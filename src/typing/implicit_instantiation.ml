@@ -146,6 +146,7 @@ struct
   let rec t_of_use_t cx tvar u =
     match u with
     | UseT (_, (OpenT (r, _) as t)) -> merge_upper_bounds cx r t
+    | UseT (_, TypeDestructorTriggerT _) -> UpperNonT u
     | UseT (_, t) -> UpperT t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
     | ResolveSpreadT
