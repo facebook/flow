@@ -6721,7 +6721,8 @@ struct
           | GenericT { bound = OpenT _; _ } ->
             let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
             rec_flow_t cx trace ~use_op:unknown_use (t, x);
-            rec_flow_t cx trace ~use_op:unknown_use (x, t)
+            if not (Context.in_implicit_instantiation cx) then
+              rec_flow_t cx trace ~use_op:unknown_use (x, t)
           | GenericT { bound = AnnotT (r, t, use_desc); reason; name; id } ->
             let repos = Some (r, use_desc) in
             let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
