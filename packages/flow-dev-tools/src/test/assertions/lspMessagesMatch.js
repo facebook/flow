@@ -27,7 +27,7 @@ function lspMessagesMatch(
   let iExpect = 0;
   // we test that messages are equal using a diff of strings, so we have
   // to convert the expected value into a string.
-  let diffable = expected => {
+  let diffable = (expected: LSPMessage | string | [string, string]) => {
     if (typeof expected === 'string') {
       return expected;
     } else if (Array.isArray(expected)) {

@@ -22,6 +22,7 @@ const {RunQueue} = require('./RunQueue');
 
 import type {Suite} from './Suite';
 import type {Args} from './testCommand';
+import type {SaneWatcher} from 'sane';
 
 /* We potentially have a ton of info to dump into stdout/stderr. Let's handle
  * drain events properly */
@@ -35,7 +36,7 @@ async function write(
   }
 }
 
-function startWatchAndRun(suites, args) {
+function startWatchAndRun(suites: Set<string>, args: Args) {
   // Require in here to avoid the dependency for most test runs
   const sane = require('sane');
 
@@ -56,7 +57,7 @@ function startWatchAndRun(suites, args) {
     process.stdout.write('> ');
   };
 
-  const keydown = chunk => {
+  const keydown = (chunk: Buffer) => {
     const char = chunk.toString()[0];
 
     const shortcut = shortcuts.get(char);
@@ -161,13 +162,13 @@ function startWatchAndRun(suites, args) {
     run();
   };
 
-  async function rerun(runID, failedOnly) {
+  async function rerun(runID: string, failedOnly: boolean) {
     suites = await findTestsByRun(runID, failedOnly);
     suites.forEach(suite => queuedSet.add(suite));
     run();
   }
 
-  async function record(runID) {
+  async function record(runID: string) {
     running = true;
     stopListeningForShortcuts();
 
@@ -188,7 +189,11 @@ function startWatchAndRun(suites, args) {
     running = false;
   }
 
-  const watch = (watcher, name, suiteNames) => {
+  const watch = (
+    watcher: SaneWatcher,
+    name: string,
+    suiteNames: Array<string>,
+  ) => {
     const callback = () => {
       changedThings.add(name);
       suiteNames.forEach(suite => queuedSet.add(suite));
@@ -222,7 +227,7 @@ function startWatchAndRun(suites, args) {
   }
 }
 
-async function runOnce(suites: {[suiteName: string]: Suite}, args) {
+async function runOnce(suites: {[suiteName: string]: Suite}, args: Args) {
   let maxErroredTests = 0;
   if (args.maxErroredTests != null) {
     maxErroredTests = args.maxErroredTests;

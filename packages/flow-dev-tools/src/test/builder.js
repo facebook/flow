@@ -369,7 +369,7 @@ class TestBuilder {
         serverProcess.stderr.removeListener('exit', resolveOnExit);
         resolve();
       }
-      const resolveOnReady = data => {
+      const resolveOnReady = (data: string) => {
         stderr
           .concat([data])
           .join('')
@@ -676,7 +676,7 @@ class TestBuilder {
         return;
       }
 
-      const doneWithVerb = async verb => {
+      const doneWithVerb = async (verb: string) => {
         if (alreadyDone) {
           return;
         }
@@ -751,7 +751,7 @@ class TestBuilder {
         }
       };
       var timeout = null;
-      const done = ok => {
+      const done = (ok: string) => {
         this.lsp &&
           this.lsp.messageEmitter.removeListener('message', onMessage);
         timeout && clearTimeout(timeout);
@@ -809,7 +809,7 @@ class TestBuilder {
       var alreadyDone = false;
       const startTime = new Date().getTime();
 
-      const doneWithVerb = async verb => {
+      const doneWithVerb = async (verb: string) => {
         if (alreadyDone) {
           return;
         }
@@ -856,7 +856,7 @@ class TestBuilder {
       var alreadyDone = false;
       const startTime = new Date().getTime();
 
-      const doneWithVerb = async verb => {
+      const doneWithVerb = async (verb: string) => {
         if (alreadyDone) {
           return;
         }
@@ -973,7 +973,7 @@ class Builder {
   static doesMessageMatch(actual: LSPMessage, expected: LSPMessage): boolean {
     const replacer =
       typeof expected.id == 'undefined' && typeof actual.id !== 'undefined'
-        ? (key, value) => (key == 'id' ? undefined : value)
+        ? (key: string, value: mixed) => (key == 'id' ? undefined : value)
         : null;
     return JSON.stringify(actual, replacer) === JSON.stringify(expected);
   }

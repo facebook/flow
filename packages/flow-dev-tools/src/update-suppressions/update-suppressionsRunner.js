@@ -357,7 +357,7 @@ async function updateSuppressionsInText(
 /* A flowtest is a file that ends in -flowtest.js or which is in a directory
  * named __flowtests__
  */
-function isFlowtest(filename) {
+function isFlowtest(filename: string) {
   return (
     filename.match(/-flowtest\.js$/) ||
     filename.match(/[/\\]__flowtests__[/\\]/)

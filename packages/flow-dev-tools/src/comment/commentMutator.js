@@ -163,7 +163,7 @@ function findStartOfLine(contents: Buffer, startOffset: number): number {
   return start + 1;
 }
 
-function findEndOfLine(contents: Buffer, startOffset): number {
+function findEndOfLine(contents: Buffer, startOffset: number): number {
   let start = startOffset;
   while (
     start < contents.length &&

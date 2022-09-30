@@ -21,12 +21,13 @@ const {default: RunQueue} = require('../test/RunQueue');
 const {getTestsDir} = require('../constants');
 
 import type {Args} from './recordCommand';
+import type {CallSuggestion} from '../test/assertions/assertionTypes';
 
 function escapeString(str: string): string {
   return str.replace(/`/g, '\\`').replace(/\${/g, '\\${');
 }
 
-function indent(str, size) {
+function indent(str: string, size: number) {
   const indent = Array(size + 1).join(' ');
   return str
     .split('\n')
@@ -34,7 +35,10 @@ function indent(str, size) {
     .join('\n');
 }
 
-function suggestionToString(suggestion, indentSize): string {
+function suggestionToString(
+  suggestion: CallSuggestion,
+  indentSize: number,
+): string {
   const args = suggestion.args
     .map(arg => {
       switch (typeof arg) {
@@ -66,7 +70,7 @@ function suggestionToString(suggestion, indentSize): string {
   }
 }
 
-function dfsForRange(node, line, col): ?[number, number] {
+function dfsForRange(node: any, line: number, col: number): ?[number, number] {
   const todo = [];
   if (typeof node === 'object' && node != null && node.hasOwnProperty('type')) {
     if (node.type === 'CallExpression') {

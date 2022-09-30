@@ -30,6 +30,7 @@ declare module 'sane' {
       callback: (filepath: string, root: string) => mixed,
     ): void;
   }
+  declare export type SaneWatcher = Sane$Watcher;
   declare module.exports: (
     path: string,
     options?: Sane$Options,

@@ -176,7 +176,7 @@ class Base<T: Object> {
   }
 
   // final
-  static showUsage(exitCode: number) {
+  static showUsage(exitCode: number): void {
     throw new ShowUsageException(exitCode);
   }
 
@@ -219,7 +219,7 @@ class Base<T: Object> {
   }
 
   // final
-  static async go() {
+  static async go(): Promise<void> {
     try {
       const argv = this.parse();
       if (argv.help) {
