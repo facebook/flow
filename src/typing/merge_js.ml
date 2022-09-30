@@ -355,7 +355,16 @@ let check_implicit_instantiations cx master_cx =
           ~f:(fun _ _ _ _ -> ())
           ~post:(fun ~cx ~implicit_instantiation_cx ->
             let new_errors = Context.errors implicit_instantiation_cx in
-            Flow_error.ErrorSet.iter (fun error -> Context.add_error cx error) new_errors)
+            Flow_error.ErrorSet.iter
+              (fun error ->
+                Error_message.(
+                  match Flow_error.msg_of_error error with
+                  | EImplicitInstantiationUnderconstrainedError _
+                  | EImplicitInstantiationTemporaryError _ ->
+                    Context.add_error cx error
+                  | _ -> ()
+                ))
+              new_errors)
           implicit_instantiation_checks
     )
 
