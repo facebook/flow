@@ -20,26 +20,6 @@ function k(x: null | 1) {
   if (x) { /* NOT sketchy */ }
 }
 
-// open, multiple lowers
-function j(x) {
-  if (x) { /* NOT sketchy because of calls */ }
-}
-j(null);
-j("foo"); // non-falsey, non sketchy
-
-function r(x) {
-  if (x) { /* sketchy because of calls */ }
-}
-r(null);
-r(""); // definitely falsey, sketchy
-
-function s(x) {
-  if (x) { /* sketchy because of calls */ }
-}
-s(null);
-declare var unknown_str: string;
-s(unknown_str); // possibly falsey, sketchy
-
 // PropExistsP
 
 // optional prop
