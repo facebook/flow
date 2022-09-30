@@ -198,8 +198,8 @@ let can_read path =
 
 let try_readdir path =
   try Dirent.entries path with
-  | Unix.Unix_error (Unix.EBADF, _, _) ->
-    Printf.eprintf "Skipping %s\n%!" path;
+  | Unix.Unix_error (err, _, _) ->
+    Printf.eprintf "Skipping %s (%s)\n%!" path (Unix.error_message err);
     [||]
 
 type stack =
