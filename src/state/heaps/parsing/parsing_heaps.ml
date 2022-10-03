@@ -539,7 +539,12 @@ let prepare_update_revdeps =
     in
     let write chunk file =
       write_acc chunk file;
-      assert (Heap.file_set_remove dependents file)
+      if not (Heap.file_set_remove dependents file) then
+        Printf.ksprintf
+          failwith
+          "remove_old_dependent failed: %s is not in dependents of module %s"
+          (read_file_name file)
+          (Modulename.to_string mname)
     in
     (size_acc, write)
   in
@@ -569,7 +574,12 @@ let prepare_update_revdeps =
       write_acc chunk file;
       let dependents = get_dependents chunk in
       let sknode = write_sknode chunk file in
-      assert (Heap.file_set_add dependents sknode)
+      if not (Heap.file_set_add dependents sknode) then
+        Printf.ksprintf
+          failwith
+          "add_new_dependent failed: could not add %s to dependents of module %s"
+          (read_file_name file)
+          (Modulename.to_string mname)
     in
     (size_acc + module_size + Heap.header_size + sknode_size, write)
   in
