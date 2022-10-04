@@ -12,11 +12,22 @@
 %token <string> ID
 %token <string> NR
 
-%start version comparator range
-%type <Semver_version.t> version
-%type <Semver_comparator.t> comparator
-%type <Semver_range.t> range
+%start version_top comparator_top range_top range_top
+%type <Semver_version.t> version_top
+%type <Semver_comparator.t> comparator_top
+%type <Semver_range.t> range_top
 %%
+
+version_top:
+  version EOF { $1 }
+;
+comparator_top:
+  comparator EOF { $1 }
+;
+range_top:
+  range EOF { $1 }
+;
+
 version:
   number part part prerelease build {
     Semver_version.({
