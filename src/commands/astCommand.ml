@@ -33,23 +33,23 @@ let spec =
     args =
       CommandSpec.ArgSpec.(
         empty
-        |> flag "--tokens" no_arg ~doc:"Include a list of syntax tokens in the output"
-        |> flag "--pretty" no_arg ~doc:"Pretty-print JSON output"
+        |> flag "--tokens" truthy ~doc:"Include a list of syntax tokens in the output"
+        |> flag "--pretty" truthy ~doc:"Pretty-print JSON output"
         |> flag
              "--check"
-             no_arg
+             truthy
              ~doc:"Checks whether the file parses, returning any errors but not the AST"
-        |> flag "--debug" no_arg ~doc:"" (* undocumented *)
+        |> flag "--debug" truthy ~doc:"" (* undocumented *)
         |> flag
              "--pattern"
-             no_arg
+             truthy
              ~doc:"Prints the AST structurally without locations to be used in pattern matching"
         |> flag
              "--type"
              (enum [("js", File_js); ("json", File_json)])
              ~doc:"Type of input file (js or json)"
-        |> flag "--strict" no_arg ~doc:"Parse in strict mode"
-        |> flag "--no-enums" no_arg ~doc:"Disable enum support"
+        |> flag "--strict" truthy ~doc:"Parse in strict mode"
+        |> flag "--no-enums" truthy ~doc:"Disable enum support"
         |> flag
              "--include-comments"
              (required

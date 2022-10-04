@@ -106,7 +106,7 @@ let common_annotate_flags prev =
        ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
   |> flag
        "--default-any"
-       no_arg
+       truthy
        ~doc:"Adds 'any' to all locations where normalization or validation fails"
 
 (***********************)
@@ -188,16 +188,16 @@ module Annotate_lti_command = struct
           |> common_annotate_flags
           |> flag
                "--skip-normal-params"
-               no_arg
+               truthy
                ~doc:
                  "Skips adding function parameter type annotations (except for 'this' annotations) even if necessary"
           |> flag
                "--skip-this-params"
-               no_arg
+               truthy
                ~doc:"Skips adding 'this' parameter type annotations to functions even if necessary"
           |> flag
                "--skip-class-properties"
-               no_arg
+               truthy
                ~doc:
                  "Skips adding type annotations to class properties without initializers even if necessary"
         );
@@ -302,11 +302,11 @@ module Annotate_empty_array_command = struct
                ~doc:""
           |> flag
                "--generalize-maybe"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing null or void to maybe types"
           |> flag
                "--generalize-react-mixed-element"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing react elements to React.MixedElement"
           |> common_annotate_flags
         );
@@ -374,15 +374,15 @@ module Annotate_cycles_command = struct
                ~doc:""
           |> flag
                "--generalize-maybe"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing null or void to maybe types"
           |> flag
                "--generalize-react-mixed-element"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing react elements to React.MixedElement"
           |> flag
                "--merge-array-elements"
-               no_arg
+               truthy
                ~doc:"combine arrays appearing in toplevel unions to a single array"
           |> common_annotate_flags
         );
@@ -492,11 +492,11 @@ module Annotate_use_state_command = struct
                ~doc:""
           |> flag
                "--generalize-maybe"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing null or void to maybe types"
           |> flag
                "--generalize-react-mixed-element"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing react elements to React.MixedElement"
           |> common_annotate_flags
         );
@@ -560,11 +560,11 @@ module Annotate_use_callback_command = struct
                ~doc:""
           |> flag
                "--generalize-maybe"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing null or void to maybe types"
           |> flag
                "--generalize-react-mixed-element"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing react elements to React.MixedElement"
           |> common_annotate_flags
         );
@@ -628,7 +628,7 @@ module Annotate_implicit_instantiation = struct
                ~doc:""
           |> flag
                "--generalize-maybe"
-               no_arg
+               truthy
                ~doc:"Generalize annotations containing null or void to maybe types"
           |> common_annotate_flags
         );

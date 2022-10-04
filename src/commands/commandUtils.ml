@@ -135,7 +135,7 @@ let warning_flags prev =
     prev
     |> flag
          "--include-warnings"
-         no_arg
+         truthy
          ~doc:"Include warnings in the error output (warnings are excluded by default)"
     |> flag
          "--max-warnings"
@@ -146,7 +146,7 @@ let warning_flags prev =
 
 let profile_flag prev =
   let open CommandSpec.ArgSpec in
-  prev |> flag "--profile" no_arg ~doc:"Output profiling information" ~env:"FLOW_PROFILE"
+  prev |> flag "--profile" truthy ~doc:"Output profiling information" ~env:"FLOW_PROFILE"
 
 let error_flags prev =
   CommandSpec.ArgSpec.(
@@ -162,15 +162,15 @@ let error_flags prev =
          )
          ~doc:"Display terminal output in color. never, always, auto (default: auto)"
     |> warning_flags
-    |> flag "--one-line" no_arg ~doc:"Escapes newlines so that each error prints on one line"
-    |> flag "--list-files" no_arg ~doc:"List files with errors"
+    |> flag "--one-line" truthy ~doc:"Escapes newlines so that each error prints on one line"
+    |> flag "--list-files" truthy ~doc:"List files with errors"
     |> flag
          "--show-all-errors"
-         no_arg
+         truthy
          ~doc:"Print all errors (the default is to truncate after 50 errors)"
     |> flag
          "--show-all-branches"
-         no_arg
+         truthy
          ~doc:"Print all branch errors (the default is to print the most relevant branches)"
     |> flag
          "--unicode"
@@ -191,8 +191,8 @@ let json_flags prev =
   CommandSpec.ArgSpec.(
     prev
     |> collect collect_json_flags
-    |> flag "--json" no_arg ~doc:"Output results in JSON format"
-    |> flag "--pretty" no_arg ~doc:"Pretty-print JSON output (implies --json)"
+    |> flag "--json" truthy ~doc:"Output results in JSON format"
+    |> flag "--pretty" truthy ~doc:"Pretty-print JSON output (implies --json)"
   )
 
 let temp_dir_flag prev =
@@ -219,7 +219,7 @@ let lazy_flags prev =
   CommandSpec.ArgSpec.(
     prev
     |> collect collect_lazy_flags
-    |> flag "--lazy" no_arg ~doc:"Only check changed files. Shorthand for `--lazy-mode true`"
+    |> flag "--lazy" truthy ~doc:"Only check changed files. Shorthand for `--lazy-mode true`"
     |> flag
          "--lazy-mode"
          (enum
@@ -255,7 +255,7 @@ let verbose_focus_flag prev =
     prev
     |> flag
          "--verbose-focus"
-         no_arg
+         truthy
          ~doc:"Print verbose output about target file only (implies --verbose)"
   )
 
@@ -335,7 +335,7 @@ let from_flag =
     )
 
 let strip_root_flag prev =
-  CommandSpec.ArgSpec.(prev |> flag "--strip-root" no_arg ~doc:"Print paths without the root")
+  CommandSpec.ArgSpec.(prev |> flag "--strip-root" truthy ~doc:"Print paths without the root")
 
 let wait_for_recheck_flag prev =
   CommandSpec.ArgSpec.(
@@ -359,7 +359,7 @@ let path_flag prev =
   )
 
 let autostop_flag prev =
-  CommandSpec.ArgSpec.(prev |> flag "--autostop" no_arg ~doc:"" (* empty to omit it from --help *))
+  CommandSpec.ArgSpec.(prev |> flag "--autostop" truthy ~doc:"" (* empty to omit it from --help *))
 
 let verbose_flags =
   let collector main verbose indent depth enabled_during_flowlib =
@@ -389,20 +389,20 @@ let verbose_flags =
     CommandSpec.ArgSpec.(
       prev
       |> collect collector
-      |> flag "--verbose" no_arg ~doc:"Print verbose info during typecheck"
+      |> flag "--verbose" truthy ~doc:"Print verbose info during typecheck"
       |> flag
            "--verbose-indent"
-           no_arg
+           truthy
            ~doc:"Indent verbose info during typecheck (implies --verbose)"
       |> flag
            "--verbose-depth"
            int
            ~doc:"Recursively print types up to specified depth (default 1, implies --verbose)"
-      |> flag "--verbose-flowlib" no_arg ~doc:"Print verbose info while initializing the flowlib"
+      |> flag "--verbose-flowlib" truthy ~doc:"Print verbose info while initializing the flowlib"
     )
 
 let quiet_flag prev =
-  CommandSpec.ArgSpec.(prev |> flag "--quiet" no_arg ~doc:"Suppress output about server startup")
+  CommandSpec.ArgSpec.(prev |> flag "--quiet" truthy ~doc:"Suppress output about server startup")
 
 type on_mismatch_behavior =
   | Choose_newest
@@ -440,7 +440,7 @@ let ignore_version_flag prev =
     prev
     |> flag
          "--ignore-version"
-         no_arg
+         truthy
          ~doc:"Ignore the version constraint in .flowconfig"
          ~env:"FLOW_IGNORE_VERSION"
   )
@@ -734,7 +734,7 @@ let no_restart_flag prev =
     prev
     |> flag
          "--no-auto-restart"
-         no_arg
+         truthy
          ~doc:"If the server dies, do not try and restart it; just exit"
   )
 
@@ -796,7 +796,7 @@ let connect_flags_with_lazy_collector collector =
     collector
     |> flag "--timeout" (optional int) ~doc:"Maximum time to wait, in seconds"
     |> flag "--retries" (optional int) ~doc:"Set the number of retries. (default: 3)"
-    |> flag "--no-auto-start" no_arg ~doc:"If the server is not running, do not start it; just exit"
+    |> flag "--no-auto-start" truthy ~doc:"If the server is not running, do not start it; just exit"
     |> temp_dir_flag
     |> shm_flags
     |> from_flag
@@ -957,19 +957,19 @@ let options_flags =
     CommandSpec.ArgSpec.(
       prev
       |> collect collect_options_flags
-      |> flag "--debug" no_arg ~doc:"Print debug info during typecheck" ~env:"FLOW_DEBUG"
+      |> flag "--debug" truthy ~doc:"Print debug info during typecheck" ~env:"FLOW_DEBUG"
       |> profile_flag
-      |> flag "--all" no_arg ~doc:"Typecheck all files, not just @flow"
+      |> flag "--all" truthy ~doc:"Typecheck all files, not just @flow"
       |> flag
            "--wait-for-recheck"
            (optional bool)
            ~doc:
              "If true, always wait for rechecks to finish before serving commands (default: false)"
       |> flag "--traces" (optional int) ~doc:"Outline an error path up to a specified level"
-      |> flag "--no-flowlib" no_arg ~doc:"Do not include embedded declarations"
+      |> flag "--no-flowlib" truthy ~doc:"Do not include embedded declarations"
       |> flag
            "--munge-underscore-members"
-           no_arg
+           truthy
            ~doc:"Treat any class member name with a leading underscore as private"
       |> flag
            "--max-workers"
@@ -992,12 +992,12 @@ let options_flags =
            ~env:"FLOW_MERGE_TIMEOUT"
       |> flag
            "--abstract-locations"
-           no_arg
+           truthy
            ~doc:
              "[EXPERIMENTAL] Use abstract locations to improve recheck times. Has no effect unless types-first is also enabled"
       |> flag
            "--include-suppressed"
-           no_arg
+           truthy
            ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
       |> flag
            "--trust-mode"
@@ -1023,7 +1023,7 @@ let options_flags =
       (* restarting to save time is a hack and should be removed. this should
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
-      |> flag "--distributed" no_arg ~doc:""
+      |> flag "--distributed" truthy ~doc:""
     )
 
 let saved_state_flags =
@@ -1059,11 +1059,11 @@ let saved_state_flags =
            ~doc:"Which saved state fetcher Flow should use (none, local) (default: none)"
       |> flag
            "--saved-state-force-recheck"
-           no_arg
+           truthy
            ~doc:"Force a lazy server to recheck the changes since the saved state was generated"
       |> flag
            "--saved-state-no-fallback"
-           no_arg
+           truthy
            ~doc:
              "If saved state fails to load, exit (normally fallback is to initialize from scratch)"
       (* This is really unsafe! Saved state is marshal'd OCaml data and it's
@@ -1071,12 +1071,12 @@ let saved_state_flags =
          segfaults. This is only for debugging. *)
       |> flag
            "--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED"
-           no_arg
+           truthy
            ~doc:""
            ~env:"FLOW_SAVED_STATE_SKIP_VERSION_CHECK_DO_NOT_USE_OR_YOU_WILL_BE_FIRED"
       |> flag
            "--saved-state-verify"
-           no_arg
+           truthy
            ~doc:"Verifies that the saved state matches what is on disk (for debugging only)"
     )
 
@@ -1120,7 +1120,7 @@ let file_watcher_flag prev =
          )
   |> flag
        "--file-watcher-debug"
-       no_arg
+       truthy
        ~doc:"Enable debug logging for the file watcher. This is very noisy"
        ~env:"FLOW_FILE_WATCHER_DEBUG"
   |> flag
@@ -1229,7 +1229,7 @@ let no_cgroup_flag =
       |> CommandSpec.ArgSpec.collect collect_no_cgroup_flag
       |> flag
            "--no-cgroup"
-           no_arg
+           truthy
            ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)"
     )
 
@@ -1964,8 +1964,8 @@ let codemod_flags prev =
     |> shm_flags
     |> from_flag
     |> ignore_version_flag
-    |> flag "--write" no_arg ~doc:"Edit files in place"
-    |> flag "--repeat" no_arg ~doc:"Run this codemod repeatedly until no more files change"
+    |> flag "--write" truthy ~doc:"Edit files in place"
+    |> flag "--repeat" truthy ~doc:"Run this codemod repeatedly until no more files change"
     |> flag
          "--log-level"
          (enum log_level_enum)

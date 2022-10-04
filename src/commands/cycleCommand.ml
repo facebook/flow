@@ -27,7 +27,7 @@ let spec =
         |> connect_flags
         |> root_flag
         |> strip_root_flag
-        |> flag "--types" no_arg ~doc:"Only consider type dependencies"
+        |> flag "--types" truthy ~doc:"Only consider type dependencies"
         |> anon "FILE..." (required string)
       );
   }

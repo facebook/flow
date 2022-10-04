@@ -25,8 +25,8 @@ let spec =
         empty
         |> CommandUtils.json_flags
         |> CommandUtils.from_flag
-        |> flag "--binary" no_arg ~doc:"Return only the binary"
-        |> flag "--semver" no_arg ~doc:"Return only the version number"
+        |> flag "--binary" truthy ~doc:"Return only the binary"
+        |> flag "--semver" truthy ~doc:"Return only the version number"
         |> anon "root" (optional string)
       );
   }

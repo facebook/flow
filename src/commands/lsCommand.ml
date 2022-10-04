@@ -33,15 +33,15 @@ let spec =
         |> root_flag
         |> json_flags
         |> from_flag
-        |> flag "--all" no_arg ~doc:"Even list ignored files"
+        |> flag "--all" truthy ~doc:"Even list ignored files"
         |> flag
              "--imaginary"
-             no_arg
+             truthy
              ~doc:
                "Even list non-existent specified files (normally they are silently dropped). Non-existent files are never considered to be libs."
         |> flag
              "--explain"
-             no_arg
+             truthy
              ~doc:"Output what kind of file each file is and why Flow cares about it"
         |> input_file_flag "ls"
         |> anon "files or dirs" (list_of string)

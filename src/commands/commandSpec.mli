@@ -11,7 +11,7 @@ module ArgSpec : sig
   type ('a, 'b) t
 
   type flag_arg_count =
-    | No_Arg
+    | Truthy
     | Arg
     | Arg_List
     | Arg_Rest
@@ -35,7 +35,7 @@ module ArgSpec : sig
 
   val collect : ('main -> 'a -> 'new_main) -> ('b, 'main) t -> ('b, 'a -> 'new_main) t
 
-  val no_arg : bool flag_t
+  val truthy : bool flag_t
 
   val string : string option flag_t
 

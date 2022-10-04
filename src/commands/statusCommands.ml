@@ -68,7 +68,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             |> error_flags
             |> strip_root_flag
             |> from_flag
-            |> flag "--version" no_arg ~doc:"Print version number and exit"
+            |> flag "--version" truthy ~doc:"Print version number and exit"
             |> anon "root" (optional string)
           );
       }

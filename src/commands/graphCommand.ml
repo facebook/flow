@@ -31,7 +31,7 @@ let depgraph_subcommand =
           |> connect_flags
           |> strip_root_flag
           |> flag "--out" (required string) ~doc:"Location to print the output file"
-          |> flag "--types" no_arg ~doc:"Only consider type dependencies"
+          |> flag "--types" truthy ~doc:"Only consider type dependencies"
           |> root_flag
         );
     }

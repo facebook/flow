@@ -18,7 +18,7 @@ module ArgSpec = struct
   type values_t = string list SMap.t
 
   type flag_arg_count =
-    | No_Arg
+    | Truthy
     | Arg
     | Arg_List
     | Arg_Rest (* consumes a '--' and all remaining args *)
@@ -178,13 +178,13 @@ module ArgSpec = struct
       arg = Arg_Command;
     }
 
-  let no_arg =
+  let truthy =
     {
       parse =
         (fun ~name:_ -> function
           | Some _ -> true
           | None -> false);
-      arg = No_Arg;
+      arg = Truthy;
     }
 
   let required ?default arg_type =
@@ -318,14 +318,14 @@ module ArgSpec = struct
     }
 
   let help_flag =
-    SMap.empty |> SMap.add "--help" { doc = "This list of options"; env = None; arg_count = No_Arg }
+    SMap.empty |> SMap.add "--help" { doc = "This list of options"; env = None; arg_count = Truthy }
 
   let apply_help (values, main) =
     let main help =
       if help then raise Show_help;
       main
     in
-    apply_arg "--help" no_arg (fun x -> x) (values, main)
+    apply_arg "--help" truthy (fun x -> x) (values, main)
 
   (* Base spec, defines --help *)
   let empty = { f = apply_help; flags = help_flag; anons = [] }
@@ -426,7 +426,7 @@ and parse_flag values spec arg args =
   try
     let flag = SMap.find arg flags in
     match flag.ArgSpec.arg_count with
-    | ArgSpec.No_Arg ->
+    | ArgSpec.Truthy ->
       let values = SMap.add arg ["true"] values in
       parse values spec args
     | ArgSpec.Arg ->
@@ -470,7 +470,7 @@ and parse_anon values spec arg args =
   | Some (name, ArgSpec.Arg_Command) ->
     let values = SMap.add name (arg :: args) values in
     parse values spec []
-  | Some (_, ArgSpec.No_Arg) -> assert false
+  | Some (_, ArgSpec.Truthy) -> assert false
   | None -> raise (Failed_to_parse { arg; msg = "Unexpected argument"; details = None })
 
 let init_from_env spec =

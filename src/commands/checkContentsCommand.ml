@@ -34,7 +34,7 @@ let spec =
         |> verbose_flags
         |> from_flag
         |> wait_for_recheck_flag
-        |> flag "--all" no_arg ~doc:"Ignore absence of an @flow pragma"
+        |> flag "--all" truthy ~doc:"Ignore absence of an @flow pragma"
         |> anon "filename" (optional string)
       );
   }

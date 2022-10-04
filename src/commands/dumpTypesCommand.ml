@@ -35,7 +35,7 @@ let spec =
         |> wait_for_recheck_flag
         |> flag
              "--evaluate-type-destructors"
-             no_arg
+             truthy
              ~doc:"Use the result of type destructor evaluation if available"
         |> anon "file" (optional string)
       );

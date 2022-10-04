@@ -33,7 +33,7 @@ let spec =
         |> wait_for_recheck_flag
         |> flag
              "--color"
-             no_arg
+             truthy
              ~doc:
                ("Print the file with colors showing which parts have unknown types "
                ^ "(blue for 'empty' and red for 'any'). "
@@ -41,14 +41,14 @@ let spec =
                )
         |> flag
              "--debug"
-             no_arg
+             truthy
              ~doc:
                ("Print debugging info about each range in the file to stderr. "
                ^ "Cannot be used with --json or --pretty"
                )
         |> path_flag
-        |> flag "--all" no_arg ~doc:"Ignore absence of @flow pragma"
-        |> flag "--show-trust" no_arg ~doc:"EXPERIMENTAL: Include trust information in output"
+        |> flag "--all" truthy ~doc:"Ignore absence of @flow pragma"
+        |> flag "--show-trust" truthy ~doc:"EXPERIMENTAL: Include trust information in output"
         |> anon "file" (optional string)
       );
   }

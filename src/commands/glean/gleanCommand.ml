@@ -20,7 +20,7 @@ let spec =
       |> codemod_flags
       |> flag "--output-dir" (optional string) ~doc:"Name of directory to output the JSON into"
       |> flag "--write-root" (optional string) ~doc:"Prefix to attach to file names (e.g. www)"
-      |> flag "--schema-version" no_arg ~doc:"Show schema version used by the indexer"
+      |> flag "--schema-version" truthy ~doc:"Show schema version used by the indexer"
       );
   }
 

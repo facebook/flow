@@ -25,7 +25,7 @@ let spec =
         |> base_flags
         |> temp_dir_flag
         |> shm_flags
-        |> flag "--lazy" no_arg ~doc:"Deprecated, has no effect"
+        |> flag "--lazy" truthy ~doc:"Deprecated, has no effect"
         |> flag "--lazy-mode" string ~doc:"Deprecated, has no effect"
         |> autostop_flag
         |> from_flag

@@ -14,7 +14,7 @@ open Utils_js
 
 let lsp_flag prev =
   let open CommandSpec.ArgSpec in
-  prev |> flag "--lsp" no_arg ~doc:"Output results as LSP responses"
+  prev |> flag "--lsp" truthy ~doc:"Output results as LSP responses"
 
 let spec =
   {
@@ -38,8 +38,8 @@ let spec =
         |> from_flag
         |> wait_for_recheck_flag
         |> lsp_flag
-        |> flag "--imports" no_arg ~doc:"Include suggestions that can be imported from other files"
-        |> flag "--imports-ranked-usage" no_arg ~doc:"" (* experimental: rank imports by usage *)
+        |> flag "--imports" truthy ~doc:"Include suggestions that can be imported from other files"
+        |> flag "--imports-ranked-usage" truthy ~doc:"" (* experimental: rank imports by usage *)
         |> anon "args" (optional (list_of string))
       );
   }

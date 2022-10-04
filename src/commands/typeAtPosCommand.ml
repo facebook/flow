@@ -35,18 +35,18 @@ let spec =
         |> wait_for_recheck_flag
         |> flag
              "--expand-json-output"
-             no_arg
+             truthy
              ~doc:"Includes an expanded version of the returned JSON type (implies --json)"
         |> flag
              "--omit-typearg-defaults"
-             no_arg
+             truthy
              ~doc:"Omit type arguments when defaults exist and match the provided type argument"
         |> flag
              "--evaluate-type-destructors"
-             no_arg
+             truthy
              ~doc:"Use the result of type destructor evaluation if available"
         |> flag "--max-depth" (required ~default:50 int) ~doc:"Maximum depth of type (default 50)"
-        |> flag "--verbose-normalizer" no_arg ~doc:"Print verbose info during normalization"
+        |> flag "--verbose-normalizer" truthy ~doc:"Print verbose info during normalization"
         |> anon "args" (required (list_of string))
       );
   }

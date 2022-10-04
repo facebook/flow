@@ -22,7 +22,7 @@ let spec =
         |> options_and_json_flags
         |> saved_state_flags
         |> log_file_flags
-        |> flag "--wait" no_arg ~doc:"Wait for the server to finish initializing"
+        |> flag "--wait" truthy ~doc:"Wait for the server to finish initializing"
         |> lazy_flags
         |> autostop_flag
         |> shm_flags

@@ -45,7 +45,7 @@ module Command (CommandList : COMMAND_LIST) = struct
     let flags = CommandSpec.flags command in
     let prev = List.nth rest (current - 1) in
     match find_flag prev flags with
-    | Some CommandSpec.ArgSpec.No_Arg
+    | Some CommandSpec.ArgSpec.Truthy
     | None ->
       if current < List.length rest && is_partial_flag (List.nth rest current) then
         let flags = SMap.keys flags in

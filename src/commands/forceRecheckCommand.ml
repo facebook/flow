@@ -28,7 +28,7 @@ let spec =
         |> from_flag
         |> flag
              "--focus"
-             no_arg
+             truthy
              ~doc:"If the server is running in lazy mode, force it to focus on these files"
         |> flag
              "--input-file"

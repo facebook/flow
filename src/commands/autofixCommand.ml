@@ -38,7 +38,7 @@ module InsertType = struct
             |> wait_for_recheck_flag
             |> flag
                  "--strict-location"
-                 no_arg
+                 truthy
                  ~doc:"Restrict the number of valid positions for each annotation"
             |> flag
                  "--strategy"
@@ -50,11 +50,11 @@ module InsertType = struct
                    )
             |> flag
                  "--in-place"
-                 no_arg
+                 truthy
                  ~doc:"Overwrite the input file or file specified by the path flag"
             |> flag
                  "--omit-typearg-defaults"
-                 no_arg
+                 truthy
                  ~doc:"Omit type arguments when defaults exist and match the provided type argument"
             |> anon "args" (required (list_of string))
           );
@@ -178,9 +178,9 @@ module Exports = struct
           |> wait_for_recheck_flag
           |> flag
                "--in-place"
-               no_arg
+               truthy
                ~doc:"Overwrite the input file or file specified by the path flag"
-          |> flag "--force" no_arg ~doc:"Write the results even if errors are encountered"
+          |> flag "--force" truthy ~doc:"Write the results even if errors are encountered"
           |> anon "file" (required string)
         );
     }
