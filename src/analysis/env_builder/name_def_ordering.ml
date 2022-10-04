@@ -544,7 +544,7 @@ struct
         | Value { hint; expr } ->
           let state = depends_of_hint state hint in
           depends_of_expression expr state
-        | SynthesizableObject (_, { Ast.Expression.Object.properties; _ }) ->
+        | SynthesizableObject { obj = { Ast.Expression.Object.properties; _ }; _ } ->
           let open Ast.Expression.Object in
           let open Ast.Expression.Object.Property in
           Base.List.fold properties ~init:state ~f:(fun state -> function
@@ -827,12 +827,13 @@ struct
       EnvMap.fold
         (fun kind_and_loc def acc ->
           match def with
-          | (Class { this_super_write_locs; _ }, _, _, _) ->
+          | (Class { this_super_write_locs = locs; _ }, _, _, _)
+          | (Binding (Root (SynthesizableObject { this_write_locs = locs; _ })), _, _, _) ->
             acc
             |> EnvSet.fold
                  (fun this_super_kind_and_loc acc ->
                    EnvMap.add this_super_kind_and_loc kind_and_loc acc)
-                 this_super_write_locs
+                 locs
           | (Function { function_loc; _ }, _, _, _)
           | (Binding (Root (FunctionValue { function_loc; arrow = false; _ })), _, _, _) ->
             EnvMap.add (Env_api.FunctionThisLoc, function_loc) kind_and_loc acc

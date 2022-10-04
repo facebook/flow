@@ -219,16 +219,12 @@ let obj_properties_synthesizable { Ast.Expression.Object.properties; comments = 
   Base.List.for_all
     ~f:(function
       | SpreadProperty _ -> false
-      | Property
-          ( _,
-            ( Method { key = Identifier _; value = (_, fn); _ }
-            | Init
-                {
-                  key = Identifier _;
-                  value = (_, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
-                  _;
-                } )
-          ) ->
+      | Property (_, Method { key = Identifier _; value = (_, fn); _ }) ->
+        func_is_synthesizable_from_annotation ~allow_this:true fn = Synthesizable
+      | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.ArrowFunction fn); _ })
+        ->
+        func_is_synthesizable_from_annotation ~allow_this:true fn = Synthesizable
+      | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Function fn); _ }) ->
         func_is_synthesizable_from_annotation ~allow_this:false fn = Synthesizable
       | Property _ -> false)
     properties
@@ -521,11 +517,27 @@ class def_finder env_entries providers toplevel_scope =
           (Some (EmptyArray { array_providers; arr_loc }), Hint_None)
         | ( None,
             Some
-              (loc, Ast.Expression.Object ({ Ast.Expression.Object.properties = _ :: _; _ } as obj)),
+              ( loc,
+                Ast.Expression.Object
+                  ({ Ast.Expression.Object.properties = _ :: _ as properties; _ } as obj)
+              ),
             _
           )
           when obj_properties_synthesizable obj ->
-          (Some (SynthesizableObject (loc, obj)), Hint_None)
+          let this_write_locs =
+            let open Ast.Expression.Object in
+            Base.List.fold properties ~init:EnvSet.empty ~f:(fun acc -> function
+              | Property (_, Property.Method _) -> acc (* this-in-object is banned. *)
+              | Property (_, Property.Init { value = (_, Ast.Expression.ArrowFunction _); _ }) ->
+                acc (* Arrow functions don't bind `this`. *)
+              | Property (_, Property.Init { value = (f_loc, Ast.Expression.Function _); _ }) ->
+                EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
+              | _ ->
+                (* Everything else is impossible due to obj_properties_synthesizable check. *)
+                acc
+            )
+          in
+          (Some (SynthesizableObject { obj_loc = loc; obj; this_write_locs }), Hint_None)
         | (None, Some init, _) -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
         | (None, None, _) -> (None, Hint_None)
       in

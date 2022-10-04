@@ -119,6 +119,7 @@ let lazily_resolve_hint cx loc hint =
 
 let resolve_annotated_function
     cx
+    ~bind_this
     ~statics
     reason
     tparams_map
@@ -127,7 +128,7 @@ let resolve_annotated_function
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this =
-    if Signature_utils.This_finder.found_this_in_body_or_params body params then
+    if bind_this && Signature_utils.This_finder.found_this_in_body_or_params body params then
       let loc = aloc_of_reason reason in
       Tvar.mk cx (mk_reason RThis loc)
     else
@@ -136,7 +137,7 @@ let resolve_annotated_function
   let ((func_sig, _) as sig_data) =
     Statement.mk_func_sig
       cx
-      ~required_this_param_type:(Some default_this)
+      ~required_this_param_type:(Base.Option.some_if bind_this default_this)
       ~require_return_annot:false
       ~constructor:false
       ~statics
@@ -145,7 +146,12 @@ let resolve_annotated_function
       function_
   in
   Node_cache.set_function_sig cache sig_loc sig_data;
-  ( Statement.Func_stmt_sig.functiontype cx ~arrow:false (Some function_loc) default_this func_sig,
+  ( Statement.Func_stmt_sig.functiontype
+      cx
+      ~arrow:(not bind_this)
+      (Some function_loc)
+      default_this
+      func_sig,
     unknown_use
   )
 
@@ -172,13 +178,16 @@ let rec resolve_binding_partial cx reason loc b =
     let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op, false)
-  | Root (SynthesizableObject (loc, { Ast.Expression.Object.properties; _ })) ->
+  | Root
+      (SynthesizableObject
+        { obj_loc = loc; obj = { Ast.Expression.Object.properties; _ }; this_write_locs = _ }
+        ) ->
     let open Ast.Expression.Object in
     let reason = mk_reason RObjectLit loc in
-    let resolve_prop ~prop_loc ~fn_loc fn =
+    let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =
       let reason = func_reason ~async:false ~generator:false prop_loc in
       let (t, _) =
-        resolve_annotated_function cx ~statics:SMap.empty reason ALocMap.empty fn_loc fn
+        resolve_annotated_function cx ~bind_this ~statics:SMap.empty reason ALocMap.empty fn_loc fn
       in
       t
     in
@@ -200,7 +209,7 @@ let rec resolve_binding_partial cx reason loc b =
                     value = (fn_loc, fn);
                   }
               ) ->
-            let t = resolve_prop ~prop_loc ~fn_loc fn in
+            let t = resolve_prop ~bind_this:false ~prop_loc ~fn_loc fn in
             Statement.ObjectExpressionAcc.add_prop
               (Properties.add_method (OrdinaryName name) (Some name_loc) t)
               acc
@@ -212,12 +221,20 @@ let rec resolve_binding_partial cx reason loc b =
                       ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
                       | Property.Literal
                           (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-                    value = (fn_loc, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
+                    value =
+                      ( fn_loc,
+                        ((Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn) as fn_exp)
+                      );
                     _;
                   }
               ) ->
             let { Ast.Function.sig_loc; _ } = fn in
-            let t = resolve_prop ~prop_loc:sig_loc ~fn_loc fn in
+            let bind_this =
+              match fn_exp with
+              | Ast.Expression.Function _ -> true
+              | _ -> false
+            in
+            let t = resolve_prop ~bind_this ~prop_loc:sig_loc ~fn_loc fn in
             Statement.ObjectExpressionAcc.add_prop
               (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
               acc
@@ -749,7 +766,14 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           statics;
           hint = _;
         } ->
-      resolve_annotated_function cx ~statics def_reason tparams_map function_loc function_
+      resolve_annotated_function
+        cx
+        ~bind_this:true
+        ~statics
+        def_reason
+        tparams_map
+        function_loc
+        function_
     | Function
         {
           function_;
@@ -815,6 +839,7 @@ let entries_of_component graph component =
         EnvSet.add (Env_api.FunctionParamLoc, l) acc
       | Root (FunctionValue { function_loc; arrow = false; _ }) ->
         EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
+      | Root (SynthesizableObject { this_write_locs; _ }) -> EnvSet.union this_write_locs acc
       | Root _ -> acc
       | Select { binding; _ } -> add_from_bindings acc binding
     in

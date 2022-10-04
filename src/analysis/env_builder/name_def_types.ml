@@ -66,7 +66,12 @@ type root =
       arrow: bool;
       tparams_map: tparams_map;
     }
-  | SynthesizableObject of ALoc.t * (ALoc.t, ALoc.t) Ast.Expression.Object.t
+  | SynthesizableObject of {
+      obj_loc: ALoc.t;
+      obj: (ALoc.t, ALoc.t) Ast.Expression.Object.t;
+      (* A set of this write locations that can be resolved by resolving the object. *)
+      this_write_locs: Env_api.EnvSet.t;
+    }
   | EmptyArray of {
       array_providers: ALocSet.t;
       arr_loc: ALoc.t;

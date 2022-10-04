@@ -7257,7 +7257,7 @@ module Make
           ~statics
           reason
           func
-          (Some default_this)
+          (Base.Option.some_if needs_this_param default_this)
       in
       (fun_type, reconstruct_ast general)
 

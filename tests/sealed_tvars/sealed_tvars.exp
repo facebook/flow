@@ -276,5 +276,21 @@ An annotation on `x` is required because Flow cannot infer its type from local c
                            ^
 
 
+Error ------------------------------------------------------------------------------------- synthesizable_object.js:4:38
 
-Found 25 errors
+Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   synthesizable_object.js:4:38
+   4|   foo() { SynthesizableObject.foo(); this; }, // Illegal this. Methods don't bind this.
+                                           ^^^^
+
+References:
+   synthesizable_object.js:4:3
+   4|   foo() { SynthesizableObject.foo(); this; }, // Illegal this. Methods don't bind this.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 26 errors
