@@ -19,6 +19,7 @@ const insert_a_really_big_predicated_arrow_function_name_here = (x: mixed)
 
 declare var x: empty;
 (x)
+// $FlowExpectedError[missing-local-annot]: Doesn't make sense to annotate since this is a parsing test.
 checks => 123;
 
 type checks = any;

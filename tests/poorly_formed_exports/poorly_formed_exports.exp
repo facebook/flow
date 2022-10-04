@@ -63,6 +63,22 @@ Cannot get `module.exports.foo` because property `foo` is not readable. [cannot-
                      ^^^
 
 
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:8:20
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   8| function addsAProp(x) {
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------------ bad-uses.js:12:29
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   12| function addsAPropToExports(x) {
+                                   ^
+
+
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:16:11
 
 `module` may only be used as part of a legal top level export statement [invalid-export]
@@ -183,8 +199,16 @@ Error --------------------------------------------------------------------------
                                 ^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------- good-es-export.js:3:20
 
-Found 23 errors
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function addsAProp(x) {
+                         ^
+
+
+
+Found 26 errors
 FLOW CHECK-CONTENTS:
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
 

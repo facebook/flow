@@ -93,43 +93,43 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
   ]),
 
   test('fun.call()', [
-    addCode('(function (...args) { return this.bar; }).call(...arr);')
+    addCode('(function (this: any, ...args: any) { return this.bar; }).call(...arr);')
       .newErrors(
         `
           test.js:5
-            5: (function (...args) { return this.bar; }).call(...arr);
-                                                                 ^^^ A spread argument is unsupported here. [unsupported-syntax]
+            5: (function (this: any, ...args: any) { return this.bar; }).call(...arr);
+                                                                                 ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
   ]),
 
   test('fun.apply()', [
-    addCode('(function () { return this.bar; }).apply(...arr);')
+    addCode('(function (this: any) { return this.bar; }).apply(...arr);')
       .newErrors(
         `
           test.js:5
-            5: (function () { return this.bar; }).apply(...arr);
-                                                           ^^^ A spread argument is unsupported here. [unsupported-syntax]
+            5: (function (this: any) { return this.bar; }).apply(...arr);
+                                                                    ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
-    addCode('(function () { return this.bar; }).apply(({}: any), ...arr);')
+    addCode('(function (this: any) { return this.bar; }).apply(({}: any), ...arr);')
       .newErrors(
         `
           test.js:7
-            7: (function () { return this.bar; }).apply(({}: any), ...arr);
-                                                                      ^^^ A spread argument is unsupported here. [unsupported-syntax]
+            7: (function (this: any) { return this.bar; }).apply(({}: any), ...arr);
+                                                                               ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
-    addCode('(function () { return this.bar; }).apply(...arr, ...arr);')
+    addCode('(function (this: any) { return this.bar; }).apply(...arr, ...arr);')
       .newErrors(
         `
           test.js:9
-            9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                           ^^^ A spread argument is unsupported here. [unsupported-syntax]
+            9: (function (this: any) { return this.bar; }).apply(...arr, ...arr);
+                                                                    ^^^ A spread argument is unsupported here. [unsupported-syntax]
 
           test.js:9
-            9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                                   ^^^ A spread argument is unsupported here. [unsupported-syntax]
+            9: (function (this: any) { return this.bar; }).apply(...arr, ...arr);
+                                                                            ^^^ A spread argument is unsupported here. [unsupported-syntax]
         `,
       ),
   ]),

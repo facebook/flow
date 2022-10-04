@@ -86,6 +86,14 @@ annotation at array pattern: [signature-verification-failure]
                  ^
 
 
+Error ------------------------------------------------------------------------------------------------------- fn.js:7:12
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7| function g(x): number {
+                 ^
+
+
 Error --------------------------------------------------------------------------------------------------- getset.js:4:12
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
@@ -375,4 +383,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 37 errors
+Found 38 errors

@@ -8,5 +8,6 @@
 
 [options]
 no_flowlib=false
+enforce_local_inference_annotations=false
 
 [strict]

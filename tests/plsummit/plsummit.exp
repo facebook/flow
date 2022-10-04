@@ -38,9 +38,9 @@ Cannot assign `c.foo()` to `x` because number [1] is incompatible with string [2
                        ^^^^^^^
 
 References:
-   objects.js:2:6
-    2|   x: number;
-            ^^^^^^ [1]
+   objects.js:6:10
+    6|   foo(): number {
+                ^^^^^^ [1]
    objects.js:12:8
    12| var x: string = c.foo(); // ERROR: number =/= string
               ^^^^^^ [2]
@@ -55,9 +55,9 @@ Cannot assign `o2.bar()` to `y` because string [1] is incompatible with number [
                        ^^^^^^^^
 
 References:
-   objects.js:16:14
-   16| var o = { y: "", foo: foo, bar: bar };
-                    ^^ [1]
+   objects.js:15:28
+   15| function bar(this: {foo(): string | number, ...},) { return this.foo(); }
+                                  ^^^^^^ [1]
    objects.js:20:8
    20| var y: number = o2.bar();
               ^^^^^^ [2]

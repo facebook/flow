@@ -292,6 +292,14 @@ References:
            ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- class.js:21:19
+
+Missing an annotation on return. [missing-local-annot]
+
+   21|     foo(x: number) {
+                         
+
+
 Error --------------------------------------------------------------------------------------------------- class.js:22:10
 
 Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -822,6 +830,14 @@ Cannot update `o.p` because property `p` is not writable. [cannot-write]
            ^
 
 
+Error -------------------------------------------------------------------------------------------------- tparams.js:3:26
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function remove<A>(a: A, x): A {
+                               ^
+
+
 Error --------------------------------------------------------------------------------------------------- tparams.js:4:4
 
 Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1187,4 +1203,4 @@ undefined. [incompatible-return]
 
 
 
-Found 80 errors
+Found 82 errors

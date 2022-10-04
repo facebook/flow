@@ -176,7 +176,7 @@ module Opts = struct
       direct_dependent_files_fix = None;
       emoji = None;
       enable_const_params = None;
-      enforce_local_inference_annotations = false;
+      enforce_local_inference_annotations = true;
       enforce_strict_call_arity = true;
       enums = false;
       env_mode = Options.ConstrainWrites;
@@ -741,10 +741,6 @@ module Opts = struct
       ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("enforce_local_inference_annotations", enforce_local_inference_annotations);
-      (* TODO(T132331906): delete the following three options parser once we deploy 0.188.0. *)
-      ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
-      ("experimental.enforce_class_annotations", boolean (fun opts _ -> Ok opts));
-      ("experimental.enforce_this_annotations", boolean (fun opts _ -> Ok opts));
       ("inference_mode", inference_mode_parser);
       ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);

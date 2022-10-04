@@ -14,6 +14,10 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
           test.js:3
             3: export class Foo { a; }
                                   ^^ Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type annotation at property \`a\`: [signature-verification-failure]
+
+          test.js:3
+            3: export class Foo { a; }
+                                  ^^ Missing an annotation on property \`a\`. [missing-local-annot]
         `,
       )
   ]),
@@ -35,6 +39,14 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
           test.js:3
             3: export class Foo { a = (p) => 42; }
             ^^^^^^^^^^^^^^ Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type annotation at property \`a\`: [signature-verification-failure]
+
+          test.js:3
+            3: export class Foo { a = (p) => 42; }
+                                       ^ Missing an annotation on \`p\`. [missing-local-annot]
+
+          test.js:3
+            3: export class Foo { a = (p) => 42; }
+                                         ^ Missing an annotation on return. [missing-local-annot]
         `,
       ),
     addCode('export class Bar { a: (p: number) => number = (p) => 42; }')

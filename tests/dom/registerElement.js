@@ -13,10 +13,10 @@ let tests = [
         }},
         attributeChangedCallback: {
           value: function attributeChangedCallback (
-            attributeLocalName,
-            oldAttributeValue,
-            newAttributeValue,
-            attributeNamespace
+            attributeLocalName: string,
+            oldAttributeValue: string | null,
+            newAttributeValue: string | null,
+            attributeNamespace: string,
           ) {
           }
         }

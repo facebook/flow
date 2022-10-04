@@ -6,12 +6,28 @@ Cannot use `this` in an exported function. [this-in-exported-function]
                              ^^^^
 
 
+Error ------------------------------------------------------------------------------- default_exported_this_func.js:3:33
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   3| export default function default1() { this; }
+                                      ^^
+
+
 Error ------------------------------------------------------------------------------- default_exported_this_func.js:3:38
 
 Cannot use `this` in an exported function. [this-in-exported-function]
 
    3| export default function default1() { this; }
                                            ^^^^
+
+
+Error -------------------------------------------------------------------------- default_exported_this_func_expr.js:3:24
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   3| export default function() { this; }
+                             ^^
 
 
 Error -------------------------------------------------------------------------- default_exported_this_func_expr.js:3:29
@@ -382,12 +398,28 @@ References:
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------- named_exported_this_func.js:4:23
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   4| export function named1() { this; }
+                            ^^
+
+
 Error --------------------------------------------------------------------------------- named_exported_this_func.js:4:28
 
 Cannot use `this` in an exported function. [this-in-exported-function]
 
    4| export function named1() { this; }
                                  ^^^^
+
+
+Error --------------------------------------------------------------------------------- named_exported_this_func.js:5:31
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   5| export const named2 = function() { this; }
+                                    ^^
 
 
 Error --------------------------------------------------------------------------------- named_exported_this_func.js:5:36
@@ -406,12 +438,28 @@ Cannot use `this` in an exported function. [this-in-exported-function]
                                     ^^^^
 
 
+Error --------------------------------------------------------------------------------- named_exported_this_func.js:9:19
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   9| function exported1() { this; }
+                        ^^
+
+
 Error --------------------------------------------------------------------------------- named_exported_this_func.js:9:24
 
 Cannot use `this` in an exported function. [this-in-exported-function]
 
    9| function exported1() { this; }
                              ^^^^
+
+
+Error -------------------------------------------------------------------------------- named_exported_this_func.js:10:27
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   10| const exported2 = function() { this; };
+                                 ^^
 
 
 Error -------------------------------------------------------------------------------- named_exported_this_func.js:10:32
@@ -428,6 +476,38 @@ Cannot use `this` in an exported function. [this-in-exported-function]
 
    11| const exported3 = () => { this; };
                                  ^^^^
+
+
+Error -------------------------------------------------------------------------------- named_exported_this_func.js:16:19
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   16| function internal1() { this; }
+                         ^^
+
+
+Error -------------------------------------------------------------------------------- named_exported_this_func.js:17:27
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   17| const internal2 = function() { this; };
+                                 ^^
+
+
+Error -------------------------------------------------------------------------------- named_exported_this_func.js:31:15
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   31|   function foo() {
+                     ^^
+
+
+Error -------------------------------------------------------------------------------- named_exported_this_func.js:37:18
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   37|   return function() {
+                        ^^
 
 
 Error ------------------------------------------------------------------------------------------ non-const-export.js:7:8
@@ -495,4 +575,4 @@ export please `import` and then `export default` instead. [export-renamed-defaul
 
 
 
-Found 41 errors
+Found 51 errors

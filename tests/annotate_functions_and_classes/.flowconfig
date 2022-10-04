@@ -1,2 +1,1 @@
 [options]
-experimental.enforce_local_inference_annotations=true

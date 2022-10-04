@@ -1064,13 +1064,5 @@ It is unsafe to read from a class property before it is definitely initialized. 
              ^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- test.js:1286:13
 
-It is unsafe to read from a class property before it is definitely initialized. [uninitialized-instance-property]
-
-   1286|   b = P65_a(this.b);
-                     ^^^^^^
-
-
-
-Found 119 errors
+Found 118 errors

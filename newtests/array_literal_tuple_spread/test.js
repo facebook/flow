@@ -96,7 +96,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
   ]),
   test('Avoid infinite recursion due to recursion', [
     addCode(`
-      function foo(arr) {
+      function foo(arr: [1]) {
         if (arr.length > 10) return arr;
         return foo([...arr, 1]);
       }
@@ -107,19 +107,10 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: (ret: void);
-                ^^^ Cannot cast \`ret\` to undefined because array literal [1] is incompatible with undefined [2]. [incompatible-cast]
+                ^^^ Cannot cast \`ret\` to undefined because tuple type [1] is incompatible with undefined [2]. [incompatible-cast]
             References:
-              6:         return foo([...arr, 1]);
-                                    ^^^^^^^^^^^ [1]
-             11: (ret: void);
-                       ^^^^ [2]
-
-          test.js:11
-           11: (ret: void);
-                ^^^ Cannot cast \`ret\` to undefined because array literal [1] is incompatible with undefined [2]. [incompatible-cast]
-            References:
-              8:       const ret = foo([1]);
-                                       ^^^ [1]
+              4:         function foo(arr: [1]) {
+                                           ^^^ [1]
              11: (ret: void);
                        ^^^^ [2]
         `,
@@ -131,14 +122,18 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
+          test.js:14
+           14:       (ret[5]: 1);
+                      ^^^^^^ Cannot get \`ret[5]\` because tuple type [1] only has 1 element, so index 5 is out of bounds. [invalid-tuple-index]
+            References:
+              4: function foo(arr: [1]) {
+                                   ^^^ [1]
           test.js:15
            15:       (ret[5]: 2);
-                      ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2]. [incompatible-cast]
+                      ^^^^^^ Cannot get \`ret[5]\` because tuple type [1] only has 1 element, so index 5 is out of bounds. [invalid-tuple-index]
             References:
-              8:       const ret = foo([1]);
-                                        ^ [1]
-             15:       (ret[5]: 2);
-                                ^ [2]
+              4: function foo(arr: [1]) {
+                                   ^^^ [1]
         `,
       )
       .because('The element type should be `1`'),
@@ -188,7 +183,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
   ]),
   test('Non-polymorphic function', [
     addCode(`
-      function foo(arr) {
+      function foo(arr: Array<number>) {
         return [...arr, 1];
       }
       const ret1 = foo([2]);
@@ -202,27 +197,43 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
            11: (ret1[0]: 2);
                 ^^^^^^^ Cannot cast \`ret1[0]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2]. [incompatible-cast]
             References:
-              8:       const ret2 = foo([3]);
-                                         ^ [1]
+              4:       function foo(arr: Array<number>) {
+                                               ^^^^^^ [1]
              11: (ret1[0]: 2);
                            ^ [2]
+          test.js:11
+           11: (ret1[0]: 2);
+                ^^^^^^^ Cannot cast \`ret1[0]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2]. [incompatible-cast]
+            References:
+               5:        return [...arr, 1];
+                                         ^ [1]
+              11: (ret1[0]: 2);
+                            ^ [2]
         `,
       )
-      .because('Flow infers the return type to [2,1] | [3,1]'),
+      .because('Flow infers the return type to Array<number>'),
     addCode('(ret2[0]: 3);')
       .newErrors(
         `
           test.js:13
-           13: (ret2[0]: 3);
-                ^^^^^^^ Cannot cast \`ret2[0]\` to number literal \`3\` because number [1] is incompatible with number literal \`3\` [2]. [incompatible-cast]
+          13: (ret2[0]: 3);
+               ^^^^^^^ Cannot cast \`ret2[0]\` to number literal \`3\` because number [1] is incompatible with number literal \`3\` [2]. [incompatible-cast]
             References:
-              7:       const ret1 = foo([2]);
+              4:       function foo(arr: Array<number>) {
+                                               ^^^^^^ [1]
+              13: (ret2[0]: 3);
+                            ^ [2]
+          test.js:13
+          13: (ret2[0]: 3);
+              ^^^^^^^ Cannot cast \`ret2[0]\` to number literal \`3\` because number [1] is incompatible with number literal \`3\` [2]. [incompatible-cast]
+            References:
+              5:         return [...arr, 1];
                                          ^ [1]
-             13: (ret2[0]: 3);
-                           ^ [2]
+              13: (ret2[0]: 3);
+                            ^ [2]
         `,
       )
-      .because('Flow infers the return type to [2,1] | [3,1]'),
+      .because('Flow infers the return type to Array<number>'),
   ]),
   test('Spreading an Array<T> should result in a non-tuple array', [
     addCode(`
