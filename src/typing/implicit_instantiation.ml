@@ -435,9 +435,12 @@ struct
     (inferred_targ_list, marked_tparams, tparams_map, tout)
 
   let solve_targs cx ?return_hint check =
+    let errors = Context.errors cx in
     let (inferred_targ_list, marked_tparams, tparams_map, tout) = implicitly_instantiate cx check in
     Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (tout, hint));
-    pin_types cx inferred_targ_list marked_tparams tparams_map check
+    let output = pin_types cx inferred_targ_list marked_tparams tparams_map check in
+    if Context.in_synthesis_mode cx then Context.reset_errors cx errors;
+    output
 
   let run cx check ~on_completion =
     let subst_map = solve_targs cx check in

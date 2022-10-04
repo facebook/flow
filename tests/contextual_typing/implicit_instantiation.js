@@ -88,3 +88,8 @@ function test6() {
   }
   new Pipe("s", s => 1, n => {}); // OK
 }
+
+function test7() {
+  declare function f<A>(A, A=>void, number): void;
+  f(3, (n) => {}, ""); // Error on third argument, but n can still be contextually typed.
+}
