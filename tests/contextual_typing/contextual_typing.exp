@@ -32,18 +32,18 @@ References:
                                                           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------- implicit_instantiation.js:94:19
+Error ---------------------------------------------------------------------------------- implicit_instantiation.js:99:19
 
 Cannot call `f` with empty string bound to the third parameter because string [1] is incompatible with number [2].
 [incompatible-call]
 
-   implicit_instantiation.js:94:19
-   94|   f(3, (n) => {}, ""); // Error on third argument, but n can still be contextually typed.
+   implicit_instantiation.js:99:19
+   99|   f(3, (n) => {}, ""); // Error on third argument, but n can still be contextually typed.
                          ^^ [1]
 
 References:
-   implicit_instantiation.js:93:37
-   93|   declare function f<A>(A, A=>void, number): void;
+   implicit_instantiation.js:98:37
+   98|   declare function f<A>(A, A=>void, number): void;
                                            ^^^^^^ [2]
 
 

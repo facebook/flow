@@ -3982,7 +3982,7 @@ module Make
                                 use_op;
                                 reason = reason_call;
                                 call_action = Funcalltype app;
-                                return_hint = Type.hint_unavailable;
+                                return_hint = Env.get_hint cx loc;
                               };
                           voided_out = OpenT t;
                         }
@@ -3992,7 +3992,7 @@ module Make
                           use_op;
                           reason = reason_call;
                           call_action = Funcalltype app;
-                          return_hint = Type.hint_unavailable;
+                          return_hint = Env.get_hint cx loc;
                         }
                   in
                   Flow.flow cx (f, call_t)
@@ -4242,7 +4242,7 @@ module Make
             voided_out;
             return_hint = Type.hint_unavailable;
           }
-      | _ -> OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable }
+      | _ -> OptCallM { opt_methodcalltype; return_hint = Env.get_hint cx chain_loc }
     in
     if private_ then
       let class_entries = Env.get_class_entries cx in

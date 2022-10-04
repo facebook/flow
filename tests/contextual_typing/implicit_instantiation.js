@@ -52,6 +52,11 @@ function test4() {
 
   declare function bar<T>(x?: T): Array<T>;
   const y: Array<number> = bar(); // OK
+
+  const z1: Array<empty> = Array.of(); // ok
+  const z2: Array<mixed> = Array.of(); // ok
+  const z3: Array<string> = Array.of(); // ok
+  const z4: Array<string | number> = Array.of(1); // ok
 }
 
 function test5() {
