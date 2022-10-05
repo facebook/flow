@@ -386,12 +386,9 @@ typedef struct {
 
 /* The hash table supports lock-free writes by performing a 16-byte CAS,
  * ensuring that the hash and address are written together atomically. */
-typedef union {
-  __int128_t value;
-  struct {
-    uint64_t hash;
-    addr_t addr;
-  };
+typedef struct {
+  uint64_t hash;
+  addr_t addr;
 } helt_t;
 
 /*****************************************************************************/
@@ -1621,57 +1618,48 @@ CAMLprim value hh_add(value key, value addr) {
   CAMLparam2(key, addr);
   check_should_exit();
 
-  helt_t elt;
-  elt.hash = get_hash(key);
-  elt.addr = Long_val(addr);
+  uint64_t elt_hash = get_hash(key);
+  addr_t elt_addr = Long_val(addr);
 
   size_t hashtbl_slots = info->hashtbl_slots;
-  size_t slot = elt.hash & (hashtbl_slots - 1);
+  size_t slot = elt_hash & (hashtbl_slots - 1);
   size_t init_slot = slot;
 
   while (1) {
-    helt_t old = hashtbl[slot];
+    uint64_t old_hash = __atomic_load_n(&hashtbl[slot].hash, __ATOMIC_ACQUIRE);
 
-    if (old.hash == 0 || (old.hash == elt.hash && old.addr == NULL_ADDR)) {
-      // This slot is free. Either the slot has never been taken (hash == 0),
-      // or the slot was taken by this value, but then deleted (addr == NULL).
-      // In either case, we attempt to atomically take this slot.
-      //
-      // Only reads and writes can happen concurrently, so we don't need to
-      // worry about concurrent deletes.
-      //
-      // Note that this is a 16-byte CAS, writing both the hash and address at
-      // the same time.
-      if (__atomic_compare_exchange_n(
-              /* ptr */ &hashtbl[slot].value,
-              /* expected */ &old.value,
-              /* desired */ elt.value,
-              /* weak */ 0,
-              /* success_memorder */ __ATOMIC_SEQ_CST,
-              /* failure_memorder */ __ATOMIC_SEQ_CST)) {
-        // We successfully grabbed the slot.
-        if (old.hash == 0) {
-          // We are the first to acquire the slot.
-          __atomic_fetch_add(&info->hcounter, 1, __ATOMIC_RELAXED);
-        }
-        __atomic_fetch_add(&info->hcounter_filled, 1, __ATOMIC_RELAXED);
-        break;
-      }
-
-      // CAS failed, meaning another thread took the slot, and the new value has
-      // been loaded into `old`. We intentionally fall through here to pick up
-      // the `old.hash == elt.hash` check below before continuing to probe.
+    // If this slot looks free, try to take it. If we are racing with another
+    // thread and lose, the CAS operation will write the current value of the
+    // hash slot into `old_hash`.
+    if (old_hash == 0 &&
+        __atomic_compare_exchange_n(
+            &hashtbl[slot].hash,
+            &old_hash,
+            elt_hash,
+            0, /* strong */
+            __ATOMIC_SEQ_CST,
+            __ATOMIC_SEQ_CST)) {
+      __atomic_fetch_add(&info->hcounter, 1, __ATOMIC_RELAXED);
+      old_hash = elt_hash; // Try to take the addr slot next
     }
 
-    if (old.hash == elt.hash) {
-      // The slot already contains the value we were trying to write, either
-      // because the slot was taken when we initially read, or because we lost
-      // the CAS race to another thread.
-      //
-      // We return the address of the winning write. Callers can compare the
-      // return value with the address they tried to write to tell if they
-      // acquired the slot.
-      addr = Val_long(old.addr);
+    if (old_hash == elt_hash) {
+      // Try to acquire the addr slot if needed. If the slot is already taken or
+      // we lose a race to acquire it, we want to return the value of the addr
+      // slot to the caller.
+      addr_t old_addr = __atomic_load_n(&hashtbl[slot].addr, __ATOMIC_ACQUIRE);
+      if (old_addr == NULL_ADDR &&
+          __atomic_compare_exchange_n(
+              &hashtbl[slot].addr,
+              &old_addr,
+              elt_addr,
+              0, /* strong */
+              __ATOMIC_SEQ_CST,
+              __ATOMIC_SEQ_CST)) {
+        __atomic_fetch_add(&info->hcounter_filled, 1, __ATOMIC_RELAXED);
+      } else {
+        addr = Val_long(old_addr);
+      }
       break;
     }
 

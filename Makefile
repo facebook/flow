@@ -42,7 +42,7 @@ OCAMLBUILD_JOBS := 0
 ################################################################################
 
 ifeq ($(UNAME_S), Linux)
-  EXTRA_LIBS += rt atomic
+  EXTRA_LIBS += rt
   INOTIFY=src/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=src/hack_forked/fsnotify_linux
@@ -70,7 +70,6 @@ ifeq ($(UNAME_S), Darwin)
   EXE=
 endif
 ifeq ($(UNAME_S), Windows)
-  EXTRA_LIBS += atomic
   INOTIFY=
   INOTIFY_STUBS=
   FSNOTIFY=src/hack_forked/fsnotify_win
