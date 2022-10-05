@@ -2396,7 +2396,9 @@ module Make
             Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
             if Context.env_mode cx = Options.LTI then
               Flow.flow_t cx (AnyT.at (AnyError None) loc, elemt)
-          end else
+          end else if Context.env_mode cx <> Options.LTI then
+            ()
+          else
             let default_init () =
               if Context.env_mode cx = Options.LTI then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
             in
