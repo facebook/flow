@@ -9,6 +9,7 @@ type ac_id = {
   include_super: bool;
   include_this: bool;
   type_: Type.t;
+  enclosing_class_t: Type.t option;
 }
 
 type autocomplete_type =
@@ -51,8 +52,6 @@ type process_location_result = {
   autocomplete_type: autocomplete_type;
 }
 
-let default_ac_id type_ = { include_super = false; include_this = false; type_ }
-
 let type_of_jsx_name =
   let open Flow_ast.JSX in
   function
@@ -88,7 +87,20 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper as super
 
+    val mutable enclosing_classes : Type.t list = []
+
     method covers_target loc = covers_target cursor loc
+
+    method default_ac_id type_ =
+      {
+        include_super = false;
+        include_this = false;
+        type_;
+        enclosing_class_t =
+          (match enclosing_classes with
+          | h :: _ -> Some h
+          | [] -> None);
+      }
 
     method find : 'a. ALoc.t -> string -> autocomplete_type -> 'a =
       fun ac_loc token autocomplete_type ->
@@ -104,6 +116,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             raise (Found { tparams_rev; ac_loc; token; autocomplete_type })
         )
 
+    method with_enclosing_class_t : 'a. Type.t -> 'a Lazy.t -> 'a =
+      fun class_t f ->
+        let previously_enclosing = enclosing_classes in
+        enclosing_classes <- class_t :: enclosing_classes;
+        let result = Lazy.force f in
+        enclosing_classes <- previously_enclosing;
+        result
+
     method! comment ((loc, Flow_ast.Comment.{ text; _ }) as c) =
       if this#covers_target loc then
         (* don't autocomplete in comments *)
@@ -113,13 +133,13 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! t_identifier (((loc, type_), { Flow_ast.Identifier.name; _ }) as ident) =
       if this#covers_target loc then
-        this#find loc name (Ac_id (default_ac_id type_))
+        this#find loc name (Ac_id (this#default_ac_id type_))
       else
         super#t_identifier ident
 
     method! jsx_element_name_identifier
         (((ac_loc, type_), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
-      if this#covers_target ac_loc then this#find ac_loc name (Ac_id (default_ac_id type_));
+      if this#covers_target ac_loc then this#find ac_loc name (Ac_id (this#default_ac_id type_));
       ident
 
     method member_with_loc expr_loc expr =
@@ -156,7 +176,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                {
                  obj_type;
                  in_optional_chain = false;
-                 bracket_syntax = Some (default_ac_id type_);
+                 bracket_syntax = Some (this#default_ac_id type_);
                  member_loc;
                  is_type_annotation = false;
                }
@@ -206,7 +226,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                {
                  obj_type;
                  in_optional_chain = true;
-                 bracket_syntax = Some (default_ac_id type_);
+                 bracket_syntax = Some (this#default_ac_id type_);
                  member_loc;
                  is_type_annotation = false;
                }
@@ -428,7 +448,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       begin
         match id with
         | Unqualified ((loc, t), { Flow_ast.Identifier.name; _ }) when this#covers_target loc ->
-          this#find loc name (Ac_id (default_ac_id t))
+          this#find loc name (Ac_id (this#default_ac_id t))
         | Qualified
             ((expr_loc, _), { qualification; id = ((loc, _), Flow_ast.Identifier.{ name; _ }) })
           when this#covers_target loc ->
@@ -463,6 +483,13 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       end;
       id
 
+    method! statement (annot, stmt) =
+      let open Flow_ast.Statement in
+      match stmt with
+      | ClassDeclaration { Flow_ast.Class.id = Some ((_, t), _); _ } ->
+        this#with_enclosing_class_t t (lazy (super#statement (annot, stmt)))
+      | _ -> super#statement (annot, stmt)
+
     method! expression expr =
       let open Flow_ast.Expression in
       match expr with
@@ -474,6 +501,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         (this#on_type_annot annot, OptionalMember (this#optional_member_with_loc loc opt_member))
       | (((_, obj_type) as annot), Object obj) ->
         (this#on_type_annot annot, Object (this#object_with_type obj_type obj))
+      | ((_, class_t), Class _) -> this#with_enclosing_class_t class_t (lazy (super#expression expr))
       | _ -> super#expression expr
 
     method object_with_type obj_type obj =
@@ -562,7 +590,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
              {
                obj_type;
                in_optional_chain = false;
-               bracket_syntax = Some (default_ac_id index_type);
+               bracket_syntax = Some (this#default_ac_id index_type);
                member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
                is_type_annotation = true;
              }
@@ -598,7 +626,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
              {
                obj_type;
                in_optional_chain = true;
-               bracket_syntax = Some (default_ac_id index_type);
+               bracket_syntax = Some (this#default_ac_id index_type);
                member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
                is_type_annotation = true;
              }

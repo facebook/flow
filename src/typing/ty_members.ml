@@ -243,7 +243,7 @@ let ty_normalizer_options =
     max_depth = Some 50;
   }
 
-let extract ~include_proto_members ~cx ~typed_ast ~file_sig scheme =
+let extract ~include_proto_members ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme =
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let in_idx_ref = ref false in
   let idx_hook () = in_idx_ref := true in
@@ -251,6 +251,7 @@ let extract ~include_proto_members ~cx ~typed_ast ~file_sig scheme =
     Ty_normalizer.expand_members
       ~include_proto_members
       ~idx_hook
+      ~force_instance
       ~options:ty_normalizer_options
       ~genv
       scheme

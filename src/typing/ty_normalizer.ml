@@ -90,6 +90,7 @@ module NormalizerMonad : sig
   val run_expand_members :
     include_proto_members:bool ->
     idx_hook:(unit -> unit) ->
+    force_instance:bool ->
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
@@ -2116,6 +2117,8 @@ end = struct
     val include_proto_members : bool
 
     val idx_hook : unit -> unit
+
+    val force_instance : bool
   end
 
   (* Expand the toplevel structure of the input type into an object type. This is
@@ -2268,10 +2271,8 @@ end = struct
 
     and this_class_t ~env ~proto ~imode t =
       match imode with
-      | IMUnset -> type__ ~env ~proto ~imode:IMStatic t
-      | IMInstance
-      | IMStatic ->
-        type__ ~env ~proto ~imode t
+      | IMUnset when not force_instance -> type__ ~env ~proto ~imode:IMStatic t
+      | _ -> type__ ~env ~proto ~imode t
 
     and type_variable ~env ~proto ~imode id =
       let (root_id, constraints) = Context.find_constraints Env.(env.genv.cx) id in
@@ -2345,11 +2346,13 @@ end = struct
     let convert_t ~env t = type__ ~env ~proto:false ~imode:IMUnset t
   end
 
-  let run_expand_members ~include_proto_members ~idx_hook =
+  let run_expand_members ~include_proto_members ~idx_hook ~force_instance =
     let module Converter = ExpandMembersConverter (struct
       let include_proto_members = include_proto_members
 
       let idx_hook = idx_hook
+
+      let force_instance = force_instance
     end) in
     run_type_aux ~f:Converter.convert_t ~simpl:Ty_utils.simplify_type
 end
@@ -2423,7 +2426,7 @@ let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
   in
   result
 
-let expand_members ~include_proto_members ~idx_hook ~options ~genv scheme =
+let expand_members ~include_proto_members ~idx_hook ~force_instance ~options ~genv scheme =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
@@ -2433,6 +2436,7 @@ let expand_members ~include_proto_members ~idx_hook ~options ~genv scheme =
       ~genv
       ~include_proto_members
       ~idx_hook
+      ~force_instance
       ~imported_names
       ~tparams_rev
       State.empty

@@ -256,6 +256,7 @@ let documentation_and_tags_of_def_loc ~reader ~typed_ast def_loc =
 let members_of_type
     ~reader
     ~exclude_proto_members
+    ?(force_instance = false)
     ?(exclude_keys = SSet.empty)
     ~tparams_rev
     cx
@@ -265,6 +266,7 @@ let members_of_type
   let ty_members =
     Ty_members.extract
       ~include_proto_members:(not exclude_proto_members)
+      ~force_instance
       ~cx
       ~typed_ast
       ~file_sig
@@ -1141,14 +1143,25 @@ let autocomplete_member
     ~tparams_rev
     ~bracket_syntax
     ~member_loc
-    ~is_type_annotation =
+    ~is_type_annotation
+    ~force_instance =
   let edit_locs = fix_locs_of_string_token token edit_locs in
   let exact_by_default = Context.exact_by_default cx in
   (* When autocompleting a type annotation, it is extremely unlikely that someone wants the type
    * of a member from the prototype of the object type. If they really want that they can get the
    * type from the prototype directly. *)
   let exclude_proto_members = is_type_annotation in
-  match members_of_type ~reader ~exclude_proto_members cx file_sig typed_ast this ~tparams_rev with
+  match
+    members_of_type
+      ~reader
+      ~exclude_proto_members
+      ~force_instance
+      cx
+      file_sig
+      typed_ast
+      this
+      ~tparams_rev
+  with
   | Error err -> AcFatalError err
   | Ok (mems, errors_to_log, in_idx) ->
     let items =
@@ -1273,7 +1286,7 @@ let autocomplete_member
     | None ->
       let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
       AcResult { result; errors_to_log }
-    | Some Autocomplete_js.{ include_this; include_super; type_ } ->
+    | Some Autocomplete_js.{ include_this; include_super; type_; _ } ->
       let {
         result = { ServerProt.Response.Completion.items = id_items; is_incomplete };
         errors_to_log = id_errors_to_log;
@@ -1677,27 +1690,80 @@ let autocomplete_get_results
         in
         let result = ServerProt.Response.Completion.{ items; is_incomplete = false } in
         ("Acliteral", AcResult { result; errors_to_log = [] })
-      | Ac_id { include_super; include_this; type_ } ->
+      | Ac_id { include_super; include_this; type_; enclosing_class_t } ->
         ( "Acid",
-          AcResult
-            (autocomplete_id
-               ~env
-               ~options
-               ~reader
-               ~cx
-               ~ac_loc
-               ~file_sig
-               ~ast
-               ~typed_ast
-               ~include_super
-               ~include_this
-               ~imports
-               ~imports_ranked_usage
-               ~tparams_rev
-               ~edit_locs
-               ~token
-               ~type_
-            )
+          let result_id =
+            autocomplete_id
+              ~env
+              ~options
+              ~reader
+              ~cx
+              ~ac_loc
+              ~file_sig
+              ~ast
+              ~typed_ast
+              ~include_super
+              ~include_this
+              ~imports
+              ~imports_ranked_usage
+              ~tparams_rev
+              ~edit_locs
+              ~token
+              ~type_
+          in
+          (match enclosing_class_t with
+          | Some t ->
+            let result_member =
+              autocomplete_member
+                ~env
+                ~reader
+                ~options
+                ~cx
+                ~file_sig
+                ~ast
+                ~typed_ast
+                ~imports
+                ~imports_ranked_usage
+                ~edit_locs
+                ~token
+                t
+                false
+                ac_loc
+                ~tparams_rev
+                ~bracket_syntax:None
+                ~member_loc:None
+                ~is_type_annotation:false
+                ~force_instance:true
+            in
+            (match result_member with
+            | AcFatalError _ as err -> err
+            | AcEmpty _ -> AcResult result_id
+            | AcResult result_member ->
+              let open ServerProt.Response.Completion in
+              let items =
+                result_id.result.items
+                @ Base.List.map
+                    ~f:(fun item ->
+                      let name = "this." ^ item.name in
+                      {
+                        item with
+                        name;
+                        text_edit = Some (text_edit ?insert_text:(Some name) name edit_locs);
+                      })
+                    result_member.result.items
+                |> fun l -> filter_by_token l token
+              in
+              AcResult
+                {
+                  result =
+                    {
+                      ServerProt.Response.Completion.items;
+                      is_incomplete =
+                        result_id.result.is_incomplete || result_member.result.is_incomplete;
+                    };
+                  errors_to_log = result_id.errors_to_log @ result_member.errors_to_log;
+                })
+          | _ -> AcResult result_id)
         )
       | Ac_member { obj_type; in_optional_chain; bracket_syntax; member_loc; is_type_annotation } ->
         ( "Acmem",
@@ -1720,6 +1786,7 @@ let autocomplete_get_results
             ~bracket_syntax
             ~member_loc
             ~is_type_annotation
+            ~force_instance:false
         )
       | Ac_jsx_element { type_ } ->
         ( "Ac_jsx_element",

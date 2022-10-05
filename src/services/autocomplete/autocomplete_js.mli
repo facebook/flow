@@ -9,6 +9,7 @@ type ac_id = {
   include_super: bool;
   include_this: bool;
   type_: Type.t;
+  enclosing_class_t: Type.t option;
 }
 
 type autocomplete_type =

@@ -58,10 +58,12 @@ val fold_hashtbl :
 
 (* `include_proto_members` controls whether to include prototypes' members.
    `idx_hook` is a function that will be called if the given type is in an IdxWrapper;
-   Feels hacky, but idx isn't super important now that we have optional chaining. *)
+   Feels hacky, but idx isn't super important now that we have optional chaining.
+   `force_instance` controls whether ThisClassT will always expand its inner InstanceT's instance members *)
 val expand_members :
   include_proto_members:bool ->
   idx_hook:(unit -> unit) ->
+  force_instance:bool ->
   options:options ->
   genv:genv ->
   Type.TypeScheme.t ->

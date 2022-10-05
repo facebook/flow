@@ -212,7 +212,17 @@ Flags: --pretty
 
 this2.js:5:6
 Flags: --pretty
-{"result":[{"name":"this","type":"this"}]}
+{
+  "result":[
+    {"name":"this","type":"this"},
+    {"name":"this.hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"this.isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"this.toLocaleString","type":"() => string"},
+    {"name":"this.toString","type":"() => string"},
+    {"name":"this.valueOf","type":"() => mixed"}
+  ]
+}
 
 typeparams.js:6:16
 Flags: --pretty
@@ -1435,7 +1445,14 @@ Flags: --pretty
   "result":[
     {"name":"Foo","type":"class Foo"},
     {"name":"this","type":"this"},
-    {"name":"super","type":"super"}
+    {"name":"super","type":"super"},
+    {"name":"this.bar","type":"empty"},
+    {"name":"this.hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"this.isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"this.toLocaleString","type":"() => string"},
+    {"name":"this.toString","type":"() => string"},
+    {"name":"this.valueOf","type":"() => mixed"}
   ]
 }
 
@@ -1467,7 +1484,14 @@ Flags: --pretty
     {"name":"x","type":"any"},
     {"name":"y","type":"(z: empty) => any"},
     {"name":"this","type":"this"},
-    {"name":"super","type":"super"}
+    {"name":"super","type":"super"},
+    {"name":"this.baz","type":"empty"},
+    {"name":"this.hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"this.isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"this.toLocaleString","type":"() => string"},
+    {"name":"this.toString","type":"() => string"},
+    {"name":"this.valueOf","type":"() => mixed"}
   ]
 }
 
@@ -13202,6 +13226,39 @@ Flags: --pretty
   "result":[
     {"name":"ab","type":"number"},
     {"name":"ac","type":"React$AbstractComponent<V$1, any>"}
+  ]
+}
+
+class_members.js:16:18
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"number"},
+    {"name":"this.been","type":"() => void"},
+    {"name":"this.bye","type":"string"},
+    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"}
+  ]
+}
+
+class_members.js:23:10
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"number"},
+    {"name":"this.baz","type":"() => void"},
+    {"name":"this.boo","type":"string"},
+    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"}
+  ]
+}
+
+class_members.js:36:10
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"number"},
+    {"name":"this.baz","type":"() => void"},
+    {"name":"this.boo","type":"string"},
+    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"}
   ]
 }
 
