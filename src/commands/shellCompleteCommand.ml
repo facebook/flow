@@ -36,7 +36,7 @@ module Command (CommandList : COMMAND_LIST) = struct
       None
     else
       try
-        let metadata = SMap.find key flags in
+        let (_, metadata) = CommandSpec.find_flag key flags in
         Some metadata.CommandSpec.ArgSpec.arg_count
       with
       | Not_found -> None

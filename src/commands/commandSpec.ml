@@ -18,11 +18,12 @@ module ArgSpec = struct
   type values_t = string list SMap.t
 
   type flag_arg_count =
-    | Truthy
-    | Arg
-    | Arg_List
-    | Arg_Rest (* consumes a '--' and all remaining args *)
-    | Arg_Command
+    | Truthy  (** if present, true; otherwise false *)
+    | No_Arg  (** --foo or --no-foo: consumes no args *)
+    | Arg  (** --foo=value or --foo value: consumes one arg *)
+    | Arg_List  (** --foo a b c: consumes until another arg is found *)
+    | Arg_Rest  (** consumes a '--' and all remaining args *)
+    | Arg_Command  (** consumes a subcommand *)
 
   (* consumes all the remaining args verbatim, to pass to a subcommand *)
 
@@ -185,6 +186,16 @@ module ArgSpec = struct
           | Some _ -> true
           | None -> false);
       arg = Truthy;
+    }
+
+  let no_arg =
+    {
+      parse =
+        (fun ~name:_ -> function
+          | None -> None
+          | Some ["false"] -> Some false
+          | Some _ -> Some true);
+      arg = No_Arg;
     }
 
   let required ?default arg_type =
@@ -379,10 +390,12 @@ type ('a, 'b) builder_t = {
   args: ('a, 'b) ArgSpec.t;
 }
 
+type flags = ArgSpec.flag_metadata SMap.t
+
 type t = {
   cmdname: string;
   cmddoc: string;
-  flags: ArgSpec.flag_metadata SMap.t;
+  flags: flags;
   args_of_argv: string list -> string list SMap.t;
   string_of_usage: unit -> string;
   main: string list SMap.t -> unit;
@@ -406,6 +419,24 @@ let consume_args args =
       not !is_done)
     args
 
+(** [find_flag "--foo" flags] looks up the spec for the "--foo" flag.
+    If the flag starts with "--no-" and there isn't an explicit flag
+    by that name, then the flag without "no-" is looked up.
+
+    Raises [Not_found] if [name] is not a valid flag. *)
+let find_flag name flags =
+  match SMap.find_opt name flags with
+  | Some flag -> (name, flag)
+  | None ->
+    if String.starts_with ~prefix:"--no-" name then
+      let p = String.length "--no-" in
+      let name = "--" ^ String.sub name p (String.length name - p) in
+      match SMap.find name flags with
+      | { ArgSpec.arg_count = ArgSpec.No_Arg; _ } as flag -> (name, flag)
+      | _ -> raise Not_found
+    else
+      raise Not_found
+
 let rec parse values spec = function
   | [] -> values
   | arg :: args ->
@@ -424,10 +455,19 @@ let rec parse values spec = function
 and parse_flag values spec arg args =
   let flags = spec.ArgSpec.flags in
   try
-    let flag = SMap.find arg flags in
+    let (arg', flag) = find_flag arg flags in
     match flag.ArgSpec.arg_count with
     | ArgSpec.Truthy ->
       let values = SMap.add arg ["true"] values in
+      parse values spec args
+    | ArgSpec.No_Arg ->
+      let value =
+        if String.equal arg arg' then
+          "true"
+        else
+          "false"
+      in
+      let values = SMap.add arg' [value] values in
       parse values spec args
     | ArgSpec.Arg ->
       begin
@@ -471,6 +511,7 @@ and parse_anon values spec arg args =
     let values = SMap.add name (arg :: args) values in
     parse values spec []
   | Some (_, ArgSpec.Truthy) -> assert false
+  | Some (_, ArgSpec.No_Arg) -> assert false
   | None -> raise (Failed_to_parse { arg; msg = "Unexpected argument"; details = None })
 
 let init_from_env spec =

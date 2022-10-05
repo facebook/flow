@@ -847,7 +847,7 @@ module Options_flags = struct
     traces: int option;
     trust_mode: Options.trust_mode option;
     env_mode: Options.env_mode option;
-    abstract_locations: bool;
+    abstract_locations: bool option;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     include_suppressions: bool;
@@ -992,7 +992,7 @@ let options_flags =
            ~env:"FLOW_MERGE_TIMEOUT"
       |> flag
            "--abstract-locations"
-           truthy
+           no_arg
            ~doc:
              "[EXPERIMENTAL] Use abstract locations to improve recheck times. Has no effect unless types-first is also enabled"
       |> flag
@@ -1288,8 +1288,10 @@ let make_options
     | None -> false
   in
   let opt_abstract_locations =
-    options_flags.abstract_locations
-    || Base.Option.value (FlowConfig.abstract_locations flowconfig) ~default:true
+    Base.Option.first_some
+      options_flags.abstract_locations
+      (FlowConfig.abstract_locations flowconfig)
+    |> Base.Option.value ~default:true
   in
   let opt_wait_for_recheck =
     Base.Option.value

@@ -12,6 +12,7 @@ module ArgSpec : sig
 
   type flag_arg_count =
     | Truthy
+    | No_Arg
     | Arg
     | Arg_List
     | Arg_Rest
@@ -36,6 +37,8 @@ module ArgSpec : sig
   val collect : ('main -> 'a -> 'new_main) -> ('b, 'main) t -> ('b, 'a -> 'new_main) t
 
   val truthy : bool flag_t
+
+  val no_arg : bool option flag_t
 
   val string : string option flag_t
 
@@ -69,6 +72,8 @@ type ('a, 'b) builder_t = {
 
 type t
 
+type flags = ArgSpec.flag_metadata SMap.t
+
 exception Show_help
 
 exception
@@ -94,7 +99,9 @@ val name : t -> string
 
 val doc : t -> string
 
-val flags : t -> ArgSpec.flag_metadata SMap.t
+val flags : t -> flags
+
+val find_flag : string -> flags -> string * ArgSpec.flag_metadata
 
 val args_of_argv : t -> string list -> string list SMap.t
 
