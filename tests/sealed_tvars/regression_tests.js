@@ -118,3 +118,7 @@ function non_assigning_member_assigns() {
 {
   var x: number = (x) => x;
 }
+
+{
+  for (const x of x) {} // Error on second x, no underconstrained error on the first one.
+}

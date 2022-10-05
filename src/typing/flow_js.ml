@@ -4699,6 +4699,10 @@ struct
             cx
             ~trace
             (Error_message.EEnumNotIterable { reason = enum_reason; for_in = false })
+        | (AnyT _, AssertIterableT { use_op; reason; async = _; targs }) ->
+          Base.List.iter targs ~f:(fun t ->
+              rec_unify cx trace ~use_op ~unify_any:true t (AnyT.error reason)
+          )
         | (_, AssertIterableT { use_op; reason; async; targs }) ->
           let iterable =
             if async then
@@ -6071,6 +6075,7 @@ struct
     | AdderT _
     | AndT _
     | ArrRestT _
+    | AssertIterableT _
     | BecomeT _
     | BindT _
     | CallT _
@@ -6174,7 +6179,6 @@ struct
     | AssertForInRHST _
     | AssertImportIsValueT _
     | AssertInstanceofRHST _
-    | AssertIterableT _
     | ComparatorT _
     | DebugPrintT _
     | DebugSleepT _

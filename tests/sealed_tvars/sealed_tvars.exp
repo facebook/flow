@@ -276,6 +276,20 @@ An annotation on `x` is required because Flow cannot infer its type from local c
                            ^
 
 
+Error --------------------------------------------------------------------------------------- regression_tests.js:123:19
+
+Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   regression_tests.js:123:19
+   123|   for (const x of x) {} // Error on second x, no underconstrained error on the first one.
+                          ^
+
+References:
+   regression_tests.js:123:14
+   123|   for (const x of x) {} // Error on second x, no underconstrained error on the first one.
+                     ^ [1]
+
+
 Error ------------------------------------------------------------------------------------- synthesizable_object.js:4:38
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
@@ -293,4 +307,4 @@ References:
 
 
 
-Found 26 errors
+Found 27 errors
