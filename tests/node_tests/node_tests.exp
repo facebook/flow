@@ -605,33 +605,6 @@ References:
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- fs/fs.js:13:1
-
-Could not decide which case to select, since case 3 [1] may work but if it doesn't case 4 [2] looks promising too. To
-fix add a type annotation to `_` [3] or to `data` [4]. [speculation-ambiguous]
-
-   fs/fs.js:13:1
-         v-----------------------------------------------------------
-     13| fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
-     14|   (data : string);
-     15| });
-         -^
-
-References:
-   <BUILTINS>/node.js:1220:20
-   1220|   declare function readFile(
-                            ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1229:20
-   1229|   declare function readFile(
-                            ^^^^^^^^ [2]
-   fs/fs.js:13:48
-     13| fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
-                                                        ^ [3]
-   fs/fs.js:13:51
-     13| fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
-                                                           ^^^^ [4]
-
-
 Error ---------------------------------------------------------------------------------------------------- fs/fs.js:28:2
 
 Cannot cast `fs.readFileSync(...)` to string because `Buffer` [1] is incompatible with string [2]. [incompatible-cast]
@@ -2368,7 +2341,7 @@ References:
 
 
 
-Found 126 errors
+Found 125 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
