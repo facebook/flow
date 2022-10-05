@@ -39,6 +39,15 @@ module type S = sig
 
   module Flow : Flow_common.S
 
+  val pin_type :
+    Context.t ->
+    Subst_name.t ->
+    Type.typeparam ->
+    Polarity.t option ->
+    Reason.reason ->
+    Type.t ->
+    output
+
   val solve_targs : Context.t -> ?return_hint:Type.t -> Check.t -> output Subst_name.Map.t
 
   val run :
@@ -59,6 +68,10 @@ end
 
 module Make (Observer : OBSERVER) (Flow : Flow_common.S) :
   S with type output = Observer.output with module Flow = Flow
+
+module PinTypes (_ : Flow_common.S) : sig
+  val pin_type : Context.t -> Reason.reason -> Type.t -> Type.t
+end
 
 type inferred_targ = {
   tparam: Type.typeparam;

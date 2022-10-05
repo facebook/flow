@@ -179,19 +179,19 @@ References:
              ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- lits.js:11:1
+Error ----------------------------------------------------------------------------------------------------- lits.js:12:1
 
 Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
 
-   11| []; //err
+   12| []; //err
        ^^
 
 
-Error ----------------------------------------------------------------------------------------------------- lits.js:14:1
+Error ----------------------------------------------------------------------------------------------------- lits.js:15:1
 
 Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
 
-   14| [].concat([]); // err, but no divergence
+   15| [].concat([]); // err, but no divergence
        ^^
 
 

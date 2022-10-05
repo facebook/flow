@@ -44,6 +44,15 @@ module type S = sig
 
   module Flow : Flow_common.S
 
+  val pin_type :
+    Context.t ->
+    Subst_name.t ->
+    Type.typeparam ->
+    Polarity.t option ->
+    Reason.reason ->
+    Type.t ->
+    output
+
   val solve_targs : Context.t -> ?return_hint:Type.t -> Check.t -> output Subst_name.Map.t
 
   val run :
@@ -230,6 +239,21 @@ struct
           Some (get_t cx t))
     | _ -> failwith "Implicit instantiation is not an OpenT"
 
+  let use_upper_bounds
+      cx
+      name
+      tparam
+      tvar
+      ?(on_upper_empty = Observer.on_missing_bounds)
+      tparam_binder_reason
+      instantiation_reason =
+    let upper_t = merge_upper_bounds cx tparam_binder_reason tvar in
+    match upper_t with
+    | UpperEmpty -> on_upper_empty cx name tparam ~tparam_binder_reason ~instantiation_reason
+    | UpperNonT u ->
+      Observer.on_upper_non_t cx name ~tparam_binder_reason ~instantiation_reason u tparam
+    | UpperT inferred -> Observer.on_pinned_tparam cx name tparam inferred
+
   let check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation =
     let { Check.lhs; operation = (use_op, reason_op, op); _ } = implicit_instantiation in
     let (call_targs, inferred_targ_list) =
@@ -298,23 +322,44 @@ struct
     Flow.flow cx (lhs, use_t);
     (inferred_targ_list, marked_tparams, tout)
 
-  let pin_types cx inferred_targ_list marked_tparams tparams_map implicit_instantiation =
-    let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
-    let use_upper_bounds
+  let pin_type cx name tparam polarity instantiation_reason t =
+    let tparam_binder_reason = TypeUtil.reason_of_t t in
+    match polarity with
+    | None ->
+      let t = merge_lower_bounds cx t in
+      (match t with
+      | None -> Observer.on_constant_tparam_missing_bounds cx name tparam
+      | Some inferred -> Observer.on_constant_tparam cx name tparam inferred)
+    | Some Neutral ->
+      (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
+       * to avoid cluttering the output we are actually interested in from this module,
+       * I'm not going to start doing that until we need error diff information for
+       * switching to Pierce's algorithm for implicit instantiation *)
+      let lower_t = merge_lower_bounds cx t in
+      (match lower_t with
+      | None -> use_upper_bounds cx name tparam t tparam_binder_reason instantiation_reason
+      | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
+    | Some Positive ->
+      (match merge_lower_bounds cx t with
+      | None -> use_upper_bounds cx name tparam t tparam_binder_reason instantiation_reason
+      | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
+    | Some Negative ->
+      use_upper_bounds
         cx
         name
-        tvar
-        ?(on_upper_empty = Observer.on_missing_bounds)
+        tparam
+        t
         tparam_binder_reason
-        instantiation_reason =
-      let tparam = Subst_name.Map.find name tparams_map in
-      let upper_t = merge_upper_bounds cx tparam_binder_reason tvar in
-      match upper_t with
-      | UpperEmpty -> on_upper_empty cx name tparam ~tparam_binder_reason ~instantiation_reason
-      | UpperNonT u ->
-        Observer.on_upper_non_t cx name ~tparam_binder_reason ~instantiation_reason u tparam
-      | UpperT inferred -> Observer.on_pinned_tparam cx name tparam inferred
-    in
+        instantiation_reason
+        ~on_upper_empty:(fun cx name tparam ~tparam_binder_reason ~instantiation_reason ->
+          match merge_lower_bounds cx t with
+          | None ->
+            Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
+          | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred
+      )
+
+  let pin_types cx inferred_targ_list marked_tparams tparams_map implicit_instantiation =
+    let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let subst_map =
       List.fold_left
         (fun acc (name, t, _) -> Subst_name.Map.add name t acc)
@@ -323,46 +368,9 @@ struct
     in
     List.fold_right
       (fun (name, t, bound) acc ->
-        let tparam_binder_reason = TypeUtil.reason_of_t t in
         let tparam = Subst_name.Map.find name tparams_map in
         let result =
-          match Marked.get name marked_tparams with
-          | None ->
-            let t = merge_lower_bounds cx t in
-            (match t with
-            | None -> Observer.on_constant_tparam_missing_bounds cx name tparam
-            | Some inferred -> Observer.on_constant_tparam cx name tparam inferred)
-          | Some Neutral ->
-            (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
-             * to avoid cluttering the output we are actually interested in from this module,
-             * I'm not going to start doing that until we need error diff information for
-             * switching to Pierce's algorithm for implicit instantiation *)
-            let lower_t = merge_lower_bounds cx t in
-            (match lower_t with
-            | None -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
-            | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
-          | Some Positive ->
-            (match merge_lower_bounds cx t with
-            | None -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
-            | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
-          | Some Negative ->
-            use_upper_bounds
-              cx
-              name
-              t
-              tparam_binder_reason
-              instantiation_reason
-              ~on_upper_empty:(fun cx name tparam ~tparam_binder_reason ~instantiation_reason ->
-                match merge_lower_bounds cx t with
-                | None ->
-                  Observer.on_missing_bounds
-                    cx
-                    name
-                    tparam
-                    ~tparam_binder_reason
-                    ~instantiation_reason
-                | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred
-            )
+          pin_type cx name tparam (Marked.get name marked_tparams) instantiation_reason t
         in
         let bound_t = Subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);
@@ -457,6 +465,42 @@ struct
     in
     post ~cx ~implicit_instantiation_cx;
     r
+end
+
+module PinTypes (Flow : Flow_common.S) = struct
+  module Observer : OBSERVER with type output = Type.t = struct
+    type output = Type.t
+
+    let on_constant_tparam _cx _name _tparam _inferred = failwith "Constant tparam is unsupported."
+
+    let on_constant_tparam_missing_bounds _cx _name _tparam =
+      failwith "Constant tparam is unsupported."
+
+    let on_pinned_tparam _cx _name _tparam inferred = inferred
+
+    let on_missing_bounds cx _name _tparam ~tparam_binder_reason ~instantiation_reason:_ =
+      Tvar.mk cx tparam_binder_reason
+
+    let on_upper_non_t cx _name _u _tparam ~tparam_binder_reason ~instantiation_reason:_ =
+      Tvar.mk cx tparam_binder_reason
+  end
+
+  module M : S with type output = Type.t with module Flow = Flow = Make (Observer) (Flow)
+
+  let pin_type cx reason t =
+    let name = Subst_name.Name "" in
+    let polarity = Polarity.Neutral in
+    let tparam =
+      {
+        reason;
+        name;
+        bound = MixedT.why reason |> with_trust bogus_trust;
+        polarity;
+        default = None;
+        is_this = false;
+      }
+    in
+    M.pin_type cx name tparam (Some polarity) reason t
 end
 
 type inferred_targ = {

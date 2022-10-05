@@ -301,6 +301,7 @@ module Make
     Class_sig.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
       (Func_stmt_sig)
       (Class_stmt_sig_types)
+  module PinTypes = Implicit_instantiation.PinTypes (Flow.FlowJs)
 
   (* In positions where an annotation may be present or an annotation can be pushed down,
    * we should prefer the annotation over the pushed-down annotation. *)
@@ -2404,12 +2405,13 @@ module Make
               (* If there's a hint, but the hint doesn't provide a type for this array, then this type will never be read from *)
               default_init ()
             | Some hint ->
+              let elemt' = Tvar.mk cx element_reason in
               if
                 Type_hint.sandbox_flow_succeeds
                   cx
-                  (DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some []))), hint)
+                  (DefT (reason, make_trust (), ArrT (ArrayAT (elemt', Some []))), hint)
               then
-                ()
+                Flow.unify cx elemt (PinTypes.pin_type cx element_reason elemt')
               else
                 default_init ()
         );
