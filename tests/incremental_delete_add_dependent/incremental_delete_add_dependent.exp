@@ -1,0 +1,11 @@
+Error ------------------------------------------------------------------------------------------------------- baz.js:2:9
+
+Cannot resolve module `Foo`. [cannot-resolve-module]
+
+   2| require("Foo");
+              ^^^^^
+
+
+
+Found 1 error
+No errors!

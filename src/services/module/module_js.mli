@@ -21,7 +21,6 @@ val imported_module :
 
 (* repick providers for dirty modules *)
 val commit_modules :
-  transaction:Transaction.t ->
   workers:MultiWorkerLwt.worker list option ->
   options:Options.t ->
   (* dirty modules *)
