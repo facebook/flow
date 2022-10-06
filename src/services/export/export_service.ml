@@ -274,7 +274,7 @@ let init ~workers ~reader ~libs parsed =
     index ~workers ~reader parsed
   in
   let exports_to_add = add_exports_of_builtins libs exports_to_add in
-  let final_export_index = Export_index.merge_export_import exports_to_add imports_to_add in
+  let final_export_index = Export_index.merge_export_import imports_to_add exports_to_add in
   (* TODO: assert that _exports_to_remove is empty? should be on init *)
   Lwt.return (Export_search.init final_export_index)
 

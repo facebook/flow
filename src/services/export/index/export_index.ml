@@ -115,30 +115,10 @@ let merge x y =
     x
     y
 
-let merge_export_import export import =
-  SMap.merge
-    (fun _key export import ->
-      match (export, import) with
-      | (Some export, Some import) ->
-        Some
-          (ExportMap.merge
-             (fun _key export import ->
-               match (export, import) with
-               | (Some export, Some import) -> Some (export + import)
-               | (Some export, None) -> Some export
-               (*Can use log, failwith, or assert, to make sure that this is never the case*)
-               | (None, Some _) -> None
-               | (None, None) -> None)
-             export
-             import
-          )
-      | (Some export, None) -> Some export
-      (*Can use log, failwith, or assert, to make sure that this is never the case*)
-      | (None, Some _)
-      | (None, None) ->
-        None)
-    export
-    import
+let merge_export_import add t =
+  let f k add acc = ExportMap.update k (Option.map (fun n -> n + add)) acc in
+  let f k add acc = SMap.update k (Option.map (ExportMap.fold f add)) acc in
+  SMap.fold f add t
 
 let fold_names ~f ~init t = SMap.fold (fun name exports acc -> f acc name exports) t init
 
@@ -177,32 +157,10 @@ let subtract old_t t =
   in
   (t, dead_names)
 
-let subtract_count export import =
-  let result =
-    SMap.merge
-      (fun _key export import ->
-        match (export, import) with
-        | (Some export, Some import) ->
-          Some
-            (ExportMap.merge
-               (fun _key export import ->
-                 match (export, import) with
-                 | (Some export, Some import) -> Some (export - import)
-                 | (Some export, None) -> Some export
-                 (*Can use log, failwith, or assert, to make sure that this is never the case*)
-                 | (None, Some _) -> None
-                 | (None, None) -> None)
-               export
-               import
-            )
-        | (Some export, None) -> Some export
-        (*Can use log, failwith, or assert, to make sure that this is never the case*)
-        | (None, Some _) -> None
-        | (None, None) -> None)
-      export
-      import
-  in
-  result
+let subtract_count rem t =
+  let f k rem acc = ExportMap.update k (Option.map (fun n -> n - rem)) acc in
+  let f k rem acc = SMap.update k (Option.map (ExportMap.fold f rem)) acc in
+  SMap.fold f rem t
 
 (** [find name t] returns all of the [(file_key, kind)] tuples that export [name] *)
 let find name (t : t) =
