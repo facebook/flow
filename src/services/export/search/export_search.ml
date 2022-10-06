@@ -77,7 +77,7 @@ let subtract old_index { index; value_matcher; type_matcher } =
   { index; value_matcher; type_matcher }
 
 let subtract_count removed_imports { index; value_matcher; type_matcher } =
-  let index = Export_index.subtract_count index removed_imports in
+  let index = Export_index.subtract_count removed_imports index in
   { index; value_matcher; type_matcher }
 
 let merge new_index { index; value_matcher; type_matcher } =
@@ -89,7 +89,7 @@ let merge new_index { index; value_matcher; type_matcher } =
 
 (*Merge_import *)
 let merge_export_import new_index { index; value_matcher; type_matcher } =
-  let index = Export_index.merge_export_import index new_index in
+  let index = Export_index.merge_export_import new_index index in
   { index; value_matcher; type_matcher }
 
 type query =
