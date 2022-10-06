@@ -1,3 +1,11 @@
+### 0.188.2
+
+Bug fixes:
+* Fix crash during incremental recheck
+
+Performance:
+* Improve performance of auto-imports index update for large codebases
+
 ### 0.188.1
 
 Bug fixes:
