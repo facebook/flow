@@ -211,14 +211,6 @@ module Reparse_mutator : sig
   val record_not_found : master_mutator -> Utils_js.FilenameSet.t -> unit
 end
 
-module Commit_modules_mutator : sig
-  type t
-
-  val create : Transaction.t -> t
-
-  val remove_modules_on_commit : t -> Modulename.Set.t -> unit
-end
-
 module Resolved_requires_mutator : sig
   type t
 

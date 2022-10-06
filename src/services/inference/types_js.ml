@@ -100,7 +100,7 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
       Lwt.return (collate_parse_results results)
   )
 
-let commit_modules ~transaction ~options ~profiling ~workers ~duplicate_providers dirty_modules =
+let commit_modules ~options ~profiling ~workers ~duplicate_providers dirty_modules =
   with_memory_timer_lwt ~options "CommitModules" profiling (fun () ->
       (* Clear duplicate provider errors for all dirty modules. *)
       let duplicate_providers =
@@ -119,7 +119,7 @@ let commit_modules ~transaction ~options ~profiling ~workers ~duplicate_provider
             duplicate_providers
       in
       let%lwt (changed_modules, new_duplicate_providers) =
-        Module_js.commit_modules ~transaction ~workers ~options dirty_modules
+        Module_js.commit_modules ~workers ~options dirty_modules
       in
       Lwt.return (changed_modules, SMap.union duplicate_providers new_duplicate_providers)
   )
@@ -1267,7 +1267,7 @@ end = struct
     in
     MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
     let%lwt (changed_modules, duplicate_providers) =
-      commit_modules ~transaction ~options ~profiling ~workers ~duplicate_providers dirty_modules
+      commit_modules ~options ~profiling ~workers ~duplicate_providers dirty_modules
     in
 
     let unparsed_or_deleted = FilenameSet.union unparsed_set deleted in
@@ -1995,7 +1995,7 @@ let assert_valid_hashes updates invalid_hashes =
 
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
   let%lwt (env, libs_ok) =
-    with_transaction "init" @@ fun transaction reader ->
+    with_transaction "init" @@ fun _transaction reader ->
     let file_options = Options.file_options options in
     (* We don't want to walk the file system for the checked in files. But we still need to find the
      * flowlibs *)
@@ -2123,13 +2123,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
     (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
     let%lwt (_changed_modules, duplicate_providers) =
-      commit_modules
-        ~transaction
-        ~options
-        ~profiling
-        ~workers
-        ~duplicate_providers:SMap.empty
-        dirty_modules
+      commit_modules ~options ~profiling ~workers ~duplicate_providers:SMap.empty dirty_modules
     in
     let errors =
       let merge_errors = FilenameMap.empty in
@@ -2281,13 +2275,7 @@ let init_from_scratch ~profiling ~workers options =
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
   let%lwt (_changed_modules, duplicate_providers) =
-    commit_modules
-      ~transaction
-      ~options
-      ~profiling
-      ~workers
-      ~duplicate_providers:SMap.empty
-      dirty_modules
+    commit_modules ~options ~profiling ~workers ~duplicate_providers:SMap.empty dirty_modules
   in
   let%lwt _resolved_requires_changed =
     resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
