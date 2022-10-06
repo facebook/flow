@@ -404,7 +404,8 @@ module Annotate_cycles_command = struct
 
       let reporter = string_reporter (module Acc)
 
-      let check_options o = Options.{ o with opt_cycle_errors = true }
+      let check_options o =
+        Options.{ o with opt_cycle_errors = true; opt_env_mode = Options.ConstrainWrites }
 
       let visit =
         let mapper =

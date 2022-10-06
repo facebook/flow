@@ -232,6 +232,21 @@ References:
                       ^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- regression_tests.js:101:14
+
+Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
+this definition [recursive-definition]
+
+   regression_tests.js:101:14
+   101|   let foo3 = function () { this; }; // error: missing annot on this
+                     ^^^^^^^^^^^
+
+References:
+   regression_tests.js:101:28
+   101|   let foo3 = function () { this; }; // error: missing annot on this
+                                   ^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------- regression_tests.js:101:23
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
@@ -307,4 +322,4 @@ References:
 
 
 
-Found 27 errors
+Found 28 errors

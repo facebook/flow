@@ -706,7 +706,7 @@ module Opts = struct
     string (fun opts s ->
         match s with
         | "constrain_writes" -> Ok { opts with env_mode = Options.ConstrainWrites }
-        | "experimental.lti" -> Ok { opts with env_mode = Options.LTI }
+        | "experimental.lti" -> Ok { opts with env_mode = Options.LTI; cycle_errors = true }
         | env_mode -> Error (spf "\"%s\" is not a valid env_mode option" env_mode)
     )
 

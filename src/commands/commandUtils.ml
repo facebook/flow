@@ -1349,7 +1349,13 @@ let make_options
       FlowConfig.enforce_local_inference_annotations flowconfig;
     opt_experimental_infer_indexers = false;
     opt_array_literal_providers = FlowConfig.array_literal_providers flowconfig;
-    opt_cycle_errors = FlowConfig.cycle_errors flowconfig;
+    opt_cycle_errors =
+      Base.Option.value_map
+        options_flags.env_mode
+        ~f:(function
+          | Options.LTI -> true
+          | Options.ConstrainWrites -> FlowConfig.cycle_errors flowconfig)
+        ~default:(FlowConfig.cycle_errors flowconfig);
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_save_implicit_instantiation_results = false;
