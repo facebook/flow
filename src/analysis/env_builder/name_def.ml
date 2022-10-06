@@ -1593,6 +1593,11 @@ class def_finder env_entries providers toplevel_scope =
           in
           Hint_t (ValueHint (jsx_title_member_to_expression member))
       in
+      let hint = decompose_hint Decomp_JsxProps hint in
+      let hint =
+        let checks = Eq_test.jsx_attributes_possible_sentinel_refinements opening_attributes in
+        decompose_hint (Decomp_SentinelRefinement checks) hint
+      in
       Base.List.iter opening_attributes ~f:(function
           | Opening.Attribute (_, { Attribute.name; value }) ->
             let hint =
@@ -1801,6 +1806,10 @@ class def_finder env_entries providers toplevel_scope =
     method private visit_object_expression ~object_hint expr =
       let open Ast.Expression.Object in
       let { properties; comments = _ } = expr in
+      let object_hint =
+        let checks = Eq_test.object_properties_possible_sentinel_refinements properties in
+        decompose_hint (Decomp_SentinelRefinement checks) object_hint
+      in
       let visit_object_key_and_compute_hint = function
         | Ast.Expression.Object.Property.Literal
             (_, { Ast.Literal.value = Ast.Literal.String name; _ }) ->

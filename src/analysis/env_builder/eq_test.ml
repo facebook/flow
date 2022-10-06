@@ -34,6 +34,12 @@ let extract_number_literal node =
 module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
+  val jsx_attributes_possible_sentinel_refinements :
+    (ALoc.t, ALoc.t) Flow_ast.JSX.Opening.attribute list -> Hint_api.sentinel_refinement SMap.t
+
+  val object_properties_possible_sentinel_refinements :
+    (ALoc.t, ALoc.t) Flow_ast.Expression.Object.property list -> Hint_api.sentinel_refinement SMap.t
+
   val visit_eq_test :
     on_type_of_test:
       (ALoc.t ->
@@ -92,7 +98,81 @@ module Make
                   and module Scope_api = Scope_api
                   and module Ssa_api = Ssa_api) : S with module Env_api = Env_api = struct
   module Env_api = Env_api
+  module RefinementKey = Refinement_key.Make (Loc_sig.ALocS)
   open Env_api.Refi
+  open Hint_api
+
+  let literal_check_of_literal { Flow_ast.Literal.value; _ } =
+    match value with
+    | Flow_ast.Literal.String s -> Some (SingletonStr s)
+    | Flow_ast.Literal.Boolean b -> Some (SingletonBool b)
+    | Flow_ast.Literal.Number n -> Some (SingletonNum n)
+    | Flow_ast.Literal.Null -> Some Null
+    | _ -> None
+
+  let literal_check_of_expr ((_loc, expr) as e) =
+    match expr with
+    | Flow_ast.Expression.Literal l -> literal_check_of_literal l
+    | Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; _ }) -> Some Void
+    | Flow_ast.Expression.Member mem ->
+      if Base.Option.is_some @@ RefinementKey.lookup_of_member ~allow_optional:false mem then
+        Some (Member (Reason.mk_expression_reason e))
+      else
+        None
+    | _ -> None
+
+  let jsx_attributes_possible_sentinel_refinements =
+    let open Flow_ast.JSX in
+    Base.List.fold ~init:SMap.empty ~f:(fun acc -> function
+      | Opening.Attribute
+          ( _,
+            {
+              Attribute.name =
+                Flow_ast.JSX.Attribute.Identifier (_, { Flow_ast.JSX.Identifier.name; comments = _ });
+              value;
+            }
+          ) ->
+        let check =
+          match value with
+          | None -> Some (SingletonBool true)
+          | Some (Attribute.Literal (_, l)) -> literal_check_of_literal l
+          | Some
+              (Attribute.ExpressionContainer
+                (_, { ExpressionContainer.expression = ExpressionContainer.Expression e; _ })
+                ) ->
+            literal_check_of_expr e
+          | Some
+              (Attribute.ExpressionContainer
+                (_, { ExpressionContainer.expression = ExpressionContainer.EmptyExpression; _ })
+                ) ->
+            None
+        in
+        Base.Option.value_map check ~default:acc ~f:(fun check -> SMap.add name check acc)
+      | _ -> acc
+    )
+
+  let object_properties_possible_sentinel_refinements =
+    Base.List.fold ~init:SMap.empty ~f:(fun acc -> function
+      | Flow_ast.Expression.Object.Property p ->
+        let open Flow_ast.Expression.Object.Property in
+        (match p with
+        | ( _,
+            Init
+              {
+                key =
+                  ( Flow_ast.Expression.Object.Property.Literal
+                      (_, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
+                  | Flow_ast.Expression.Object.Property.Identifier
+                      (_, { Flow_ast.Identifier.name; comments = _ }) );
+                value;
+                shorthand = _;
+              }
+          ) ->
+          literal_check_of_expr value
+          |> Base.Option.value_map ~default:acc ~f:(fun check -> SMap.add name check acc)
+        | _ -> acc)
+      | Flow_ast.Expression.Object.SpreadProperty _ -> acc
+    )
 
   let visit_eq_test
       ~on_type_of_test

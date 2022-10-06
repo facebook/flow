@@ -19,6 +19,14 @@ type ('t, 'targs, 'args) implicit_instantiation_hints = {
   arg_index: int;
 }
 
+and sentinel_refinement =
+  | SingletonNum of float
+  | SingletonBool of bool
+  | SingletonStr of string
+  | Null
+  | Void
+  | Member of Reason.t
+
 and ('t, 'targs, 'args) hint_decomposition =
   (* Hint on `{ f: e }` becomes hint on `e` *)
   | Decomp_ObjProp of string
@@ -53,6 +61,7 @@ and ('t, 'targs, 'args) hint_decomposition =
   | Comp_ImmediateFuncCall
   (* Type of C in `<C [props]/>` becomes hint on `props` *)
   | Decomp_JsxProps
+  | Decomp_SentinelRefinement of sentinel_refinement SMap.t
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
   | Decomp_Instantiated of ('t, 'targs, 'args) implicit_instantiation_hints
@@ -81,6 +90,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
   | Comp_ImmediateFuncCall -> "Comp_ImmediateFuncCall"
   | Decomp_JsxProps -> "Decomp_JsxProps"
+  | Decomp_SentinelRefinement _ -> "Decomp_SentinelRefinement"
   | Decomp_Await -> "Decomp_Await"
   | Decomp_Instantiated _ -> "Decomp_Instantiated"
 
@@ -129,6 +139,7 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list = function
   | Decomp_FuncReturn -> Decomp_FuncReturn
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Decomp_JsxProps -> Decomp_JsxProps
+  | Decomp_SentinelRefinement checks -> Decomp_SentinelRefinement checks
   | Decomp_Instantiated { reason; return_hint; targs; arg_list; arg_index } ->
     Decomp_Instantiated
       {

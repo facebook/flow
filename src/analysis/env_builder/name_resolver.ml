@@ -3781,6 +3781,26 @@ module Make
             ~finally:(fun () -> this#reset_env env);
           field
 
+      method! object_ loc expr =
+        let open Ast.Expression.Object in
+        let { properties; comments = _ } = expr in
+        Eq_test.object_properties_possible_sentinel_refinements properties
+        |> this#add_sentinel_check_writes;
+        super#object_ loc expr
+
+      method private add_sentinel_check_writes =
+        SMap.iter (fun _ -> function
+          | Hint_api.Member reason ->
+            let write_entries =
+              EnvMap.add
+                (Env_api.ExpressionLoc, aloc_of_reason reason)
+                (Env_api.AssigningWrite reason)
+                env_state.write_entries
+            in
+            env_state <- { env_state with write_entries }
+          | _ -> ()
+        )
+
       method! object_property prop =
         let open Ast.Expression.Object.Property in
         match prop with
@@ -5053,6 +5073,10 @@ module Make
         | _ -> ()
 
       method! jsx_element loc expr =
+        let open Ast.JSX in
+        let { opening_element = (_, { Opening.attributes = opening_attributes; _ }); _ } = expr in
+        Eq_test.jsx_attributes_possible_sentinel_refinements opening_attributes
+        |> this#add_sentinel_check_writes;
         this#jsx_function_call loc;
         super#jsx_element loc expr
 

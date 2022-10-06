@@ -13,6 +13,14 @@ type ('t, 'targs, 'args) implicit_instantiation_hints = {
   arg_index: int;
 }
 
+and sentinel_refinement =
+  | SingletonNum of float
+  | SingletonBool of bool
+  | SingletonStr of string
+  | Null
+  | Void
+  | Member of Reason.t
+
 and ('t, 'targs, 'args) hint_decomposition =
   | Decomp_ObjProp of string
   | Decomp_ObjComputed
@@ -30,6 +38,7 @@ and ('t, 'targs, 'args) hint_decomposition =
   | Decomp_FuncReturn
   | Comp_ImmediateFuncCall
   | Decomp_JsxProps
+  | Decomp_SentinelRefinement of sentinel_refinement SMap.t
   | Decomp_Instantiated of ('t, 'targs, 'args) implicit_instantiation_hints
 
 and ('t, 'targs, 'args) hint =

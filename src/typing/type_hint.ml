@@ -340,6 +340,30 @@ and type_of_hint_decomposition cx op reason t =
             in
             Flow_js.flow cx (t, use_t)
         )
+      | Decomp_SentinelRefinement checks ->
+        (match SMap.elements checks with
+        | [] -> t
+        | hd :: tl ->
+          let predicate_of_check (prop, literal_check) =
+            let other_t =
+              match literal_check with
+              | SingletonBool b -> DefT (reason, bogus_trust (), SingletonBoolT b)
+              | SingletonNum n -> DefT (reason, bogus_trust (), SingletonNumT (n, string_of_float n))
+              | SingletonStr s -> DefT (reason, bogus_trust (), SingletonStrT (OrdinaryName s))
+              | Null -> DefT (reason, bogus_trust (), NullT)
+              | Void -> DefT (reason, bogus_trust (), VoidT)
+              | Member reason -> Env.find_write cx Env_api.ExpressionLoc reason
+            in
+            LeftP (SentinelProp prop, other_t)
+          in
+          let predicate =
+            Base.List.fold tl ~init:(predicate_of_check hd) ~f:(fun acc check ->
+                AndP (acc, predicate_of_check check)
+            )
+          in
+          Tvar.mk_no_wrap_where cx reason (fun tvar ->
+              Flow_js.flow cx (t, PredicateT (predicate, tvar))
+          ))
       | Decomp_Instantiated instantiation_hint -> decomp_instantiated cx t instantiation_hint
   )
 

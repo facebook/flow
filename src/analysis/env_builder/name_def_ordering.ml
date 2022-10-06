@@ -421,6 +421,18 @@ struct
         | Hint_api.Hint_Decomp (ops, hint_node) ->
           Nel.fold_left
             (fun acc -> function
+              | Hint_api.Decomp_SentinelRefinement checks ->
+                SMap.fold
+                  (fun _ check acc ->
+                    match check with
+                    | Hint_api.Member r ->
+                      let loc = aloc_of_reason r in
+                      depends_of_node
+                        (fun visitor -> visitor#add ~why:loc (Env_api.ExpressionLoc, loc))
+                        acc
+                    | _ -> acc)
+                  checks
+                  acc
               | Hint_api.Decomp_Instantiated { Hint_api.return_hint; arg_list; arg_index; _ } ->
                 let rec loop acc i = function
                   | [] -> acc
