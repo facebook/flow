@@ -8,7 +8,7 @@
 open Reason
 open Type
 open Hint_api
-module ImplicitInstantiationSynthesis = Implicit_instantiation.Synthesis (Flow_js.FlowJs)
+module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 
 let in_sandbox_cx cx t ~f =
   let original_errors = Context.errors cx in
@@ -113,7 +113,7 @@ let rec decomp_instantiated cx fn instantiation_hint =
     in
     let subst_map =
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          ImplicitInstantiationSynthesis.solve_targs cx ?return_hint check
+          ImplicitInstantiation.solve_targs cx ?return_hint check
           |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
       )
     in

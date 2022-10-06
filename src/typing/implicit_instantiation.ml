@@ -508,33 +508,7 @@ type inferred_targ = {
   inferred: Type.t;
 }
 
-module SynthesisObserver : OBSERVER with type output = inferred_targ = struct
-  type output = inferred_targ
-
-  let on_constant_tparam _cx _name tparam inferred = { tparam; inferred }
-
-  let on_constant_tparam_missing_bounds _cx _name tparam =
-    let inferred =
-      match tparam.default with
-      | None -> tparam.Type.bound
-      | Some t -> t
-    in
-    { tparam; inferred }
-
-  let on_pinned_tparam _cx _name tparam inferred = { tparam; inferred }
-
-  let on_missing_bounds cx _name tparam ~tparam_binder_reason ~instantiation_reason:_ =
-    { tparam; inferred = Tvar.mk cx tparam_binder_reason }
-
-  let on_upper_non_t cx _name _u tparam ~tparam_binder_reason ~instantiation_reason:_ =
-    { tparam; inferred = Tvar.mk cx tparam_binder_reason }
-end
-
-module Synthesis : functor (Flow : Flow_common.S) ->
-  S with type output = inferred_targ with module Flow = Flow =
-  Make (SynthesisObserver)
-
-module CheckObserver : OBSERVER with type output = inferred_targ = struct
+module Observer : OBSERVER with type output = inferred_targ = struct
   type output = inferred_targ
 
   let any_error = AnyT.why (AnyError None)
@@ -552,34 +526,41 @@ module CheckObserver : OBSERVER with type output = inferred_targ = struct
   let on_pinned_tparam _cx _name tparam inferred = { tparam; inferred }
 
   let on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason =
-    Flow_js_utils.add_output
-      cx
-      (Error_message.EImplicitInstantiationUnderconstrainedError
-         {
-           bound = Subst_name.string_of_subst_name name;
-           reason_call = instantiation_reason;
-           reason_l = tparam_binder_reason;
-         }
-      );
-    { tparam; inferred = any_error tparam_binder_reason }
+    if Context.in_synthesis_mode cx then
+      { tparam; inferred = Tvar.mk_placeholder cx tparam_binder_reason }
+    else (
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EImplicitInstantiationUnderconstrainedError
+           {
+             bound = Subst_name.string_of_subst_name name;
+             reason_call = instantiation_reason;
+             reason_l = tparam_binder_reason;
+           }
+        );
+      { tparam; inferred = any_error tparam_binder_reason }
+    )
 
   let on_upper_non_t cx name u tparam ~tparam_binder_reason ~instantiation_reason:_ =
-    let msg =
-      Subst_name.string_of_subst_name name
-      ^ " contains a non-Type.t upper bound "
-      ^ Type.string_of_use_ctor u
-    in
-    Flow_js_utils.add_output
-      cx
-      (Error_message.EImplicitInstantiationTemporaryError
-         (Reason.aloc_of_reason tparam_binder_reason, msg)
-      );
-    { tparam; inferred = any_error tparam_binder_reason }
+    if Context.in_synthesis_mode cx then
+      { tparam; inferred = Tvar.mk_placeholder cx tparam_binder_reason }
+    else
+      let msg =
+        Subst_name.string_of_subst_name name
+        ^ " contains a non-Type.t upper bound "
+        ^ Type.string_of_use_ctor u
+      in
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EImplicitInstantiationTemporaryError
+           (Reason.aloc_of_reason tparam_binder_reason, msg)
+        );
+      { tparam; inferred = any_error tparam_binder_reason }
 end
 
 module Pierce : functor (Flow : Flow_common.S) ->
   S with type output = inferred_targ with module Flow = Flow =
-  Make (CheckObserver)
+  Make (Observer)
 
 module type KIT = sig
   module Flow : Flow_common.S

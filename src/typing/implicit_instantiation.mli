@@ -78,8 +78,6 @@ type inferred_targ = {
   inferred: Type.t;
 }
 
-module Synthesis (Flow : Flow_common.S) : S with type output = inferred_targ with module Flow = Flow
-
 module Pierce (Flow : Flow_common.S) : S with type output = inferred_targ with module Flow = Flow
 
 module type KIT = sig
