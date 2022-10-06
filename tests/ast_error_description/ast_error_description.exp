@@ -1203,6 +1203,17 @@ References:
                      ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- expression.js:52:17
+
+Cannot use `class { ... }` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
+
+                       v------
+   52| class X extends class {
+   53|   m() {}
+   54| } {
+       ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- expression.js:56:6
 
 Cannot cast `super.m.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1218,38 +1229,6 @@ References:
    expression.js:56:31
    56|     (((super.m: empty): T).p: empty);
                                      ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:56:8
-
-Cannot cast `super.m` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:56:8
-   56|     (((super.m: empty): T).p: empty);
-              ^^^^^^^
-
-References:
-   expression.js:53:3
-   53|   m() {}
-         ^^^^^^ [1]
-   expression.js:56:17
-   56|     (((super.m: empty): T).p: empty);
-                       ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- expression.js:56:14
-
-Cannot get `super.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   expression.js:56:14
-   56|     (((super.m: empty): T).p: empty);
-                    ^ [1]
-
-References:
-   expression.js:53:3
-   53|   m() {}
-         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:59:2
@@ -1623,4 +1602,4 @@ References:
 
 
 
-Found 103 errors
+Found 102 errors

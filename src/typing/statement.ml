@@ -6180,6 +6180,7 @@ module Make
       let (class_t, _, class_sig, class_ast_f) =
         mk_class_sig cx ~name_loc ~class_loc reason self c
       in
+
       let public_property_map =
         Class_stmt_sig.fields_to_prop_map cx
         @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
@@ -6317,11 +6318,57 @@ module Make
         ~statics:SMap.empty
     in
     let mk_extends cx tparams_map = function
-      | None -> (Implicit { null = false }, None)
+      | None -> (Implicit { null = false }, (fun () -> None))
       | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
-        let (((_, c), _) as expr) = expression cx expr in
+        let (c, expr) =
+          let open Ast.Expression in
+          let rec super_expr (loc, expr) =
+            match expr with
+            | Identifier (id_loc, id) ->
+              let t = identifier cx id id_loc in
+              (t, (fun () -> ((loc, t), Identifier ((id_loc, t), id))))
+            | Member
+                {
+                  Member._object;
+                  property =
+                    Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+                  comments;
+                } ->
+              let (t, _object_f) = super_expr _object in
+              let expr_reason = mk_expression_reason (loc, expr) in
+              let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
+              let use_op = Op (GetProperty expr_reason) in
+              let tout = get_prop ~use_op ~cond:None cx expr_reason t (prop_reason, name) in
+              ( tout,
+                fun () ->
+                  ( (loc, tout),
+                    Member
+                      {
+                        Member._object = _object_f ();
+                        property = Member.PropertyIdentifier ((ploc, tout), id);
+                        comments;
+                      }
+                  )
+              )
+            | TypeCast { TypeCast.expression = expr; annot; comments } ->
+              let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+              ( t,
+                fun () ->
+                  let (((_, infer_t), _) as e') = expression cx expr in
+                  let use_op =
+                    Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t })
+                  in
+                  Flow.flow cx (infer_t, TypeCastT (use_op, t));
+                  ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
+              )
+            | _ ->
+              Flow.add_output cx Error_message.(EInvalidExtends (mk_expression_reason (loc, expr)));
+              (AnyT.at (AnyError None) loc, (fun () -> expression cx (loc, expr)))
+          in
+          super_expr expr
+        in
         let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
-        (Explicit t, Some (loc, { Ast.Class.Extends.expr; targs; comments }))
+        (Explicit t, (fun () -> Some (loc, { Ast.Class.Extends.expr = expr (); targs; comments })))
     in
     fun cx ~name_loc ~class_loc reason self cls ->
       let node_cache = Context.node_cache cx in
@@ -6351,9 +6398,9 @@ module Make
         let tparams_map_with_this =
           Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
         in
-        let (class_sig, extends_ast, implements_ast) =
+        let (class_sig, extends_ast_f, implements_ast) =
           let id = Context.make_aloc_id cx name_loc in
-          let (extends, extends_ast) = mk_extends cx tparams_map_with_this extends in
+          let (extends, extends_ast_f) = mk_extends cx tparams_map_with_this extends in
           let (implements, implements_ast) =
             match implements with
             | None -> ([], None)
@@ -6391,7 +6438,7 @@ module Make
           let super =
             Class { Class_stmt_sig_types.extends; mixins = []; implements; this_t; this_tparam }
           in
-          (empty id class_loc reason tparams tparams_map super, extends_ast, implements_ast)
+          (empty id class_loc reason tparams tparams_map super, extends_ast_f, implements_ast)
         in
         (* In case there is no constructor, pick up a default one. *)
         let class_sig =
@@ -6802,7 +6849,7 @@ module Make
                   }
                 );
               tparams = tparams_ast;
-              extends = extends_ast;
+              extends = extends_ast_f ();
               implements = implements_ast;
               class_decorators = class_decorators_ast;
               comments;

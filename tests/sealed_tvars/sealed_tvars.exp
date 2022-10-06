@@ -14,6 +14,22 @@ Unreachable code. [unreachable-code]
                                        ^^^^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------ class_ext.js:3:17
+
+Cannot use `42.f(...)` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
+
+   3| class C extends ((42: any): D).f(x => 42) {}
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ class_ext.js:3:34
+
+An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   3| class C extends ((42: any): D).f(x => 42) {}
+                                       ^
+
+
 Error ---------------------------------------------------------------------------------------------------- enums.js:4:17
 
 Enum `A` is not an iterable. You can use `A.members()` to get an iterator for the enum's members. [not-iterable]
@@ -322,4 +338,4 @@ References:
 
 
 
-Found 28 errors
+Found 30 errors

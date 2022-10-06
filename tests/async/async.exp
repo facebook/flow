@@ -121,6 +121,14 @@ References:
                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- async_base_class.js:12:22
+
+Cannot use `await P` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
+
+   12|   class Bar extends (await P) { }
+                            ^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- async_return_void.js:4:3
 
 Cannot return undefined because undefined [1] is incompatible with string [2] in type argument `R` [3].
@@ -203,4 +211,4 @@ Unexpected number, expected the token `,`
 
 
 
-Found 14 errors
+Found 15 errors

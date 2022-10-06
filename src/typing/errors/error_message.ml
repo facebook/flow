@@ -183,6 +183,7 @@ and 'loc t' =
   | ETooManyTypeArgs of 'loc virtual_reason * 'loc virtual_reason * int
   | ETooFewTypeArgs of 'loc virtual_reason * 'loc virtual_reason * int
   | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
+  | EInvalidExtends of 'loc virtual_reason
   | EPropertyTypeAnnot of 'loc
   | EExportsAnnot of 'loc
   | ECharSetAnnot of 'loc
@@ -832,6 +833,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ETooManyTypeArgs (r1, r2, i) -> ETooManyTypeArgs (map_reason r1, map_reason r2, i)
   | ETooFewTypeArgs (r1, r2, i) -> ETooFewTypeArgs (map_reason r1, map_reason r2, i)
   | EInvalidTypeArgs (r1, r2) -> EInvalidTypeArgs (map_reason r1, map_reason r2)
+  | EInvalidExtends r -> EInvalidExtends (map_reason r)
   | EPropertyTypeAnnot loc -> EPropertyTypeAnnot (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
   | ECharSetAnnot loc -> ECharSetAnnot (f loc)
@@ -1194,6 +1196,7 @@ let util_use_op_of_msg nope util = function
   | ETooManyTypeArgs (_, _, _)
   | ETooFewTypeArgs (_, _, _)
   | EInvalidTypeArgs (_, _)
+  | EInvalidExtends _
   | EPropertyTypeAnnot _
   | EExportsAnnot _
   | ECharSetAnnot _
@@ -1308,6 +1311,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETooManyTypeArgs (primary, _, _) ->
     Some (poly_loc_of_reason primary)
   | ESketchyNumberLint (_, reason)
+  | EInvalidExtends reason
   | EBigIntNotYetSupported reason
   | EUnsupportedSetProto reason
   | EReactElementFunArity (reason, _, _)
@@ -1879,6 +1883,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EInvalidTypeArgs (reason_main, reason_tapp) ->
     let features =
       [text "Cannot use "; ref reason_main; text " with "; ref reason_tapp; text " argument"]
+    in
+    Normal { features }
+  | EInvalidExtends reason ->
+    let features =
+      [
+        text "Cannot use ";
+        ref reason;
+        text " as a superclass. Only variables and member expressions may be extended";
+      ]
     in
     Normal { features }
   | ETypeParamArity (_, n) ->
@@ -4115,6 +4128,7 @@ let error_code_of_message err : error_code option =
   | EInvalidReactPropType _ -> Some InvalidPropType
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
+  | EInvalidExtends _ -> Some InvalidExtends
   | ELintSetting _ -> Some LintSetting
   | EMissingAnnotation _ -> Some MissingAnnot
   | EMissingLocalAnnotation { reason; hint_available = _ } ->
