@@ -143,17 +143,24 @@ struct
                 t
                 (function
                   | None -> Some (Nel.one why)
-                  | Some locs -> Some (Nel.cons why locs))
+                  | Some locs ->
+                    Some
+                      ( if Nel.mem ~equal:ALoc.equal why locs then
+                        locs
+                      else
+                        Nel.cons why locs
+                      ))
                 uses
           )
 
         method add ~why t = if Env_api.has_assigning_write t env_entries then this#force_add ~why t
 
-        method find_writes ~for_type loc =
+        method find_writes ~for_type ?(allow_missing = false) loc =
           let write_locs =
             try Env_api.write_locs_of_read_loc env_values loc with
             | Not_found ->
-              FlowAPIUtils.add_output cx Error_message.(EInternal (loc, MissingEnvRead loc));
+              if not allow_missing then
+                FlowAPIUtils.add_output cx Error_message.(EInternal (loc, MissingEnvRead loc));
               []
           in
           let writes =
@@ -363,6 +370,10 @@ struct
         (* In order to resolve a def containing a read, the writes that the
            Name_resolver determines reach the variable must be resolved *)
         method! expression ((loc, _) as expr) =
+          (* An expression might read an refined value. e.g. if (foo.bar) foo.bar.
+             Therefore, we need to record these writes. *)
+          let writes = this#find_writes ~for_type:false ~allow_missing:true loc in
+          Base.List.iter ~f:(this#add ~why:loc) writes;
           this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
           this#add ~why:loc (Env_api.ExpressionLoc, loc);
           this#add ~why:loc (Env_api.ArrayProviderLoc, loc);
@@ -597,9 +608,15 @@ struct
       in
       let depends_of_selector state = function
         | Computed exp -> depends_of_expression exp state
+        | Prop { prop_loc; _ } ->
+          (* In `const {d: {a, b}} = obj`, each prop might be reading from a refined value, \
+             which is a write. We need to track these dependencies as well. *)
+          let visitor = new use_visitor cx this_super_dep_loc_map env state in
+          let writes = visitor#find_writes ~for_type:false ~allow_missing:true prop_loc in
+          Base.List.iter ~f:(visitor#add ~why:prop_loc) writes;
+          visitor#acc
         | Default
         | Elem _
-        | Prop _
         | ObjRest _
         | ArrRest _ ->
           state

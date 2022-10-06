@@ -436,7 +436,7 @@ module Make
     | Exports -> []
     | ModuleScoped _ -> []
     | Global _ -> []
-    | Projection _ -> []
+    | Projection l -> [(OrdinaryNameLoc, l)]
     | Unreachable _ -> []
     | Undefined _ -> []
     | Number _ -> []

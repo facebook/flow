@@ -789,6 +789,29 @@ if (x.y) { x.y }
       (2, 4) to (2, 7) => heap
     ] |}]
 
+let%expect_test "refi_recorded_read" =
+  print_order_test {|
+if (x.prop) {
+  const y = x.prop;
+}
+  |};
+  [%expect {|
+    (2, 4) to (2, 10) =>
+    (3, 8) to (3, 9) |}]
+
+let%expect_test "sentinel_refi" =
+  print_order_test {|
+if (obj.d.type === "a") {
+  let {d: {payload, type}} = obj;
+}
+  |};
+  [%expect {|
+    (2, 4) to (2, 9) =>
+    (2, 4) to (2, 14) =>
+    (2, 19) to (2, 22) =>
+    (3, 11) to (3, 18) =>
+    (3, 20) to (3, 24) |}]
+
 let%expect_test "inc" =
   print_order_test {|
 let x;
