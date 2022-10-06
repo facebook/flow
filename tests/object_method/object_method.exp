@@ -1,3 +1,31 @@
+Error -------------------------------------------------------------------------------------------------- callable.js:8:1
+
+Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
+
+   callable.js:8:1
+   8| o<number>(); // Error should be here
+      ^
+
+References:
+   callable.js:3:5
+   3|     <T, U>(): T,
+          ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- callable.js:16:1
+
+Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
+
+   callable.js:16:1
+   16| i<number>(); // Error should be here
+       ^
+
+References:
+   callable.js:11:5
+   11|     <T, U>(): T
+           ^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- spread.js:4:3
 
 Cannot assign function to `x.m` because property `m` is not writable. [cannot-write]
@@ -51,4 +79,4 @@ References:
 
 
 
-Found 5 errors
+Found 7 errors

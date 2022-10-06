@@ -3231,11 +3231,7 @@ struct
               add_output cx ~trace error_message;
               AnyT.error reason_op
           in
-          (match u with
-          | UseT (_, (DefT (_, _, FunT _) as u_def))
-          | UseT (_, (AnyT _ as u_def)) ->
-            rec_flow cx trace (fun_t, UseT (use_op, u_def))
-          | _ -> rec_flow cx trace (fun_t, u))
+          rec_flow cx trace (reposition cx ~trace (aloc_of_reason reason) fun_t, u)
         (******************************)
         (* matching shapes of objects *)
         (******************************)
