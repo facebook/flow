@@ -821,41 +821,50 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
       );
   Env.resolve_env_entry ~use_op ~update_reason cx t def_kind id_loc
 
+let entries_of_def graph (kind, loc) =
+  let open Name_def_ordering in
+  let acc = EnvSet.singleton (kind, loc) in
+  let rec add_from_bindings acc = function
+    | Root (Annotation { param_loc = Some l; _ }) -> EnvSet.add (Env_api.FunctionParamLoc, l) acc
+    | Root (Contextual { reason; _ }) ->
+      let l = Reason.poly_loc_of_reason reason in
+      EnvSet.add (Env_api.FunctionParamLoc, l) acc
+    | Root (FunctionValue { function_loc; arrow = false; _ }) ->
+      EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
+    | Root (SynthesizableObject { this_write_locs; _ }) -> EnvSet.union this_write_locs acc
+    | Root _ -> acc
+    | Select { binding; _ } -> add_from_bindings acc binding
+  in
+  match EnvMap.find (kind, loc) graph with
+  | (Binding b, _, _, _) -> add_from_bindings acc b
+  | (DeclaredModule (loc, _), _, _, _) -> EnvSet.add (Env_api.DeclareModuleExportsLoc, loc) acc
+  | (Class { this_super_write_locs; _ }, _, _, _) -> EnvSet.union this_super_write_locs acc
+  | (Function { has_this_def = true; function_loc; _ }, _, _, _) ->
+    EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
+  | _ -> acc
+
 let entries_of_component graph component =
   let open Name_def_ordering in
-  let entries_of_def acc element =
-    let (kind, loc) =
+  let entries_of_elt element =
+    let kl =
       match element with
       | Name_def_ordering.Normal kl
       | Resolvable kl
       | Illegal { payload = kl; _ } ->
         kl
     in
-    let acc = EnvSet.add (kind, loc) acc in
-    let rec add_from_bindings acc = function
-      | Root (Annotation { param_loc = Some l; _ }) -> EnvSet.add (Env_api.FunctionParamLoc, l) acc
-      | Root (Contextual { reason; _ }) ->
-        let l = Reason.poly_loc_of_reason reason in
-        EnvSet.add (Env_api.FunctionParamLoc, l) acc
-      | Root (FunctionValue { function_loc; arrow = false; _ }) ->
-        EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
-      | Root (SynthesizableObject { this_write_locs; _ }) -> EnvSet.union this_write_locs acc
-      | Root _ -> acc
-      | Select { binding; _ } -> add_from_bindings acc binding
-    in
-    match EnvMap.find (kind, loc) graph with
-    | (Binding b, _, _, _) -> add_from_bindings acc b
-    | (DeclaredModule (loc, _), _, _, _) -> EnvSet.add (Env_api.DeclareModuleExportsLoc, loc) acc
-    | (Class { this_super_write_locs; _ }, _, _, _) -> EnvSet.union this_super_write_locs acc
-    | (Function { has_this_def = true; function_loc; _ }, _, _, _) ->
-      EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
-    | _ -> acc
+    entries_of_def graph kl
   in
+
   match component with
-  | Singleton elt -> entries_of_def EnvSet.empty elt
-  | ResolvableSCC elts -> Nel.fold_left entries_of_def EnvSet.empty elts
+  | Singleton elt -> entries_of_elt elt
+  | ResolvableSCC elts ->
+    Nel.fold_left (fun acc def -> EnvSet.union acc (entries_of_elt def)) EnvSet.empty elts
   | IllegalSCC elts ->
-    Nel.fold_left (fun acc { payload = elt; _ } -> entries_of_def acc elt) EnvSet.empty elts
+    Nel.fold_left
+      (fun acc { payload = elt; _ } -> EnvSet.union acc (entries_of_elt elt))
+      EnvSet.empty
+      elts
 
 let init_type_param =
   let rec init_type_param cx graph def_loc =
@@ -916,7 +925,67 @@ let init_type_param =
 
 let resolve_component_type_params cx graph component =
   let open Name_def_ordering in
+  let resolve_illegal loc def =
+    match def with
+    | ( TypeParam
+          ( _,
+            ( _,
+              {
+                Ast.Type.TypeParam.name =
+                  (name_loc, { Ast.Identifier.name = str_name; comments = _ });
+                _;
+              }
+            )
+          ),
+        _,
+        _,
+        _
+      ) ->
+      let name = Subst_name.Name str_name in
+      let reason = mk_annot_reason (RType (OrdinaryName str_name)) name_loc in
+      let tparam =
+        {
+          reason;
+          name;
+          bound = DefT (reason, bogus_trust (), MixedT Mixed_everything);
+          polarity = Polarity.Neutral;
+          default = None;
+          is_this = false;
+        }
+      in
+      let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+      Context.set_environment
+        cx
+        {
+          env with
+          Loc_env.tparams = ALocMap.add loc (name, tparam, AnyT.at (AnyError None) loc) tparams;
+        }
+    | (Class _, _, _, _) ->
+      let name = Subst_name.Name "this" in
+      let reason = mk_annot_reason RThis loc in
+      let tparam =
+        {
+          reason;
+          name;
+          bound = DefT (reason, bogus_trust (), MixedT Mixed_everything);
+          polarity = Polarity.Neutral;
+          default = None;
+          is_this = true;
+        }
+      in
+      let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+      Context.set_environment
+        cx
+        {
+          env with
+          Loc_env.tparams = ALocMap.add loc (name, tparam, AnyT.at (AnyError None) loc) tparams;
+        }
+    | _ -> ()
+  in
   let resolve_element = function
+    | Illegal { payload = key; _ } when Context.env_mode cx = Options.LTI ->
+      let (_kind, loc) = key in
+      resolve_illegal loc (EnvMap.find key graph)
     | Name_def_ordering.Normal key
     | Resolvable key
     | Illegal { payload = key; _ } ->
@@ -928,13 +997,35 @@ let resolve_component_type_params cx graph component =
       | _ -> ())
   in
   match component with
+  | IllegalSCC elts when Context.env_mode cx = Options.LTI ->
+    Nel.iter
+      (fun {
+             payload =
+               Illegal { payload; _ } | Resolvable payload | Name_def_ordering.Normal payload;
+             _;
+           } -> resolve_illegal (snd payload) (EnvMap.find payload graph))
+      elts
   | Singleton elt -> resolve_element elt
   | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
   | IllegalSCC elts -> Nel.iter (fun { payload = elt; _ } -> resolve_element elt) elts
 
 let resolve_component cx graph component =
   let open Name_def_ordering in
+  let resolve_illegal entries =
+    EnvSet.iter
+      (fun (kind, loc) ->
+        Env.resolve_env_entry
+          ~use_op:unknown_use
+          ~update_reason:false
+          cx
+          (AnyT.at (AnyError None) loc)
+          kind
+          loc)
+      entries
+  in
   let resolve_element = function
+    | Illegal { payload; _ } when Context.env_mode cx = Options.LTI ->
+      resolve_illegal (entries_of_def graph payload)
     | Name_def_ordering.Normal (kind, loc)
     | Resolvable (kind, loc)
     | Illegal { payload = (kind, loc); _ } ->
@@ -962,9 +1053,10 @@ let resolve_component cx graph component =
   resolve_component_type_params cx graph component;
   let () =
     match component with
+    | IllegalSCC _ when Context.env_mode cx = Options.LTI -> resolve_illegal entries_for_resolution
     | Singleton elt -> resolve_element elt
     | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
-    | IllegalSCC elts -> Nel.iter (fun { payload = elt; _ } -> resolve_element elt) elts
+    | IllegalSCC elts -> Nel.iter (fun { payload; _ } -> resolve_element payload) elts
   in
   let env = Context.environment cx in
   EnvSet.iter
