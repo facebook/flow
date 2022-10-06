@@ -5,6 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val resolve : Context.t -> Type.t -> unit
+val resolve : Context.t -> require_resolution:bool -> Type.t -> unit
 
-val resolved_t : Context.t -> Type.t -> Type.t
+val resolved_t : Context.t -> require_resolution:bool -> Type.t -> Type.t
