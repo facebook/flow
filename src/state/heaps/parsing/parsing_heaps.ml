@@ -530,7 +530,9 @@ let prepare_update_revdeps =
    * bit tricky because we might remove the last dependent in one step, then add
    * a dependent/provider in another step. One idea is to maintain a set of
    * dirty modules which is scanned on commit and deleted if possible. For now,
-   * leaking these modules is not too bad. *)
+   * leaking these modules is not too bad.
+   *
+   * X-ref commit modules where a module can be updated to have no providers. *)
   let remove_old_dependent (size_acc, write_acc) mname =
     let dependents =
       match mname with
@@ -1408,31 +1410,6 @@ module Reparse_mutator = struct
   let record_unchanged () unchanged = changed_files := FilenameSet.diff !changed_files unchanged
 
   let record_not_found () not_found = not_found_files := not_found
-end
-
-module Commit_modules_mutator = struct
-  type t = unit
-
-  let to_remove = ref MSet.empty
-
-  let reset_refs () = to_remove := MSet.empty
-
-  let remove_module = function
-    | Modulename.String name -> HasteModuleHeap.remove name
-    | Modulename.Filename file_key -> FileModuleHeap.remove file_key
-
-  let commit () =
-    Hh_logger.info "Committing modules";
-    MSet.iter remove_module !to_remove;
-    reset_refs ()
-
-  let rollback () =
-    Hh_logger.info "Rolling back modules";
-    reset_refs ()
-
-  let create transaction = Transaction.add ~commit ~rollback transaction
-
-  let remove_modules_on_commit () modules = to_remove := modules
 end
 
 module Resolved_requires_mutator = struct

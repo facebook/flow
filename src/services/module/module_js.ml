@@ -593,26 +593,19 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let commit_modules ~transaction ~workers ~options dirty_modules =
+let commit_modules ~workers ~options dirty_modules =
   let module Heap = SharedMem.NewAPI in
   let debug = Options.is_debug_mode options in
-  let mutator = Parsing_heaps.Commit_modules_mutator.create transaction in
-  let f (unchanged, to_remove, errmap) mname =
+  let f (unchanged, errmap) mname =
     let mname_str = Modulename.to_string mname in
-    let (provider_ent, all_providers, dependents) =
+    let (provider_ent, all_providers) =
       match mname with
       | Modulename.String name ->
         let m = Parsing_heaps.get_haste_module_unsafe name in
-        ( Heap.get_haste_provider m,
-          Heap.get_haste_all_providers_exclusive m,
-          Heap.get_haste_dependents m
-        )
+        (Heap.get_haste_provider m, Heap.get_haste_all_providers_exclusive m)
       | Modulename.Filename key ->
         let m = Parsing_heaps.get_file_module_unsafe key in
-        ( Heap.get_file_provider m,
-          Heap.get_file_all_providers_exclusive m,
-          Heap.get_file_dependents m
-        )
+        (Heap.get_file_provider m, Heap.get_file_all_providers_exclusive m)
     in
     let all_providers =
       let f acc f =
@@ -625,20 +618,16 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
     let (new_provider, errmap) = choose_provider ~options mname_str all_providers errmap in
     match (old_provider, new_provider) with
     | (_, None) ->
+      (* TODO: Clean up modules which have no providers and no dependents. At
+       * this point we don't have enough information to remove a module because
+       * we might gain new dependents in the resolve require step after commit
+       * modules.
+       *
+       * X-ref update revdeps in parsing heaps, where a module can lose its last
+       * dependent. *)
       if debug then prerr_endlinef "no remaining providers: %s" mname_str;
       Heap.entity_advance provider_ent None;
-      let to_remove =
-        (* Check if we can remove this module from the hash table. We know there
-         * are no more providers. If there are no dependents, we can remove it.
-         * If there are dependents, this module is a phantom dependency. We keep
-         * it around in case we get a new provider later, so we can find its
-         * dependents to recheck them. *)
-        if Heap.sklist_is_empty dependents then
-          Modulename.Set.add mname to_remove
-        else
-          to_remove
-      in
-      (unchanged, to_remove, errmap)
+      (unchanged, errmap)
     | (None, Some p) ->
       (* When can this happen? Either m pointed to a file that used to
          provide m and changed or got deleted (causing m to be in
@@ -646,7 +635,7 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
       if debug then
         prerr_endlinef "initial provider %s -> %s" mname_str (Parsing_heaps.read_file_name p);
       Heap.entity_advance provider_ent (Some p);
-      (unchanged, to_remove, errmap)
+      (unchanged, errmap)
     | (Some old_p, Some new_p) ->
       if Heap.files_equal old_p new_p then (
         (* When can this happen? Say m pointed to f before, a different file
@@ -663,7 +652,7 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
           else
             Modulename.Set.add mname unchanged
         in
-        (unchanged, to_remove, errmap)
+        (unchanged, errmap)
       ) else (
         (* When can this happen? Say m pointed to f before, a different file
            f' that provides m changed (so m is not in old_modules), and
@@ -675,19 +664,17 @@ let commit_modules ~transaction ~workers ~options dirty_modules =
             (Parsing_heaps.read_file_name new_p)
             (Parsing_heaps.read_file_name old_p);
         Heap.entity_advance provider_ent (Some new_p);
-        (unchanged, to_remove, errmap)
+        (unchanged, errmap)
       )
   in
-  let%lwt (unchanged, to_remove, duplicate_providers) =
+  let%lwt (unchanged, duplicate_providers) =
     MultiWorkerLwt.call
       workers
       ~job:(List.fold_left f)
-      ~neutral:(Modulename.Set.empty, Modulename.Set.empty, SMap.empty)
-      ~merge:(fun (a1, a2, a3) (b1, b2, b3) ->
-        (Modulename.Set.union a1 b1, Modulename.Set.union a2 b2, SMap.union a3 b3))
+      ~neutral:(Modulename.Set.empty, SMap.empty)
+      ~merge:(fun (a1, a2) (b1, b2) -> (Modulename.Set.union a1 b1, SMap.union a2 b2))
       ~next:(MultiWorkerLwt.next workers (Modulename.Set.elements dirty_modules))
   in
-  Parsing_heaps.Commit_modules_mutator.remove_modules_on_commit mutator to_remove;
   let changed_modules = Modulename.Set.diff dirty_modules unchanged in
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (changed_modules, duplicate_providers)
