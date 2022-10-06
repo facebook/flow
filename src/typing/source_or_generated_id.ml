@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
-
 (* In order to minimize the frequency with which we unnecessarily compare
    equivalent structures, we assign structures created at the top level of a
    source program an id of their location instead of an int. This way, if we
@@ -25,13 +23,7 @@ let compare_id a b =
 
 let equal_id a b = compare_id a b = 0
 
-let id_of_int i = Generated i
-
-let id_as_int = function
-  | Generated i -> Some i
-  | _ -> None
-
-let generate_id = Reason.mk_id %> id_of_int
+let generate_id () = Generated (Reason.mk_id ())
 
 let id_of_aloc_id aloc_id = Source aloc_id
 

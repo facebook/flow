@@ -6366,7 +6366,7 @@ struct
           | _ -> failwith "$key and $value must be added as fields"
       in
       let proto_props = Context.find_props cx proto_props_id in
-      let props_tmap = Reason.mk_id () |> Properties.id_of_int in
+      let props_tmap = Properties.generate_id () in
       Context.add_property_map cx props_tmap (NameUtils.Map.union own_props_without_dict proto_props);
       (* Interfaces with an indexer type are indexed, all others are inexact *)
       let obj_kind =

@@ -1770,13 +1770,7 @@ and Properties : sig
 
   val generate_id : unit -> id
 
-  val id_of_int : int -> id
-
-  val id_as_int : id -> int option
-
   val id_of_aloc_id : ALoc.id -> id
-
-  val fake_id : id
 
   val string_of_id : id -> string
 
@@ -1830,8 +1824,6 @@ end = struct
 
   let add_method x loc t = NameUtils.Map.add x (Method (loc, t))
 
-  let fake_id = id_of_int 0
-
   let extract_named_exports pmap =
     NameUtils.Map.fold
       (fun x p tmap ->
@@ -1863,10 +1855,6 @@ and Eval : sig
 
   val compare_id : id -> id -> int
 
-  val id_of_int : int -> id
-
-  val id_as_int : id -> int option
-
   val id_of_aloc_id : ALoc.id -> id
 
   val string_of_id : id -> string
@@ -1894,10 +1882,6 @@ and Poly : sig
   val compare_id : id -> id -> int
 
   val equal_id : id -> id -> bool
-
-  val id_of_int : int -> id
-
-  val id_as_int : id -> int option
 
   val id_of_aloc_id : ALoc.id -> id
 

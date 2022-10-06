@@ -922,8 +922,7 @@ let make_aloc_id cx aloc = ALoc.id_of_aloc cx.aloc_table aloc
 let make_generic_id cx name loc = Generic.make_bound_id (make_aloc_id cx loc) name
 
 let generate_property_map cx pmap =
-  let id = Reason.mk_id () in
-  let id = Type.Properties.id_of_int id in
+  let id = Type.Properties.generate_id () in
   add_property_map cx id pmap;
   id
 
