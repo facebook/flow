@@ -445,7 +445,11 @@ struct
   let solve_targs cx ?return_hint check =
     let errors = Context.errors cx in
     let (inferred_targ_list, marked_tparams, tparams_map, tout) = implicitly_instantiate cx check in
-    Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (tout, hint));
+    let errors_before_using_return_hint = Context.errors cx in
+    Context.run_with_fresh_constrain_cache cx (fun () ->
+        Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (tout, hint))
+    );
+    Context.reset_errors cx errors_before_using_return_hint;
     let output = pin_types cx inferred_targ_list marked_tparams tparams_map check in
     if Context.in_synthesis_mode cx then Context.reset_errors cx errors;
     output
@@ -622,12 +626,8 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   let run
       cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
-    (* The current Pierce's algorithm running inside flow_js does not have access to the return
-       hint type, which will cause a lot of unactionable unconstrained implicit instantiation
-       errors. We disable the check when we have return context for now, but we should re-enable
-       it when we can use the return hint more effectively. *)
-    match (Context.env_mode cx, has_context) with
-    | (Options.LTI, false) ->
+    match Context.env_mode cx with
+    | Options.LTI ->
       Context.run_in_implicit_instantiation_mode cx (fun () ->
           run_pierce
             cx
