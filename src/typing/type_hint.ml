@@ -391,7 +391,7 @@ and evaluate_hint cx reason hint =
 
 let sandbox_flow_succeeds cx (t1, t2) =
   let original_errors = Context.errors cx in
-  Flow_js.flow_t cx (t1, t2);
+  Context.run_with_fresh_constrain_cache cx (fun () -> Flow_js.flow_t cx (t1, t2));
   let new_errors = Context.errors cx in
   if Flow_error.ErrorSet.equal original_errors new_errors then
     true
