@@ -181,6 +181,10 @@ module Jekyll
 
             start_pos = message['start']['offset']
             end_pos = message['end']['offset']
+            if end_pos <= start_pos
+              # Force zero-width error to have width 1
+              end_pos = start_pos + 1
+            end
 
             open  = '<span class="flow-error-target" data-error-id="' + error['id'] + '" data-message-id="' + message['id'] + '">'
             close = '</span>'
