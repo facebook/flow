@@ -9,11 +9,11 @@ exact properties and methods.
 ```js
 // @flow
 class Foo {
-  serialize() { return '[Foo]'; }
+  serialize(): string { return '[Foo]'; }
 }
 
 class Bar {
-  serialize() { return '[Bar]'; }
+  serialize(): string { return '[Bar]'; }
 }
 
 // $ExpectError
@@ -30,11 +30,11 @@ interface Serializable {
 }
 
 class Foo {
-  serialize() { return '[Foo]'; }
+  serialize(): string { return '[Foo]'; }
 }
 
 class Bar {
-  serialize() { return '[Bar]'; }
+  serialize(): string { return '[Bar]'; }
 }
 
 const foo: Serializable = new Foo(); // Works!
@@ -63,12 +63,12 @@ interface Serializable {
 }
 
 class Foo implements Serializable {
-  serialize() { return '[Foo]'; } // Works!
+  serialize(): string { return '[Foo]'; } // Works!
 }
 
 class Bar implements Serializable {
   // $ExpectError
-  serialize() { return 42; } // Error!
+  serialize(): number { return 42; } // Error!
 }
 ```
 
