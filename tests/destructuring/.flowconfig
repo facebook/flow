@@ -3,4 +3,3 @@ module.system=haste
 no_flowlib=false
 all=true
 exact_empty_objects=true
-enforce_local_inference_annotations=false

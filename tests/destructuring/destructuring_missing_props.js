@@ -23,7 +23,7 @@ var { qux = "string" } = obj; // Error, qux missing
 // Begin React examples
 
 const React = require('react');
-function Component({defaultProps = "default", regularProp}) { // Error, missing regularProp
+function Component({defaultProps = "default", regularProp}: {|regularProp?: number|}) { // Error, missing regularProp
   (defaultProps: string);
   (regularProp: number);
   return null;

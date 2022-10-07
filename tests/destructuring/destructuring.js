@@ -10,7 +10,7 @@ var obj;
 ({n: obj.x} = {n:3});
 [obj.x] = ['foo'];
 
-function foo({p, z:[r]}) {
+function foo({p, z:[r]}: {|p: number, z: Array<number>|}) {
     a = p;
     b = z;
     c = r;
@@ -19,7 +19,7 @@ foo({p:0, z:[1,2]});
 
 [a,,b,...c] = [0,1,true,3];
 
-function bar({x, ...z}) {
+function bar({x, ...z}: {|x: string, y: number|}) {
     var o:{x: string; y: number;} = z;
 }
 bar({x:"",y:0});
