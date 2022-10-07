@@ -337,12 +337,12 @@ while (( next_test_to_print < ${#dirs[@]} )); do
     (( next_test_to_print++ ))
 done
 
-if [ $failed -eq 0 ]; then
+if [ "$failed" -eq 0 ]; then
   FAILED_COLOR="$COLOR_DEFAULT_BOLD"
 else
   FAILED_COLOR="$COLOR_WHITE_ON_RED_BOLD"
 fi
-if [ $errored -eq 0 ]; then
+if [ "$errored" -eq 0 ]; then
   ERRORED_COLOR="$COLOR_DEFAULT_BOLD"
 else
   ERRORED_COLOR="$COLOR_WHITE_ON_RED_BOLD"
@@ -358,4 +358,6 @@ if [[ "$quiet" -eq 0 ]]; then
     "$COLOR_RESET"
 fi
 
-exit $((failed + errored))
+if [[ "$failed" -gt 0 || "$errored" -gt 0 ]]; then
+  exit 1
+fi
