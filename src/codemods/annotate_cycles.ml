@@ -78,15 +78,21 @@ class annotate_cycles_mapper
         Flow_error.ErrorSet.fold
           (fun err (acc, ct) ->
             match Flow_error.msg_of_error err with
-            | ERecursiveDefinition { annot_loc = Some loc; _ } ->
-              (LSet.add (ALoc.to_loc_with_tables tables loc) acc, ct)
-            | ERecursiveDefinition { annot_loc = None; _ } -> (acc, ct + 1)
+            | ERecursiveDefinition { annot_locs = []; _ } -> (acc, ct + 1)
+            | ERecursiveDefinition { annot_locs; _ } ->
+              let acc =
+                Base.List.map ~f:(ALoc.to_loc_with_tables tables) annot_locs
+                |> LSet.of_list
+                |> LSet.union acc
+              in
+              (acc, ct)
             | EDefinitionCycle cycle ->
               let annotations =
                 Nel.to_list cycle
-                |> Base.List.filter_map ~f:(fun (_, _, annot_loc) ->
-                       Base.Option.map ~f:(ALoc.to_loc_with_tables tables) annot_loc
+                |> Base.List.map ~f:(fun (_, _, annot_locs) ->
+                       Base.List.map ~f:(ALoc.to_loc_with_tables tables) annot_locs
                    )
+                |> List.flatten
               in
               if Base.List.length annotations = 0 then
                 (acc, ct + 1)

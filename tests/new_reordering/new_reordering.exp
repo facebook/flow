@@ -101,11 +101,11 @@ References:
 Error -------------------------------------------------------------------------------------------------------- a.js:62:7
 
 Cannot compute a type for `math2` because its definition includes references to itself [1],  [2]. Please add an
-annotation to this definition [3] [recursive-definition]
+annotation to these positions [3] [4] [recursive-definition]
 
    a.js:62:7
    62| const math2 = {
-             ^^^^^ [3]
+             ^^^^^
 
 References:
    a.js:73:12
@@ -114,12 +114,50 @@ References:
    a.js:67:12
    67|     return math2.even(x - 1)
                   ^^^^^ [2]
+   a.js:69:20
+   69|   even: (x: number) => {
+                           [3]
+   a.js:63:17
+   63|   odd(x: number) {
+                        [4]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:77:7
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `odd_obj` [1] depends on other definition [2]
+ - `even_obj` [3] depends on other definition [4]
+Please add type annotations to these definitions [5] [6] [7] [definition-cycle]
+
+   a.js:77:7
+   77| const odd_obj = {
+             ^^^^^^^ [1]
+
+References:
+   a.js:83:12
+   83|     return even_obj.even(x - 1)
+                  ^^^^^^^^ [2]
+   a.js:87:7
+   87| const even_obj = {
+             ^^^^^^^^ [3]
+   a.js:92:12
+   92|     return odd_obj.odd(x - 1)
+                  ^^^^^^^ [4]
+   a.js:79:17
+   79|   odd(x: number) {
+                        [5]
+   a.js:78:14
+   78|   unrelated() { return 42 },
+                     [6]
+   a.js:88:22
+   88|     even: (x: number) => {
+                             [7]
 
 
 
-Found 6 errors
+Found 7 errors
 Annotating cycles...
->>> a.js (#changes: 5)
+>>> a.js (#changes: 9)
 //@flow
 
 
@@ -181,14 +219,14 @@ const math1 = {
   }
 }
 
-const math2: {| even: (x: number) => boolean, odd(x: number): boolean |} = {
-  odd(x: number) {
+const math2 = {
+  odd(x: number): boolean {
     if (x === 0) {
       return false;
     }
     return math2.even(x - 1)
   },
-  even: (x: number) => {
+  even: (x: number): boolean => {
     if (x === 0) {
       return true;
     }
@@ -196,13 +234,32 @@ const math2: {| even: (x: number) => boolean, odd(x: number): boolean |} = {
   }
 }
 
+const odd_obj = {
+  unrelated(): number { return 42 },
+  odd(x: number): boolean {
+    if (x === 0) {
+      return false;
+    }
+    return even_obj.even(x - 1)
+  }
+}
+
+const even_obj = {
+    even: (x: number): boolean => {
+    if (x === 0) {
+      return true;
+    }
+    return odd_obj.odd(x - 1)
+  }
+}
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              5
-  Total size of annotations:               12
-  Number of cycles:                         5
+  Number of annotations added:              9
+  Total size of annotations:                9
+  Number of cycles:                         9
   Number of annotations skipped:            0
   Number of unannotatable cycles:           1
 

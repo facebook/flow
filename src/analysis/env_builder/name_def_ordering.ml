@@ -25,7 +25,7 @@ module Tarjan =
 type 'k blame = {
   payload: 'k;
   reason: ALoc.t virtual_reason;
-  annot_loc: ALoc.t option;
+  annot_locs: ALoc.t list;
   recursion: ALoc.t Nel.t;
 }
 
@@ -567,7 +567,12 @@ struct
         | Value { hint; expr } ->
           let state = depends_of_hint state hint in
           depends_of_expression expr state
-        | SynthesizableObject { obj = { Ast.Expression.Object.properties; _ }; _ } ->
+        | ObjectValue
+            {
+              obj = { Ast.Expression.Object.properties; _ };
+              synthesizable = ObjectSynthesizable _;
+              _;
+            } ->
           let open Ast.Expression.Object in
           let open Ast.Expression.Object.Property in
           Base.List.fold properties ~init:state ~f:(fun state -> function
@@ -583,6 +588,8 @@ struct
               depends_of_fun true ALocMap.empty Hint_api.Hint_None ~statics:SMap.empty fn state
             | _ -> failwith "Object not synthesizable"
           )
+        | ObjectValue { obj; obj_loc; _ } ->
+          depends_of_expression (obj_loc, Ast.Expression.Object obj) EnvMap.empty
         | FunctionValue { hint; function_loc = _; function_; statics; arrow = _; tparams_map } ->
           depends_of_fun false tparams_map hint ~statics function_ state
         | EmptyArray { array_providers; _ } ->
@@ -720,7 +727,7 @@ struct
             hint;
           } ->
         depends_of_fun
-          (synthesizable_from_annotation = Synthesizable)
+          (synthesizable_from_annotation = FunctionSynthesizable)
           tparams_map
           hint
           ~statics
@@ -750,8 +757,9 @@ struct
         | Root Catch -> true
         | Root (Annotation { default_expression = None; _ }) -> true
         | Root (Annotation { default_expression = Some _; _ }) -> false
-        | Root (SynthesizableObject _) -> true
-        | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _) -> false
+        | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
+        | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
+          false
         | Select { selector = Computed _ | Default; _ } -> false
         | Select { binding; _ } -> bind_loop binding
       in
@@ -761,7 +769,7 @@ struct
       | TypeAlias _
       | OpaqueType _
       | TypeParam _
-      | Function { synthesizable_from_annotation = Synthesizable; _ }
+      | Function { synthesizable_from_annotation = FunctionSynthesizable; _ }
       | Interface _
       (* Imports are academic here since they can't be in a cycle anyways, since they depend on nothing *)
       | Import { import_kind = Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ }
@@ -786,30 +794,31 @@ struct
         false
   end
 
-  let annotation_loc scopes loc =
+  let annotation_locs scopes loc =
     let rec bind_loop b =
       match b with
-      | Root Catch -> None
-      | Root (Annotation _) -> None
-      | Root
-          (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | SynthesizableObject _)
-        ->
+      | Root Catch
+      | Root (Annotation _)
+      | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) ->
+        []
+      | Root (ObjectValue { synthesizable = MissingMemberReturns locs; _ }) -> Nel.to_list locs
+      | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
         begin
           try
             let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
               Scope_api.With_ALoc.def_of_use scopes loc
             in
-            Some loc
+            [loc]
           with
-          | Scope_api.With_ALoc.Missing_def _ -> None
+          | Scope_api.With_ALoc.Missing_def _ -> []
         end
-      | Select { selector = Computed _ | Default; _ } -> None
+      | Select { selector = Computed _ | Default; _ } -> []
       | Select { binding; _ } -> bind_loop binding
     in
     function
     | Binding bind -> bind_loop bind
-    | GeneratorNext None -> Some loc
-    | Function { synthesizable_from_annotation = MissingReturn loc; _ } -> Some loc
+    | GeneratorNext None -> [loc]
+    | Function { synthesizable_from_annotation = MissingReturn loc; _ } -> [loc]
     | TypeAlias _
     | OpaqueType _
     | TypeParam _
@@ -823,12 +832,12 @@ struct
     | WriteExpression _
     | DeclaredModule _
     | GeneratorNext (Some _) ->
-      None
+      []
     (* TODO *)
     | Update _
     | MemberAssign _
     | OpAssign _ ->
-      None
+      []
 
   let dependencies cx this_super_dep_loc_map env (kind, loc) (def, _, _, _) acc =
     let depends = FindDependencies.depends cx this_super_dep_loc_map env loc def in
@@ -857,7 +866,14 @@ struct
         (fun kind_and_loc def acc ->
           match def with
           | (Class { this_super_write_locs = locs; _ }, _, _, _)
-          | (Binding (Root (SynthesizableObject { this_write_locs = locs; _ })), _, _, _) ->
+          | ( Binding
+                (Root
+                  (ObjectValue { synthesizable = ObjectSynthesizable { this_write_locs = locs }; _ })
+                  ),
+              _,
+              _,
+              _
+            ) ->
             acc
             |> EnvSet.fold
                  (fun this_super_kind_and_loc acc ->
@@ -918,7 +934,7 @@ struct
                 payload = (kind, loc);
                 reason;
                 recursion;
-                annot_loc = annotation_loc scopes loc def;
+                annot_locs = annotation_locs scopes loc def;
               }
         else
           Normal (kind, loc)
@@ -962,7 +978,7 @@ struct
                   payload = element_of_loc (kind, loc);
                   reason;
                   recursion = edges;
-                  annot_loc = annotation_loc scopes loc def;
+                  annot_locs = annotation_locs scopes loc def;
                 })
               component
           in

@@ -46,6 +46,20 @@ type ast_hint =
   )
   hint
 
+type function_synth_kind =
+  | FunctionSynthesizable
+  | MissingReturn of ALoc.t
+  | MissingArguments
+  | PredicateFunction
+
+type object_synth_kind =
+  | ObjectSynthesizable of {
+      (* A set of this write locations that can be resolved by resolving the object. *)
+      this_write_locs: Env_api.EnvSet.t;
+    }
+  | MissingMemberReturns of ALoc.t Nel.t
+  | Unsynthesizable
+
 type root =
   | Annotation of {
       tparams_map: tparams_map;
@@ -66,11 +80,10 @@ type root =
       arrow: bool;
       tparams_map: tparams_map;
     }
-  | SynthesizableObject of {
+  | ObjectValue of {
+      synthesizable: object_synth_kind;
       obj_loc: ALoc.t;
       obj: (ALoc.t, ALoc.t) Ast.Expression.Object.t;
-      (* A set of this write locations that can be resolved by resolving the object. *)
-      this_write_locs: Env_api.EnvSet.t;
     }
   | EmptyArray of {
       array_providers: ALocSet.t;
@@ -134,12 +147,6 @@ type class_implicit_this_tparam = {
   class_tparams_loc: ALoc.t option;
 }
 
-type function_synth_kind =
-  | Synthesizable
-  | MissingReturn of ALoc.t
-  | MissingArguments
-  | PredicateFunction
-
 type def =
   | Binding of binding
   | ChainExpression of cond_context * (ALoc.t, ALoc.t) Ast.Expression.t
@@ -200,7 +207,7 @@ module Print = struct
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
     | FunctionValue { function_loc; _ } -> spf "function val %s" (ALoc.debug_to_string function_loc)
-    | SynthesizableObject _ -> "object"
+    | ObjectValue _ -> "object"
     | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)
     | For (Of _, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
 

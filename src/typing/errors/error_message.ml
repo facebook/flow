@@ -438,11 +438,11 @@ and 'loc t' =
   | EInvalidGraphQL of 'loc * Graphql.error
   | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason * string option
   | EAnnotationInferenceRecursive of 'loc * 'loc virtual_reason
-  | EDefinitionCycle of ('loc virtual_reason * 'loc Nel.t * 'loc option) Nel.t
+  | EDefinitionCycle of ('loc virtual_reason * 'loc Nel.t * 'loc list) Nel.t
   | ERecursiveDefinition of {
       reason: 'loc virtual_reason;
       recursion: 'loc Nel.t;
-      annot_loc: 'loc option;
+      annot_locs: 'loc list;
     }
   | EDuplicateClassMember of {
       loc: 'loc;
@@ -1053,15 +1053,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EDefinitionCycle
       (Nel.map
          (fun (reason, recur, annot) ->
-           (map_reason reason, Nel.map f recur, Base.Option.map ~f annot))
+           (map_reason reason, Nel.map f recur, Base.List.map ~f annot))
          elts
       )
-  | ERecursiveDefinition { reason; recursion; annot_loc } ->
+  | ERecursiveDefinition { reason; recursion; annot_locs } ->
     ERecursiveDefinition
       {
         reason = map_reason reason;
         recursion = Nel.map f recursion;
-        annot_loc = Base.Option.map ~f annot_loc;
+        annot_locs = Base.List.map ~f annot_locs;
       }
   | EDuplicateClassMember { loc; name; static } ->
     EDuplicateClassMember { loc = f loc; name; static }
@@ -3889,17 +3889,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | ERecursiveDefinition { reason; recursion = (hd, tl); annot_loc } ->
+  | ERecursiveDefinition { reason; recursion = (hd, tl); annot_locs } ->
     let tl_recur =
       Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl |> List.flatten
     in
     let annot_message =
-      [
-        text "Please add an annotation to ";
-        Base.Option.value_map annot_loc ~default:(text "this definition") ~f:(fun l ->
-            ref (mk_reason (RCustom "this definition") l)
-        );
-      ]
+      match annot_locs with
+      | [] -> [text "this definition"]
+      | [l] -> [ref (mk_reason (RCustom "this definition") l)]
+      | ls ->
+        text "these positions" :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) ls
     in
     let features =
       [
@@ -3909,7 +3908,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ref (mk_reason (RCustom "itself") hd);
       ]
       @ tl_recur
-      @ text ". " :: annot_message
+      @ text ". Please add an annotation to " :: annot_message
     in
     Normal { features }
   | EDefinitionCycle dependencies ->
@@ -3934,11 +3933,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     let annot_message =
       Nel.map
-        (fun (_, _, annot_loc) ->
-          Base.Option.map annot_loc ~f:(fun annot_loc -> ref (mk_reason (RCustom "") annot_loc)))
+        (fun (_, _, annot_locs) ->
+          Base.List.map annot_locs ~f:(fun annot_loc -> ref (mk_reason (RCustom "") annot_loc)))
         dependencies
       |> Nel.to_list
-      |> Base.List.filter_opt
+      |> List.flatten
     in
     let features =
       text

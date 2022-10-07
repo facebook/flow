@@ -203,7 +203,7 @@ let func_is_synthesizable_from_annotation
       if Base.List.length params > 0 then
         MissingArguments
       else
-        Synthesizable
+        FunctionSynthesizable
     in
     match return with
     | Ast.Type.Available _ -> based_on_params
@@ -213,21 +213,34 @@ let func_is_synthesizable_from_annotation
       else
         MissingReturn loc
 
-let obj_properties_synthesizable { Ast.Expression.Object.properties; comments = _ } =
+let obj_properties_synthesizable ~this_write_locs { Ast.Expression.Object.properties; comments = _ }
+    =
   let open Ast.Expression.Object in
   let open Ast.Expression.Object.Property in
-  Base.List.for_all
-    ~f:(function
-      | SpreadProperty _ -> false
-      | Property (_, Method { key = Identifier _; value = (_, fn); _ }) ->
-        func_is_synthesizable_from_annotation ~allow_this:true fn = Synthesizable
-      | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.ArrowFunction fn); _ })
-        ->
-        func_is_synthesizable_from_annotation ~allow_this:true fn = Synthesizable
-      | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Function fn); _ }) ->
-        func_is_synthesizable_from_annotation ~allow_this:false fn = Synthesizable
-      | Property _ -> false)
-    properties
+  let handle_fun acc = function
+    | FunctionSynthesizable -> Ok acc
+    | MissingReturn loc -> Ok (loc :: acc)
+    | _ -> Error ()
+  in
+  let missing =
+    Base.List.fold_result
+      ~init:[]
+      ~f:
+        (fun acc -> function
+          | SpreadProperty _ -> Error ()
+          | Property (_, Method { key = Identifier _; value = (_, fn); _ })
+          | Property
+              (_, Init { key = Identifier _; value = (_, Ast.Expression.ArrowFunction fn); _ }) ->
+            handle_fun acc (func_is_synthesizable_from_annotation ~allow_this:true fn)
+          | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Function fn); _ }) ->
+            handle_fun acc (func_is_synthesizable_from_annotation ~allow_this:false fn)
+          | Property _ -> Error ())
+      properties
+  in
+  match missing with
+  | Ok [] -> ObjectSynthesizable { this_write_locs }
+  | Ok (hd :: tl) -> MissingMemberReturns (hd, tl)
+  | Error () -> Unsynthesizable
 
 let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics function_ =
   Function
@@ -517,13 +530,13 @@ class def_finder env_entries providers toplevel_scope =
           (Some (EmptyArray { array_providers; arr_loc }), Hint_None)
         | ( None,
             Some
-              ( loc,
-                Ast.Expression.Object
-                  ({ Ast.Expression.Object.properties = _ :: _ as properties; _ } as obj)
+              ( ( loc,
+                  Ast.Expression.Object
+                    ({ Ast.Expression.Object.properties = _ :: _ as properties; _ } as obj)
+                ) as init
               ),
             _
-          )
-          when obj_properties_synthesizable obj ->
+          ) ->
           let this_write_locs =
             let open Ast.Expression.Object in
             Base.List.fold properties ~init:EnvSet.empty ~f:(fun acc -> function
@@ -537,7 +550,11 @@ class def_finder env_entries providers toplevel_scope =
                 acc
             )
           in
-          (Some (SynthesizableObject { obj_loc = loc; obj; this_write_locs }), Hint_None)
+          begin
+            match obj_properties_synthesizable ~this_write_locs obj with
+            | Unsynthesizable -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
+            | synthesizable -> (Some (ObjectValue { obj_loc = loc; obj; synthesizable }), Hint_None)
+          end
         | (None, Some init, _) -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
         | (None, None, _) -> (None, Hint_None)
       in

@@ -73,3 +73,22 @@ const math2 = {
     return math2.odd(x - 1)
   }
 }
+
+const odd_obj = {
+  unrelated() { return 42 },
+  odd(x: number) {
+    if (x === 0) {
+      return false;
+    }
+    return even_obj.even(x - 1)
+  }
+}
+
+const even_obj = {
+    even: (x: number) => {
+    if (x === 0) {
+      return true;
+    }
+    return odd_obj.odd(x - 1)
+  }
+}

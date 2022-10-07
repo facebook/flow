@@ -179,8 +179,12 @@ let rec resolve_binding_partial cx reason loc b =
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op, false)
   | Root
-      (SynthesizableObject
-        { obj_loc = loc; obj = { Ast.Expression.Object.properties; _ }; this_write_locs = _ }
+      (ObjectValue
+        {
+          obj_loc = loc;
+          obj = { Ast.Expression.Object.properties; _ };
+          synthesizable = ObjectSynthesizable _;
+        }
         ) ->
     let open Ast.Expression.Object in
     let reason = mk_reason RObjectLit loc in
@@ -252,6 +256,11 @@ let rec resolve_binding_partial cx reason loc b =
         ~empty_unsealed:(not @@ Context.exact_empty_objects cx)
     in
     (t, unknown_use, true)
+  | Root (ObjectValue { obj_loc; obj; _ }) ->
+    let expr = (obj_loc, Ast.Expression.Object obj) in
+    let t = expression cx expr in
+    let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
+    (t, use_op, false)
   | Root (FunctionValue { hint = _; function_loc; function_; statics; arrow; tparams_map = _ }) ->
     let { Ast.Function.id; async; generator; sig_loc; _ } = function_ in
     let reason_fun =
@@ -759,7 +768,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Function
         {
           function_;
-          synthesizable_from_annotation = Synthesizable;
+          synthesizable_from_annotation = FunctionSynthesizable;
           has_this_def = _;
           function_loc;
           tparams_map;
@@ -805,7 +814,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     match def with
     | ChainExpression _
     | WriteExpression _
-    | Binding (Root (SynthesizableObject _)) ->
+    | Binding (Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ })) ->
       true
     | _ -> false
   in
@@ -831,7 +840,8 @@ let entries_of_def graph (kind, loc) =
       EnvSet.add (Env_api.FunctionParamLoc, l) acc
     | Root (FunctionValue { function_loc; arrow = false; _ }) ->
       EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
-    | Root (SynthesizableObject { this_write_locs; _ }) -> EnvSet.union this_write_locs acc
+    | Root (ObjectValue { synthesizable = ObjectSynthesizable { this_write_locs }; _ }) ->
+      EnvSet.union this_write_locs acc
     | Root _ -> acc
     | Select { binding; _ } -> add_from_bindings acc binding
   in

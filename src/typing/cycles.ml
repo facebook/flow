@@ -12,8 +12,8 @@ let handle_element cx elt =
   | Normal _
   | Resolvable _ ->
     ()
-  | Illegal { reason; recursion; payload = _; annot_loc } ->
-    Flow_js.add_output cx (Error_message.ERecursiveDefinition { reason; recursion; annot_loc })
+  | Illegal { reason; recursion; payload = _; annot_locs } ->
+    Flow_js.add_output cx (Error_message.ERecursiveDefinition { reason; recursion; annot_locs })
 
 let handle_component cx scc =
   match scc with
@@ -22,9 +22,9 @@ let handle_component cx scc =
   | IllegalSCC elts_blame ->
     let blame =
       Nel.map
-        (fun { payload = elt; reason; recursion = blame; annot_loc } ->
+        (fun { payload = elt; reason; recursion = blame; annot_locs } ->
           handle_element cx elt;
-          (reason, blame, annot_loc))
+          (reason, blame, annot_locs))
         elts_blame
     in
     Flow_js.add_output cx Error_message.(EDefinitionCycle blame)
