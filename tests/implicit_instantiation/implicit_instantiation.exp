@@ -1,3 +1,17 @@
+Error -------------------------------------------------------------------------------------------- class_static.js:12:11
+
+Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
+
+   class_static.js:12:11
+   12| const y = OneTarg<string>(); // error, incorrect amount of args
+                 ^^^^^^^
+
+References:
+   class_static.js:9:10
+    9|   static <K, V>(): OneTarg<K, V>;
+                ^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:5:19
 
 Cannot assign `identity<...>(...)` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -50,4 +64,4 @@ References:
 
 
 
-Found 3 errors
+Found 4 errors
