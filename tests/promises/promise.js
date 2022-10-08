@@ -7,7 +7,7 @@
 //////////////////////////////////////////////////
 
 // Promise constructor resolve(T) -> then(T)
-new Promise(function(resolve, reject) {
+new Promise<number>(function(resolve, reject) {
   resolve(0);
 }).then(function(num) {
   var a: number = num;
@@ -17,7 +17,7 @@ new Promise(function(resolve, reject) {
 });
 
 // Promise constructor with arrow function resolve(T) -> then(T)
-new Promise((resolve, reject) => resolve(0))
+new Promise<number>((resolve, reject) => resolve(0))
   .then(function(num) {
     var a: number = num;
 
@@ -26,7 +26,7 @@ new Promise((resolve, reject) => resolve(0))
   });
 
 // Promise constructor resolve(Promise<T>) -> then(T)
-new Promise(function(resolve, reject) {
+new Promise<number>(function(resolve, reject) {
   resolve(new Promise(function(resolve, reject) {
     resolve(0);
   }));
@@ -36,7 +36,7 @@ new Promise(function(resolve, reject) {
 });
 
 // Promise constructor resolve(Promise<Promise<T>>) -> then(T)
-new Promise(function(resolve, reject) {
+new Promise<number>(function(resolve, reject) {
   resolve(new Promise(function(resolve, reject) {
     resolve(new Promise(function(resolve, reject) {
       resolve(0);
@@ -48,7 +48,7 @@ new Promise(function(resolve, reject) {
 });
 
 // Promise constructor resolve(T); resolve(U); -> then(T|U)
-new Promise(function(resolve, reject) {
+new Promise<number | string>(function(resolve, reject) {
   if (Math.random()) {
     resolve(42);
   } else {
@@ -68,7 +68,7 @@ new Promise(function(resolve, reject) {
 /////////////////////////////////////////////////
 
 // TODO: Promise constructor reject(T) -> catch(T)
-new Promise(function(resolve, reject) {
+new Promise<empty>(function(resolve, reject) {
   reject(0);
 }).catch(function(num) {
   var a: number = num;
@@ -78,8 +78,8 @@ new Promise(function(resolve, reject) {
 });
 
 // TODO: Promise constructor reject(Promise<T>) ~> catch(Promise<T>)
-new Promise(function(resolve, reject) {
-  reject(new Promise(function(resolve, reject) {
+new Promise<empty>(function(resolve, reject) {
+  reject(new Promise<empty>(function(resolve, reject) {
     reject(0);
   }));
 }).catch(function(num) {
@@ -90,7 +90,7 @@ new Promise(function(resolve, reject) {
 });
 
 // TODO: Promise constructor reject(T); reject(U); -> then(T|U)
-new Promise(function(resolve, reject) {
+new Promise<empty>(function(resolve, reject) {
   if (Math.random()) {
     reject(42);
   } else {

@@ -49,28 +49,11 @@ Cannot assign `d.x` to `s` because number [1] is incompatible with string [2]. [
                       ^^^
 
 References:
-   generics.js:16:18
-   16| var b = d.m(true,0);
-                        ^ [1]
+   generics.js:15:15
+   15| var d = new D<number>();
+                     ^^^^^^ [1]
    generics.js:17:7
    17| var s:string = d.x;
-             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ generics.js:25:16
-
-Cannot assign `e.set(...)` to `x` because undefined [1] is incompatible with string [2]. [incompatible-type]
-
-   generics.js:25:16
-   25| var x:string = e.set(0);
-                      ^^^^^^^^
-
-References:
-   generics.js:24:9
-   24| var e = new E(); // error: too few arguments to inherited constructor
-               ^^^^^^^ [1]
-   generics.js:25:7
-   25| var x:string = e.set(0);
              ^^^^^^ [2]
 
 
@@ -83,9 +66,26 @@ Cannot assign `e.set(...)` to `x` because number [1] is incompatible with string
                       ^^^^^^^^
 
 References:
-   generics.js:25:22
+   generics.js:24:15
+   24| var e = new E<number | void>(); // error: too few arguments to inherited constructor
+                     ^^^^^^ [1]
+   generics.js:25:7
    25| var x:string = e.set(0);
-                            ^ [1]
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ generics.js:25:16
+
+Cannot assign `e.set(...)` to `x` because undefined [1] is incompatible with string [2]. [incompatible-type]
+
+   generics.js:25:16
+   25| var x:string = e.set(0);
+                      ^^^^^^^^
+
+References:
+   generics.js:24:24
+   24| var e = new E<number | void>(); // error: too few arguments to inherited constructor
+                              ^^^^ [1]
    generics.js:25:7
    25| var x:string = e.set(0);
              ^^^^^^ [2]
@@ -93,7 +93,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:36:41
 
-Cannot assign `h1` to `h2` because string [1] is incompatible with number [2] in array element of type argument `X` [3].
+Cannot assign `h1` to `h2` because string [1] is incompatible with number [2] in type argument `X` [3].
 [incompatible-type-arg]
 
    generics.js:36:41
@@ -101,9 +101,9 @@ Cannot assign `h1` to `h2` because string [1] is incompatible with number [2] in
                                                ^^
 
 References:
-   generics.js:35:9
-   35| h1.foo(["..."]);
-               ^^^^^ [1]
+   generics.js:34:22
+   34| var h1 = new H<Array<string>>();
+                            ^^^^^^ [1]
    generics.js:36:28
    36| var h2:F<Array<Array<Array<number>>>> = h1;
                                   ^^^^^^ [2]

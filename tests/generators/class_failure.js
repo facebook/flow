@@ -7,7 +7,7 @@ class GeneratorExamples<X> {
   }
 }
 
-var examples = new GeneratorExamples();
+var examples = new GeneratorExamples<mixed>();
 
 for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
 

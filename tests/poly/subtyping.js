@@ -27,7 +27,7 @@
   }
 
   (coerce('a'): empty);
-  coerce('a').toFixed();
+  coerce<_, number>('a').toFixed();
 }
 
 // Test issue #8766, round 3 -- this time also testing for a subtle

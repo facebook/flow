@@ -12,7 +12,7 @@ class D<T> {
   }
 }
 
-var d = new D();
+var d = new D<number>();
 var b = d.m(true,0);
 var s:string = d.x;
 
@@ -21,7 +21,7 @@ class E<X> extends C<X> {
     set(x:X):X { /*return x;*/ this.x = x; return /*this.x; */this.get(); }
 }
 
-var e = new E(); // error: too few arguments to inherited constructor
+var e = new E<number | void>(); // error: too few arguments to inherited constructor
 var x:string = e.set(0);
 
 class F<X> { }
@@ -31,7 +31,7 @@ class H<Z> extends G<Array<Z>> {
     foo(x:Z) { this.x = x; }
 }
 
-var h1 = new H();
+var h1 = new H<Array<string>>();
 h1.foo(["..."]);
 var h2:F<Array<Array<Array<number>>>> = h1;
 

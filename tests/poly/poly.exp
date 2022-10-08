@@ -113,9 +113,9 @@ Cannot cast `newVal4` to string because number [1] is incompatible with string [
         ^^^^^^^
 
 References:
-   error.js:19:8
-   19| newFn4(42);
-              ^^ [1]
+   error.js:18:31
+   18| const [newVal4, newFn4] = fn4<number>();
+                                     ^^^^^^ [1]
    error.js:20:11
    20| (newVal4: string); // The error should point here.
                  ^^^^^^ [2]

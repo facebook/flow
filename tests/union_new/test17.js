@@ -2,6 +2,6 @@
 
 // Array#concat
 
-[].concat([]);
+([]: Array<empty>).concat([]);
 
-([].concat([0,1])[1]: string)
+(([]: Array<empty>).concat([0,1])[1]: string)

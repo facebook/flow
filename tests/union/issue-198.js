@@ -1,4 +1,4 @@
-var p = new Promise(function(resolve, reject) {
+var p = new Promise<number>(function(resolve, reject) {
     resolve(5);
 })
     .then(function(num) {

@@ -264,16 +264,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test17.js:7:2
-   7| ([].concat([0,1])[1]: string)
-       ^^^^^^^^^^^^^^^^^^^
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test17.js:7:13
-   7| ([].concat([0,1])[1]: string)
-                  ^ [1]
-   test17.js:7:23
-   7| ([].concat([0,1])[1]: string)
-                            ^^^^^^ [2]
+   test17.js:7:29
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+                                  ^ [1]
+   test17.js:7:39
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
@@ -281,16 +281,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    test17.js:7:2
-   7| ([].concat([0,1])[1]: string)
-       ^^^^^^^^^^^^^^^^^^^
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test17.js:7:15
-   7| ([].concat([0,1])[1]: string)
-                    ^ [1]
-   test17.js:7:23
-   7| ([].concat([0,1])[1]: string)
-                            ^^^^^^ [2]
+   test17.js:7:31
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+                                    ^ [1]
+   test17.js:7:39
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+                                            ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- test20.js:14:26

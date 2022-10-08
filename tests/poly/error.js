@@ -15,6 +15,6 @@ declare function fn3<T>(x: T, y: (T) => void): void;
 fn3(42, (x: string) => {}); // The error should point to 42 and not string.
 
 declare function fn4<T>(): [T, (T) => void];
-const [newVal4, newFn4] = fn4();
+const [newVal4, newFn4] = fn4<number>();
 newFn4(42);
 (newVal4: string); // The error should point here.

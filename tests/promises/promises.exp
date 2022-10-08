@@ -213,9 +213,9 @@ Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [
                          ^^^
 
 References:
-   promise.js:11:11
-   11|   resolve(0);
-                 ^ [1]
+   promise.js:10:13
+   10| new Promise<number>(function(resolve, reject) {
+                   ^^^^^^ [1]
    promise.js:16:10
    16|   var b: string = num; // Error: number ~> string
                 ^^^^^^ [2]
@@ -230,9 +230,9 @@ Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [
                            ^^^
 
 References:
-   promise.js:20:42
-   20| new Promise((resolve, reject) => resolve(0))
-                                                ^ [1]
+   promise.js:20:13
+   20| new Promise<number>((resolve, reject) => resolve(0))
+                   ^^^^^^ [1]
    promise.js:25:12
    25|     var b: string = num; // Error: number ~> string
                   ^^^^^^ [2]
@@ -247,9 +247,9 @@ Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [
                          ^^^
 
 References:
-   promise.js:31:13
-   31|     resolve(0);
-                   ^ [1]
+   promise.js:29:13
+   29| new Promise<number>(function(resolve, reject) {
+                   ^^^^^^ [1]
    promise.js:35:10
    35|   var b: string = num; // Error: number ~> string
                 ^^^^^^ [2]
@@ -264,9 +264,9 @@ Cannot assign `num` to `b` because number [1] is incompatible with string [2]. [
                          ^^^
 
 References:
-   promise.js:42:15
-   42|       resolve(0);
-                     ^ [1]
+   promise.js:39:13
+   39| new Promise<number>(function(resolve, reject) {
+                   ^^^^^^ [1]
    promise.js:47:10
    47|   var b: string = num; // Error: number ~> string
                 ^^^^^^ [2]
@@ -281,9 +281,9 @@ Cannot assign `numOrStr` to `c` because number [1] is incompatible with string [
                          ^^^^^^^^
 
 References:
-   promise.js:53:13
-   53|     resolve(42);
-                   ^^ [1]
+   promise.js:51:13
+   51| new Promise<number | string>(function(resolve, reject) {
+                   ^^^^^^ [1]
    promise.js:63:10
    63|   var c: string = numOrStr; // Error: number|string -> string
                 ^^^^^^ [2]

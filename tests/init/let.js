@@ -114,7 +114,7 @@ function for_in_post_init() {
 // for-of leaves it possibly uninitialized
 function for_of_post_init() {
   var x:number;
-  for (let p of []) {
+  for (let p of ([]: Array<mixed>)) {
     x = 0;
   }
   var y:number = x; // error

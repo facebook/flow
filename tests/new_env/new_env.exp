@@ -218,7 +218,7 @@ Error --------------------------------------------------------------------------
 Cannot call `Promise` because function [1] requires another argument. [incompatible-call]
 
    globals.js:5:13
-      5| var y = new Promise();
+      5| var y = new Promise<string>();
                      ^^^^^^^
 
 References:
@@ -241,8 +241,8 @@ Cannot cast `y` to empty because `Promise` [1] is incompatible with empty [2]. [
 
 References:
    globals.js:5:9
-   5| var y = new Promise();
-              ^^^^^^^^^^^^^ [1]
+   5| var y = new Promise<string>();
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
    globals.js:6:5
    6| (y: empty);
           ^^^^^ [2]
