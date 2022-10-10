@@ -712,13 +712,13 @@ let add_implicit_instantiation_call cx lhs poly_t use_op reason funcalltype =
     let check = Implicit_instantiation_check.of_call lhs poly_t use_op reason funcalltype in
     add_possibly_speculating_implicit_instantiation_check cx check
 
-let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
+let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op targs args =
   if cx.metadata.run_post_inference_implicit_instantiation then
-    let check = Implicit_instantiation_check.of_ctor lhs poly_t use_op reason_op args in
+    let check = Implicit_instantiation_check.of_ctor lhs poly_t use_op reason_op targs args in
     add_possibly_speculating_implicit_instantiation_check cx check
 
-let add_implicit_instantiation_jsx cx lhs poly_t use_op reason_op clone ~component ~config children
-    =
+let add_implicit_instantiation_jsx
+    cx lhs poly_t use_op reason_op clone ~component ~config ~targs children =
   if cx.metadata.run_post_inference_implicit_instantiation then
     let check =
       Implicit_instantiation_check.of_jsx
@@ -729,6 +729,7 @@ let add_implicit_instantiation_jsx cx lhs poly_t use_op reason_op clone ~compone
         clone
         ~component
         ~config
+        ~targs
         children
     in
     add_possibly_speculating_implicit_instantiation_check cx check

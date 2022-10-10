@@ -172,6 +172,18 @@ module type SUBTYPING = sig
   val instantiate_this_class :
     Context.t -> Type.trace -> Reason.reason -> Type.t -> Type.t -> Type.cont -> unit
 
+  val instantiate_poly_with_targs :
+    Context.t ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    reason_op:Reason.reason ->
+    reason_tapp:Reason.t ->
+    ?cache:Reason.t list ->
+    ?errs_ref:Context.subst_cache_err list ref ->
+    ALoc.t * Type.typeparam Nel.t * Type.t ->
+    Type.t list ->
+    Type.t
+
   val instantiate_poly :
     Context.t ->
     Type.trace ->

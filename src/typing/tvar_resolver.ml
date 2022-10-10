@@ -84,8 +84,7 @@ let run_conditionally cx f =
   | (_, Context.InitLib) -> ()
   | (Options.LTI, _)
   | (_, Context.PostInference) ->
-    let (_ : bool) = f () in
-    ()
+    ignore @@ f ()
   | _ -> ()
 
 let resolve cx ~require_resolution t =
@@ -102,6 +101,12 @@ let resolved_fun_call_type cx ~require_resolution funcalltype =
 let resolved_call_arg cx ~require_resolution call_arg =
   run_conditionally cx (fun () -> resolver#call_arg cx require_resolution call_arg);
   call_arg
+
+let resolved_type_args cx ~require_resolution targs =
+  run_conditionally cx (fun () ->
+      Option.map (List.map (resolver#targ cx Polarity.Positive require_resolution)) targs
+  );
+  targs
 
 let resolved_typeparam cx ~require_resolution typeparam =
   run_conditionally cx (fun () ->

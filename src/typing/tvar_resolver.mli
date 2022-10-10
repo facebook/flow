@@ -14,4 +14,7 @@ val resolved_fun_call_type :
 
 val resolved_call_arg : Context.t -> require_resolution:bool -> Type.call_arg -> Type.call_arg
 
+val resolved_type_args :
+  Context.t -> require_resolution:bool -> Type.targ list option -> Type.targ list option
+
 val resolved_typeparam : Context.t -> require_resolution:bool -> Type.typeparam -> Type.typeparam

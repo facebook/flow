@@ -255,24 +255,79 @@ struct
     | UpperT inferred -> Observer.on_pinned_tparam cx name tparam inferred
 
   let check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation =
-    let { Check.lhs; operation = (use_op, reason_op, op); _ } = implicit_instantiation in
-    let (call_targs, inferred_targ_list) =
-      List.fold_right
-        (fun tparam (targs, inferred_targ_and_bound_list) ->
-          let reason_tapp = TypeUtil.reason_of_t lhs in
-          let targ =
-            Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
-          in
-          ( ExplicitArg targ :: targs,
-            (tparam.name, targ, tparam.bound) :: inferred_targ_and_bound_list
-          ))
-        tparams
-        ([], [])
+    let { Check.lhs; operation = (use_op, reason_op, op); poly_t = (tparams_loc, _, _) } =
+      implicit_instantiation
     in
-    let (use_t, tout) =
+    let reason_tapp = TypeUtil.reason_of_t lhs in
+    let merge_targs explicit_targs =
+      match explicit_targs with
+      | None ->
+        List.fold_right
+          (fun tparam (targs, inferred_targ_and_bound_list) ->
+            let targ =
+              Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
+            in
+            ( ExplicitArg targ :: targs,
+              (tparam.name, targ, tparam.bound, true) :: inferred_targ_and_bound_list
+            ))
+          tparams
+          ([], [])
+      | Some explicit_targs ->
+        let maximum_arity = List.length tparams in
+        let reason_arity = Flow_js_utils.mk_poly_arity_reason tparams_loc in
+        let minimum_arity = Flow_js_utils.poly_minimum_arity (Nel.of_list_exn tparams) in
+        if List.length explicit_targs > maximum_arity then
+          Flow_js_utils.add_output
+            cx
+            (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
+        let rec loop (targs, inferred_targ_and_bound_list) tparams_rev_acc explicit_targs_rev_acc =
+          match (tparams_rev_acc, explicit_targs_rev_acc) with
+          | ([], _) -> (List.rev targs, List.rev inferred_targ_and_bound_list)
+          | (tparam :: tparams_rest, []) ->
+            let targ =
+              Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
+            in
+            if Base.Option.is_none tparam.default then
+              Flow_js_utils.add_output
+                cx
+                (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
+            loop
+              ( ExplicitArg targ :: targs,
+                (tparam.name, targ, tparam.bound, true) :: inferred_targ_and_bound_list
+              )
+              tparams_rest
+              []
+          | (tparam :: tparams_rest, explicit_targ :: explicit_targs_rest) ->
+            (match explicit_targ with
+            | ExplicitArg targ ->
+              loop
+                ( ExplicitArg targ :: targs,
+                  (tparam.name, targ, tparam.bound, false) :: inferred_targ_and_bound_list
+                )
+                tparams_rest
+                explicit_targs_rest
+            | ImplicitArg (r, id) ->
+              let reason = mk_reason RImplicitInstantiation (aloc_of_reason r) in
+              let targ =
+                Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason reason_tapp
+              in
+              Flow.flow cx (targ, UseT (use_op, OpenT (r, id)));
+              (* It is important to convert implicit args to explicit args so there won't be
+                 infinite loops between this module and flow_js. *)
+              loop
+                ( ExplicitArg targ :: targs,
+                  (tparam.name, targ, tparam.bound, true) :: inferred_targ_and_bound_list
+                )
+                tparams_rest
+                explicit_targs_rest)
+        in
+        loop ([], []) tparams explicit_targs
+    in
+    let (inferred_targ_list, use_t, tout) =
       match op with
       | Check.Call calltype ->
         let new_tout = Tvar.mk_no_wrap cx reason_op in
+        let (call_targs, inferred_targ_list) = merge_targs calltype.call_targs in
         let call_t =
           CallT
             {
@@ -284,9 +339,10 @@ struct
               return_hint = Type.hint_unavailable;
             }
         in
-        (call_t, OpenT (reason_op, new_tout))
-      | Check.Constructor call_args ->
+        (inferred_targ_list, call_t, OpenT (reason_op, new_tout))
+      | Check.Constructor (explicit_targs, call_args) ->
         let new_tout = Tvar.mk cx reason_op in
+        let (call_targs, inferred_targ_list) = merge_targs explicit_targs in
         let constructor_t =
           ConstructorT
             {
@@ -298,9 +354,10 @@ struct
               return_hint = Type.hint_unavailable;
             }
         in
-        (constructor_t, new_tout)
-      | Check.Jsx { clone; component; config; children } ->
+        (inferred_targ_list, constructor_t, new_tout)
+      | Check.Jsx { clone; component; config; targs; children } ->
         let new_tout = Tvar.mk cx reason_op in
+        let (call_targs, inferred_targ_list) = merge_targs targs in
         let react_kit_t =
           ReactKitT
             ( use_op,
@@ -317,7 +374,7 @@ struct
                 }
             )
         in
-        (react_kit_t, new_tout)
+        (inferred_targ_list, react_kit_t, new_tout)
     in
     Flow.flow cx (lhs, use_t);
     (inferred_targ_list, marked_tparams, tout)
@@ -362,15 +419,18 @@ struct
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let subst_map =
       List.fold_left
-        (fun acc (name, t, _) -> Subst_name.Map.add name t acc)
+        (fun acc (name, t, _, _) -> Subst_name.Map.add name t acc)
         Subst_name.Map.empty
         inferred_targ_list
     in
     List.fold_right
-      (fun (name, t, bound) acc ->
+      (fun (name, t, bound, is_inferred) acc ->
         let tparam = Subst_name.Map.find name tparams_map in
         let result =
-          pin_type cx name tparam (Marked.get name marked_tparams) instantiation_reason t
+          if is_inferred then
+            pin_type cx name tparam (Marked.get name marked_tparams) instantiation_reason t
+          else
+            Observer.on_pinned_tparam cx name tparam t
         in
         let bound_t = Subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);
@@ -620,8 +680,55 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     instantiate_poly_with_subst_map cx ?cache trace t targs_map ~use_op ~reason_op ~reason_tapp
 
   let run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp =
-    let poly_t = check.Implicit_instantiation_check.poly_t in
-    FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
+    let {
+      Implicit_instantiation_check.poly_t = (_, xs, _) as poly_t;
+      operation = (_, _, operation);
+      _;
+    } =
+      check
+    in
+    match operation with
+    | Implicit_instantiation_check.Call { Type.call_targs = Some targs; _ }
+    | Implicit_instantiation_check.Constructor (Some targs, _)
+    | Implicit_instantiation_check.Jsx { targs = Some targs; _ } ->
+      let (_, ts) =
+        Nel.fold_left
+          (fun (targs, ts) typeparam ->
+            match targs with
+            | [] -> ([], ts)
+            | ExplicitArg t :: targs -> (targs, t :: ts)
+            | ImplicitArg (r, id) :: targs ->
+              (* `_` can introduce non-termination, just like omitting type arguments
+               * can. In order to protect against that non-termination we use cache_instantiate.
+               * Instead of letting instantiate_poly do that for us on every type argument, we
+               * do it ourselves here so that explicit type arguments do not have their reasons
+               * needlessly changed. Note that the ImplicitTypeParam reason that cache instatiations
+               * introduce can also change the use_op in a flow. In the NumT ~> StrT case,
+               * this can make meaningful differences in type checking behavior. Ensuring that
+               * the use_op/reason change happens _only_ on actually implicitly instantiated
+               * type variables helps preserve the correct type checking behavior. *)
+              let reason = mk_reason RImplicitInstantiation (aloc_of_reason r) in
+              let t =
+                Instantiation_utils.ImplicitTypeArgument.mk_targ cx typeparam reason reason_tapp
+              in
+              let t_ =
+                cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t
+              in
+              Flow.flow cx (t_, UseT (use_op, OpenT (r, id)));
+              (targs, t_ :: ts))
+          (targs, [])
+          xs
+      in
+      FlowJs.instantiate_poly_with_targs
+        cx
+        trace
+        ~use_op
+        ~reason_op
+        ~reason_tapp
+        ?cache:None
+        poly_t
+        (List.rev ts)
+    | _ -> FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
 
   let run
       cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =

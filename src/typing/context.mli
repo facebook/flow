@@ -363,6 +363,7 @@ val add_implicit_instantiation_ctor :
   Implicit_instantiation_check.poly_t ->
   Type.use_op ->
   Reason.t ->
+  Type.targ list option ->
   Type.call_arg list ->
   unit
 
@@ -375,6 +376,7 @@ val add_implicit_instantiation_jsx :
   bool ->
   component:Type.t ->
   config:Type.t ->
+  targs:Type.targ list option ->
   Type.t list * Type.t option ->
   unit
 

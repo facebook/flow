@@ -2633,6 +2633,15 @@ struct
         *)
         | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
           let reason_op = reason_of_use_t u in
+          let all_explicit_targs = function
+            | None -> None
+            | Some targs ->
+              Base.List.fold_right targs ~init:(Some []) ~f:(fun targ acc ->
+                  match (targ, acc) with
+                  | (ExplicitArg _, Some acc) -> Some (targ :: acc)
+                  | _ -> None
+              )
+          in
           begin
             match u with
             (* Special case for `_ instanceof C` where C is polymorphic *)
@@ -2702,8 +2711,54 @@ struct
                   calltype.call_args_tlist
               in
               begin
-                match calltype.call_targs with
-                | None ->
+                match all_explicit_targs calltype.call_targs with
+                | Some targs ->
+                  (match t with
+                  (* We are calling the static callable method of a class. We need to be careful
+                   * not to apply the targs at this point, because this PolyT represents the class
+                   * and not the static function that's being called. We implicitly instantiate
+                   * the instance's tparams using the bounds and then forward the result original call
+                   * instead of consuming the method call's type arguments.
+                   *
+                   * We use the bounds to explicitly instantiate so that we don't create yet another implicit
+                   * instantiation here that would be un-annotatable. *)
+                  | ThisClassT _ ->
+                    let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
+                    let t_ =
+                      instantiate_poly_call_or_new
+                        cx
+                        trace
+                        (tparams_loc, ids, t)
+                        (Nel.to_list targs)
+                        ~use_op
+                        ~reason_op
+                        ~reason_tapp
+                    in
+                    rec_flow cx trace (t_, u)
+                  | _ ->
+                    let t_ =
+                      instantiate_poly_call_or_new
+                        cx
+                        trace
+                        (tparams_loc, ids, t)
+                        targs
+                        ~use_op
+                        ~reason_op
+                        ~reason_tapp
+                    in
+                    rec_flow
+                      cx
+                      trace
+                      ( t_,
+                        CallT
+                          {
+                            use_op;
+                            reason = reason_op;
+                            call_action = Funcalltype { calltype with call_targs = None };
+                            return_hint;
+                          }
+                      ))
+                | _ ->
                   let poly_t = (tparams_loc, ids, t) in
                   let check =
                     Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype
@@ -2719,135 +2774,125 @@ struct
                       ~reason_tapp
                       ~return_hint
                   in
-                  rec_flow cx trace (t_, u)
-                | Some targs ->
-                  (match t with
-                  (* We are calling the static callable method of a class. We need to be careful
-                   * not to apply the targs at this point, because this PolyT represents the class
-                   * and not the static function that's being called. We implicitly instantiate
-                   * the instance's tparams using the bounds and then forward the result original call
-                   * instead of consuming the method call's type arguments. 
-                   *
-                   * We use the bounds to explicitly instantiate so that we don't create yet another implicit
-                   * instantiation here that would be un-annotatable. *)
-                  | ThisClassT _ ->
-                    let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
-                    let t_ =
-                      instantiate_poly_call_or_new
-                        cx
-                        trace
-                        (tparams_loc, ids, t)
-                        (Nel.to_list targs)
-                        ~use_op
-                        ~reason_op
-                        ~reason_tapp
-                        ~cache:arg_reasons
-                    in
-                    rec_flow cx trace (t_, u)
-                  | _ ->
-                    let t_ =
-                      instantiate_poly_call_or_new
-                        cx
-                        trace
-                        (tparams_loc, ids, t)
-                        targs
-                        ~use_op
-                        ~reason_op
-                        ~reason_tapp
-                        ~cache:arg_reasons
-                    in
-                    rec_flow
-                      cx
-                      trace
-                      ( t_,
-                        CallT
-                          {
-                            use_op;
-                            reason = reason_op;
-                            call_action = Funcalltype { calltype with call_targs = None };
-                            return_hint;
-                          }
-                      ))
+                  rec_flow
+                    cx
+                    trace
+                    ( t_,
+                      CallT
+                        {
+                          use_op;
+                          reason = reason_op;
+                          call_action = Funcalltype { calltype with call_targs = None };
+                          return_hint;
+                        }
+                    )
               end
-            | ConstructorT
-                { use_op; reason = reason_op; targs = Some targs; args; tout; return_hint } ->
-              let t_ =
-                instantiate_poly_call_or_new
+            | ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint } ->
+              (match all_explicit_targs targs with
+              | Some targs ->
+                let t_ =
+                  instantiate_poly_call_or_new
+                    cx
+                    trace
+                    (tparams_loc, ids, t)
+                    targs
+                    ~use_op
+                    ~reason_op
+                    ~reason_tapp
+                in
+                rec_flow
                   cx
                   trace
-                  (tparams_loc, ids, t)
-                  targs
-                  ~use_op
-                  ~reason_op
-                  ~reason_tapp
-              in
-              rec_flow
-                cx
-                trace
-                ( t_,
-                  ConstructorT { use_op; reason = reason_op; targs = None; args; tout; return_hint }
-                )
-            | ConstructorT { use_op; reason = reason_op; targs = None; args; tout = _; return_hint }
-              ->
-              let poly_t = (tparams_loc, ids, t) in
-              let check = Implicit_instantiation_check.of_ctor l poly_t use_op reason_op args in
-              let t_ =
-                ImplicitInstantiationKit.run
-                  cx
-                  check
-                  trace
-                  ~use_op
-                  ~reason_op
-                  ~reason_tapp
-                  ~return_hint
-              in
-              rec_flow cx trace (t_, u)
-            | ReactKitT
-                (use_op, reason_op, React.CreateElement ({ targs = Some targs; _ } as payload)) ->
-              let t_ =
-                instantiate_poly_call_or_new
+                  ( t_,
+                    ConstructorT
+                      { use_op; reason = reason_op; targs = None; args; tout; return_hint }
+                  )
+              | None ->
+                let poly_t = (tparams_loc, ids, t) in
+                let check =
+                  Implicit_instantiation_check.of_ctor l poly_t use_op reason_op targs args
+                in
+                let t_ =
+                  ImplicitInstantiationKit.run
+                    cx
+                    check
+                    trace
+                    ~use_op
+                    ~reason_op
+                    ~reason_tapp
+                    ~return_hint
+                in
+                rec_flow
                   cx
                   trace
-                  (tparams_loc, ids, t)
-                  targs
-                  ~use_op
-                  ~reason_op
-                  ~reason_tapp
-              in
-              rec_flow
-                cx
-                trace
-                ( t_,
-                  ReactKitT (use_op, reason_op, React.CreateElement { payload with targs = None })
-                )
+                  ( t_,
+                    ConstructorT
+                      { use_op; reason = reason_op; targs = None; args; tout; return_hint }
+                  ))
             | ReactKitT
                 ( use_op,
-                  _,
-                  React.CreateElement { clone; component; config; children; return_hint; _ }
+                  reason_op,
+                  React.CreateElement
+                    { clone; component; config; children; return_hint; targs; tout }
                 ) ->
-              let poly_t = (tparams_loc, ids, t) in
-              let check =
-                Implicit_instantiation_check.of_jsx
-                  l
-                  poly_t
-                  use_op
-                  reason_op
-                  clone
-                  ~component
-                  ~config
-                  children
-              in
-              let t_ =
-                ImplicitInstantiationKit.run
+              (match all_explicit_targs targs with
+              | Some targs ->
+                let t_ =
+                  instantiate_poly_call_or_new
+                    cx
+                    trace
+                    (tparams_loc, ids, t)
+                    targs
+                    ~use_op
+                    ~reason_op
+                    ~reason_tapp
+                in
+                rec_flow
                   cx
-                  check
                   trace
-                  ~use_op
-                  ~reason_op
-                  ~reason_tapp
-                  ~return_hint
-              in
-              rec_flow cx trace (t_, u)
+                  ( t_,
+                    ReactKitT
+                      ( use_op,
+                        reason_op,
+                        React.CreateElement
+                          { clone; component; config; children; return_hint; targs = None; tout }
+                      )
+                  )
+              | None ->
+                let poly_t = (tparams_loc, ids, t) in
+                let check =
+                  Implicit_instantiation_check.of_jsx
+                    l
+                    poly_t
+                    use_op
+                    reason_op
+                    clone
+                    ~component
+                    ~config
+                    ~targs
+                    children
+                in
+                let t_ =
+                  ImplicitInstantiationKit.run
+                    cx
+                    check
+                    trace
+                    ~use_op
+                    ~reason_op
+                    ~reason_tapp
+                    ~return_hint
+                in
+                rec_flow
+                  cx
+                  trace
+                  ( t_,
+                    ReactKitT
+                      ( use_op,
+                        reason_op,
+                        React.CreateElement
+                          { clone; component; config; children; return_hint; targs = None; tout }
+                      )
+                  ))
             | _ ->
               let use_op =
                 match use_op_of_use_t u with
@@ -6938,28 +6983,16 @@ struct
   (* Instantiate a polymorphic definition given tparam instantiations in a Call or
    * New expression. *)
   and instantiate_poly_call_or_new
-      cx trace ~use_op ~reason_op ~reason_tapp ?cache ?errs_ref (tparams_loc, xs, t) targs =
+      cx trace ~use_op ~reason_op ~reason_tapp ?errs_ref (tparams_loc, xs, t) targs =
     let (_, ts) =
       Nel.fold_left
-        (fun (targs, ts) typeparam ->
+        (fun (targs, ts) _ ->
           match targs with
           | [] -> ([], ts)
           | ExplicitArg t :: targs -> (targs, t :: ts)
-          | ImplicitArg (r, id) :: targs ->
-            (* `_` can introduce non-termination, just like omitting type arguments
-             * can. In order to protect against that non-termination we use cache_instantiate.
-             * Instead of letting instantiate_poly do that for us on every type argument, we
-             * do it ourselves here so that explicit type arguments do not have their reasons
-             * needlessly changed. Note that the ImplicitTypeParam reason that cache instatiations
-             * introduce can also change the use_op in a flow. In the NumT ~> StrT case,
-             * this can make meaningful differences in type checking behavior. Ensuring that
-             * the use_op/reason change happens _only_ on actually implicitly instantiated
-             * type variables helps preserve the correct type checking behavior. *)
-            let reason = mk_reason RImplicitInstantiation (aloc_of_reason r) in
-            let t = ImplicitTypeArgument.mk_targ cx typeparam reason reason_tapp in
-            let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
-            rec_flow_t cx trace ~use_op (t_, OpenT (r, id));
-            (targs, t_ :: ts))
+          | ImplicitArg _ :: _ ->
+            failwith
+              "targs containing ImplicitArg should be handled by ImplicitInstantiationKit instead.")
         (targs, [])
         xs
     in

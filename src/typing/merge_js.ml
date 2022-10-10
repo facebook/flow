@@ -362,12 +362,17 @@ let reduce_implicit_instantiation_check cx check =
   let op' =
     match op with
     | Call calltype -> Call (Tvar_resolver.resolved_fun_call_type ~require_resolution cx calltype)
-    | Constructor args ->
-      Constructor (ListUtils.ident_map (Tvar_resolver.resolved_call_arg cx ~require_resolution) args)
-    | Jsx { clone; component; config; children = (children, children_spread) } ->
+    | Constructor (targs, args) ->
+      let targs = Tvar_resolver.resolved_type_args cx ~require_resolution targs in
+      let args =
+        ListUtils.ident_map (Tvar_resolver.resolved_call_arg cx ~require_resolution) args
+      in
+      Constructor (targs, args)
+    | Jsx { clone; component; config; targs; children = (children, children_spread) } ->
       let reduce_t = Tvar_resolver.resolved_t cx ~require_resolution in
       let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
-      Jsx { clone; component = reduce_t component; config = reduce_t config; children }
+      let targs = Tvar_resolver.resolved_type_args cx ~require_resolution targs in
+      Jsx { clone; component = reduce_t component; config = reduce_t config; targs; children }
   in
   { lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
 
