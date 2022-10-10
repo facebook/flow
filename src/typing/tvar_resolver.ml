@@ -51,15 +51,60 @@ let resolver =
             ()
         );
         require_resolution
+
+    method call_arg cx require_resolution t =
+      match t with
+      | Arg t
+      | SpreadArg t ->
+        let _ = this#type_ cx Polarity.Positive require_resolution t in
+        require_resolution
+
+    method fun_call_type cx require_resolution t =
+      let {
+        call_this_t;
+        call_targs;
+        call_args_tlist;
+        call_tout = (r, id);
+        call_strict_arity = _;
+        call_speculation_hint_state = _;
+      } =
+        t
+      in
+      let _ = this#type_ cx Polarity.Positive require_resolution call_this_t in
+      let _ =
+        Option.map (List.map (this#targ cx Polarity.Positive require_resolution)) call_targs
+      in
+      let _ = List.map (this#call_arg cx require_resolution) call_args_tlist in
+      let _ = this#tvar cx Polarity.Positive require_resolution r id in
+      require_resolution
   end
 
-let resolve cx ~require_resolution t =
-  match (Context.env_mode cx, Context.current_phase cx <> Context.InitLib) with
-  | (Options.LTI, true) ->
-    let (_ : bool) = resolver#type_ cx Polarity.Positive require_resolution t in
+let run_conditionally cx f =
+  match (Context.env_mode cx, Context.current_phase cx) with
+  | (_, Context.InitLib) -> ()
+  | (Options.LTI, _)
+  | (_, Context.PostInference) ->
+    let (_ : bool) = f () in
     ()
   | _ -> ()
+
+let resolve cx ~require_resolution t =
+  run_conditionally cx (fun () -> resolver#type_ cx Polarity.Positive require_resolution t)
 
 let resolved_t cx ~require_resolution t =
   resolve cx ~require_resolution t;
   t
+
+let resolved_fun_call_type cx ~require_resolution funcalltype =
+  run_conditionally cx (fun () -> resolver#fun_call_type cx require_resolution funcalltype);
+  funcalltype
+
+let resolved_call_arg cx ~require_resolution call_arg =
+  run_conditionally cx (fun () -> resolver#call_arg cx require_resolution call_arg);
+  call_arg
+
+let resolved_typeparam cx ~require_resolution typeparam =
+  run_conditionally cx (fun () ->
+      resolver#type_param cx Polarity.Positive require_resolution typeparam
+  );
+  typeparam
