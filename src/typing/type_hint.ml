@@ -200,25 +200,23 @@ and type_of_hint_decomposition cx op reason t =
       | Decomp_ArrElement i ->
         Tvar.mk_no_wrap_where cx reason (fun element_t ->
             let use_t =
-              DestructuringT
-                ( reason,
-                  DestructAnnot,
-                  Elem
-                    (DefT
-                       ( reason,
-                         bogus_trust (),
-                         NumT (Literal (None, (float_of_int i, string_of_int i)))
-                       )
+              GetElemT
+                ( unknown_use,
+                  reason,
+                  true,
+                  DefT
+                    ( reason,
+                      bogus_trust (),
+                      NumT (Literal (None, (float_of_int i, string_of_int i)))
                     ),
-                  element_t,
-                  Reason.mk_id ()
+                  element_t
                 )
             in
             Flow_js.flow cx (t, use_t)
         )
       | Decomp_ArrSpread i ->
         Tvar.mk_no_wrap_where cx reason (fun tout ->
-            let use_t = DestructuringT (reason, DestructAnnot, ArrRest i, tout, Reason.mk_id ()) in
+            let use_t = ArrRestT (unknown_use, reason, i, OpenT tout) in
             Flow_js.flow cx (t, use_t)
         )
       | Decomp_Await ->
@@ -313,7 +311,13 @@ and type_of_hint_decomposition cx op reason t =
       | Decomp_ObjProp name ->
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t =
-              DestructuringT (reason, DestructAnnot, Prop (name, false), tout, Reason.mk_id ())
+              GetPropT
+                ( unknown_use,
+                  reason,
+                  Some (Reason.mk_id ()),
+                  Named (reason, OrdinaryName name),
+                  tout
+                )
             in
             (* TODO:
                Be more lenient with union branches that failed to match.
@@ -323,12 +327,12 @@ and type_of_hint_decomposition cx op reason t =
       | Decomp_ObjComputed ->
         Tvar.mk_no_wrap_where cx reason (fun element_t ->
             let use_t =
-              DestructuringT
-                ( reason,
-                  DestructAnnot,
-                  Elem (DefT (reason, bogus_trust (), StrT AnyLiteral)),
-                  element_t,
-                  Reason.mk_id ()
+              GetElemT
+                ( unknown_use,
+                  reason,
+                  true,
+                  DefT (reason, bogus_trust (), StrT AnyLiteral),
+                  element_t
                 )
             in
             Flow_js.flow cx (t, use_t)
@@ -337,7 +341,7 @@ and type_of_hint_decomposition cx op reason t =
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t =
               (* We assume the object spread is at the start of the object. *)
-              DestructuringT (reason, DestructAnnot, ObjRest [], tout, Reason.mk_id ())
+              ObjRestT (reason, [], OpenT tout, Reason.mk_id ())
             in
             Flow_js.flow cx (t, use_t)
         )
