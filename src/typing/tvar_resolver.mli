@@ -5,16 +5,39 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val resolve : Context.t -> require_resolution:bool -> Type.t -> unit
+type unconstrained_tvar_resolution_strategy =
+  | Allow
+  | Error
+  | Exception
 
-val resolved_t : Context.t -> require_resolution:bool -> Type.t -> Type.t
+exception UnconstrainedTvarException of int
+
+val resolve :
+  Context.t -> on_unconstrained_tvar:unconstrained_tvar_resolution_strategy -> Type.t -> unit
+
+val resolved_t :
+  Context.t -> on_unconstrained_tvar:unconstrained_tvar_resolution_strategy -> Type.t -> Type.t
 
 val resolved_fun_call_type :
-  Context.t -> require_resolution:bool -> Type.funcalltype -> Type.funcalltype
+  Context.t ->
+  on_unconstrained_tvar:unconstrained_tvar_resolution_strategy ->
+  Type.funcalltype ->
+  Type.funcalltype
 
-val resolved_call_arg : Context.t -> require_resolution:bool -> Type.call_arg -> Type.call_arg
+val resolved_call_arg :
+  Context.t ->
+  on_unconstrained_tvar:unconstrained_tvar_resolution_strategy ->
+  Type.call_arg ->
+  Type.call_arg
 
 val resolved_type_args :
-  Context.t -> require_resolution:bool -> Type.targ list option -> Type.targ list option
+  Context.t ->
+  on_unconstrained_tvar:unconstrained_tvar_resolution_strategy ->
+  Type.targ list option ->
+  Type.targ list option
 
-val resolved_typeparam : Context.t -> require_resolution:bool -> Type.typeparam -> Type.typeparam
+val resolved_typeparam :
+  Context.t ->
+  on_unconstrained_tvar:unconstrained_tvar_resolution_strategy ->
+  Type.typeparam ->
+  Type.typeparam

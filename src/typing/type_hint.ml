@@ -12,7 +12,7 @@ module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 
 let in_sandbox_cx cx t ~f =
   let original_errors = Context.errors cx in
-  let result = f (Tvar_resolver.resolved_t cx ~require_resolution:true t) in
+  let result = f (Tvar_resolver.resolved_t cx ~on_unconstrained_tvar:Tvar_resolver.Error t) in
   let new_errors = Context.errors cx in
   if Flow_error.ErrorSet.equal original_errors new_errors then
     Some result

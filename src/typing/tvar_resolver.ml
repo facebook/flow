@@ -9,15 +9,22 @@ open Type
 open Reason
 open Utils_js
 
+type unconstrained_tvar_resolution_strategy =
+  | Allow
+  | Error
+  | Exception
+
+exception UnconstrainedTvarException of int
+
 let resolver =
   object (this)
-    inherit [bool] Type_visitor.t
+    inherit [unconstrained_tvar_resolution_strategy] Type_visitor.t
 
-    method! tvar cx pole require_resolution r id =
+    method! tvar cx pole strategy r id =
       let module C = Type.Constraint in
       let (root_id, root) = Context.find_root cx id in
       match root.C.constraints with
-      | C.FullyResolved _ -> require_resolution
+      | C.FullyResolved _ -> strategy
       | _ ->
         let t =
           match Flow_js_utils.merge_tvar_opt cx r root_id with
@@ -26,7 +33,9 @@ let resolver =
             if Context.in_synthesis_mode cx then
               None
             else begin
-              ( if require_resolution then
+              (match strategy with
+              | Allow -> ()
+              | Error ->
                 let id_msg =
                   match Context.verbose cx with
                   | Some verbose when Debug_js.Verbose.verbose_in_file cx verbose -> Some root_id
@@ -35,7 +44,7 @@ let resolver =
                 Flow_js_utils.add_output
                   cx
                   Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar id_msg))
-              );
+              | Exception -> raise (UnconstrainedTvarException root_id));
               let desc =
                 match desc_of_reason r with
                 | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
@@ -47,19 +56,19 @@ let resolver =
         Base.Option.iter t ~f:(fun t ->
             let root = C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) } in
             Context.add_tvar cx root_id root;
-            let (_ : bool) = this#type_ cx pole require_resolution t in
+            let (_ : unconstrained_tvar_resolution_strategy) = this#type_ cx pole strategy t in
             ()
         );
-        require_resolution
+        strategy
 
-    method call_arg cx require_resolution t =
+    method call_arg cx strategy t =
       match t with
       | Arg t
       | SpreadArg t ->
-        let _ = this#type_ cx Polarity.Positive require_resolution t in
-        require_resolution
+        let _ = this#type_ cx Polarity.Positive strategy t in
+        strategy
 
-    method fun_call_type cx require_resolution t =
+    method fun_call_type cx strategy t =
       let {
         call_this_t;
         call_targs;
@@ -70,13 +79,11 @@ let resolver =
       } =
         t
       in
-      let _ = this#type_ cx Polarity.Positive require_resolution call_this_t in
-      let _ =
-        Option.map (List.map (this#targ cx Polarity.Positive require_resolution)) call_targs
-      in
-      let _ = List.map (this#call_arg cx require_resolution) call_args_tlist in
-      let _ = this#tvar cx Polarity.Positive require_resolution r id in
-      require_resolution
+      let _ = this#type_ cx Polarity.Positive strategy call_this_t in
+      let _ = Option.map (List.map (this#targ cx Polarity.Positive strategy)) call_targs in
+      let _ = List.map (this#call_arg cx strategy) call_args_tlist in
+      let _ = this#tvar cx Polarity.Positive strategy r id in
+      strategy
   end
 
 let run_conditionally cx f =
@@ -87,29 +94,29 @@ let run_conditionally cx f =
     ignore @@ f ()
   | _ -> ()
 
-let resolve cx ~require_resolution t =
-  run_conditionally cx (fun () -> resolver#type_ cx Polarity.Positive require_resolution t)
+let resolve cx ~on_unconstrained_tvar t =
+  run_conditionally cx (fun () -> resolver#type_ cx Polarity.Positive on_unconstrained_tvar t)
 
-let resolved_t cx ~require_resolution t =
-  resolve cx ~require_resolution t;
+let resolved_t cx ~on_unconstrained_tvar t =
+  resolve cx ~on_unconstrained_tvar t;
   t
 
-let resolved_fun_call_type cx ~require_resolution funcalltype =
-  run_conditionally cx (fun () -> resolver#fun_call_type cx require_resolution funcalltype);
+let resolved_fun_call_type cx ~on_unconstrained_tvar funcalltype =
+  run_conditionally cx (fun () -> resolver#fun_call_type cx on_unconstrained_tvar funcalltype);
   funcalltype
 
-let resolved_call_arg cx ~require_resolution call_arg =
-  run_conditionally cx (fun () -> resolver#call_arg cx require_resolution call_arg);
+let resolved_call_arg cx ~on_unconstrained_tvar call_arg =
+  run_conditionally cx (fun () -> resolver#call_arg cx on_unconstrained_tvar call_arg);
   call_arg
 
-let resolved_type_args cx ~require_resolution targs =
+let resolved_type_args cx ~on_unconstrained_tvar targs =
   run_conditionally cx (fun () ->
-      Option.map (List.map (resolver#targ cx Polarity.Positive require_resolution)) targs
+      Option.map (List.map (resolver#targ cx Polarity.Positive on_unconstrained_tvar)) targs
   );
   targs
 
-let resolved_typeparam cx ~require_resolution typeparam =
+let resolved_typeparam cx ~on_unconstrained_tvar typeparam =
   run_conditionally cx (fun () ->
-      resolver#type_param cx Polarity.Positive require_resolution typeparam
+      resolver#type_param cx Polarity.Positive on_unconstrained_tvar typeparam
   );
   typeparam

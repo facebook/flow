@@ -353,25 +353,27 @@ class resolver_visitor =
 let reduce_implicit_instantiation_check cx check =
   let open Implicit_instantiation_check in
   let { lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in
-  (* The tvars get resolved either way, but setting this to true causes errors when something
-   * is not resolved. This is undesirable for the post-inference pass *)
-  let require_resolution = false in
-  let lhs' = Tvar_resolver.resolved_t cx ~require_resolution lhs in
-  let tparams' = Nel.ident_map (Tvar_resolver.resolved_typeparam cx ~require_resolution) tparams in
-  let t' = Tvar_resolver.resolved_t cx ~require_resolution t in
+  (* The tvars get resolved either way.
+     Erroring on unresolved tvars is undesirable for the post-inference pass *)
+  let on_unconstrained_tvar = Tvar_resolver.Allow in
+  let lhs' = Tvar_resolver.resolved_t cx ~on_unconstrained_tvar lhs in
+  let tparams' =
+    Nel.ident_map (Tvar_resolver.resolved_typeparam cx ~on_unconstrained_tvar) tparams
+  in
+  let t' = Tvar_resolver.resolved_t cx ~on_unconstrained_tvar t in
   let op' =
     match op with
-    | Call calltype -> Call (Tvar_resolver.resolved_fun_call_type ~require_resolution cx calltype)
+    | Call calltype -> Call (Tvar_resolver.resolved_fun_call_type ~on_unconstrained_tvar cx calltype)
     | Constructor (targs, args) ->
-      let targs = Tvar_resolver.resolved_type_args cx ~require_resolution targs in
+      let targs = Tvar_resolver.resolved_type_args cx ~on_unconstrained_tvar targs in
       let args =
-        ListUtils.ident_map (Tvar_resolver.resolved_call_arg cx ~require_resolution) args
+        ListUtils.ident_map (Tvar_resolver.resolved_call_arg cx ~on_unconstrained_tvar) args
       in
       Constructor (targs, args)
     | Jsx { clone; component; config; targs; children = (children, children_spread) } ->
-      let reduce_t = Tvar_resolver.resolved_t cx ~require_resolution in
+      let reduce_t = Tvar_resolver.resolved_t cx ~on_unconstrained_tvar in
       let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
-      let targs = Tvar_resolver.resolved_type_args cx ~require_resolution targs in
+      let targs = Tvar_resolver.resolved_type_args cx ~on_unconstrained_tvar targs in
       Jsx { clone; component = reduce_t component; config = reduce_t config; targs; children }
   in
   { lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
