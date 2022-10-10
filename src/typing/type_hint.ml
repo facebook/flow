@@ -8,11 +8,12 @@
 open Reason
 open Type
 open Hint_api
+open Utils_js
 module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 
 let in_sandbox_cx cx t ~f =
   let original_errors = Context.errors cx in
-  let result = f (Tvar_resolver.resolved_t cx ~on_unconstrained_tvar:Tvar_resolver.Error t) in
+  let result = f (Tvar_resolver.resolved_t cx ~on_unconstrained_tvar:Tvar_resolver.Allow t) in
   let new_errors = Context.errors cx in
   if Flow_error.ErrorSet.equal original_errors new_errors then
     Some result
@@ -367,6 +368,13 @@ and type_of_hint_decomposition cx op reason t =
       | Decomp_Instantiated instantiation_hint -> decomp_instantiated cx t instantiation_hint
   )
 
+and fully_resolve_final_result cx t =
+  match Tvar_resolver.resolved_t cx ~on_unconstrained_tvar:Tvar_resolver.Exception t with
+  | exception Tvar_resolver.UnconstrainedTvarException i ->
+    Debug_js.Verbose.print_if_verbose cx [spf "Under-constrained tvar %d" i];
+    None
+  | t -> Some t
+
 and evaluate_hint_ops cx reason t ops =
   let rec loop t = function
     | [] -> Some t
@@ -380,13 +388,13 @@ and evaluate_hint_ops cx reason t ops =
      unsolved tvars in the final result will fail the evaluation. *)
   match Context.run_in_synthesis_mode cx (fun () -> loop t ops) with
   | (_, None) -> None
-  | (_, Some t) -> in_sandbox_cx cx t ~f:Base.Fn.id
+  | (_, Some t) -> fully_resolve_final_result cx t
 
 and evaluate_hint cx reason hint =
   match hint with
   | Hint_None -> None
   | Hint_Placeholder -> Some (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
-  | Hint_t t -> evaluate_hint_ops cx reason t []
+  | Hint_t t -> fully_resolve_final_result cx t
   | Hint_Decomp (ops, t) -> ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t
 
 let sandbox_flow_succeeds cx (t1, t2) =
