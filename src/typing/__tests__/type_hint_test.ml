@@ -258,6 +258,7 @@ let mk_cx ~verbose () =
 
 let mk_hint base_t ops =
   ops
+  |> List.mapi (fun i op -> (i, op))
   |> Nel.of_list
   |> Base.Option.value_map ~default:(Hint_t base_t) ~f:(fun l -> Hint_Decomp (l, base_t))
 

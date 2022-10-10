@@ -378,8 +378,16 @@ and fully_resolve_final_result cx t =
 and evaluate_hint_ops cx reason t ops =
   let rec loop t = function
     | [] -> Some t
-    | op :: ops ->
-      (match type_of_hint_decomposition cx op reason t with
+    | (id, op) :: ops ->
+      let result =
+        match Context.hint_eval_cache_find_opt cx id with
+        | Some result -> result
+        | None ->
+          let result = type_of_hint_decomposition cx op reason t in
+          Context.add_hint_eval_cache_entry cx id result;
+          result
+      in
+      (match result with
       | Some t -> loop t ops
       | None -> None)
   in

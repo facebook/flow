@@ -431,7 +431,8 @@ struct
         | Hint_api.Hint_t hint_node -> depends_of_hint_node state hint_node
         | Hint_api.Hint_Decomp (ops, hint_node) ->
           Nel.fold_left
-            (fun acc -> function
+            (fun acc (_id, op) ->
+              match op with
               | Hint_api.Decomp_SentinelRefinement checks ->
                 SMap.fold
                   (fun _ check acc ->

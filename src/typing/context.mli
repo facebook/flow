@@ -422,6 +422,8 @@ val add_global_value_cache_entry : t -> Reason.name -> Type.t -> unit
 
 val add_env_cache_entry : t -> for_value:bool -> int -> Type.t -> unit
 
+val add_hint_eval_cache_entry : t -> int -> Type.t option -> unit
+
 (* Flow allows you test test if a property exists inside a conditional. However, we only wan to
  * allow this test if there's a chance that the property might exist. So `if (foo.bar)` should be
  *
@@ -517,6 +519,8 @@ val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Tr
 val global_value_cache_find_opt : t -> Reason.name -> Type.t option
 
 val env_cache_find_opt : t -> for_value:bool -> int -> Type.t option
+
+val hint_eval_cache_find_opt : t -> int -> Type.t option option
 
 val constraint_cache : t -> Type.FlowSet.t ref
 

@@ -68,7 +68,7 @@ and ('t, 'targs, 'args) hint_decomposition =
 
 and ('t, 'targs, 'args) hint =
   | Hint_t of 't
-  | Hint_Decomp of ('t, 'targs, 'args) hint_decomposition Nel.t * 't
+  | Hint_Decomp of (int * ('t, 'targs, 'args) hint_decomposition) Nel.t * 't
   (* The hint placeholder used in env_resolution to pass to expression type checkers.
      It will eventually be removed once we move all hint decomposition logic into env_resolution. *)
   | Hint_Placeholder
@@ -99,14 +99,17 @@ let string_of_hint ~on_hint = function
   | Hint_Decomp (ops, t) ->
     Utils_js.spf
       "Hint_Decomp (%s)(%s)"
-      (Nel.map string_of_hint_unknown_kind ops |> Nel.to_list |> String.concat ", ")
+      (Nel.map (fun (_, op) -> string_of_hint_unknown_kind op) ops
+      |> Nel.to_list
+      |> String.concat ", "
+      )
       (on_hint t)
   | Hint_Placeholder -> "Hint_Placeholder"
   | Hint_None -> "Hint_None"
 
 let decompose_hint decomp = function
-  | Hint_t t -> Hint_Decomp (Nel.one decomp, t)
-  | Hint_Decomp (decomps, t) -> Hint_Decomp (Nel.cons decomp decomps, t)
+  | Hint_t t -> Hint_Decomp (Nel.one (Reason.mk_id (), decomp), t)
+  | Hint_Decomp (decomps, t) -> Hint_Decomp (Nel.cons (Reason.mk_id (), decomp) decomps, t)
   | Hint_Placeholder -> Hint_Placeholder
   | Hint_None -> Hint_None
 
@@ -152,8 +155,10 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list = function
 
 and map ~map_base_hint ~map_targs ~map_arg_list = function
   | Hint_t t -> Hint_t (map_base_hint t)
-  | Hint_Decomp (decomps, t) ->
+  | Hint_Decomp (ops, t) ->
     Hint_Decomp
-      (Nel.map (map_decomp_op ~map_base_hint ~map_targs ~map_arg_list) decomps, map_base_hint t)
+      ( Nel.map (fun (i, op) -> (i, map_decomp_op ~map_base_hint ~map_targs ~map_arg_list op)) ops,
+        map_base_hint t
+      )
   | Hint_Placeholder -> Hint_Placeholder
   | Hint_None -> Hint_None

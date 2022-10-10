@@ -197,6 +197,7 @@ type t = {
   module_info: Module_info.t;
   mutable require_map: Type.tvar ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
+  mutable hint_eval_cache: Type.t option IMap.t;
   mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;
   mutable in_synthesis_mode: bool;
@@ -363,6 +364,7 @@ let make ccx metadata file aloc_table phase =
     module_info = Module_info.empty_cjs_module ();
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
+    hint_eval_cache = IMap.empty;
     declare_module_ref = None;
     environment = Loc_env.empty Name_def.Global;
     in_synthesis_mode = false;
@@ -589,6 +591,8 @@ let in_synthesis_mode cx = cx.in_synthesis_mode
 let any_propagation cx = cx.metadata.any_propagation
 
 let node_cache cx = cx.node_cache
+
+let hint_eval_cache_find_opt cx id = IMap.find_opt id cx.hint_eval_cache
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
 
@@ -910,6 +914,9 @@ let unnecessary_invariants cx =
         (loc, r) :: acc)
     cx.ccx.invariants_useful
     []
+
+let add_hint_eval_cache_entry cx id result =
+  cx.hint_eval_cache <- IMap.add id result cx.hint_eval_cache
 
 (* utils *)
 let find_real_props cx id =

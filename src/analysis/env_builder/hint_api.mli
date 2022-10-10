@@ -43,7 +43,7 @@ and ('t, 'targs, 'args) hint_decomposition =
 
 and ('t, 'targs, 'args) hint =
   | Hint_t of 't
-  | Hint_Decomp of ('t, 'targs, 'args) hint_decomposition Nel.t * 't
+  | Hint_Decomp of (int * ('t, 'targs, 'args) hint_decomposition) Nel.t * 't
   | Hint_Placeholder
   | Hint_None
 
