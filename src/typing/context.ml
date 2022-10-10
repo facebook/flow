@@ -191,7 +191,7 @@ let string_of_phase = function
 type t = {
   ccx: component_t;
   file: File_key.t;
-  phase: phase;
+  mutable phase: phase;
   aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
@@ -764,6 +764,13 @@ let run_in_implicit_instantiation_mode cx f =
   cx.ccx.in_implicit_instantiation <- true;
   let result = f () in
   cx.ccx.in_implicit_instantiation <- saved;
+  result
+
+let run_in_post_inference_mode cx f =
+  let saved = cx.phase in
+  cx.phase <- PostInference;
+  let result = f () in
+  cx.phase <- saved;
   result
 
 let set_trust_graph cx trust_graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }

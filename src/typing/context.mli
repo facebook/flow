@@ -392,6 +392,8 @@ val set_graph : t -> Type.Constraint.node IMap.t -> unit
 
 val run_in_implicit_instantiation_mode : t -> (unit -> 'a) -> 'a
 
+val run_in_post_inference_mode : t -> (unit -> 'a) -> 'a
+
 val set_trust_graph : t -> Trust_constraint.node IMap.t -> unit
 
 val set_property_maps : t -> Type.Properties.map -> unit
