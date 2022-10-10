@@ -294,80 +294,6 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
-(* It's unfortunate that this function and prepare_implicit_instantiation_checks_and cx are here,
- * but ocamlbuild erroneously detects a cycle when using the context optimizer in
- * implicit_instantiation.ml. dune does not detect that cycle, and neither does buck.
- *)
-let reduce_implicit_instantiation_check reducer cx pole check =
-  let open Implicit_instantiation_check in
-  let { lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in
-  let lhs' = reducer#type_ cx pole lhs in
-  let tparams' = Nel.ident_map (reducer#type_param cx pole) tparams in
-  let t' = reducer#type_ cx pole t in
-  let op' =
-    match op with
-    | Call calltype -> Call (reducer#fun_call_type cx pole calltype)
-    | Constructor args -> Constructor (ListUtils.ident_map (reducer#call_arg cx pole) args)
-    | Jsx { clone; component; config; children = (children, children_spread) } ->
-      let reduce_t = reducer#type_ cx pole in
-      let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
-      Jsx { clone; component = reduce_t component; config = reduce_t config; children }
-  in
-  { lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
-
-let prepare_implicit_instantiation_checks_and_cx ~cx ~master_cx implicit_instantiation_checks =
-  let file = Context.file cx in
-  let metadata = Context.metadata cx in
-  let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
-  let ccx = Context.make_ccx master_cx in
-  let implicit_instantiation_cx = Context.make ccx metadata file aloc_table Context.PostInference in
-  let reducer =
-    new Context_optimizer.context_optimizer ~no_lowers:(fun _ -> Type.Unsoundness.merged_any)
-  in
-  let implicit_instantiation_checks =
-    Base.List.map
-      ~f:(reduce_implicit_instantiation_check reducer cx Polarity.Neutral)
-      implicit_instantiation_checks
-  in
-  Context.merge_into
-    ccx
-    {
-      Type.TypeContext.graph = reducer#get_reduced_graph;
-      trust_graph = reducer#get_reduced_trust_graph;
-      property_maps = reducer#get_reduced_property_maps;
-      call_props = reducer#get_reduced_call_props;
-      export_maps = reducer#get_reduced_export_maps;
-      evaluated = reducer#get_reduced_evaluated;
-    };
-  (implicit_instantiation_checks, implicit_instantiation_cx)
-
-let check_implicit_instantiations cx master_cx =
-  if Context.run_post_inference_implicit_instantiation cx then
-    let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
-    let (implicit_instantiation_checks, implicit_instantiation_cx) =
-      prepare_implicit_instantiation_checks_and_cx ~cx ~master_cx implicit_instantiation_checks
-    in
-    Context.run_in_implicit_instantiation_mode implicit_instantiation_cx (fun () ->
-        PierceImplicitInstantiation.fold
-          ~implicit_instantiation_cx
-          ~cx
-          ~init:()
-          ~f:(fun _ _ _ _ -> ())
-          ~post:(fun ~cx ~implicit_instantiation_cx ->
-            let new_errors = Context.errors implicit_instantiation_cx in
-            Flow_error.ErrorSet.iter
-              (fun error ->
-                Error_message.(
-                  match Flow_error.msg_of_error error with
-                  | EImplicitInstantiationUnderconstrainedError _
-                  | EImplicitInstantiationTemporaryError _ ->
-                    Context.add_error cx error
-                  | _ -> ()
-                ))
-              new_errors)
-          implicit_instantiation_checks
-    )
-
 class resolver_visitor =
   (* TODO: replace this with the context_optimizer *)
   let no_lowers _cx r = Type.Unsoundness.merged_any r in
@@ -419,6 +345,68 @@ class resolver_visitor =
       else
         Context.make_call_prop cx t'
   end
+
+(* It's unfortunate that this function and prepare_implicit_instantiation_checks are here,
+ * but ocamlbuild erroneously detects a cycle when using the context optimizer in
+ * implicit_instantiation.ml. dune does not detect that cycle, and neither does buck.
+ *)
+let reduce_implicit_instantiation_check cx check =
+  let open Implicit_instantiation_check in
+  let { lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in
+  (* The tvars get resolved either way, but setting this to true causes errors when something
+   * is not resolved. This is undesirable for the post-inference pass *)
+  let require_resolution = false in
+  let lhs' = Tvar_resolver.resolved_t cx ~require_resolution lhs in
+  let tparams' = Nel.ident_map (Tvar_resolver.resolved_typeparam cx ~require_resolution) tparams in
+  let t' = Tvar_resolver.resolved_t cx ~require_resolution t in
+  let op' =
+    match op with
+    | Call calltype -> Call (Tvar_resolver.resolved_fun_call_type ~require_resolution cx calltype)
+    | Constructor args ->
+      Constructor (ListUtils.ident_map (Tvar_resolver.resolved_call_arg cx ~require_resolution) args)
+    | Jsx { clone; component; config; children = (children, children_spread) } ->
+      let reduce_t = Tvar_resolver.resolved_t cx ~require_resolution in
+      let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
+      Jsx { clone; component = reduce_t component; config = reduce_t config; children }
+  in
+  { lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
+
+let prepare_implicit_instantiation_checks ~cx implicit_instantiation_checks =
+  let implicit_instantiation_checks =
+    Base.List.map ~f:(reduce_implicit_instantiation_check cx) implicit_instantiation_checks
+  in
+  implicit_instantiation_checks
+
+let check_implicit_instantiations cx =
+  Context.run_in_post_inference_mode cx (fun () ->
+      if Context.run_post_inference_implicit_instantiation cx then
+        let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
+        let implicit_instantiation_checks =
+          prepare_implicit_instantiation_checks ~cx implicit_instantiation_checks
+        in
+        let errors = Context.errors cx in
+        Context.run_in_implicit_instantiation_mode cx (fun () ->
+            PierceImplicitInstantiation.fold
+              ~implicit_instantiation_cx:cx
+              ~cx
+              ~init:()
+              ~f:(fun _ _ _ _ -> ())
+              ~post:(fun ~cx ~implicit_instantiation_cx:_ ->
+                let new_errors = Flow_error.ErrorSet.diff (Context.errors cx) errors in
+                Context.reset_errors cx errors;
+                Flow_error.ErrorSet.iter
+                  (fun error ->
+                    Error_message.(
+                      match Flow_error.msg_of_error error with
+                      | EImplicitInstantiationUnderconstrainedError _
+                      | EImplicitInstantiationTemporaryError _ ->
+                        Context.add_error cx error
+                      | _ -> ()
+                    ))
+                  new_errors)
+              implicit_instantiation_checks
+        )
+  )
 
 let detect_matching_props_violations init_cx master_cx =
   let open Type in
@@ -631,7 +619,7 @@ let post_merge_checks cx master_cx ast tast metadata =
   check_constrained_writes cx master_cx;
   detect_sketchy_null_checks cx master_cx;
   detect_non_voidable_properties cx;
-  check_implicit_instantiations cx master_cx;
+  check_implicit_instantiations cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
