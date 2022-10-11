@@ -140,11 +140,8 @@ struct
           | DefT (_, _, EmptyT)
           | AnyT _ ->
             loop cx pole acc (None, targs)
-          | t ->
-            failwith
-            @@ "Encountered a "
-            ^ string_of_ctor t
-            ^ " in typeapp case of fully constrained analysis"
+          (* All other cases are errors *)
+          | _ -> loop cx pole acc (None, targs)
     end
 
   type use_t_result =
