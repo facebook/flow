@@ -880,8 +880,33 @@ struct
                  (fun this_super_kind_and_loc acc ->
                    EnvMap.add this_super_kind_and_loc kind_and_loc acc)
                  locs
-          | (Function { function_loc; _ }, _, _, _)
-          | (Binding (Root (FunctionValue { function_loc; arrow = false; _ })), _, _, _) ->
+          | ( Function
+                {
+                  function_loc;
+                  function_ =
+                    { Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ }); _ };
+                  _;
+                },
+              _,
+              _,
+              _
+            )
+          | ( Binding
+                (Root
+                  (FunctionValue
+                    {
+                      function_loc;
+                      function_ =
+                        { Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ }); _ };
+                      arrow = false;
+                      _;
+                    }
+                    )
+                  ),
+              _,
+              _,
+              _
+            ) ->
             EnvMap.add (Env_api.FunctionThisLoc, function_loc) kind_and_loc acc
           | _ -> acc)
         map

@@ -6639,3 +6639,15 @@ declare var b2: {bar: Bar};
         (15, 22) to (15, 25) => {
           Global Bar
         }] |}]
+
+let%expect_test "annot_this" =
+  print_ssa_test {|
+function f(this: number) {
+  this;
+}
+|};
+    [%expect {|
+      [
+        (3, 2) to (3, 6) => {
+          (2, 11) to (2, 23): (this)
+        }] |}]

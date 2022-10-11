@@ -1704,6 +1704,20 @@ module Make
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
+            | Bindings.ThisAnnot ->
+              let reason = mk_reason RThis loc in
+              let write_entries =
+                EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
+              in
+              env_state <- { env_state with write_entries };
+              {
+                val_ref = ref (Val.one reason);
+                havoc = Val.one reason;
+                writes_by_closure_provider_val = None;
+                def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+                kind;
+              }
             | Bindings.DeclaredClass ->
               let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
               let write_entries =
@@ -3476,8 +3490,8 @@ module Make
         );
         stmt
 
-      method! this_binding_function_id_opt ~fun_loc id =
-        super#this_binding_function_id_opt ~fun_loc id;
+      method! this_binding_function_id_opt ~fun_loc ~has_this_annot id =
+        super#this_binding_function_id_opt ~fun_loc ~has_this_annot id;
         let function_write_loc =
           match id with
           | Some (loc, _) -> loc
@@ -3489,7 +3503,10 @@ module Make
             env_state <- { env_state with write_entries };
             fun_loc
         in
-        if this#is_assigning_write (Env_api.OrdinaryNameLoc, function_write_loc) then
+        if
+          this#is_assigning_write (Env_api.OrdinaryNameLoc, function_write_loc)
+          && not has_this_annot
+        then
           let write_entries =
             EnvMap.add
               (Env_api.FunctionThisLoc, fun_loc)
@@ -3591,8 +3608,22 @@ module Make
                       in
                       let bindings =
                         if not is_arrow then
-                          let id name = (fun_loc, { Ast.Identifier.name; comments = None }) in
-                          Bindings.(add (id "this", Const) bindings)
+                          match params with
+                          | (_, { Ast.Function.Params.this_ = Some (loc, _); _ }) ->
+                            let id name = (loc, { Ast.Identifier.name; comments = None }) in
+                            env_state <-
+                              {
+                                env_state with
+                                write_entries =
+                                  EnvMap.add_ordinary
+                                    loc
+                                    (Env_api.AssigningWrite (mk_reason RThis loc))
+                                    env_state.write_entries;
+                              };
+                            Bindings.(add (id "this", ThisAnnot) bindings)
+                          | _ ->
+                            let id name = (fun_loc, { Ast.Identifier.name; comments = None }) in
+                            Bindings.(add (id "this", Const) bindings)
                         else
                           bindings
                       in

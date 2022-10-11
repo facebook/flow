@@ -543,7 +543,21 @@ class def_finder env_entries providers toplevel_scope =
               | Property (_, Property.Method _) -> acc (* this-in-object is banned. *)
               | Property (_, Property.Init { value = (_, Ast.Expression.ArrowFunction _); _ }) ->
                 acc (* Arrow functions don't bind `this`. *)
-              | Property (_, Property.Init { value = (f_loc, Ast.Expression.Function _); _ }) ->
+              | Property
+                  ( _,
+                    Property.Init
+                      {
+                        value =
+                          ( f_loc,
+                            Ast.Expression.Function
+                              {
+                                Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ });
+                                _;
+                              }
+                          );
+                        _;
+                      }
+                  ) ->
                 EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
               | _ ->
                 (* Everything else is impossible due to obj_properties_synthesizable check. *)
@@ -670,6 +684,26 @@ class def_finder env_entries providers toplevel_scope =
       Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
       ignore @@ super#function_rest_param expr
 
+    method! function_this_param this_ =
+      let (loc, { Ast.Function.ThisParam.annot; comments = _ }) = this_ in
+      this#add_ordinary_binding
+        loc
+        (mk_reason RThis loc)
+        (Binding
+           (Root
+              (Annotation
+                 {
+                   tparams_map = tparams;
+                   optional = false;
+                   default_expression = None;
+                   param_loc = None;
+                   annot;
+                 }
+              )
+           )
+        );
+      super#function_this_param this_
+
     method! catch_clause_pattern pat =
       Destructure.pattern ~f:this#add_ordinary_binding (Root Catch) pat;
       super#catch_clause_pattern pat
@@ -774,7 +808,7 @@ class def_finder env_entries providers toplevel_scope =
         (fun () ->
           let {
             Ast.Function.id = _;
-            params = (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ = _ });
+            params = (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ });
             body;
             async;
             generator;
@@ -787,6 +821,7 @@ class def_finder env_entries providers toplevel_scope =
             expr
           in
           Base.Option.iter fun_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
+          ignore (Base.Option.map this_ ~f:this#function_this_param : _ option);
           Base.List.iteri
             ~f:(fun i ->
               this#visit_function_param ~hint:(decompose_hint (Decomp_FuncParam i) func_hint))
@@ -890,20 +925,18 @@ class def_finder env_entries providers toplevel_scope =
                   ( _,
                     {
                       Ast.Class.PrivateField.value =
-                        Ast.Class.Property.Initialized (f_loc, Ast.Expression.Function _);
+                        Ast.Class.Property.Initialized
+                          ( f_loc,
+                            Ast.Expression.Function
+                              {
+                                Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ });
+                                _;
+                              }
+                          );
                       _;
                     }
                   ) ->
                 EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
-              | Ast.Class.Body.Method (_, { Ast.Class.Method.value = (f_loc, f); _ }) ->
-                let has_this_param =
-                  let { Ast.Function.params = (_, { Ast.Function.Params.this_; _ }); _ } = f in
-                  Base.Option.is_some this_
-                in
-                if has_this_param then
-                  EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
-                else
-                  acc
               | _ -> acc
             )
           in

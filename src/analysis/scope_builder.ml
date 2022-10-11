@@ -542,7 +542,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method private hoist_annotations f = f ()
 
-      method private this_binding_function_id_opt ~fun_loc:_ ident =
+      method private this_binding_function_id_opt ~fun_loc:_ ~has_this_annot:_ ident =
         Base.Option.iter ident ~f:(fun id -> ignore @@ this#function_identifier id)
 
       method! function_declaration loc (expr : (L.t, L.t) Ast.Function.t) =
@@ -556,7 +556,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           let open Ast.Function in
           let {
             id;
-            params;
+            params = (_, { Ast.Function.Params.this_; _ }) as params;
             body;
             return;
             tparams;
@@ -568,7 +568,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           } =
             expr
           in
-          this#this_binding_function_id_opt ~fun_loc:loc id;
+          this#this_binding_function_id_opt
+            ~fun_loc:loc
+            ~has_this_annot:(Base.Option.is_some this_)
+            id;
           let generator_return_loc =
             match (generator, return) with
             | (false, _) -> None
@@ -599,7 +602,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           let open Ast.Function in
           let {
             id;
-            params;
+            params = (_, { Ast.Function.Params.this_; _ }) as params;
             body;
             return;
             tparams;
@@ -629,7 +632,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               if is_arrow then
                 run_opt this#function_identifier id
               else
-                this#this_binding_function_id_opt ~fun_loc:loc id;
+                this#this_binding_function_id_opt
+                  ~fun_loc:loc
+                  ~has_this_annot:(Base.Option.is_some this_)
+                  id;
               (* This function is not hoisted, so we just traverse the signature *)
               this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
                   this#lambda ~is_arrow ~fun_loc:loc ~generator_return_loc params predicate body;

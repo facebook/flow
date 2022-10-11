@@ -10,6 +10,7 @@ module Ast = Flow_ast
 type kind =
   | Var
   | Let
+  | ThisAnnot
   | Const
   | Type of { imported: bool }
   | Enum

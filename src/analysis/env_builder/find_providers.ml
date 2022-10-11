@@ -901,6 +901,10 @@ end = struct
         end;
         super#identifier ident
 
+      method! function_this_param ((loc, _) as this_) =
+        this#new_entry "this" Bindings.Const Ast.Statement.VariableDeclaration.Const loc;
+        super#function_this_param this_
+
       method! function_identifier ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
         this#new_entry name Bindings.Function Flow_ast.Statement.VariableDeclaration.Let loc;
         super#identifier ident

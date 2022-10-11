@@ -838,7 +838,15 @@ let entries_of_def graph (kind, loc) =
     | Root (Contextual { reason; _ }) ->
       let l = Reason.poly_loc_of_reason reason in
       EnvSet.add (Env_api.FunctionParamLoc, l) acc
-    | Root (FunctionValue { function_loc; arrow = false; _ }) ->
+    | Root
+        (FunctionValue
+          {
+            function_loc;
+            arrow = false;
+            function_ = { Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ }); _ };
+            _;
+          }
+          ) ->
       EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
     | Root (ObjectValue { synthesizable = ObjectSynthesizable { this_write_locs }; _ }) ->
       EnvSet.union this_write_locs acc
@@ -849,7 +857,17 @@ let entries_of_def graph (kind, loc) =
   | (Binding b, _, _, _) -> add_from_bindings acc b
   | (DeclaredModule (loc, _), _, _, _) -> EnvSet.add (Env_api.DeclareModuleExportsLoc, loc) acc
   | (Class { this_super_write_locs; _ }, _, _, _) -> EnvSet.union this_super_write_locs acc
-  | (Function { has_this_def = true; function_loc; _ }, _, _, _) ->
+  | ( Function
+        {
+          has_this_def = true;
+          function_loc;
+          function_ = { Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ }); _ };
+          _;
+        },
+      _,
+      _,
+      _
+    ) ->
     EnvSet.add (Env_api.FunctionThisLoc, function_loc) acc
   | _ -> acc
 
