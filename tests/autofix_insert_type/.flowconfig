@@ -1,4 +1,6 @@
 [ignore]
+<PROJECT_ROOT>/.*.js
+!<PROJECT_ROOT>/tmp/out.js
 
 [include]
 
@@ -8,6 +10,5 @@
 
 [options]
 no_flowlib=false
-enforce_local_inference_annotations=false
 
 [strict]

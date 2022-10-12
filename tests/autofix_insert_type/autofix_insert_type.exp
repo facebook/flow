@@ -22,18 +22,53 @@ arrow-0.js 3 14
 
 const a = (x): number => x + 1;
 a(1);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:12
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| const a = (x): number => x + 1;
+                 ^
+
+
+
+Found 1 error
 arrow-1.js 3 16
 // @flow
 
 const b = (x, y: string, z) => x(y, z.f);
 b((k, l) => (l + k), "a", { f: 2 });
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:12
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| const b = (x, y: string, z) => x(y, z.f);
+                 ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:26
+
+Missing an annotation on `z`. [missing-local-annot]
+
+   3| const b = (x, y: string, z) => x(y, z.f);
+                               ^
+
+
+
+Found 2 errors
 arrow-2.js 3 5
 // @flow
 
 ((x): number => x + 1)(4);
-No errors!
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:3:3
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| ((x): number => x + 1)(4);
+        ^
+
+
+
+Found 1 error
 class-0.js 4 3
 // @flow
 
@@ -45,7 +80,24 @@ class A {
 }
 
 (new A).m("");
-No errors!
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:5:5
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   5|   m(x) {
+          ^
+
+
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:5:7
+
+Missing an annotation on return. [missing-local-annot]
+
+   5|   m(x) {
+            
+
+
+
+Found 2 errors
 class-0.js 4 4
 // @flow
 
@@ -57,7 +109,24 @@ class A {
 }
 
 (new A).m("");
-No errors!
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:5:5
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   5|   m(x) {
+          ^
+
+
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:5:7
+
+Missing an annotation on return. [missing-local-annot]
+
+   5|   m(x) {
+            
+
+
+
+Found 2 errors
 class-0.js 4 3 4 4
 // @flow
 
@@ -69,7 +138,24 @@ class A {
 }
 
 (new A).m("");
-No errors!
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:5:5
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   5|   m(x) {
+          ^
+
+
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:5:7
+
+Missing an annotation on return. [missing-local-annot]
+
+   5|   m(x) {
+            
+
+
+
+Found 2 errors
 class-1.js 5 6
 // @flow
 
@@ -81,7 +167,16 @@ class A {
 var a = new A;
 function foo(x) { return x; }
 foo(A);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:9:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   9| function foo(x) { return x; }
+                   ^
+
+
+
+Found 1 error
 class-2.js 4 6
 // @flow
 
@@ -153,7 +248,16 @@ function foo(x, y: ((z: number) => number)) {
 }
 
 foo(1, (z) => z + 1);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function foo(x, y: ((z: number) => number)) {
+                   ^
+
+
+
+Found 1 error
 func-2.js 4 17
 // @flow
 
@@ -165,7 +269,32 @@ function foo(x, y) {
 }
 
 foo(1, 1);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function foo(x, y) {
+                   ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:17
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   3| function foo(x, y) {
+                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:4:27
+
+Missing an annotation on `w`. [missing-local-annot]
+
+   4|   function bar(z: number, w) {
+                                ^
+
+
+
+Found 3 errors
 func-3.js 2 22
 // @flow
 function throws_arg(): empty {
@@ -200,7 +329,16 @@ function outer<T>(y: T): void {
     inner(x, (x: mixed));
   }
 }
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:4:27
+
+Missing an annotation on `z`. [missing-local-annot]
+
+   4|   function inner<T>(x: T, z) {
+                                ^
+
+
+
+Found 1 error
 object-0.js 7 6
 // @flow
 
@@ -214,7 +352,16 @@ var obj = {
 }
 
 obj.n(0)
-No errors!
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:4:5
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   4|   n(y) {
+          ^
+
+
+
+Found 1 error
 object-1.js 7 8
 // @flow
 
@@ -228,7 +375,16 @@ var obj = {
 }
 
 obj['n'](0)
-No errors!
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:4:7
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   4|   'n'(y) {
+            ^
+
+
+
+Found 1 error
 object-2.js 6 6
 // @flow
 
@@ -239,7 +395,16 @@ foo({
   n: () => 2,
   l: function bar() {}
 });
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function foo(x) {}
+                   ^
+
+
+
+Found 1 error
 poly-0.js 3 22 --strategy=specialize
 // @flow
 
@@ -332,7 +497,16 @@ class A { // end of line comment
                                 f = 1;
   m(x): number { return this.f + 1; }
 } (new A).m(""); // weird spacing
-No errors!
+Error --------------------------------------------------------------------------------------------------- tmp/out.js:5:5
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   5|   m(x): number { return this.f + 1; }
+          ^
+
+
+
+Found 1 error
 replacement-dictionary.js 3 3 --strategy=generalize
 // @flow
 
@@ -371,7 +545,24 @@ obj.n(0)
 
 
 // This is kinda trailing whitespace
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:2:14
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   2| var obj = {n(y): string {return obj.m(y);},m(x) {return "";}}
+                   ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:2:46
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   2| var obj = {n(y): string {return obj.m(y);},m(x) {return "";}}
+                                                   ^
+
+
+
+Found 2 errors
 func-0.js 4 14 4 15
 // @flow
 
@@ -380,7 +571,16 @@ function foo(x: number, y) {
 }
 
 foo(1, "");
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:25
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   3| function foo(x: number, y) {
+                              ^
+
+
+
+Found 1 error
 func-0.js 4 10 4 15
 // @flow
 
@@ -389,7 +589,16 @@ function foo(x: number, y) {
 }
 
 foo(1, "");
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:25
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   3| function foo(x: number, y) {
+                              ^
+
+
+
+Found 1 error
 arrow-0.js 3 11 3 23
 // @flow
 
@@ -401,7 +610,16 @@ arrow-0.js 4 1 4 5
 
 const a = (x) => x + 1;
 (a(1): number);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:12
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| const a = (x) => x + 1;
+                 ^
+
+
+
+Found 1 error
 arrow-0.js 3 7 3 8
 // @flow
 
@@ -560,7 +778,32 @@ function foo(x: number, y) {
 }
 
 foo(1, 1);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:25
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   3| function foo(x: number, y) {
+                              ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:4:16
+
+Missing an annotation on `z`. [missing-local-annot]
+
+   4|   function bar(z, w) {
+                     ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:4:19
+
+Missing an annotation on `w`. [missing-local-annot]
+
+   4|   function bar(z, w) {
+                        ^
+
+
+
+Found 3 errors
 func-2.js 3 17 3 18
 // @flow
 
@@ -572,7 +815,32 @@ function foo(x, y: number) {
 }
 
 foo(1, 1);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function foo(x, y: number) {
+                   ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:4:16
+
+Missing an annotation on `z`. [missing-local-annot]
+
+   4|   function bar(z, w) {
+                     ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:4:19
+
+Missing an annotation on `w`. [missing-local-annot]
+
+   4|   function bar(z, w) {
+                        ^
+
+
+
+Found 3 errors
 func-2.js 4 16
 // @flow
 
@@ -584,7 +852,32 @@ function foo(x, y) {
 }
 
 foo(1, 1);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function foo(x, y) {
+                   ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:17
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   3| function foo(x, y) {
+                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:4:27
+
+Missing an annotation on `w`. [missing-local-annot]
+
+   4|   function bar(z: number, w) {
+                                ^
+
+
+
+Found 3 errors
 func-2.js 4 19 4 20
 // @flow
 
@@ -596,7 +889,32 @@ function foo(x, y) {
 }
 
 foo(1, 1);
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:14
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function foo(x, y) {
+                   ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:17
+
+Missing an annotation on `y`. [missing-local-annot]
+
+   3| function foo(x, y) {
+                      ^
+
+
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:4:16
+
+Missing an annotation on `z`. [missing-local-annot]
+
+   4|   function bar(z, w: number) {
+                     ^
+
+
+
+Found 3 errors
 insert-type array.js 3:15
 cat array.js 3:15
 // @flow

@@ -17,8 +17,8 @@ do_file() {
     "$TEMP_DIR/$FILE" "$@"
   cat "$TEMP_DIR/out.js"
   rm "$TEMP_DIR/$FILE"
-  assert_ok "$FLOW" force-recheck "$TEMP_DIR/out.js"
-  assert_ok "$FLOW" status
+  "$FLOW" force-recheck "$TEMP_DIR/out.js"
+  "$FLOW" status || :
   rm "$TEMP_DIR/out.js"
 }
 
