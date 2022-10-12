@@ -2,7 +2,7 @@
 
 // disjoint unions
 
-function length(list: List) {
+function length(list: List): number {
   if (list.kind === "cons") return length(list.next) + 1;
   else return 0;
 }

@@ -6,7 +6,7 @@ async function coerce(t: string): Promise<number> {
 
   let sentinel = { flag: false };
   const p = new Promise<void>(resolve => {
-    const intervalId = setInterval(() => {
+    const intervalId: IntervalID = setInterval(() => {
       if (sentinel.flag) {
         box = { type: "BAD", value: t };
         clearInterval(intervalId);

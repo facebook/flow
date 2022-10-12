@@ -49,7 +49,7 @@ function list(n: number): OCamlList {
   if (n > 0) return { kind: "cons", next: list(n-1) };
   return { kind: "nil" };
 }
-function length(l: OCamlList) {
+function length(l: OCamlList): number {
   switch (l.kind) {
   case "cons": return 1 + length(l.next);
   default: return 0;

@@ -124,9 +124,9 @@ Cannot assign `obj['m']()` to `x` because number [1] is incompatible with string
                         ^^^^^^^^^^
 
 References:
-   test7.js:1:17
-   1| const obj = {x: 0, m() { return obj.x }}
-                      ^ [1]
+   test7.js:1:19
+   1| const obj: {|m(): number, x: number|} = {x: 0, m() { return obj.x }}
+                        ^^^^^^ [1]
    test7.js:2:10
    2| const x: string = obj['m'](); // error, number ~> string
                ^^^^^^ [2]

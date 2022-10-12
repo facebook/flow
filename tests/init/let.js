@@ -148,8 +148,8 @@ function switch_post_init3(i: number): number {
 
 // reference of a let-binding is permitted in a sub-closure within the init expr
 function sub_closure_init_reference() {
-  let x = function() { return x; };
-  const y = function() { return y; };
+  let x: mixed = function() { return x; };
+  const y: mixed = function() { return y; };
 
   // var-bindings can reference each other cyclically since they do not incur a
   // TDZ (...even though this is weird...)

@@ -192,7 +192,7 @@ Cannot call `length` with object literal bound to `list` because object literal 
 
 References:
    test11.js:5:23
-    5| function length(list: List) {
+    5| function length(list: List): number {
                              ^^^^ [2]
 
 
