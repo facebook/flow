@@ -3,4 +3,3 @@ module.system=haste
 traces=3
 no_flowlib=false
 all=true
-enforce_local_inference_annotations=false
