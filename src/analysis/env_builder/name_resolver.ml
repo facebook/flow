@@ -5403,8 +5403,8 @@ module Make
 
       method! function_param_pattern ((loc, _) as patt) =
         write_entries <-
-          EnvMap.update_ordinary
-            loc
+          EnvMap.update
+            (Env_api.FunctionParamLoc, loc)
             (function
               | None -> Some Env_api.NonAssigningWrite
               | x -> x)
