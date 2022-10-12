@@ -369,7 +369,7 @@ function nested() {
   [%expect {|
     (2, 5) to (2, 6) =>
     legal scc: (((3, 5) to (3, 6)); ((4, 5) to (4, 6))) =>
-    illegal scc: (((7, 2) to (7, 3)); ((9, 2) to (9, 3)); ((8, 2) to (8, 3))) =>
+    illegal scc: (((7, 2) to (7, 3)); ((8, 2) to (8, 3)); ((9, 2) to (9, 3))) =>
     (6, 9) to (6, 15) |}]
 
 let%expect_test "deps2a" =
@@ -537,7 +537,7 @@ interface J { h: C }
 class C implements I { }
   |};
   [%expect {|
-    legal scc: (((2, 10) to (2, 11)); ((4, 6) to (4, 7)); ((3, 10) to (3, 11))) |}]
+    legal scc: (((2, 10) to (2, 11)); ((3, 10) to (3, 11)); ((4, 6) to (4, 7))) |}]
 
 let%expect_test "import" =
   print_init_test {|
@@ -614,7 +614,7 @@ var f = new C();
 type S = typeof f;
   |};
   [%expect {|
-    illegal scc: (((2, 14) to (2, 15)); ((3, 4) to (3, 5)); ((4, 5) to (4, 6))) |}]
+    illegal scc: (((2, 14) to (2, 15)); ((4, 5) to (4, 6)); ((3, 4) to (3, 5))) |}]
 
 let%expect_test "declare_class2" =
   print_order_test {|
@@ -836,7 +836,7 @@ class JSResourceReference<+T> {
   [%expect {|
     (2, 16) to (2, 17) =>
     (4, 27) to (4, 28) =>
-    legal scc: (((4, 6) to (4, 25)); ((7, 4) to (7, 12)); ((6, 4) to (6, 11)); ((5, 17) to (5, 18))) =>
+    legal scc: (((4, 6) to (4, 25)); ((5, 17) to (5, 18)); ((6, 4) to (6, 11)); ((7, 4) to (7, 12))) =>
     (2, 5) to (2, 12) |}]
 
 let%expect_test "type_params_dep" =
@@ -994,5 +994,5 @@ pipe(
   [%expect {|
     (4, 2) to (4, 4) =>
     (5, 2) to (5, 3) =>
-    illegal scc: (((6, 2) to (6, 3)); ((5, 2) to (5, 8)); ((6, 7) to (6, 8))) =>
+    illegal scc: (((6, 2) to (6, 3)); ((6, 7) to (6, 8)); ((5, 2) to (5, 8))) =>
     (6, 2) to (6, 12) |}]
