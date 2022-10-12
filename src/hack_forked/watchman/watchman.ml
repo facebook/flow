@@ -846,7 +846,17 @@ let re_init_dead_env =
       match%lwt can_re_init ~allow_fresh_instance dead_env with
       | Ok true ->
         let () = Hh_logger.info "Attempting to reestablish watchman subscription" in
-        re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+        let prior_clockspec =
+          (* passing a clockspec from a previous instance causes the subscription to
+             return is_fresh_instance and empty results, which defeats the point when
+             allow_fresh_instance = true. but if we're passing allow_fresh_instance,
+             then we should already be reconstructing missed changes. *)
+          if allow_fresh_instance then
+            None
+          else
+            Some dead_env.prior_clockspec
+        in
+        re_init ?prior_clockspec dead_env.prior_settings
       | Ok false ->
         let () = Hh_logger.log "Unable to resubscribe to a fresh watchman instance" in
         Lwt.return (Error Fresh_instance)
