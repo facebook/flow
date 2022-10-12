@@ -1,3 +1,19 @@
+### 0.189.0
+
+Likely to cause new Flow errors:
+* `enforce_local_inference_annotations` is now on by default. To migrate your codebase run the following codemod to add the required annotations: `flow codemod annotate-lti`. More details on the changes are explained in the [Requiring More Annotations to Functions and Classes in Flow blog post](https://medium.com/flow-type/requiring-more-annotations-to-functions-and-classes-in-flow-e8aa9b1d76bd).
+
+New Features:
+* Class members can be suggested by autocomplete even if `this` is not typed explicitly.
+
+Notable bug fixes:
+* We will now consistently emit `object-this-reference` errors. Previously these errors were missing when the object is an argument of `Object.freeze()`, `Object.defineProperties()` or `Object.create()`.
+* Fix crash when walking directories that can't be accessed.
+* Fixed a potential crash when two type identifiers are declared in the same block.
+
+Library Definitions:
+* Improve `fs.readFile` type definition when the `encoding` config option is supplied.
+
 ### 0.188.2
 
 Bug fixes:
