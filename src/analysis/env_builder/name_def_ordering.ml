@@ -137,17 +137,22 @@ struct
       object (this)
         inherit [ALoc.t Nel.t EnvMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
 
-        method private force_add ~why t =
-          this#update_acc (fun uses ->
-              EnvMap.update
-                t
-                (function
-                  | None -> Some (Nel.one why)
-                  | Some locs -> Some (Nel.cons why locs))
-                uses
-          )
-
-        method add ~why t = if Env_api.has_assigning_write t env_entries then this#force_add ~why t
+        method add ~why t =
+          if Env_api.has_assigning_write t env_entries then
+            this#update_acc (fun uses ->
+                EnvMap.update
+                  t
+                  (function
+                    | None -> Some (Nel.one why)
+                    | Some locs ->
+                      Some
+                        ( if Nel.mem ~equal:ALoc.equal why locs then
+                          locs
+                        else
+                          Nel.cons why locs
+                        ))
+                  uses
+            )
 
         method find_writes ~for_type loc =
           let write_locs =
@@ -227,9 +232,7 @@ struct
           id
 
         method! binding_type_identifier ((loc, _) as id) =
-          (* Unconditional, unlike the above, because all binding type identifiers should
-             exist in the environment. *)
-          this#force_add ~why:loc (Env_api.OrdinaryNameLoc, loc);
+          this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
           id
 
         method! this_expression loc this_ =
