@@ -496,7 +496,14 @@ module Make
       let vals = normalize t.write_state in
       Base.List.map
         ~f:(function
-          | Uninitialized l when WriteSet.cardinal vals <= 1 ->
+          | Uninitialized l
+            when WriteSet.for_all
+                   (function
+                     | IllegalWrite _
+                     | Uninitialized _ ->
+                       true
+                     | _ -> false)
+                   vals ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
           | Undefined r -> Env_api.Undefined r
           | Number r -> Env_api.Number r
@@ -2140,18 +2147,7 @@ module Make
                 ))
           | _ ->
             (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
-            | Some err ->
-              add_output err;
-              let write_entries =
-                EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
-              in
-              (* Give unsupported var redeclaration a write to avoid spurious errors like use of
-                 possibly undefined variable. Essentially, we are treating var redeclaration as a
-                 assignment with an any-typed value. *)
-              (match (stored_binding_kind, kind) with
-              | (Bindings.Var, VarBinding) -> val_ref := Val.illegal_write reason
-              | _ -> ());
-              env_state <- { env_state with write_entries }
+            | Some err -> this#error_assignment loc reason stored_binding_kind kind err val_ref
             | _ ->
               this#havoc_heap_refinements heap_refinements;
               let current_val = !val_ref in
@@ -2166,6 +2162,19 @@ module Make
                 EnvMap.add_ordinary loc write_entry env_state.write_entries
               in
               env_state <- { env_state with write_entries })
+
+      method error_assignment loc reason stored_binding_kind kind err val_ref =
+        add_output err;
+        let write_entries =
+          EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
+        in
+        (* Give unsupported var redeclaration a write to avoid spurious errors like use of
+            possibly undefined variable. Essentially, we are treating var redeclaration as a
+            assignment with an any-typed value. *)
+        (match (stored_binding_kind, kind) with
+        | (Bindings.Var, VarBinding) -> val_ref := Val.illegal_write reason
+        | _ -> ());
+        env_state <- { env_state with write_entries }
 
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
@@ -2544,6 +2553,9 @@ module Make
                       let { val_ref; kind = stored_binding_kind; def_loc; _ } =
                         this#env_read name
                       in
+                      let kind =
+                        variable_declaration_binding_kind_to_pattern_write_kind (Some kind)
+                      in
                       let error =
                         error_for_assignment_kind
                           cx
@@ -2551,14 +2563,13 @@ module Make
                           loc
                           def_loc
                           stored_binding_kind
-                          (variable_declaration_binding_kind_to_pattern_write_kind (Some kind))
+                          kind
                           !val_ref
                       in
-                      Base.Option.iter ~f:add_output error;
                       if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc;
+                      let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
                       match (error, annot) with
                       | (None, Ast.Type.Available _) ->
-                        let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
                         env_state <-
                           {
                             env_state with
@@ -2568,6 +2579,8 @@ module Make
                                 (Env_api.AssigningWrite reason)
                                 env_state.write_entries;
                           }
+                      | (Some err, _) ->
+                        this#error_assignment loc reason stored_binding_kind kind err val_ref
                       | _ -> ())
                   ()
                   id;
