@@ -46,6 +46,13 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
     addCode('React.createElement(...arr, {})')
       .newErrors(
         `
+					test.js:3          3: const arr = [1,2,3];
+					                    ^ Cannot instantiate React ref because number [1] is incompatible with string [2] in type argument \`ElementType\`. [incompatible-type-arg]
+					  References:
+					    3: const arr = [1,2,3];
+					                    ^ [1]
+					  162:   | string
+					           ^^^^^^ [2]. See lib: [LIB] react.js:162
           test.js:7
             7: React.createElement(...arr, {})
                      ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component. [not-a-component]

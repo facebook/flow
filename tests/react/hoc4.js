@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 
-function connect<TProps>(
+function connect<TProps: {}>(
   Component: React.ComponentType<TProps>,
-): React.ComponentType<$Diff<TProps, {prop: number}>> {
+): React.ComponentType<$Diff<TProps, {prop?: number}>> {
   return (null: any);
 }
 

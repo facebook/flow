@@ -42,7 +42,7 @@ export type Fragment<Ref, +Data: FragmentData> = Data;
 export type GetPropFragmentRef = (<T>(Fragment<T, FragmentData>) => T) &
   (<T>(T) => T);
 
-export function createFragmentContainer<Props>(
+export function createFragmentContainer<Props: {}>(
   Component: React.ComponentType<Props>,
 ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
   return (null: any);

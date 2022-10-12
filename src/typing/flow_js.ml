@@ -6219,6 +6219,7 @@ struct
     (* Handled in __flow *)
     | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
+    | UseT (_, TypeAppT _)
     | UseT (_, DefT (_, _, TypeT _))
     | CreateObjWithComputedPropT _ (* Handled in __flow *)
     (* Should never occur, so we just defer to __flow to handle errors *)
