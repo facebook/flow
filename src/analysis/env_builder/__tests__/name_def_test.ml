@@ -969,6 +969,17 @@ declare module B {
     (7, 19) to (7, 20) =>
     (6, 15) to (6, 16) |}]
 
+let%expect_test "declare module crash regression" =
+  print_order_test {|
+declare module 'a' {
+  declare type T = number;
+  declare type T = number;
+}
+  |};
+  [%expect {|
+    (3, 15) to (3, 16) =>
+    (2, 15) to (2, 18) |}]
+
 let%expect_test "empty arr" =
   print_order_test {|
 var x = [];
