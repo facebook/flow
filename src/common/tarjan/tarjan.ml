@@ -25,7 +25,6 @@ module Make
 struct
   type node = {
     value: N.t;
-    edges: NSet.t;
     (* visit order, -1 if unvisited *)
     mutable index: int;
     (* back edge to earliest visited node, -1 when unvisited *)
@@ -35,7 +34,9 @@ struct
 
   (** Nodes are N.t. Edges are dependencies. **)
   type topsort_state = {
-    graph: node NMap.t;
+    graph: NSet.t NMap.t;
+    (* nodes, created on demand *)
+    nodes: (N.t, node) Hashtbl.t;
     (* number of nodes visited *)
     mutable visit_count: int;
     (* nodes in a strongly connected component *)
@@ -45,12 +46,27 @@ struct
   }
 
   let initial_state graph =
-    let graph =
-      NMap.mapi
-        (fun value edges -> { value; edges; index = -1; lowlink = -1; on_stack = false })
-        graph
-    in
-    { graph; visit_count = 0; stack = []; components = [] }
+    let nodes = Hashtbl.create 0 in
+    { graph; nodes; visit_count = 0; stack = []; components = [] }
+
+  let find_or_create_node state value =
+    match Hashtbl.find_opt state.nodes value with
+    | Some n -> n
+    | None ->
+      let n = { value; index = -1; lowlink = -1; on_stack = false } in
+      Hashtbl.add state.nodes value n;
+      n
+
+  (* Return component strongly connected to v. *)
+  let rec collect_scc state v acc = function
+    | [] -> failwith "unexpected empty stack"
+    | w :: stack ->
+      w.on_stack <- false;
+      if w == v then (
+        state.stack <- stack;
+        state.components <- (w.value, acc) :: state.components
+      ) else
+        collect_scc state v (w.value :: acc) stack
 
   (* Compute strongly connected component for node m with requires rs. *)
   let rec strongconnect state v =
@@ -70,9 +86,10 @@ struct
        If the edge has not yet been visited, recurse in a depth-first manner.
        If the edge has been visited, it is a back-edge iff it is on the stack,
        otherwise it's a cross-edge and can be ignored. *)
-    v.edges
+    state.graph
+    |> NMap.find v.value
     |> NSet.iter (fun e ->
-           let w = NMap.find e state.graph in
+           let w = find_or_create_node state e in
            if w.index = -1 then (
              strongconnect state w;
              v.lowlink <- min v.lowlink w.lowlink
@@ -82,25 +99,13 @@ struct
 
     if v.lowlink = v.index then
       (* strongly connected component *)
-      let c = component state v in
-      state.components <- (v.value, c) :: state.components
-
-  (* Return component strongly connected to v. *)
-  and component state v =
-    (* pop stack until m is found *)
-    let w = List.hd state.stack in
-    state.stack <- List.tl state.stack;
-    w.on_stack <- false;
-    if v.value = w.value then
-      []
-    else
-      w.value :: component state v
+      collect_scc state v [] state.stack
 
   (** main loop **)
   let tarjan ~roots state =
     NSet.iter
       (fun x ->
-        let v = NMap.find x state.graph in
+        let v = find_or_create_node state x in
         if v.index = -1 then strongconnect state v)
       roots
 
