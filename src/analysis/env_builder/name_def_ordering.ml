@@ -442,7 +442,7 @@ struct
                     | _ -> acc)
                   checks
                   acc
-              | Hint_api.Decomp_Instantiated { Hint_api.return_hint; arg_list; arg_index; _ } ->
+              | Hint_api.Instantiate_Callee { Hint_api.return_hint; arg_list; arg_index; _ } ->
                 let rec loop acc i = function
                   | [] -> acc
                   | _ when i >= arg_index -> acc

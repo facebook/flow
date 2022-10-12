@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ('t, 'targs, 'args) implicit_instantiation_hints = {
+type ('t, 'targs, 'args) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
   return_hint: ('t, 'targs, 'args) hint;
   targs: 'targs Lazy.t;
@@ -39,7 +39,7 @@ and ('t, 'targs, 'args) hint_decomposition =
   | Comp_ImmediateFuncCall
   | Decomp_JsxProps
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
-  | Decomp_Instantiated of ('t, 'targs, 'args) implicit_instantiation_hints
+  | Instantiate_Callee of ('t, 'targs, 'args) fun_call_implicit_instantiation_hints
 
 and ('t, 'targs, 'args) hint =
   | Hint_t of 't

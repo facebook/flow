@@ -1496,7 +1496,7 @@ class def_finder env_entries providers toplevel_scope =
           let hint =
             call_argumemts_hint
             |> decompose_hint
-                 (Decomp_Instantiated
+                 (Instantiate_Callee
                     {
                       Hint_api.reason = call_reason;
                       return_hint;

@@ -57,7 +57,7 @@ let get_t cx = function
     Flow_js_utils.merge_tvar ~no_lowers:(fun _ r -> DefT (r, bogus_trust (), EmptyT)) cx r id
   | t -> t
 
-let rec decomp_instantiated cx fn instantiation_hint =
+let rec instantiate_callee cx fn instantiation_hint =
   let { Hint_api.reason; targs; arg_list; return_hint; arg_index } = instantiation_hint in
   let t =
     match get_t cx (simplify_callee cx reason unknown_use fn) with
@@ -369,7 +369,7 @@ and type_of_hint_decomposition cx op reason t =
           Tvar.mk_no_wrap_where cx reason (fun tvar ->
               Flow_js.flow cx (t, PredicateT (predicate, tvar))
           ))
-      | Decomp_Instantiated instantiation_hint -> decomp_instantiated cx t instantiation_hint
+      | Instantiate_Callee instantiation_hint -> instantiate_callee cx t instantiation_hint
   )
 
 and fully_resolve_final_result cx t =

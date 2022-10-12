@@ -11,7 +11,7 @@
  * then we can check the value of property `f` with the hint `(number) => number`
  * and, further, use `number` as the type of `x`. *)
 
-type ('t, 'targs, 'args) implicit_instantiation_hints = {
+type ('t, 'targs, 'args) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
   return_hint: ('t, 'targs, 'args) hint;
   targs: 'targs Lazy.t;
@@ -64,7 +64,7 @@ and ('t, 'targs, 'args) hint_decomposition =
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
-  | Decomp_Instantiated of ('t, 'targs, 'args) implicit_instantiation_hints
+  | Instantiate_Callee of ('t, 'targs, 'args) fun_call_implicit_instantiation_hints
 
 and ('t, 'targs, 'args) hint =
   | Hint_t of 't
@@ -92,7 +92,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_JsxProps -> "Decomp_JsxProps"
   | Decomp_SentinelRefinement _ -> "Decomp_SentinelRefinement"
   | Decomp_Await -> "Decomp_Await"
-  | Decomp_Instantiated _ -> "Decomp_Instantiated"
+  | Instantiate_Callee _ -> "Instantiate_Callee"
 
 let string_of_hint ~on_hint = function
   | Hint_t t -> Utils_js.spf "Hint_t (%s)" (on_hint t)
@@ -143,8 +143,8 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list = function
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Decomp_JsxProps -> Decomp_JsxProps
   | Decomp_SentinelRefinement checks -> Decomp_SentinelRefinement checks
-  | Decomp_Instantiated { reason; return_hint; targs; arg_list; arg_index } ->
-    Decomp_Instantiated
+  | Instantiate_Callee { reason; return_hint; targs; arg_list; arg_index } ->
+    Instantiate_Callee
       {
         reason;
         return_hint = map ~map_base_hint ~map_targs ~map_arg_list return_hint;
