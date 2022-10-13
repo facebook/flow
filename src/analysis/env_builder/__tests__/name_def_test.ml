@@ -1019,3 +1019,21 @@ pipe(
     (5, 2) to (5, 3) =>
     illegal scc: (((6, 2) to (6, 3)); ((6, 7) to (6, 8)); ((5, 2) to (5, 8))) =>
     (6, 2) to (6, 12) |}]
+
+let%expect_test "left to right cycles" =
+  print_order_test {|
+class Outer {
+ constructor() {
+   var Inner = class {
+      constructor() {
+        var x = new Outer();
+      }
+   };
+ }
+}
+  |};
+  [%expect {|
+    (2, 6) to (2, 11) =>
+    (4, 15) to (8, 4) =>
+    (6, 12) to (6, 13) =>
+    (4, 7) to (4, 12) |}]

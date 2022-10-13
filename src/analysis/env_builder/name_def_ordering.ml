@@ -297,24 +297,6 @@ struct
           | None -> this#add ~why:loc (Env_api.OrdinaryNameLoc, loc));
           super#function_ loc expr
 
-        method! class_
-            loc
-            ( { Ast.Class.id = ident; tparams; extends; implements; body; class_decorators; _ } as
-            cls
-            ) =
-          let open Flow_ast_mapper in
-          let _ = this#class_body_annotated body in
-          let () =
-            match ident with
-            | Some id -> ignore @@ this#class_identifier id
-            | None -> this#add ~why:loc (Env_api.OrdinaryNameLoc, loc)
-          in
-          let _ = map_opt this#type_params tparams in
-          let _ = map_opt (map_loc this#class_extends) extends in
-          let _ = map_opt this#class_implements implements in
-          let _ = map_list this#class_decorator class_decorators in
-          cls
-
         method class_body_annotated (cls_body : ('loc, 'loc) Ast.Class.Body.t) =
           let open Ast.Class.Body in
           let (_, { body; comments = _ }) = cls_body in
