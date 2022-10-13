@@ -6140,6 +6140,61 @@ struct
       any_prop_call_prop cx ~use_op ~covariant_flow call_t
     )
 
+  and any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow targs =
+    List.iter
+      (fun (_, _, t, polarity) ->
+        match polarity with
+        | Polarity.Positive -> covariant_flow ~use_op t
+        | Polarity.Negative -> contravariant_flow ~use_op t
+        | Polarity.Neutral -> invariant_any_propagation_flow cx trace ~use_op any t)
+      targs
+
+  (* TODO: Proper InstanceT propagation has non-termation issues that requires some
+   * deep investigation. Punting on it for now. Note that using the type_args polarity
+   * will likely be stricter than necessary. In practice, most type params do not
+   * have variance sigils even if they are only used co/contravariantly.
+   * Inline interfaces are an exception to this rule. The type_args there can be
+   * empty even if the interface contains type arguments because they would only
+   * appear in type_args if they are bound at the interface itself. We handle those
+   * in the more general way, since they are used so rarely that non-termination is not
+   * an issue (for now!) *)
+  and any_prop_inst
+      cx
+      trace
+      ~use_op
+      any
+      ~covariant_flow
+      ~contravariant_flow
+      static
+      super
+      implements
+      {
+        class_id = _;
+        type_args;
+        own_props;
+        proto_props;
+        inst_call_t;
+        initialized_fields = _;
+        initialized_static_fields = _;
+        has_unknown_react_mixins = _;
+        inst_kind;
+      } =
+    if Context.in_lti_implicit_instantiation cx then (
+      any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow type_args;
+      match inst_kind with
+      | InterfaceKind { inline = true } ->
+        covariant_flow ~use_op static;
+        covariant_flow ~use_op super;
+        List.iter (covariant_flow ~use_op) implements;
+        let property_prop =
+          any_prop_properties cx trace ~use_op ~covariant_flow ~contravariant_flow any
+        in
+        property_prop (Context.find_props cx own_props);
+        property_prop (Context.find_props cx proto_props);
+        any_prop_call_prop cx ~use_op ~covariant_flow inst_call_t
+      | _ -> ()
+    )
+
   (* types trapped for any propagation. Returns true if this function handles the any case, either
      by propagating or by doing the trivial case. False if the usetype needs to be handled
      separately. *)
@@ -6286,6 +6341,19 @@ struct
     | UseT (use_op, DefT (_, _, ObjT obj)) ->
       any_prop_obj cx trace ~use_op ~covariant_flow ~contravariant_flow any obj;
       true
+    | UseT (use_op, DefT (_, _, InstanceT (static, super, implements, inst))) ->
+      any_prop_inst
+        cx
+        trace
+        ~use_op
+        any
+        ~covariant_flow
+        ~contravariant_flow
+        static
+        super
+        implements
+        inst;
+      true
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
     | AssertArithmeticOperandT _
@@ -6329,7 +6397,6 @@ struct
     | UseT (_, CustomFunT (_, DebugPrint))
     | UseT (_, CustomFunT (_, DebugThrow))
     | UseT (_, CustomFunT (_, DebugSleep))
-    | UseT (_, DefT (_, _, InstanceT _))
     | UseT _ ->
       true
 
@@ -6370,6 +6437,19 @@ struct
       true
     | DefT (_, _, ObjT obj) ->
       any_prop_obj cx trace ~use_op ~covariant_flow ~contravariant_flow any obj;
+      true
+    | DefT (_, _, InstanceT (static, super, implements, inst)) ->
+      any_prop_inst
+        cx
+        trace
+        ~use_op
+        any
+        ~covariant_flow
+        ~contravariant_flow
+        static
+        super
+        implements
+        inst;
       true
     (* These types have no negative positions in their lower bounds *)
     | FunProtoApplyT _
@@ -6416,7 +6496,6 @@ struct
     | CustomFunT (_, DebugPrint)
     | CustomFunT (_, DebugThrow)
     | CustomFunT (_, DebugSleep)
-    | DefT (_, _, InstanceT _)
     | DefT _
     | AnyT _ ->
       true

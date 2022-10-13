@@ -1,31 +1,3 @@
-Error ------------------------------------------------------------------------------------------- any_propagation.js:4:3
-
-`T` is underconstrained by await [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
-
-   any_propagation.js:4:3
-      4|   await (null : any); // Error for now
-           ^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:1916:25
-   1916| declare function $await<T>(p: Promise<T> | T): T;
-                                 ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ any_propagation.js:13:1
-
-`T` is underconstrained by call of `instToAny` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
-
-   any_propagation.js:13:1
-   13| instToAny((null: any)); // Error for now
-       ^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   any_propagation.js:11:28
-   11| declare function instToAny<T>(x: (y: C<T>) => mixed): C<T> => mixed;
-                                  ^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- contextual_ctor.js:5:9
 
 `T` is underconstrained by new `C` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
@@ -158,4 +130,4 @@ References:
 
 
 
-Found 12 errors
+Found 10 errors

@@ -1,7 +1,7 @@
 //@flow
 
 async function f() {
-  await (null : any); // Error for now
+  await (null : any);
 }
 
 class C<T> {
@@ -10,7 +10,12 @@ class C<T> {
 
 declare function instToAny<T>(x: (y: C<T>) => mixed): C<T> => mixed;
 
-instToAny((null: any)); // Error for now
+instToAny((null: any));
+
+type PolyInlineInst<T> = interface {foo: T}; 
+declare function anyToInlineInst<T>(x: PolyInlineInst<T>): T;
+
+anyToInlineInst((null: any));
 
 type PolyObj<T> = {foo: T};
 
