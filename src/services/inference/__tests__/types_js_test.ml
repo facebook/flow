@@ -73,7 +73,6 @@ let dummy_options_flags =
     wait_for_recheck = None;
     env_mode = Some Options.ConstrainWrites;
     include_suppressions = false;
-    incremental_revdeps = None;
     estimate_recheck_time = None;
     distributed = false;
   }

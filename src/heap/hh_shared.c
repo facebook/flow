@@ -1871,19 +1871,6 @@ CAMLprim value hh_entity_advance(value entity_val, value data_val) {
   CAMLreturn(Val_unit);
 }
 
-/* Iterates the shared hash table. */
-CAMLprim value hh_iter(value f) {
-  CAMLparam1(f);
-  intnat hashtbl_slots = info->hashtbl_slots;
-  for (intnat i = 0; i < hashtbl_slots; i++) {
-    addr_t addr = hashtbl[i].addr;
-    if (addr != NULL_ADDR) {
-      caml_callback(f, Val_long(addr));
-    }
-  }
-  CAMLreturn(Val_unit);
-}
-
 CAMLprim value hh_load_acquire(value addr_val) {
   int64_t* ptr = (int64_t*)Ptr_of_addr(Long_val(addr_val));
   return __atomic_load_n(ptr, __ATOMIC_ACQUIRE);

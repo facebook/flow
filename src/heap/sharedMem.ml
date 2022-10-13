@@ -203,9 +203,6 @@ external get_next_version : unit -> int = "hh_next_version" [@@noalloc]
  * and writers. *)
 external commit_transaction : unit -> unit = "hh_commit_transaction"
 
-(* Iterate the shared hash table. *)
-external hh_iter : (_ addr -> unit) -> unit = "hh_iter"
-
 let is_init_transaction () = get_next_version () == 0
 
 let on_compact = ref (fun _ _ -> ())
@@ -2129,23 +2126,6 @@ module NewAPI = struct
     let head_addr = file_all_providers_addr m in
     let head = read_addr heap head_addr in
     loop head_addr head
-
-  let iter_resolved_requires f =
-    let heap = get_heap () in
-    let f addr =
-      let hd = read_header heap addr in
-      if obj_tag hd = tag_val Source_file_tag then
-        match entity_read_latest (get_parse addr) with
-        | None -> ()
-        | Some parse ->
-          let hd = read_header heap parse in
-          if obj_tag hd = tag_val Typed_tag then (
-            match entity_read_latest (get_resolved_requires parse) with
-            | None -> ()
-            | Some resolved_requires -> f addr resolved_requires
-          )
-    in
-    hh_iter f
 
   (** File set *)
 

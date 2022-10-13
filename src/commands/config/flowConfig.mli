@@ -146,8 +146,6 @@ val ignore_non_literal_requires : config -> bool
 
 val include_warnings : config -> bool
 
-val incremental_revdeps : config -> bool
-
 val lazy_mode : config -> lazy_mode option
 
 (* global defaults for lint suppressions and strict mode *)

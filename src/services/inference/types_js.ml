@@ -124,62 +124,29 @@ let commit_modules ~options ~profiling ~workers ~duplicate_providers dirty_modul
       Lwt.return (changed_modules, SMap.union duplicate_providers new_duplicate_providers)
   )
 
-module DirectDependentFilesCache : sig
-  val clear : unit -> unit
-
-  val with_cache :
-    cache_key:FilenameSet.t -> on_miss:FilenameSet.t Lwt.t Lazy.t -> FilenameSet.t Lwt.t
-end = struct
-  let max_size = 100
-
-  let cache : FilenameSet.t FilenameCache.t = FilenameCache.make ~max_size
-
-  let clear () = FilenameCache.clear cache
-
-  let with_cache ~cache_key ~on_miss =
-    match FilenameSet.elements cache_key with
-    | [root_file] ->
-      let%lwt (result, _did_hit) = FilenameCache.with_cache root_file on_miss cache in
-      Lwt.return result
-    | _ ->
-      (* Cache is only for when there is a single root file *)
-      Lazy.force on_miss
-end
-
-let clear_cache_if_resolved_requires_changed options resolved_requires_changed =
-  if resolved_requires_changed then (
-    Hh_logger.info "Resolved requires changed";
-    if not (Options.incremental_revdeps options) then DirectDependentFilesCache.clear ()
-  ) else
-    Hh_logger.info "Resolved requires are unchanged"
-
 let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
-  let mutator = Parsing_heaps.Resolved_requires_mutator.create transaction options parsed_set in
-  let%lwt resolved_requires_changed =
-    with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
-        MultiWorkerLwt.call
-          workers
-          ~job:
-            (List.fold_left (fun acc filename ->
-                 let changed =
-                   Module_js.add_parsed_resolved_requires
-                     filename
-                     ~mutator
-                     ~reader
-                     ~options
-                     ~node_modules_containers
-                 in
-                 acc || changed
-             )
-            )
-          ~neutral:false
-          ~merge:( || )
-          ~next:(MultiWorkerLwt.next workers parsed)
-    )
-  in
-  clear_cache_if_resolved_requires_changed options resolved_requires_changed;
-  Lwt.return resolved_requires_changed
+  let mutator = Parsing_heaps.Resolved_requires_mutator.create transaction parsed_set in
+  with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
+      MultiWorkerLwt.call
+        workers
+        ~job:
+          (List.fold_left (fun acc filename ->
+               let changed =
+                 Module_js.add_parsed_resolved_requires
+                   filename
+                   ~mutator
+                   ~reader
+                   ~options
+                   ~node_modules_containers
+               in
+               acc || changed
+           )
+          )
+        ~neutral:false
+        ~merge:( || )
+        ~next:(MultiWorkerLwt.next workers parsed)
+  )
 
 let error_set_of_internal_error file (loc, internal_error) =
   Error_message.EInternal (loc, internal_error)
@@ -1276,29 +1243,7 @@ end = struct
        or are new / changed files that are phantom dependents. *)
     let%lwt direct_dependent_files =
       with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
-          if Options.incremental_revdeps options then
-            Dep_service.calc_incremental_dependents workers ~candidates:unchanged ~changed_modules
-          else (
-            if not (FilenameSet.disjoint old_parsed unparsed_or_deleted) then
-              (* unparsed/deleted files can't be direct dependents. a previously-parsed
-                 file may be cached as a direct dependent of some other file. so if any
-                 files are no longer parsed, we invalidate the cache to clear them out of
-                 any other files' caches.
-
-                 note: we could search the cache for entries containing these files. we
-                 could also just deal with bogus entries downstream, like by ignoring
-                 unparsed direct dependents in resolve_requires, but that's fragile.
-                 really, the solution is to make calc_direct_dependents fast so we don't
-                 need this cache. *)
-              DirectDependentFilesCache.clear ();
-
-            DirectDependentFilesCache.with_cache
-              ~cache_key:new_or_changed_or_deleted
-              ~on_miss:
-                ( lazy
-                  (Dep_service.calc_direct_dependents workers ~candidates:unchanged ~changed_modules)
-                  )
-          )
+          Dep_service.calc_incremental_dependents workers ~candidates:unchanged ~changed_modules
       )
     in
     Hh_logger.info "Re-resolving parsed and directly dependent files";
@@ -1308,6 +1253,11 @@ end = struct
       let parsed = FilenameSet.elements parsed_set in
       resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
     in
+
+    if resolved_requires_changed then
+      Hh_logger.info "Resolved requires changed"
+    else
+      Hh_logger.info "Resolved requires are unchanged";
 
     Hh_logger.info "Recalculating dependency graph";
     let parsed = FilenameSet.union parsed_set unchanged in
@@ -2029,7 +1979,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       (* Restore the FileHeap *)
       let ms =
         Parsing_heaps.From_saved_state.add_parsed
-          options
           fn
           hash
           module_name
@@ -2053,9 +2002,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
 
       (* Restore the FileHeap *)
-      let ms =
-        Parsing_heaps.From_saved_state.add_unparsed options fn unparsed_hash unparsed_module_name
-      in
+      let ms = Parsing_heaps.From_saved_state.add_unparsed fn unparsed_hash unparsed_module_name in
 
       let invalid_hashes =
         if verify && not (verify_hash ~reader:abstract_reader fn) then

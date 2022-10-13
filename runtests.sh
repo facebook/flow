@@ -21,8 +21,6 @@ show_help() {
   echo "        only run check tests"
   echo "    -n"
   echo "        test using sealed tvars environment"
-  echo "    -i"
-  echo "        test using incremental reverse dependencies"
   echo "    -r"
   echo "        re-record failing tests to update expected output"
   echo "    -q"
@@ -47,9 +45,8 @@ quiet=0
 relative="."
 enforced_env=0
 check_only=0
-incremental_revdeps=0
-export saved_state filter check_only enforced_env incremental_revdeps
-while getopts "b:d:f:clqxnirst:vh?" opt; do
+export saved_state filter check_only enforced_env
+while getopts "b:d:f:clqxnrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -74,9 +71,6 @@ while getopts "b:d:f:clqxnirst:vh?" opt; do
     ;;
   q)
     quiet=1
-    ;;
-  i)
-    incremental_revdeps=1
     ;;
   r)
     record=1

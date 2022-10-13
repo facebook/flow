@@ -330,8 +330,6 @@ module NewAPI : sig
 
   val read_resolved_requires : resolved_requires addr -> string
 
-  val iter_resolved_requires : (file addr -> resolved_requires addr -> unit) -> unit
-
   (* imports *)
 
   val prepare_write_imports : string -> size * (chunk -> imports addr)

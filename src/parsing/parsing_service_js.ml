@@ -776,7 +776,6 @@ let parse
 let reparse
     ~transaction
     ~reader
-    ~options
     ~parse_options
     ~profile
     ~max_header_tokens
@@ -785,9 +784,7 @@ let reparse
     ~with_progress
     ~workers
     ~modified:files =
-  let (master_mutator, worker_mutator) =
-    Parsing_heaps.Reparse_mutator.create transaction options files
-  in
+  let (master_mutator, worker_mutator) = Parsing_heaps.Reparse_mutator.create transaction files in
   let next = next_of_filename_set ?with_progress workers files in
   let%lwt results =
     parse
@@ -851,7 +848,7 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let parse_options = make_parse_options_internal ~use_strict ~types_mode ~docblock:None options in
   let exported_module = Module_js.exported_module ~options in
   (* This isn't a recheck, so there shouldn't be any unchanged *)
-  let worker_mutator = Parsing_heaps.Parse_mutator.create options in
+  let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
     ~worker_mutator
     ~reader
@@ -875,7 +872,6 @@ let reparse_with_defaults
   reparse
     ~transaction
     ~reader
-    ~options
     ~parse_options
     ~profile
     ~max_header_tokens
@@ -894,7 +890,7 @@ let ensure_parsed ~reader options workers files =
   in
   (* We're not replacing any info, so there's nothing to roll back. That means we can just use the
    * simple Parse_mutator rather than the rollback-able Reparse_mutator *)
-  let worker_mutator = Parsing_heaps.Parse_mutator.create options in
+  let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   let progress_fn ~total ~start ~length:_ =
     MonitorRPC.status_update
       ~event:ServerStatus.(Parsing_progress { total = Some total; finished = start })

@@ -85,7 +85,6 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
-    incremental_revdeps: bool;
     lazy_mode: lazy_mode option;
     log_saving: Options.log_saving SMap.t;
     max_files_checked_per_worker: int;
@@ -209,7 +208,6 @@ module Opts = struct
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
-      incremental_revdeps = true;
       lazy_mode = None;
       log_saving = SMap.empty;
       max_files_checked_per_worker = 100;
@@ -368,8 +366,6 @@ module Opts = struct
     | Hh_json.Syntax_error msg -> Error (spf "Failed to parse JSON: %s" msg)
 
   let json = opt optparse_json
-
-  let incremental_revdeps_parser = boolean (fun opts v -> Ok { opts with incremental_revdeps = v })
 
   let max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
@@ -745,7 +741,6 @@ module Opts = struct
       ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
-      ("experimental.incremental_revdeps", incremental_revdeps_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ( "experimental.run_post_inference_implicit_instantiation",
         post_inference_implicit_instantiation_parser
@@ -1427,8 +1422,6 @@ let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
 let include_warnings c = c.options.Opts.include_warnings
-
-let incremental_revdeps c = c.options.Opts.incremental_revdeps
 
 let lazy_mode c = c.options.Opts.lazy_mode
 

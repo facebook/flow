@@ -83,61 +83,7 @@ open Utils_js
    which have new providers.
 
    Return the subset of candidates directly dependent on root_modules / root_files.
-
-   TODO: Scanning the dependency graph to find reverse dependencies like this is not good! To avoid
-   this, we should maintain the reverse dependency graph carefully as well. The existing reverse
-   dependency graph stored in the server's OCaml heap is not enough:
-     - It does not track reverse dependencies for non-checked files
-     - It does not track reverse dependencies for no-provider modules
-     - It does not track reverse dependencies for "phantom" files
-
-   IMPORTANT!!! The only state this function can read is the resolved requires! If you need this
-                function to read any other state, make sure to update the DirectDependentFilesCache!
 *)
-let calc_direct_dependents_job acc changed_modules =
-  (* The MultiWorker API is weird. All jobs get the `neutral` value as their
-   * accumulator argument. We can exploit this to return a set from workers
-   * while the server accumulates lists of sets. *)
-  assert (acc = []);
-  let open Parsing_heaps in
-  let changed_modules = Modulename.Set.of_list changed_modules in
-  let dependents = ref FilenameSet.empty in
-  Parsing_heaps.iter_resolved_requires (fun file { resolved_modules; phantom_dependencies; _ } ->
-      if
-        SMap.exists
-          (fun _ -> function
-            | Ok m -> Modulename.Set.mem m changed_modules
-            | _ -> false)
-          resolved_modules
-        || Modulename.Set.exists
-             (fun m -> Modulename.Set.mem m changed_modules)
-             phantom_dependencies
-      then
-        dependents := FilenameSet.add (Parsing_heaps.read_file_key file) !dependents
-  );
-  !dependents
-
-let calc_direct_dependents workers ~candidates ~changed_modules =
-  if Modulename.Set.is_empty changed_modules then
-    (* If root_modules is empty then we can immediately return. We know that
-     * the empty set has no direct or transitive dependencies. This can save us
-     * a lot of time on very large repositories *)
-    Lwt.return FilenameSet.empty
-  else
-    (* Find direct dependents via parallel heap scans, searching for dependents
-     * of the changed modules. Note that we accumulate a list of sets during
-     * the call, then merge the sets after. List.cons is much faster than
-     * FilenameSet.union, so we can avoid blocking worker SEND this way. *)
-    let next =
-      MultiWorkerLwt.next workers ~max_size:2000 (Modulename.Set.elements changed_modules)
-    in
-    let%lwt dependent_sets =
-      MultiWorkerLwt.call workers ~job:calc_direct_dependents_job ~merge:List.cons ~neutral:[] ~next
-    in
-    let dependents = List.fold_left FilenameSet.union FilenameSet.empty dependent_sets in
-    (* We are only interested in dependents which are also in `candidates` *)
-    Lwt.return (FilenameSet.inter candidates dependents)
-
 let calc_incremental_dependents =
   let job acc ms =
     (* The MultiWorker API is weird. All jobs get the `neutral` value as their

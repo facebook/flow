@@ -197,14 +197,13 @@ type worker_mutator = {
 }
 
 module Parse_mutator : sig
-  val create : Options.t -> worker_mutator
+  val create : unit -> worker_mutator
 end
 
 module Reparse_mutator : sig
   type master_mutator (* Used by the master process *)
 
-  val create :
-    Transaction.t -> Options.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
+  val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
 
   val record_unchanged : master_mutator -> Utils_js.FilenameSet.t -> unit
 
@@ -214,7 +213,7 @@ end
 module Resolved_requires_mutator : sig
   type t
 
-  val create : Transaction.t -> Options.t -> Utils_js.FilenameSet.t -> t
+  val create : Transaction.t -> Utils_js.FilenameSet.t -> t
 
   val add_resolved_requires : t -> file_addr -> [ `typed ] parse_addr -> resolved_requires -> bool
 end
@@ -229,7 +228,6 @@ end
 
 module From_saved_state : sig
   val add_parsed :
-    Options.t ->
     File_key.t ->
     Xx.hash ->
     string option ->
@@ -239,7 +237,5 @@ module From_saved_state : sig
     (string * int) option ->
     Modulename.Set.t
 
-  val add_unparsed : Options.t -> File_key.t -> Xx.hash -> string option -> Modulename.Set.t
+  val add_unparsed : File_key.t -> Xx.hash -> string option -> Modulename.Set.t
 end
-
-val iter_resolved_requires : (file_addr -> resolved_requires -> unit) -> unit

@@ -7,12 +7,6 @@
 
 open Utils_js
 
-val calc_direct_dependents :
-  MultiWorkerLwt.worker list option ->
-  candidates:FilenameSet.t ->
-  changed_modules:Modulename.Set.t ->
-  FilenameSet.t Lwt.t
-
 val calc_incremental_dependents :
   MultiWorkerLwt.worker list option ->
   candidates:FilenameSet.t ->

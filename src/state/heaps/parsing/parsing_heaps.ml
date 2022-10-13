@@ -56,8 +56,6 @@ exception Leader_not_found of string
 
 exception Failed_to_read_haste_info of string (* filename *) * Exception.t
 
-exception Failed_to_read_resolve_requires of string (* filename *) * Exception.t
-
 let () =
   let printf exn format =
     Printf.sprintf
@@ -69,8 +67,6 @@ let () =
   Exception.register_printer (function
       | Failed_to_read_haste_info (file, exn) ->
         Some (printf exn "Failed to read haste info for %s" file)
-      | Failed_to_read_resolve_requires (file, exn) ->
-        Some (printf exn "Failed to read resolve requires for %s" file)
       | _ -> None
       )
 
@@ -585,19 +581,15 @@ let prepare_update_revdeps =
     in
     (size_acc + module_size + Heap.header_size + sknode_size, write)
   in
-  fun options old_resolved_requires new_resolved_requires ->
-    let init = (0, (fun _ _ -> ())) in
-    if Options.incremental_revdeps options then
-      let old_dependencies = all_dependencies old_resolved_requires in
-      let new_dependencies = all_dependencies new_resolved_requires in
-      partition_fold
-        Modulename.compare
-        remove_old_dependent
-        add_new_dependent
-        init
-        (old_dependencies, new_dependencies)
-    else
-      init
+  fun old_resolved_requires new_resolved_requires ->
+    let old_dependencies = all_dependencies old_resolved_requires in
+    let new_dependencies = all_dependencies new_resolved_requires in
+    partition_fold
+      Modulename.compare
+      remove_old_dependent
+      add_new_dependent
+      (0, (fun _ _ -> ()))
+      (old_dependencies, new_dependencies)
 
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
@@ -716,7 +708,7 @@ let add_checked_file
       dirty_modules
   )
 
-let add_unparsed_file options file_key file_opt hash module_name =
+let add_unparsed_file file_key file_opt hash module_name =
   let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   let size = (2 * header_size) + untyped_parse_size + int64_size in
@@ -732,7 +724,7 @@ let add_unparsed_file options file_key file_opt hash module_name =
         let* addr = entity_read_latest (get_resolved_requires parse) in
         Some (read_resolved_requires_caml addr)
       in
-      let (dep_size, update_revdeps) = prepare_update_revdeps options old_resolved_requires None in
+      let (dep_size, update_revdeps) = prepare_update_revdeps old_resolved_requires None in
       let update chunk =
         update_revdeps chunk file;
         update_file chunk
@@ -748,7 +740,7 @@ let add_unparsed_file options file_key file_opt hash module_name =
 (* If this file used to exist, but no longer does, then it was deleted. Record
  * the deletion by clearing parse information. Deletion might also require
  * re-picking module providers, so we return dirty modules. *)
-let clear_file options file_key =
+let clear_file file_key =
   let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   match FileHeap.get file_key with
@@ -764,7 +756,7 @@ let clear_file options file_key =
           let* addr = entity_read_latest (get_resolved_requires parse) in
           Some (read_resolved_requires_caml addr)
         in
-        let (size, update) = prepare_update_revdeps options old_resolved_requires None in
+        let (size, update) = prepare_update_revdeps old_resolved_requires None in
         alloc size (fun chunk -> update chunk file)
       in
       entity_advance parse_ent None;
@@ -841,7 +833,7 @@ let rollback_file =
   let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   let get_haste_module_info info = (get_haste_module info, info) in
-  let rollback_file options file =
+  let rollback_file file =
     let parse_ent = get_parse file in
     let (old_file_module, new_file_module, old_typed_parse, new_typed_parse) =
       match (entity_read_committed parse_ent, entity_read_latest parse_ent) with
@@ -871,7 +863,7 @@ let rollback_file =
           let* addr = entity_read_latest (get_resolved_requires old_parse) in
           Some (read_resolved_requires_caml addr)
         in
-        let (size, update_revdeps) = prepare_update_revdeps options None old_resolved_requires in
+        let (size, update_revdeps) = prepare_update_revdeps None old_resolved_requires in
         alloc size (fun chunk -> update_revdeps chunk file)
       | _ -> ()
     in
@@ -904,10 +896,10 @@ let rollback_file =
     old_file_module |> Option.iter (fun m -> add_file_provider m file);
     old_haste_module |> Option.iter (fun (m, info) -> add_haste_provider m file info)
   in
-  fun options file_key ->
+  fun file_key ->
     match FileHeap.get file_key with
     | None -> ()
-    | Some file -> if file_changed file then rollback_file options file
+    | Some file -> if file_changed file then rollback_file file
 
 module Reader_cache : sig
   val get_ast : File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
@@ -1352,9 +1344,7 @@ type worker_mutator = {
 module Parse_mutator = struct
   let clear_not_found = Fun.const MSet.empty
 
-  let create options =
-    let add_unparsed = add_unparsed options in
-    { add_parsed; add_unparsed; clear_not_found }
+  let create () = { add_parsed; add_unparsed; clear_not_found }
 end
 
 (* Reparsing is more complicated than parsing, since we need to worry about transactions.
@@ -1385,13 +1375,13 @@ module Reparse_mutator = struct
    * table, so sharedmem GC can collect them. *)
   let not_found_files = ref FilenameSet.empty
 
-  let rollback_changed options = FilenameSet.iter (rollback_file options) !changed_files
+  let rollback_changed () = FilenameSet.iter rollback_file !changed_files
 
   let reset_refs () =
     changed_files := FilenameSet.empty;
     not_found_files := FilenameSet.empty
 
-  let create transaction options files =
+  let create transaction files =
     changed_files := files;
 
     let commit () =
@@ -1405,15 +1395,11 @@ module Reparse_mutator = struct
     let rollback () =
       Hh_logger.info "Rolling back reparse";
       Mutator_cache.clear ();
-      rollback_changed options;
+      rollback_changed ();
       reset_refs ()
     in
 
     Transaction.add ~commit ~rollback transaction;
-
-    let add_unparsed = add_unparsed options in
-
-    let clear_not_found = clear_not_found options in
 
     ((), { add_parsed; add_unparsed; clear_not_found })
 
@@ -1423,9 +1409,9 @@ module Reparse_mutator = struct
 end
 
 module Resolved_requires_mutator = struct
-  type t = Options.t
+  type t = unit
 
-  let rollback_resolved_requires options file_key =
+  let rollback_resolved_requires file_key =
     let read_resolved_requires_caml = read_resolved_requires in
     let open Heap in
     match get_file_addr file_key with
@@ -1447,22 +1433,21 @@ module Resolved_requires_mutator = struct
           Some (read_resolved_requires_caml addr)
         in
         let (size, update_revdeps) =
-          prepare_update_revdeps options new_resolved_requires old_resolved_requires
+          prepare_update_revdeps new_resolved_requires old_resolved_requires
         in
         alloc size (fun chunk -> update_revdeps chunk file);
         entity_rollback ent
       | _ -> ())
 
-  let create transaction options files =
+  let create transaction files =
     let commit () = Hh_logger.info "Committing resolved requires" in
     let rollback () =
       Hh_logger.info "Rolling back resolved requires";
-      FilenameSet.iter (rollback_resolved_requires options) files
+      FilenameSet.iter rollback_resolved_requires files
     in
-    Transaction.add ~commit ~rollback transaction;
-    options
+    Transaction.add ~commit ~rollback transaction
 
-  let add_resolved_requires options file parse resolved_requires =
+  let add_resolved_requires () file parse resolved_requires =
     let ent = Heap.get_resolved_requires parse in
     let old_resolved_requires =
       let* addr = Heap.entity_read_latest ent in
@@ -1472,7 +1457,7 @@ module Resolved_requires_mutator = struct
     | Some { hash; _ } when Int64.equal hash resolved_requires.hash -> false
     | _ ->
       let (update_size, update_revdeps) =
-        prepare_update_revdeps options old_resolved_requires (Some resolved_requires)
+        prepare_update_revdeps old_resolved_requires (Some resolved_requires)
       in
       let open Heap in
       let resolved_requires = Marshal.to_string resolved_requires [] in
@@ -1899,7 +1884,7 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 end
 
 module From_saved_state = struct
-  let add_parsed options file_key hash module_name exports resolved_requires imports cas_digest =
+  let add_parsed file_key hash module_name exports resolved_requires imports cas_digest =
     let (file_kind, file_name) = file_kind_and_name file_key in
     let exports = Marshal.to_string exports [] in
     let imports = Marshal.to_string imports [] in
@@ -1917,9 +1902,7 @@ module From_saved_state = struct
     let (resolved_requires_size, write_resolved_requires) =
       prepare_write_resolved_requires resolved_requires_str
     in
-    let (revdeps_size, update_revdeps) =
-      prepare_update_revdeps options None (Some resolved_requires)
-    in
+    let (revdeps_size, update_revdeps) = prepare_update_revdeps None (Some resolved_requires) in
     let size =
       (12 * header_size)
       + (5 * entity_size)
@@ -1968,17 +1951,5 @@ module From_saved_state = struct
         calc_dirty_modules file_key file haste_ent file_module
     )
 
-  let add_unparsed options file_key = add_unparsed options file_key None
+  let add_unparsed file_key = add_unparsed file_key None
 end
-
-let iter_resolved_requires f =
-  SharedMem.NewAPI.iter_resolved_requires (fun file resolved_requires_addr ->
-      let resolved_requires =
-        try read_resolved_requires resolved_requires_addr with
-        | exn ->
-          let exn = Exception.wrap exn in
-          let filename = read_file_name file in
-          raise (Failed_to_read_resolve_requires (filename, exn))
-      in
-      f file resolved_requires
-  )
