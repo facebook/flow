@@ -809,6 +809,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | TypeParam (_, _) -> resolve_type_param cx id_loc
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     | DeclaredModule (loc, module_) -> resolve_declare_module cx loc module_
+    | NonBindingParam -> (AnyT.at (Unsound NonBindingParameter) id_loc, unknown_use)
   in
   let update_reason =
     match def with

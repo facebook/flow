@@ -196,6 +196,7 @@ type def =
     }
   | GeneratorNext of generator_annot option
   | DeclaredModule of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t
+  | NonBindingParam
 
 module Print = struct
   open Utils_js
@@ -279,6 +280,7 @@ module Print = struct
     | GeneratorNext _ -> "next"
     | Import { import_kind; source; import; source_loc = _ } ->
       spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
+    | NonBindingParam -> "nonbinding_param"
 end
 
 type env_entries_map = (def * scope_kind * class_stack * ALoc.t virtual_reason) Env_api.EnvMap.t

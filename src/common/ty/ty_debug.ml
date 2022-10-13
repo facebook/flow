@@ -86,6 +86,7 @@ and dump_any_unsoundness_kind = function
   | Unchecked -> "Unchecked"
   | Unimplemented -> "Unimplemented"
   | UnresolvedType -> "UnresolvedType"
+  | NonBindingParameter -> "NonBindingParameter"
 
 and dump_list : 'a. ('a -> string) -> ?sep:string -> 'a list -> string =
  (fun f ?(sep = ", ") ls -> Base.List.map ~f ls |> String.concat sep)

@@ -88,6 +88,7 @@ and unsoundness_kind =
   | Unchecked
   | Unimplemented
   | UnresolvedType
+  | NonBindingParameter
 
 (* The purpose of adding this distinction is to enable normalized types to mimic
  * the behavior of the signature optimizer when exporting types that contain
@@ -504,6 +505,7 @@ class ['A] comparator_ty =
       | Unchecked -> 11
       | Unimplemented -> 12
       | UnresolvedType -> 13
+      | NonBindingParameter -> 14
 
     method tag_of_prop _env =
       function

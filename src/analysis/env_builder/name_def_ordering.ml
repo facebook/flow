@@ -746,6 +746,7 @@ struct
       | Enum _ ->
         (* Enums don't contain any code or type references, they're literal-like *) EnvMap.empty
       | Import _ -> (* same with all imports *) EnvMap.empty
+      | NonBindingParam -> EnvMap.empty
 
     (* Is the variable defined by this def able to be recursively depended on, e.g. created as a 0->1 tvar before being
        resolved? *)
@@ -778,6 +779,7 @@ struct
             _;
           }
       | Class _
+      | NonBindingParam
       | DeclaredClass _
       | DeclaredModule _ ->
         true
@@ -829,6 +831,7 @@ struct
     | ChainExpression _
     | WriteExpression _
     | DeclaredModule _
+    | NonBindingParam
     | GeneratorNext (Some _) ->
       []
     (* TODO *)

@@ -1045,6 +1045,7 @@ module rec TypeTerm : sig
     | Unchecked
     | Unimplemented
     | UnresolvedType
+    | NonBindingParameter
 
   and fun_param = string option * t
 

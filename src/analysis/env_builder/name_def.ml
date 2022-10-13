@@ -110,48 +110,57 @@ module Destructure = struct
   let identifier ~f acc (name_loc, { Ast.Identifier.name; _ }) =
     f name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) (Binding acc)
 
-  let rec pattern ~f acc (_, p) =
+  let rec fold_pattern ~f ~join ~default acc (_, p) =
     match p with
-    | Array { Array.elements; annot = _; comments = _ } -> array_elements ~f acc elements
-    | Object { Object.properties; annot = _; comments = _ } -> object_properties ~f acc properties
+    | Array { Array.elements; annot = _; comments = _ } ->
+      array_elements ~f ~join ~default acc elements
+    | Object { Object.properties; annot = _; comments = _ } ->
+      object_properties ~f ~join ~default acc properties
     | Identifier { Identifier.name = id; optional = _; annot = _ } -> identifier ~f acc id
-    | Expression _ -> ()
+    | Expression _ -> default
 
-  and array_elements ~f acc =
+  and array_elements ~f ~join ~default acc elts =
     let open Ast.Pattern.Array in
-    Base.List.iteri ~f:(fun i -> function
-      | Hole _ -> ()
-      | Element (_, { Element.argument = p; default = d }) ->
-        let acc = array_element acc i in
-        let acc = pattern_default acc d in
-        pattern ~f acc p
-      | RestElement (_, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
-        let acc = array_rest_element acc i in
-        pattern ~f acc p
-    )
+    Base.List.fold
+      ~init:(0, default)
+      ~f:(fun (i, prev) elt ->
+        let res =
+          match elt with
+          | Hole _ -> default
+          | Element (_, { Element.argument = p; default = d }) ->
+            let acc = array_element acc i in
+            let acc = pattern_default acc d in
+            fold_pattern ~f ~join ~default acc p
+          | RestElement (_, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
+            let acc = array_rest_element acc i in
+            fold_pattern ~f ~join ~default acc p
+        in
+        (i + 1, join prev res))
+      elts
+    |> snd
 
   and object_properties =
     let open Ast.Pattern.Object in
-    let prop ~f acc xs has_computed p =
+    let prop ~f ~join ~default acc xs has_computed p =
       match p with
       | Property (_, { Property.key; pattern = p; default = d; shorthand = _ }) ->
         let has_default = d <> None in
         let (acc, xs, has_computed') = object_property acc xs key ~has_default in
         let acc = pattern_default acc d in
-        pattern ~f acc p;
-        (xs, has_computed || has_computed')
+        (fold_pattern ~f ~join ~default acc p, xs, has_computed || has_computed')
       | RestElement (_, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
         let acc = object_rest_property acc xs has_computed in
-        pattern ~f acc p;
-        (xs, false)
+        (fold_pattern ~f ~join ~default acc p, xs, false)
     in
-    let rec loop ~f acc xs has_computed = function
-      | [] -> ()
+    let rec loop ~f ~join ~default res_acc acc xs has_computed = function
+      | [] -> res_acc
       | p :: ps ->
-        let (xs, has_computed) = prop ~f acc xs has_computed p in
-        loop ~f acc xs has_computed ps
+        let (res, xs, has_computed) = prop ~f ~join ~default acc xs has_computed p in
+        loop ~f ~join ~default (join res_acc res) acc xs has_computed ps
     in
-    (fun ~f acc ps -> loop ~f acc [] false ps)
+    (fun ~f ~join ~default acc ps -> loop ~f ~join ~default default acc [] false ps)
+
+  let pattern = fold_pattern ~default:() ~join:(fun _ _ -> ())
 end
 
 let func_params_missing_annotations
@@ -621,8 +630,9 @@ class def_finder env_entries providers toplevel_scope =
         | _ -> false
       in
       let (param_loc, _) = argument in
+      let annot = Destructure.type_of_pattern argument in
       let source =
-        match Destructure.type_of_pattern argument with
+        match annot with
         | Some annot ->
           Base.Option.iter
             default_expression
@@ -655,7 +665,18 @@ class def_finder env_entries providers toplevel_scope =
           this#record_hint param_loc hint;
           Contextual { reason; hint; optional; default_expression }
       in
-      Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
+      let f loc reason src =
+        this#add_ordinary_binding loc reason src;
+        true
+      in
+      if
+        (not (Destructure.fold_pattern ~f ~default:false ~join:( || ) (Root source) argument))
+        && Base.Option.is_none annot
+      then
+        this#add_binding
+          (Env_api.FunctionParamLoc, loc)
+          (mk_reason RDestructuring loc)
+          NonBindingParam;
       ignore @@ super#function_param (loc, { argument; default = None })
 
     method private visit_function_rest_param ~hint (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
