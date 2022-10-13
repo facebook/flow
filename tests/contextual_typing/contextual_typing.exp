@@ -195,108 +195,12 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
        ^^
 
 
-Error ------------------------------------------------------------------------------------ sentinel_refinements.js:51:15
-
-Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to call of `a` [3] or to unknown element type of empty array [4]. [speculation-ambiguous]
-
-   sentinel_refinements.js:51:15
-   51| const e1: A = { __type__: a(), arr: [] }; // error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   sentinel_refinements.js:7:10
-    7| type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   sentinel_refinements.js:7:50
-    7| type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   sentinel_refinements.js:51:27
-   51| const e1: A = { __type__: a(), arr: [] }; // error
-                                 ^^^ [3]
-   sentinel_refinements.js:51:37
-   51| const e1: A = { __type__: a(), arr: [] }; // error
-                                           ^^ [4]
-
-
-Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:15
-
-Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to return [3] or to call of `a` [4]. [speculation-ambiguous]
-
-   sentinel_refinements.js:52:15
-   52| const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   sentinel_refinements.js:8:10
-    8| type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   sentinel_refinements.js:8:56
-    8| type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
-                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   sentinel_refinements.js:52:42
-   52| const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
-                                                ^^^^^^^^^^^ [3]
-   sentinel_refinements.js:52:27
-   52| const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
-                                 ^^^ [4]
-
-
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:36
 
 An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    52| const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
                                           ^
-
-
-Error ------------------------------------------------------------------------------------- sentinel_refinements.js:53:1
-
-Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to call of `a` [3] or to unknown element type of empty array [4]. [speculation-ambiguous]
-
-   sentinel_refinements.js:53:1
-   53| <CompAProp __type__={a()} arr={[]} />; // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   sentinel_refinements.js:7:10
-    7| type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   sentinel_refinements.js:7:50
-    7| type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   sentinel_refinements.js:53:22
-   53| <CompAProp __type__={a()} arr={[]} />; // error
-                            ^^^ [3]
-   sentinel_refinements.js:53:32
-   53| <CompAProp __type__={a()} arr={[]} />; // error
-                                      ^^ [4]
-
-
-Error ------------------------------------------------------------------------------------- sentinel_refinements.js:54:1
-
-Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
-fix add a type annotation to return [3] or to call of `a` [4]. [speculation-ambiguous]
-
-   sentinel_refinements.js:54:1
-   54| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   sentinel_refinements.js:8:10
-    8| type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   sentinel_refinements.js:8:56
-    8| type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
-                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   sentinel_refinements.js:54:37
-   54| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
-                                           ^^^^^^^^^^^ [3]
-   sentinel_refinements.js:54:22
-   54| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
-                            ^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:54:31
@@ -308,4 +212,4 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 
 
-Found 21 errors
+Found 17 errors

@@ -48,7 +48,7 @@ const f8: F = { f: (v) => (v: number), __type__: Enum.B }; // ok
 
 // Errors
 declare function a(): 'a';
-const e1: A = { __type__: a(), arr: [] }; // error
+const e1: A = { __type__: a(), arr: [] }; // no error
 const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
-<CompAProp __type__={a()} arr={[]} />; // error
+<CompAProp __type__={a()} arr={[]} />; // no error
 <CompFProp __type__={a()} f={(v) => (v: string)} />; // error

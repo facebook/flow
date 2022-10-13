@@ -2323,8 +2323,7 @@ module Make
         node
       | None -> expression_ ~cond cx loc e
     in
-    if not (Env.has_hint cx loc) then
-      Tvar_resolver.resolve cx ~on_unconstrained_tvar:Tvar_resolver.Allow t;
+    Tvar_resolver.resolve cx ~on_unconstrained_tvar:Tvar_resolver.Allow t;
     res
 
   and this_ cx loc this =
