@@ -1719,6 +1719,7 @@ class def_finder env_entries providers toplevel_scope =
             else
               decompose_hint (Decomp_ArrElement i) hint
           in
+          this#record_hint loc hint;
           match child with
           | Ast.JSX.Element elem -> ignore @@ this#jsx_element loc elem
           | Ast.JSX.Fragment frag -> ignore @@ this#jsx_fragment loc frag
