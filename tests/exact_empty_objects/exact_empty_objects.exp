@@ -632,69 +632,112 @@ References:
                    ^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:15:40
+Error ----------------------------------------------------------------------------------------------------- test.js:14:5
+
+Cannot assign `1` to `err.a` because property `a` is missing in object literal [1]. [prop-missing]
+
+   test.js:14:5
+   14| err.a = 1; // ERROR
+           ^
+
+References:
+   test.js:10:13
+   10| const err = {};
+                   ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:5
+
+Cannot assign `1` to `err['a']` because property `a` is missing in object literal [1]. [prop-missing]
+
+   test.js:15:5
+   15| err['a'] = 1; // ERROR
+           ^^^
+
+References:
+   test.js:10:13
+   10| const err = {};
+                   ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:11
+
+Cannot assign `1` to `err['a']` because an index signature declaring the expected key / value type is missing in object
+literal [1]. [prop-missing]
+
+   test.js:16:11
+   16| err[('a': string)] = 1; // ERROR
+                 ^^^^^^
+
+References:
+   test.js:10:13
+   10| const err = {};
+                   ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:19:40
 
 Cannot assign object literal to `spread` because property `b` is missing in object literal [1] but exists in object
 type [2]. [prop-missing]
 
-   test.js:15:40
-   15| const spread: {a: number, b: string} = {a: 1, ...{}}; // ERROR
+   test.js:19:40
+   19| const spread: {a: number, b: string} = {a: 1, ...{}}; // ERROR
                                               ^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:15:15
-   15| const spread: {a: number, b: string} = {a: 1, ...{}}; // ERROR
+   test.js:19:15
+   19| const spread: {a: number, b: string} = {a: 1, ...{}}; // ERROR
                      ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:18:3
+Error ----------------------------------------------------------------------------------------------------- test.js:22:3
 
 Cannot call `f` with object literal bound to `a` because property `a` is missing in object literal [1] but exists in
 object type [2]. [prop-missing]
 
-   test.js:18:3
-   18| f({}); // ERROR
+   test.js:22:3
+   22| f({}); // ERROR
          ^^ [1]
 
 References:
-   test.js:17:23
-   17| declare function f(a: {a: void}): void;
+   test.js:21:23
+   21| declare function f(a: {a: void}): void;
                              ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:31:4
+Error ----------------------------------------------------------------------------------------------------- test.js:35:4
 
 Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test.js:31:4
-   31|   (a: empty); // ERROR
+   test.js:35:4
+   35|   (a: empty); // ERROR
           ^
 
 References:
-   test.js:27:49
-   27| function paramDefaultDestructuring({a, b}: {a?: string, b?: number} = {}) {
+   test.js:31:49
+   31| function paramDefaultDestructuring({a, b}: {a?: string, b?: number} = {}) {
                                                        ^^^^^^ [1]
-   test.js:31:7
-   31|   (a: empty); // ERROR
+   test.js:35:7
+   35|   (a: empty); // ERROR
              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:31:4
+Error ----------------------------------------------------------------------------------------------------- test.js:35:4
 
 Cannot cast `a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test.js:31:4
-   31|   (a: empty); // ERROR
+   test.js:35:4
+   35|   (a: empty); // ERROR
           ^
 
 References:
-   test.js:27:49
-   27| function paramDefaultDestructuring({a, b}: {a?: string, b?: number} = {}) {
+   test.js:31:49
+   31| function paramDefaultDestructuring({a, b}: {a?: string, b?: number} = {}) {
                                                        ^^^^^^ [1]
-   test.js:31:7
-   31|   (a: empty); // ERROR
+   test.js:35:7
+   35|   (a: empty); // ERROR
              ^^^^^ [2]
 
 
 
-Found 42 errors
+Found 45 errors
