@@ -358,6 +358,14 @@ let prepare_write_new_haste_info_maybe size old_haste_info = function
       in
       (size, write))
 
+let prepare_write_cas_digest_maybe cas_digest =
+  match cas_digest with
+  | None -> (0, (fun _ -> None))
+  | Some (sha1, bytelen) ->
+    let open Heap in
+    let (size, write) = prepare_write_cas_digest sha1 bytelen in
+    (header_size + size, (fun chunk -> Some (write chunk)))
+
 (* Calculate the set of dirty modules and prepare those modules to be committed.
  *
  * If this file became a provider to a haste/file module, we add this file to
@@ -663,13 +671,7 @@ let add_checked_file
       let imports = serialize imports in
       let (imports_size, write_imports) = prepare_write_imports imports in
       let (exports_size, write_exports) = prepare_write_exports exports in
-      let (cas_digest_size, write_cas_digest) =
-        match cas_digest with
-        | None -> (0, (fun _ -> None))
-        | Some (sha1, bytelen) ->
-          let (size, write) = prepare_write_cas_digest sha1 bytelen in
-          (header_size + size, (fun chunk -> Some (write chunk)))
-      in
+      let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
       let size =
         size
         + (4 * header_size)
@@ -1892,13 +1894,7 @@ module From_saved_state = struct
     let open Heap in
     let (exports_size, write_exports) = prepare_write_exports exports in
     let (imports_size, write_imports) = prepare_write_imports imports in
-    let (cas_digest_size, write_cas_digest) =
-      match cas_digest with
-      | None -> (0, (fun _ -> None))
-      | Some (sha1, bytelen) ->
-        let (size, write) = prepare_write_cas_digest sha1 bytelen in
-        (header_size + size, (fun chunk -> Some (write chunk)))
-    in
+    let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
     let (resolved_requires_size, write_resolved_requires) =
       prepare_write_resolved_requires resolved_requires_str
     in
