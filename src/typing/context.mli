@@ -195,6 +195,8 @@ val trust_graph : t -> Trust_constraint.node IMap.t
 
 val in_implicit_instantiation : t -> bool
 
+val in_lti_implicit_instantiation : t -> bool
+
 val is_checked : t -> bool
 
 val is_verbose : t -> bool

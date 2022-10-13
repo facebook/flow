@@ -6094,6 +6094,52 @@ struct
     contravariant ~use_op this;
     covariant ~use_op return_t
 
+  and invariant_any_propagation_flow cx trace ~use_op any t =
+    if Context.any_propagation cx then rec_unify cx trace ~use_op any t
+
+  and any_prop_call_prop cx ~use_op ~covariant_flow = function
+    | None -> ()
+    | Some id -> covariant_flow ~use_op (Context.find_call cx id)
+
+  and any_prop_properties cx trace ~use_op ~covariant_flow ~contravariant_flow any properties =
+    properties
+    |> NameUtils.Map.iter (fun _ property ->
+           let polarity = Property.polarity property in
+           property
+           |> Property.iter_t (fun t ->
+                  match polarity with
+                  | Polarity.Positive -> covariant_flow ~use_op t
+                  | Polarity.Negative -> contravariant_flow ~use_op t
+                  | Polarity.Neutral -> invariant_any_propagation_flow cx trace ~use_op any t
+              )
+       )
+
+  and any_prop_obj
+      cx
+      trace
+      ~use_op
+      ~covariant_flow
+      ~contravariant_flow
+      any
+      { flags = _; props_tmap; proto_t; call_t } =
+    (* NOTE: Doing this always would be correct and desirable, but the
+     * performance of doing this always is just not good enough. Instead,
+     * we do it only in implicit instantiation to ensure that we do not get
+     * spurious underconstrained errors when objects contain type arguments
+     * that get any as a lower bound *)
+    if Context.in_lti_implicit_instantiation cx then (
+      covariant_flow ~use_op proto_t;
+      any_prop_properties
+        cx
+        trace
+        ~use_op
+        ~covariant_flow
+        ~contravariant_flow
+        any
+        (Context.find_props cx props_tmap);
+      any_prop_call_prop cx ~use_op ~covariant_flow call_t
+    )
+
   (* types trapped for any propagation. Returns true if this function handles the any case, either
      by propagating or by doing the trivial case. False if the usetype needs to be handled
      separately. *)
@@ -6237,6 +6283,9 @@ struct
     | UseT (_, OpenT _)
     | UseT (_, TypeDestructorTriggerT _) ->
       false
+    | UseT (use_op, DefT (_, _, ObjT obj)) ->
+      any_prop_obj cx trace ~use_op ~covariant_flow ~contravariant_flow any obj;
+      true
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
     | AssertArithmeticOperandT _
@@ -6280,7 +6329,6 @@ struct
     | UseT (_, CustomFunT (_, DebugPrint))
     | UseT (_, CustomFunT (_, DebugThrow))
     | UseT (_, CustomFunT (_, DebugSleep))
-    | UseT (_, DefT (_, _, ObjT _))
     | UseT (_, DefT (_, _, InstanceT _))
     | UseT _ ->
       true
@@ -6319,6 +6367,9 @@ struct
       true
     | GenericT { bound; _ } ->
       covariant_flow ~use_op bound;
+      true
+    | DefT (_, _, ObjT obj) ->
+      any_prop_obj cx trace ~use_op ~covariant_flow ~contravariant_flow any obj;
       true
     (* These types have no negative positions in their lower bounds *)
     | FunProtoApplyT _
@@ -6365,7 +6416,6 @@ struct
     | CustomFunT (_, DebugPrint)
     | CustomFunT (_, DebugThrow)
     | CustomFunT (_, DebugSleep)
-    | DefT (_, _, ObjT _)
     | DefT (_, _, InstanceT _)
     | DefT _
     | AnyT _ ->

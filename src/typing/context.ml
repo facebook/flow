@@ -484,6 +484,12 @@ let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
 
 let in_implicit_instantiation cx = cx.ccx.in_implicit_instantiation
 
+let in_lti_implicit_instantiation cx =
+  match (cx.phase, env_mode cx) with
+  | (_, Options.LTI) -> in_implicit_instantiation cx
+  | (PostInference, _) -> in_implicit_instantiation cx
+  | _ -> false
+
 let is_checked cx = cx.metadata.checked
 
 let is_verbose cx =
