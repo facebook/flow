@@ -329,7 +329,10 @@ class def_finder env_entries providers toplevel_scope =
       let stmts = Flow_ast_utils.hoist_function_declarations stmts in
       let rec loop state stmts =
         match stmts with
-        | [] -> SMap.iter (fun _ (statics, process_func) -> process_func statics) state
+        | [] ->
+          SMap.iter
+            (fun _ (statics, process_funcs) -> Base.List.iter ~f:(fun f -> f statics) process_funcs)
+            state
         (* f.a = <e>; *)
         | ( _,
             Expression
@@ -373,7 +376,7 @@ class def_finder env_entries providers toplevel_scope =
               obj_name
               (function
                 | None -> None
-                | Some (statics, process_func) ->
+                | Some (statics, process_funcs) ->
                   let statics =
                     (* Only first assignment sets the type. *)
                     SMap.update
@@ -383,7 +386,7 @@ class def_finder env_entries providers toplevel_scope =
                         | x -> x)
                       statics
                   in
-                  Some (statics, process_func))
+                  Some (statics, process_funcs))
               state
           in
           loop state xs
@@ -427,9 +430,12 @@ class def_finder env_entries providers toplevel_scope =
           :: xs ->
           let state =
             if Env_api.has_assigning_write (Env_api.OrdinaryNameLoc, id_loc) env_entries then
-              SMap.add
+              let visit statics = this#visit_function_declaration ~statics loc func in
+              SMap.update
                 name
-                (SMap.empty, (fun statics -> this#visit_function_declaration ~statics loc func))
+                (function
+                  | None -> Some (SMap.empty, [visit])
+                  | Some (statics, process_funcs) -> Some (statics, visit :: process_funcs))
                 state
             else (
               ignore @@ this#statement stmt;
@@ -475,19 +481,21 @@ class def_finder env_entries providers toplevel_scope =
           in
           let state =
             if Env_api.has_assigning_write (Env_api.OrdinaryNameLoc, id_loc) env_entries then
-              SMap.add
+              let visit statics =
+                this#visit_function_expr
+                  ~func_hint:Hint_None
+                  ~has_this_def:(not arrow)
+                  ~var_assigned_to:(Some var_id)
+                  ~statics
+                  ~arrow
+                  loc
+                  func
+              in
+              SMap.update
                 name
-                ( SMap.empty,
-                  fun statics ->
-                    this#visit_function_expr
-                      ~func_hint:Hint_None
-                      ~has_this_def:(not arrow)
-                      ~var_assigned_to:(Some var_id)
-                      ~statics
-                      ~arrow
-                      loc
-                      func
-                )
+                (function
+                  | None -> Some (SMap.empty, [visit])
+                  | Some (statics, process_funcs) -> Some (statics, visit :: process_funcs))
                 state
             else (
               ignore @@ this#statement stmt;
@@ -496,7 +504,7 @@ class def_finder env_entries providers toplevel_scope =
           in
           loop state xs
         | x :: xs ->
-          ignore @@ super#statement x;
+          ignore @@ this#statement x;
           loop state xs
       in
       loop SMap.empty stmts;
