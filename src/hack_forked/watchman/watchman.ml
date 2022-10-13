@@ -996,7 +996,9 @@ let get_mergebase_and_changes =
   [env.mergebase]. *)
 let check_for_changed_mergebase (env : env) =
   match env.mergebase with
-  | None -> Lwt.return None
+  | None ->
+    Hh_logger.debug "Unable to check for changed mergebase: unknown previous mergebase";
+    Lwt.return None
   | Some old_mergebase ->
     let%lwt new_mergebase =
       match%lwt get_mergebase env with
@@ -1015,9 +1017,12 @@ let check_for_changed_mergebase (env : env) =
       if changed_mergebase then (
         Hh_logger.info "Watchman reports mergebase changed from %S to %S" old_mergebase mergebase;
         env.mergebase <- Some mergebase
-      );
+      ) else
+        Hh_logger.debug "Watchman reports mergebase is unchanged at %S" mergebase;
       Lwt.return (Some changed_mergebase)
-    | None -> Lwt.return None)
+    | None ->
+      Hh_logger.warn "Unable to fetch current mergebase";
+      Lwt.return None)
 
 let recover_from_restart (env : env) =
   match env.mergebase with
@@ -1039,6 +1044,8 @@ let recover_from_restart (env : env) =
            no longer does when we reconnect. *)
         Lwt.return (Error Restarted)
       | Ok (Some (mergebase, changes)) ->
+        (* this is a new `env`, make sure to store the mergebase! *)
+        env.mergebase <- Some mergebase;
         if String.equal mergebase prev_mergebase then
           (* the mergebase didn't change, so no upstream files changed. we can
              recover by rechecking `changes` (the files currently changed
