@@ -366,6 +366,32 @@ let prepare_write_cas_digest_maybe cas_digest =
     let (size, write) = prepare_write_cas_digest sha1 bytelen in
     (header_size + size, (fun chunk -> Some (write chunk)))
 
+let prepare_write_ast (ast : (Loc.t, Loc.t) Flow_ast.Program.t) =
+  let serialized = Marshal.to_string (compactify_loc ast) [] in
+  Heap.prepare_write_serialized_ast serialized
+
+let prepare_write_docblock (docblock : Docblock.t) =
+  let serialized = Marshal.to_string docblock [] in
+  let size = Heap.docblock_size serialized in
+  let write chunk = Heap.write_docblock chunk serialized in
+  (size, write)
+
+let prepare_write_exports (exports : Exports.t) =
+  let serialized = Marshal.to_string exports [] in
+  Heap.prepare_write_serialized_exports serialized
+
+let prepare_write_file_sig (file_sig : File_sig.With_Loc.tolerable_t) =
+  let serialized = Marshal.to_string file_sig [] in
+  Heap.prepare_write_serialized_file_sig serialized
+
+let prepare_write_imports (imports : Imports.t) =
+  let serialized = Marshal.to_string imports [] in
+  Heap.prepare_write_serialized_imports serialized
+
+let prepare_write_resolved_requires (resolved_requires : resolved_requires) =
+  let serialized = Marshal.to_string resolved_requires [] in
+  Heap.prepare_write_serialized_resolved_requires serialized
+
 (* Calculate the set of dirty modules and prepare those modules to be committed.
  *
  * If this file became a provider to a haste/file module, we add this file to
@@ -617,19 +643,16 @@ let add_checked_file
     imports
     cas_digest =
   let open Type_sig_collections in
-  let serialize x = Marshal.to_string x [] in
-  let ast = serialize (compactify_loc ast) in
-  let docblock = serialize docblock in
-  let file_sig = serialize file_sig in
-  let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
-  let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
-  let (file_sig_size, write_file_sig) = Heap.prepare_write_file_sig file_sig in
-  let (ast_size, write_ast) = Heap.prepare_write_ast ast in
   let open Heap in
+  let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
+  let (docblock_size, write_docblock) = prepare_write_docblock docblock in
+  let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
+  let (file_sig_size, write_file_sig) = prepare_write_file_sig file_sig in
+  let (ast_size, write_ast) = prepare_write_ast ast in
   let size =
     (5 * header_size)
     + ast_size
-    + docblock_size docblock
+    + docblock_size
     + aloc_table_size aloc_table
     + type_sig_size sig_bsize
     + file_sig_size
@@ -667,10 +690,8 @@ let add_checked_file
     match unchanged_or_fresh_parse with
     | Either.Left unchanged_parse -> (size, Fun.const (unchanged_parse, MSet.empty))
     | Either.Right (size, write_parse_ents_maybe, add_file_maybe) ->
-      let exports = serialize exports in
-      let imports = serialize imports in
-      let (imports_size, write_imports) = prepare_write_imports imports in
       let (exports_size, write_exports) = prepare_write_exports exports in
+      let (imports_size, write_imports) = prepare_write_imports imports in
       let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
       let size =
         size
@@ -698,7 +719,7 @@ let add_checked_file
   alloc size (fun chunk ->
       let (parse, dirty_modules) = add_file_maybe chunk in
       let ast = write_ast chunk in
-      let docblock = write_docblock chunk docblock in
+      let docblock = write_docblock chunk in
       let aloc_table = write_aloc_table chunk aloc_table in
       let type_sig = write_type_sig chunk sig_bsize write_sig in
       let file_sig = write_file_sig chunk in
@@ -1462,7 +1483,6 @@ module Resolved_requires_mutator = struct
         prepare_update_revdeps old_resolved_requires (Some resolved_requires)
       in
       let open Heap in
-      let resolved_requires = Marshal.to_string resolved_requires [] in
       let (resolved_requires_size, write_resolved_requires) =
         prepare_write_resolved_requires resolved_requires
       in
@@ -1888,15 +1908,12 @@ end
 module From_saved_state = struct
   let add_parsed file_key hash module_name exports resolved_requires imports cas_digest =
     let (file_kind, file_name) = file_kind_and_name file_key in
-    let exports = Marshal.to_string exports [] in
-    let imports = Marshal.to_string imports [] in
-    let resolved_requires_str = Marshal.to_string resolved_requires [] in
     let open Heap in
     let (exports_size, write_exports) = prepare_write_exports exports in
     let (imports_size, write_imports) = prepare_write_imports imports in
     let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
     let (resolved_requires_size, write_resolved_requires) =
-      prepare_write_resolved_requires resolved_requires_str
+      prepare_write_resolved_requires resolved_requires
     in
     let (revdeps_size, update_revdeps) = prepare_update_revdeps None (Some resolved_requires) in
     let size =

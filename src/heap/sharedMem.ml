@@ -1588,7 +1588,7 @@ module NewAPI = struct
 
   (** ASTs *)
 
-  let prepare_write_ast ast = prepare_write_compressed Serialized_ast_tag ast
+  let prepare_write_serialized_ast ast = prepare_write_compressed Serialized_ast_tag ast
 
   let read_ast addr = read_compressed Serialized_ast_tag addr
 
@@ -1645,26 +1645,29 @@ module NewAPI = struct
 
   (** File sigs *)
 
-  let prepare_write_file_sig file_sig = prepare_write_compressed Serialized_file_sig_tag file_sig
+  let prepare_write_serialized_file_sig file_sig =
+    prepare_write_compressed Serialized_file_sig_tag file_sig
 
   let read_file_sig addr = read_compressed Serialized_file_sig_tag addr
 
   (** Exports *)
 
-  let prepare_write_exports exports = prepare_write_compressed Serialized_exports_tag exports
+  let prepare_write_serialized_exports exports =
+    prepare_write_compressed Serialized_exports_tag exports
 
   let read_exports addr = read_compressed Serialized_exports_tag addr
 
   (** Resolved requires *)
 
-  let prepare_write_resolved_requires resolved_requires =
+  let prepare_write_serialized_resolved_requires resolved_requires =
     prepare_write_compressed Serialized_resolved_requires_tag resolved_requires
 
   let read_resolved_requires addr = read_compressed Serialized_resolved_requires_tag addr
 
   (** Imports *)
 
-  let prepare_write_imports imports = prepare_write_compressed Serialized_imports_tag imports
+  let prepare_write_serialized_imports imports =
+    prepare_write_compressed Serialized_imports_tag imports
 
   let read_imports addr = read_compressed Serialized_imports_tag addr
 

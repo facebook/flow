@@ -308,31 +308,31 @@ module NewAPI : sig
 
   (* ast *)
 
-  val prepare_write_ast : string -> size * (chunk -> ast addr)
+  val prepare_write_serialized_ast : string -> size * (chunk -> ast addr)
 
   val read_ast : ast addr -> string
 
   (* file sig *)
 
-  val prepare_write_file_sig : string -> size * (chunk -> file_sig addr)
+  val prepare_write_serialized_file_sig : string -> size * (chunk -> file_sig addr)
 
   val read_file_sig : file_sig addr -> string
 
   (* exports *)
 
-  val prepare_write_exports : string -> size * (chunk -> exports addr)
+  val prepare_write_serialized_exports : string -> size * (chunk -> exports addr)
 
   val read_exports : exports addr -> string
 
   (* resolved requires *)
 
-  val prepare_write_resolved_requires : string -> size * (chunk -> resolved_requires addr)
+  val prepare_write_serialized_resolved_requires : string -> size * (chunk -> resolved_requires addr)
 
   val read_resolved_requires : resolved_requires addr -> string
 
   (* imports *)
 
-  val prepare_write_imports : string -> size * (chunk -> imports addr)
+  val prepare_write_serialized_imports : string -> size * (chunk -> imports addr)
 
   val read_imports : imports addr -> string
 
