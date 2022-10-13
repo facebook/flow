@@ -119,8 +119,8 @@ type ObjectType<TK, TV> = {[key: TK]: TV, ...};
 function ObjectFlip<TK: ObjectKey, TV: ?ObjectKey>(
   obj: ObjectType<TK, TV>,
   key: TK,
-) {
-  var flipped = {};
+): {[string | number]: TK} {
+  const flipped: {[string | number]: TK} = {};
   const value: ?TV = obj[key];
   if (value !== null && value !== undefined) {
     flipped[value] = key;

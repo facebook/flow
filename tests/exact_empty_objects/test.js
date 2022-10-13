@@ -11,6 +11,10 @@ const err = {};
 err.xxx; // ERROR
 if (err.xxx) {} // ERROR
 err.m(); // ERROR
+err.a = 1; // ERROR
+err['a'] = 1; // ERROR
+err[('a': string)] = 1; // ERROR
+err[('a': any)] = 1; // OK: allow unsoundness when key is any.
 
 const spread: {a: number, b: string} = {a: 1, ...{}}; // ERROR
 

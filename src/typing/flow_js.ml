@@ -7373,7 +7373,26 @@ struct
                   method_accessible = true;
                 }
             )
-      | Computed elem_t -> write_computed_obj_prop cx trace elem_t prop_t reason_op)
+      | Computed elem_t ->
+        if Obj_type.is_exact_or_sealed reason_op o.flags.obj_kind then
+          match elem_t with
+          | AnyT _ when Obj_type.is_exact_or_sealed reason_op o.flags.obj_kind ->
+            rec_flow_t cx trace ~use_op:unknown_use (prop_t, AnyT.untyped reason_op)
+          | _ ->
+            add_output
+              cx
+              ~trace
+              (Error_message.EPropNotFound
+                 {
+                   prop_name = None;
+                   reason_prop = TypeUtil.reason_of_t elem_t;
+                   reason_obj;
+                   use_op;
+                   suggestion = None;
+                 }
+              )
+        else
+          write_computed_obj_prop cx trace elem_t prop_t reason_op)
 
   and write_computed_obj_prop cx trace key_t value_t reason_op =
     match key_t with
