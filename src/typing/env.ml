@@ -280,7 +280,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                    EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
                  );
                Type.(AnyT.make (AnyError None) reason)
-             | (Env_api.UndeclaredClass { def; _ }, ForType) ->
+             | (Env_api.UndeclaredClassOrEnum { def; _ }, ForType) ->
                Debug_js.Verbose.print_if_verbose
                  cx
                  [
@@ -290,7 +290,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.aloc_of_reason def |> Reason.string_of_aloc);
                  ];
                find_write_exn Env_api.OrdinaryNameLoc def
-             | (Env_api.UndeclaredClass { name; def }, (ForValue | ForTypeof)) ->
+             | (Env_api.UndeclaredClassOrEnum { name; def }, (ForValue | ForTypeof)) ->
                let def_loc = aloc_of_reason def in
                Flow_js.add_output
                  cx
@@ -542,7 +542,7 @@ let is_global_var cx loc =
         | Env_api.With_ALoc.Number _ -> true
         | Env_api.With_ALoc.DeclaredFunction _ -> true
         | Env_api.With_ALoc.Uninitialized _ -> true
-        | Env_api.With_ALoc.UndeclaredClass _ -> true
+        | Env_api.With_ALoc.UndeclaredClassOrEnum _ -> true
         | Env_api.With_ALoc.EmptyArray _ -> true
         | Env_api.With_ALoc.Write _ -> true
         | Env_api.With_ALoc.IllegalWrite _ -> true

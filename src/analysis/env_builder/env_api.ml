@@ -64,7 +64,7 @@ module type S = sig
     | IllegalWrite of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
-    | UndeclaredClass of {
+    | UndeclaredClassOrEnum of {
         def: L.t Reason.virtual_reason;
         name: string;
       }
@@ -271,7 +271,7 @@ module Make
     | IllegalWrite of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
-    | UndeclaredClass of {
+    | UndeclaredClassOrEnum of {
         def: L.t Reason.virtual_reason;
         name: string;
       }
@@ -417,8 +417,9 @@ module Make
     match write_loc with
     | Refinement { refinement_id = _; write_id = _; writes } ->
       writes |> List.map (writes_of_write_loc ~for_type) |> List.flatten
-    | UndeclaredClass { def; _ } when for_type -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason def)]
-    | UndeclaredClass _ -> []
+    | UndeclaredClassOrEnum { def; _ } when for_type ->
+      [(OrdinaryNameLoc, Reason.poly_loc_of_reason def)]
+    | UndeclaredClassOrEnum _ -> []
     | Write r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
     | EmptyArray { reason; arr_providers } ->
       (OrdinaryNameLoc, Reason.poly_loc_of_reason reason)

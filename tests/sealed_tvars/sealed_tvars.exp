@@ -53,6 +53,20 @@ References:
            ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- enums.js:9:9
+
+Cannot use variable `X` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   enums.js:9:9
+    9| var y = X;
+               ^
+
+References:
+   enums.js:11:13
+   11| export enum X {
+                   ^ [1]
+
+
 Error --------------------------------------------------------------------------------- illegal_function_binding.js:4:10
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
@@ -323,4 +337,4 @@ References:
 
 
 
-Found 29 errors
+Found 30 errors

@@ -45,10 +45,10 @@ let print_values refinement_of_id =
     match write_loc with
     | Uninitialized _ -> "(uninitialized)"
     | Undeclared _ -> "(undeclared)"
-    | UndeclaredClass { def; _ } ->
+    | UndeclaredClassOrEnum { def; _ } ->
       let loc = Reason.poly_loc_of_reason def in
       Utils_js.spf
-        "(undeclared class) %s: (%s)"
+        "(undeclared class or enum) %s: (%s)"
         (L.debug_to_string loc)
         Reason.(desc_of_reason def |> string_of_desc)
     | Projection l -> Utils_js.spf "projection at %s" (L.debug_to_string l)
@@ -5221,7 +5221,7 @@ class C {
   [%expect {|
     [
       (2, 1) to (2, 2) => {
-        (undeclared class) (7, 6) to (7, 7): (`C`)
+        (undeclared class or enum) (7, 6) to (7, 7): (`C`)
       };
       (4, 15) to (4, 16) => {
         (7, 6) to (7, 7): (`C`)
@@ -5259,7 +5259,7 @@ C;
   [%expect {|
     [
       (2, 0) to (2, 1) => {
-        (undeclared class) (3, 6) to (3, 7): (`C`)
+        (undeclared class or enum) (3, 6) to (3, 7): (`C`)
       };
       (4, 5) to (4, 6) => {
         (3, 6) to (3, 7): (`C`)
@@ -5303,7 +5303,7 @@ class C {
         (3, 9) to (3, 14): (`havoc`)
       };
       (8, 0) to (8, 1) => {
-        (undeclared class) (10, 6) to (10, 7): (`C`)
+        (undeclared class or enum) (10, 6) to (10, 7): (`C`)
       }] |}]
 
 let%expect_test "deps_recur_broken_init" =
@@ -5654,10 +5654,10 @@ class _class {}
           declared function (18, 26) to (18, 32)
         };
         (9, 2) to (9, 8) => {
-          (undeclared class) (19, 6) to (19, 12): (`_class`)
+          (undeclared class or enum) (19, 6) to (19, 12): (`_class`)
         };
         (10, 2) to (10, 3) => {
-          (undeclared)
+          (undeclared class or enum) (20, 7) to (20, 8): (`E`)
         }] |}]
 
 let%expect_test "declaration_declares_undeclared" =
@@ -6650,4 +6650,21 @@ function f(this: number) {
       [
         (3, 2) to (3, 6) => {
           (2, 11) to (2, 23): (this)
+        }] |}]
+
+let%expect_test "decl_enum" =
+  print_ssa_test {|
+type Props = X
+var y = X;
+export enum X {
+  AGE,
+}
+|};
+    [%expect {|
+      [
+        (2, 13) to (2, 14) => {
+          (undeclared class or enum) (4, 12) to (4, 13): (`X`)
+        };
+        (3, 8) to (3, 9) => {
+          (undeclared class or enum) (4, 12) to (4, 13): (`X`)
         }] |}]
