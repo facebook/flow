@@ -763,8 +763,10 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   let (t, use_op) =
     match def with
     | Binding b -> resolve_binding cx def_reason id_loc b
-    | ChainExpression (cond, e) -> resolve_chain_expression cx ~cond e
-    | WriteExpression (cond, e) -> resolve_write_expression cx ~cond e
+    | ExpressionDef { cond_context = cond; expr; chain = true; hint = _ } ->
+      resolve_chain_expression cx ~cond expr
+    | ExpressionDef { cond_context = cond; expr; chain = false; hint = _ } ->
+      resolve_write_expression cx ~cond expr
     | Function
         {
           function_;
@@ -813,8 +815,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   in
   let update_reason =
     match def with
-    | ChainExpression _
-    | WriteExpression _
+    | ExpressionDef _
     | Binding (Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ })) ->
       true
     | _ -> false

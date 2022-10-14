@@ -58,20 +58,46 @@ let print_order lst =
       Printf.sprintf "illegal self-cycle (%s)" (ALoc.debug_to_string loc)
   in
   let msg =
+    let loc_of_elt elt =
+      match elt with
+      | Normal (_, l)
+      | Resolvable (_, l)
+      | Illegal { payload = (_, l); _ } ->
+        l
+    in
+    let compare a b =
+      let c = ALoc.compare (loc_of_elt a) (loc_of_elt b) in
+      if c = 0 then
+        Stdlib.compare a b
+      else
+        c
+    in
+    let compare_blame { payload = a; _ } { payload = b; _ } =
+      let c = ALoc.compare (loc_of_elt a) (loc_of_elt b) in
+      if c = 0 then
+        Stdlib.compare a b
+      else
+        c
+    in
     Base.List.map
       ~f:(function
         | Singleton elt -> msg_of_elt elt
         | IllegalSCC keys ->
           Printf.sprintf
             "illegal scc: ((%s))"
-            (Nel.map (fun { payload = elt; _ } -> msg_of_elt elt) keys
-            |> Nel.to_list
+            (Nel.to_list keys
+            |> Base.List.sort ~compare:compare_blame
+            |> Base.List.map ~f:(fun { payload = elt; _ } -> msg_of_elt elt)
             |> String.concat "); ("
             )
         | ResolvableSCC keys ->
           Printf.sprintf
             "legal scc: ((%s))"
-            (Nel.map msg_of_elt keys |> Nel.to_list |> String.concat "); ("))
+            (Nel.to_list keys
+            |> Base.List.sort ~compare
+            |> Base.List.map ~f:msg_of_elt
+            |> String.concat "); ("
+            ))
       lst
     |> String.concat " => \n"
   in
@@ -614,7 +640,7 @@ var f = new C();
 type S = typeof f;
   |};
   [%expect {|
-    illegal scc: (((2, 14) to (2, 15)); ((4, 5) to (4, 6)); ((3, 4) to (3, 5))) |}]
+    illegal scc: (((2, 14) to (2, 15)); ((3, 4) to (3, 5)); ((4, 5) to (4, 6))) |}]
 
 let%expect_test "declare_class2" =
   print_order_test {|
@@ -786,7 +812,7 @@ if (x.y) { x.y }
   |};
   [%expect {|
     [
-      (2, 4) to (2, 7) => heap
+      (2, 4) to (2, 7) => exp
     ] |}]
 
 let%expect_test "refi_recorded_read" =
@@ -1017,10 +1043,10 @@ pipe(
   [%expect {|
     (4, 2) to (4, 4) =>
     (5, 2) to (5, 3) =>
-    illegal scc: (((6, 2) to (6, 3)); ((6, 7) to (6, 8)); ((5, 2) to (5, 8))) =>
+    illegal scc: (((5, 2) to (5, 8)); ((6, 2) to (6, 3)); ((6, 7) to (6, 8))) =>
     (6, 2) to (6, 12) |}]
 
-let%expect_test "left to right cycles" =
+let%expect_test "inner-outer-class" =
   print_order_test {|
 class Outer {
  constructor() {
@@ -1037,3 +1063,37 @@ class Outer {
     (4, 15) to (8, 4) =>
     (6, 12) to (6, 13) =>
     (4, 7) to (4, 12) |}]
+
+let%expect_test "arr cycle" =
+  print_order_test {|
+function foo(arr: $ReadOnlyArray<Object>) {
+    return arr.map(foo)
+        .reduce((acc, item) => acc.concat(item), [])
+  }
+  |};
+  [%expect {|
+    (2, 13) to (2, 16) =>
+    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22)); ((4, 16) to (4, 47)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46)); ((4, 49) to (4, 51))) |}]
+
+let%expect_test "new cycle" =
+  print_order_test {|
+function foo(arr: $ReadOnlyArray<Object>) {
+    return arr.map(foo)
+        .reduce((acc, item) => acc.concat(item), new Set())
+  }
+  |};
+  [%expect {|
+    (2, 13) to (2, 16) =>
+    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22)); ((4, 16) to (4, 47)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46)); ((4, 49) to (4, 58))) |}]
+
+let%expect_test "lit cycle" =
+  print_order_test {|
+function foo(arr: $ReadOnlyArray<Object>) {
+    return arr.map(foo)
+        .reduce((acc, item) => acc.concat(item), 42)
+  }
+  |};
+  [%expect {|
+    (2, 13) to (2, 16) =>
+    (4, 49) to (4, 51) =>
+    illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22)); ((4, 16) to (4, 47)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46))) |}]

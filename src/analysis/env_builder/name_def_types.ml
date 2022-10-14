@@ -147,10 +147,16 @@ type class_implicit_this_tparam = {
   class_tparams_loc: ALoc.t option;
 }
 
+type expression_def = {
+  cond_context: cond_context;
+  chain: bool;
+  expr: (ALoc.t, ALoc.t) Ast.Expression.t;
+  hint: ast_hint;
+}
+
 type def =
   | Binding of binding
-  | ChainExpression of cond_context * (ALoc.t, ALoc.t) Ast.Expression.t
-  | WriteExpression of cond_context * (ALoc.t, ALoc.t) Ast.Expression.t
+  | ExpressionDef of expression_def
   | MemberAssign of {
       member_loc: ALoc.t;
       member: (ALoc.t, ALoc.t) Ast.Expression.Member.t;
@@ -240,8 +246,7 @@ module Print = struct
 
   let string_of_source = function
     | Binding b -> string_of_binding b
-    | ChainExpression _ -> spf "heap"
-    | WriteExpression _ -> spf "exp"
+    | ExpressionDef _ -> spf "exp"
     | Update _ -> "[in/de]crement"
     | MemberAssign _ -> "member_assign"
     | OpAssign _ -> "opassign"

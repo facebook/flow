@@ -687,11 +687,21 @@ struct
         in
         depends_of_expression rhs state
       in
+      let depends_of_hinted_expression hint expr =
+        let open Ast.Expression in
+        let state = depends_of_expression ~for_expression_writes:true expr EnvMap.empty in
+        match expr with
+        | ( _,
+            ( Array { Array.elements = []; _ }
+            | Call _ | New _
+            | Object { Object.properties = []; _ } )
+          ) ->
+          depends_of_hint state hint
+        | _ -> state
+      in
       function
       | Binding binding -> depends_of_binding binding
-      | ChainExpression (_, exp)
-      | WriteExpression (_, exp) ->
-        depends_of_expression ~for_expression_writes:true exp EnvMap.empty
+      | ExpressionDef { expr; hint; _ } -> depends_of_hinted_expression hint expr
       | Update _ -> depends_of_update None
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs
@@ -765,8 +775,7 @@ struct
       | DeclaredClass _
       | DeclaredModule _ ->
         true
-      | ChainExpression _
-      | WriteExpression _
+      | ExpressionDef _
       | Update _
       | MemberAssign _
       | OpAssign _
@@ -810,8 +819,7 @@ struct
     | Import _
     | Class _
     | DeclaredClass _
-    | ChainExpression _
-    | WriteExpression _
+    | ExpressionDef _
     | DeclaredModule _
     | NonBindingParam
     | GeneratorNext (Some _) ->

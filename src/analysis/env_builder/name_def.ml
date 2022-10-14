@@ -1575,28 +1575,37 @@ class def_finder env_entries providers toplevel_scope =
 
     method! member _ _ = failwith "Should be visited by visit_member_expression"
 
-    method private visit_member_expression ~cond loc mem =
+    method private visit_member_expression ~cond ~hint loc mem =
       begin
         match EnvMap.find_opt_ordinary loc env_entries with
         | Some (Env_api.AssigningWrite reason) ->
           this#add_ordinary_binding
             loc
             reason
-            (ChainExpression (cond, (loc, Ast.Expression.Member mem)))
+            (ExpressionDef
+               { cond_context = cond; expr = (loc, Ast.Expression.Member mem); hint; chain = true }
+            )
         | _ -> ()
       end;
       ignore @@ super#member loc mem
 
     method! optional_member _ _ = failwith "Should be visited by visit_optional_member_expression"
 
-    method private visit_optional_member_expression ~cond loc mem =
+    method private visit_optional_member_expression ~cond ~hint loc mem =
       begin
         match EnvMap.find_opt_ordinary loc env_entries with
         | Some (Env_api.AssigningWrite reason) ->
           this#add_ordinary_binding
             loc
             reason
-            (ChainExpression (cond, (loc, Ast.Expression.OptionalMember mem)))
+            (ExpressionDef
+               {
+                 cond_context = cond;
+                 expr = (loc, Ast.Expression.OptionalMember mem);
+                 hint;
+                 chain = true;
+               }
+            )
         | _ -> ()
       end;
       let open Ast.Expression.OptionalMember in
@@ -1733,19 +1742,25 @@ class def_finder env_entries providers toplevel_scope =
       expr
 
     method private visit_expression ~hint ~cond ((loc, expr) as exp) =
-      begin
-        match EnvMap.find_opt (Env_api.ExpressionLoc, loc) env_entries with
-        | Some (Env_api.AssigningWrite reason) ->
-          this#add_binding (Env_api.ExpressionLoc, loc) reason (WriteExpression (cond, exp))
-        | _ -> ()
-      end;
       let hint =
         match EnvMap.find_opt (Env_api.ArrayProviderLoc, loc) env_entries with
         | Some (Env_api.AssigningWrite reason) ->
-          this#add_binding (Env_api.ArrayProviderLoc, loc) reason (WriteExpression (cond, exp));
+          this#add_binding
+            (Env_api.ArrayProviderLoc, loc)
+            reason
+            (ExpressionDef { cond_context = cond; expr = exp; hint = Hint_None; chain = false });
           Hint_None
         | _ -> hint
       in
+      begin
+        match EnvMap.find_opt (Env_api.ExpressionLoc, loc) env_entries with
+        | Some (Env_api.AssigningWrite reason) ->
+          this#add_binding
+            (Env_api.ExpressionLoc, loc)
+            reason
+            (ExpressionDef { cond_context = cond; expr = exp; hint; chain = false })
+        | _ -> ()
+      end;
       this#record_hint loc hint;
       match expr with
       | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr
@@ -1764,8 +1779,8 @@ class def_finder env_entries providers toplevel_scope =
           loc
           x
       | Ast.Expression.Object expr -> this#visit_object_expression ~object_hint:hint expr
-      | Ast.Expression.Member m -> this#visit_member_expression ~cond loc m
-      | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond loc m
+      | Ast.Expression.Member m -> this#visit_member_expression ~cond ~hint loc m
+      | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond ~hint loc m
       | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr
       | Ast.Expression.Logical expr -> this#visit_logical_expression ~hint ~cond expr
       | Ast.Expression.Call expr ->
