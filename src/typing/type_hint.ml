@@ -165,10 +165,8 @@ and type_of_hint_decomposition cx op reason t =
 
   let get_method_type t propref =
     Tvar.mk_where cx reason (fun prop_t ->
-        SpeculationFlow.flow
-          cx
-          reason
-          (t, MethodT (unknown_use, reason, reason, propref, NoMethodAction, prop_t))
+        let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction, prop_t) in
+        Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
     )
   in
 
@@ -238,7 +236,7 @@ and type_of_hint_decomposition cx op reason t =
                   element_t
                 )
             in
-            SpeculationFlow.flow cx reason (t, use_t)
+            Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
         )
       | Decomp_ArrSpread i ->
         Tvar.mk_no_wrap_where cx reason (fun tout ->
@@ -289,7 +287,9 @@ and type_of_hint_decomposition cx op reason t =
             let fun_t =
               fun_t ~params ~rest_param:None ~return_t:(Unsoundness.unresolved_any reason)
             in
-            SpeculationFlow.flow_t cx reason ~upper_unresolved:false (fun_t, t)
+            Context.run_in_hint_decomp cx (fun () ->
+                SpeculationFlow.flow_t cx reason ~upper_unresolved:false (fun_t, t)
+            )
         )
       | Decomp_FuncRest n ->
         Tvar.mk_where cx reason (fun rest_t ->
@@ -302,7 +302,9 @@ and type_of_hint_decomposition cx op reason t =
                 ~rest_param:(Some (None, ALoc.none, rest_t))
                 ~return_t:(Unsoundness.unresolved_any reason)
             in
-            SpeculationFlow.flow_t cx reason ~upper_unresolved:false (fun_t, t)
+            Context.run_in_hint_decomp cx (fun () ->
+                SpeculationFlow.flow_t cx reason ~upper_unresolved:false (fun_t, t)
+            )
         )
       | Decomp_FuncReturn ->
         Tvar.mk_where cx reason (fun return_t ->
@@ -312,7 +314,9 @@ and type_of_hint_decomposition cx op reason t =
                 ~rest_param:(Some (None, ALoc.none, Unsoundness.unresolved_any reason))
                 ~return_t
             in
-            SpeculationFlow.flow_t cx reason ~upper_unresolved:true (t, fun_t)
+            Context.run_in_hint_decomp cx (fun () ->
+                SpeculationFlow.flow_t cx reason ~upper_unresolved:true (t, fun_t)
+            )
         )
       | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t
       | Decomp_JsxProps ->
@@ -353,10 +357,7 @@ and type_of_hint_decomposition cx op reason t =
                   tout
                 )
             in
-            (* TODO:
-               Be more lenient with union branches that failed to match.
-               We should collect and return all successful branches in speculation. *)
-            SpeculationFlow.flow cx reason (t, use_t)
+            Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
         )
       | Decomp_ObjComputed ->
         Tvar.mk_no_wrap_where cx reason (fun element_t ->
@@ -369,7 +370,7 @@ and type_of_hint_decomposition cx op reason t =
                   element_t
                 )
             in
-            SpeculationFlow.flow cx reason (t, use_t)
+            Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
         )
       | Decomp_ObjSpread ->
         Tvar.mk_no_wrap_where cx reason (fun tout ->
@@ -377,7 +378,7 @@ and type_of_hint_decomposition cx op reason t =
               (* We assume the object spread is at the start of the object. *)
               ObjRestT (reason, [], OpenT tout, Reason.mk_id ())
             in
-            SpeculationFlow.flow cx reason (t, use_t)
+            Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
         )
       | Decomp_SentinelRefinement checks ->
         (match SMap.elements checks with

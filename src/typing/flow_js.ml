@@ -690,8 +690,8 @@ struct
            it. Also, unlike full type resolution, the tvars that are concretized
            don't necessarily have the 0->1 property: they could be concretized at
            different types, as more and more lower bounds appear. *)
-        | (UnionT (_, urep), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
-          flow_all_in_union cx trace urep u
+        | (UnionT (r, urep), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
+          flow_all_in_union cx trace r urep u
         | (MaybeT (lreason, t), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
           let lreason = replace_desc_reason RNullOrVoid lreason in
           rec_flow cx trace (NullT.make lreason |> with_trust Trust.bogus_trust, u);
@@ -826,7 +826,7 @@ struct
           when union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) l u
           ->
           ()
-        | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
+        | (UnionT (r, rep1), TypeCastT _) -> flow_all_in_union cx trace r rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
         (**********************************************************************)
         (* enum cast e.g. `(x: T)` where `x` is an `EnumT`                    *)
@@ -1278,9 +1278,15 @@ struct
         | (MaybeT (reason, t), _) ->
           let reason = replace_desc_reason RNullOrVoid reason in
           let t = push_type_alias_reason reason t in
-          rec_flow cx trace (NullT.make reason |> with_trust Trust.bogus_trust, u);
-          rec_flow cx trace (VoidT.make reason |> with_trust Trust.bogus_trust, u);
-          rec_flow cx trace (t, u)
+          let f t =
+            if Context.in_hint_decomp cx then
+              speculation_flow_no_throws cx trace ~reason (t, u)
+            else
+              rec_flow cx trace (t, u)
+          in
+          f (NullT.make reason |> with_trust Trust.bogus_trust);
+          f (VoidT.make reason |> with_trust Trust.bogus_trust);
+          f t
         (******************)
         (* optional types *)
         (******************)
@@ -1323,14 +1329,20 @@ struct
         | (OptionalT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
-          rec_flow cx trace (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust, u);
-          rec_flow cx trace (t, u)
+          let f t =
+            if Context.in_hint_decomp cx then
+              speculation_flow_no_throws cx trace ~reason:r (t, u)
+            else
+              rec_flow cx trace (t, u)
+          in
+          f (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust);
+          f t
         (**************************)
         (* logical types - part A *)
         (**************************)
-        | (UnionT (_, rep), (AndT _ | OrT _ | NullishCoalesceT _))
+        | (UnionT (r, rep), (AndT _ | OrT _ | NullishCoalesceT _))
           when not (UnionRep.is_optimized_finally rep) ->
-          flow_all_in_union cx trace rep u
+          flow_all_in_union cx trace r rep u
         | (left, AndT (_, right, u)) ->
           begin
             match left with
@@ -1804,16 +1816,16 @@ struct
             (Error_message.EComputedPropertyWithUnion
                { computed_property_reason = reason; union_reason = r }
             )
-        | ((UnionT (_, rep1) as u1), EqT { arg = UnionT _ as u2; _ }) ->
+        | ((UnionT (r, rep1) as u1), EqT { arg = UnionT _ as u2; _ }) ->
           if union_optimization_guard cx (curry equatable) u1 u2 then begin
             if Context.is_verbose cx then prerr_endline "UnionT ~> EqT fast path"
           end else
-            flow_all_in_union cx trace rep1 u
-        | ((UnionT (_, rep1) as u1), StrictEqT { arg = UnionT _ as u2; cond_context; _ }) ->
+            flow_all_in_union cx trace r rep1 u
+        | ((UnionT (r, rep1) as u1), StrictEqT { arg = UnionT _ as u2; cond_context; _ }) ->
           if union_optimization_guard cx (curry (strict_equatable cond_context)) u1 u2 then begin
             if Context.is_verbose cx then prerr_endline "UnionT ~> StrictEqT fast path"
           end else
-            flow_all_in_union cx trace rep1 u
+            flow_all_in_union cx trace r rep1 u
         | (UnionT _, EqT { reason; flip; arg }) when needs_resolution arg || is_generic arg ->
           rec_flow cx trace (arg, EqT { reason; flip = not flip; arg = l })
         | (UnionT _, StrictEqT { reason; cond_context; flip; arg })
@@ -1843,7 +1855,7 @@ struct
               | UnionRep.Conditional _
               | UnionRep.Unknown ->
                 (* inconclusive: the union is not concretized *)
-                flow_all_in_union cx trace rep u)
+                flow_all_in_union cx trace r rep u)
             | UnionEnum.Many enums ->
               let acc =
                 UnionEnumSet.fold
@@ -1873,7 +1885,7 @@ struct
                 | UnionRep.Conditional _
                 | UnionRep.Unknown ->
                   (* inconclusive: the union is not concretized *)
-                  flow_all_in_union cx trace rep u
+                  flow_all_in_union cx trace r rep u
               end
           else
             (* for l.key !== sentinel where l.key is a union, we can't really prove
@@ -1897,7 +1909,7 @@ struct
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
-        | (UnionT (_, rep), _)
+        | (UnionT (r, rep), _)
           when match u with
                (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
                   prevents a drastic blowup of cases which can cause perf problems. *)
@@ -1905,7 +1917,7 @@ struct
                | PredicateT (NotP (RightP (SentinelProp _, _)), _) ->
                  false
                | _ -> true ->
-          flow_all_in_union cx trace rep u
+          flow_all_in_union cx trace r rep u
         | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         | (_, FilterMaybeT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         (* special treatment for some operations on intersections: these
@@ -5639,11 +5651,6 @@ struct
                }
             )
         | _ ->
-          Default_resolve.default_resolve_touts
-            ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
-            cx
-            (reason_of_t l |> aloc_of_reason)
-            u;
           add_output
             cx
             ~trace
@@ -5654,7 +5661,12 @@ struct
                  use_op = use_op_of_use_t u;
                  branches = [];
                }
-            )
+            );
+          Default_resolve.default_resolve_touts
+            ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
+            cx
+            (reason_of_t l |> aloc_of_reason)
+            u
     )
 
   (**
@@ -9673,7 +9685,17 @@ struct
     in
     get_builtin_type cx ?trace reason (OrdinaryName x)
 
-  and flow_all_in_union cx trace rep u = iter_union ~f:rec_flow cx trace rep u
+  and speculation_flow_no_throws cx trace ~reason (l, u) =
+    SpeculationKit.try_singleton_no_throws cx trace reason ~upper_unresolved:true l u
+
+  and flow_all_in_union cx trace reason rep u =
+    let f =
+      if Context.in_hint_decomp cx then
+        speculation_flow_no_throws ~reason
+      else
+        rec_flow
+    in
+    iter_union ~f cx trace rep u
 
   and call_args_iter f =
     List.iter (function

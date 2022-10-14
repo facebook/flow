@@ -132,28 +132,72 @@ References:
                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- intersections.js:30:16
+Error ------------------------------------------------------------------------------------------- intersections.js:30:25
 
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+Cannot cast `x` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   30|   bak('bool', (x) => { (x: boolean); }); // error missing annot (ideally would use hint)
-                      ^
+   intersections.js:30:25
+   30|   bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
+                               ^
+
+References:
+   intersections.js:15:33
+   15|   type S = (tag: 'str', cb: (x: string) => void) => void;
+                                       ^^^^^^ [1]
+   intersections.js:30:28
+   30|   bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
+                                  ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- intersections.js:31:16
+Error ------------------------------------------------------------------------------------------- intersections.js:30:25
 
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+Cannot cast `x` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   31|   bak('bool', (x) => { (x: string); }); // error missing annot (ideally would use hint and error on cast)
-                      ^
+   intersections.js:30:25
+   30|   bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
+                               ^
+
+References:
+   intersections.js:16:33
+   16|   type N = (tag: 'num', cb: (x: number) => void) => void;
+                                       ^^^^^^ [1]
+   intersections.js:30:28
+   30|   bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
+                                  ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- intersections.js:39:10
+Error ------------------------------------------------------------------------------------------- intersections.js:31:25
 
-An annotation on `y` is required because Flow cannot infer its type from local context. [missing-local-annot]
+Cannot cast `x` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
-   39|   foo(x, y => {}); // error missing annotation for y
-                ^
+   intersections.js:31:25
+   31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
+                               ^
+
+References:
+   intersections.js:14:34
+   14|   type B = (tag: 'bool', cb: (x: boolean) => void) => void;
+                                        ^^^^^^^ [1]
+   intersections.js:31:28
+   31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- intersections.js:31:25
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   intersections.js:31:25
+   31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
+                               ^
+
+References:
+   intersections.js:16:33
+   16|   type N = (tag: 'num', cb: (x: number) => void) => void;
+                                       ^^^^^^ [1]
+   intersections.js:31:28
+   31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
+                                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ lits.js:3:5
@@ -195,21 +239,39 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
        ^^
 
 
-Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:36
+Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:43
 
-An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
+Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
+   sentinel_refinements.js:52:43
    52| const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
-                                          ^
+                                                 ^
+
+References:
+   sentinel_refinements.js:8:80
+    8| type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
+                                                                                      ^^^^^^ [1]
+   sentinel_refinements.js:52:46
+   52| const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
+                                                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ sentinel_refinements.js:54:31
+Error ------------------------------------------------------------------------------------ sentinel_refinements.js:54:38
 
-An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
+Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
+   sentinel_refinements.js:54:38
    54| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
-                                     ^
+                                            ^
+
+References:
+   sentinel_refinements.js:8:80
+    8| type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
+                                                                                      ^^^^^^ [1]
+   sentinel_refinements.js:54:41
+   54| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
+                                               ^^^^^^ [2]
 
 
 
-Found 17 errors
+Found 18 errors

@@ -377,6 +377,11 @@ let eval_hint_tests =
     >:: mk_eval_hint_test ~expected:"number" "(string, number) => number" [Decomp_FuncReturn];
     "fun_decomp_simple_on_first_argument_of_hint"
     >:: mk_eval_hint_test ~expected:"string" "(string, number) => number" [Decomp_FuncParam 0];
+    "fun_decomp_union"
+    >:: mk_eval_hint_test
+          ~expected:"string"
+          "(string) => number | (string) => number"
+          [Decomp_FuncParam 0];
     "fun_decomp_simple_on_second_argument_of_hint"
     >:: mk_eval_hint_test ~expected:"number" "(string, number) => number" [Decomp_FuncParam 1];
     "fun_decomp_on_nonexistent_argument_of_hint"
@@ -444,12 +449,13 @@ let eval_hint_tests =
           ~expected:"number | string | void"
           "{foo: number} | {[string]: string} | {bar: string}"
           [Decomp_ObjProp "foo"];
-    (* TODO: Be more lenient with union branches that failed to match. *)
     "obj_prop_union_some_failed"
     >:: mk_eval_hint_test
-          ~expected:"None"
+          ~expected:"number | string"
           "{foo: number} | {[string]: string} | number"
           [Decomp_ObjProp "foo"];
+    "obj_prop_optional"
+    >:: mk_eval_hint_test ~expected:"number" "?{foo: number}" [Decomp_ObjProp "foo"];
     "obj_prop_intersection"
     >:: mk_eval_hint_test
           ~expected:"number"

@@ -193,6 +193,8 @@ val graph : t -> Type.Constraint.node IMap.t
 
 val trust_graph : t -> Trust_constraint.node IMap.t
 
+val in_hint_decomp : t -> bool
+
 val in_implicit_instantiation : t -> bool
 
 val in_lti_implicit_instantiation : t -> bool
@@ -393,6 +395,8 @@ val set_type_graph : t -> Graph_explorer.graph -> unit
 val set_all_unresolved : t -> ISet.t IMap.t -> unit
 
 val set_graph : t -> Type.Constraint.node IMap.t -> unit
+
+val run_in_hint_decomp : t -> (unit -> unit) -> unit
 
 val run_in_implicit_instantiation_mode : t -> (unit -> 'a) -> 'a
 
