@@ -273,11 +273,11 @@ let rec recheck_single ~recheck_count genv env =
        * recheck, we should first check whether we need to compact. Otherwise, sharedmem could
        * potentially grow unbounded.
        *
-       * The constant budget provided here should be sufficient to fully scan a 25G heap within 5
+       * The constant budget provided here should be sufficient to fully scan a 5G heap within 5
        * iterations. We want to avoid the scenario where repeatedly cancelled rechecks cause the
        * heap to grow faster than we can scan. An algorithmic approach to determine the amount of
        * work based on the allocation rate would be better. *)
-      let _done : bool = SharedMem.collect_slice 20000000 in
+      let _done : bool = SharedMem.collect_slice 256000 in
       ServerMonitorListenerState.requeue_workload workload;
       recheck_single ~recheck_count:(recheck_count + 1) genv env
     in
