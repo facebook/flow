@@ -24,6 +24,24 @@ module type OUTPUT = sig
   val try_intersection :
     Context.t -> Type.trace -> Type.use_t -> Reason.reason -> Type.InterRep.t -> unit
 
+  val try_singleton_throw_on_failure :
+    Context.t ->
+    Type.trace ->
+    Reason.reason ->
+    upper_unresolved:bool ->
+    Type.t ->
+    Type.use_t ->
+    unit
+
+  val try_singleton_no_throws :
+    Context.t ->
+    Type.trace ->
+    Reason.reason ->
+    upper_unresolved:bool ->
+    Type.t ->
+    Type.use_t ->
+    unit
+
   val prep_try_intersection :
     Context.t ->
     Type.trace ->
@@ -223,6 +241,30 @@ module Make (Flow : INPUT) : OUTPUT = struct
     resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap)
     @@ (* ...and then begin the choice-making process *)
     try_flow_continuation cx trace reason speculation_id (IntersectionCases (ts, u))
+
+  and try_singleton_throw_on_failure cx trace reason ~upper_unresolved t u =
+    let speculation_id = mk_id () in
+    Speculation.init_speculation cx speculation_id;
+
+    let imap =
+      if upper_unresolved then
+        (* collect parts of the intersection type to be fully resolved *)
+        let imap = ResolvableTypeJob.collect_of_types cx IMap.empty [t] in
+        (* collect parts of the upper bound to be fully resolved, while logging
+           unresolved tvars *)
+        ResolvableTypeJob.collect_of_use ~log_unresolved:speculation_id cx imap u
+      else
+        let imap = ResolvableTypeJob.collect_of_use cx IMap.empty u in
+        ResolvableTypeJob.collect_of_type ~log_unresolved:speculation_id cx imap t
+    in
+    (* fully resolve the collected types *)
+    resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap)
+    @@ (* ...and then begin the choice-making process *)
+    try_flow_continuation cx trace reason speculation_id (SingletonCase (t, u))
+
+  and try_singleton_no_throws cx trace reason ~upper_unresolved t u =
+    try try_singleton_throw_on_failure cx trace reason ~upper_unresolved t u with
+    | SpeculationSingletonError -> ()
 
   (** Preprocessing for intersection types.
 
@@ -606,6 +648,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               cx
               ~trace
               (Error_message.EUnionSpeculationFailed { use_op; reason; reason_op; branches })
+          | SingletonCase _ -> raise SpeculationSingletonError
           | IntersectionCases (ls, upper) ->
             let err =
               let reason_lower = mk_intersection_reason r ls in
@@ -668,11 +711,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ~f:(fun i l ->
           (i, reason_of_use_t u, l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))
         ls
+    | SingletonCase (l, u) ->
+      [(0, reason_of_use_t u, l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u)]
 
   and choices_of_spec = function
     | UnionCases (_, _, _, ts)
     | IntersectionCases (ts, _) ->
       ts
+    | SingletonCase (t, _) -> [t]
 
   and ignore_of_spec = function
     | IntersectionCases
@@ -684,9 +730,21 @@ module Make (Flow : INPUT) : OUTPUT = struct
               call_action = Funcalltype { call_tout = (_, id); _ };
               return_hint = _;
             }
+        )
+    | SingletonCase
+        ( _,
+          CallT
+            {
+              use_op = _;
+              reason = _;
+              call_action = Funcalltype { call_tout = (_, id); _ };
+              return_hint = _;
+            }
         ) ->
       Some id
-    | IntersectionCases (_, GetPropT (_, _, _, _, (_, id))) -> Some id
+    | IntersectionCases (_, GetPropT (_, _, _, _, (_, id)))
+    | SingletonCase (_, GetPropT (_, _, _, _, (_, id))) ->
+      Some id
     | _ -> None
 
   (* spec optimization *)
@@ -748,6 +806,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ -> false
       end
     | IntersectionCases _ -> false
+    | SingletonCase _ -> false
 
   and shortcut_enum cx trace reason_op use_op l rep =
     let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
@@ -798,7 +857,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     |> List.iter (function
            | (_, Speculation_state.FlowAction (l, u)) ->
              (match spec with
-             | IntersectionCases (_, u') ->
+             | IntersectionCases (_, u')
+             | SingletonCase (_, u') ->
                let use_op = use_op_of_use_t u' in
                (match use_op with
                | None -> rec_flow cx trace (l, u)
@@ -811,7 +871,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
                rec_flow cx trace (l, mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
            | (_, Speculation_state.UnifyAction (use_op, t1, t2)) ->
              (match spec with
-             | IntersectionCases (_, u') ->
+             | IntersectionCases (_, u')
+             | SingletonCase (_, u') ->
                let use_op' = use_op_of_use_t u' in
                (match use_op' with
                | None -> rec_unify cx trace t1 t2 ~use_op

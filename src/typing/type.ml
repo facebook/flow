@@ -1455,6 +1455,7 @@ module rec TypeTerm : sig
   and spec =
     | UnionCases of use_op * t * UnionRep.t * t list
     | IntersectionCases of t list * use_t
+    | SingletonCase of t * use_t
 
   and resolve_spread_type = {
     (* This is the list of elements that are already resolved (that is have no

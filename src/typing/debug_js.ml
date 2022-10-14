@@ -449,6 +449,7 @@ and dump_use_t_ (depth, tvars) cx t =
         (String.concat "; " (Base.List.map ~f:kid ts))
     | IntersectionCases (ts, use_t) ->
       spf "([%s], %s)" (String.concat "; " (Base.List.map ~f:kid ts)) (use_kid use_t)
+    | SingletonCase (t, use_t) -> spf "(%s, %s)" (kid t) (use_kid use_t)
   in
   let react_kit =
     React.(
