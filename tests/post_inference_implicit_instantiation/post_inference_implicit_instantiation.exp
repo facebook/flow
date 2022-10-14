@@ -26,6 +26,21 @@ References:
                          ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:4:7
+
+Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
+[incompatible-call]
+
+   polyt_flow_error.js:4:7
+   4| first(1); // Incompatibility error, but no error on under-constrained T
+            ^ [1]
+
+References:
+   polyt_flow_error.js:3:27
+   3| declare function first<T>(Array<T>): ?T;
+                                ^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ tdt.js:5:11
 
 T contains a non-Type.t upper bound UseT(ImplicitTypeParam, TypeDestructorTriggerT)
@@ -130,4 +145,4 @@ References:
 
 
 
-Found 10 errors
+Found 11 errors

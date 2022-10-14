@@ -49,6 +49,7 @@ module type S = sig
     Subst_name.t ->
     Type.typeparam ->
     Polarity.t option ->
+    default_bound:Type.t option ->
     Reason.reason ->
     Type.t ->
     output
@@ -236,12 +237,18 @@ struct
           Some (get_t cx t))
     | _ -> failwith "Implicit instantiation is not an OpenT"
 
+  let on_missing_bounds cx name tparam ~default_bound ~tparam_binder_reason ~instantiation_reason =
+    match default_bound with
+    | Some t -> Observer.on_pinned_tparam cx name tparam t
+    | None -> Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
+
   let use_upper_bounds
       cx
       name
       tparam
       tvar
-      ?(on_upper_empty = Observer.on_missing_bounds)
+      ~default_bound
+      ?(on_upper_empty = on_missing_bounds ~default_bound)
       tparam_binder_reason
       instantiation_reason =
     let upper_t = merge_upper_bounds cx tparam_binder_reason tvar in
@@ -376,7 +383,7 @@ struct
     Flow.flow cx (lhs, use_t);
     (inferred_targ_list, marked_tparams, tout)
 
-  let pin_type cx name tparam polarity instantiation_reason t =
+  let pin_type cx name tparam polarity ~default_bound instantiation_reason t =
     let tparam_binder_reason = TypeUtil.reason_of_t t in
     match polarity with
     | None ->
@@ -391,28 +398,39 @@ struct
        * switching to Pierce's algorithm for implicit instantiation *)
       let lower_t = merge_lower_bounds cx t in
       (match lower_t with
-      | None -> use_upper_bounds cx name tparam t tparam_binder_reason instantiation_reason
+      | None ->
+        use_upper_bounds cx name tparam t ~default_bound tparam_binder_reason instantiation_reason
       | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
     | Some Positive ->
       (match merge_lower_bounds cx t with
-      | None -> use_upper_bounds cx name tparam t tparam_binder_reason instantiation_reason
+      | None ->
+        use_upper_bounds cx name tparam t ~default_bound tparam_binder_reason instantiation_reason
       | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
     | Some Negative ->
+      let on_upper_empty cx name tparam ~tparam_binder_reason ~instantiation_reason =
+        match merge_lower_bounds cx t with
+        | None ->
+          on_missing_bounds
+            cx
+            name
+            tparam
+            ~default_bound
+            ~tparam_binder_reason
+            ~instantiation_reason
+        | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred
+      in
       use_upper_bounds
         cx
         name
         tparam
         t
+        ~default_bound
+        ~on_upper_empty
         tparam_binder_reason
         instantiation_reason
-        ~on_upper_empty:(fun cx name tparam ~tparam_binder_reason ~instantiation_reason ->
-          match merge_lower_bounds cx t with
-          | None ->
-            Observer.on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason
-          | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred
-      )
 
-  let pin_types cx inferred_targ_list marked_tparams tparams_map implicit_instantiation =
+  let pin_types
+      cx ~has_new_errors inferred_targ_list marked_tparams tparams_map implicit_instantiation =
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let subst_map =
       List.fold_left
@@ -425,7 +443,15 @@ struct
         let tparam = Subst_name.Map.find name tparams_map in
         let result =
           if is_inferred then
-            pin_type cx name tparam (Marked.get name marked_tparams) instantiation_reason t
+            pin_type
+              cx
+              name
+              tparam
+              (Marked.get name marked_tparams)
+              ~default_bound:
+                (Base.Option.some_if has_new_errors (AnyT.error (TypeUtil.reason_of_t t)))
+              instantiation_reason
+              t
           else
             Observer.on_pinned_tparam cx name tparam t
         in
@@ -503,11 +529,12 @@ struct
     let errors = Context.errors cx in
     let (inferred_targ_list, marked_tparams, tparams_map, tout) = implicitly_instantiate cx check in
     let errors_before_using_return_hint = Context.errors cx in
+    let has_new_errors = not @@ Flow_error.ErrorSet.equal errors errors_before_using_return_hint in
     Context.run_with_fresh_constrain_cache cx (fun () ->
         Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (tout, hint))
     );
     Context.reset_errors cx errors_before_using_return_hint;
-    let output = pin_types cx inferred_targ_list marked_tparams tparams_map check in
+    let output = pin_types cx ~has_new_errors inferred_targ_list marked_tparams tparams_map check in
     if Context.in_synthesis_mode cx then Context.reset_errors cx errors;
     output
 
@@ -561,7 +588,7 @@ module PinTypes (Flow : Flow_common.S) = struct
         is_this = false;
       }
     in
-    M.pin_type cx name tparam (Some polarity) reason t
+    M.pin_type cx name tparam (Some polarity) ~default_bound:None reason t
 end
 
 type inferred_targ = {

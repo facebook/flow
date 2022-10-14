@@ -44,6 +44,7 @@ module type S = sig
     Subst_name.t ->
     Type.typeparam ->
     Polarity.t option ->
+    default_bound:Type.t option ->
     Reason.reason ->
     Type.t ->
     output

@@ -386,12 +386,13 @@ let prepare_implicit_instantiation_checks ~cx implicit_instantiation_checks =
 
 let check_implicit_instantiations cx =
   Context.run_in_post_inference_mode cx (fun () ->
-      if Context.run_post_inference_implicit_instantiation cx then
+      if Context.run_post_inference_implicit_instantiation cx then (
         let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
         let implicit_instantiation_checks =
           prepare_implicit_instantiation_checks ~cx implicit_instantiation_checks
         in
-        let errors = Context.errors cx in
+        let saved_errors = Context.errors cx in
+        Context.reset_errors cx Flow_error.ErrorSet.empty;
         Context.run_in_implicit_instantiation_mode cx (fun () ->
             PierceImplicitInstantiation.fold
               ~implicit_instantiation_cx:cx
@@ -399,8 +400,8 @@ let check_implicit_instantiations cx =
               ~init:()
               ~f:(fun _ _ _ _ -> ())
               ~post:(fun ~cx ~implicit_instantiation_cx:_ ->
-                let new_errors = Flow_error.ErrorSet.diff (Context.errors cx) errors in
-                Context.reset_errors cx errors;
+                let new_errors = Context.errors cx in
+                Context.reset_errors cx saved_errors;
                 Flow_error.ErrorSet.iter
                   (fun error ->
                     Error_message.(
@@ -413,6 +414,7 @@ let check_implicit_instantiations cx =
                   new_errors)
               implicit_instantiation_checks
         )
+      )
   )
 
 let detect_matching_props_violations init_cx master_cx =
