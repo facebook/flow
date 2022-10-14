@@ -270,17 +270,17 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
              | (Env_api.Number reason, _) -> Type.(NumT.make reason |> with_trust Trust.bogus_trust)
              | (Env_api.DeclaredFunction loc, _) ->
                provider_type_for_def_loc ~intersect:true cx env loc
-             | (Env_api.Undeclared (_name, def_loc), (ForType | ForTypeof)) ->
+             | (Env_api.Undeclared (_name, def_loc), ForType) ->
                check_readable cx Env_api.OrdinaryNameLoc def_loc;
                t_option_value_exn cx def_loc (Loc_env.find_ordinary_write env def_loc)
-             | (Env_api.Undeclared (name, def_loc), ForValue) ->
+             | (Env_api.Undeclared (name, def_loc), (ForValue | ForTypeof)) ->
                Flow_js.add_output
                  cx
                  Error_message.(
                    EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
                  );
                Type.(AnyT.make (AnyError None) reason)
-             | (Env_api.UndeclaredClass { def; _ }, (ForType | ForTypeof)) ->
+             | (Env_api.UndeclaredClass { def; _ }, ForType) ->
                Debug_js.Verbose.print_if_verbose
                  cx
                  [
@@ -290,7 +290,7 @@ and type_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.aloc_of_reason def |> Reason.string_of_aloc);
                  ];
                find_write_exn Env_api.OrdinaryNameLoc def
-             | (Env_api.UndeclaredClass { name; def }, _) ->
+             | (Env_api.UndeclaredClass { name; def }, (ForValue | ForTypeof)) ->
                let def_loc = aloc_of_reason def in
                Flow_js.add_output
                  cx

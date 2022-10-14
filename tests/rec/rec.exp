@@ -248,6 +248,21 @@ References:
                        ^^^ [2]
 
 
+Error ------------------------------------------------------------------------------- recursive_react_component.js:13:30
+
+Cannot use variable `TimeoutFn` [1] because the declaration either comes later or was skipped.
+[reference-before-declaration]
+
+   recursive_react_component.js:13:30
+   13|   theme?: ElementProp<typeof TimeoutFn, 'theme'>,
+                                    ^^^^^^^^^
+
+References:
+   recursive_react_component.js:19:7
+   19| const TimeoutFn = (props: Props) => {
+             ^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------- recursive_react_component.js:21:11
 
 Cannot resolve name `DoesntMatter`. [cannot-resolve-name]
@@ -428,4 +443,4 @@ References:
 
 
 
-Found 25 errors
+Found 26 errors
