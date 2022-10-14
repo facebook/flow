@@ -6,5 +6,19 @@ Cannot resolve name `call`. [cannot-resolve-name]
               ^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test2.js:6:25
 
-Found 1 error
+Cannot create `div` element because number [1] is not a function. [not-a-function]
+
+   test2.js:6:25
+   6| function mk() { return <div /> }; // Error, call can't extract base name
+                              ^^^
+
+References:
+   test2.js:8:26
+   8| function call() { return 42; }
+                               ^^ [1]
+
+
+
+Found 2 errors

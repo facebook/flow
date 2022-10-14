@@ -11,6 +11,10 @@ open Name_def_ordering
 module Ast = Flow_ast
 module EnvMap = Env_api.EnvMap
 
+let jsx_mode = ref Options.Jsx_react
+
+let react_runtime = ref Options.ReactRuntimeClassic
+
 module Context = struct
   type t = unit
 
@@ -18,9 +22,9 @@ module Context = struct
 
   let file _cx = File_key.SourceFile "test.js"
 
-  let jsx _cx = Options.Jsx_react
+  let jsx _cx = !jsx_mode
 
-  let react_runtime _cx = Options.ReactRuntimeClassic
+  let react_runtime _cx = !react_runtime
 
   let env_mode _cx = Options.LTI
 
@@ -111,14 +115,23 @@ let print_init_test contents =
   let (inits, _) = Name_def.find_defs env_entries providers ast in
   print_values inits
 
-let print_order_test contents =
+let print_order_test ?(custom_jsx = None) ?(react_runtime_automatic = false) contents =
+  if react_runtime_automatic then react_runtime := Options.ReactRuntimeAutomatic;
+  (match custom_jsx with
+  | None -> ()
+  | Some str ->
+    let (ast, _errors) = Parser_flow.jsx_pragma_expression str None in
+    let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#expression ast in
+    jsx_mode := Options.Jsx_pragma (str, aloc_ast));
   let ast = parse_with_alocs contents in
   let (_, ({ Name_resolver.Env_api.env_entries; providers; _ } as env)) =
     Name_resolver.program_with_scope () ast
   in
   let (inits, _) = Name_def.find_defs env_entries providers ast in
   let order = Name_def_ordering.build_ordering () env inits in
-  print_order order
+  print_order order;
+  react_runtime := Options.ReactRuntimeClassic;
+  jsx_mode := Options.Jsx_react
 
 (* TODO: ocamlformat mangles the ppx syntax. *)
 [@@@ocamlformat "disable=true"]
@@ -1097,3 +1110,70 @@ function foo(arr: $ReadOnlyArray<Object>) {
     (2, 13) to (2, 16) =>
     (4, 49) to (4, 51) =>
     illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22)); ((4, 16) to (4, 47)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46))) |}]
+
+let%expect_test "react_fwd" =
+  print_order_test {|
+import * as React from 'react';
+
+const RC = <T />
+
+function T(): void {}
+|};
+    [%expect {|
+      (2, 12) to (2, 17) =>
+      (6, 9) to (6, 10) =>
+      (4, 6) to (4, 8) |}]
+
+let%expect_test "std_jsx" =
+  print_order_test {|
+<FirstElement />
+function time_to_create_some_elements_bro() {
+  return <SecondElement />
+}
+function createMikesCoolElement() { return 42 };
+import * as React from 'react';
+|};
+    [%expect {|
+      (7, 12) to (7, 17) =>
+      (3, 9) to (3, 41) =>
+      (6, 9) to (6, 31) |}]
+
+let%expect_test "custom_jsx_pragma" =
+  print_order_test ~custom_jsx:(Some "createMikesCoolElement") {|
+<FirstElement />
+function time_to_create_some_elements_bro() {
+  return <SecondElement />
+}
+function createMikesCoolElement() { return 42 };
+import * as React from 'react';
+|};
+    [%expect {|
+      (6, 9) to (6, 31) =>
+      (3, 9) to (3, 41) =>
+      (7, 12) to (7, 17) |}]
+
+let%expect_test "jsx_pragma_member_expr" =
+  print_order_test ~custom_jsx:(Some "Test.f") {|
+var x = <Component />
+function Component() {}
+import * as React from 'react';
+|};
+    [%expect {|
+      (3, 9) to (3, 18) =>
+      (2, 4) to (2, 5) =>
+      (4, 12) to (4, 17)
+       |}]
+
+let%expect_test "automatic_react_runtime" =
+  print_order_test ~react_runtime_automatic:true {|
+<FirstElement />
+function time_to_create_some_elements_bro() {
+  return <SecondElement />
+}
+function createMikesCoolElement() { return 42 };
+import * as React from 'react';
+|};
+    [%expect {|
+      (3, 9) to (3, 41) =>
+      (6, 9) to (6, 31) =>
+      (7, 12) to (7, 17) |}]

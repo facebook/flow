@@ -246,6 +246,39 @@ struct
           Base.List.iter ~f:(this#add ~why:loc) writes;
           this_
 
+        method! jsx_element_name_identifier (ident : (ALoc.t, ALoc.t) Ast.JSX.Identifier.t) =
+          let (loc, _) = ident in
+          let writes = this#find_writes ~for_type:false loc in
+          Base.List.iter ~f:(this#add ~why:loc) writes;
+          super#jsx_identifier ident
+
+        method private jsx_function_call loc =
+          match (Context.react_runtime cx, Context.jsx cx) with
+          | (Options.ReactRuntimeClassic, Options.Jsx_react) ->
+            let writes = this#find_writes ~for_type:false loc in
+            Base.List.iter ~f:(this#add ~why:loc) writes
+          | (_, Options.Jsx_pragma (_, (_, Ast.Expression.Identifier _))) ->
+            let writes = this#find_writes ~for_type:false loc in
+            Base.List.iter ~f:(this#add ~why:loc) writes
+          | (Options.ReactRuntimeClassic, Options.Jsx_pragma (_, ast)) ->
+            ignore @@ this#expression ast
+          | _ -> ()
+
+        method! jsx_element loc expr =
+          let open Ast.JSX in
+          let { opening_element; closing_element; _ } = expr in
+          let loc =
+            match closing_element with
+            | None -> fst opening_element
+            | _ -> loc
+          in
+          this#jsx_function_call loc;
+          super#jsx_element loc expr
+
+        method! jsx_fragment loc expr =
+          this#jsx_function_call loc;
+          super#jsx_fragment loc expr
+
         (* Skip names in function parameter types (e.g. declared functions) *)
         method! function_param_type (fpt : ('loc, 'loc) Ast.Type.Function.Param.t) =
           let open Ast.Type.Function.Param in
