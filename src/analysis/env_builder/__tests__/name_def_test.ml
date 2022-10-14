@@ -1177,3 +1177,19 @@ import * as React from 'react';
       (3, 9) to (3, 41) =>
       (6, 9) to (6, 31) =>
       (7, 12) to (7, 17) |}]
+
+let%expect_test "return_annot" =
+  print_order_test {|
+const S = ()=> {
+  const x = useStyle();
+};
+
+type Styles = 1
+
+const useStyle = (): Styles => { return 1; }
+|};
+    [%expect {|
+      (6, 5) to (6, 11) =>
+      (8, 6) to (8, 14) =>
+      (3, 8) to (3, 9) =>
+      (2, 6) to (2, 7) |}]

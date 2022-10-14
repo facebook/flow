@@ -122,3 +122,13 @@ function non_assigning_member_assigns() {
 {
   for (const x of x) {} // Error on second x, no underconstrained error on the first one.
 }
+
+{
+  const S = ()=> {
+    const x = useStyle();
+  };
+
+  type Styles = 1
+
+  const useStyle = (): Styles => { return 1; }
+}

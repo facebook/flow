@@ -313,11 +313,12 @@ struct
           let { Ast.Function.params; body; predicate; return; tparams; _ } = expr in
           let open Flow_ast_mapper in
           let _ = this#function_params params in
+          let _ = this#type_annotation_hint return in
           let _ =
             if fully_annotated then
-              (this#type_annotation_hint return, body)
+              body
             else
-              (return, this#function_body_any body)
+              this#function_body_any body
           in
           let _ = map_opt this#predicate predicate in
           let _ = map_opt this#type_params tparams in
