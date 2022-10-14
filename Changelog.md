@@ -1,3 +1,18 @@
+### 0.190.0
+
+Note:
+Due to large number of likely new Flow errors that will be introduced in the next release, we decided to create an extra release to ease the upgrade process.
+We announced in the recent [blog post](https://medium.com/flow-type/requiring-more-annotations-to-functions-and-classes-in-flow-e8aa9b1d76bd) that we would remove the `enforce_local_inference_annotations` option in flowconfigs, as it became the default in v0.189.0. This change will be delayed to v0.191.0 instead.
+
+Likely to cause new Flow errors:
+* Flow will now error on indexed write to exact objects without indexed type.
+* Flow now requires that the target of `extends` clauses in class definitions are either variables, casts, or member expressions, rather than allowing arbitrary expressions.
+* We fixed a bug in which type arguments were not passed to the type parameters of static callable methods.
+* We unblocked constraints involving `any` and type applications like `Promise<T>`, which may cause new downstream errors to be discovered.
+
+Notable bug fixes:
+* Fix a bug that can cause the Flow server to unnecessarily restart when Watchman restarts
+
 ### 0.189.0
 
 Likely to cause new Flow errors:
