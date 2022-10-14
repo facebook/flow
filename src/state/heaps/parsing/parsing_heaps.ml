@@ -392,6 +392,22 @@ let prepare_write_resolved_requires (resolved_requires : resolved_requires) =
   let serialized = Marshal.to_string resolved_requires [] in
   Heap.prepare_write_serialized_resolved_requires serialized
 
+let prepare_write_resolved_requires_ent resolved_requires_opt =
+  let open Heap in
+  let (resolved_requires_size, write_resolved_requires) =
+    match resolved_requires_opt with
+    | None -> (0, Fun.const None)
+    | Some resolved_requires ->
+      let (size, write) = prepare_write_resolved_requires resolved_requires in
+      (size, (fun chunk -> Some (write chunk)))
+  in
+  let size = header_size + entity_size + resolved_requires_size in
+  let write chunk =
+    let resolved_requires = write_resolved_requires chunk in
+    write_entity chunk resolved_requires
+  in
+  (size, write)
+
 (* Calculate the set of dirty modules and prepare those modules to be committed.
  *
  * If this file became a provider to a haste/file module, we add this file to
@@ -510,10 +526,15 @@ let prepare_update_file size file_key file parse_ent module_name =
   in
   (size, write)
 
-let prepare_write_typed_parse_ents size =
+let prepare_write_typed_parse_ents size resolved_requires_opt =
   let open Heap in
-  let size = size + (3 * (header_size + entity_size)) in
-  let write chunk = (write_entity chunk None, write_entity chunk None, write_entity chunk None) in
+  let (resolved_requires_size, write_resolved_requires_ent) =
+    prepare_write_resolved_requires_ent resolved_requires_opt
+  in
+  let size = size + (2 * (header_size + entity_size)) + resolved_requires_size in
+  let write chunk =
+    (write_resolved_requires_ent chunk, write_entity chunk None, write_entity chunk None)
+  in
   (size, write)
 
 (* Given a file, it's old resolved requires, and new resolved requires, compute
@@ -660,7 +681,7 @@ let add_checked_file
   let unchanged_or_fresh_parse =
     match file_opt with
     | None ->
-      let (size, write_parse_ents) = prepare_write_typed_parse_ents size in
+      let (size, write_parse_ents) = prepare_write_typed_parse_ents size None in
       let (size, add_file) = prepare_create_file size file_key module_name in
       Either.Right (size, write_parse_ents, add_file)
     | Some file ->
@@ -671,7 +692,7 @@ let add_checked_file
       in
       (match typed_parse with
       | None ->
-        let (size, write_parse_ents) = prepare_write_typed_parse_ents size in
+        let (size, write_parse_ents) = prepare_write_typed_parse_ents size None in
         let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
         Either.Right (size, write_parse_ents, update_file)
       | Some parse ->
@@ -1912,23 +1933,20 @@ module From_saved_state = struct
     let (exports_size, write_exports) = prepare_write_exports exports in
     let (imports_size, write_imports) = prepare_write_imports imports in
     let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
-    let (resolved_requires_size, write_resolved_requires) =
-      prepare_write_resolved_requires resolved_requires
-    in
     let (revdeps_size, update_revdeps) = prepare_update_revdeps None (Some resolved_requires) in
     let size =
-      (12 * header_size)
-      + (5 * entity_size)
+      (9 * header_size)
+      + (2 * entity_size)
       + string_size file_name
       + typed_parse_size
       + file_size
       + int64_size
       + exports_size
-      + resolved_requires_size
       + imports_size
       + cas_digest_size
       + revdeps_size
     in
+    let (size, write_parse_ents) = prepare_write_typed_parse_ents size (Some resolved_requires) in
     let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
     let (size, write_new_haste_info_maybe) =
       prepare_write_new_haste_info_maybe size None module_name
@@ -1941,10 +1959,7 @@ module From_saved_state = struct
         let haste_ent = write_entity chunk haste_info in
         let exports = write_exports chunk in
         let imports = write_imports chunk in
-        let resolved_requires = write_resolved_requires chunk in
-        let resolved_requires_ent = write_entity chunk (Some resolved_requires) in
-        let leader_ent = write_entity chunk None in
-        let sig_hash_ent = write_entity chunk None in
+        let (resolved_requires_ent, leader_ent, sig_hash_ent) = write_parse_ents chunk in
         let cas_digest = write_cas_digest chunk in
         let parse =
           write_typed_parse
