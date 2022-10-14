@@ -47,8 +47,8 @@ assert_ok "$FLOW" type-at-pos charset.js 3 13 --strip-root --pretty
 # destructuring.js
 printf "destructuring.js:3:6 = "
 assert_ok "$FLOW" type-at-pos destructuring.js 3 6 --strip-root --pretty
-printf "destructuring.js:17:13 = "
-assert_ok "$FLOW" type-at-pos destructuring.js 17 13 --strip-root --pretty
+printf "destructuring.js:11:13 = "
+assert_ok "$FLOW" type-at-pos destructuring.js 11 13 --strip-root --pretty
 
 # generics.js
 printf "generics.js:5:1 = "

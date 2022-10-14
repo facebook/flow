@@ -223,18 +223,18 @@ destructuring.js:3:6 = {
   "start":6,
   "end":6
 }
-destructuring.js:17:13 = {
-  "type":"empty",
+destructuring.js:11:13 = {
+  "type":"number",
   "reasons":[],
   "loc":{
     "source":"destructuring.js",
     "type":"SourceFile",
-    "start":{"line":17,"column":13,"offset":413},
-    "end":{"line":17,"column":13,"offset":414}
+    "start":{"line":11,"column":13,"offset":157},
+    "end":{"line":11,"column":13,"offset":158}
   },
   "path":"destructuring.js",
-  "line":17,
-  "endline":17,
+  "line":11,
+  "endline":11,
   "start":13,
   "end":13
 }

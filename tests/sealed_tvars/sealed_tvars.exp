@@ -336,5 +336,13 @@ References:
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- this.js:3:11
 
-Found 30 errors
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   3| function f() {
+                ^^
+
+
+
+Found 31 errors

@@ -812,6 +812,9 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     | DeclaredModule (loc, module_) -> resolve_declare_module cx loc module_
     | NonBindingParam -> (AnyT.at (Unsound NonBindingParameter) id_loc, unknown_use)
+    | MissingThisAnnot when Context.env_mode cx = Options.LTI ->
+      (AnyT.at (AnyError None) id_loc, unknown_use)
+    | MissingThisAnnot -> (Tvar.mk cx def_reason, unknown_use)
   in
   let update_reason =
     match def with

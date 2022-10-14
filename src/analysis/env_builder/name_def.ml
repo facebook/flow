@@ -739,8 +739,29 @@ class def_finder env_entries providers toplevel_scope =
 
     method visit_function_expr
         ~func_hint ~has_this_def ~var_assigned_to ~statics ~arrow function_loc expr =
-      let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
+      let {
+        Ast.Function.id;
+        async;
+        generator;
+        sig_loc;
+        params = (_, { Ast.Function.Params.this_; _ }) as params;
+        body;
+        _;
+      } =
+        expr
+      in
       let scope_kind = func_scope_kind expr in
+      begin
+        match this_ with
+        | None
+          when has_this_def && Signature_utils.This_finder.found_this_in_body_or_params body params
+          ->
+          this#add_binding
+            (Env_api.FunctionThisLoc, function_loc)
+            (mk_reason RThis function_loc)
+            MissingThisAnnot
+        | _ -> ()
+      end;
       this#in_new_tparams_env (fun () ->
           this#visit_function ~scope_kind ~func_hint expr;
           (match var_assigned_to with
@@ -805,9 +826,25 @@ class def_finder env_entries providers toplevel_scope =
       expr
 
     method visit_function_declaration ~statics loc expr =
-      let { Ast.Function.id; async; generator; sig_loc; _ } = expr in
+      let {
+        Ast.Function.id;
+        async;
+        generator;
+        sig_loc;
+        params = (_, { Ast.Function.Params.this_; _ }) as params;
+        body;
+        _;
+      } =
+        expr
+      in
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
+          begin
+            match this_ with
+            | None when Signature_utils.This_finder.found_this_in_body_or_params body params ->
+              this#add_binding (Env_api.FunctionThisLoc, loc) (mk_reason RThis loc) MissingThisAnnot
+            | _ -> ()
+          end;
           this#visit_function ~func_hint:Hint_None ~scope_kind expr;
           let reason = func_reason ~async ~generator sig_loc in
           let def =

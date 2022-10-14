@@ -58,6 +58,14 @@ module This_finder = struct
         this#set_acc true;
         node
 
+      method! type_identifier node =
+        begin
+          match node with
+          | (_, { Flow_ast.Identifier.name = "this"; _ }) -> this#set_acc true
+          | _ -> ()
+        end;
+        node
+
       (* Any mentions of `this` in these constructs would reference
          the `this` within those structures, so we ignore them *)
       method! class_ _ x = x

@@ -96,7 +96,7 @@ struct
   module FindDependencies : sig
     val depends :
       Context.t ->
-      EnvMap.key option EnvMap.t ->
+      EnvMap.key EnvMap.t ->
       Env_api.env_info ->
       ALoc.t ->
       Name_def.def ->
@@ -165,9 +165,9 @@ struct
           let writes =
             write_locs
             |> Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type)
-            |> Base.List.filter_map ~f:(fun kind_and_loc ->
+            |> Base.List.map ~f:(fun kind_and_loc ->
                    EnvMap.find_opt kind_and_loc this_super_dep_loc_map
-                   |> Base.Option.value ~default:(Some kind_and_loc)
+                   |> Base.Option.value ~default:kind_and_loc
                )
           in
           let refinements =
@@ -772,6 +772,7 @@ struct
         (* Enums don't contain any code or type references, they're literal-like *) EnvMap.empty
       | Import _ -> (* same with all imports *) EnvMap.empty
       | NonBindingParam -> EnvMap.empty
+      | MissingThisAnnot -> EnvMap.empty
 
     (* Is the variable defined by this def able to be recursively depended on, e.g. created as a 0->1 tvar before being
        resolved? *)
@@ -805,6 +806,7 @@ struct
           }
       | Class _
       | NonBindingParam
+      | MissingThisAnnot
       | DeclaredClass _
       | DeclaredModule _ ->
         true
@@ -855,6 +857,7 @@ struct
     | ExpressionDef _
     | DeclaredModule _
     | NonBindingParam
+    | MissingThisAnnot
     | GeneratorNext (Some _) ->
       []
     (* TODO *)
@@ -901,36 +904,8 @@ struct
             acc
             |> EnvSet.fold
                  (fun this_super_kind_and_loc acc ->
-                   EnvMap.add this_super_kind_and_loc (Some kind_and_loc) acc)
+                   EnvMap.add this_super_kind_and_loc kind_and_loc acc)
                  locs
-          | ( Function
-                {
-                  function_loc;
-                  function_ =
-                    { Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ }); _ };
-                  _;
-                },
-              _,
-              _,
-              _
-            )
-          | ( Binding
-                (Root
-                  (FunctionValue
-                    {
-                      function_loc;
-                      function_ =
-                        { Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ }); _ };
-                      arrow = false;
-                      _;
-                    }
-                    )
-                  ),
-              _,
-              _,
-              _
-            ) ->
-            EnvMap.add (Env_api.FunctionThisLoc, function_loc) None acc
           | _ -> acc)
         map
         EnvMap.empty
