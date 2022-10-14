@@ -1079,12 +1079,15 @@ end = struct
       if deleted_count > 0 then log_files deleted "deleted" deleted_count
     );
 
-    Hh_logger.debug
-      "recheck: old = %d, del = %d, fresh = %d, unmod = %d"
-      (FilenameSet.cardinal old_parsed)
-      (FilenameSet.cardinal deleted)
-      (CheckedSet.cardinal freshparsed)
-      (FilenameSet.cardinal unchanged);
+    (* old_parsed and unchanged sets are large and `cardinal` is O(n), so avoid
+     * this call unless we are in debug mode. *)
+    if Hh_logger.Level.(passes_min_level Debug) then
+      Hh_logger.debug
+        "recheck: old = %d, del = %d, fresh = %d, unmod = %d"
+        (FilenameSet.cardinal old_parsed)
+        (FilenameSet.cardinal deleted)
+        (CheckedSet.cardinal freshparsed)
+        (FilenameSet.cardinal unchanged);
 
     (* "updates" is a CheckedSet where "focused" updates come from file system events.
        When a file changes, [reparse] notices and includes it in [new_or_changed], and
