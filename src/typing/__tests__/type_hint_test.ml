@@ -567,13 +567,18 @@ let eval_hint_tests =
           [Decomp_CallSuper];
     "jsx_props_of_class_component"
     >:: mk_eval_hint_test_with_type_setup
-          ~expected:"{bar: string, foo: number}"
+          ~expected:"{+bar: string, +foo: number}"
           "class MyComponent extends React$Component<{bar: string, foo: number}> {}; MyComponent"
           [Decomp_JsxProps];
     "jsx_props_of_function_component"
     >:: mk_eval_hint_test
-          ~expected:"{bar: string, foo: number}"
+          ~expected:"{+bar: string, +foo: number}"
           "({bar: string, foo: number}) => number"
+          [Decomp_JsxProps];
+    "jsx_props_of_abstract_component"
+    >:: mk_eval_hint_test
+          ~expected:"{+bar: string, +foo: number}"
+          "React$AbstractComponent<{+bar: string, +foo: number}, mixed>"
           [Decomp_JsxProps];
     "jsx_props_select"
     >:: mk_eval_hint_test
@@ -582,7 +587,7 @@ let eval_hint_tests =
           [Decomp_ObjProp "foo"; Decomp_JsxProps];
     "jsx_props_spread"
     >:: mk_eval_hint_test
-          ~expected:"{bar: string, foo: number}"
+          ~expected:"{+bar: string, +foo: number}"
           "({bar: string, foo: number}) => number"
           [Decomp_ObjSpread; Decomp_JsxProps];
   ]

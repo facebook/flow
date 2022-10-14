@@ -324,7 +324,7 @@ and type_of_hint_decomposition cx op reason t =
             SpeculationFlow.flow
               cx
               reason
-              (t, ReactKitT (unknown_use, reason, React.GetProps (OpenT props_t)))
+              (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
         )
       | Decomp_MethodElem ->
         get_method_type t (Computed (DefT (reason, bogus_trust (), StrT AnyLiteral)))
