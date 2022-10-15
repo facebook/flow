@@ -109,6 +109,43 @@ References:
              ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- import.js:3:1
+
+Cannot use variable `E` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   import.js:3:1
+   3| E.C;
+      ^
+
+References:
+   import.js:6:13
+   6| import * as E from "./export";
+                  ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:4:14
+
+Cannot assign `10` to `x` because number [1] is incompatible with `C` [2]. [incompatible-type]
+
+   import.js:4:14
+   4| var x: E.C = 10;
+                   ^^ [1]
+
+References:
+   import.js:4:8
+   4| var x: E.C = 10;
+             ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:5:8
+
+Cannot use `c` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   5| var y: E.c = 10;
+             ^^^
+
+
 Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -345,4 +382,4 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 
 
-Found 31 errors
+Found 34 errors

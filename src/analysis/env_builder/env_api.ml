@@ -64,10 +64,6 @@ module type S = sig
     | IllegalWrite of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
-    | UndeclaredClassOrEnum of {
-        def: L.t Reason.virtual_reason;
-        name: string;
-      }
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
@@ -271,10 +267,6 @@ module Make
     | IllegalWrite of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
     | Undeclared of string * L.t
-    | UndeclaredClassOrEnum of {
-        def: L.t Reason.virtual_reason;
-        name: string;
-      }
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
@@ -417,15 +409,13 @@ module Make
     match write_loc with
     | Refinement { refinement_id = _; write_id = _; writes } ->
       writes |> List.map (writes_of_write_loc ~for_type) |> List.flatten
-    | UndeclaredClassOrEnum { def; _ } when for_type ->
-      [(OrdinaryNameLoc, Reason.poly_loc_of_reason def)]
-    | UndeclaredClassOrEnum _ -> []
     | Write r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
     | EmptyArray { reason; arr_providers } ->
       (OrdinaryNameLoc, Reason.poly_loc_of_reason reason)
       :: Base.List.map ~f:(fun l -> (ArrayProviderLoc, l)) (L.LSet.elements arr_providers)
     | IllegalWrite _ -> []
     | Uninitialized _ -> []
+    | Undeclared (_, loc) when for_type -> [(OrdinaryNameLoc, loc)]
     | Undeclared _ -> []
     | FunctionThis r -> [(FunctionThisLoc, Reason.poly_loc_of_reason r)]
     | GlobalThis _ -> []

@@ -115,8 +115,6 @@ module Make
 
     val number : L.t virtual_reason -> t
 
-    val undeclared_class_or_enum : L.t virtual_reason -> string -> t
-
     val merge : t -> t -> t
 
     val empty_array : L.t virtual_reason -> L.LSet.t -> t
@@ -200,10 +198,6 @@ module Make
       | Uninitialized of ALoc.t
       | Undeclared of string * ALoc.t
       | DeclaredButSkipped of string * ALoc.t
-      | UndeclaredClassOrEnum of {
-          def: ALoc.t virtual_reason;
-          name: string;
-        }
       | Projection of ALoc.t
       | FunctionThis of ALoc.t virtual_reason
       | GlobalThis of ALoc.t virtual_reason
@@ -239,12 +233,6 @@ module Make
       | Uninitialized _ -> "(uninitialized)"
       | Undeclared _ -> "(undeclared)"
       | DeclaredButSkipped _ -> "(declared but skipped)"
-      | UndeclaredClassOrEnum { def; _ } ->
-        let loc = Reason.poly_loc_of_reason def in
-        Utils_js.spf
-          "(undeclared class or enum) %s: (%s)"
-          (L.debug_to_string loc)
-          Reason.(desc_of_reason def |> string_of_desc)
       | Projection l -> Utils_js.spf "projection at %s" (L.debug_to_string l)
       | Loc reason ->
         let loc = Reason.poly_loc_of_reason reason in
@@ -302,14 +290,12 @@ module Make
     let is_undeclared t =
       match t.write_state with
       | Undeclared _ -> true
-      | UndeclaredClassOrEnum _ -> true
       | _ -> false
 
     let is_undeclared_or_skipped t =
       match t.write_state with
       | Undeclared _ -> true
       | DeclaredButSkipped _ -> true
-      | UndeclaredClassOrEnum _ -> true
       | _ -> false
 
     let is_declared_function t =
@@ -342,8 +328,6 @@ module Make
     let empty_array reason arr_providers = mk_with_write_state (EmptyArray { reason; arr_providers })
 
     let number r = mk_with_write_state (Number r)
-
-    let undeclared_class_or_enum def name = mk_with_write_state (UndeclaredClassOrEnum { def; name })
 
     let projection loc = mk_with_write_state @@ Projection loc
 
@@ -421,7 +405,6 @@ module Make
       | DeclaredFunction _
       | Undeclared _
       | DeclaredButSkipped _
-      | UndeclaredClassOrEnum _
       | Projection _
       | FunctionThis _
       | GlobalThis _
@@ -511,7 +494,6 @@ module Make
           | Undeclared (name, loc)
           | DeclaredButSkipped (name, loc) ->
             Env_api.Undeclared (name, loc)
-          | UndeclaredClassOrEnum { def; name } -> Env_api.UndeclaredClassOrEnum { def; name }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
           | Projection loc -> Env_api.Projection loc
           | FunctionThis r -> Env_api.FunctionThis r
@@ -549,13 +531,12 @@ module Make
     let writes_of_uninitialized refine_to_undefined { write_state; _ } =
       let rec state_is_uninitialized v =
         match v with
-        | Undeclared _ -> []
+        | Undeclared _ -> [v]
         | DeclaredButSkipped _ -> []
         | Undefined _ -> []
         | Number _ -> []
         | DeclaredFunction _ -> []
         | Uninitialized _ -> [v]
-        | UndeclaredClassOrEnum _ -> [v]
         | PHI states -> Base.List.concat_map ~f:state_is_uninitialized states
         | Refinement { refinement_id; val_t = { write_state; _ } } ->
           let states = state_is_uninitialized write_state in
@@ -1748,10 +1729,9 @@ module Make
                   ~init:env_state.write_entries
                   providers
               in
-              let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
               env_state <- { env_state with write_entries };
               {
-                val_ref = ref (Val.undeclared_class_or_enum reason name);
+                val_ref = ref (Val.undeclared name loc);
                 havoc;
                 writes_by_closure_provider_val = None;
                 def_loc = Some loc;
@@ -2181,7 +2161,7 @@ module Make
        * this read
        *
        * Note that we don't emit EBinding errors for referenced-before-declaration errors here.
-       * That is because we may read an UndeclaredClassOrEnum from a type position and the
+       * That is because we may read an UndeclaredTypeAndValue from a type position and the
        * name_resolver doesn't keep track of whether we are in a type context or not.
        *
        * Instead of augmenting the name_resolver with those capabilities, we emit these errors
