@@ -392,7 +392,10 @@ struct
           this#add ~why:loc (Env_api.ArrayProviderLoc, loc);
           super#expression expr
 
-        method visit_expression_for_expression_writes expr = ignore @@ super#expression expr
+        method visit_expression_for_expression_writes ((loc, _) as expr) =
+          let writes = this#find_writes ~for_type:false ~allow_missing:true loc in
+          Base.List.iter ~f:(this#add ~why:loc) writes;
+          ignore @@ super#expression expr
       end
 
     (* For all the possible defs, explore the def's structure with the class above

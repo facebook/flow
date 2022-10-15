@@ -132,3 +132,10 @@ function non_assigning_member_assigns() {
 
   const useStyle = (): Styles => { return 1; }
 }
+
+{
+  declare var rule: {title_label: string};
+  const titlesAdlabels = [];
+  rule.title_label = "a";
+  titlesAdlabels.push(rule.title_label);
+}

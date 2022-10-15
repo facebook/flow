@@ -988,8 +988,7 @@ x.push(42);
     (4, 6) to (4, 7) =>
     (3, 9) to (3, 10) =>
     (7, 2) to (7, 3) =>
-    (6, 9) to (6, 10) =>
-    (9, 7) to (9, 9) |}]
+    (6, 9) to (6, 10) |}]
 
 let%expect_test "declare module" =
   print_order_test {|
@@ -1026,8 +1025,7 @@ x.push(42);
   |};
   [%expect {|
     (3, 7) to (3, 9) =>
-    (2, 4) to (2, 5) =>
-    (3, 7) to (3, 9) |}]
+    (2, 4) to (2, 5) |}]
 
 let%expect_test "left to right deps" =
   print_order_test {|
@@ -1193,3 +1191,32 @@ const useStyle = (): Styles => { return 1; }
       (8, 6) to (8, 14) =>
       (3, 8) to (3, 9) =>
       (2, 6) to (2, 7) |}]
+
+let%expect_test "provider_refi" =
+  print_order_test {|
+declare var rule: {title_label: string};
+const titlesAdlabels = [];
+rule.title_label = "a";
+titlesAdlabels.push(rule.title_label);
+|};
+    [%expect {|
+      (2, 12) to (2, 16) =>
+      (4, 0) to (4, 16) =>
+      (5, 20) to (5, 36) =>
+      (3, 6) to (3, 20) |}]
+
+let%expect_test "logic_op_assign_repeat" =
+  print_order_test {|
+function member_op_assignment_refinement_ok(o: {p: ?number}) {
+  o.p &&= 3;
+  o.p &&= 3;
+  o.p &&= 3;
+}
+|};
+    [%expect {|
+      (2, 44) to (2, 45) =>
+      (2, 9) to (2, 43) =>
+      (3, 2) to (3, 5) =>
+      (4, 2) to (4, 5) =>
+      (5, 2) to (5, 5)
+        |}]
