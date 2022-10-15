@@ -33,6 +33,12 @@ module PierceImplicitInstantiation : Implicit_instantiation.S =
           Subst_name.string_of_subst_name name
           ^ " contains a non-Type.t upper bound "
           ^ Type.string_of_use_ctor u
+          ^ Type.(
+              match u with
+              | UseT (_, TypeDestructorTriggerT (_, _, _, d, _)) ->
+                " " ^ Debug_js.string_of_destructor d
+              | _ -> ""
+            )
         in
         Flow_js.add_output
           cx

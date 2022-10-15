@@ -43,7 +43,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ tdt.js:5:11
 
-T contains a non-Type.t upper bound UseT(ImplicitTypeParam, TypeDestructorTriggerT)
+T contains a non-Type.t upper bound UseT(ImplicitTypeParam, TypeDestructorTriggerT) Rest
 
    5| const a = f();
                 ^^^
