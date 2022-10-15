@@ -6668,3 +6668,77 @@ export enum X {
         (3, 8) to (3, 9) => {
           (undeclared class or enum) (4, 12) to (4, 13): (`X`)
         }] |}]
+
+let%expect_test "logic_op_assign_repeat" =
+  print_ssa_test {|
+function member_op_assignment_refinement_ok(o: {p: ?number}) {
+  o.p &&= 3;
+  o.p &&= 3;
+  o.p &&= 3;
+}
+|};
+    [%expect {|
+      [
+        (3, 2) to (3, 3) => {
+          (2, 44) to (2, 45): (`o`)
+        };
+        (4, 2) to (4, 3) => {
+          (2, 44) to (2, 45): (`o`)
+        };
+        (4, 2) to (4, 5) => {
+          (3, 2) to (3, 5): (some property)
+        };
+        (5, 2) to (5, 3) => {
+          (2, 44) to (2, 45): (`o`)
+        };
+        (5, 2) to (5, 5) => {
+          (4, 2) to (4, 5): (some property)
+        }]
+        |}]
+
+let%expect_test "logic_op_assign_repeat_existing_refi" =
+  print_ssa_test {|
+function member_op_assignment_refinement_ok(o: {p: ?number}) {
+  if (o.p === 0) {
+    o.p ??= 3;
+    o.p &&= (o.p && 3);
+    o.p ||= (o.p && 3);
+  }
+}
+|};
+    [%expect {|
+      [
+        (3, 6) to (3, 7) => {
+          (2, 44) to (2, 45): (`o`)
+        };
+        (4, 4) to (4, 5) => {
+          {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}
+        };
+        (4, 4) to (4, 7) => {
+          {refinement = 0; writes = projection at (3, 6) to (3, 9)}
+        };
+        (5, 4) to (5, 5) => {
+          {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}
+        };
+        (5, 4) to (5, 7) => {
+          (4, 4) to (4, 7): (some property)
+        };
+        (5, 13) to (5, 14) => {
+          {refinement = PropExistsR (p); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
+        };
+        (5, 13) to (5, 16) => {
+          {refinement = Truthy; writes = (4, 4) to (4, 7): (some property)}
+        };
+        (6, 4) to (6, 5) => {
+          {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}
+        };
+        (6, 4) to (6, 7) => {
+          (5, 4) to (5, 7): (some property)
+        };
+        (6, 13) to (6, 14) => {
+          {refinement = Not (PropExistsR (p)); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
+        };
+        (6, 13) to (6, 16) => {
+          {refinement = Not (Truthy); writes = (5, 4) to (5, 7): (some property)}
+        }]
+        |}]

@@ -2405,14 +2405,6 @@ module Make
             (match left_expr with
             | None -> statement_error
             | Some left_expr ->
-              begin
-                match RefinementKey.of_expression left_expr with
-                | None -> ()
-                | Some refinement_key ->
-                  (* If we don't already have a projection val in the environment for this key, we need to create one and commit it.
-                     We need to use this special function, so that the projection won't be auto-removed. *)
-                  this#add_projection refinement_key
-              end;
               (* THe LHS is unconditionally evaluated, so we don't run-to-completion and catch the
                * error here *)
               (match operator with
@@ -2444,7 +2436,13 @@ module Make
             | _ ->
               this#pop_refinement_scope ();
               this#merge_self_env env1);
-            ignore @@ this#assignment_pattern left
+            (match left with
+            | (loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
+              let reason = mk_reason RSomeProperty loc in
+              let assigned_val = Val.one reason in
+              this#assign_member ~delete:false mem loc assigned_val reason
+            | (_, Ast.Pattern.Identifier _) -> ignore @@ this#assignment_pattern left
+            | _ -> statement_error)
         end;
         expr
 
@@ -4221,19 +4219,6 @@ module Make
         in
         let nnf = nnf total in
         recur nnf
-
-      method private add_projection ({ RefinementKey.lookup; loc } as key) =
-        let create_val_for_heap =
-          lazy
-            (let reason = mk_reason (RefinementKey.reason_desc key) loc in
-             let write_entries =
-               EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
-             in
-             env_state <- { env_state with write_entries };
-             Val.one reason
-            )
-        in
-        this#map_val_with_lookup lookup ~create_val_for_heap (fun x -> x)
 
       (* Commit a set of refinements, all of which are linked biconditionally. If these refinements are negated,
          then the negation of each refinement should hold; separate calls to this function in the same
