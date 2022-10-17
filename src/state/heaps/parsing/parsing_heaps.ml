@@ -358,6 +358,17 @@ let prepare_write_new_haste_info_maybe size old_haste_info = function
       in
       (size, write))
 
+let prepare_write_aloc_table locs =
+  let open Type_sig_collections in
+  let serialized = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
+  let size = Heap.aloc_table_size serialized in
+  let write chunk = Heap.write_aloc_table chunk serialized in
+  (size, write)
+
+let prepare_write_ast (ast : (Loc.t, Loc.t) Flow_ast.Program.t) =
+  let serialized = Marshal.to_string (compactify_loc ast) [] in
+  Heap.prepare_write_serialized_ast serialized
+
 let prepare_write_cas_digest_maybe cas_digest =
   match cas_digest with
   | None -> (0, (fun _ -> None))
@@ -365,10 +376,6 @@ let prepare_write_cas_digest_maybe cas_digest =
     let open Heap in
     let (size, write) = prepare_write_cas_digest sha1 bytelen in
     (header_size + size, (fun chunk -> Some (write chunk)))
-
-let prepare_write_ast (ast : (Loc.t, Loc.t) Flow_ast.Program.t) =
-  let serialized = Marshal.to_string (compactify_loc ast) [] in
-  Heap.prepare_write_serialized_ast serialized
 
 let prepare_write_docblock (docblock : Docblock.t) =
   let serialized = Marshal.to_string docblock [] in
@@ -406,6 +413,13 @@ let prepare_write_resolved_requires_ent resolved_requires_opt =
     let resolved_requires = write_resolved_requires_maybe chunk in
     write_entity chunk resolved_requires
   in
+  (size, write)
+
+let prepare_write_type_sig type_sig =
+  let open Heap in
+  let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
+  let size = type_sig_size sig_bsize in
+  let write chunk = write_type_sig chunk sig_bsize write_sig in
   (size, write)
 
 (* Calculate the set of dirty modules and prepare those modules to be committed.
@@ -646,6 +660,25 @@ let prepare_update_revdeps =
       (0, (fun _ _ -> ()))
       (old_dependencies, new_dependencies)
 
+let prepare_set prepare_write setter x =
+  let open Heap in
+  let (size, write) = prepare_write x in
+  let write chunk parse =
+    let ast = write chunk in
+    setter parse ast
+  in
+  (header_size + size, write)
+
+let prepare_set_aloc_table = prepare_set prepare_write_aloc_table Heap.set_aloc_table
+
+let prepare_set_ast = prepare_set prepare_write_ast Heap.set_ast
+
+let prepare_set_docblock = prepare_set prepare_write_docblock Heap.set_docblock
+
+let prepare_set_file_sig = prepare_set prepare_write_file_sig Heap.set_file_sig
+
+let prepare_set_type_sig = prepare_set prepare_write_type_sig Heap.set_type_sig
+
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
  * function will update the existing entry in place. Otherwise, we will create a
@@ -663,21 +696,13 @@ let add_checked_file
     exports
     imports
     cas_digest =
-  let open Type_sig_collections in
   let open Heap in
-  let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
-  let (docblock_size, write_docblock) = prepare_write_docblock docblock in
-  let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
-  let (file_sig_size, write_file_sig) = prepare_write_file_sig file_sig in
-  let (ast_size, write_ast) = prepare_write_ast ast in
-  let size =
-    (5 * header_size)
-    + ast_size
-    + docblock_size
-    + aloc_table_size aloc_table
-    + type_sig_size sig_bsize
-    + file_sig_size
-  in
+  let (ast_size, set_ast) = prepare_set_ast ast in
+  let (docblock_size, set_docblock) = prepare_set_docblock docblock in
+  let (aloc_table_size, set_aloc_table) = prepare_set_aloc_table locs in
+  let (type_sig_size, set_type_sig) = prepare_set_type_sig type_sig in
+  let (file_sig_size, set_file_sig) = prepare_set_file_sig file_sig in
+  let size = ast_size + docblock_size + aloc_table_size + type_sig_size + file_sig_size in
   let unchanged_or_fresh_parse =
     match file_opt with
     | None ->
@@ -739,16 +764,11 @@ let add_checked_file
   in
   alloc size (fun chunk ->
       let (parse, dirty_modules) = add_file_maybe chunk in
-      let ast = write_ast chunk in
-      let docblock = write_docblock chunk in
-      let aloc_table = write_aloc_table chunk aloc_table in
-      let type_sig = write_type_sig chunk sig_bsize write_sig in
-      let file_sig = write_file_sig chunk in
-      set_ast parse ast;
-      set_docblock parse docblock;
-      set_aloc_table parse aloc_table;
-      set_type_sig parse type_sig;
-      set_file_sig parse file_sig;
+      set_ast chunk parse;
+      set_docblock chunk parse;
+      set_aloc_table chunk parse;
+      set_type_sig chunk parse;
+      set_file_sig chunk parse;
       dirty_modules
   )
 
