@@ -487,70 +487,6 @@ let calc_dirty_modules file_key file haste_ent new_file_module =
    * re-picked, but it is still dirty because `file` changed. (see TODO) *)
   MSet.add (Files.eponymous_module file_key) dirty_modules
 
-let prepare_create_file size file_key module_name =
-  let open Heap in
-  let (file_kind, file_name) = file_kind_and_name file_key in
-  let size = size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size in
-  let (size, write_new_haste_info_maybe) =
-    prepare_write_new_haste_info_maybe size None module_name
-  in
-  let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
-  let write chunk parse =
-    let file_name = write_string chunk file_name in
-    let parse_ent = write_entity chunk (Some parse) in
-    let haste_info = write_new_haste_info_maybe chunk in
-    let haste_ent = write_entity chunk haste_info in
-    let file_module = add_file_module_maybe chunk in
-    let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
-    if file = FileHeap.add file_key file then
-      calc_dirty_modules file_key file haste_ent file_module
-    else
-      (* Two threads raced to add this file and the other thread won. We don't
-       * need to mark any files as dirty; the other thread will have done that
-       * for us. *)
-      MSet.empty
-  in
-  (size, write)
-
-let prepare_update_file size file_key file parse_ent module_name =
-  let open Heap in
-  let haste_ent = get_haste_info file in
-  let old_haste_info = entity_read_latest haste_ent in
-  let (size, write_new_haste_info_maybe) =
-    prepare_write_new_haste_info_maybe size old_haste_info module_name
-  in
-  let new_file_module =
-    (* If we are re-parsing an unparsed file, we need to re-add ourselves to the
-     * file module's provider list. If the file is already parsed, then we are
-     * certainly already a provider, so we don't need to re-add. *)
-    match entity_read_latest parse_ent with
-    | None -> get_file_module file
-    | Some _ -> None
-  in
-  let write chunk parse =
-    entity_advance parse_ent (Some parse);
-    let new_haste_info = write_new_haste_info_maybe chunk in
-    let () =
-      match (old_haste_info, new_haste_info) with
-      | (None, None) -> ()
-      | (Some old_info, Some new_info) when haste_info_equal old_info new_info -> ()
-      | _ -> entity_advance haste_ent new_haste_info
-    in
-    calc_dirty_modules file_key file haste_ent new_file_module
-  in
-  (size, write)
-
-let prepare_write_typed_parse_ents size resolved_requires_opt =
-  let open Heap in
-  let (resolved_requires_size, write_resolved_requires_ent) =
-    prepare_write_resolved_requires_ent resolved_requires_opt
-  in
-  let size = size + (2 * (header_size + entity_size)) + resolved_requires_size in
-  let write chunk =
-    (write_resolved_requires_ent chunk, write_entity chunk None, write_entity chunk None)
-  in
-  (size, write)
-
 (* Given a file, it's old resolved requires, and new resolved requires, compute
  * the changes necessary to update the reverse dependency graph. *)
 let prepare_update_revdeps =
@@ -659,6 +595,70 @@ let prepare_update_revdeps =
       add_new_dependent
       (0, (fun _ _ -> ()))
       (old_dependencies, new_dependencies)
+
+let prepare_create_file size file_key module_name =
+  let open Heap in
+  let (file_kind, file_name) = file_kind_and_name file_key in
+  let size = size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size in
+  let (size, write_new_haste_info_maybe) =
+    prepare_write_new_haste_info_maybe size None module_name
+  in
+  let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
+  let write chunk parse =
+    let file_name = write_string chunk file_name in
+    let parse_ent = write_entity chunk (Some parse) in
+    let haste_info = write_new_haste_info_maybe chunk in
+    let haste_ent = write_entity chunk haste_info in
+    let file_module = add_file_module_maybe chunk in
+    let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
+    if file = FileHeap.add file_key file then
+      calc_dirty_modules file_key file haste_ent file_module
+    else
+      (* Two threads raced to add this file and the other thread won. We don't
+       * need to mark any files as dirty; the other thread will have done that
+       * for us. *)
+      MSet.empty
+  in
+  (size, write)
+
+let prepare_update_file size file_key file parse_ent module_name =
+  let open Heap in
+  let haste_ent = get_haste_info file in
+  let old_haste_info = entity_read_latest haste_ent in
+  let (size, write_new_haste_info_maybe) =
+    prepare_write_new_haste_info_maybe size old_haste_info module_name
+  in
+  let new_file_module =
+    (* If we are re-parsing an unparsed file, we need to re-add ourselves to the
+     * file module's provider list. If the file is already parsed, then we are
+     * certainly already a provider, so we don't need to re-add. *)
+    match entity_read_latest parse_ent with
+    | None -> get_file_module file
+    | Some _ -> None
+  in
+  let write chunk parse =
+    entity_advance parse_ent (Some parse);
+    let new_haste_info = write_new_haste_info_maybe chunk in
+    let () =
+      match (old_haste_info, new_haste_info) with
+      | (None, None) -> ()
+      | (Some old_info, Some new_info) when haste_info_equal old_info new_info -> ()
+      | _ -> entity_advance haste_ent new_haste_info
+    in
+    calc_dirty_modules file_key file haste_ent new_file_module
+  in
+  (size, write)
+
+let prepare_write_typed_parse_ents size resolved_requires_opt =
+  let open Heap in
+  let (resolved_requires_size, write_resolved_requires_ent) =
+    prepare_write_resolved_requires_ent resolved_requires_opt
+  in
+  let size = size + (2 * (header_size + entity_size)) + resolved_requires_size in
+  let write chunk =
+    (write_resolved_requires_ent chunk, write_entity chunk None, write_entity chunk None)
+  in
+  (size, write)
 
 let prepare_set_maybe prepare_write setter opt =
   let open Heap in
