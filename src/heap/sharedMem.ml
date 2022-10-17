@@ -859,7 +859,8 @@ module NewAPI = struct
     let chunk = { heap = get_heap (); next_addr = addr; remaining_size = size } in
     let x = f chunk in
     (* Ensure allocated space was initialized. *)
-    assert (chunk.remaining_size = 0);
+    if chunk.remaining_size <> 0 then
+      Printf.ksprintf failwith "alloc: %d requested, %d remaining" size chunk.remaining_size;
     assert (chunk.next_addr = addr_offset addr size);
     x
 
