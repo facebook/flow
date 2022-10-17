@@ -660,24 +660,27 @@ let prepare_update_revdeps =
       (0, (fun _ _ -> ()))
       (old_dependencies, new_dependencies)
 
-let prepare_set prepare_write setter x =
+let prepare_set_maybe prepare_write setter opt =
   let open Heap in
-  let (size, write) = prepare_write x in
-  let write chunk parse =
-    let ast = write chunk in
-    setter parse ast
-  in
-  (header_size + size, write)
+  match opt with
+  | None -> (0, (fun _ _ -> ()))
+  | Some x ->
+    let (size, write) = prepare_write x in
+    let write chunk parse =
+      let ast = write chunk in
+      setter parse ast
+    in
+    (header_size + size, write)
 
-let prepare_set_aloc_table = prepare_set prepare_write_aloc_table Heap.set_aloc_table
+let prepare_set_aloc_table_maybe = prepare_set_maybe prepare_write_aloc_table Heap.set_aloc_table
 
-let prepare_set_ast = prepare_set prepare_write_ast Heap.set_ast
+let prepare_set_ast_maybe = prepare_set_maybe prepare_write_ast Heap.set_ast
 
-let prepare_set_docblock = prepare_set prepare_write_docblock Heap.set_docblock
+let prepare_set_docblock_maybe = prepare_set_maybe prepare_write_docblock Heap.set_docblock
 
-let prepare_set_file_sig = prepare_set prepare_write_file_sig Heap.set_file_sig
+let prepare_set_file_sig_maybe = prepare_set_maybe prepare_write_file_sig Heap.set_file_sig
 
-let prepare_set_type_sig = prepare_set prepare_write_type_sig Heap.set_type_sig
+let prepare_set_type_sig_maybe = prepare_set_maybe prepare_write_type_sig Heap.set_type_sig
 
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
@@ -688,20 +691,20 @@ let add_checked_file
     file_opt
     hash
     module_name
-    docblock
-    ast
-    locs
-    type_sig
-    file_sig
+    docblock_opt
+    ast_opt
+    locs_opt
+    type_sig_opt
+    file_sig_opt
     exports
     imports
     cas_digest =
   let open Heap in
-  let (ast_size, set_ast) = prepare_set_ast ast in
-  let (docblock_size, set_docblock) = prepare_set_docblock docblock in
-  let (aloc_table_size, set_aloc_table) = prepare_set_aloc_table locs in
-  let (type_sig_size, set_type_sig) = prepare_set_type_sig type_sig in
-  let (file_sig_size, set_file_sig) = prepare_set_file_sig file_sig in
+  let (ast_size, set_ast_maybe) = prepare_set_ast_maybe ast_opt in
+  let (docblock_size, set_docblock_maybe) = prepare_set_docblock_maybe docblock_opt in
+  let (aloc_table_size, set_aloc_table_maybe) = prepare_set_aloc_table_maybe locs_opt in
+  let (type_sig_size, set_type_sig_maybe) = prepare_set_type_sig_maybe type_sig_opt in
+  let (file_sig_size, set_file_sig_maybe) = prepare_set_file_sig_maybe file_sig_opt in
   let size = ast_size + docblock_size + aloc_table_size + type_sig_size + file_sig_size in
   let unchanged_or_fresh_parse =
     match file_opt with
@@ -764,11 +767,11 @@ let add_checked_file
   in
   alloc size (fun chunk ->
       let (parse, dirty_modules) = add_file_maybe chunk in
-      set_ast chunk parse;
-      set_docblock chunk parse;
-      set_aloc_table chunk parse;
-      set_type_sig chunk parse;
-      set_file_sig chunk parse;
+      set_ast_maybe chunk parse;
+      set_docblock_maybe chunk parse;
+      set_aloc_table_maybe chunk parse;
+      set_type_sig_maybe chunk parse;
+      set_file_sig_maybe chunk parse;
       dirty_modules
   )
 
@@ -1048,11 +1051,11 @@ let add_parsed
         file_opt
         hash
         module_name
-        docblock
-        ast
-        locs
-        type_sig
-        file_sig
+        (Some docblock)
+        (Some ast)
+        (Some locs)
+        (Some type_sig)
+        (Some file_sig)
         exports
         imports
         cas_digest
