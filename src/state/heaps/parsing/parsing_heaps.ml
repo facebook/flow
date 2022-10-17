@@ -394,16 +394,16 @@ let prepare_write_resolved_requires (resolved_requires : resolved_requires) =
 
 let prepare_write_resolved_requires_ent resolved_requires_opt =
   let open Heap in
-  let (resolved_requires_size, write_resolved_requires) =
+  let (resolved_requires_size, write_resolved_requires_maybe) =
     match resolved_requires_opt with
     | None -> (0, Fun.const None)
     | Some resolved_requires ->
       let (size, write) = prepare_write_resolved_requires resolved_requires in
-      (size, (fun chunk -> Some (write chunk)))
+      (header_size + size, (fun chunk -> Some (write chunk)))
   in
   let size = header_size + entity_size + resolved_requires_size in
   let write chunk =
-    let resolved_requires = write_resolved_requires chunk in
+    let resolved_requires = write_resolved_requires_maybe chunk in
     write_entity chunk resolved_requires
   in
   (size, write)
@@ -1935,7 +1935,7 @@ module From_saved_state = struct
     let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
     let (revdeps_size, update_revdeps) = prepare_update_revdeps None (Some resolved_requires) in
     let size =
-      (9 * header_size)
+      (8 * header_size)
       + (2 * entity_size)
       + string_size file_name
       + typed_parse_size
