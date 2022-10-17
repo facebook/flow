@@ -589,21 +589,41 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (MaybeT (reason, t), _) ->
       let reason = replace_desc_reason RNullOrVoid reason in
       let t = push_type_alias_reason reason t in
-      rec_flow_t cx trace ~use_op (NullT.make reason |> with_trust Trust.bogus_trust, u);
-      rec_flow_t cx trace ~use_op (VoidT.make reason |> with_trust Trust.bogus_trust, u);
-      rec_flow_t cx trace ~use_op (t, u)
+      let f t =
+        if Context.in_hint_decomp cx then
+          SpeculationKit.try_singleton_no_throws
+            cx
+            trace
+            reason
+            ~upper_unresolved:true
+            t
+            (UseT (use_op, u))
+        else
+          rec_flow_t cx trace ~use_op (t, u)
+      in
+      f (NullT.make reason |> with_trust Trust.bogus_trust);
+      f (VoidT.make reason |> with_trust Trust.bogus_trust);
+      f t
     | (DefT (r, trust, VoidT), OptionalT { reason = _; type_ = tout; use_desc = _ }) ->
       rec_flow_t cx trace ~use_op (EmptyT.why r trust, tout)
     | (OptionalT { reason = _; type_ = t; use_desc = _ }, OptionalT _)
     | (OptionalT { reason = _; type_ = t; use_desc = _ }, MaybeT _) ->
       rec_flow_t cx trace ~use_op (t, u)
     | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
-      rec_flow_t
-        cx
-        trace
-        ~use_op
-        (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust, u);
-      rec_flow_t cx trace ~use_op (t, u)
+      let f t =
+        if Context.in_hint_decomp cx then
+          SpeculationKit.try_singleton_no_throws
+            cx
+            trace
+            r
+            ~upper_unresolved:true
+            t
+            (UseT (use_op, u))
+        else
+          rec_flow_t cx trace ~use_op (t, u)
+      in
+      f (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust);
+      f t
     | (ThisTypeAppT (reason_tapp, c, this, ts), _) ->
       let reason_op = reason_of_t u in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in

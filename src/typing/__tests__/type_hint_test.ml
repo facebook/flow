@@ -375,6 +375,8 @@ let eval_hint_tests =
     >:: mk_eval_hint_test ~expected:"string | Promise<string>" "string" [Decomp_Await];
     "fun_decomp_simple_return"
     >:: mk_eval_hint_test ~expected:"number" "(string, number) => number" [Decomp_FuncReturn];
+    "fun_decomp_multi_spec_return"
+    >:: mk_eval_hint_test ~expected:"number" "?(string, number) => number" [Decomp_FuncReturn];
     "fun_decomp_simple_on_first_argument_of_hint"
     >:: mk_eval_hint_test ~expected:"string" "(string, number) => number" [Decomp_FuncParam 0];
     "fun_decomp_union"
