@@ -979,8 +979,13 @@ module NewAPI = struct
    * function should be called before writing any heap object. *)
   let write_header chunk tag obj_size =
     let size = header_size + obj_size in
+    if chunk.remaining_size < size then
+      Printf.ksprintf
+        failwith
+        "write_header: tried to write %d but only %d remaining"
+        size
+        chunk.remaining_size;
     chunk.remaining_size <- chunk.remaining_size - size;
-    assert (chunk.remaining_size >= 0);
     let addr = chunk.next_addr in
     unsafe_write_header_at chunk.heap addr tag obj_size;
     chunk.next_addr <- addr_offset addr header_size;
