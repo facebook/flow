@@ -98,3 +98,8 @@ function test7() {
   declare function f<A>(A, A=>void, number): void;
   f(3, (n) => {}, ""); // Error on third argument, but n can still be contextually typed.
 }
+
+function test8() {
+  declare function f<T=string>(T => string): T;
+  f(s => (s: string)); // ok
+}

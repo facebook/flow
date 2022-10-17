@@ -614,20 +614,23 @@ module Observer : OBSERVER with type output = inferred_targ = struct
   let on_pinned_tparam _cx _name tparam inferred = { tparam; inferred }
 
   let on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason =
-    if Context.in_synthesis_mode cx then
-      { tparam; inferred = Tvar.mk_placeholder cx tparam_binder_reason }
-    else (
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EImplicitInstantiationUnderconstrainedError
-           {
-             bound = Subst_name.string_of_subst_name name;
-             reason_call = instantiation_reason;
-             reason_l = tparam_binder_reason;
-           }
-        );
-      { tparam; inferred = any_error tparam_binder_reason }
-    )
+    match tparam.default with
+    | Some inferred -> { tparam; inferred }
+    | None ->
+      if Context.in_synthesis_mode cx then
+        { tparam; inferred = Tvar.mk_placeholder cx tparam_binder_reason }
+      else (
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EImplicitInstantiationUnderconstrainedError
+             {
+               bound = Subst_name.string_of_subst_name name;
+               reason_call = instantiation_reason;
+               reason_l = tparam_binder_reason;
+             }
+          );
+        { tparam; inferred = any_error tparam_binder_reason }
+      )
 
   let on_upper_non_t cx name u tparam ~tparam_binder_reason ~instantiation_reason:_ =
     if Context.in_synthesis_mode cx then
