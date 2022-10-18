@@ -554,19 +554,89 @@ end = struct
    * - default: apply when destructuring returned 0 or >1 types, or a recursive type
    * - non_eval: apply when no destructuring happened
    *)
-  let type_destructor_t
-      ~env ~cont ~default ~non_eval ?(force_eval = false) (use_op, reason, id, t, d) =
-    if Env.evaluate_type_destructors env || force_eval then
+  let eval_t ~env ~cont ~default ~non_eval ?(force_eval = false) (t, d, id) =
+    match d with
+    | T.TypeDestructorT (use_op, reason, d) ->
+      if Env.evaluate_type_destructors env || force_eval then
+        let cx = Env.get_cx env in
+        Recursive.with_cache (EvalKey id) ~f:(fun () ->
+            let trace = Trace.dummy_trace in
+            let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
+            match Lookahead.peek ~env tout with
+            | Lookahead.LowerBounds [t] -> cont ~env t
+            | _ -> default ~env tout
+        )
+      else
+        non_eval ~env t d
+    | T.LatentPredT _ ->
       let cx = Env.get_cx env in
-      Recursive.with_cache (EvalKey id) ~f:(fun () ->
-          let trace = Trace.dummy_trace in
-          let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
-          match Lookahead.peek ~env tout with
-          | Lookahead.LowerBounds [t] -> cont ~env t
-          | _ -> default ~env tout
-      )
-    else
-      non_eval ~env t d
+      let evaluated = Context.evaluated cx in
+      let t' =
+        match T.Eval.Map.find_opt id evaluated with
+        | Some evaled_t -> evaled_t
+        | None -> t
+      in
+      cont ~env t'
+
+  let type_variable ~env ~cont id =
+    let uses_t =
+      let rec uses_t_aux acc uses =
+        match uses with
+        | [] ->
+          begin
+            match acc with
+            | [] -> return Ty.NoUpper
+            | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl)))
+          end
+        | T.UseT (_, t) :: rest
+        | T.TypeCastT (_, t) :: rest ->
+          let%bind t = cont ~env t in
+          uses_t_aux (t :: acc) rest
+        | T.ReposLowerT (_, _, u) :: rest -> uses_t_aux acc (u :: rest)
+        (* skip these *)
+        | T.AssertImportIsValueT _ :: rest
+        | T.CJSExtractNamedExportsT _ :: rest ->
+          uses_t_aux acc rest
+        | u :: _ -> return (Ty.SomeUnknownUpper (T.string_of_use_ctor u))
+      in
+      (fun uses -> uses_t_aux [] uses)
+    in
+    let empty_with_upper_bounds bounds =
+      let uses = Base.List.map ~f:fst (T.Constraint.UseTypeMap.keys bounds.T.Constraint.upper) in
+      let%map use_kind = uses_t uses in
+      Ty.Bot (Ty.NoLowerWithUpper use_kind)
+    in
+    let resolve_from_lower_bounds bounds =
+      T.TypeMap.keys bounds.T.Constraint.lower
+      |> mapM (fun t ->
+             let%map ty = cont ~env t in
+             Nel.to_list (Ty.bk_union ty)
+         )
+      >>| Base.List.concat
+      >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
+    in
+    let resolve_bounds = function
+      | T.Constraint.Resolved (_, t)
+      | T.Constraint.FullyResolved (_, (lazy t)) ->
+        cont ~env t
+      | T.Constraint.Unresolved bounds ->
+        (match%bind resolve_from_lower_bounds bounds with
+        | [] -> empty_with_upper_bounds bounds
+        | hd :: tl -> return (Ty.mk_union ~from_bounds:true ~flattened:true (hd, tl)))
+    in
+    let (root_id, constraints) =
+      (* Use `root_id` as a proxy for `id` *)
+      Context.find_constraints Env.(env.genv.cx) id
+    in
+    Recursive.with_cache (TVarKey root_id) ~f:(fun () -> resolve_bounds constraints)
+
+  let maybe_t ~env ~cont t =
+    let%map t = cont ~env t in
+    Ty.mk_union ~from_bounds:false (Ty.Void, [Ty.Null; t])
+
+  let optional_t ~env ~cont t =
+    let%map t = cont ~env t in
+    Ty.mk_union ~from_bounds:false (Ty.Void, [t])
 
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
@@ -722,13 +792,14 @@ end = struct
     and type_ctor ~env ~cont t =
       let open Type in
       match t with
-      | OpenT (_, id) -> type_variable ~env id
+      | OpenT (_, id) -> type_variable ~env ~cont:type__ id
       | GenericT { bound; reason; name; _ } ->
         let loc = Reason.def_aloc_of_reason reason in
         let default _ = type__ ~env bound in
         lookup_tparam ~default env bound name loc
       | AnnotT (_, t, _) -> type__ ~env t
-      | EvalT (t, d, id) -> eval_t ~env ~cont t id d
+      | EvalT (t, d, id) ->
+        eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id)
       | ExactT (_, t) -> exact_t ~env t
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t t i
@@ -751,12 +822,8 @@ end = struct
       | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
       | DefT (_, _, SingletonStrT lit) -> return (Ty.StrLit lit)
       | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
-      | MaybeT (_, t) ->
-        let%map t = type__ ~env t in
-        Ty.mk_union ~from_bounds:false (Ty.Void, [Ty.Null; t])
-      | OptionalT { reason = _; type_ = t; use_desc = _ } ->
-        let%map t = type__ ~env t in
-        Ty.mk_union ~from_bounds:false (Ty.Void, [t])
+      | MaybeT (_, t) -> maybe_t ~env ~cont:type__ t
+      | OptionalT { type_ = t; _ } -> optional_t ~env ~cont:type__ t
       | DefT (_, _, FunT (static, f)) ->
         let%map t = fun_ty ~env static f None in
         Ty.Fun t
@@ -849,39 +916,6 @@ end = struct
       | DefT (_, _, TypeT _)
       | ModuleT _ ->
         terr ~kind:(UnexpectedTypeCtor (string_of_ctor t)) (Some t)
-
-    and type_variable ~env id =
-      let (root_id, constraints) =
-        (* Use `root_id` as a proxy for `id` *)
-        Context.find_constraints Env.(env.genv.cx) id
-      in
-      Recursive.with_cache (TVarKey root_id) ~f:(fun () -> resolve_bounds ~env constraints)
-
-    (* Resolving a type variable amounts to normalizing its lower bounds and
-       taking their union.
-    *)
-    and resolve_bounds ~env = function
-      | T.Constraint.Resolved (_, t)
-      | T.Constraint.FullyResolved (_, (lazy t)) ->
-        type__ ~env t
-      | T.Constraint.Unresolved bounds ->
-        (match%bind resolve_from_lower_bounds ~env bounds with
-        | [] -> empty_with_upper_bounds ~env bounds
-        | hd :: tl -> return (Ty.mk_union ~from_bounds:true ~flattened:true (hd, tl)))
-
-    and resolve_from_lower_bounds ~env bounds =
-      T.TypeMap.keys bounds.T.Constraint.lower
-      |> mapM (fun t ->
-             let%map ty = type__ ~env t in
-             Nel.to_list (Ty.bk_union ty)
-         )
-      >>| Base.List.concat
-      >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
-
-    and empty_with_upper_bounds ~env bounds =
-      let uses = Base.List.map ~f:fst (T.Constraint.UseTypeMap.keys bounds.T.Constraint.upper) in
-      let%map use_kind = uses_t ~env uses in
-      Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
     and any_t reason kind =
       match kind with
@@ -1660,44 +1694,6 @@ end = struct
       | T.RestType (T.Object.Rest.ReactConfigMerge _, _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 
-    and latent_pred_t ~env id t =
-      let cx = Env.get_cx env in
-      let evaluated = Context.evaluated cx in
-      let t' =
-        match T.Eval.Map.find_opt id evaluated with
-        | Some evaled_t -> evaled_t
-        | None -> t
-      in
-      type__ ~env t'
-
-    and eval_t ~env ~cont t id = function
-      | Type.LatentPredT _ -> latent_pred_t ~env id t
-      | Type.TypeDestructorT (use_op, r, d) ->
-        let non_eval = type_destructor_unevaluated in
-        type_destructor_t ~env ~cont ~default:type__ ~non_eval (use_op, r, id, t, d)
-
-    and uses_t =
-      let rec uses_t_aux ~env acc uses =
-        match uses with
-        | [] ->
-          begin
-            match acc with
-            | [] -> return Ty.NoUpper
-            | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl)))
-          end
-        | T.UseT (_, t) :: rest
-        | T.TypeCastT (_, t) :: rest ->
-          let%bind t = type__ ~env t in
-          uses_t_aux ~env (t :: acc) rest
-        | T.ReposLowerT (_, _, u) :: rest -> uses_t_aux ~env acc (u :: rest)
-        (* skip these *)
-        | T.AssertImportIsValueT _ :: rest
-        | T.CJSExtractNamedExportsT _ :: rest ->
-          uses_t_aux ~env acc rest
-        | u :: _ -> return (Ty.SomeUnknownUpper (T.string_of_use_ctor u))
-      in
-      (fun ~env uses -> uses_t_aux ~env [] uses)
-
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 
     let convert_t ?(skip_reason = false) =
@@ -2249,16 +2245,6 @@ end = struct
       | (T.InterfaceKind _, _, _) ->
         member_expand_object ~env ~proto super inst
 
-    and latent_pred_t ~env ~proto ~imode id t =
-      let cx = Env.get_cx env in
-      let evaluated = Context.evaluated cx in
-      let t' =
-        match T.Eval.Map.find_opt id evaluated with
-        | Some evaled_t -> evaled_t
-        | None -> t
-      in
-      type__ ~env ~proto ~imode t'
-
     and opaque_t ~env ~proto ~imode r opaquetype =
       let current_source = Env.current_file env in
       let opaque_source = ALoc.source (def_aloc_of_reason r) in
@@ -2275,29 +2261,10 @@ end = struct
       | IMUnset when not force_instance -> type__ ~env ~proto ~imode:IMStatic t
       | _ -> type__ ~env ~proto ~imode t
 
-    and type_variable ~env ~proto ~imode id =
-      let (root_id, constraints) = Context.find_constraints Env.(env.genv.cx) id in
-      Recursive.with_cache (TVarKey root_id) ~f:(fun () ->
-          match constraints with
-          | T.Constraint.Resolved (_, t)
-          | T.Constraint.FullyResolved (_, (lazy t)) ->
-            type__ ~env ~proto ~imode t
-          | T.Constraint.Unresolved bounds ->
-            let%map lowers =
-              mapM
-                (fun t -> type__ ~env ~proto ~imode t >>| Ty.bk_union >>| Nel.to_list)
-                (T.TypeMap.keys bounds.T.Constraint.lower)
-            in
-            let lowers = Base.List.(dedup_and_sort ~compare:Stdlib.compare (concat lowers)) in
-            (match lowers with
-            | [] -> Ty.Bot Ty.EmptyType
-            | hd :: tl -> Ty.mk_union ~from_bounds:true ~flattened:true (hd, tl))
-      )
-
     and type__ ~env ~proto ~(imode : instance_mode) t =
       let open Type in
       match t with
-      | OpenT (_, id) -> type_variable ~env ~proto ~imode id
+      | OpenT (_, id) -> type_variable ~env ~cont:(type__ ~proto ~imode) id
       | AnnotT (_, t, _) -> type__ ~env ~proto ~imode t
       | DefT (_, _, IdxWrapper t) ->
         idx_hook ();
@@ -2322,23 +2289,21 @@ end = struct
         let tparams_rev = List.rev (Nel.to_list tparams) @ env.Env.tparams_rev in
         let env = Env.{ env with tparams_rev } in
         type__ ~env ~proto ~imode t_out
-      | MaybeT (_, t) ->
-        let%map t = type__ ~env ~proto ~imode t in
-        Ty.mk_union ~from_bounds:false (Ty.Void, [Ty.Null; t])
+      | MaybeT (_, t) -> maybe_t ~env ~cont:(type__ ~proto ~imode) t
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ~proto ~imode) rep
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ~proto ~imode) rep
       | DefT (_, _, FunT (static, _)) -> type__ ~env ~proto ~imode static
       | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~proto ~imode r use_op t ts
       | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
-      | OptionalT { type_ = t; _ } ->
-        let%map t = type__ ~env ~proto ~imode t in
-        Ty.mk_union ~from_bounds:false (Ty.Void, [t])
-      | EvalT (t, TypeDestructorT (use_op, r, d), id) ->
-        let cont = type__ ~proto ~imode in
-        let non_eval = TypeConverter.convert_type_destructor_unevaluated in
-        let default = TypeConverter.convert_t ~skip_reason:false in
-        type_destructor_t ~env ~cont ~default ~non_eval ~force_eval:true (use_op, r, id, t, d)
-      | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
+      | OptionalT { type_ = t; _ } -> optional_t ~env ~cont:(type__ ~proto ~imode) t
+      | EvalT (t, d, id) ->
+        eval_t
+          ~env
+          ~cont:(type__ ~proto ~imode)
+          ~default:(TypeConverter.convert_t ~skip_reason:false)
+          ~non_eval:TypeConverter.convert_type_destructor_unevaluated
+          ~force_eval:true
+          (t, d, id)
       | ExactT (_, t) -> type__ ~env ~proto ~imode t
       | GenericT { bound; _ } -> type__ ~env ~proto ~imode bound
       | OpaqueT (r, o) -> opaque_t ~env ~proto ~imode r o
