@@ -607,8 +607,23 @@ struct
           )
         | ObjectValue { obj; obj_loc; _ } ->
           depends_of_expression (obj_loc, Ast.Expression.Object obj) EnvMap.empty
-        | FunctionValue { hint; function_loc = _; function_; statics; arrow = _; tparams_map } ->
-          depends_of_fun false tparams_map hint ~statics function_ state
+        | FunctionValue
+            {
+              hint;
+              synthesizable_from_annotation;
+              function_loc = _;
+              function_;
+              statics;
+              arrow = _;
+              tparams_map;
+            } ->
+          depends_of_fun
+            (synthesizable_from_annotation = FunctionSynthesizable)
+            tparams_map
+            hint
+            ~statics
+            function_
+            state
         | EmptyArray { array_providers; _ } ->
           ALocSet.fold
             (fun loc acc ->

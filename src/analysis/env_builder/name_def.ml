@@ -772,6 +772,8 @@ class def_finder env_entries providers toplevel_scope =
                  (FunctionValue
                     {
                       hint = func_hint;
+                      synthesizable_from_annotation =
+                        func_is_synthesizable_from_annotation ~allow_this:arrow expr;
                       function_loc;
                       function_ = expr;
                       statics;

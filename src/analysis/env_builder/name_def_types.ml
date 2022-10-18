@@ -74,6 +74,7 @@ type root =
     }
   | FunctionValue of {
       hint: ast_hint;
+      synthesizable_from_annotation: function_synth_kind;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
       statics: (ALoc.t, ALoc.t) Ast.Expression.t SMap.t;

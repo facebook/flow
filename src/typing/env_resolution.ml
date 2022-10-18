@@ -261,7 +261,66 @@ let rec resolve_binding_partial cx reason loc b =
     let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op, false)
-  | Root (FunctionValue { hint = _; function_loc; function_; statics; arrow; tparams_map = _ }) ->
+  | Root
+      (FunctionValue
+        {
+          hint = _;
+          synthesizable_from_annotation = FunctionSynthesizable;
+          function_loc;
+          function_;
+          statics;
+          arrow;
+          tparams_map;
+        }
+        ) ->
+    let cache = Context.node_cache cx in
+    let tparams_map = mk_tparams_map cx tparams_map in
+    let { Ast.Function.sig_loc; async; generator; params; body; _ } = function_ in
+    let reason_fun =
+      func_reason
+        ~async
+        ~generator
+        ( if arrow then
+          function_loc
+        else
+          sig_loc
+        )
+    in
+    let default_this =
+      if (not arrow) && Signature_utils.This_finder.found_this_in_body_or_params body params then
+        let loc = aloc_of_reason reason_fun in
+        Tvar.mk cx (mk_reason RThis loc)
+      else
+        Type.implicit_mixed_this reason_fun
+    in
+    let ((func_sig, _) as sig_data) =
+      Statement.mk_func_sig
+        cx
+        ~required_this_param_type:(Base.Option.some_if (not arrow) default_this)
+        ~require_return_annot:false
+        ~constructor:false
+        ~statics
+        tparams_map
+        reason_fun
+        function_
+    in
+    Node_cache.set_function_sig cache sig_loc sig_data;
+    ( Statement.Func_stmt_sig.functiontype cx ~arrow (Some function_loc) default_this func_sig,
+      Op (AssignVar { var = Some reason; init = reason_fun }),
+      true
+    )
+  | Root
+      (FunctionValue
+        {
+          hint = _;
+          synthesizable_from_annotation = _;
+          function_loc;
+          function_;
+          statics;
+          arrow;
+          tparams_map = _;
+        }
+        ) ->
     let { Ast.Function.id; async; generator; sig_loc; _ } = function_ in
     let reason_fun =
       func_reason
