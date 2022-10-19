@@ -69,5 +69,7 @@ val expand_members :
   Type.TypeScheme.t ->
   (Ty.t, error) result
 
+val expand_literal_union : options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.t, error) result
+
 (* A debugging facility for getting quick string representations of Type.t *)
 val debug_string_of_t : Context.t -> Type.t -> string

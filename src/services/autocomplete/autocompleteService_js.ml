@@ -430,7 +430,8 @@ let rec literals_of_ty acc ty =
   | Ty.Union (_, t1, t2, ts) -> Base.List.fold_left (t1 :: t2 :: ts) ~f:literals_of_ty ~init:acc
   | Ty.StrLit _
   | Ty.NumLit _
-  | Ty.BoolLit _ ->
+  | Ty.BoolLit _
+  | Ty.Null ->
     ty :: acc
   | Ty.Bool _ -> Ty.BoolLit true :: Ty.BoolLit false :: acc
   | _ -> acc
@@ -439,11 +440,7 @@ let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_loc
   let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
   let options = ty_normalizer_options in
   let upper_bound_ty =
-    match Ty_normalizer.from_scheme ~options ~genv scheme with
-    | Ok (Ty.Type ty) -> ty
-    | Ok (Ty.Decl _)
-    | Error _ ->
-      Ty.Top
+    Result.value (Ty_normalizer.expand_literal_union ~options ~genv scheme) ~default:Ty.Top
   in
   (* TODO: since we're inserting values, we shouldn't really be using the Ty_printer *)
   let exact_by_default = Context.exact_by_default cx in

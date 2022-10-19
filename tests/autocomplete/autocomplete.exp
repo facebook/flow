@@ -10928,11 +10928,95 @@ Flags: --lsp
 upper_bounds_1.js:10:3
 Flags: --lsp
 {
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
+{
+  "label":"'bar'",
+  "labelDetails":{"detail":": \"bar\""},
+  "kind":12,
+  "detail":"\"bar\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'bar'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
+    ]
+  }
+}
+{
+  "label":"'baz'",
+  "labelDetails":{"detail":": \"baz\""},
+  "kind":12,
+  "detail":"\"baz\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'baz'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'baz'"
+      }
+    ]
+  }
+}
+{
   "label":"f",
   "labelDetails":{"detail":"(Union) => void"},
   "kind":3,
   "detail":"(Union) => void",
-  "sortText":"00000000000000000000",
+  "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
@@ -10946,7 +11030,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":0,
+        "index":3,
         "session_requests":null,
         "typed_length":null,
         "completion":"f"
@@ -10957,15 +11041,113 @@ Flags: --lsp
 
 upper_bounds_2.js:10:4
 Flags: --lsp
+{
+  "label":"'baz'",
+  "labelDetails":{"detail":": \"baz\""},
+  "kind":12,
+  "detail":"\"baz\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"'baz'",
+    "insert":{"start":{"line":9,"character":2},"end":{"line":9,"character":3}},
+    "replace":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'baz'"
+      }
+    ]
+  }
+}
+{
+  "label":"'bar'",
+  "labelDetails":{"detail":": \"bar\""},
+  "kind":12,
+  "detail":"\"bar\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"'bar'",
+    "insert":{"start":{"line":9,"character":2},"end":{"line":9,"character":3}},
+    "replace":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'"
+      }
+    ]
+  }
+}
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"'foo'",
+    "insert":{"start":{"line":9,"character":2},"end":{"line":9,"character":3}},
+    "replace":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
 
 upper_bounds_3.js:12:5
 Flags: --pretty
-{"result":[{"name":"f","type":"(Union) => void"},{"name":"x","type":"empty"}]}
+{
+  "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"f","type":"(Union) => void"},
+    {"name":"x","type":"empty"}
+  ]
+}
 
 upper_bounds_4.js:15:7
 Flags: --pretty
 {
   "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
     {"name":"cond","type":"boolean"},
     {"name":"f","type":"(Union) => void"},
     {"name":"x","type":"\"foo\""}
@@ -10976,6 +11158,9 @@ upper_bounds_5.js:13:5
 Flags: --pretty
 {
   "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
     {"name":"f","type":"(Union) => void"},
     {"name":"g","type":"(Union) => void"},
     {"name":"x","type":"empty"}
@@ -11020,6 +11205,93 @@ Flags: --pretty
     {"name":"blue","type":"number"},
     {"name":"indigo","type":"number"},
     {"name":"yellow","type":"number"}
+  ]
+}
+
+upper_bounds_11.js:12:3
+Flags: --pretty
+{
+  "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"f","type":"(Union) => void"}
+  ]
+}
+
+upper_bounds_12.js:9:3
+Flags: --pretty
+{
+  "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"f","type":"((\"foo\" | \"bar\" | \"baz\")) => void"}
+  ]
+}
+
+upper_bounds_13.js:12:3
+Flags: --pretty
+{
+  "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"f","type":"(Union) => void"}
+  ]
+}
+
+upper_bounds_14.js:13:21
+Flags: --pretty
+{
+  "result":[
+    {"name":"'failure'","type":"\"failure\""},
+    {"name":"'success'","type":"\"success\""}
+  ]
+}
+
+upper_bounds_15.js:4:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"null","type":"null"},
+    {"name":"x","type":"U"}
+  ]
+}
+
+upper_bounds_16.js:9:11
+Flags: --pretty
+{"result":[{"name":"'foo'","type":"\"foo\""},{"name":"x","type":"O"}]}
+
+upper_bounds_16.js:11:11
+Flags: --pretty
+{
+  "result":[
+    {"name":"null","type":"null"},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"x","type":"O"}
+  ]
+}
+
+upper_bounds_17.js:5:13
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"x","type":"T"}
+  ]
+}
+
+upper_bounds_17.js:11:13
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"x","type":"T"},
+    {"name":"y","type":"A"}
   ]
 }
 

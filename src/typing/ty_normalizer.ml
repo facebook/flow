@@ -98,6 +98,15 @@ module NormalizerMonad : sig
     State.t ->
     Type.t ->
     (Ty.t, error) result * State.t
+
+  val run_expand_literal_union :
+    options:Env.options ->
+    genv:Env.genv ->
+    imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
+    tparams_rev:Type.typeparam list ->
+    State.t ->
+    Type.t ->
+    (Ty.t, error) result * State.t
 end = struct
   type id_key =
     | TVarKey of int
@@ -178,6 +187,13 @@ end = struct
     let t_str = Base.Option.map t ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t)) in
     let msg = Base.List.filter_opt [msg; t_str] |> String.concat ", " in
     error (kind, msg)
+
+  let descend env t =
+    let depth = env.Env.depth in
+    let env = Env.descend env in
+    match Env.max_depth env with
+    | Some max_depth when depth > max_depth -> terr ~kind:RecursionLimit (Some t)
+    | _ -> return env
 
   (* Update state *)
 
@@ -638,6 +654,14 @@ end = struct
     let%map t = cont ~env t in
     Ty.mk_union ~from_bounds:false (Ty.Void, [t])
 
+  let type_app_t ~env ~cont reason use_op c ts =
+    let cx = Env.get_cx env in
+    let trace = Trace.dummy_trace in
+    let reason_op = reason in
+    let reason_tapp = reason in
+    let t = Flow_js.mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
+    cont ~env t
+
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
@@ -745,16 +769,13 @@ end = struct
         result
       in
       fun ~env t ->
-        let env = Env.descend env in
+        let%bind env = descend env t in
         let options = env.Env.options in
         let depth = env.Env.depth - 1 in
-        match Env.max_depth env with
-        | Some max_depth when depth > max_depth -> terr ~kind:RecursionLimit (Some t)
-        | _ ->
-          if options.Env.verbose_normalizer then
-            type_debug ~env ~depth t
-          else
-            type_with_alias_reason ~env t
+        if options.Env.verbose_normalizer then
+          type_debug ~env ~depth t
+        else
+          type_with_alias_reason ~env t
 
     and type_with_alias_reason ~env t =
       let open Type in
@@ -2184,14 +2205,6 @@ end = struct
       in
       Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_frozen = false; obj_literal = None; obj_props }
 
-    and type_app_t ~env ~proto ~imode reason use_op c ts =
-      let cx = Env.get_cx env in
-      let trace = Trace.dummy_trace in
-      let reason_op = reason in
-      let reason_tapp = reason in
-      let t = Flow_js.mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
-      type__ ~env ~proto ~imode t
-
     and enum_t ~env reason trust enum =
       let { T.members; representation_t; _ } = enum in
       let enum_t = T.mk_enum_type ~trust reason enum in
@@ -2293,7 +2306,7 @@ end = struct
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ~proto ~imode) rep
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ~proto ~imode) rep
       | DefT (_, _, FunT (static, _)) -> type__ ~env ~proto ~imode static
-      | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~proto ~imode r use_op t ts
+      | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~cont:(type__ ~proto ~imode) r use_op t ts
       | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
       | OptionalT { type_ = t; _ } -> optional_t ~env ~cont:(type__ ~proto ~imode) t
       | EvalT (t, d, id) ->
@@ -2321,6 +2334,49 @@ end = struct
       let force_instance = force_instance
     end) in
     run_type_aux ~f:Converter.convert_t ~simpl:Ty_utils.simplify_type
+
+  (* A kind of shallow type normalizer that is only concerned with expanding types
+     which could contribute literals to a union. All other types immediately yield
+     empty. This strong base case allows expansion in cases that might present
+     performance issues (e.g., expanding through type aliases) in the standard
+     TypeConverter type normalizer.
+
+     This is useful for autocomplete based on a type's upper bound.
+  *)
+  module ExpandLiteralUnionConverter : sig
+    val convert_t : env:Env.t -> Type.t -> (Ty.t, error) t
+  end = struct
+    let rec type__ ~env t =
+      let open Type in
+      let%bind env = descend env t in
+      match t with
+      | OpenT (_, id) -> type_variable ~env ~cont:type__ id
+      | AnnotT (_, t, _) -> type__ ~env t
+      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env) rep
+      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env) rep
+      | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~cont:type__ r use_op t ts
+      | EvalT (t, d, id) ->
+        eval_t
+          ~env
+          ~cont:type__
+          ~default:(TypeConverter.convert_t ~skip_reason:false)
+          ~non_eval:TypeConverter.convert_type_destructor_unevaluated
+          ~force_eval:true
+          (t, d, id)
+      | MaybeT (_, t) -> maybe_t ~env ~cont:type__ t
+      | OptionalT { type_ = t; _ } -> optional_t ~env ~cont:type__ t
+      | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
+      | DefT (_, _, SingletonStrT lit) -> return (Ty.StrLit lit)
+      | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
+      | DefT (_, _, BoolT _) -> return (Ty.Bool None)
+      | DefT (_, _, NullT) -> return Ty.Null
+      | _ -> return empty_type
+
+    let convert_t ~env t = type__ ~env t
+  end
+
+  let run_expand_literal_union =
+    run_type_aux ~f:ExpandLiteralUnionConverter.convert_t ~simpl:Ty_utils.simplify_type
 end
 
 open NormalizerMonad
@@ -2407,6 +2463,15 @@ let expand_members ~include_proto_members ~idx_hook ~force_instance ~options ~ge
       ~tparams_rev
       State.empty
       t
+  in
+  result
+
+let expand_literal_union ~options ~genv scheme =
+  print_normalizer_banner options;
+  let imported_names = run_imports ~options ~genv in
+  let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
+  let (result, _) =
+    run_expand_literal_union ~options ~genv ~imported_names ~tparams_rev State.empty t
   in
   result
 
