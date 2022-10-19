@@ -198,7 +198,8 @@ class ['a] t =
       | PartialType
       | ReactElementPropsType
       | ReactElementConfigType
-      | ReactElementRefType ->
+      | ReactElementRefType
+      | IdxUnwrapType ->
         acc
       | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
       | ElementType { index_type; _ } -> self#type_ cx pole_TODO acc index_type
@@ -223,7 +224,6 @@ class ['a] t =
       | ReactPropType _
       | ReactCreateElement
       | ReactCloneElement
-      | Idx
       | DebugPrint
       | DebugThrow
       | DebugSleep ->

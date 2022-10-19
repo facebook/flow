@@ -1008,7 +1008,23 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 )
                 targs
           )
-        | "$Facebookism$Idx" -> mk_custom_fun cx loc t_ast targs ident Idx
+        | "$Facebookism$IdxUnwrapper" ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              let reason = mk_reason (RType (OrdinaryName "$Facebookism$IdxUnwrapper")) loc in
+              reconstruct_ast
+                (EvalT (t, TypeDestructorT (use_op reason, reason, IdxUnwrapType), mk_eval_id cx loc)
+                )
+                targs
+          )
+        | "$Facebookism$IdxWrapper" ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              let reason = mk_reason (RType (OrdinaryName "$Facebookism$IdxWrapper")) loc in
+              reconstruct_ast (DefT (reason, infer_trust cx, IdxWrapper t)) targs
+          )
         | "$Flow$DebugPrint" -> mk_custom_fun cx loc t_ast targs ident DebugPrint
         | "$Flow$DebugThrow" -> mk_custom_fun cx loc t_ast targs ident DebugThrow
         | "$Flow$DebugSleep" -> mk_custom_fun cx loc t_ast targs ident DebugSleep

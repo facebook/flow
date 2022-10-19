@@ -55,6 +55,7 @@ let string_of_destructor = function
   | ReactElementConfigType -> "ReactElementConfig"
   | ReactElementRefType -> "ReactElementRef"
   | ReactConfigType _ -> "ReactConfig"
+  | IdxUnwrapType -> "IdxUnwrapType"
 
 let string_of_destruct_kind = function
   | DestructAnnot -> "Annot"
@@ -155,7 +156,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCloneElement -> "ReactCloneElement"
     | ReactElementFactory _ -> "ReactElementFactory"
-    | Idx -> "Idx"
     | DebugPrint -> "DebugPrint"
     | DebugThrow -> "DebugThrow"
     | DebugSleep -> "DebugSleep"
@@ -1366,8 +1366,7 @@ let dump_error_message =
     | EUnsupportedExact (reason1, reason2) ->
       spf "EUnsupportedExact (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EIdxArity reason -> spf "EIdxArity (%s)" (dump_reason cx reason)
-    | EIdxUse1 reason -> spf "EIdxUse1 (%s)" (dump_reason cx reason)
-    | EIdxUse2 reason -> spf "EIdxUse2 (%s)" (dump_reason cx reason)
+    | EIdxUse reason -> spf "EIdxUse (%s)" (dump_reason cx reason)
     | EUnexpectedThisType loc -> spf "EUnexpectedThisType (%s)" (string_of_aloc loc)
     | ETypeParamArity (loc, expected) ->
       spf "ETypeParamArity (%s, %d)" (string_of_aloc loc) expected

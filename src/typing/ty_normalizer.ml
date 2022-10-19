@@ -1410,25 +1410,6 @@ end = struct
             [(Some "o", Ty.explicit_any, non_opt_param); (Some "p", Ty.explicit_any, non_opt_param)]
           in
           return (mk_fun ~params Ty.explicit_any)
-        (* var idx:
-           <IdxObject: Any, IdxResult>
-           (obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult)
-           => ?IdxResult;
-        *)
-        | Idx ->
-          let idxObject = Ty.Bound (ALoc.none, "IdxObject") in
-          let idxResult = Ty.Bound (ALoc.none, "IdxResult") in
-          let tparams = [mk_tparam ~bound:Ty.explicit_any "IdxObject"; mk_tparam "IdxResult"] in
-          let pathCallback =
-            mk_fun ~params:[(Some "demaybefiedObj", idxObject, non_opt_param)] idxResult
-          in
-          let params =
-            [
-              (Some "obj", idxObject, non_opt_param);
-              (Some "pathCallback", pathCallback, non_opt_param);
-            ]
-          in
-          return (mk_fun ~tparams ~params (Ty.mk_maybe ~from_bounds:false idxResult))
         (* debugPrint: (_: any[]) => void *)
         | DebugPrint ->
           return
@@ -1509,7 +1490,6 @@ end = struct
         | ReactElementFactory t ->
           let%map t = type__ ~env t in
           generic_builtin_t (Reason.OrdinaryName "React$ElementFactory") [t]
-        | Idx -> return (builtin_t (Reason.OrdinaryName "$Facebookism$Idx"))
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
         | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
         | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep"))
@@ -1712,6 +1692,7 @@ end = struct
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in
         Ty.Utility (Ty.ReactConfigType (ty, default_props'))
+      | T.IdxUnwrapType -> return (Ty.Utility (Ty.IdxUnwrapType ty))
       | T.RestType (T.Object.Rest.ReactConfigMerge _, _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 

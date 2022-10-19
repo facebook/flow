@@ -912,144 +912,6 @@ struct
           | DefT (_, _, def_t) ->
             test def_t
           | _ -> ())
-        (*
-         * Handling for the idx() custom function.
-         *
-         * idx(a, a => a.b.c) is a 2-arg function with semantics meant to simlify
-         * the process of extracting a property from a chain of maybe-typed property
-         * accesses.
-         *
-         * As an example, if you consider an object type such as:
-         *
-         *   {
-         *     me: ?{
-         *       firstName: string,
-         *       lastName: string,
-         *       friends: ?Array<User>,
-         *     }
-         *   }
-         *
-         * The process of getting to the friends of my first friend (safely) looks
-         * something like this:
-         *
-         *   let friendsOfFriend = obj.me && obj.me.friends && obj.me.friends[0]
-         *                         && obj.me.friends[0].friends;
-         *
-         * This is verbose to say the least. To simplify, we can define a function
-         * called idx() as:
-         *
-         *   function idx(obj, callback) {
-         *     try { return callback(obj); } catch (e) {
-         *       if (isNullPropertyAccessError(e)) {
-         *         return null;
-         *       } else {
-         *         throw e;
-         *       }
-         *     }
-         *   }
-         *
-         * This function can then be used to safely dive into the aforementioned
-         * object tersely:
-         *
-         *  let friendsOfFriend = idx(obj, obj => obj.me.friends[0].friends);
-         *
-         * If we assume these semantics, then we can model the type of this function
-         * by wrapping the `obj` parameter in a special signifying wrapper type that
-         * is only valid against use types associated with property accesses. Any
-         * time this specially wrapper type flows into a property access operation,
-         * we:
-         *
-         * 1) Strip away any potential MaybeT from the contained type
-         * 2) Forward the un-Maybe'd type on to the access operation
-         * 3) Wrap the result back in the special wrapper
-         *
-         * We can then flow this wrapped `obj` to a call on the callback function,
-         * remove the wrapper from the return type, and return that value wrapped in
-         * a MaybeT.
-         *
-         * ...of course having a `?.` operator in the language would be a nice
-         *    reason to throw all of this clownerous hackery away...
-         *)
-        | (CustomFunT (_, Idx), CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
-          rec_flow_t cx trace ~use_op (l, OpenT tout)
-        | ( CustomFunT (lreason, Idx),
-            CallT
-              {
-                use_op;
-                reason = reason_op;
-                call_action =
-                  Funcalltype
-                    {
-                      call_this_t;
-                      call_targs;
-                      call_args_tlist;
-                      call_tout;
-                      call_strict_arity;
-                      call_speculation_hint_state;
-                    };
-                return_hint;
-              }
-          ) ->
-          let tout =
-            match (call_targs, call_args_tlist) with
-            | (None, [Arg obj; Arg cb]) ->
-              let wrapped_obj = DefT (reason_op, bogus_trust (), IdxWrapper obj) in
-
-              let callback_result =
-                Tvar.mk_no_wrap_where cx reason_op (fun call_tout ->
-                    let call_action =
-                      Funcalltype
-                        {
-                          call_this_t;
-                          call_targs = None;
-                          call_args_tlist = [Arg wrapped_obj];
-                          call_tout;
-                          call_strict_arity;
-                          call_speculation_hint_state;
-                        }
-                    in
-                    rec_flow
-                      cx
-                      trace
-                      (cb, CallT { use_op; reason = reason_op; call_action; return_hint })
-                )
-              in
-              let unwrapped_t =
-                Tvar.mk_where cx reason_op (fun t ->
-                    rec_flow cx trace (callback_result, IdxUnwrap (reason_op, t))
-                )
-              in
-              let maybe_r = update_desc_reason (fun desc -> RMaybe desc) reason_op in
-              MaybeT (maybe_r, unwrapped_t)
-            | (None, SpreadArg t1 :: SpreadArg t2 :: _) ->
-              add_output cx ~trace Error_message.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument));
-              add_output cx ~trace Error_message.(EUnsupportedSyntax (loc_of_t t2, SpreadArgument));
-              AnyT.error reason_op
-            | (None, SpreadArg t :: _)
-            | (None, _ :: SpreadArg t :: _) ->
-              let spread_loc = loc_of_t t in
-              add_output cx ~trace Error_message.(EUnsupportedSyntax (spread_loc, SpreadArgument));
-              AnyT.error reason_op
-            | (Some _, _) ->
-              add_output
-                cx
-                ~trace
-                Error_message.(
-                  ECallTypeArity
-                    {
-                      call_loc = aloc_of_reason reason_op;
-                      is_new = false;
-                      reason_arity = lreason;
-                      expected_arity = 0;
-                    }
-                );
-              AnyT.error reason_op
-            | _ ->
-              (* Why is idx strict about arity? No other functions are. *)
-              add_output cx ~trace Error_message.(EIdxArity reason_op);
-              AnyT.error reason_op
-          in
-          rec_flow_t ~use_op:unknown_use cx trace (tout, OpenT call_tout)
         (* Unwrap idx() callback param *)
         | (DefT (_, _, IdxWrapper obj), IdxUnwrap (_, t)) ->
           rec_flow_t ~use_op:unknown_use cx trace (obj, t)
@@ -1135,7 +997,8 @@ struct
             cx
             trace
             (DefT (idx_reason, trust, IdxWrapper prop_type), OpenT t_out)
-        | (DefT (reason, _, IdxWrapper _), _) -> add_output cx ~trace (Error_message.EIdxUse2 reason)
+        | (DefT (_, _, IdxWrapper _), _) ->
+          add_output cx ~trace (Error_message.EIdxUse (reason_of_use_t u))
         (*********************)
         (* optional chaining *)
         (*********************)
@@ -6414,7 +6277,6 @@ struct
     | UseT (_, CustomFunT (_, Compose _))
     | UseT (_, CustomFunT (_, ReactCreateElement))
     | UseT (_, CustomFunT (_, ReactCloneElement))
-    | UseT (_, CustomFunT (_, Idx))
     | UseT (_, CustomFunT (_, DebugPrint))
     | UseT (_, CustomFunT (_, DebugThrow))
     | UseT (_, CustomFunT (_, DebugSleep))
@@ -6514,7 +6376,6 @@ struct
     | CustomFunT (_, Compose _)
     | CustomFunT (_, ReactCreateElement)
     | CustomFunT (_, ReactCloneElement)
-    | CustomFunT (_, Idx)
     | CustomFunT (_, DebugPrint)
     | CustomFunT (_, DebugThrow)
     | CustomFunT (_, DebugSleep)
@@ -7121,6 +6982,7 @@ struct
           | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
           | ReactConfigType default_props ->
             ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
+          | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
         )
 
   and variance_check cx ?trace tparams polarity = function

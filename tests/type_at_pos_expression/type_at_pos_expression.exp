@@ -29,7 +29,7 @@ dictionary.js:19:7 = {
   "end":8
 }
 facebookism.js:3:8 = {
-  "type":"$Facebookism$Idx",
+  "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?$Facebookism$IdxUnwrapper<IdxResult>",
   "reasons":[],
   "loc":{
     "source":"facebookism.js",

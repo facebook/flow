@@ -216,6 +216,8 @@ and utility =
   | ReactElementConfigType of t
   | ReactElementRefType of t
   | ReactConfigType of t * t
+  (* Idx *)
+  | IdxUnwrapType of t
 
 and polarity =
   | Positive
@@ -543,6 +545,7 @@ class ['A] comparator_ty =
       | ObjKeyMirror _ -> 22
       | Partial _ -> 23
       | ObjMapConst _ -> 24
+      | IdxUnwrapType _ -> 25
 
     method tag_of_polarity _ =
       function
@@ -701,6 +704,7 @@ let string_of_utility_ctor = function
   | ReactElementConfigType _ -> "React$ElementConfig"
   | ReactElementRefType _ -> "React$ElementRef"
   | ReactConfigType _ -> "React$Config"
+  | IdxUnwrapType _ -> "$Facebookism$IdxUnwrapper"
 
 let types_of_utility = function
   | Keys t -> Some [t]
@@ -724,3 +728,4 @@ let types_of_utility = function
   | ReactElementConfigType t -> Some [t]
   | ReactElementRefType t -> Some [t]
   | ReactConfigType (t1, t2) -> Some [t1; t2]
+  | IdxUnwrapType t -> Some [t]

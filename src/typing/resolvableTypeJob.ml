@@ -252,7 +252,8 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | ReactConfigType default_props -> collect_of_type ?log_unresolved cx acc default_props
   | ReactElementPropsType
   | ReactElementConfigType
-  | ReactElementRefType ->
+  | ReactElementRefType
+  | IdxUnwrapType ->
     acc
 
 and collect_of_property ?log_unresolved cx name property acc =

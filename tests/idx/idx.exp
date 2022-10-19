@@ -18,9 +18,12 @@ Cannot cast `idx(...)` to number because null or undefined [1] is incompatible w
 
    test.js:10:2
    10| (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:10:31
    10| (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
                                      ^^^^^^ [2]
@@ -49,9 +52,12 @@ Cannot cast `idx(...)` to number because null or undefined [1] is incompatible w
 
    test.js:12:2
    12| (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:12:34
    12| (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
                                         ^^^^^^ [2]
@@ -71,12 +77,12 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:14:1
+Error ---------------------------------------------------------------------------------------------------- test.js:14:18
 
-Cannot call `idx(...)` because the callback must only access properties on the callback parameter. [invalid-idx]
+Illegal `idx` operation: the callback can only access properties on the callback parameter. [invalid-idx]
 
    14| idx(obj1, obj => obj.a = null); // error: invalid-idx
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        ^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:2
@@ -85,9 +91,12 @@ Cannot cast `idx(...)` to number because null or undefined [1] is incompatible w
 
    test.js:17:2
    17| (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:17:31
    17| (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
                                      ^^^^^^ [2]
@@ -99,12 +108,32 @@ Cannot cast `idx(...)` to number because null or undefined [1] is incompatible w
 
    test.js:20:2
    20| (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:20:31
    20| (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
                                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:27:2
+
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:27:2
+   27| (idx(ab, _ => _.a): empty); // error
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:27:21
+   27| (idx(ab, _ => _.a): empty); // error
+                           ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:27:2
@@ -119,20 +148,6 @@ References:
    test.js:26:20
    26| declare var ab: {a:string}|{b:number};
                           ^^^^^^ [1]
-   test.js:27:21
-   27| (idx(ab, _ => _.a): empty); // error
-                           ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:27:2
-
-Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
-
-   test.js:27:2
-   27| (idx(ab, _ => _.a): empty); // error
-        ^^^^^^^^^^^^^^^^^ [1]
-
-References:
    test.js:27:21
    27| (idx(ab, _ => _.a): empty); // error
                            ^^^^^ [2]
@@ -154,6 +169,23 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:2
 
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:28:2
+   28| (idx(ab, _ => _.b): empty); // error
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:28:21
+   28| (idx(ab, _ => _.b): empty); // error
+                           ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:2
+
 Cannot cast `idx(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:28:2
@@ -164,20 +196,6 @@ References:
    test.js:26:31
    26| declare var ab: {a:string}|{b:number};
                                      ^^^^^^ [1]
-   test.js:28:21
-   28| (idx(ab, _ => _.b): empty); // error
-                           ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:28:2
-
-Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
-
-   test.js:28:2
-   28| (idx(ab, _ => _.b): empty); // error
-        ^^^^^^^^^^^^^^^^^ [1]
-
-References:
    test.js:28:21
    28| (idx(ab, _ => _.b): empty); // error
                            ^^^^^ [2]
@@ -203,9 +221,12 @@ Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible wi
 
    test.js:29:2
    29| (idx(ab, _ => _.c): empty); // error
-        ^^^^^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^^^^^
 
 References:
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:29:21
    29| (idx(ab, _ => _.c): empty); // error
                            ^^^^^ [2]
@@ -248,9 +269,9 @@ Cannot cast `idx(...)` to number because null or undefined [1] is incompatible w
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:32:27
-   32| class Foo1 { a: ?Foo1; b: ?number; }
-                                 ^^^^^^^ [1]
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:36:31
    36| (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
                                      ^^^^^^ [2]
@@ -262,20 +283,23 @@ Cannot cast `idx(...)` to number because null or undefined [1] is incompatible w
 
    test.js:36:2
    36| (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   test.js:32:27
+   32| class Foo1 { a: ?Foo1; b: ?number; }
+                                 ^^^^^^^ [1]
    test.js:36:31
    36| (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
                                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:37:1
+Error ---------------------------------------------------------------------------------------------------- test.js:37:22
 
-Cannot call `idx(...)` because the callback must only access properties on the callback parameter. [invalid-idx]
+Illegal `idx` operation: the callback can only access properties on the callback parameter. [invalid-idx]
 
    37| idx(new Foo1(), o => o.a = null); // error: invalid-idx
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            ^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:49:2
@@ -284,9 +308,12 @@ Cannot cast `idx(...)` to number because null or undefined [1] is incompatible w
 
    test.js:49:2
    49| (idx(42, n => n): number); // error: result must be MaybeT
-        ^^^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^^^
 
 References:
+   test.js:3:121
+    3| declare function idx<IdxObject, IdxResult>(object: IdxObject, f: (_: $Facebookism$IdxWrapper<IdxObject>) => IdxResult): ?$Facebookism$IdxUnwrapper<IdxResult>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:49:19
    49| (idx(42, n => n): number); // error: result must be MaybeT
                          ^^^^^^ [2]
@@ -306,12 +333,12 @@ References:
            ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:57:1
+Error ---------------------------------------------------------------------------------------------------- test.js:57:16
 
-Cannot call `idx(...)` because the callback must only access properties on the callback parameter. [invalid-idx]
+Illegal `idx` operation: the callback can only access properties on the callback parameter. [invalid-idx]
 
    57| idx({}, obj => obj()); // error: invalid-idx
-       ^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^^
 
 
 

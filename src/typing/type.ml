@@ -1400,6 +1400,7 @@ module rec TypeTerm : sig
     | ReactElementConfigType
     | ReactElementRefType
     | ReactConfigType of t
+    | IdxUnwrapType
 
   and optional_indexed_access_index =
     | OptionalIndexedAccessStrLitIndex of name
@@ -1434,8 +1435,6 @@ module rec TypeTerm : sig
     | ReactCreateElement
     | ReactCloneElement
     | ReactElementFactory of t
-    (* Facebookisms *)
-    | Idx
     (* Internal tools *)
     | DebugPrint
     | DebugThrow

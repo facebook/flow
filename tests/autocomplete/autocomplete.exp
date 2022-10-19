@@ -365,7 +365,7 @@ Flags: --pretty
   "result":[
     {
       "name":"idx",
-      "type":"<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult"
+      "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?IdxResult"
     },
     {"name":"objectAssign","type":"(target: any, ...sources: Array<any>) => any"},
     {"name":"objectGetPrototypeOf","type":"(o: any) => any"}

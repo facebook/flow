@@ -2122,6 +2122,22 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
         Annot (ReactElementRef (loc, t))
       | _ -> Err (loc, CheckError)
     end
+  | "$Facebookism$IdxUnwrapper" ->
+    begin
+      match targs with
+      | Some (_, { arguments = [t]; _ }) ->
+        let t = annot opts scope tbls xs t in
+        Annot (FacebookismIdxUnwrapper (loc, t))
+      | _ -> Err (loc, CheckError)
+    end
+  | "$Facebookism$IdxWrapper" ->
+    begin
+      match targs with
+      | Some (_, { arguments = [t]; _ }) ->
+        let t = annot opts scope tbls xs t in
+        Annot (FacebookismIdxWrapper (loc, t))
+      | _ -> Err (loc, CheckError)
+    end
   | "$Compose" ->
     begin
       match targs with
@@ -2132,12 +2148,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     begin
       match targs with
       | None -> Annot (ComposeReverse loc)
-      | _ -> Err (loc, CheckError)
-    end
-  | "$Facebookism$Idx" ->
-    begin
-      match targs with
-      | None -> Annot (FacebookismIdx loc)
       | _ -> Err (loc, CheckError)
     end
   | "$Flow$DebugPrint" ->

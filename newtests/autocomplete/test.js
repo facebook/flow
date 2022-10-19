@@ -772,7 +772,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "idx",
-               "type": "<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult"
+               "type": "<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?IdxResult"
              },
              {
                "name": "objectAssign",

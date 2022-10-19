@@ -9,38 +9,6 @@ const {suite, test} = require('flow-dev-tools/src/test/Tester');
 /* This test suite documents a bunch of places where using spread arguments
  * doesn't work, either intentionally or due to us being lazy */
 module.exports = (suite(({addFile, addFiles, addCode}) => [
-  test('idx', [
-    addCode('declare var idx: $Facebookism$Idx;\n'),
-    addCode('idx(...arr, obj => obj.foo)')
-      .newErrors(
-        `
-          test.js:8
-            8: idx(...arr, obj => obj.foo)
-                      ^^^ A spread argument is unsupported here. [unsupported-syntax]
-        `,
-      ),
-    addCode('idx({}, ...arr)')
-      .newErrors(
-        `
-          test.js:10
-           10: idx({}, ...arr)
-                          ^^^ A spread argument is unsupported here. [unsupported-syntax]
-        `,
-      ),
-    addCode('idx(...arr, ...arr)')
-      .newErrors(
-        `
-          test.js:12
-           12: idx(...arr, ...arr)
-                      ^^^ A spread argument is unsupported here. [unsupported-syntax]
-
-          test.js:12
-           12: idx(...arr, ...arr)
-                              ^^^ A spread argument is unsupported here. [unsupported-syntax]
-        `,
-      ),
-  ]),
-
   test('React.createElement', [
     addCode('const React = require("react");'),
     addCode('React.createElement(...arr, {})')

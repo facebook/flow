@@ -520,7 +520,8 @@ class virtual ['a] t =
           ReactConfigType default_props'
       | ReactElementPropsType
       | ReactElementConfigType
-      | ReactElementRefType ->
+      | ReactElementRefType
+      | IdxUnwrapType ->
         t
 
     method object_kit_spread_operand_slice
@@ -572,7 +573,6 @@ class virtual ['a] t =
       | ReactPropType _
       | ReactCreateElement
       | ReactCloneElement
-      | Idx
       | DebugPrint
       | DebugThrow
       | DebugSleep ->

@@ -1440,49 +1440,319 @@
     "end":50
   },
   {
-    "type":"$Facebookism$Idx",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":19,"column":13,"offset":462},
-      "end":{"line":19,"column":15,"offset":465}
-    },
-    "path":"test.js",
-    "line":19,
-    "endline":19,
-    "start":13,
-    "end":15
-  },
-  {
-    "type":"$Facebookism$Idx",
+    "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?$Facebookism$IdxUnwrapper<IdxResult>",
     "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
       "start":{"line":19,"column":18,"offset":467},
-      "end":{"line":19,"column":33,"offset":483}
+      "end":{"line":19,"column":20,"offset":470}
     },
     "path":"test.js",
     "line":19,
     "endline":19,
     "start":18,
-    "end":33
+    "end":20
   },
   {
-    "type":"$Facebookism$Idx",
+    "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?$Facebookism$IdxUnwrapper<IdxResult>",
     "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":19,"column":18,"offset":467},
-      "end":{"line":19,"column":33,"offset":483}
+      "start":{"line":19,"column":21,"offset":470},
+      "end":{"line":19,"column":157,"offset":607}
     },
     "path":"test.js",
     "line":19,
     "endline":19,
-    "start":18,
-    "end":33
+    "start":21,
+    "end":157
+  },
+  {
+    "type":"mixed",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":31,"offset":480},
+      "end":{"line":19,"column":30,"offset":480}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":31,
+    "end":30
+  },
+  {
+    "type":"mixed",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":42,"offset":491},
+      "end":{"line":19,"column":41,"offset":491}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":42,
+    "end":41
+  },
+  {
+    "type":"IdxObject",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":44,"offset":493},
+      "end":{"line":19,"column":49,"offset":499}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":44,
+    "end":49
+  },
+  {
+    "type":"IdxObject",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":52,"offset":501},
+      "end":{"line":19,"column":60,"offset":510}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":52,
+    "end":60
+  },
+  {
+    "type":"IdxObject",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":52,"offset":501},
+      "end":{"line":19,"column":60,"offset":510}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":52,
+    "end":60
+  },
+  {
+    "type":"(_: IdxObject) => IdxResult",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":63,"offset":512},
+      "end":{"line":19,"column":63,"offset":513}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":63,
+    "end":63
+  },
+  {
+    "type":"(_: IdxObject) => IdxResult",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":66,"offset":515},
+      "end":{"line":19,"column":117,"offset":567}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":66,
+    "end":117
+  },
+  {
+    "type":"IdxObject",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":67,"offset":516},
+      "end":{"line":19,"column":67,"offset":517}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":67,
+    "end":67
+  },
+  {
+    "type":"IdxObject",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":70,"offset":519},
+      "end":{"line":19,"column":92,"offset":542}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":70,
+    "end":92
+  },
+  {
+    "type":"IdxObject",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":70,"offset":519},
+      "end":{"line":19,"column":103,"offset":553}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":70,
+    "end":103
+  },
+  {
+    "type":"IdxObject",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":94,"offset":543},
+      "end":{"line":19,"column":102,"offset":552}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":94,
+    "end":102
+  },
+  {
+    "type":"IdxObject",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":94,"offset":543},
+      "end":{"line":19,"column":102,"offset":552}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":94,
+    "end":102
+  },
+  {
+    "type":"IdxResult",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":109,"offset":558},
+      "end":{"line":19,"column":117,"offset":567}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":109,
+    "end":117
+  },
+  {
+    "type":"IdxResult",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":109,"offset":558},
+      "end":{"line":19,"column":117,"offset":567}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":109,
+    "end":117
+  },
+  {
+    "type":"?$Facebookism$IdxUnwrapper<IdxResult>",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":121,"offset":570},
+      "end":{"line":19,"column":157,"offset":607}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":121,
+    "end":157
+  },
+  {
+    "type":"$Facebookism$IdxUnwrapper<IdxResult>",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":122,"offset":571},
+      "end":{"line":19,"column":146,"offset":596}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":122,
+    "end":146
+  },
+  {
+    "type":"$Facebookism$IdxUnwrapper<IdxResult>",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":122,"offset":571},
+      "end":{"line":19,"column":157,"offset":607}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":122,
+    "end":157
+  },
+  {
+    "type":"IdxResult",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":148,"offset":597},
+      "end":{"line":19,"column":156,"offset":606}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":148,
+    "end":156
+  },
+  {
+    "type":"IdxResult",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":19,"column":148,"offset":597},
+      "end":{"line":19,"column":156,"offset":606}
+    },
+    "path":"test.js",
+    "line":19,
+    "endline":19,
+    "start":148,
+    "end":156
   },
   {
     "type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}",
@@ -1490,8 +1760,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":13,"offset":497},
-      "end":{"line":20,"column":15,"offset":500}
+      "start":{"line":20,"column":13,"offset":621},
+      "end":{"line":20,"column":15,"offset":624}
     },
     "path":"test.js",
     "line":20,
@@ -1505,8 +1775,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":18,"offset":502},
-      "end":{"line":20,"column":52,"offset":537}
+      "start":{"line":20,"column":18,"offset":626},
+      "end":{"line":20,"column":52,"offset":661}
     },
     "path":"test.js",
     "line":20,
@@ -1520,8 +1790,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":19,"offset":503},
-      "end":{"line":20,"column":19,"offset":504}
+      "start":{"line":20,"column":19,"offset":627},
+      "end":{"line":20,"column":19,"offset":628}
     },
     "path":"test.js",
     "line":20,
@@ -1535,8 +1805,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":23,"offset":507},
-      "end":{"line":20,"column":51,"offset":536}
+      "start":{"line":20,"column":23,"offset":631},
+      "end":{"line":20,"column":51,"offset":660}
     },
     "path":"test.js",
     "line":20,
@@ -1550,8 +1820,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":24,"offset":508},
-      "end":{"line":20,"column":24,"offset":509}
+      "start":{"line":20,"column":24,"offset":632},
+      "end":{"line":20,"column":24,"offset":633}
     },
     "path":"test.js",
     "line":20,
@@ -1565,8 +1835,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":27,"offset":511},
-      "end":{"line":20,"column":50,"offset":535}
+      "start":{"line":20,"column":27,"offset":635},
+      "end":{"line":20,"column":50,"offset":659}
     },
     "path":"test.js",
     "line":20,
@@ -1580,8 +1850,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":28,"offset":512},
-      "end":{"line":20,"column":50,"offset":535}
+      "start":{"line":20,"column":28,"offset":636},
+      "end":{"line":20,"column":50,"offset":659}
     },
     "path":"test.js",
     "line":20,
@@ -1595,8 +1865,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":29,"offset":513},
-      "end":{"line":20,"column":29,"offset":514}
+      "start":{"line":20,"column":29,"offset":637},
+      "end":{"line":20,"column":29,"offset":638}
     },
     "path":"test.js",
     "line":20,
@@ -1610,8 +1880,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":32,"offset":516},
-      "end":{"line":20,"column":35,"offset":520}
+      "start":{"line":20,"column":32,"offset":640},
+      "end":{"line":20,"column":35,"offset":644}
     },
     "path":"test.js",
     "line":20,
@@ -1625,8 +1895,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":32,"offset":516},
-      "end":{"line":20,"column":49,"offset":534}
+      "start":{"line":20,"column":32,"offset":640},
+      "end":{"line":20,"column":49,"offset":658}
     },
     "path":"test.js",
     "line":20,
@@ -1640,8 +1910,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":39,"offset":523},
-      "end":{"line":20,"column":49,"offset":534}
+      "start":{"line":20,"column":39,"offset":647},
+      "end":{"line":20,"column":49,"offset":658}
     },
     "path":"test.js",
     "line":20,
@@ -1655,8 +1925,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":40,"offset":524},
-      "end":{"line":20,"column":40,"offset":525}
+      "start":{"line":20,"column":40,"offset":648},
+      "end":{"line":20,"column":40,"offset":649}
     },
     "path":"test.js",
     "line":20,
@@ -1670,8 +1940,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":43,"offset":527},
-      "end":{"line":20,"column":48,"offset":533}
+      "start":{"line":20,"column":43,"offset":651},
+      "end":{"line":20,"column":48,"offset":657}
     },
     "path":"test.js",
     "line":20,
@@ -1685,8 +1955,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":7,"offset":545},
-      "end":{"line":21,"column":15,"offset":554}
+      "start":{"line":21,"column":7,"offset":669},
+      "end":{"line":21,"column":15,"offset":678}
     },
     "path":"test.js",
     "line":21,
@@ -1700,8 +1970,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":7,"offset":545},
-      "end":{"line":21,"column":15,"offset":554}
+      "start":{"line":21,"column":7,"offset":669},
+      "end":{"line":21,"column":15,"offset":678}
     },
     "path":"test.js",
     "line":21,
@@ -1715,8 +1985,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":16,"offset":554},
-      "end":{"line":21,"column":15,"offset":554}
+      "start":{"line":21,"column":16,"offset":678},
+      "end":{"line":21,"column":15,"offset":678}
     },
     "path":"test.js",
     "line":21,
@@ -1725,13 +1995,13 @@
     "end":15
   },
   {
-    "type":"$Facebookism$Idx",
+    "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?$Facebookism$IdxUnwrapper<IdxResult>",
     "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":19,"offset":557},
-      "end":{"line":21,"column":21,"offset":560}
+      "start":{"line":21,"column":19,"offset":681},
+      "end":{"line":21,"column":21,"offset":684}
     },
     "path":"test.js",
     "line":21,
@@ -1740,13 +2010,13 @@
     "end":21
   },
   {
-    "type":"$Facebookism$Idx",
+    "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?$Facebookism$IdxUnwrapper<IdxResult>",
     "reasons":[],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":19,"offset":557},
-      "end":{"line":21,"column":21,"offset":560}
+      "start":{"line":21,"column":19,"offset":681},
+      "end":{"line":21,"column":21,"offset":684}
     },
     "path":"test.js",
     "line":21,
@@ -1760,8 +2030,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":19,"offset":557},
-      "end":{"line":21,"column":46,"offset":585}
+      "start":{"line":21,"column":19,"offset":681},
+      "end":{"line":21,"column":46,"offset":709}
     },
     "path":"test.js",
     "line":21,
@@ -1775,8 +2045,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":23,"offset":561},
-      "end":{"line":21,"column":25,"offset":564}
+      "start":{"line":21,"column":23,"offset":685},
+      "end":{"line":21,"column":25,"offset":688}
     },
     "path":"test.js",
     "line":21,
@@ -1790,8 +2060,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":23,"offset":561},
-      "end":{"line":21,"column":25,"offset":564}
+      "start":{"line":21,"column":23,"offset":685},
+      "end":{"line":21,"column":25,"offset":688}
     },
     "path":"test.js",
     "line":21,
@@ -1805,8 +2075,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":28,"offset":566},
-      "end":{"line":21,"column":30,"offset":569}
+      "start":{"line":21,"column":28,"offset":690},
+      "end":{"line":21,"column":30,"offset":693}
     },
     "path":"test.js",
     "line":21,
@@ -1820,8 +2090,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":28,"offset":566},
-      "end":{"line":21,"column":30,"offset":569}
+      "start":{"line":21,"column":28,"offset":690},
+      "end":{"line":21,"column":30,"offset":693}
     },
     "path":"test.js",
     "line":21,
@@ -1835,8 +2105,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":28,"offset":566},
-      "end":{"line":21,"column":45,"offset":584}
+      "start":{"line":21,"column":28,"offset":690},
+      "end":{"line":21,"column":45,"offset":708}
     },
     "path":"test.js",
     "line":21,
@@ -1850,8 +2120,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":31,"offset":569},
-      "end":{"line":21,"column":30,"offset":569}
+      "start":{"line":21,"column":31,"offset":693},
+      "end":{"line":21,"column":30,"offset":693}
     },
     "path":"test.js",
     "line":21,
@@ -1865,8 +2135,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":31,"offset":569},
-      "end":{"line":21,"column":30,"offset":569}
+      "start":{"line":21,"column":31,"offset":693},
+      "end":{"line":21,"column":30,"offset":693}
     },
     "path":"test.js",
     "line":21,
@@ -1880,8 +2150,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":35,"offset":573},
-      "end":{"line":21,"column":37,"offset":576}
+      "start":{"line":21,"column":35,"offset":697},
+      "end":{"line":21,"column":37,"offset":700}
     },
     "path":"test.js",
     "line":21,
@@ -1895,8 +2165,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":35,"offset":573},
-      "end":{"line":21,"column":37,"offset":576}
+      "start":{"line":21,"column":35,"offset":697},
+      "end":{"line":21,"column":37,"offset":700}
     },
     "path":"test.js",
     "line":21,
@@ -1910,8 +2180,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":35,"offset":573},
-      "end":{"line":21,"column":39,"offset":578}
+      "start":{"line":21,"column":35,"offset":697},
+      "end":{"line":21,"column":39,"offset":702}
     },
     "path":"test.js",
     "line":21,
@@ -1925,8 +2195,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":35,"offset":573},
-      "end":{"line":21,"column":41,"offset":580}
+      "start":{"line":21,"column":35,"offset":697},
+      "end":{"line":21,"column":41,"offset":704}
     },
     "path":"test.js",
     "line":21,
@@ -1940,8 +2210,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":35,"offset":573},
-      "end":{"line":21,"column":43,"offset":582}
+      "start":{"line":21,"column":35,"offset":697},
+      "end":{"line":21,"column":43,"offset":706}
     },
     "path":"test.js",
     "line":21,
@@ -1955,8 +2225,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":35,"offset":573},
-      "end":{"line":21,"column":45,"offset":584}
+      "start":{"line":21,"column":35,"offset":697},
+      "end":{"line":21,"column":45,"offset":708}
     },
     "path":"test.js",
     "line":21,
@@ -1970,8 +2240,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":39,"offset":577},
-      "end":{"line":21,"column":39,"offset":578}
+      "start":{"line":21,"column":39,"offset":701},
+      "end":{"line":21,"column":39,"offset":702}
     },
     "path":"test.js",
     "line":21,
@@ -1985,8 +2255,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":41,"offset":579},
-      "end":{"line":21,"column":41,"offset":580}
+      "start":{"line":21,"column":41,"offset":703},
+      "end":{"line":21,"column":41,"offset":704}
     },
     "path":"test.js",
     "line":21,
@@ -2000,8 +2270,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":43,"offset":581},
-      "end":{"line":21,"column":43,"offset":582}
+      "start":{"line":21,"column":43,"offset":705},
+      "end":{"line":21,"column":43,"offset":706}
     },
     "path":"test.js",
     "line":21,
@@ -2015,8 +2285,8 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":45,"offset":583},
-      "end":{"line":21,"column":45,"offset":584}
+      "start":{"line":21,"column":45,"offset":707},
+      "end":{"line":21,"column":45,"offset":708}
     },
     "path":"test.js",
     "line":21,

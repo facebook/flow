@@ -169,8 +169,7 @@ and 'loc t' =
       ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
   | EIdxArity of 'loc virtual_reason
-  | EIdxUse1 of 'loc virtual_reason
-  | EIdxUse2 of 'loc virtual_reason
+  | EIdxUse of 'loc virtual_reason
   | EUnexpectedThisType of 'loc
   | ETypeParamArity of 'loc * int
   | ECallTypeArity of {
@@ -822,8 +821,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
   | EIdxArity r -> EIdxArity (map_reason r)
-  | EIdxUse1 r -> EIdxUse1 (map_reason r)
-  | EIdxUse2 r -> EIdxUse2 (map_reason r)
+  | EIdxUse r -> EIdxUse (map_reason r)
   | EUnexpectedThisType loc -> EUnexpectedThisType (f loc)
   | ETypeParamArity (loc, i) -> ETypeParamArity (f loc, i)
   | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity } ->
@@ -1187,8 +1185,7 @@ let util_use_op_of_msg nope util = function
   | ESpeculationAmbiguous _
   | EUnsupportedExact (_, _)
   | EIdxArity _
-  | EIdxUse1 _
-  | EIdxUse2 _
+  | EIdxUse _
   | EUnexpectedThisType _
   | ETypeParamArity (_, _)
   | ECallTypeArity _
@@ -1327,8 +1324,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMissingAnnotation (reason, _)
   | EMissingLocalAnnotation { reason; _ }
   | EIdxArity reason
-  | EIdxUse1 reason
-  | EIdxUse2 reason
+  | EIdxUse reason
   | EUnsupportedExact (_, reason)
   | EPolarityMismatch { reason; _ }
   | ENoNamedExport (reason, _, _, _)
@@ -2268,23 +2264,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EIdxUse1 _ ->
+  | EIdxUse _ ->
     let features =
       [
-        text "Cannot call ";
-        code "idx(...)";
-        text " because the callback ";
-        text "argument must not be annotated.";
-      ]
-    in
-    Normal { features }
-  | EIdxUse2 _ ->
-    let features =
-      [
-        text "Cannot call ";
-        code "idx(...)";
-        text " because the callback must ";
-        text "only access properties on the callback parameter.";
+        text "Illegal ";
+        code "idx";
+        text " operation: the callback can only access properties on the callback parameter.";
       ]
     in
     Normal { features }
@@ -4092,8 +4077,7 @@ let error_code_of_message err : error_code option =
   | EFunctionCallExtraArg _ -> Some ExtraArg
   | EFunPredCustom (_, _) -> Some FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
-  | EIdxUse1 _ -> Some InvalidIdx
-  | EIdxUse2 _ -> Some InvalidIdx
+  | EIdxUse _ -> Some InvalidIdx
   | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
   | EImportTypeAsValue (_, _) -> Some ImportTypeAsValue
   | EImportValueAsType (_, _) -> Some ImportValueAsType
