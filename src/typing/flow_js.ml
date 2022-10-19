@@ -6152,6 +6152,13 @@ struct
       any_prop_call_prop cx ~use_op ~covariant_flow call_t
     )
 
+  (* FullyResolved tvars cannot contain non-FullyResolved parts, so there's no need to
+   * deeply traverse them! *)
+  and any_prop_tvar cx tvar =
+    match Context.find_constraints cx tvar with
+    | (_, FullyResolved _) -> true
+    | _ -> false
+
   and any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow targs =
     List.iter
       (fun (_, _, t, polarity) ->
@@ -6250,6 +6257,7 @@ struct
       (* Propagating through here causes exponential blowup. React PropTypes are deprecated
          anyways, so it is not unreasonable to just not trust them *)
       true
+    | UseT (_, OpenT (_, id)) -> any_prop_tvar cx id
     | AdderT _
     | AndT _
     | ArrRestT _
@@ -6325,7 +6333,9 @@ struct
     | ToStringT _
     | UnaryMinusT _
     | UnifyT _
-    | UseT (_, AnnotT _) (* this transforms into a ReposUseT *)
+    (* We have to propagate through AnnotTs because they may contain implicitly
+     * instantiated targs. Already handled in __flow by turning into a ReposUseT *)
+    | UseT (_, AnnotT _)
     | UseT (_, MaybeT _) (* used to filter maybe *)
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
@@ -6347,7 +6357,6 @@ struct
        this can be handled by the pre-existing rules *)
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
-    | UseT (_, OpenT _)
     | UseT (_, TypeDestructorTriggerT _) ->
       false
     | UseT (use_op, DefT (_, _, ObjT obj)) ->
@@ -6471,7 +6480,10 @@ struct
     | ObjProtoT _
     | NullProtoT _ ->
       true
+    | OpenT (_, id) -> any_prop_tvar cx id
     (* Handled already in __flow *)
+    (* We have to propagate through AnnotTs because they may contain implicitly
+     * instantiated targs *)
     | AnnotT _
     | ExactT _
     | ThisClassT _
@@ -6493,8 +6505,6 @@ struct
     | ModuleT _
     | TypeDestructorTriggerT _ ->
       false
-    (* Need special action later *)
-    | OpenT _ -> false
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | CustomFunT (_, ReactElementFactory _)
     | CustomFunT (_, ReactPropType _)
