@@ -57,6 +57,7 @@ function test4() {
   const z2: Array<mixed> = Array.of(); // ok
   const z3: Array<string> = Array.of(); // ok
   const z4: Array<string | number> = Array.of(1); // ok
+  const z5: Array<string> = z3.concat(1); // Only one error on 1 ~> string
 }
 
 function test5() {
