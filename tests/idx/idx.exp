@@ -1,0 +1,318 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:7:8
+
+Cannot get `obj1.a.b` because property `b` is missing in null or undefined [1]. [incompatible-use]
+
+   test.js:7:8
+   7| obj1.a.b.c; // error
+             ^
+
+References:
+   test.js:6:23
+   6| declare var obj1: {a: ?{b: {c: number}}};
+                            ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:2
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:10:2
+   10| (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:10:31
+   10| (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:11:2
+
+Cannot cast `idx(...)` to nullable string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:11:2
+   11| (idx(obj1, obj => obj.a.b.c): ?string); // error: number ~> string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:6:32
+    6| declare var obj1: {a: ?{b: {c: number}}};
+                                      ^^^^^^ [1]
+   test.js:11:32
+   11| (idx(obj1, obj => obj.a.b.c): ?string); // error: number ~> string
+                                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:2
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:12:2
+   12| (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:12:34
+   12| (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
+                                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:13:22
+
+Cannot get `obj.notAProp` because property `notAProp` is missing in object type [1]. [prop-missing]
+
+   test.js:13:22
+   13| idx(obj1, obj => obj.notAProp); // error: prop-missing
+                            ^^^^^^^^
+
+References:
+   test.js:6:19
+    6| declare var obj1: {a: ?{b: {c: number}}};
+                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:1
+
+Cannot call `idx(...)` because the callback must only access properties on the callback parameter. [invalid-idx]
+
+   14| idx(obj1, obj => obj.a = null); // error: invalid-idx
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:2
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:17:2
+   17| (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:17:31
+   17| (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:2
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:20:2
+   20| (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:20:31
+   20| (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:27:2
+
+Cannot cast `idx(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:27:2
+   27| (idx(ab, _ => _.a): empty); // error
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:26:20
+   26| declare var ab: {a:string}|{b:number};
+                          ^^^^^^ [1]
+   test.js:27:21
+   27| (idx(ab, _ => _.a): empty); // error
+                           ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:27:2
+
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:27:2
+   27| (idx(ab, _ => _.a): empty); // error
+        ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:27:21
+   27| (idx(ab, _ => _.a): empty); // error
+                           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:17
+
+Cannot get `_.a` because property `a` is missing in object type [1]. [prop-missing]
+
+   test.js:27:17
+   27| (idx(ab, _ => _.a): empty); // error
+                       ^
+
+References:
+   test.js:26:28
+   26| declare var ab: {a:string}|{b:number};
+                                  ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:2
+
+Cannot cast `idx(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:28:2
+   28| (idx(ab, _ => _.b): empty); // error
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:26:31
+   26| declare var ab: {a:string}|{b:number};
+                                     ^^^^^^ [1]
+   test.js:28:21
+   28| (idx(ab, _ => _.b): empty); // error
+                           ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:2
+
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:28:2
+   28| (idx(ab, _ => _.b): empty); // error
+        ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:28:21
+   28| (idx(ab, _ => _.b): empty); // error
+                           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:28:17
+
+Cannot get `_.b` because property `b` is missing in object type [1]. [prop-missing]
+
+   test.js:28:17
+   28| (idx(ab, _ => _.b): empty); // error
+                       ^
+
+References:
+   test.js:26:17
+   26| declare var ab: {a:string}|{b:number};
+                       ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:29:2
+
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:29:2
+   29| (idx(ab, _ => _.c): empty); // error
+        ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:29:21
+   29| (idx(ab, _ => _.c): empty); // error
+                           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:29:17
+
+Cannot get `_.c` because property `c` is missing in object type [1]. [prop-missing]
+
+   test.js:29:17
+   29| (idx(ab, _ => _.c): empty); // error
+                       ^
+
+References:
+   test.js:26:17
+   26| declare var ab: {a:string}|{b:number};
+                       ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:29:17
+
+Cannot get `_.c` because property `c` is missing in object type [1]. [prop-missing]
+
+   test.js:29:17
+   29| (idx(ab, _ => _.c): empty); // error
+                       ^
+
+References:
+   test.js:26:28
+   26| declare var ab: {a:string}|{b:number};
+                                  ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:36:2
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:36:2
+   36| (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:32:27
+   32| class Foo1 { a: ?Foo1; b: ?number; }
+                                 ^^^^^^^ [1]
+   test.js:36:31
+   36| (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:36:2
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:36:2
+   36| (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:36:31
+   36| (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:37:1
+
+Cannot call `idx(...)` because the callback must only access properties on the callback parameter. [invalid-idx]
+
+   37| idx(new Foo1(), o => o.a = null); // error: invalid-idx
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:49:2
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:49:2
+   49| (idx(42, n => n): number); // error: result must be MaybeT
+        ^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:49:19
+   49| (idx(42, n => n): number); // error: result must be MaybeT
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:50:16
+
+Cannot get `n.nope` because property `nope` is missing in `Number` [1]. [prop-missing]
+
+   test.js:50:16
+   50| idx(42, n => n.nope); // error: prop-missing
+                      ^^^^
+
+References:
+   test.js:50:5
+   50| idx(42, n => n.nope); // error: prop-missing
+           ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:57:1
+
+Cannot call `idx(...)` because the callback must only access properties on the callback parameter. [invalid-idx]
+
+   57| idx({}, obj => obj()); // error: invalid-idx
+       ^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 23 errors
