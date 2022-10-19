@@ -6248,7 +6248,7 @@ module Make
                   cx
                   ~required_this_param_type:None
                   ~constructor:false
-                  ~require_return_annot:(Context.enforce_local_inference_annotations cx)
+                  ~require_return_annot:true
                   ~statics:SMap.empty
                   tparams_map
                   reason
@@ -6278,7 +6278,7 @@ module Make
                 Statement.Func_stmt_sig.functiontype cx ~arrow function_loc_opt this_t func_sig
               in
               Flow.flow_t cx (t, annot_t)
-            | (_, Inferred _) when Context.enforce_local_inference_annotations cx ->
+            | (_, Inferred _) ->
               let annot_loc =
                 match annot with
                 | Ast.Type.Missing loc
@@ -6305,8 +6305,7 @@ module Make
           )
       in
       (match (init, annot_or_inferred) with
-      | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _)
-        when Context.enforce_local_inference_annotations cx ->
+      | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _) ->
         Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
         if Context.env_mode cx = Options.LTI then
           Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
@@ -6317,7 +6316,7 @@ module Make
       mk_func_sig
         cx
         ~required_this_param_type:None
-        ~require_return_annot:((not constructor) && Context.enforce_local_inference_annotations cx)
+        ~require_return_annot:(not constructor)
         ~constructor
         ~statics:SMap.empty
     in
@@ -6985,10 +6984,9 @@ module Make
     in
     let require_this_annot cx func param_loc = function
       | (Some t, None)
-        when Context.enforce_local_inference_annotations cx
-             && Signature_utils.This_finder.found_this_in_body_or_params
-                  func.Ast.Function.body
-                  func.Ast.Function.params ->
+        when Signature_utils.This_finder.found_this_in_body_or_params
+               func.Ast.Function.body
+               func.Ast.Function.params ->
         let reason = mk_reason (RImplicitThis (RFunction RNormal)) param_loc in
         Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
         if Context.env_mode cx = Options.LTI then

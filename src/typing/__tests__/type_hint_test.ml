@@ -27,7 +27,6 @@ let metadata =
     enable_const_params = false;
     enable_enums = true;
     enable_relay_integration = false;
-    enforce_local_inference_annotations = false;
     enforce_strict_call_arity = true;
     env_mode = Options.LTI;
     exact_by_default = true;

@@ -36,7 +36,6 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
-  enforce_local_inference_annotations: bool;
   enforce_strict_call_arity: bool;
   env_mode: Options.env_mode;
   exact_by_default: bool;
@@ -223,7 +222,6 @@ let metadata_of_options options =
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
-    enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     env_mode = Options.env_mode options;
     exact_by_default = Options.exact_by_default options;
@@ -445,9 +443,6 @@ let goals cx = cx.ccx.goal_map
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let exact_empty_objects cx = cx.metadata.exact_empty_objects || env_mode cx = Options.LTI
-
-let enforce_local_inference_annotations cx =
-  cx.metadata.enforce_local_inference_annotations || env_mode cx = Options.LTI
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 

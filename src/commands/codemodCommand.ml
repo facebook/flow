@@ -222,12 +222,7 @@ module Annotate_lti_command = struct
       (* Match all files the codemod is run over *)
       let check_options o =
         let open Options in
-        {
-          o with
-          opt_any_propagation = false;
-          opt_env_mode = ConstrainWrites;
-          opt_enforce_local_inference_annotations = true;
-        }
+        { o with opt_any_propagation = false; opt_env_mode = ConstrainWrites }
 
       let visit =
         let mapper =

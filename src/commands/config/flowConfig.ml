@@ -53,7 +53,6 @@ module Opts = struct
     direct_dependent_files_fix: bool option;
     emoji: bool option;
     enable_const_params: bool option;
-    enforce_local_inference_annotations: bool;
     enforce_strict_call_arity: bool;
     enums: bool;
     env_mode: Options.env_mode;
@@ -175,7 +174,6 @@ module Opts = struct
       direct_dependent_files_fix = None;
       emoji = None;
       enable_const_params = None;
-      enforce_local_inference_annotations = true;
       enforce_strict_call_arity = true;
       enums = false;
       env_mode = Options.ConstrainWrites;
@@ -449,9 +447,6 @@ module Opts = struct
       ~init:(fun opts -> { opts with haste_paths_includes = [] })
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
-
-  let enforce_local_inference_annotations =
-    boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
 
   let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
@@ -736,7 +731,6 @@ module Opts = struct
       );
       ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
-      ("enforce_local_inference_annotations", enforce_local_inference_annotations);
       ("inference_mode", inference_mode_parser);
       ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
@@ -1360,8 +1354,6 @@ let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 let emoji c = c.options.Opts.emoji
 
 let enable_const_params c = c.options.Opts.enable_const_params
-
-let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
 
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 

@@ -439,7 +439,7 @@ let rec resolve_binding_partial cx reason loc b =
     in
     let () =
       match hint with
-      | Hint_api.Hint_None when Context.enforce_local_inference_annotations cx ->
+      | Hint_api.Hint_None ->
         Flow_js.add_output
           cx
           (Error_message.EMissingLocalAnnotation { reason; hint_available = false })

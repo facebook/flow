@@ -84,8 +84,6 @@ val emoji : config -> bool option
 
 val enable_const_params : config -> bool option
 
-val enforce_local_inference_annotations : config -> bool
-
 val enforce_strict_call_arity : config -> bool
 
 val enums : config -> bool
