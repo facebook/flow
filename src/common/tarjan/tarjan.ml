@@ -64,7 +64,7 @@ struct
       w.on_stack <- false;
       if w == v then (
         state.stack <- stack;
-        state.components <- (w.value, acc) :: state.components
+        state.components <- (w.value, List.rev acc) :: state.components
       ) else
         collect_scc state v (w.value :: acc) stack
 
