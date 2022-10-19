@@ -10,12 +10,7 @@ module type S = sig
 
   type callback = use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t -> Type.t
 
-  val empty :
-    ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-    ?default:Type.t Default.t ->
-    annot:bool ->
-    Type.t ->
-    state
+  val empty : ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t -> annot:bool -> Type.t -> state
 
   val pattern :
     Context.t ->

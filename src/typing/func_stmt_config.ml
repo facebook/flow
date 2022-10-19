@@ -78,8 +78,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     | Object { annot; properties; comments } ->
       let default = eval_default cx default in
       let properties =
-        let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
-        let init = Destructuring.empty ?default t ~annot:has_anno in
+        let init = Destructuring.empty t ~annot:has_anno in
         let f = destruct cx in
         Destructuring.object_properties cx ~f init properties
       in
@@ -93,8 +92,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     | Array { annot; elements; comments } ->
       let default = eval_default cx default in
       let elements =
-        let default = Base.Option.map default ~f:(fun ((_, t), _) -> Default.expr t) in
-        let init = Destructuring.empty ?default t ~annot:has_anno in
+        let init = Destructuring.empty t ~annot:has_anno in
         let f = destruct cx in
         Destructuring.array_elements cx ~f init elements
       in

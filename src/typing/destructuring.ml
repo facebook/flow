@@ -25,13 +25,12 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     parent: Type.t option;
     current: Type.t;
     init: (ALoc.t, ALoc.t) Flow_ast.Expression.t option;
-    default: Type.t Default.t option;
     annot: bool;
   }
 
   type callback = use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t -> Type.t
 
-  let empty ?init ?default ~annot current = { parent = None; current; init; default; annot }
+  let empty ?init ~annot current = { parent = None; current; init; annot }
 
   let destruct cx reason ~annot selector t =
     let kind =
@@ -47,16 +46,15 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
   let pattern_default cx acc = function
     | None -> (acc, None)
     | Some e ->
-      let { current; default; annot; _ } = acc in
-      let (((loc, t), _) as e) = Statement.expression cx e in
-      let default = Some (Default.expr ?default t) in
+      let { current; annot; _ } = acc in
+      let (((loc, _), _) as e) = Statement.expression cx e in
       let reason = mk_reason RDefaultValue loc in
       let current = destruct cx reason ~annot Default current in
-      let acc = { acc with current; default } in
+      let acc = { acc with current } in
       (acc, Some e)
 
   let array_element cx acc i loc =
-    let { current; init; default; annot; _ } = acc in
+    let { current; init; annot; _ } = acc in
     let key =
       DefT (mk_reason RNumber loc, bogus_trust (), NumT (Literal (None, (float i, string_of_int i))))
     in
@@ -91,18 +89,16 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       | Some t -> (None, t)
       | None -> (Some current, destruct cx reason ~annot (Elem key) current)
     in
-    let default = Base.Option.map default ~f:(Default.elem key reason) in
-    { acc with parent; current; init; default }
+    { acc with parent; current; init }
 
   let array_rest_element cx acc i loc =
-    let { current; default; annot; _ } = acc in
+    let { current; annot; _ } = acc in
     let reason = mk_reason RArrayPatternRestProp loc in
     let (parent, current) = (Some current, destruct cx reason ~annot (ArrRest i) current) in
-    let default = Base.Option.map default ~f:(Default.arr_rest i reason) in
-    { acc with parent; current; default }
+    { acc with parent; current }
 
   let object_named_property ~has_default cx acc loc x comments =
-    let { current; init; default; annot; _ } = acc in
+    let { current; init; annot; _ } = acc in
     let reason = mk_reason (RProperty (Some (OrdinaryName x))) loc in
     let init =
       Base.Option.map init ~f:(fun init ->
@@ -119,15 +115,6 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     in
     let refinement =
       Base.Option.bind init ~f:(fun init -> Refinement.get ~allow_optional:true cx init loc)
-    in
-    let default =
-      Base.Option.map default ~f:(fun default ->
-          let d = Default.prop x reason has_default default in
-          if has_default then
-            Default.default reason d
-          else
-            d
-      )
     in
     let (parent, current) =
       match refinement with
@@ -150,10 +137,10 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
          *)
         Type_inference_hooks_js.dispatch_lval_hook cx x loc (Type_inference_hooks_js.Parent t)
     in
-    { acc with parent; current; init; default }
+    { acc with parent; current; init }
 
   let object_computed_property cx acc e =
-    let { current; init; default; annot; _ } = acc in
+    let { current; init; annot; _ } = acc in
     let (((loc, t), _) as e') = Statement.expression cx e in
     let reason = mk_reason (RProperty None) loc in
     let init =
@@ -166,15 +153,13 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       )
     in
     let (parent, current) = (Some current, destruct cx reason ~annot (Elem t) current) in
-    let default = Base.Option.map default ~f:(Default.elem t reason) in
-    ({ acc with parent; current; init; default }, e')
+    ({ acc with parent; current; init }, e')
 
   let object_rest_property cx acc xs loc =
-    let { current; default; annot; _ } = acc in
+    let { current; annot; _ } = acc in
     let reason = mk_reason RObjectPatternRestProp loc in
     let (parent, current) = (Some current, destruct cx reason ~annot (ObjRest xs) current) in
-    let default = Base.Option.map default ~f:(Default.obj_rest xs reason) in
-    { acc with parent; current; default }
+    { acc with parent; current }
 
   let object_property
       cx ~has_default (acc : state) xs (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key) :
@@ -197,7 +182,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key)
 
   let identifier cx ~f acc name_loc name =
-    let { parent; current = _; init; default; annot = _ } = acc in
+    let { parent; current = _; init; annot = _ } = acc in
     let () =
       match parent with
       (* If there was a parent pattern, we already dispatched the hook if relevant. *)
@@ -218,10 +203,9 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
            {
              var = Some reason;
              init =
-               (match (default, init) with
-               | (Some (Default.Expr t), _) -> reason_of_t t
-               | (_, Some init) -> mk_expression_reason init
-               | _ -> reason_of_t current);
+               (match init with
+               | Some init -> mk_expression_reason init
+               | None -> reason_of_t current);
            }
         )
     in
