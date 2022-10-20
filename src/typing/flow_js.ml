@@ -6123,6 +6123,8 @@ struct
          anyways, so it is not unreasonable to just not trust them *)
       true
     | UseT (_, OpenT (_, id)) -> any_prop_tvar cx id
+    (* AnnotTs are 0->1, so there's no need to propagate any inside them *)
+    | UseT (_, AnnotT _) -> true
     | AdderT _
     | AndT _
     | ArrRestT _
@@ -6198,9 +6200,6 @@ struct
     | ToStringT _
     | UnaryMinusT _
     | UnifyT _
-    (* We have to propagate through AnnotTs because they may contain implicitly
-     * instantiated targs. Already handled in __flow by turning into a ReposUseT *)
-    | UseT (_, AnnotT _)
     | UseT (_, MaybeT _) (* used to filter maybe *)
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
@@ -6344,11 +6343,10 @@ struct
     | ObjProtoT _
     | NullProtoT _ ->
       true
+    (* AnnotTs are 0->1, so there's no need to propagate any inside them *)
+    | AnnotT _ -> true
     | OpenT (_, id) -> any_prop_tvar cx id
     (* Handled already in __flow *)
-    (* We have to propagate through AnnotTs because they may contain implicitly
-     * instantiated targs *)
-    | AnnotT _
     | ExactT _
     | ThisClassT _
     | EvalT _
