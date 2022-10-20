@@ -120,7 +120,7 @@ function startWatchAndRun(suites: Set<string>, args: Args) {
     const runSet = queuedSet;
     queuedSet = new Set<string>();
 
-    const suitesToRun = {};
+    const suitesToRun: {[string]: Suite} = {};
     for (const suiteName of runSet) {
       try {
         suitesToRun[suiteName] = loadSuite(suiteName);
@@ -408,7 +408,7 @@ async function testRunner(args: Args): Promise<void> {
   if (args.watch) {
     startWatchAndRun(suites, args);
   } else {
-    const loadedSuites = {};
+    const loadedSuites: {[string]: Suite} = {};
     for (const suiteName of suites) {
       loadedSuites[suiteName] = loadSuite(suiteName);
     }

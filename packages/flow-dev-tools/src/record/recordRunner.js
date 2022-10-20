@@ -20,6 +20,7 @@ const {loadSuite} = require('../test/findTests');
 const {default: RunQueue} = require('../test/RunQueue');
 const {getTestsDir} = require('../constants');
 
+import type {Suite} from '../test/Suite';
 import type {Args} from './recordCommand';
 import type {CallSuggestion} from '../test/assertions/assertionTypes';
 
@@ -110,7 +111,7 @@ async function runner(args: Args): Promise<void> {
     suites = await findTestsByName(args.suites);
   }
 
-  const loadedSuites = {};
+  const loadedSuites: {[string]: Suite} = {};
   for (const suiteName of suites) {
     loadedSuites[suiteName] = loadSuite(suiteName);
   }

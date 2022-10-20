@@ -119,8 +119,8 @@ class Base<T: Object> {
   static parse(): any {
     const boolean = [];
     const string = [];
-    const defaults = {};
-    const alias = {};
+    const defaults: {[string]: mixed} = {};
+    const alias: {[string]: string | Array<string>} = {};
 
     const flags = this.getAllFlags();
     for (const flag of flags) {

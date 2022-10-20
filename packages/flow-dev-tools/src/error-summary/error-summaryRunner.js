@@ -20,7 +20,7 @@ async function runner(args: Args): Promise<void> {
     args.flowconfigName,
   );
 
-  var error_summary = {};
+  var error_summary: {[string]: number} = {};
   var files = new Set();
   flow_result.errors.forEach(error =>
     error.message.forEach(err => {
