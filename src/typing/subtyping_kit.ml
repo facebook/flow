@@ -662,7 +662,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
         let reason_op = reason_of_t u in
         let t =
-          mk_typeapp_instance_annot cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts
+          reposition_reason
+            ~trace
+            cx
+            reason_tapp
+            ~use_desc:false
+            (mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts)
         in
         rec_flow_t cx trace ~use_op (t, u);
         TypeAppExpansion.pop ()
@@ -670,10 +675,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (_, TypeAppT (reason_tapp, use_op_tapp, c, ts)) ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
         let reason_op = reason_of_t l in
-        let t =
-          mk_typeapp_instance_annot cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts
-        in
-        rec_flow cx trace (l, UseT (use_op, t));
+        let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts in
+        (* We do the slingshot trick here so that we flow l to the results of making the typeapp
+         * instead of adding another lower bound to t. We can't use an Annot here, which would do
+         * that for us, because ts may not be 0->1, so using them to make an Annot would break
+         * invariants that we rely on. In particular, it would force us to traverse AnnotTs to
+         * do any propagation, which is extremely costly. *)
+        rec_flow cx trace (t, ReposUseT (reason_tapp, false, use_op, l));
         TypeAppExpansion.pop ()
       )
     (**********************)
