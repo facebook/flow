@@ -9364,6 +9364,11 @@ struct
     flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
     mk_instance_raw cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
 
+  and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
+    let t = Tvar.mk cx reason_tapp in
+    flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
+    mk_instance_source cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
+
   and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts =
     let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts in
     mk_instance cx ~trace reason_tapp t
@@ -9371,18 +9376,19 @@ struct
   and mk_instance cx ?trace instance_reason ?use_desc c =
     mk_instance_raw cx ?trace instance_reason ?use_desc ~reason_type:instance_reason c
 
+  and mk_instance_source cx ?trace instance_reason ~reason_type c =
+    Tvar.mk_where cx instance_reason (fun t ->
+        (* this part is similar to making a runtime value *)
+        flow_opt_t
+          cx
+          ?trace
+          ~use_op:unknown_use
+          (c, DefT (reason_type, bogus_trust (), TypeT (InstanceKind, t)))
+    )
+
   and mk_instance_raw cx ?trace instance_reason ?(use_desc = false) ~reason_type c =
     (* Make an annotation. *)
-    let source =
-      Tvar.mk_where cx instance_reason (fun t ->
-          (* this part is similar to making a runtime value *)
-          flow_opt_t
-            cx
-            ?trace
-            ~use_op:unknown_use
-            (c, DefT (reason_type, bogus_trust (), TypeT (InstanceKind, t)))
-      )
-    in
+    let source = mk_instance_source cx ?trace instance_reason ~reason_type c in
     AnnotT (instance_reason, source, use_desc)
 
   and reposition_reason cx ?trace reason ?(use_desc = false) t =

@@ -64,6 +64,17 @@ module type BASE = sig
     Type.t list ->
     Type.t
 
+  val mk_typeapp_instance :
+    Context.t ->
+    ?trace:Type.trace ->
+    use_op:Type.use_op ->
+    reason_op:Reason.reason ->
+    reason_tapp:Reason.reason ->
+    ?cache:Reason.reason list ->
+    Type.t ->
+    Type.t list ->
+    Type.t
+
   val resolve_id :
     Context.t ->
     Type.trace ->
