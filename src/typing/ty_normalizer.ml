@@ -659,7 +659,7 @@ end = struct
     let trace = Trace.dummy_trace in
     let reason_op = reason in
     let reason_tapp = reason in
-    let t = Flow_js.mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
+    let t = Flow_js.mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
     cont ~env t
 
   module Reason_utils = struct

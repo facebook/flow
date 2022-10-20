@@ -53,7 +53,7 @@ module type BASE = sig
 
   val filter_optional : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.ident
 
-  val mk_typeapp_instance :
+  val mk_typeapp_instance_annot :
     Context.t ->
     ?trace:Type.trace ->
     use_op:Type.use_op ->

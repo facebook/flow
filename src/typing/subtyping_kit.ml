@@ -661,14 +661,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (TypeAppT (reason_tapp, use_op_tapp, c, ts), _) ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
         let reason_op = reason_of_t u in
-        let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts in
+        let t =
+          mk_typeapp_instance_annot cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts
+        in
         rec_flow_t cx trace ~use_op (t, u);
         TypeAppExpansion.pop ()
       )
     | (_, TypeAppT (reason_tapp, use_op_tapp, c, ts)) ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
         let reason_op = reason_of_t l in
-        let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts in
+        let t =
+          mk_typeapp_instance_annot cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts
+        in
         rec_flow cx trace (l, UseT (use_op, t));
         TypeAppExpansion.pop ()
       )

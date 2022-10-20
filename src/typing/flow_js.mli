@@ -50,7 +50,7 @@ end
 
 val get_builtin_typeapp : Context.t -> ?trace:Type.trace -> reason -> name -> Type.t list -> Type.t
 
-val mk_typeapp_instance :
+val mk_typeapp_instance_annot :
   Context.t ->
   ?trace:Type.trace ->
   use_op:Type.use_op ->

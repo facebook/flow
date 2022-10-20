@@ -1309,7 +1309,9 @@ struct
         | (TypeAppT (reason_tapp, use_op, c, ts), MethodT (_, _, _, _, _, _))
         | (TypeAppT (reason_tapp, use_op, c, ts), PrivateMethodT (_, _, _, _, _, _, _, _)) ->
           let reason_op = reason_of_use_t u in
-          let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp ~cache:[] c ts in
+          let t =
+            mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp ~cache:[] c ts
+          in
           rec_flow cx trace (t, u)
         (* This is the second step in checking a TypeAppT (c, ts) ~> TypeAppT (c, ts).
          * The first step is in subtyping_kit.ml, and concretizes the c for our
@@ -1397,7 +1399,7 @@ struct
         | (TypeAppT (reason_tapp, use_op, c, ts), _) ->
           if TypeAppExpansion.push_unless_loop cx (c, ts) then (
             let reason_op = reason_of_use_t u in
-            let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
+            let t = mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
             rec_flow cx trace (t, u);
             TypeAppExpansion.pop ()
           )
@@ -6851,7 +6853,7 @@ struct
     | GenericT { bound = TypeAppT (_, use_op_tapp, c, ts); reason = reason_tapp; id; name } ->
       let destructor = TypeDestructorT (use_op, reason, d) in
       let t =
-        mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts
+        mk_typeapp_instance_annot cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts
       in
       rec_flow
         cx
@@ -6862,7 +6864,7 @@ struct
     | TypeAppT (reason_tapp, use_op_tapp, c, ts) ->
       let destructor = TypeDestructorT (use_op, reason, d) in
       let t =
-        mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts
+        mk_typeapp_instance_annot cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts
       in
       rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
     (* If we are destructuring a union, evaluating the destructor on the union
@@ -9357,7 +9359,7 @@ struct
     typeapp reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
-  and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
+  and mk_typeapp_instance_annot cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
     let t = Tvar.mk cx reason_tapp in
     flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
     mk_instance_raw cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
