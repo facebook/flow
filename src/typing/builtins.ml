@@ -18,7 +18,7 @@ let get_builtin builtins name ~on_missing =
   | None -> on_missing ()
   | Some (NotYetWritten t)
   | Some (Entry t) ->
-    t
+    Ok t
 
 (* Having to pass flow_t is not ideal. In a more ideal world, we should be able to functorize
  * this module over FLOW_COMMON so that we could call flow_t directly. Unfortunately, even that

@@ -53,8 +53,6 @@ val in_async_scope : Context.t -> bool
 
 val in_predicate_scope : Context.t -> bool
 
-val get_global_value_type : Context.t -> Reason.name -> Reason.t -> Type.t
-
 (** Set the current scope kind and return the previous scope kind. *)
 val set_scope_kind : Context.t -> Name_def.scope_kind -> Name_def.scope_kind
 

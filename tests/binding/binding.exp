@@ -1121,6 +1121,20 @@ References:
                ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- tdz.js:79:16
+
+Cannot use variable `C` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   tdz.js:79:16
+   79| var x2: typeof C // error
+                      ^
+
+References:
+   tdz.js:82:7
+   82| class C {}
+             ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- tdz.js:80:13
 
 Cannot use variable `C` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
@@ -1182,6 +1196,21 @@ References:
              ^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- tdz_class_fields.js:7:25
+
+Cannot use variable `forwardReferenced` [1] because the declaration either comes later or was skipped.
+[reference-before-declaration]
+
+   tdz_class_fields.js:7:25
+    7|     static #d: number = forwardReferenced; // Should error
+                               ^^^^^^^^^^^^^^^^^
+
+References:
+   tdz_class_fields.js:10:7
+   10| const forwardReferenced = 0;
+             ^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- unbound.js:3:1
 
 Cannot resolve name `unbound`. [cannot-resolve-name]
@@ -1198,11 +1227,43 @@ Cannot resolve name `UnboundType`. [cannot-resolve-name]
                  ^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- unbound.js:11:11
+
+Cannot resolve name `UnboundType`. [cannot-resolve-name]
+
+   11| (unbound: UnboundType); // Error
+                 ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- unbound.js:12:11
+
+Cannot resolve name `UnboundType`. [cannot-resolve-name]
+
+   12| (unbound: UnboundType); // Error
+                 ^^^^^^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- unbound.js:14:1
 
 Cannot resolve name `unboundFunction`. [cannot-resolve-name]
 
    14| unboundFunction(); // Error
+       ^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- unbound.js:15:1
+
+Cannot resolve name `unboundFunction`. [cannot-resolve-name]
+
+   15| unboundFunction(); // No error, only error once
+       ^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- unbound.js:16:1
+
+Cannot resolve name `unboundFunction`. [cannot-resolve-name]
+
+   16| unboundFunction(); // No error, only error once
        ^^^^^^^^^^^^^^^
 
 
@@ -1214,5 +1275,21 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
            ^^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------------- unbound.js:22:5
 
-Found 90 errors
+Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
+
+   22|     unboundFunction2(); // Error
+           ^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- unbound.js:25:5
+
+Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
+
+   25|     unboundFunction2(); // Error
+           ^^^^^^^^^^^^^^^^
+
+
+
+Found 98 errors

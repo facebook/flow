@@ -548,5 +548,19 @@ References:
                ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ undeclared.js:8:5
 
-Found 33 errors
+Cannot use variable `c` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   undeclared.js:8:5
+    8|     c; // error: declaration comes later
+           ^
+
+References:
+   undeclared.js:10:9
+   10|   const c: ?number = 0;
+               ^ [1]
+
+
+
+Found 34 errors

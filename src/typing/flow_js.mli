@@ -130,6 +130,13 @@ val add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit
 
 val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
 
+val get_builtin_result :
+  Context.t ->
+  ?trace:Type.trace ->
+  name ->
+  reason ->
+  (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result
+
 val get_builtin_tvar : Context.t -> ?trace:Type.trace -> name -> reason -> Type.ident
 
 val get_builtin_type : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t

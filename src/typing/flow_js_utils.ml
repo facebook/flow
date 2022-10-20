@@ -704,7 +704,19 @@ let instantiate_poly_param_upper_bounds cx typeparams =
 
 (** Builtins *)
 
-let lookup_builtin_strict cx x reason =
+let emit_cacheable_env_error cx loc err =
+  let open Error_message in
+  let err =
+    match err with
+    | Env_api.ReferencedBeforeDeclaration { name; def_loc } ->
+      EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
+    | Env_api.BuiltinLookupFailed { reason_desc; potential_generator; name } ->
+      EBuiltinLookupFailed
+        { reason = mk_reason reason_desc loc; potential_generator; name = Some name }
+  in
+  add_output cx err
+
+let lookup_builtin_strict_result cx x reason =
   let builtins = Context.builtins cx in
   Builtins.get_builtin builtins x ~on_missing:(fun () ->
       let potential_generator =
@@ -712,15 +724,28 @@ let lookup_builtin_strict cx x reason =
         |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern (uninternal_name x) 0)
         |> Base.Option.map ~f:snd
       in
-      add_output
-        cx
-        (Error_message.EBuiltinLookupFailed { reason; name = Some x; potential_generator });
-      AnyT.error_of_kind UnresolvedName reason
+      Error
+        ( AnyT.error_of_kind UnresolvedName reason,
+          Nel.one
+            (Env_api.BuiltinLookupFailed
+               { reason_desc = desc_of_reason reason; name = x; potential_generator }
+            )
+        )
   )
+
+let apply_env_errors cx loc = function
+  | Ok t -> t
+  | Error (t, errs) ->
+    Nel.iter (emit_cacheable_env_error cx loc) errs;
+    t
+
+let lookup_builtin_strict cx x reason =
+  lookup_builtin_strict_result cx x reason |> apply_env_errors cx (aloc_of_reason reason)
 
 let lookup_builtin_with_default cx x default =
   let builtins = Context.builtins cx in
-  Builtins.get_builtin builtins x ~on_missing:(fun () -> default)
+  let builtin = Builtins.get_builtin builtins x ~on_missing:(fun () -> Ok default) in
+  Base.Result.ok_exn builtin
 
 let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_strict cx x reason in

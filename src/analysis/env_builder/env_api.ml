@@ -179,6 +179,22 @@ module type S = sig
     refinement_of_id: int -> Refi.refinement;
   }
 
+  type cacheable_env_error =
+    | ReferencedBeforeDeclaration of {
+        def_loc: ALoc.t;
+        name: string;
+      }
+    | BuiltinLookupFailed of {
+        reason_desc: Reason.reason_desc;
+        potential_generator: string option;
+        name: Reason.name;
+      }
+
+  val map_result :
+    f:('a -> 'b) ->
+    ('a, 'a * cacheable_env_error Nel.t) result ->
+    ('b, 'b * cacheable_env_error Nel.t) result
+
   val empty : env_info
 
   val has_assigning_write : def_loc_type * L.t -> env_entry EnvMap.t -> bool
@@ -211,6 +227,17 @@ module Make
 
   module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
     Scope_builder.Make (L) (Scope_api)
+
+  type cacheable_env_error =
+    | ReferencedBeforeDeclaration of {
+        def_loc: ALoc.t;
+        name: string;
+      }
+    | BuiltinLookupFailed of {
+        reason_desc: Reason.reason_desc;
+        potential_generator: string option;
+        name: Reason.name;
+      }
 
   type literal_check =
     | SingletonNum of ALoc.t * bool * float * string
@@ -391,6 +418,11 @@ module Make
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
+
+  let map_result ~f res =
+    match res with
+    | Ok t -> Ok (f t)
+    | Error (t, x) -> Error (f t, x)
 
   let has_assigning_write kind_and_loc values =
     match EnvMap.find_opt kind_and_loc values with

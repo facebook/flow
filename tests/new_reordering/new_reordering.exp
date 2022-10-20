@@ -252,7 +252,6 @@ const even_obj = {
     return odd_obj.odd(x - 1)
   }
 }
-
 >>> Launching report...
 
 Stats:

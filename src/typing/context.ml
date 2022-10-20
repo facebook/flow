@@ -160,9 +160,10 @@ type component_t = {
   mutable implicit_instantiation_results: Type.t list ALocFuzzyMap.t;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
-  mutable global_value_cache: Type.t NameUtils.Map.t;
-  mutable env_value_cache: Type.t IMap.t;
-  mutable env_type_cache: Type.t IMap.t;
+  mutable global_value_cache:
+    (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result NameUtils.Map.t;
+  mutable env_value_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
+  mutable env_type_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
   mutable annot_graph: Type.AConstraint.node IMap.t;
   (* Used to power an autofix that takes the lower bounds of a parameter and turn them into an

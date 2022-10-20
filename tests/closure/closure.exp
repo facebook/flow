@@ -201,6 +201,22 @@ Cannot resolve name `x`. [cannot-resolve-name]
           ^
 
 
+Error ------------------------------------------------------------------------------------------------- Closure.js:138:5
+
+Cannot resolve name `x`. [cannot-resolve-name]
+
+   138|     x = 42;
+            ^
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:141:4
+
+Cannot resolve name `x`. [cannot-resolve-name]
+
+   141|   (x: void); // should error
+           ^
+
+
 Error ---------------------------------------------------------------------------------------------- cond_havoc.js:12:10
 
 Cannot return `x` because string [1] is incompatible with number [2]. [incompatible-return]
@@ -236,4 +252,4 @@ References:
 
 
 
-Found 14 errors
+Found 16 errors

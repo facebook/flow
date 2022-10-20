@@ -9321,27 +9321,45 @@ struct
    *
    * If you are not in a lib file, then this behaves as a strict lookup. We error and return Any
    * in the case where the builtin is not already in the map *)
-  and get_builtin_tvar cx ?trace:_ x reason =
+  and get_builtin_tvar_result cx ?trace:_ x reason =
     if Context.current_phase cx <> Context.InitLib then
-      lookup_builtin_strict_tvar cx x reason
+      lookup_builtin_strict_tvar_result cx x reason
     else
       let builtins = Context.builtins cx in
       let builtin =
         Builtins.get_builtin builtins x ~on_missing:(fun () ->
             let tvar = Tvar.mk cx reason in
             Builtins.add_not_yet_seen_builtin builtins x tvar;
-            tvar
+            Ok tvar
         )
       in
-      Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t))
+      Env_api.map_result
+        ~f:(fun builtin -> Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t)))
+        builtin
 
-  and get_builtin cx ?trace x reason = OpenT (reason, get_builtin_tvar cx ?trace x reason)
+  and get_builtin_result cx ?trace x reason =
+    Env_api.map_result (get_builtin_tvar_result cx ?trace x reason) ~f:(fun n -> OpenT (reason, n))
+
+  and get_builtin cx ?trace x reason =
+    get_builtin_result cx ?trace x reason
+    |> Flow_js_utils.apply_env_errors cx (aloc_of_reason reason)
+
+  and get_builtin_tvar cx ?trace x reason =
+    get_builtin_tvar_result cx ?trace x reason
+    |> Flow_js_utils.apply_env_errors cx (aloc_of_reason reason)
 
   (* Looks up a builtin and errors if it is not found. Does not add an entry that requires a
    * write later. *)
+  and lookup_builtin_strict_tvar_result cx x reason =
+    let builtin = Flow_js_utils.lookup_builtin_strict_result cx x reason in
+
+    Env_api.map_result builtin ~f:(fun builtin ->
+        Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t))
+    )
+
   and lookup_builtin_strict_tvar cx x reason =
-    let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in
-    Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t))
+    lookup_builtin_strict_tvar_result cx x reason
+    |> Flow_js_utils.apply_env_errors cx (aloc_of_reason reason)
 
   and lookup_builtin_strict cx x reason = OpenT (reason, lookup_builtin_strict_tvar cx x reason)
 

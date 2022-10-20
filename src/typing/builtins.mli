@@ -9,7 +9,8 @@ type t
 
 val add_not_yet_seen_builtin : t -> Reason.name -> Type.t -> unit
 
-val get_builtin : t -> Reason.name -> on_missing:(unit -> Type.t) -> Type.t
+val get_builtin :
+  t -> Reason.name -> on_missing:(unit -> (Type.t, 'a) result) -> (Type.t, 'a) result
 
 val set_builtin : flow_t:(Type.t * Type.t -> unit) -> t -> Reason.name -> Type.t -> unit
 

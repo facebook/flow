@@ -1,3 +1,31 @@
+Error ---------------------------------------------------------------------------------------------------- class.js:5:26
+
+Cannot use variable `D` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   class.js:5:26
+   5| class B extends A<typeof D & C> { }
+                               ^
+
+References:
+   class.js:9:7
+   9| class D {}
+            ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:7:26
+
+Cannot use variable `D` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   class.js:7:26
+   7| class C extends A<typeof D>{ }
+                               ^
+
+References:
+   class.js:9:7
+   9| class D {}
+            ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- constrain_array.js:5:2
 
 Cannot cast `x[0]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -763,4 +791,4 @@ References:
 
 
 
-Found 47 errors
+Found 49 errors

@@ -421,9 +421,11 @@ val run_in_synthesis_mode : t -> (unit -> 'a) -> ISet.t * 'a
 
 val clear_master_shared : t -> master_context -> unit
 
-val add_global_value_cache_entry : t -> Reason.name -> Type.t -> unit
+val add_global_value_cache_entry :
+  t -> Reason.name -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result -> unit
 
-val add_env_cache_entry : t -> for_value:bool -> int -> Type.t -> unit
+val add_env_cache_entry :
+  t -> for_value:bool -> int -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result -> unit
 
 val add_hint_eval_cache_entry : t -> int -> Type.t option -> unit
 
@@ -519,9 +521,11 @@ val find_trust_graph : t -> Trust_constraint.ident -> Trust_constraint.constrain
 
 val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root
 
-val global_value_cache_find_opt : t -> Reason.name -> Type.t option
+val global_value_cache_find_opt :
+  t -> Reason.name -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result option
 
-val env_cache_find_opt : t -> for_value:bool -> int -> Type.t option
+val env_cache_find_opt :
+  t -> for_value:bool -> int -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result option
 
 val hint_eval_cache_find_opt : t -> int -> Type.t option option
 

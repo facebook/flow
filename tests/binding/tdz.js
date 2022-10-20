@@ -76,7 +76,7 @@ function f5() {
 //
 
 var x1: C;       // ok
-var x2: typeof C // ok
+var x2: typeof C // error
 var y = new C(); // error: let ref before decl from value position
 
 class C {}

@@ -8,8 +8,8 @@ function actuallyBound() {
 }
 
 (unbound: UnboundType); // Error
-(unbound: UnboundType); // No error, only error once
-(unbound: UnboundType); // No error, only error once
+(unbound: UnboundType); // Error
+(unbound: UnboundType); // Error
 
 unboundFunction(); // Error
 unboundFunction(); // No error, only error once
@@ -19,8 +19,8 @@ if (true) {
     unboundFunction2(); // Error
 }
 if (true) {
-    unboundFunction2(); // No error, only error once
+    unboundFunction2(); // Error
 }
 if (true) {
-    unboundFunction2(); // No error, only error once
+    unboundFunction2(); // Error
 }
