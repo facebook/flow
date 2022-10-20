@@ -132,7 +132,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
         `,
       ),
     addCode(`
-      const o2 = Object.assign({}, ...objArr);
+      const o2 = Object.assign(({}: {x?: string, y?: number}), ...objArr);
       o2.x;
     `)
       .noNewErrors()

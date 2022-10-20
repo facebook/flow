@@ -1,4 +1,3 @@
 [options]
-exact_empty_objects=true
 
 [lints]

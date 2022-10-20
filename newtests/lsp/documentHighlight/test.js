@@ -164,23 +164,8 @@ module.exports = (suite(
         // Property definition on an object without an annotation
         snapshot('objects.js', 13, 12, 'objects_5.json'),
 
-        // Introduction of a shadow property via a write
-        snapshot('objects.js', 18, 4, 'objects_6.json'),
-        // Use of a shadow property
-        snapshot('objects.js', 19, 4, 'objects_7.json'),
-
-        // Introduction of a shadow property via a read
-        snapshot('objects.js', 22, 4, 'objects_8.json'),
-        // Write of a shadow property introduced via a read
-        snapshot('objects.js', 23, 4, 'objects_9.json'),
-
-        // Introduction of a shadow property that is never written
-        snapshot('objects.js', 26, 4, 'objects_10.json'),
-        // Read of a shadow property that is never written
-        snapshot('objects.js', 27, 4, 'objects_11.json'),
-
         // Use of a property that came through type spread
-        snapshot('objects.js', 34, 25, 'objects_12.json'),
+        snapshot('objects.js', 22, 25, 'objects_12.json'),
 
         // Object literal method
         snapshot('objects.js', 7, 21, 'objects_13.json'),
@@ -189,10 +174,10 @@ module.exports = (suite(
         snapshot('objects.js', 7, 31, 'objects_14.json'),
 
         // Method in object literal which flows into two types
-        snapshot('objects.js', 41, 13, 'objects_15.json'),
+        snapshot('objects.js', 29, 13, 'objects_15.json'),
 
         // Property in object literal which flows into two types
-        snapshot('objects.js', 41, 23, 'objects_16.json'),
+        snapshot('objects.js', 29, 23, 'objects_16.json'),
       ]),
       test('Declare', [
         addFiles(...fixtures),

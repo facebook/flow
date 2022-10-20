@@ -88,5 +88,5 @@ const getters_and_setters = {
 }
 
 Object.freeze({ foo() {this} }); // error
-Object.defineProperties({}, { foo() {this} }); // error
+Object.defineProperties(({}: {foo?: () => void}), { foo() {this} }); // error
 Object.create({}, { foo() {this} }) // error
