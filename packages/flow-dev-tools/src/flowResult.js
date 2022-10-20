@@ -84,7 +84,7 @@ const noErrors: FlowResult = {
 
 // Returns a result that is a - b
 function difference(a: FlowResult, b: FlowResult): FlowResult {
-  const oldHashes = {};
+  const oldHashes: {[string]: FlowError} = {};
   const errors = [];
   for (let error of b.errors) {
     const hash = JSON.stringify(error.message);
