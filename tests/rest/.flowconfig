@@ -1,4 +1,3 @@
 [options]
 no_flowlib=true
 all=true
-exact_empty_objects=true

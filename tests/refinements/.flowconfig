@@ -2,7 +2,6 @@
 module.system=haste
 no_flowlib=false
 all=true
-exact_empty_objects=true
 
 [libs]
 lib.js

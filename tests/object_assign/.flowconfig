@@ -6,4 +6,3 @@
 
 [options]
 no_flowlib=false
-exact_empty_objects=true

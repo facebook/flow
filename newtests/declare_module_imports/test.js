@@ -48,21 +48,15 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
     addCode('import type {CT} from "C";').noNewErrors(),
     addCode('import type {DT} from "D";').noNewErrors(),
     addCode(`
-      const cVal = {};
-      const dVal = {};
-      cVal.D = dVal;
-      dVal.C = cVal;
+      declare var cVal: CT;
+      const dVal = {C: cVal};
     `).noNewErrors(),
 
     addCode('(cVal: CT);').noNewErrors(),
     addCode('(cVal.D: DT);').noNewErrors(),
-    addCode('(cVal: DT);').noNewErrors(),
-    addCode('(cVal.D: CT);').noNewErrors(),
 
     addCode('(dVal: DT);').noNewErrors(),
     addCode('(dVal.C: CT);').noNewErrors(),
-    addCode('(dVal: CT);').noNewErrors(),
-    addCode('(dVal.C: DT);').noNewErrors(),
   ]),
 
   /**

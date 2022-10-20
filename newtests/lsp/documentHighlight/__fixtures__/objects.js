@@ -15,18 +15,6 @@ const b = {bar: ''};
 b.bar;
 b.bar;
 
-const c = {};
-c.bar = 4;
-c.bar;
-
-const d = {};
-d.bar;
-d.bar = 4;
-
-const e = {};
-e.bar;
-e.bar;
-
 type Spreaded = {
   ...Alias,
 };

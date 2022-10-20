@@ -1363,7 +1363,7 @@ let make_options
       |> Base.Option.value ~default:true;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_exact_empty_objects =
-      Base.Option.value (FlowConfig.exact_empty_objects flowconfig) ~default:false;
+      Base.Option.value (FlowConfig.exact_empty_objects flowconfig) ~default:true;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_facebook_module_interop = FlowConfig.facebook_module_interop flowconfig;
