@@ -12,7 +12,7 @@ type error_status = Vcs_utils.error_status =
   | Errored of string
 
 let hg ?cwd args =
-  let env = Sys_utils.inherit_env_with [| "NOSCMLOG=1"; "HGPLAIN=1" |] in
+  let env = `Extend [("NOSCMLOG", "1"); ("HGPLAIN", "1")] in
   exec ?cwd ~env "hg" args
 
 (** [merge_base a b] returns the hash of the common ancestor of [a] and [b]. *)
