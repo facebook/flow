@@ -102,3 +102,5 @@ const even_obj = {
     return odd_obj.odd(x - 1)
   }
 }
+
+const recursiveArrow = () => true ? 1 : recursiveArrow();

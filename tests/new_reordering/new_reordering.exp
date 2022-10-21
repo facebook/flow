@@ -157,10 +157,28 @@ References:
                               [7]
 
 
+Error ------------------------------------------------------------------------------------------------------- a.js:106:7
 
-Found 7 errors
+Cannot compute a type for `recursiveArrow` because its definition includes references to itself [1]. Please add an
+annotation to this definition [2] [recursive-definition]
+
+   a.js:106:7
+   106| const recursiveArrow = () => true ? 1 : recursiveArrow();
+              ^^^^^^^^^^^^^^
+
+References:
+   a.js:106:41
+   106| const recursiveArrow = () => true ? 1 : recursiveArrow();
+                                                ^^^^^^^^^^^^^^ [1]
+   a.js:106:26
+   106| const recursiveArrow = () => true ? 1 : recursiveArrow();
+                                  [2]
+
+
+
+Found 8 errors
 Annotating cycles...
->>> a.js (#changes: 10)
+>>> a.js (#changes: 11)
 //@flow
 
 
@@ -266,13 +284,15 @@ const even_obj = {
   }
 }
 
+const recursiveArrow = (): number => true ? 1 : recursiveArrow();
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:             10
-  Total size of annotations:               10
-  Number of cycles:                        10
+  Number of annotations added:             11
+  Total size of annotations:               11
+  Number of cycles:                        11
   Number of annotations skipped:            0
   Number of unannotatable cycles:           1
 

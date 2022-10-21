@@ -850,6 +850,7 @@ struct
       | Root (Annotation _)
       | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) ->
         []
+      | Root (FunctionValue { synthesizable_from_annotation = MissingReturn loc; _ }) -> [loc]
       | Root (ObjectValue { synthesizable = MissingMemberReturns locs; _ }) -> Nel.to_list locs
       | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
         begin
