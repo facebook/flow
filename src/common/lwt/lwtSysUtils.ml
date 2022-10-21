@@ -50,6 +50,43 @@ let prepare_args cmd args =
      instead, when we pass "". *)
   ("", Array.of_list (cmd :: args))
 
+(** [Lwt_process.spawn] incorrectly serializes the [env] argument on Windows
+  (https://github.com/ocsigen/lwt/issues/966). To work around this, ON WINDOWS,
+  we set the desired envs in the current process, let the spawned child inherit
+  our env, and then undo the changes. On other platforms, we explicitly pass
+  [env].
+
+  This function returns [None] on Windows and [Some env], where [env] is the
+  child's complete env, otherwise. It also returns a "restore" function that
+  will undo the env changes in the current process, if any. This only does
+  anything on Windows.
+
+  We only support extending the env rather than passing a clean new env,
+  so that we don't have to unset all of the existing envs on Windows and then
+  restore them. As of this writing, this is all we need anyway. *)
+let prepare_env = function
+  | None -> (None, Fun.id)
+  | Some (`Extend envs) ->
+    if Sys.win32 then
+      let prevs =
+        List.map
+          (fun (k, v) ->
+            let prev = Sys.getenv_opt k |> Option.value ~default:"" in
+            Unix.putenv k v;
+            (k, prev))
+          envs
+      in
+      let restore () = List.iter (fun (k, v) -> Unix.putenv k v) prevs in
+      (None, restore)
+    else
+      (* why do we use [unsafe_environment] and pass a potentially large
+         env around instead of the set/restore pattern? only Windows'
+         [Unix.putenv] lets you unset a variable by passing an empty string;
+         on Linux you would need to call unsetenv() which is not available
+         in OCaml. *)
+      let envs = List.map (fun (k, v) -> k ^ "=" ^ v) envs |> Array.of_list in
+      (Some (Array.append (Unix.unsafe_environment ()) envs), Fun.id)
+
 (** At least as of Lwt 5.5.0, [Lwt_process.with_process_full] tries to close
   the process even when [f] fails, and can raise an EBADF that swallows
   whatever the original exception was. https://github.com/ocsigen/lwt/issues/956
@@ -58,7 +95,18 @@ let prepare_args cmd args =
   reraise the original exception. We also use ppx_lwt instead of [Lwt.finalize]
   to improve backtraces. *)
 let with_process_full ?timeout ?env ?cwd cmd f =
-  let process = Lwt_process.open_process_full ?timeout ?env ?cwd cmd in
+  let (env, restore_env) = prepare_env env in
+  let process =
+    try
+      let process = Lwt_process.open_process_full ?timeout ?env ?cwd cmd in
+      restore_env ();
+      process
+    with
+    | e ->
+      let exn = Exception.wrap e in
+      restore_env ();
+      Exception.reraise exn
+  in
   let ignore_close process =
     try%lwt
       let%lwt _ = process#close in

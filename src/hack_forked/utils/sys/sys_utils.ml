@@ -5,14 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(** By default, when using [exec] the child inherits our environment.
-    At a low level it uses the extern `environ` variable. In OCaml,
-    that is exposed via [Unix.unsafe_environment ()]. If we pass our
-    own env to functions like [Lwt_process.open_* ~env], it replaces
-    instead of extends our process's env. [inherit_env_with [| "FOO=1" |]]
-    will explicitly include our env, plus set [FOO=1]. *)
-let inherit_env_with extras = Array.append (Unix.unsafe_environment ()) extras
-
 let realpath p =
   try Some (Unix.realpath p) with
   | Unix.Unix_error _ -> None
