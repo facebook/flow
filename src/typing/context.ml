@@ -773,9 +773,9 @@ let set_graph cx graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 let run_in_implicit_instantiation_mode cx f =
   let saved = in_implicit_instantiation cx in
   cx.ccx.in_implicit_instantiation <- true;
-  let result = f () in
+  let result = Base.Result.try_with f in
   cx.ccx.in_implicit_instantiation <- saved;
-  result
+  Base.Result.ok_exn result
 
 let run_in_post_inference_mode cx f =
   let saved = cx.phase in

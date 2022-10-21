@@ -104,3 +104,17 @@ function test8() {
   declare function f<T=string>(T => string): T;
   f(s => (s: string)); // ok
 }
+
+function test9() {
+  type M<O> = $ObjMap<
+    O,
+    // This overload selection problem will trigger a PolyT ~> CallT call outside of implicit
+    // instantiation. Correctly selecting the overload requires us to flow targ to bound, which is
+    // disabled during implicit instantiation.
+    (<T: string>(T) => string) & (<T: number>(T) => boolean)
+  >;
+  declare function id<T>(T): T;
+  // A regression test for an earlier bug where the overload is incorrectly selected, and causes
+  // an incompatibility.
+  const _: M<{| num: number |}> = {num: id(true)}; // ok
+}
