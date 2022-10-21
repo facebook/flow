@@ -1,3 +1,8 @@
+### 0.190.1
+
+* Fix a bug on Windows where the server would exit unexpectedly after `hg update`
+* Performance improvements
+
 ### 0.190.0
 
 Note:
