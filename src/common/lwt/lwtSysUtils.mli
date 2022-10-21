@@ -13,7 +13,12 @@ type command_result = {
   status: Unix.process_status;
 }
 
-val exec : ?env:string array -> ?cwd:string -> string -> string list -> command_result Lwt.t
+val exec :
+  ?env:[< `Extend of (string * string) list ] ->
+  ?cwd:string ->
+  string ->
+  string list ->
+  command_result Lwt.t
 
 val exec_with_timeout :
   timeout:float -> string -> string list -> (command_result, string) result Lwt.t
