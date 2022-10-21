@@ -584,27 +584,31 @@ struct
         | Value { hint; expr } ->
           let state = depends_of_hint state hint in
           depends_of_expression expr state
-        | ObjectValue
-            {
-              obj = { Ast.Expression.Object.properties; _ };
-              synthesizable = ObjectSynthesizable _;
-              _;
-            } ->
+        | ObjectValue { obj; synthesizable = ObjectSynthesizable _; _ } ->
           let open Ast.Expression.Object in
           let open Ast.Expression.Object.Property in
-          Base.List.fold properties ~init:state ~f:(fun state -> function
-            | Property
-                ( _,
-                  ( Method { value = (_, fn); _ }
-                  | Init
-                      {
-                        value = (_, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
-                        _;
-                      } )
-                ) ->
-              depends_of_fun true ALocMap.empty Hint_api.Hint_None ~statics:SMap.empty fn state
-            | _ -> failwith "Object not synthesizable"
-          )
+          let rec loop state { Ast.Expression.Object.properties; _ } =
+            Base.List.fold properties ~init:state ~f:(fun state -> function
+              | Property
+                  ( _,
+                    ( Method { key = Identifier _; value = (_, fn); _ }
+                    | Init
+                        {
+                          key = Identifier _;
+                          value = (_, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
+                          _;
+                        } )
+                  ) ->
+                depends_of_fun true ALocMap.empty Hint_api.Hint_None ~statics:SMap.empty fn state
+              | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Object obj); _ })
+                ->
+                loop state obj
+              | Property (_, Init { key = Identifier _; value; _ }) ->
+                depends_of_expression value state
+              | _ -> failwith "Object not synthesizable"
+            )
+          in
+          loop state obj
         | ObjectValue { obj; obj_loc; _ } ->
           depends_of_expression (obj_loc, Ast.Expression.Object obj) EnvMap.empty
         | FunctionValue

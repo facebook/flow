@@ -178,16 +178,8 @@ let rec resolve_binding_partial cx reason loc b =
     let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op, false)
-  | Root
-      (ObjectValue
-        {
-          obj_loc = loc;
-          obj = { Ast.Expression.Object.properties; _ };
-          synthesizable = ObjectSynthesizable _;
-        }
-        ) ->
+  | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
-    let reason = mk_reason RObjectLit loc in
     let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =
       let reason = func_reason ~async:false ~generator:false prop_loc in
       let (t, _) =
@@ -196,57 +188,90 @@ let rec resolve_binding_partial cx reason loc b =
       t
     in
 
-    let acc =
-      Base.List.fold
-        properties
-        ~init:(Statement.ObjectExpressionAcc.empty ~allow_sealed:true)
-        ~f:(fun acc prop ->
-          match prop with
-          | Property
-              ( prop_loc,
-                Property.Method
-                  {
-                    key =
-                      ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
-                      | Property.Literal
-                          (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-                    value = (fn_loc, fn);
-                  }
-              ) ->
-            let t = resolve_prop ~bind_this:false ~prop_loc ~fn_loc fn in
-            Statement.ObjectExpressionAcc.add_prop
-              (Properties.add_method (OrdinaryName name) (Some name_loc) t)
-              acc
-          | Property
-              ( _,
-                Property.Init
-                  {
-                    key =
-                      ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
-                      | Property.Literal
-                          (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-                    value =
-                      ( fn_loc,
-                        ((Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn) as fn_exp)
-                      );
-                    _;
-                  }
-              ) ->
-            let { Ast.Function.sig_loc; _ } = fn in
-            let bind_this =
-              match fn_exp with
-              | Ast.Expression.Function _ -> true
-              | _ -> false
-            in
-            let t = resolve_prop ~bind_this ~prop_loc:sig_loc ~fn_loc fn in
-            Statement.ObjectExpressionAcc.add_prop
-              (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
-              acc
-          | _ -> failwith "Object not synthesizable"
-      )
-    in
-    let obj_proto = ObjProtoT reason in
-    let t =
+    let rec mk_obj obj_loc { properties; _ } =
+      let reason = mk_reason RObjectLit obj_loc in
+      let obj_proto = ObjProtoT reason in
+      let acc =
+        Base.List.fold
+          properties
+          ~init:(Statement.ObjectExpressionAcc.empty ~allow_sealed:true)
+          ~f:(fun acc prop ->
+            match prop with
+            | Property
+                ( prop_loc,
+                  Property.Method
+                    {
+                      key =
+                        ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
+                        | Property.Literal
+                            (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                      value = (fn_loc, fn);
+                    }
+                ) ->
+              let t = resolve_prop ~bind_this:false ~prop_loc ~fn_loc fn in
+              Statement.ObjectExpressionAcc.add_prop
+                (Properties.add_method (OrdinaryName name) (Some name_loc) t)
+                acc
+            | Property
+                ( _,
+                  Property.Init
+                    {
+                      key =
+                        ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
+                        | Property.Literal
+                            (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                      value =
+                        ( fn_loc,
+                          ((Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn) as fn_exp)
+                        );
+                      _;
+                    }
+                ) ->
+              let { Ast.Function.sig_loc; _ } = fn in
+              let bind_this =
+                match fn_exp with
+                | Ast.Expression.Function _ -> true
+                | _ -> false
+              in
+              let t = resolve_prop ~bind_this ~prop_loc:sig_loc ~fn_loc fn in
+              Statement.ObjectExpressionAcc.add_prop
+                (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
+                acc
+            | Property
+                ( _,
+                  Property.Init
+                    {
+                      key =
+                        ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
+                        | Property.Literal
+                            (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                      value = (_, (Ast.Expression.Literal _ | Ast.Expression.Identifier _)) as exp;
+                      _;
+                    }
+                ) ->
+              let t = expression cx exp in
+              Statement.ObjectExpressionAcc.add_prop
+                (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
+                acc
+            | Property
+                ( _,
+                  Property.Init
+                    {
+                      key =
+                        ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
+                        | Property.Literal
+                            (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                      value = (obj_loc, Ast.Expression.Object obj);
+                      _;
+                    }
+                ) ->
+              let t = mk_obj obj_loc obj in
+              Statement.ObjectExpressionAcc.add_prop
+                (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
+                acc
+            | _ -> failwith "Object not synthesizable"
+        )
+      in
       Statement.ObjectExpressionAcc.mk_object_from_spread_acc
         cx
         acc
@@ -255,6 +280,7 @@ let rec resolve_binding_partial cx reason loc b =
         ~default_proto:obj_proto
         ~empty_unsealed:(not @@ Context.exact_empty_objects cx)
     in
+    let t = mk_obj loc obj in
     (t, unknown_use, true)
   | Root (ObjectValue { obj_loc; obj; _ }) ->
     let expr = (obj_loc, Ast.Expression.Object obj) in

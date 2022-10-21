@@ -222,33 +222,84 @@ let func_is_synthesizable_from_annotation
       else
         MissingReturn loc
 
-let obj_properties_synthesizable ~this_write_locs { Ast.Expression.Object.properties; comments = _ }
-    =
+let obj_this_write_locs { Ast.Expression.Object.properties; _ } =
+  let open Ast.Expression.Object in
+  Base.List.fold properties ~init:EnvSet.empty ~f:(fun acc -> function
+    | Property (_, Property.Method _) -> acc (* this-in-object is banned. *)
+    | Property (_, Property.Init { value = (_, Ast.Expression.ArrowFunction _); _ }) ->
+      acc (* Arrow functions don't bind `this`. *)
+    | Property
+        ( _,
+          Property.Init
+            {
+              value =
+                ( f_loc,
+                  Ast.Expression.Function
+                    { Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ }); _ }
+                );
+              _;
+            }
+        ) ->
+      EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
+    | _ ->
+      (* Everything else is impossible due to obj_properties_synthesizable check. *)
+      acc
+  )
+
+let rec obj_properties_synthesizable
+    ~this_write_locs { Ast.Expression.Object.properties; comments = _ } =
   let open Ast.Expression.Object in
   let open Ast.Expression.Object.Property in
-  let handle_fun acc = function
-    | FunctionSynthesizable -> Ok acc
-    | MissingReturn loc -> Ok (loc :: acc)
+  let handle_fun this_write_locs acc = function
+    | FunctionSynthesizable -> Ok (acc, this_write_locs)
+    | MissingReturn loc -> Ok (loc :: acc, this_write_locs)
     | _ -> Error ()
   in
   let missing =
     Base.List.fold_result
-      ~init:[]
+      ~init:([], this_write_locs)
       ~f:
-        (fun acc -> function
+        (fun (acc, this_write_locs) -> function
           | SpreadProperty _ -> Error ()
+          | Property (_, Init { key = Identifier (_, { Ast.Identifier.name = "__proto__"; _ }); _ })
+            ->
+            Error ()
           | Property (_, Method { key = Identifier _; value = (_, fn); _ })
           | Property
               (_, Init { key = Identifier _; value = (_, Ast.Expression.ArrowFunction fn); _ }) ->
-            handle_fun acc (func_is_synthesizable_from_annotation ~allow_this:true fn)
+            handle_fun
+              this_write_locs
+              acc
+              (func_is_synthesizable_from_annotation ~allow_this:true fn)
           | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Function fn); _ }) ->
-            handle_fun acc (func_is_synthesizable_from_annotation ~allow_this:false fn)
+            handle_fun
+              this_write_locs
+              acc
+              (func_is_synthesizable_from_annotation ~allow_this:false fn)
+          | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Object obj); _ }) ->
+            begin
+              match obj_properties_synthesizable ~this_write_locs:(obj_this_write_locs obj) obj with
+              | ObjectSynthesizable { this_write_locs = new_this_write_locs } ->
+                Ok (acc, EnvSet.union this_write_locs new_this_write_locs)
+              | MissingMemberReturns (hd, tl) -> Ok (hd :: tl @ acc, this_write_locs)
+              | Unsynthesizable -> Error ()
+            end
+          | Property
+              ( _,
+                Init
+                  {
+                    key = Identifier _;
+                    value = (_, (Ast.Expression.Literal _ | Ast.Expression.Identifier _));
+                    _;
+                  }
+              ) ->
+            Ok (acc, this_write_locs)
           | Property _ -> Error ())
       properties
   in
   match missing with
-  | Ok [] -> ObjectSynthesizable { this_write_locs }
-  | Ok (hd :: tl) -> MissingMemberReturns (hd, tl)
+  | Ok ([], this_write_locs) -> ObjectSynthesizable { this_write_locs }
+  | Ok (hd :: tl, _) -> MissingMemberReturns (hd, tl)
   | Error () -> Unsynthesizable
 
 let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics function_ =
@@ -548,39 +599,12 @@ class def_finder env_entries providers toplevel_scope =
         | ( None,
             Some
               ( ( loc,
-                  Ast.Expression.Object
-                    ({ Ast.Expression.Object.properties = _ :: _ as properties; _ } as obj)
+                  Ast.Expression.Object ({ Ast.Expression.Object.properties = _ :: _; _ } as obj)
                 ) as init
               ),
             _
           ) ->
-          let this_write_locs =
-            let open Ast.Expression.Object in
-            Base.List.fold properties ~init:EnvSet.empty ~f:(fun acc -> function
-              | Property (_, Property.Method _) -> acc (* this-in-object is banned. *)
-              | Property (_, Property.Init { value = (_, Ast.Expression.ArrowFunction _); _ }) ->
-                acc (* Arrow functions don't bind `this`. *)
-              | Property
-                  ( _,
-                    Property.Init
-                      {
-                        value =
-                          ( f_loc,
-                            Ast.Expression.Function
-                              {
-                                Ast.Function.params = (_, { Ast.Function.Params.this_ = None; _ });
-                                _;
-                              }
-                          );
-                        _;
-                      }
-                  ) ->
-                EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
-              | _ ->
-                (* Everything else is impossible due to obj_properties_synthesizable check. *)
-                acc
-            )
-          in
+          let this_write_locs = obj_this_write_locs obj in
           begin
             match obj_properties_synthesizable ~this_write_locs obj with
             | Unsynthesizable -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)

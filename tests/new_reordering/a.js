@@ -45,6 +45,11 @@ function is_zero(x: number): boolean %checks {
 }
 
 const math1 = {
+  foo: "Hello",
+  subobj: {
+    foo: is_zero,
+    meth(x: number): bool { return true }
+  },
   odd(x: number): bool {
     if (x === 0) {
       return false;
@@ -60,6 +65,11 @@ const math1 = {
 }
 
 const math2 = {
+  foo: "Hello",
+  subobj: {
+    foo: math1,
+    meth(x: number) { return true }
+  },
   odd(x: number) {
     if (x === 0) {
       return false;
