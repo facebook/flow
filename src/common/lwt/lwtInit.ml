@@ -25,6 +25,35 @@ let spf = Printf.sprintf
  * lwt issue: https://github.com/ocsigen/lwt/issues/496
  *)
 class windows_select =
+  let string_of_file_kind = function
+    | Unix.S_REG -> "S_REG"
+    | Unix.S_DIR -> "S_DIR"
+    | Unix.S_CHR -> "S_CHR"
+    | Unix.S_BLK -> "S_BLK"
+    | Unix.S_LNK -> "S_LNK"
+    | Unix.S_FIFO -> "S_FIFO"
+    | Unix.S_SOCK -> "S_SOCK"
+  in
+  let info_of_fd fd =
+    try
+      let { Unix.st_kind; st_perm; _ } = Unix.fstat fd in
+      Printf.sprintf "%s 0o%.3o" (string_of_file_kind st_kind) st_perm
+    with
+    | _ -> "exn"
+  in
+  let debug_select fds_r fds_w fds_e timeout =
+    try Unix.select fds_r fds_w fds_e timeout with
+    | Unix.Unix_error (Unix.EACCES, _, _) ->
+      let args =
+        Printf.sprintf
+          "[%s], [%s], [%s], %f"
+          (fds_r |> List.map info_of_fd |> String.concat "; ")
+          (fds_w |> List.map info_of_fd |> String.concat "; ")
+          (fds_e |> List.map info_of_fd |> String.concat "; ")
+          timeout
+      in
+      raise (Unix.Unix_error (Unix.EACCES, "select", args))
+  in
   object
     inherit Lwt_engine.select_based
 
@@ -33,7 +62,7 @@ class windows_select =
       let ready_r =
         List.fold_left
           (fun ready_r fd_r ->
-            match Unix.select [fd_r] [] [] 0.0 with
+            match debug_select [fd_r] [] [] 0.0 with
             | ([], _, _) -> ready_r
             | _ -> fd_r :: ready_r)
           []
@@ -43,7 +72,7 @@ class windows_select =
       let ready_w =
         List.fold_left
           (fun ready_w fd_w ->
-            match Unix.select [] [fd_w] [] 0.0 with
+            match debug_select [] [fd_w] [] 0.0 with
             | (_, [], _) -> ready_w
             | _ -> fd_w :: ready_w)
           []
@@ -51,7 +80,7 @@ class windows_select =
       in
       (* If nothing is ready, then do a multi-fd select with the timeout *)
       if ready_r = [] && ready_w = [] then
-        let (fds_r, fds_w, _) = Unix.select fds_r fds_w [] timeout in
+        let (fds_r, fds_w, _) = debug_select fds_r fds_w [] timeout in
         (fds_r, fds_w)
       else
         (ready_r, ready_w)
