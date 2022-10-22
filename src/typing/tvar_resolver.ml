@@ -87,9 +87,9 @@ let resolver =
   end
 
 let run_conditionally cx f =
-  match (Context.env_mode cx, Context.current_phase cx) with
+  match (Context.lti cx, Context.current_phase cx) with
   | (_, Context.InitLib) -> ()
-  | (Options.LTI, _)
+  | (true, _)
   | (_, Context.PostInference) ->
     ignore @@ f ()
   | _ -> ()

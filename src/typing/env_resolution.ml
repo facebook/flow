@@ -99,7 +99,7 @@ let resolve_hint cx loc hint =
       in
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
   in
-  if Context.env_mode cx = Options.LTI then
+  if Context.lti cx then
     let map_base_hint = resolve_hint_node in
     let map_targs = Statement.convert_call_targs_opt' cx in
     let map_arg_list = synth_arg_list cx in
@@ -434,7 +434,7 @@ let rec resolve_binding_partial cx reason loc b =
         let elemt = Tvar.mk cx element_reason in
         if Context.array_literal_providers cx then begin
           Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-          if Context.env_mode cx = Options.LTI then Flow_js.flow_t cx (AnyT.error reason, elemt)
+          if Context.lti cx then Flow_js.flow_t cx (AnyT.error reason, elemt)
         end;
         (elemt, Some [], replace_desc_reason REmptyArrayLit reason)
     in
@@ -448,7 +448,7 @@ let rec resolve_binding_partial cx reason loc b =
     (t, use_op, false)
   | Root (Contextual { reason; hint; optional; default_expression }) ->
     let param_loc = Reason.poly_loc_of_reason reason in
-    let contextual_typing_enabled = Context.env_mode cx = Options.LTI in
+    let contextual_typing_enabled = Context.lti cx in
     let t =
       if contextual_typing_enabled then
         let (has_hint, lazy_hint) = lazily_resolve_hint cx loc hint in
@@ -897,8 +897,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     | DeclaredModule (loc, module_) -> resolve_declare_module cx loc module_
     | NonBindingParam -> (AnyT.at (Unsound NonBindingParameter) id_loc, unknown_use)
-    | MissingThisAnnot when Context.env_mode cx = Options.LTI ->
-      (AnyT.at (AnyError None) id_loc, unknown_use)
+    | MissingThisAnnot when Context.lti cx -> (AnyT.at (AnyError None) id_loc, unknown_use)
     | MissingThisAnnot -> (Tvar.mk cx def_reason, unknown_use)
   in
   let update_reason =
@@ -1101,7 +1100,7 @@ let resolve_component_type_params cx graph component =
     | _ -> ()
   in
   let resolve_element = function
-    | Illegal { payload = key; _ } when Context.env_mode cx = Options.LTI ->
+    | Illegal { payload = key; _ } when Context.lti cx ->
       let (_kind, loc) = key in
       resolve_illegal loc (EnvMap.find key graph)
     | Name_def_ordering.Normal key
@@ -1115,7 +1114,7 @@ let resolve_component_type_params cx graph component =
       | _ -> ())
   in
   match component with
-  | IllegalSCC elts when Context.env_mode cx = Options.LTI ->
+  | IllegalSCC elts when Context.lti cx ->
     Nel.iter
       (fun {
              payload =
@@ -1142,8 +1141,7 @@ let resolve_component cx graph component =
       entries
   in
   let resolve_element = function
-    | Illegal { payload; _ } when Context.env_mode cx = Options.LTI ->
-      resolve_illegal (entries_of_def graph payload)
+    | Illegal { payload; _ } when Context.lti cx -> resolve_illegal (entries_of_def graph payload)
     | Name_def_ordering.Normal (kind, loc)
     | Resolvable (kind, loc)
     | Illegal { payload = (kind, loc); _ } ->
@@ -1158,20 +1156,20 @@ let resolve_component cx graph component =
     cx
     (lazy [Utils_js.spf "Resolving component %s" (string_of_component graph component)]);
   let entries_for_resolution =
-    match Context.env_mode cx with
-    | Options.LTI ->
+    if Context.lti cx then begin
       let entries = entries_of_component graph component in
       let ({ Loc_env.readable; _ } as env) = Context.environment cx in
       Context.set_environment
         cx
         { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries };
       entries
-    | _ -> EnvSet.empty
+    end else
+      EnvSet.empty
   in
   resolve_component_type_params cx graph component;
   let () =
     match component with
-    | IllegalSCC _ when Context.env_mode cx = Options.LTI -> resolve_illegal entries_for_resolution
+    | IllegalSCC _ when Context.lti cx -> resolve_illegal entries_for_resolution
     | Singleton elt -> resolve_element elt
     | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
     | IllegalSCC elts -> Nel.iter (fun { payload; _ } -> resolve_element payload) elts

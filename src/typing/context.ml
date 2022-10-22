@@ -33,11 +33,13 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   cycle_errors: bool;
+  cycle_errors_includes: string list;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
   enforce_strict_call_arity: bool;
-  env_mode: Options.env_mode;
+  inference_mode: Options.inference_mode;
+  inference_mode_lti_includes: string list;
   exact_by_default: bool;
   exact_empty_objects: bool;
   experimental_infer_indexers: bool;
@@ -47,6 +49,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   array_literal_providers: bool;
+  array_literal_providers_includes: string list;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -220,11 +223,13 @@ let metadata_of_options options =
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     cycle_errors = Options.cycle_errors options;
+    cycle_errors_includes = Options.cycle_errors_includes options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-    env_mode = Options.env_mode options;
+    inference_mode = Options.inference_mode options;
+    inference_mode_lti_includes = Options.inference_mode_lti_includes options;
     exact_by_default = Options.exact_by_default options;
     exact_empty_objects = Options.exact_empty_objects options;
     experimental_infer_indexers = Options.experimental_infer_indexers options;
@@ -238,6 +243,7 @@ let metadata_of_options options =
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
     array_literal_providers = Options.array_literal_providers options;
+    array_literal_providers_includes = Options.array_literal_providers_includes options;
     react_runtime = Options.react_runtime options;
     react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
@@ -419,17 +425,28 @@ let enable_const_params cx =
 
 let enable_enums cx = cx.metadata.enable_enums
 
+let file cx = cx.file
+
 let enable_relay_integration cx =
   cx.metadata.enable_relay_integration
-  && Relay_options.enabled_for_file cx.metadata.relay_integration_excludes cx.file
+  && Relay_options.enabled_for_file cx.metadata.relay_integration_excludes (file cx)
 
 let relay_integration_module_prefix cx =
   Relay_options.module_prefix_for_file
     cx.metadata.relay_integration_module_prefix_includes
-    cx.file
+    (file cx)
     cx.metadata.relay_integration_module_prefix
 
-let env_mode cx = cx.metadata.env_mode
+let in_dirlist cx dirs =
+  match dirs with
+  | [] -> false
+  | _ :: _ ->
+    let filename = File_key.to_string (file cx) in
+    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+    List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+
+let lti cx =
+  cx.metadata.inference_mode = Options.LTI || in_dirlist cx cx.metadata.inference_mode_lti_includes
 
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
@@ -443,16 +460,15 @@ let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
 
-let exact_empty_objects cx = cx.metadata.exact_empty_objects || env_mode cx = Options.LTI
+let exact_empty_objects cx = cx.metadata.exact_empty_objects || lti cx
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 
-let cycle_errors cx = cx.metadata.cycle_errors
+let cycle_errors cx =
+  cx.metadata.cycle_errors || lti cx || in_dirlist cx cx.metadata.cycle_errors_includes
 
 let run_post_inference_implicit_instantiation cx =
   cx.metadata.run_post_inference_implicit_instantiation
-
-let file cx = cx.file
 
 let aloc_tables cx = cx.ccx.aloc_tables
 
@@ -483,8 +499,8 @@ let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
 let in_implicit_instantiation cx = cx.ccx.in_implicit_instantiation
 
 let in_lti_implicit_instantiation cx =
-  match (cx.phase, env_mode cx) with
-  | (_, Options.LTI) -> in_implicit_instantiation cx
+  match (cx.phase, lti cx) with
+  | (_, true) -> in_implicit_instantiation cx
   | (PostInference, _) -> in_implicit_instantiation cx
   | _ -> false
 
@@ -572,7 +588,10 @@ let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
 
-let array_literal_providers cx = cx.metadata.array_literal_providers || env_mode cx = Options.LTI
+let array_literal_providers cx =
+  cx.metadata.array_literal_providers
+  || lti cx
+  || in_dirlist cx cx.metadata.array_literal_providers_includes
 
 let jsx cx = cx.metadata.jsx
 

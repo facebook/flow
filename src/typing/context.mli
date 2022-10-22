@@ -53,11 +53,13 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   cycle_errors: bool;
+  cycle_errors_includes: string list;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
   enforce_strict_call_arity: bool;
-  env_mode: Options.env_mode;
+  inference_mode: Options.inference_mode;
+  inference_mode_lti_includes: string list;
   exact_by_default: bool;
   exact_empty_objects: bool;
   experimental_infer_indexers: bool;
@@ -67,6 +69,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   array_literal_providers: bool;
+  array_literal_providers_includes: string list;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -79,6 +82,8 @@ type metadata = {
   relay_integration_module_prefix_includes: Str.regexp list;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
+  (* save_implicit_instantiation_results is used for the implicit instantiation
+   * annotation codemod *)
   save_implicit_instantiation_results: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
@@ -146,7 +151,7 @@ val enable_relay_integration : t -> bool
 
 val relay_integration_module_prefix : t -> string option
 
-val env_mode : t -> Options.env_mode
+val lti : t -> bool
 
 val enforce_strict_call_arity : t -> bool
 

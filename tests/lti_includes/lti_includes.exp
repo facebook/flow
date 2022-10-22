@@ -1,0 +1,34 @@
+Error --------------------------------------------------------------------------------------------------- include.js:5:8
+
+Cannot call `x.push` because string [1] is incompatible with number [2] in array element. [incompatible-call]
+
+   include.js:5:8
+   5| x.push("a");
+             ^^^ [1]
+
+References:
+   include.js:4:8
+   4| x.push(42);
+             ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- include.js:7:5
+
+Cannot compute a type for `z` because its definition includes references to itself [1]. Please add an annotation to this
+definition [2] [recursive-definition]
+
+   include.js:7:5
+   7| var z = function() {
+          ^
+
+References:
+   include.js:8:12
+   8|     return z;
+                 ^ [1]
+   include.js:7:19
+   7| var z = function() {
+                         [2]
+
+
+
+Found 2 errors

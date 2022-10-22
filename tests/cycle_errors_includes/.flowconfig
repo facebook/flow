@@ -1,0 +1,2 @@
+[options]
+experimental.cycle_errors.includes=<PROJECT_ROOT>/include.js

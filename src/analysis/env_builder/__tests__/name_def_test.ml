@@ -26,7 +26,7 @@ module Context = struct
 
   let react_runtime _cx = !react_runtime
 
-  let env_mode _cx = Options.LTI
+  let lti _cx = true
 
   let enable_const_params _cx = false
 

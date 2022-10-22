@@ -78,6 +78,8 @@ val babel_loose_array_spread : config -> bool option
 
 val cycle_errors : config -> bool
 
+val cycle_errors_includes : config -> string list
+
 val direct_dependent_files_fix : config -> bool option
 
 val emoji : config -> bool option
@@ -88,7 +90,9 @@ val enforce_strict_call_arity : config -> bool
 
 val enums : config -> bool
 
-val env_mode : config -> Options.env_mode
+val inference_mode : config -> Options.inference_mode
+
+val inference_mode_lti_includes : config -> string list
 
 val estimate_recheck_time : config -> bool option
 
@@ -180,6 +184,8 @@ val modules_are_use_strict : config -> bool
 val munge_underscores : config -> bool
 
 val array_literal_providers : config -> bool
+
+val array_literal_providers_includes : config -> string list
 
 val no_flowlib : config -> bool
 

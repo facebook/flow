@@ -3913,7 +3913,7 @@ module Make
         expr
 
       method! call_arguments arg_list =
-        ( if Context.env_mode cx = Options.LTI then
+        ( if Context.lti cx then
           let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = arg_list in
           Base.List.iter arguments ~f:(fun arg ->
               let ((loc, _) as expr) =

@@ -1,0 +1,20 @@
+Error --------------------------------------------------------------------------------------------------- include.js:3:5
+
+Cannot compute a type for `x` because its definition includes references to itself [1]. Please add an annotation to this
+definition [2] [recursive-definition]
+
+   include.js:3:5
+   3| var x = function() {
+          ^
+
+References:
+   include.js:4:12
+   4|     return x;
+                 ^ [1]
+   include.js:3:19
+   3| var x = function() {
+                         [2]
+
+
+
+Found 1 error

@@ -776,11 +776,11 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   let run
       cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
-    match Context.env_mode cx with
-    | Options.LTI ->
+    if Context.lti cx then
       let return_hint = lazy_hint reason_op in
       Context.run_in_implicit_instantiation_mode cx (fun () ->
           run_pierce cx ~return_hint check ?cache trace ~use_op ~reason_op ~reason_tapp
       )
-    | _ -> run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
+    else
+      run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
 end

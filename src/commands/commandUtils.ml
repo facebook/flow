@@ -846,7 +846,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    env_mode: Options.env_mode option;
+    inference_mode: Options.inference_mode option;
     abstract_locations: bool option;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -916,7 +916,7 @@ let options_flags =
       abstract_locations
       include_suppressions
       trust_mode
-      env_mode
+      inference_mode
       estimate_recheck_time
       distributed =
     (match merge_timeout with
@@ -930,7 +930,7 @@ let options_flags =
         profile;
         all;
         wait_for_recheck;
-        env_mode;
+        inference_mode;
         traces;
         no_flowlib;
         munge_underscore_members;
@@ -1343,19 +1343,26 @@ let make_options
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_experimental_infer_indexers = false;
     opt_array_literal_providers = FlowConfig.array_literal_providers flowconfig;
-    opt_cycle_errors =
-      Base.Option.value_map
-        options_flags.env_mode
-        ~f:(function
-          | Options.LTI -> true
-          | Options.ConstrainWrites -> FlowConfig.cycle_errors flowconfig)
-        ~default:(FlowConfig.cycle_errors flowconfig);
+    opt_array_literal_providers_includes =
+      Base.List.map
+        ~f:(fun s -> Files.expand_project_root_token ~root s)
+        (FlowConfig.array_literal_providers_includes flowconfig);
+    opt_cycle_errors = FlowConfig.cycle_errors flowconfig;
+    opt_cycle_errors_includes =
+      Base.List.map
+        ~f:(fun s -> Files.expand_project_root_token ~root s)
+        (FlowConfig.cycle_errors_includes flowconfig);
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_save_implicit_instantiation_results = false;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
-    opt_env_mode = Base.Option.value options_flags.env_mode ~default:(FlowConfig.env_mode flowconfig);
+    opt_inference_mode =
+      Base.Option.value options_flags.inference_mode ~default:(FlowConfig.inference_mode flowconfig);
+    opt_inference_mode_lti_includes =
+      Base.List.map
+        ~f:(fun s -> Files.expand_project_root_token ~root s)
+        (FlowConfig.inference_mode_lti_includes flowconfig);
     opt_estimate_recheck_time =
       Base.Option.first_some
         options_flags.estimate_recheck_time

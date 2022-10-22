@@ -222,7 +222,7 @@ module Annotate_lti_command = struct
       (* Match all files the codemod is run over *)
       let check_options o =
         let open Options in
-        { o with opt_any_propagation = false; opt_env_mode = ConstrainWrites }
+        { o with opt_any_propagation = false; opt_inference_mode = ConstrainWrites }
 
       let visit =
         let mapper =
@@ -324,7 +324,7 @@ module Annotate_empty_array_command = struct
 
       let check_options o =
         let open Options in
-        { o with opt_env_mode = ConstrainWrites; opt_array_literal_providers = true }
+        { o with opt_inference_mode = ConstrainWrites; opt_array_literal_providers = true }
 
       let visit =
         let mapper =
@@ -400,7 +400,7 @@ module Annotate_cycles_command = struct
       let reporter = string_reporter (module Acc)
 
       let check_options o =
-        Options.{ o with opt_cycle_errors = true; opt_env_mode = Options.ConstrainWrites }
+        Options.{ o with opt_cycle_errors = true; opt_inference_mode = Options.ConstrainWrites }
 
       let visit =
         let mapper =

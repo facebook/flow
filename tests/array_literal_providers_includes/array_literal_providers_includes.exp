@@ -1,0 +1,21 @@
+Error --------------------------------------------------------------------------------------------------- include.js:5:8
+
+Cannot call `x.push` because string [1] is incompatible with number [2] in array element. All writes to `x` must be
+compatible with the type of its initial element [2]. Add an annotation to `x` [3] if a different type is desired.
+[incompatible-call]
+
+   include.js:5:8
+   5| x.push("a");
+             ^^^ [1]
+
+References:
+   include.js:4:8
+   4| x.push(42);
+             ^^ [2]
+   include.js:3:5
+   3| var x = [];
+          ^ [3]
+
+
+
+Found 1 error

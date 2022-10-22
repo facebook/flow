@@ -29,7 +29,7 @@ type trust_mode =
   | CheckTrust
   | SilentTrust
 
-type env_mode =
+type inference_mode =
   | ConstrainWrites
   | LTI
 
@@ -67,6 +67,7 @@ type t = {
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_cycle_errors: bool;
+  opt_cycle_errors_includes: string list;
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
@@ -74,7 +75,8 @@ type t = {
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_strict_call_arity: bool;
   opt_enums: bool;
-  opt_env_mode: env_mode;
+  opt_inference_mode: inference_mode;
+  opt_inference_mode_lti_includes: string list;
   opt_estimate_recheck_time: bool;
   opt_exact_by_default: bool;
   opt_exact_empty_objects: bool;
@@ -112,6 +114,7 @@ type t = {
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_array_literal_providers: bool;
+  opt_array_literal_providers_includes: string list;
   opt_node_main_fields: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
@@ -161,6 +164,8 @@ let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
 let cycle_errors opts = opts.opt_cycle_errors
 
+let cycle_errors_includes opts = opts.opt_cycle_errors_includes
+
 let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 
 let enable_const_params opts = opts.opt_enable_const_params
@@ -173,7 +178,9 @@ let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 
 let enums opts = opts.opt_enums
 
-let env_mode opts = opts.opt_env_mode
+let inference_mode opts = opts.opt_inference_mode
+
+let inference_mode_lti_includes opts = opts.opt_inference_mode_lti_includes
 
 let estimate_recheck_time opts = opts.opt_estimate_recheck_time
 
@@ -250,6 +257,8 @@ let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let array_literal_providers opts = opts.opt_array_literal_providers
+
+let array_literal_providers_includes opts = opts.opt_array_literal_providers_includes
 
 let node_main_fields opts = opts.opt_node_main_fields
 

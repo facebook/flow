@@ -1,0 +1,3 @@
+[options]
+experimental.array_literal_providers.includes=<PROJECT_ROOT>/include.js
+no_flowlib=false

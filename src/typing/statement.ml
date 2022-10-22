@@ -2398,13 +2398,12 @@ module Make
         ( if Context.array_literal_providers cx then
           if not has_hint then begin
             Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-            if Context.env_mode cx = Options.LTI then
-              Flow.flow_t cx (AnyT.at (AnyError None) loc, elemt)
-          end else if Context.env_mode cx <> Options.LTI then
+            if Context.lti cx then Flow.flow_t cx (AnyT.at (AnyError None) loc, elemt)
+          end else if not (Context.lti cx) then
             ()
           else
             let default_init () =
-              if Context.env_mode cx = Options.LTI then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
+              if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
             in
             match lazy_hint element_reason with
             | None ->
@@ -6290,7 +6289,7 @@ module Make
                 (Error_message.EMissingLocalAnnotation
                    { reason = repos_reason annot_loc reason; hint_available = false }
                 );
-              if Context.env_mode cx = Options.LTI then
+              if Context.lti cx then
                 Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
             | _ -> ()
           end;
@@ -6307,7 +6306,7 @@ module Make
       (match (init, annot_or_inferred) with
       | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _) ->
         Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
-        if Context.env_mode cx = Options.LTI then
+        if Context.lti cx then
           Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
       | _ -> ());
       (field, annot_t, annot_ast, get_init)
@@ -6989,7 +6988,7 @@ module Make
                func.Ast.Function.params ->
         let reason = mk_reason (RImplicitThis (RFunction RNormal)) param_loc in
         Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
-        if Context.env_mode cx = Options.LTI then
+        if Context.lti cx then
           Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
       | _ -> ()
     in
@@ -7114,7 +7113,7 @@ module Make
               Flow_js.add_output
                 cx
                 (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
-              if Context.env_mode cx = Options.LTI then
+              if Context.lti cx then
                 Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
             | _ -> ()
           end;

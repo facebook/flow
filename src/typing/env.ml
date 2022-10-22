@@ -110,10 +110,9 @@ let t_option_value_exn cx loc t =
 (************************)
 
 let check_readable cx kind loc =
-  match (Context.env_mode cx, Context.current_phase cx <> Context.InitLib) with
-  | (Options.LTI, true) ->
+  if Context.lti cx && Context.current_phase cx <> Context.InitLib then
     let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
-    (match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
+    match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
     | Some Env_api.NonAssigningWrite -> ()
     | _ ->
       (match Loc_env.find_write env kind loc with
@@ -127,8 +126,7 @@ let check_readable cx kind loc =
           | _ ->
             Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind))
         end
-      | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t)))
-  | _ -> ()
+      | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t))
 
 let find_var_opt { Env_api.env_values; _ } loc =
   match ALocMap.find_opt loc env_values with
@@ -737,9 +735,7 @@ let set_module_exports cx t =
     ~f:(unify_write_entry cx ~use_op:unknown_use t Env_api.DeclareModuleExportsLoc)
 
 let bind cx t ~kind loc =
-  match Context.env_mode cx with
-  | Options.LTI -> ()
-  | _ -> unify_write_entry cx ~use_op:Type.unknown_use t kind loc
+  if not (Context.lti cx) then unify_write_entry cx ~use_op:Type.unknown_use t kind loc
 
 let bind_function_param cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionParamLoc loc
