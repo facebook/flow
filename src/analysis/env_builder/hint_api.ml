@@ -11,12 +11,20 @@
  * then we can check the value of property `f` with the hint `(number) => number`
  * and, further, use `number` as the type of `x`. *)
 
-type ('t, 'targs, 'args) fun_call_implicit_instantiation_hints = {
+type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
-  return_hint: ('t, 'targs, 'args) hint;
+  return_hint: ('t, 'targs, 'args, 'props, 'children) hint;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
   arg_index: int;
+}
+
+and ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints = {
+  jsx_reason: Reason.t;
+  jsx_name: string;
+  jsx_props: 'props;
+  jsx_children: 'children;
+  jsx_hint: ('t, 'targs, 'args, 'props, 'children) hint;
 }
 
 and sentinel_refinement =
@@ -27,7 +35,7 @@ and sentinel_refinement =
   | Void
   | Member of Reason.t
 
-and ('t, 'targs, 'args) hint_decomposition =
+and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Hint on `{ f: e }` becomes hint on `e` *)
   | Decomp_ObjProp of string
   (* Hint on `{ [k]: e }` becomes hint on `e` *)
@@ -64,11 +72,15 @@ and ('t, 'targs, 'args) hint_decomposition =
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
-  | Instantiate_Callee of ('t, 'targs, 'args) fun_call_implicit_instantiation_hints
+  | Instantiate_Callee of
+      ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints
+  (* Type of Comp in <Comp ... /> is instantiated with props and children.
+     Returns Comp if the type of Comp is not polymorphic. *)
+  | Instantiate_Component of ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints
 
-and ('t, 'targs, 'args) hint =
+and ('t, 'targs, 'args, 'props, 'children) hint =
   | Hint_t of 't
-  | Hint_Decomp of (int * ('t, 'targs, 'args) hint_decomposition) Nel.t * 't
+  | Hint_Decomp of (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't
   (* The hint placeholder used in env_resolution to pass to expression type checkers.
      It will eventually be removed once we move all hint decomposition logic into env_resolution. *)
   | Hint_Placeholder
@@ -93,6 +105,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_SentinelRefinement _ -> "Decomp_SentinelRefinement"
   | Decomp_Await -> "Decomp_Await"
   | Instantiate_Callee _ -> "Instantiate_Callee"
+  | Instantiate_Component _ -> "Instantiate_Component"
 
 let string_of_hint ~on_hint = function
   | Hint_t t -> Utils_js.spf "Hint_t (%s)" (on_hint t)
@@ -125,7 +138,7 @@ let is_hint_none = function
   | Hint_None -> true
   | _ -> false
 
-let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list = function
+let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function
   | Decomp_ObjProp prop -> Decomp_ObjProp prop
   | Decomp_ObjComputed -> Decomp_ObjComputed
   | Decomp_ObjSpread -> Decomp_ObjSpread
@@ -147,17 +160,23 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list = function
     Instantiate_Callee
       {
         reason;
-        return_hint = map ~map_base_hint ~map_targs ~map_arg_list return_hint;
+        return_hint = map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx return_hint;
         targs = Lazy.map map_targs targs;
         arg_list = Lazy.map map_arg_list arg_list;
         arg_index;
       }
+  | Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hint } ->
+    let (jsx_props, jsx_children) = map_jsx jsx_reason jsx_name jsx_props jsx_children in
+    let jsx_hint = map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx jsx_hint in
+    Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hint }
 
-and map ~map_base_hint ~map_targs ~map_arg_list = function
+and map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function
   | Hint_t t -> Hint_t (map_base_hint t)
   | Hint_Decomp (ops, t) ->
     Hint_Decomp
-      ( Nel.map (fun (i, op) -> (i, map_decomp_op ~map_base_hint ~map_targs ~map_arg_list op)) ops,
+      ( Nel.map
+          (fun (i, op) -> (i, map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx op))
+          ops,
         map_base_hint t
       )
   | Hint_Placeholder -> Hint_Placeholder

@@ -8,7 +8,13 @@
 val evaluate_hint :
   Context.t ->
   Reason.t ->
-  (Type.t, Type.targ list option, (ALoc.t * Type.call_arg) list) Hint_api.hint ->
+  ( Type.t,
+    Type.targ list option,
+    (ALoc.t * Type.call_arg) list,
+    Type.t,
+    Type.t list * Type.t option
+  )
+  Hint_api.hint ->
   Type.t option
 
 val sandbox_flow_succeeds : Context.t -> Type.t * Type.t -> bool

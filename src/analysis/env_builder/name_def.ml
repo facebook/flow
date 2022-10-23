@@ -1698,7 +1698,7 @@ class def_finder env_entries providers toplevel_scope =
       in
       this#visit_expression ~hint ~cond argument
 
-    method! jsx_element _ expr =
+    method! jsx_element loc_element expr =
       let open Ast.JSX in
       let {
         opening_element =
@@ -1743,6 +1743,41 @@ class def_finder env_entries providers toplevel_scope =
             )
           in
           Hint_t (ValueHint (jsx_title_member_to_expression member))
+      in
+      let hint =
+        let rec jsx_title_member_to_string (_, { Ast.JSX.MemberExpression._object; property; _ }) =
+          let (_, { Ast.JSX.Identifier.name; comments = _ }) = property in
+          match _object with
+          | Ast.JSX.MemberExpression.MemberExpression member ->
+            jsx_title_member_to_string member ^ "." ^ name
+          | Ast.JSX.MemberExpression.Identifier (_, { Ast.JSX.Identifier.name = obj; comments = _ })
+            ->
+            obj ^ "." ^ name
+        in
+        let jsx_title_namespaced_name_to_string namespaced_name =
+          let (_, { Ast.JSX.NamespacedName.namespace = (_, namespace); name = (_, name) }) =
+            namespaced_name
+          in
+          namespace.Ast.JSX.Identifier.name ^ name.Ast.JSX.Identifier.name
+        in
+        let jsx_name =
+          match opening_name with
+          | Ast.JSX.Identifier (_, { Ast.JSX.Identifier.name; comments = _ }) -> name
+          | Ast.JSX.MemberExpression member -> jsx_title_member_to_string member
+          | Ast.JSX.NamespacedName namespace -> jsx_title_namespaced_name_to_string namespace
+        in
+        decompose_hint
+          (Instantiate_Component
+             {
+               jsx_reason = mk_reason (RJSXElement (Some jsx_name)) loc_element;
+               jsx_name;
+               jsx_props = opening_attributes;
+               jsx_children = children;
+               (* TODO: thread hint *)
+               jsx_hint = Hint_None;
+             }
+          )
+          hint
       in
       let hint = decompose_hint Decomp_JsxProps hint in
       let hint =

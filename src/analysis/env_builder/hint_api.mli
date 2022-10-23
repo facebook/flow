@@ -5,12 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ('t, 'targs, 'args) fun_call_implicit_instantiation_hints = {
+type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
-  return_hint: ('t, 'targs, 'args) hint;
+  return_hint: ('t, 'targs, 'args, 'props, 'children) hint;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
   arg_index: int;
+}
+
+and ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints = {
+  jsx_reason: Reason.t;
+  jsx_name: string;
+  jsx_props: 'props;
+  jsx_children: 'children;
+  jsx_hint: ('t, 'targs, 'args, 'props, 'children) hint;
 }
 
 and sentinel_refinement =
@@ -21,7 +29,7 @@ and sentinel_refinement =
   | Void
   | Member of Reason.t
 
-and ('t, 'targs, 'args) hint_decomposition =
+and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_ObjProp of string
   | Decomp_ObjComputed
   | Decomp_ObjSpread
@@ -39,30 +47,39 @@ and ('t, 'targs, 'args) hint_decomposition =
   | Comp_ImmediateFuncCall
   | Decomp_JsxProps
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
-  | Instantiate_Callee of ('t, 'targs, 'args) fun_call_implicit_instantiation_hints
+  | Instantiate_Callee of
+      ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints
+  | Instantiate_Component of ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints
 
-and ('t, 'targs, 'args) hint =
+and ('t, 'targs, 'args, 'props, 'children) hint =
   | Hint_t of 't
-  | Hint_Decomp of (int * ('t, 'targs, 'args) hint_decomposition) Nel.t * 't
+  | Hint_Decomp of (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't
   | Hint_Placeholder
   | Hint_None
 
-val string_of_hint_unknown_kind : ('t, 'targs, 'args) hint_decomposition -> string
+val string_of_hint_unknown_kind :
+  ('t, 'targs, 'args, 'props, 'children) hint_decomposition -> string
 
-val string_of_hint : on_hint:('t -> string) -> ('t, 'targs, 'args) hint -> string
+val string_of_hint : on_hint:('t -> string) -> ('t, 'targs, 'args, 'props, 'children) hint -> string
 
 val decompose_hint :
-  ('t, 'targs, 'args) hint_decomposition -> ('t, 'targs, 'args) hint -> ('t, 'targs, 'args) hint
+  ('t, 'targs, 'args, 'props, 'children) hint_decomposition ->
+  ('t, 'targs, 'args, 'props, 'children) hint ->
+  ('t, 'targs, 'args, 'props, 'children) hint
 
 (** Combine two hints into one, by picking the first one if it contains useful
  *  information; otherwise picking the second hint. *)
-val merge_hints : ('t, 'targs, 'args) hint -> ('t, 'targs, 'args) hint -> ('t, 'targs, 'args) hint
+val merge_hints :
+  ('t, 'targs, 'args, 'props, 'children) hint ->
+  ('t, 'targs, 'args, 'props, 'children) hint ->
+  ('t, 'targs, 'args, 'props, 'children) hint
 
-val is_hint_none : ('t, 'targs, 'args) hint -> bool
+val is_hint_none : ('t, 'targs, 'args, 'props, 'children) hint -> bool
 
 val map :
   map_base_hint:('a -> 'b) ->
   map_targs:('c -> 'd) ->
   map_arg_list:('e -> 'f) ->
-  ('a, 'c, 'e) hint ->
-  ('b, 'd, 'f) hint
+  map_jsx:(Reason.t -> string -> 'g -> 'h -> 'i * 'j) ->
+  ('a, 'c, 'e, 'g, 'h) hint ->
+  ('b, 'd, 'f, 'i, 'j) hint

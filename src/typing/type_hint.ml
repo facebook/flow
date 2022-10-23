@@ -144,6 +144,41 @@ let rec instantiate_callee cx fn instantiation_hint =
     Flow_js.subst cx subst_map t_out
   | t -> t
 
+and instantiate_component cx component instantiation_hint =
+  match get_t cx component with
+  | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ })
+    when Context.jsx cx = Options.Jsx_react ->
+    let {
+      Hint_api.jsx_reason = reason;
+      jsx_name = _;
+      jsx_props = config;
+      jsx_children = children;
+      jsx_hint;
+    } =
+      instantiation_hint
+    in
+    let return_hint = evaluate_hint cx reason jsx_hint in
+    let check =
+      Implicit_instantiation_check.of_jsx
+        component
+        (tparams_loc, tparams, t_out)
+        unknown_use
+        reason
+        false
+        ~component
+        ~config
+        ~targs:None
+        children
+    in
+    let subst_map =
+      Context.run_in_implicit_instantiation_mode cx (fun () ->
+          ImplicitInstantiation.solve_targs cx ?return_hint check
+          |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
+      )
+    in
+    Flow_js.subst cx subst_map t_out
+  | t -> t
+
 and type_of_hint_decomposition cx op reason t =
   let fun_t ~params ~rest_param ~return_t =
     DefT
@@ -405,6 +440,7 @@ and type_of_hint_decomposition cx op reason t =
               SpeculationFlow.flow cx reason (t, PredicateT (predicate, tvar))
           ))
       | Instantiate_Callee instantiation_hint -> instantiate_callee cx t instantiation_hint
+      | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint
   )
 
 and fully_resolve_final_result cx t =

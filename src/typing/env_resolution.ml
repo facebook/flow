@@ -103,7 +103,22 @@ let resolve_hint cx loc hint =
     let map_base_hint = resolve_hint_node in
     let map_targs = Statement.convert_call_targs_opt' cx in
     let map_arg_list = synth_arg_list cx in
-    Hint_api.map hint ~map_base_hint ~map_targs ~map_arg_list
+    let map_jsx reason name props children =
+      let (_, (props, _, unresolved_params, _)) =
+        Context.run_in_synthesis_mode cx (fun () ->
+            Statement.jsx_mk_props cx reason name props children
+        )
+      in
+      let children =
+        Base.List.map
+          ~f:(function
+            | Type.UnresolvedArg (a, _) -> a
+            | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
+          unresolved_params
+      in
+      (props, (children, None))
+    in
+    Hint_api.map hint ~map_base_hint ~map_targs ~map_arg_list ~map_jsx
   else
     match hint with
     | Hint_t _

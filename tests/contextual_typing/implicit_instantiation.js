@@ -1,5 +1,7 @@
 // @flow
 
+import * as React from 'react';
+
 function test1() {
   declare function f<T>(f: (string) => T): T;
   // We should be able to infer that c is string.
@@ -80,6 +82,9 @@ function test5() {
   }
   const c1: C<string=>string> = new C(x => x); // OK
   const c2: C<string=>string> = new C(x => x, 1); // OK
+
+  declare function Component<T>({v: T, f: (T) => void}): void;
+  <Component v="1" f={(v) => {(v: string)}} />; // OK
 }
 
 function test6() {

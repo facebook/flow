@@ -65,6 +65,17 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Expression.expression_or_spread ->
     Type.call_arg * (ALoc.t, ALoc.t * Type.t) Ast.Expression.expression_or_spread
 
+  val jsx_mk_props :
+    Context.t ->
+    Reason.reason ->
+    string ->
+    (ALoc.t, ALoc.t) Ast.JSX.Opening.attribute list ->
+    ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list ->
+    Type.t
+    * (ALoc.t, ALoc.t * Type.t) Ast.JSX.Opening.attribute list
+    * Type.unresolved_param list
+    * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list)
+
   val statement :
     Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
 
