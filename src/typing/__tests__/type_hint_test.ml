@@ -594,6 +594,11 @@ let eval_hint_tests =
           ~expected:"{+bar: string, +foo: number}"
           "({bar: string, foo: number}) => number"
           [Decomp_ObjSpread; Decomp_JsxProps];
+    "jsx_ref_function"
+    >:: mk_eval_hint_test
+          ~expected:"React$ElementRef<React$AbstractComponent<{...}, string>> | null"
+          "React$AbstractComponent<{...}, string>"
+          [Decomp_FuncParam 0; Decomp_JsxRef];
   ]
 
 let tests = "type_hint" >::: ["evaluate_hint" >::: eval_hint_tests]

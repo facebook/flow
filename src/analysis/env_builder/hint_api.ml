@@ -69,6 +69,8 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Comp_ImmediateFuncCall
   (* Type of C in `<C [props]/>` becomes hint on `props` *)
   | Decomp_JsxProps
+  (* Type of C in `<C ref={ref} ... />` becomes hint on `ref` *)
+  | Decomp_JsxRef
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
@@ -102,6 +104,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
   | Comp_ImmediateFuncCall -> "Comp_ImmediateFuncCall"
   | Decomp_JsxProps -> "Decomp_JsxProps"
+  | Decomp_JsxRef -> "Decomp_JsxRef"
   | Decomp_SentinelRefinement _ -> "Decomp_SentinelRefinement"
   | Decomp_Await -> "Decomp_Await"
   | Instantiate_Callee _ -> "Instantiate_Callee"
@@ -155,6 +158,7 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_FuncReturn -> Decomp_FuncReturn
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Decomp_JsxProps -> Decomp_JsxProps
+  | Decomp_JsxRef -> Decomp_JsxRef
   | Decomp_SentinelRefinement checks -> Decomp_SentinelRefinement checks
   | Instantiate_Callee { reason; return_hint; targs; arg_list; arg_index } ->
     Instantiate_Callee

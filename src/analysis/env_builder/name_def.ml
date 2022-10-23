@@ -1779,6 +1779,7 @@ class def_finder env_entries providers toplevel_scope =
           )
           hint
       in
+      let ref_hint = decompose_hint Decomp_JsxRef hint in
       let hint = decompose_hint Decomp_JsxProps hint in
       let hint =
         let checks = Eq_test.jsx_attributes_possible_sentinel_refinements opening_attributes in
@@ -1788,6 +1789,9 @@ class def_finder env_entries providers toplevel_scope =
           | Opening.Attribute (_, { Attribute.name; value }) ->
             let hint =
               match name with
+              | Ast.JSX.Attribute.Identifier (_, { Ast.JSX.Identifier.name = "ref"; comments = _ })
+                ->
+                ref_hint
               | Ast.JSX.Attribute.Identifier (_, { Ast.JSX.Identifier.name; comments = _ }) ->
                 decompose_hint (Decomp_ObjProp name) hint
               | Ast.JSX.Attribute.NamespacedName _ -> Hint_None

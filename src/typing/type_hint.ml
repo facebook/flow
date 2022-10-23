@@ -361,6 +361,7 @@ and type_of_hint_decomposition cx op reason t =
               reason
               (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
         )
+      | Decomp_JsxRef -> Flow_js.get_builtin_typeapp cx reason (OrdinaryName "React$Ref") [t]
       | Decomp_MethodElem ->
         get_method_type t (Computed (DefT (reason, bogus_trust (), StrT AnyLiteral)))
       | Decomp_MethodName name -> get_method_type t (Named (reason, OrdinaryName name))
