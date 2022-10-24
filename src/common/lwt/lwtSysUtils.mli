@@ -21,4 +21,8 @@ val exec :
   command_result Lwt.t
 
 val exec_with_timeout :
-  timeout:float -> string -> string list -> (command_result, string) result Lwt.t
+  ?env:[< `Extend of (string * string) list ] ->
+  timeout:float ->
+  string ->
+  string list ->
+  (command_result, string) result Lwt.t

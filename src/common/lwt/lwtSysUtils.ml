@@ -127,8 +127,8 @@ let with_process_full ?timeout ?env ?cwd cmd f =
 let exec ?env ?cwd cmd args =
   with_process_full ?env ?cwd (prepare_args cmd args) command_result_of_process
 
-let exec_with_timeout ~timeout cmd args =
-  with_process_full (prepare_args cmd args) (fun process ->
+let exec_with_timeout ?env ~timeout cmd args =
+  with_process_full ?env (prepare_args cmd args) (fun process ->
       let timeout_msg =
         Printf.sprintf "Timed out while running `%s` after %.3f seconds" cmd timeout
       in
