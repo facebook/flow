@@ -7248,14 +7248,22 @@ module Make
         reason
         func
     in
-    let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx func_sig in
     let default_this =
       match default_this with
       | Some t -> t
       | None -> dummy_this (aloc_of_reason reason)
     in
     let fun_type = Func_stmt_sig.functiontype cx ~arrow fun_loc default_this func_sig in
-    (fun_type, reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast))
+    if Context.in_synthesis_mode cx then
+      let { Ast.Function.params; body; _ } = func in
+      let params_ast = Typed_ast_utils.error_mapper#function_params params in
+      let body_ast = Typed_ast_utils.error_mapper#function_body body in
+      (fun_type, reconstruct_func params_ast body_ast)
+    else
+      let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx func_sig in
+      ( fun_type,
+        reconstruct_func (Base.Option.value_exn params_ast) (Base.Option.value_exn body_ast)
+      )
 
   (* Process a function declaration, returning a (polymorphic) function type. *)
   and mk_function_declaration cx ~general reason fun_loc func =

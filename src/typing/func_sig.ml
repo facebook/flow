@@ -274,7 +274,7 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels_check_body cx x =
+  let toplevels cx x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
     let body_loc =
       let open Ast.Function in
@@ -542,29 +542,6 @@ struct
          where expr' is the typed AST translation of expr.
     *)
     (params_ast, body_ast, init_ast)
-
-  let toplevels_skip_body cx x =
-    let { T.kind; fparams; body; _ } = x in
-    let params_ast = F.eval cx fparams in
-    let body_ast = Base.Option.map ~f:Typed_ast_utils.error_mapper#function_body body in
-    let init_ast =
-      match kind with
-      | Ordinary
-      | Ctor
-      | Async
-      | Generator _
-      | AsyncGenerator _
-      | Predicate ->
-        None
-      | FieldInit e -> Some (Typed_ast_utils.error_mapper#expression e)
-    in
-    (params_ast, body_ast, init_ast)
-
-  let toplevels cx x =
-    if Context.in_synthesis_mode cx then
-      toplevels_skip_body cx x
-    else
-      toplevels_check_body cx x
 
   let to_ctor_sig f = { f with T.kind = Ctor }
 end
