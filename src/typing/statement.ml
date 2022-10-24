@@ -165,7 +165,7 @@ module Make
             (t, ts, Some head_slice)
           | _ -> failwith "Invariant Violation: spread list has two slices in a row"
         in
-        let seal = Obj_type.mk_seal reason ~sealed:true ~frozen in
+        let seal = Obj_type.mk_seal ~frozen in
         let target = Object.Spread.Value { make_seal = seal } in
         let tool = Object.Resolve Object.Next in
         let state =

@@ -287,8 +287,7 @@ class ['a] t =
       match flags.obj_kind with
       | Indexed dict -> self#dict_type cx pole acc dict
       | Exact
-      | Inexact
-      | UnsealedInFile _ ->
+      | Inexact ->
         acc
 
     method private obj_type cx pole acc o =

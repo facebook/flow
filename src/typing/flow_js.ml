@@ -1515,21 +1515,15 @@ struct
         (* AnyT has every prop *)
         | (AnyT _, HasOwnPropT _) -> ()
         | (DefT (_, _, ObjT { flags; props_tmap; _ }), GetKeysT (reason_op, keys)) ->
-          begin
-            match flags.obj_kind with
-            | UnsealedInFile _ ->
-              rec_flow cx trace (StrT.why reason_op |> with_trust bogus_trust, keys)
-            | _ ->
-              let dict_t = Obj_type.get_dict_opt flags.obj_kind in
-              (* flow the union of keys of l to keys *)
-              let keylist =
-                Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op
-              in
-              rec_flow cx trace (union_of_ts reason_op keylist, keys);
-              Base.Option.iter dict_t ~f:(fun { key; _ } ->
-                  rec_flow cx trace (key, ToStringT (reason_op, keys))
-              )
-          end
+          let dict_t = Obj_type.get_dict_opt flags.obj_kind in
+          (* flow the union of keys of l to keys *)
+          let keylist =
+            Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op
+          in
+          rec_flow cx trace (union_of_ts reason_op keylist, keys);
+          Base.Option.iter dict_t ~f:(fun { key; _ } ->
+              rec_flow cx trace (key, ToStringT (reason_op, keys))
+          )
         | (DefT (_, _, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys)) ->
           (* methods are not enumerable, so only walk fields *)
           let own_props = Context.find_props cx instance.own_props in
@@ -3753,8 +3747,7 @@ struct
           (match flags.obj_kind with
           | Indexed _ -> rec_flow_t cx trace ~use_op (AnyT.make Untyped reason_op, t)
           | Exact
-          | Inexact
-          | UnsealedInFile _ ->
+          | Inexact ->
             rec_flow_t cx trace ~use_op (to_obj, t))
         | ( DefT (lreason, _, InstanceT (_, _, _, { own_props; proto_props; _ })),
             ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _)
@@ -3824,11 +3817,6 @@ struct
         (*************************)
         (* objects can be copied *)
         (*************************)
-
-        (* Note: The story around unsealed objects and rest is not great. One
-           thought is to insert a special kind of shadow property into the host
-           object, which directs all writes (other than those in `xs`) to the
-           unsealed rest result object. For now, the design here is incomplete. *)
         | (DefT (reason_obj, _, ObjT { props_tmap; flags; _ }), ObjRestT (reason, xs, t, id)) ->
           ConstFoldExpansion.guard id (reason_obj, 0) (function
               | 0 ->
@@ -3851,10 +3839,7 @@ struct
           in
           let use_op = Op (ObjectSpread { op = reason_op }) in
           let spread_tool = Object.Resolve Object.Next in
-          let spread_target =
-            Object.Spread.Value
-              { make_seal = Obj_type.mk_seal reason_op ~sealed:true ~frozen:false }
-          in
+          let spread_target = Object.Spread.Value { make_seal = Obj_type.mk_seal ~frozen:false } in
           let spread_state =
             {
               Object.Spread.todo_rev =
@@ -3920,12 +3905,6 @@ struct
             | _ -> ());
             perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
           | None ->
-            let lookup_kind =
-              match (Obj_type.sealed_in_op reason_op o.flags.obj_kind, lookup_kind) with
-              | (false, ShadowRead (strict, ids)) -> ShadowRead (strict, Nel.cons o.props_tmap ids)
-              | (false, ShadowWrite ids) -> ShadowWrite (Nel.cons o.props_tmap ids)
-              | _ -> lookup_kind
-            in
             rec_flow
               cx
               trace
@@ -4912,9 +4891,9 @@ struct
            Such tests are always non-strict, in that we don't immediately report an
            error if the property is not found not in the object type. Instead, if
            the property is not found, we control the result type of the read based
-           on the flags on the object type. For exact sealed object types, the
+           on the flags on the object type. For exact object types, the
            result type is `void`; otherwise, it is "unknown". Indeed, if the
-           property is not found in an exact sealed object type, we can be sure it
+           property is not found in an exact object type, we can be sure it
            won't exist at run time, so the read will return undefined; but for other
            object types, the property *might* exist at run time, and since we don't
            know what the type of the property would be, we set things up so that the
@@ -4951,25 +4930,9 @@ struct
           let test_info = Some (id, (reason_prop, reason_of_t l)) in
           let lookup_default =
             match l with
-            | DefT (_, _, ObjT { flags; _ }) when Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind
-              ->
-              if Obj_type.sealed_in_op reason_op flags.obj_kind then
-                let r = replace_desc_reason (RMissingProperty name) reason_op in
-                Some (DefT (r, bogus_trust (), VoidT), lookup_default)
-              else
-                (* This is an unsealed object. We don't now when (or even if) this
-                 * property access will resolve, since reads and writes can happen
-                 * in any order.
-                 *
-                 * Due to this, we never error on property accesses. TODO: Build a
-                 * separate mechanism unsealed objects that errors after merge if a
-                 * shadow prop is read but never written.
-                 *
-                 * We also should not return a default type on lookup failure,
-                 * because a later write could make the lookup succeed.
-                 *)
-                let () = Context.test_prop_hit cx id in
-                None
+            | DefT (_, _, ObjT { flags; _ }) when Obj_type.is_exact flags.obj_kind ->
+              let r = replace_desc_reason (RMissingProperty name) reason_op in
+              Some (DefT (r, bogus_trust (), VoidT), lookup_default)
             | _ ->
               (* Note: a lot of other types could in principle be considered
                  "exact". For example, new instances of classes could have exact
@@ -5845,8 +5808,7 @@ struct
       | UseT (use_op, ExactT (r, u)) ->
         if is_concrete bound then
           match bound with
-          | DefT (_, _, ObjT { flags; _ }) when not @@ Obj_type.is_exact_or_sealed r flags.obj_kind
-            ->
+          | DefT (_, _, ObjT { flags; _ }) when not @@ Obj_type.is_exact flags.obj_kind ->
             let l = make_generic bound in
             exact_obj_error cx trace flags.obj_kind ~exact_reason:r ~use_op l;
             (* Continue the Flow even after we've errored. Often, there is more that
@@ -6461,12 +6423,6 @@ struct
           call_t = call_id;
         }
       in
-      let lkind =
-        match lkind with
-        (* ObjT <: Interface subtyping treats lower bounds as if they were sealed *)
-        | UnsealedInFile _ -> Exact
-        | _ -> lkind
-      in
       let lower =
         DefT
           ( lreason,
@@ -6747,7 +6703,7 @@ struct
             match curr_t with
             | DefT (_, _, NullT) -> getprop_ub ()
             | DefT (_, _, ObjT { flags = { obj_kind; _ }; proto_t = ObjProtoT _; _ })
-              when Obj_type.is_legacy_exact_DO_NOT_USE obj_kind ->
+              when Obj_type.is_exact obj_kind ->
               lookup_ub ()
             | _ -> getprop_ub ()
           else
@@ -7300,7 +7256,7 @@ struct
     | None ->
       (match propref with
       | Named (reason_prop, prop) ->
-        if Obj_type.is_exact_or_sealed reason_op o.flags.obj_kind then
+        if Obj_type.is_exact o.flags.obj_kind then
           add_output
             cx
             ~trace
@@ -7314,13 +7270,7 @@ struct
                }
             )
         else
-          let sealed = Obj_type.sealed_in_op reason_op o.flags.obj_kind in
-          let lookup_kind =
-            if sealed then
-              Strict reason_obj
-            else
-              ShadowWrite (Nel.one o.props_tmap)
-          in
+          let lookup_kind = Strict reason_obj in
           rec_flow
             cx
             trace
@@ -7337,9 +7287,9 @@ struct
                 }
             )
       | Computed elem_t ->
-        if Obj_type.is_exact_or_sealed reason_op o.flags.obj_kind then
+        if Obj_type.is_exact o.flags.obj_kind then
           match elem_t with
-          | AnyT _ when Obj_type.is_exact_or_sealed reason_op o.flags.obj_kind ->
+          | AnyT _ when Obj_type.is_exact o.flags.obj_kind ->
             rec_flow_t cx trace ~use_op:unknown_use (prop_t, AnyT.untyped reason_op)
           | _ ->
             add_output
@@ -7667,7 +7617,7 @@ struct
             (Error_message.EPropNotReadable
                { reason_prop = reason; prop_name = Some (OrdinaryName key); use_op = unknown_use }
             ))
-      | None when Obj_type.is_exact_or_sealed (fst result) flags.obj_kind ->
+      | None when Obj_type.is_exact flags.obj_kind ->
         (* prop is absent from exact object type *)
         if sense then
           ()

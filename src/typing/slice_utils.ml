@@ -34,7 +34,7 @@ let mk_object_type
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       Base.Option.value_map
         ~f:(fun exact_reason ->
-          if Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind then
+          if Obj_type.is_exact flags.obj_kind then
             let exact_reason =
               if invalidate_aliases then
                 update_desc_reason invalidate_rtype_alias exact_reason
@@ -109,7 +109,7 @@ let read_prop r flags x p =
       let t = DefT (reason, bogus_trust (), MixedT Mixed_everything) in
       t
   in
-  (t, Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind, is_method)
+  (t, Obj_type.is_exact flags.obj_kind, is_method)
 
 let read_dict r { value; dict_polarity; _ } =
   if Polarity.compat (dict_polarity, Polarity.Positive) then
@@ -249,8 +249,8 @@ let spread2
       _inexact_reason2,
       { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ }
     ) =
-  let exact1 = Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind in
-  let exact2 = Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind in
+  let exact1 = Obj_type.is_exact flags1.obj_kind in
+  let exact2 = Obj_type.is_exact flags2.obj_kind in
   let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
   let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
   let dict =
@@ -392,10 +392,7 @@ let spread2
       match dict with
       | Some d -> Indexed d
       | None ->
-        if
-          Obj_type.is_exact_or_sealed reason flags1.obj_kind
-          && Obj_type.is_exact_or_sealed reason flags2.obj_kind
-        then
+        if Obj_type.is_exact flags1.obj_kind && Obj_type.is_exact flags2.obj_kind then
           Exact
         else
           Inexact
@@ -461,13 +458,12 @@ let spread_mk_object cx reason target { Object.reason = _; props; flags; generic
       (* Type spread result is exact if annotated to be exact *)
       | Annot { make_exact } -> (make_exact, Sealed)
       (* Value spread result is exact if all inputs are exact *)
-      | Value { make_seal } -> (Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind, make_seal)
+      | Value { make_seal } -> (Obj_type.is_exact flags.obj_kind, make_seal)
     in
     let dict = Obj_type.get_dict_opt flags.obj_kind in
     let obj_kind =
       match (exact, sealed, dict) with
       | (_, _, Some d) -> Indexed d
-      | (true, Object.Spread.UnsealedInFile x, _) -> UnsealedInFile x
       | (true, _, _) -> Exact
       | _ -> Inexact
     in
@@ -621,7 +617,6 @@ let object_rest
   let rest
       cx
       ~use_op
-      reason
       merge_mode
       { Object.reason = r1; props = props1; flags = flags1; generics = generics1; interface = _ }
       { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ } =
@@ -634,7 +629,7 @@ let object_rest
             ( merge_mode,
               get_prop r1 p1 dict1,
               get_prop r2 p2 dict2,
-              Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind
+              Obj_type.is_exact flags2.obj_kind
             )
           with
           (* If the object we are using to subtract has an optional property, non-own
@@ -775,7 +770,7 @@ let object_rest
            * For C there will be no prop. However, if the props object is exact
            * then we need to throw an error. *)
           | (ReactConfigMerge _, None, Some (_, _, _), _) ->
-            ( if Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind then
+            ( if Obj_type.is_exact flags1.obj_kind then
               let use_op =
                 Frame (PropertyCompatibility { prop = Some k; lower = r2; upper = r1 }, unknown_use)
               in
@@ -818,7 +813,6 @@ let object_rest
       match (flags1.obj_kind, dict) with
       | (Exact, _) -> Exact
       | (Indexed _, Some d) -> Indexed d
-      | (UnsealedInFile _, _) when Obj_type.sealed_in_op reason flags1.obj_kind -> Exact
       | _ -> Inexact
     in
     let flags = { frozen = false; obj_kind } in
@@ -844,7 +838,7 @@ let object_rest
     let tool = Object.Rest (options, state) in
     recurse cx use_op reason resolve_tool tool t
   | Done base ->
-    let xs = Nel.map_concat (fun slice -> Nel.map (rest cx ~use_op reason options slice) x) base in
+    let xs = Nel.map_concat (fun slice -> Nel.map (rest cx ~use_op options slice) x) base in
     let t =
       match xs with
       | (x, []) -> x
@@ -1022,8 +1016,7 @@ let intersect2
       ~otherwise:
         ( if
           (* TODO(jmbrown): Audit this condition. Should this be a conjunction? *)
-          Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind
-          || Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind
+          Obj_type.is_exact flags1.obj_kind || Obj_type.is_exact flags2.obj_kind
         then
           Exact
         else

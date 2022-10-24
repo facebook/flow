@@ -140,10 +140,6 @@ let rec merge_type cx =
     in
     let obj_kind =
       match (o1.flags.obj_kind, o2.flags.obj_kind) with
-      | (UnsealedInFile s1, UnsealedInFile s2) when s1 = s2 -> UnsealedInFile s1
-      | (UnsealedInFile _, _)
-      | (_, UnsealedInFile _) ->
-        UnsealedInFile None
       | ( Indexed { key = k1; value = v1; dict_polarity = Polarity.Positive; _ },
           Indexed { key = k2; value = v2; dict_polarity = Polarity.Positive; _ }
         ) ->

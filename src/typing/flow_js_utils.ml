@@ -780,7 +780,7 @@ let map_obj cx trust o reason_op ~map_t ~map_field =
   in
   let reason = replace_desc_reason RObjectType reason_op in
   let t = DefT (reason, trust, ObjT { o with props_tmap; flags }) in
-  if Obj_type.is_legacy_exact_DO_NOT_USE o.flags.obj_kind then
+  if Obj_type.is_exact o.flags.obj_kind then
     ExactT (reason, t)
   else
     t
@@ -1785,17 +1785,14 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       (match propref with
       | Named (reason_prop, name) ->
         let lookup_kind =
-          if Obj_type.sealed_in_op reason_op o.flags.obj_kind then
-            match lookup_info with
-            | Some (id, lookup_default_tout) when Obj_type.is_exact o.flags.obj_kind ->
-              let lookup_default =
-                let r = replace_desc_reason (RMissingProperty (Some name)) reason_op in
-                Some (DefT (r, bogus_trust (), VoidT), lookup_default_tout)
-              in
-              NonstrictReturning (lookup_default, Some (id, (reason_prop, reason_obj)))
-            | _ -> Strict reason_obj
-          else
-            ShadowRead (None, Nel.one o.props_tmap)
+          match lookup_info with
+          | Some (id, lookup_default_tout) when Obj_type.is_exact o.flags.obj_kind ->
+            let lookup_default =
+              let r = replace_desc_reason (RMissingProperty (Some name)) reason_op in
+              Some (DefT (r, bogus_trust (), VoidT), lookup_default_tout)
+            in
+            NonstrictReturning (lookup_default, Some (id, (reason_prop, reason_obj)))
+          | _ -> Strict reason_obj
         in
         let x = (reason_op, lookup_kind, propref, use_op, Properties.Set.singleton o.props_tmap) in
         F.cg_lookup cx trace ~obj_t:l o.proto_t x
@@ -1927,18 +1924,7 @@ let objt_to_obj_rest cx props_tmap flags reason xs =
    * handle internal names *)
   let props = NameUtils.Map.filter (fun x _ -> not (is_internal_name x)) props in
   let proto = ObjProtoT reason in
-  (* A rest result can not be exact if the source object is unsealed,
-     because we may not have seen all the writes yet. *)
-  let obj_kind =
-    match flags.obj_kind with
-    | UnsealedInFile _ when not (Obj_type.sealed_in_op reason flags.obj_kind) ->
-      UnsealedInFile (ALoc.source (aloc_of_reason reason))
-    | UnsealedInFile _
-    | Exact ->
-      Exact
-    | Indexed d -> Indexed d
-    | _ -> Inexact
-  in
+  let obj_kind = flags.obj_kind in
   Obj_type.mk_with_proto cx reason ~props proto ~obj_kind
 
 (* $Values *)

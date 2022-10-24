@@ -691,24 +691,17 @@ module rec ConsGen : S = struct
       let t = elab_t cx t (Annot_GetKeysT reason) in
       elab_t cx t op
     | (DefT (_, _, ObjT { flags; props_tmap; _ }), Annot_GetKeysT reason_op) ->
-      begin
-        match flags.obj_kind with
-        | UnsealedInFile _ -> with_trust bogus_trust (StrT.why reason_op)
-        | _ ->
-          let dict_t = Obj_type.get_dict_opt flags.obj_kind in
-          (* flow the union of keys of l to keys *)
-          let keylist =
-            Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op
-          in
-          let keylist =
-            match dict_t with
-            | None -> keylist
-            | Some { key; _ } ->
-              let key = elab_t cx key (Annot_ToStringT reason_op) in
-              key :: keylist
-          in
-          union_of_ts reason_op keylist
-      end
+      let dict_t = Obj_type.get_dict_opt flags.obj_kind in
+      (* flow the union of keys of l to keys *)
+      let keylist = Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op in
+      let keylist =
+        match dict_t with
+        | None -> keylist
+        | Some { key; _ } ->
+          let key = elab_t cx key (Annot_ToStringT reason_op) in
+          key :: keylist
+      in
+      union_of_ts reason_op keylist
     | (DefT (_, _, InstanceT (_, _, _, instance)), Annot_GetKeysT reason_op) ->
       (* methods are not enumerable, so only walk fields *)
       let own_props = Context.find_props cx instance.own_props in

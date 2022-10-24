@@ -589,8 +589,7 @@ class virtual ['a] t =
         else
           { flags with obj_kind = Indexed dict' }
       | Exact
-      | Inexact
-      | UnsealedInFile _ ->
+      | Inexact ->
         flags
 
     method obj_type cx map_cx t =

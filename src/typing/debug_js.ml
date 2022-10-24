@@ -244,7 +244,6 @@ let rec dump_t_ (depth, tvars) cx t =
         | Inexact -> "Inexact"
         | Indexed { key; value; _ } ->
           spf "Indexed {[%s]: %s}" (p ~reason:false key) (p ~reason:false value)
-        | UnsealedInFile _ -> "UnsealedInFile"
       in
       p ~trust:(Some trust) t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
     | DefT (_, trust, ArrT (ArrayAT (elemt, None))) ->
@@ -519,8 +518,7 @@ and dump_use_t_ (depth, tvars) cx t =
       match obj_kind with
       | Indexed { dict_polarity = p; _ } -> [Polarity.sigil p ^ "[]"]
       | Exact
-      | Inexact
-      | UnsealedInFile _ ->
+      | Inexact ->
         []
     in
     let xs =

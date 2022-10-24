@@ -1274,7 +1274,6 @@ module rec TypeTerm : sig
     | Exact
     | Inexact
     | Indexed of dicttype
-    | UnsealedInFile of File_key.t option
 
   and flags = {
     frozen: bool;
@@ -2516,7 +2515,6 @@ and Object : sig
     }
 
     type sealtype =
-      | UnsealedInFile of File_key.t option
       | Sealed
       | Frozen
 
@@ -3840,16 +3838,6 @@ let mk_opt_boundfunctioncalltype this targs args strict = (this, targs, args, st
 let mk_opt_methodcalltype
     ?opt_meth_generic_this opt_meth_targs opt_meth_args_tlist opt_meth_strict_arity =
   { opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; opt_meth_strict_arity }
-
-(* An object type has two flags, sealed and exact. A sealed object type cannot
-   be extended. An exact object type accurately describes objects without
-   "forgeting" any properties: so to extend an object type with optional
-   properties, the object type must be exact. Thus, as an invariant, "not exact"
-   logically implies "sealed" (and by contrapositive, "not sealed" implies
-   "exact"; in other words, exact and sealed cannot both be false).
-
-   Types of object literals are exact, but can be sealed or unsealed. Object
-   type annotations are sealed but not exact. *)
 
 let default_flags = { obj_kind = Exact; frozen = false }
 

@@ -319,13 +319,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           in
           let (exact, changed) =
             if
-              Obj_type.is_legacy_exact_DO_NOT_USE widest.Object.flags.obj_kind
-              && not (Obj_type.is_legacy_exact_DO_NOT_USE slice.Object.flags.obj_kind)
+              Obj_type.is_exact widest.Object.flags.obj_kind
+              && not (Obj_type.is_exact slice.Object.flags.obj_kind)
             then
               (false, true)
             else
-              ( Obj_type.is_legacy_exact_DO_NOT_USE widest.Object.flags.obj_kind
-                && Obj_type.is_legacy_exact_DO_NOT_USE slice.Object.flags.obj_kind,
+              ( Obj_type.is_exact widest.Object.flags.obj_kind
+                && Obj_type.is_exact slice.Object.flags.obj_kind,
                 changed
               )
           in
@@ -469,8 +469,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | Some d -> Indexed d
                 | None ->
                   if
-                    Obj_type.is_exact_or_sealed reason config_flags.obj_kind
-                    && Obj_type.is_exact_or_sealed reason defaults_flags.obj_kind
+                    Obj_type.is_exact config_flags.obj_kind
+                    && Obj_type.is_exact defaults_flags.obj_kind
                   then
                     Exact
                   else
@@ -502,7 +502,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 Obj_type.obj_kind_from_optional_dict
                   ~dict
                   ~otherwise:
-                    ( if Obj_type.is_exact_or_sealed reason config_flags.obj_kind then
+                    ( if Obj_type.is_exact config_flags.obj_kind then
                       Exact
                     else
                       Inexact
@@ -547,7 +547,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               (fun _ (t, _) -> rec_flow_t cx trace ~use_op (t, react_transport_value))
               props_map;
             match flags.obj_kind with
-            | UnsealedInFile _ -> failwith "React config should never be unsealed"
             | Exact -> ()
             | Inexact ->
               let r =

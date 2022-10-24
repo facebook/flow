@@ -142,14 +142,6 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
   let name = OrdinaryName "defaultProps" in
   let reason_missing = replace_desc_reason RReactDefaultProps (reason_of_t component) in
   let reason_prop = replace_desc_reason (RProperty (Some name)) reason_op in
-  (* NOTE: This is intentionally unsound. Function statics are modeled
-   * as an unsealed object and so a `GetPropT` would perform a shadow
-   * lookup since a write to an unsealed property may happen at any
-   * time. If we were to perform a shadow lookup for `defaultProps` and
-   * `defaultProps` was never written then our lookup would stall and
-   * therefore so would our props analysis. So instead we make the
-   * stateful assumption that `defaultProps` was already written to
-   * the component statics which may not always be true. *)
   let lookup_kind =
     NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
   in

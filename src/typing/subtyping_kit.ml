@@ -295,8 +295,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (* property doesn't exist in inflowing type *)
           (match up with
           | Field (_, OptionalT _, _) when lit -> ()
-          | Field (_, OptionalT _, Polarity.Positive)
-            when Obj_type.is_exact_or_sealed ureason lflags.obj_kind ->
+          | Field (_, OptionalT _, Polarity.Positive) when Obj_type.is_exact lflags.obj_kind ->
             rec_flow
               cx
               trace
@@ -313,35 +312,27 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   }
               )
           | _ ->
-            (* When an object type is unsealed, typing it as another object type should add properties
-               of that object type to it as needed. We do this when not speculating, because adding
-               properties changes state, and the state change is necessary to enforce
-               consistency. *)
-            if not (Obj_type.sealed_in_op ureason lflags.obj_kind) then
-              speculative_object_write cx lflds s up
-            else
-              (* otherwise, look up the property in the prototype *)
-              let lookup_kind =
-                match (Obj_type.sealed_in_op ureason lflags.obj_kind, ldict) with
-                | (false, None) -> ShadowRead (Some lreason, Nel.one lflds)
-                | (true, None) -> Strict lreason
-                | _ -> NonstrictReturning (None, None)
-              in
-              rec_flow
-                cx
-                trace
-                ( lproto,
-                  LookupT
-                    {
-                      reason = ureason;
-                      lookup_kind;
-                      ts = [];
-                      propref;
-                      lookup_action = LookupProp (use_op, up);
-                      method_accessible = true;
-                      ids = None;
-                    }
-                ))
+            (* look up the property in the prototype *)
+            let lookup_kind =
+              match ldict with
+              | None -> Strict lreason
+              | _ -> NonstrictReturning (None, None)
+            in
+            rec_flow
+              cx
+              trace
+              ( lproto,
+                LookupT
+                  {
+                    reason = ureason;
+                    lookup_kind;
+                    ts = [];
+                    propref;
+                    lookup_action = LookupProp (use_op, up);
+                    method_accessible = true;
+                    ids = None;
+                  }
+              ))
     );
 
     (* Any properties in l but not u must match indexer *)
@@ -995,7 +986,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow cx trace (t, MakeExactT (r, Upper (UseT (use_op, u))))
     (* ObjT LB ~> $Exact<UB>. make exact if exact and unsealed *)
     | (DefT (_, _, ObjT { flags; _ }), ExactT (r, t)) ->
-      if Obj_type.is_exact_or_sealed r flags.obj_kind then
+      if Obj_type.is_exact flags.obj_kind then
         let t = push_type_alias_reason r t in
         rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
       else (

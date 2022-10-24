@@ -1007,20 +1007,14 @@ end = struct
       let%bind obj_props = obj_props_t ~env props_tmap call_t in
       let%map obj_kind =
         match obj_kind with
-        | T.UnsealedInFile _
-        | T.Exact
-          when not (obj_props = []) ->
-          return Ty.ExactObj
+        | T.Exact -> return Ty.ExactObj
         | T.Indexed d ->
           let { T.dict_polarity; dict_name; key; value } = d in
           let dict_polarity = type_polarity dict_polarity in
           let%bind dict_key = type__ ~env key in
           let%bind dict_value = type__ ~env value in
           return (Ty.IndexedObj { Ty.dict_polarity; dict_name; dict_key; dict_value })
-        | T.Exact
-        | T.UnsealedInFile _
-        | T.Inexact ->
-          return Ty.InexactObj
+        | T.Inexact -> return Ty.InexactObj
       in
       { Ty.obj_kind; obj_frozen; obj_literal; obj_props }
 
@@ -1140,9 +1134,6 @@ end = struct
         let own_props = Context.find_props cx own_props in
         let%bind props_ty = react_props ~env ~default:Ty.explicit_any own_props "props" in
         let%bind state_ty = react_props ~env ~default:Ty.explicit_any own_props "state" in
-        (* The inferred type for state is unsealed, which has its exact bit set.
-         * However, Ty.t does not account for unsealed and exact sealed objects are
-         * incompatible with exact and unsealed, so making state inexact here. *)
         let state_ty = inexactify state_ty in
         return (generic_builtin_t (Reason.OrdinaryName "React$Component") [props_ty; state_ty])
 
