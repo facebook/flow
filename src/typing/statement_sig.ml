@@ -37,18 +37,13 @@ module type S = sig
   module ObjectExpressionAcc : sig
     type t
 
-    val empty : allow_sealed:bool -> t
+    (* unit arg is required due to recursive modules *)
+    val empty : unit -> t
 
     val add_prop : (Type.Properties.t -> Type.Properties.t) -> t -> t
 
     val mk_object_from_spread_acc :
-      Context.t ->
-      t ->
-      Reason.t ->
-      frozen:bool ->
-      default_proto:Type.t ->
-      empty_unsealed:bool ->
-      Type.t
+      Context.t -> t -> Reason.t -> frozen:bool -> default_proto:Type.t -> Type.t
   end
 
   val convert_call_targs_opt' :

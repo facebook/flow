@@ -71,18 +71,11 @@ module Make
       obj_pmap: Type.Properties.t;
       tail: element list;
       proto: Type.t option;
-      obj_sealed: bool;
       obj_key_autocomplete: bool;
     }
 
-    let empty ~allow_sealed =
-      {
-        obj_pmap = NameUtils.Map.empty;
-        tail = [];
-        proto = None;
-        obj_sealed = allow_sealed;
-        obj_key_autocomplete = false;
-      }
+    let empty _ =
+      { obj_pmap = NameUtils.Map.empty; tail = []; proto = None; obj_key_autocomplete = false }
 
     let empty_slice = Slice { slice_pmap = NameUtils.Map.empty }
 
@@ -104,10 +97,6 @@ module Make
       in
       { acc with obj_pmap = NameUtils.Map.empty; tail = Spread t :: tail }
 
-    let set_seal ~allow_sealed sealed acc = { acc with obj_sealed = allow_sealed && sealed }
-
-    let sealed acc = acc.obj_sealed
-
     let set_obj_key_autocomplete acc = { acc with obj_key_autocomplete = true }
 
     let obj_key_autocomplete acc = acc.obj_key_autocomplete
@@ -122,19 +111,13 @@ module Make
 
     let proto { proto; _ } = proto
 
-    let mk_object_from_spread_acc cx acc reason ~frozen ~default_proto ~empty_unsealed =
-      let sealed = sealed acc in
+    let mk_object_from_spread_acc cx acc reason ~frozen ~default_proto =
       match elements_rev acc with
       | (Slice { slice_pmap }, []) ->
-        let sealed = sealed && not (NameUtils.Map.is_empty slice_pmap && empty_unsealed) in
         let proto = Base.Option.value ~default:default_proto (proto acc) in
-        let obj_kind =
-          if sealed || frozen || obj_key_autocomplete acc then
-            Exact
-          else
-            UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
+        let obj_t =
+          Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen ~props:slice_pmap proto
         in
-        let obj_t = Obj_type.mk_with_proto cx reason ~obj_kind ~frozen ~props:slice_pmap proto in
         if obj_key_autocomplete acc then
           Tvar.mk_where cx reason (fun tvar -> Flow_js.flow_t cx (obj_t, tvar))
         else
@@ -182,7 +165,7 @@ module Make
             (t, ts, Some head_slice)
           | _ -> failwith "Invariant Violation: spread list has two slices in a row"
         in
-        let seal = Obj_type.mk_seal reason ~sealed ~frozen in
+        let seal = Obj_type.mk_seal reason ~sealed:true ~frozen in
         let target = Object.Spread.Value { make_seal = seal } in
         let tool = Object.Resolve Object.Next in
         let state =
@@ -2015,12 +1998,12 @@ module Make
         (fun (map, rev_prop_asts) prop ->
           let (map, prop) = object_prop cx map prop in
           (map, prop :: rev_prop_asts))
-        (ObjectExpressionAcc.empty ~allow_sealed:true, [])
+        (ObjectExpressionAcc.empty (), [])
         props
     in
     (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-  and object_ cx reason ~frozen ?(allow_sealed = true) props =
+  and object_ cx reason ~frozen props =
     let open Ast.Expression.Object in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
@@ -2038,32 +2021,9 @@ module Make
     let (acc, rev_prop_asts) =
       List.fold_left
         (fun (acc, rev_prop_asts) -> function
-          (* Enforce that the only way to make unsealed object literals is ...{} (spreading empty object
-             literals). Otherwise, spreading always returns sealed object literals.
-
-             Also enforce that a spread of an inexact object can only appear as the first element of an
-             object literal, because otherwise we cannot determine the type of the object literal without
-             significantly losing precision about elements preceding that spread.
-
-             Finally, the exactness of an object literal type is determined solely by its sealedness.
-
-             TODO: This treatment of spreads is oblivious to issues that arise when spreading expressions
-             of union type.
-          *)
           | SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) ->
             let (((_, spread), _) as argument) = expression cx argument in
-            let not_empty_object_literal_argument =
-              match spread with
-              | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.obj_kind
-              | _ -> true
-            in
-            let acc =
-              if not_empty_object_literal_argument then
-                ObjectExpressionAcc.add_spread spread acc
-              else
-                acc
-            in
-            ( ObjectExpressionAcc.set_seal ~allow_sealed not_empty_object_literal_argument acc,
+            ( ObjectExpressionAcc.add_spread spread acc,
               SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) :: rev_prop_asts
             )
           | Property
@@ -2149,17 +2109,11 @@ module Make
           | prop ->
             let (acc, prop) = object_prop cx acc prop in
             (acc, prop :: rev_prop_asts))
-        (ObjectExpressionAcc.empty ~allow_sealed, [])
+        (ObjectExpressionAcc.empty (), [])
         props
     in
     let t =
-      ObjectExpressionAcc.mk_object_from_spread_acc
-        cx
-        acc
-        reason
-        ~frozen
-        ~default_proto:obj_proto
-        ~empty_unsealed:false
+      ObjectExpressionAcc.mk_object_from_spread_acc cx acc reason ~frozen ~default_proto:obj_proto
     in
     (t, List.rev rev_prop_asts)
 
@@ -5526,7 +5480,7 @@ module Make
               Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments })
             in
             (acc, att :: atts))
-        (ObjectExpressionAcc.empty ~allow_sealed:true, [])
+        (ObjectExpressionAcc.empty (), [])
         attributes
     in
     let attributes = List.rev atts in
@@ -5564,7 +5518,6 @@ module Make
         reason_props
         ~frozen:false
         ~default_proto:proto
-        ~empty_unsealed:false
     in
     (t, attributes, unresolved_params, children)
 

@@ -207,10 +207,7 @@ let rec resolve_binding_partial cx reason loc b =
       let reason = mk_reason RObjectLit obj_loc in
       let obj_proto = ObjProtoT reason in
       let acc =
-        Base.List.fold
-          properties
-          ~init:(Statement.ObjectExpressionAcc.empty ~allow_sealed:true)
-          ~f:(fun acc prop ->
+        Base.List.fold properties ~init:(Statement.ObjectExpressionAcc.empty ()) ~f:(fun acc prop ->
             match prop with
             | Property
                 ( prop_loc,
@@ -293,7 +290,6 @@ let rec resolve_binding_partial cx reason loc b =
         reason
         ~frozen:false
         ~default_proto:obj_proto
-        ~empty_unsealed:false
     in
     let t = mk_obj loc obj in
     (t, unknown_use, true)
