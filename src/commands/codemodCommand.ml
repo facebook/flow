@@ -419,51 +419,6 @@ module Annotate_cycles_command = struct
   let command = CommandSpec.command spec main
 end
 
-module Annotate_empty_object_command = struct
-  let doc = "Annotates empty objects."
-
-  let spec =
-    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
-    let preserve_string_literals_level =
-      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
-    in
-    let name = "annotate-empty-object" in
-    {
-      CommandSpec.name;
-      doc;
-      usage =
-        Printf.sprintf "Usage: %s codemod %s [OPTION]... [FILE]\n\n%s\n" Utils_js.exe_name name doc;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> CommandUtils.codemod_flags
-          |> flag
-               "--preserve-literals"
-               (required ~default:Literals.Never (enum preserve_string_literals_level))
-               ~doc:""
-          |> common_annotate_flags
-        );
-    }
-
-  let main codemod_flags preserve_literals max_type_size default_any () =
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Annotate_empty_object.Acc
-
-      type accumulator = Acc.t
-
-      let reporter = string_reporter (module Acc)
-
-      let check_options o = Options.{ o with opt_experimental_infer_indexers = true }
-
-      let visit =
-        let mapper = Annotate_empty_object.mapper ~preserve_literals ~max_type_size ~default_any in
-        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
-    end) in
-    main (module Runner) codemod_flags ()
-
-  let command = CommandSpec.command spec main
-end
-
 module Annotate_use_state_command = struct
   let doc = "Adds explicit type arguments to `useState`/`React.useState` calls"
 
@@ -718,7 +673,6 @@ let command =
       [
         (Annotate_cycles_command.spec.CommandSpec.name, Annotate_cycles_command.command);
         (Annotate_empty_array_command.spec.CommandSpec.name, Annotate_empty_array_command.command);
-        (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
         (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
         ( Annotate_optional_properties_command.spec.CommandSpec.name,
