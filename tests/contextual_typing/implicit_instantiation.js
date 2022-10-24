@@ -124,3 +124,12 @@ function test9() {
   // an incompatibility.
   const _: M<{| num: number |}> = {num: id(true)}; // ok
 }
+
+function test10() {
+  type V = {||};
+  type Variables = {|+[string]: any|};
+  declare opaque type Query<-TVariables: Variables>;
+  declare var q: Query<V>;
+  declare function poly<-TVariables: Variables>(q: Query<TVariables>): void;
+  poly(q); // ok
+}

@@ -390,9 +390,20 @@ struct
     let pin_tparam inferred () = Observer.on_pinned_tparam cx name tparam inferred in
     match polarity with
     | None ->
-      let t = merge_lower_bounds cx t in
-      (match t with
-      | None -> (fun () -> Observer.on_constant_tparam_missing_bounds cx name tparam)
+      (match merge_lower_bounds cx t with
+      | None ->
+        let on_upper_empty cx name tparam ~tparam_binder_reason:_ ~instantiation_reason:_ =
+          Observer.on_constant_tparam_missing_bounds cx name tparam
+        in
+        use_upper_bounds
+          cx
+          name
+          tparam
+          t
+          ~default_bound
+          ~on_upper_empty
+          tparam_binder_reason
+          instantiation_reason
       | Some inferred -> (fun () -> Observer.on_constant_tparam cx name tparam inferred))
     | Some Neutral ->
       (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
