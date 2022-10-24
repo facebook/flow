@@ -4672,8 +4672,8 @@ module Make
           ~on_member_eq_other:(fun expr other ->
             ignore @@ this#expression expr;
             let refis = this#maybe_sentinel ~sense ~strict loc expr other in
-            this#commit_refinement refis;
-            ignore @@ this#expression other)
+            ignore @@ this#expression other;
+            this#commit_refinement refis)
           ~on_other_eq_member:(fun other expr ->
             ignore @@ this#expression other;
             ignore @@ this#expression expr;

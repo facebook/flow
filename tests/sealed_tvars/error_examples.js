@@ -1,6 +1,9 @@
 //@flow
 
-// Contextual
-var x: number => number = (x) => x;
+declare var values: {
+    greeting: string,
+    };
 
-var h: number = x(10);
+if (values.greeting === values) {
+
+}

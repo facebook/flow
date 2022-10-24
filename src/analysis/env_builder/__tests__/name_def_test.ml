@@ -1233,3 +1233,14 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
       (4, 2) to (4, 5) =>
       (5, 2) to (5, 5)
         |}]
+
+let%expect_test "logic_op_assign_repeat" =
+  print_order_test {|
+declare var values: mixed;
+
+if (values.b === values.a) {
+}
+|};
+    [%expect {|
+      (2, 12) to (2, 18) =>
+      (4, 17) to (4, 25) |}]

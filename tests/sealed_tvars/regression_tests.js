@@ -139,3 +139,13 @@ function non_assigning_member_assigns() {
   rule.title_label = "a";
   titlesAdlabels.push(rule.title_label);
 }
+
+{
+  declare var values: {
+    greeting: string,
+  };
+
+  if (values.greeting === values) {
+
+  }
+}
