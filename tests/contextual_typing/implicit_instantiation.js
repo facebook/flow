@@ -1,6 +1,6 @@
 // @flow
-
 import * as React from 'react';
+import { PolyComponent } from "./poly_react_component_export";
 
 function test1() {
   declare function f<T>(f: (string) => T): T;
@@ -85,6 +85,7 @@ function test5() {
 
   declare function Component<T>({v: T, f: (T) => void}): void;
   <Component v="1" f={(v) => {(v: string)}} />; // OK
+  <PolyComponent v="1" f={(v) => {(v: string)}} />; // OK
 }
 
 function test6() {

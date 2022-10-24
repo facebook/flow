@@ -75,10 +75,16 @@ let simplify_callee cx reason use_op func_t =
         (func_t, CallT { use_op; reason; call_action; return_hint = hint_unavailable })
   )
 
-let get_t cx = function
-  | OpenT (r, id) ->
+let rec get_t cx ~depth = function
+  | AnnotT (_, t, _) when depth >= 0 -> get_t cx ~depth:(depth - 1) t
+  | OpenT (r, id) when depth >= 0 ->
     Flow_js_utils.merge_tvar ~no_lowers:(fun _ r -> DefT (r, bogus_trust (), EmptyT)) cx r id
+    |> get_t cx ~depth:(depth - 1)
   | t -> t
+
+(* We choose a depth of 3 because it's sufficient to unwrap OpenT(AnnotT(OpenT)), which is the most
+   complicated case known. If we run into issues in the future, we can increase the depth limit. *)
+let get_t = get_t ~depth:3
 
 let rec instantiate_callee cx fn instantiation_hint =
   let { Hint_api.reason; targs; arg_list; return_hint; arg_index } = instantiation_hint in
