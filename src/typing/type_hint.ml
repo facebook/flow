@@ -85,17 +85,12 @@ let rec instantiate_callee cx fn instantiation_hint =
   let t =
     match get_t cx (simplify_callee cx reason unknown_use fn) with
     | IntersectionT (r, rep) ->
-      let (_, result) =
-        Context.run_in_synthesis_mode cx (fun () ->
-            synthesis_speculation_call
-              cx
-              reason
-              (r, rep)
-              (Lazy.force targs)
-              (Lazy.force arg_list |> Base.List.map ~f:snd)
-        )
-      in
-      result
+      synthesis_speculation_call
+        cx
+        reason
+        (r, rep)
+        (Lazy.force targs)
+        (Lazy.force arg_list |> Base.List.map ~f:snd)
     | t -> t
   in
   match get_t cx t with
