@@ -188,7 +188,6 @@ let sig_options
     ?facebook_fbt
     ?(max_literal_len = 100)
     ?(exact_by_default = false)
-    ?(exact_empty_objects = false)
     ?module_ref_prefix
     ?(enable_enums = true)
     ?(enable_relay_integration = false)
@@ -202,7 +201,6 @@ let sig_options
     facebook_fbt;
     max_literal_len;
     exact_by_default;
-    exact_empty_objects;
     module_ref_prefix;
     enable_enums;
     enable_relay_integration;
@@ -219,7 +217,6 @@ let print_sig
     ?facebook_fbt
     ?facebook_keyMirror
     ?exact_by_default
-    ?exact_empty_objects
     ?max_literal_len
     ?module_ref_prefix
     ?enable_enums
@@ -234,7 +231,6 @@ let print_sig
       ?facebook_fbt
       ?facebook_keyMirror
       ?exact_by_default
-      ?exact_empty_objects
       ?max_literal_len
       ?module_ref_prefix
       ?enable_enums
@@ -633,14 +629,14 @@ let%expect_test "empty_object_literal" =
   |};
   [%expect {|
     ESModule {type_exports = [||];
-      exports = [|ExportDefault {default_loc = [1:7-14]; def = (Err [1:15-18])}|];
+      exports =
+      [|ExportDefault {default_loc = [1:7-14];
+          def = (Value ObjLit {loc = [1:15-18]; frozen = false; proto = None; props = {}})}
+        |];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
         stars = []; strict = true}}
-
-    Errors:
-    ([1:15-18], (SigError (Signature_error.EmptyObject [1:15-18])))
   |}]
 
 let%expect_test "export_class_reference" =

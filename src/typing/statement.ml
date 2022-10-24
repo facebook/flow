@@ -2159,7 +2159,7 @@ module Make
         reason
         ~frozen
         ~default_proto:obj_proto
-        ~empty_unsealed:(not @@ Context.exact_empty_objects cx)
+        ~empty_unsealed:false
     in
     (t, List.rev rev_prop_asts)
 

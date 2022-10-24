@@ -61,7 +61,6 @@ type metadata = {
   inference_mode: Options.inference_mode;
   inference_mode_lti_includes: string list;
   exact_by_default: bool;
-  exact_empty_objects: bool;
   experimental_infer_indexers: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -164,8 +163,6 @@ val evaluated : t -> Type.t Type.Eval.Map.t
 val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
-
-val exact_empty_objects : t -> bool
 
 val array_literal_providers : t -> bool
 

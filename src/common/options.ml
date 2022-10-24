@@ -79,7 +79,6 @@ type t = {
   opt_inference_mode_lti_includes: string list;
   opt_estimate_recheck_time: bool;
   opt_exact_by_default: bool;
-  opt_exact_empty_objects: bool;
   opt_experimental_infer_indexers: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
@@ -185,8 +184,6 @@ let inference_mode_lti_includes opts = opts.opt_inference_mode_lti_includes
 let estimate_recheck_time opts = opts.opt_estimate_recheck_time
 
 let exact_by_default opts = opts.opt_exact_by_default
-
-let exact_empty_objects opts = opts.opt_exact_empty_objects
 
 let experimental_infer_indexers opts = opts.opt_experimental_infer_indexers
 

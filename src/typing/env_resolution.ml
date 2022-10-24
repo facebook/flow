@@ -293,7 +293,7 @@ let rec resolve_binding_partial cx reason loc b =
         reason
         ~frozen:false
         ~default_proto:obj_proto
-        ~empty_unsealed:(not @@ Context.exact_empty_objects cx)
+        ~empty_unsealed:false
     in
     let t = mk_obj loc obj in
     (t, unknown_use, true)

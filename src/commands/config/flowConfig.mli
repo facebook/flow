@@ -98,8 +98,6 @@ val estimate_recheck_time : config -> bool option
 
 val exact_by_default : config -> bool
 
-val exact_empty_objects : config -> bool option
-
 val facebook_fbs : config -> string option
 
 val facebook_fbt : config -> string option

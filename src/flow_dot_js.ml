@@ -125,7 +125,6 @@ let stub_metadata ~root ~checked =
     inference_mode = Options.ConstrainWrites;
     inference_mode_lti_includes = [];
     exact_by_default = false;
-    exact_empty_objects = true;
     experimental_infer_indexers = false;
     facebook_fbs = None;
     facebook_fbt = None;

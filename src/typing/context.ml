@@ -41,7 +41,6 @@ type metadata = {
   inference_mode: Options.inference_mode;
   inference_mode_lti_includes: string list;
   exact_by_default: bool;
-  exact_empty_objects: bool;
   experimental_infer_indexers: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -231,7 +230,6 @@ let metadata_of_options options =
     inference_mode = Options.inference_mode options;
     inference_mode_lti_includes = Options.inference_mode_lti_includes options;
     exact_by_default = Options.exact_by_default options;
-    exact_empty_objects = Options.exact_empty_objects options;
     experimental_infer_indexers = Options.experimental_infer_indexers options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
@@ -459,8 +457,6 @@ let evaluated cx = cx.ccx.sig_cx.evaluated
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
-
-let exact_empty_objects cx = cx.metadata.exact_empty_objects || lti cx
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 

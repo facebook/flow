@@ -651,7 +651,7 @@ module Annotate_optional_properties_command = struct
 
       let reporter = string_reporter (module Acc)
 
-      let check_options o = Options.{ o with opt_exact_empty_objects = true }
+      let check_options o = o
 
       let visit =
         let mapper =

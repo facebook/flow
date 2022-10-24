@@ -139,7 +139,6 @@ let load_lib_files ~ccx ~options ~reader files =
           facebook_fbt = Options.facebook_fbt options;
           max_literal_len = Options.max_literal_length options;
           exact_by_default = Options.exact_by_default options;
-          exact_empty_objects = Options.exact_empty_objects options;
           module_ref_prefix = Options.haste_module_ref_prefix options;
           enable_enums = Options.enums options;
           enable_relay_integration = Options.enable_relay_integration options;

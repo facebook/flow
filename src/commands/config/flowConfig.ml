@@ -60,7 +60,6 @@ module Opts = struct
     inference_mode_lti_includes: string list;
     estimate_recheck_time: bool option;
     exact_by_default: bool;
-    exact_empty_objects: bool option;
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
@@ -184,7 +183,6 @@ module Opts = struct
       inference_mode_lti_includes = [];
       estimate_recheck_time = None;
       exact_by_default = false;
-      exact_empty_objects = None;
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;
@@ -754,7 +752,6 @@ module Opts = struct
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
-      ("exact_empty_objects", boolean (fun opts v -> Ok { opts with exact_empty_objects = Some v }));
       ("experimental.abstract_locations", abstract_locations_parser);
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
@@ -1403,8 +1400,6 @@ let inference_mode_lti_includes c = c.options.Opts.inference_mode_lti_includes
 let estimate_recheck_time c = c.options.Opts.estimate_recheck_time
 
 let exact_by_default c = c.options.Opts.exact_by_default
-
-let exact_empty_objects c = c.options.Opts.exact_empty_objects
 
 let facebook_fbs c = c.options.Opts.facebook_fbs
 
