@@ -1183,29 +1183,10 @@ module rec TypeTerm : sig
 
    * NonstrictReturning (Some (default, tout))
      If the property is not found, unify a default type with the *original*
-     tvar from the lookup.
-
-   * ShadowRead (strict, property_map_ids)
-     If the property is not found, installs shadow properties into unsealed
-     objects found along the prototype chain.
-
-     Shadow reads can be strict or non-strict, and behaves identically to
-     `Strict` and `NonstrictReturning None` respectively.
-
-     Note: Shadow reads are only ever strict in ObjT -> ObjT flows, which
-     ensures statements like `var o: { p: T } = {}` are an error. This
-     behavior is also race-y, and possibly undesirable.
-
-   * ShadowWrite property_map_ids
-     If the property is not found, install a property on a single unsealed
-     object type which originated the lookup. Also install shadow properties
-     along the prototype chain, to ensure that the entire proto chain is subtype
-     compatible. *)
+     tvar from the lookup. *)
   and lookup_kind =
     | Strict of reason
     | NonstrictReturning of (t * t) option * (ident * (reason * reason)) option
-    | ShadowRead of reason option * Properties.id Nel.t
-    | ShadowWrite of Properties.id Nel.t
 
   and lookup_action =
     | ReadProp of {

@@ -162,7 +162,6 @@ type 'loc virtual_reason_desc =
   | RPropertyAssignment of string option
   | RProperty of name option
   | RPrivateProperty of string
-  | RShadowProperty of name
   | RMember of {
       object_: string;
       property: string;
@@ -270,7 +269,7 @@ let rec map_desc_locs f = function
     | RSuper | RNoSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _
     | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RIdentifier _
     | RUnknownParameter _ | RIdentifierAssignment _ | RPropertyAssignment _ | RProperty _
-    | RPrivateProperty _ | RShadowProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
+    | RPrivateProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
     | RUnknownProperty _ | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _
     | RUntypedModule _ | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _
     | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _
@@ -643,7 +642,6 @@ let rec string_of_desc = function
   | RMember { object_; property } -> spf "`%s%s`" object_ property
   | RPropertyAssignment (Some x) -> spf "assignment of property `%s`" x
   | RPropertyAssignment None -> "assignment of computed property/element"
-  | RShadowProperty x -> spf ".%s" (display_string_of_name x)
   | RPropertyOf (x, d) -> spf "property `%s` of %s" (display_string_of_name x) (string_of_desc d)
   | RPropertyIsAString (OrdinaryName "") -> "empty string"
   | RPropertyIsAString x -> spf "string `%s`" (display_string_of_name x)
@@ -1418,7 +1416,6 @@ let classification_of_reason r =
   | RPropertyAssignment _
   | RProperty _
   | RPrivateProperty _
-  | RShadowProperty _
   | RMember _
   | RPropertyOf _
   | RPropertyIsAString _

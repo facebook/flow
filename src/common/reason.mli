@@ -122,7 +122,6 @@ type 'loc virtual_reason_desc =
   | RPropertyAssignment of string option
   | RProperty of name option
   | RPrivateProperty of string
-  | RShadowProperty of name
   | RMember of {
       object_: string;
       property: string;

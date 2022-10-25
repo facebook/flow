@@ -418,14 +418,6 @@ and dump_use_t_ (depth, tvars) cx t =
         )
         (Base.Option.value_map testid_opt ~default:"" ~f:(fun (id, _) -> spf " for test id %d" id))
     | Strict r -> spf "Strict %S" (dump_reason cx r)
-    | ShadowRead (_, ids) ->
-      spf
-        "ShadowRead [%s]"
-        (String.concat "; " (Nel.to_list ids |> Base.List.map ~f:Properties.string_of_id))
-    | ShadowWrite ids ->
-      spf
-        "ShadowWrite [%s]"
-        (String.concat "; " (Nel.to_list ids |> Base.List.map ~f:Properties.string_of_id))
   in
   let lookup_action = function
     | ReadProp { tout = (reason, tout); _ } ->
@@ -1102,8 +1094,6 @@ let dump_error_message =
     | InstanceLookupComputed -> "InstanceLookupComputed"
     | PropRefComputedOpen -> "PropRefComputedOpen"
     | PropRefComputedLiteral -> "PropRefComputedLiteral"
-    | ShadowReadComputed -> "ShadowReadComputed"
-    | ShadowWriteComputed -> "ShadowWriteComputed"
     | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
     | InterfaceTypeSpread -> "InterfaceTypeSpread"
     | Error_message.DebugThrow -> "DebugThrow"

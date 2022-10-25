@@ -504,8 +504,6 @@ and internal_error =
   | InstanceLookupComputed
   | PropRefComputedOpen
   | PropRefComputedLiteral
-  | ShadowReadComputed
-  | ShadowWriteComputed
   | RestParameterNotIdentifierPattern
   | InterfaceTypeSpread
   | DebugThrow
@@ -1592,8 +1590,6 @@ let string_of_internal_error = function
   | InstanceLookupComputed -> "unexpected computed property lookup on InstanceT"
   | PropRefComputedOpen -> "unexpected open computed property element type"
   | PropRefComputedLiteral -> "unexpected literal computed property element type"
-  | ShadowReadComputed -> "unexpected shadow read on computed property"
-  | ShadowWriteComputed -> "unexpected shadow write on computed property"
   | RestParameterNotIdentifierPattern -> "unexpected rest parameter, expected an identifier pattern"
   | InterfaceTypeSpread -> "unexpected spread property in interface"
   | DebugThrow -> "debug throw"
