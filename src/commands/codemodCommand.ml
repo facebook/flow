@@ -419,15 +419,15 @@ module Annotate_cycles_command = struct
   let command = CommandSpec.command spec main
 end
 
-module Annotate_use_state_command = struct
-  let doc = "Adds explicit type arguments to `useState`/`React.useState` calls"
+module Annotate_react_hooks_command = struct
+  let doc = "Adds explicit type arguments to builtin React hooks calls"
 
   let spec =
     let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
     let preserve_string_literals_level =
       Literals.[("always", Always); ("never", Never); ("auto", Auto)]
     in
-    let name = "annotate-use-state" in
+    let name = "annotate-react-hooks" in
     {
       CommandSpec.name;
       doc;
@@ -463,7 +463,7 @@ module Annotate_use_state_command = struct
       () =
     let open Codemod_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Annotate_use_state.Acc
+      module Acc = Annotate_react_hooks.Acc
 
       type accumulator = Acc.t
 
@@ -473,75 +473,7 @@ module Annotate_use_state_command = struct
 
       let visit =
         let mapper =
-          Annotate_use_state.mapper
-            ~preserve_literals
-            ~generalize_maybe
-            ~generalize_react_mixed_element
-            ~max_type_size
-            ~default_any
-        in
-        Codemod_utils.make_visitor (Mapper mapper)
-    end) in
-    main (module Runner) codemod_flags ()
-
-  let command = CommandSpec.command spec main
-end
-
-module Annotate_use_callback_command = struct
-  let doc = "Adds explicit type annotations to functions in `useCallback`/`React.useCallback` calls"
-
-  let spec =
-    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
-    let preserve_string_literals_level =
-      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
-    in
-    let name = "annotate-use-callback" in
-    {
-      CommandSpec.name;
-      doc;
-      usage =
-        Printf.sprintf "Usage: %s codemod %s [OPTION]... [FILE]\n\n%s\n" name Utils_js.exe_name doc;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> CommandUtils.codemod_flags
-          |> flag
-               "--preserve-literals"
-               (required ~default:Literals.Never (enum preserve_string_literals_level))
-               ~doc:""
-          |> flag
-               "--generalize-maybe"
-               truthy
-               ~doc:"Generalize annotations containing null or void to maybe types"
-          |> flag
-               "--generalize-react-mixed-element"
-               truthy
-               ~doc:"Generalize annotations containing react elements to React.MixedElement"
-          |> common_annotate_flags
-        );
-    }
-
-  let main
-      codemod_flags
-      preserve_literals
-      generalize_maybe
-      generalize_react_mixed_element
-      max_type_size
-      default_any
-      () =
-    let open Codemod_utils in
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Annotate_use_state.Acc
-
-      type accumulator = Acc.t
-
-      let reporter = string_reporter (module Acc)
-
-      let check_options o = o
-
-      let visit =
-        let mapper =
-          Annotate_use_callback.mapper
+          Annotate_react_hooks.mapper
             ~preserve_literals
             ~generalize_maybe
             ~generalize_react_mixed_element
@@ -678,8 +610,7 @@ let command =
         ( Annotate_optional_properties_command.spec.CommandSpec.name,
           Annotate_optional_properties_command.command
         );
-        (Annotate_use_state_command.spec.CommandSpec.name, Annotate_use_state_command.command);
-        (Annotate_use_callback_command.spec.CommandSpec.name, Annotate_use_callback_command.command);
+        (Annotate_react_hooks_command.spec.CommandSpec.name, Annotate_react_hooks_command.command);
         ( Annotate_implicit_instantiation.spec.CommandSpec.name,
           Annotate_implicit_instantiation.command
         );

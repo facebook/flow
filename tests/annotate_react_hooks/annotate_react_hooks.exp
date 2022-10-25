@@ -1,6 +1,6 @@
->>> test.js (#changes: 8)
+>>> test.js (#changes: 20)
 import * as React from 'react';
-import {useState} from 'react';
+import {useState, useCallback} from 'react';
 
 // null
 {
@@ -59,15 +59,46 @@ import {useState} from 'react';
   const [val, setValue] = useState(new Map()); // NOT ANNOTATED
 }
 
+{
+  let f = useCallback((a: string, b: number) => {}); // ANNOTATED
+  f("", 0);
+}
+{
+  let f = React.useCallback((a: string, b: number) => {}); // ANNOTATED
+  f("", 0);
+}
+{
+  let f = useCallback((a: string, b: number) => {}, []); // ANNOTATED
+  f("", 0);
+}
+{
+  let f = React.useCallback((a: string, b: number) => {}, []); // ANNOTATED
+  f("", 0);
+}
+{
+  let f = useCallback((a: void, b: void) => {}); // ANNOTATED
+  f();
+}
+{
+  let f = React.useCallback((a: void, b: void) => {}); // ANNOTATED
+  f();
+}
+{
+  let f = useCallback((a, b) => {}); // NOT ANNOTATED
+}
+{
+  let f = React.useCallback((a, b) => {}); // NOT ANNOTATED
+}
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              8
-  Total size of annotations:               20
+  Number of annotations added:             20
+  Total size of annotations:               32
 
 Errors:
-  Missing annot./normalizer error:          0
+  Missing annot./normalizer error:          4
   Validation Error:                         0
   Import Error:
     Loc source none:                        0

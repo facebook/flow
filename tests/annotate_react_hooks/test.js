@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useState} from 'react';
+import {useState, useCallback} from 'react';
 
 // null
 {
@@ -56,4 +56,35 @@ import {useState} from 'react';
 }
 {
   const [val, setValue] = useState(new Map()); // NOT ANNOTATED
+}
+
+{
+  let f = useCallback((a, b) => {}); // ANNOTATED
+  f("", 0);
+}
+{
+  let f = React.useCallback((a, b) => {}); // ANNOTATED
+  f("", 0);
+}
+{
+  let f = useCallback((a, b) => {}, []); // ANNOTATED
+  f("", 0);
+}
+{
+  let f = React.useCallback((a, b) => {}, []); // ANNOTATED
+  f("", 0);
+}
+{
+  let f = useCallback((a, b) => {}); // ANNOTATED
+  f();
+}
+{
+  let f = React.useCallback((a, b) => {}); // ANNOTATED
+  f();
+}
+{
+  let f = useCallback((a, b) => {}); // NOT ANNOTATED
+}
+{
+  let f = React.useCallback((a, b) => {}); // NOT ANNOTATED
 }
