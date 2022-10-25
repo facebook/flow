@@ -208,22 +208,6 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
             ^^
 
 
-Error ------------------------------------------------------------------------------------- empty_array_literals.js:7:17
-
-Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
-
-   7| const x1 = { f: [] }; // TODO should error due to missing annotation
-                      ^^
-
-
-Error ------------------------------------------------------------------------------------ empty_array_literals.js:15:17
-
-Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
-
-   15| ({ x4 } = { x4: [] }); // TODO should error due to provider position
-                       ^^
-
-
 Error --------------------------------------------------------------------------------------------------- globals.js:4:2
 
 Cannot cast `x` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
@@ -791,4 +775,4 @@ References:
 
 
 
-Found 49 errors
+Found 47 errors

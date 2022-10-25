@@ -2351,8 +2351,8 @@ module Make
         (* empty array, analogous to object with implicit properties *)
         ( if Context.array_literal_providers cx then
           if not has_hint then begin
-            Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-            if Context.lti cx then Flow.flow_t cx (AnyT.at (AnyError None) loc, elemt)
+            if Context.lti cx then
+              Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
           end else if not (Context.lti cx) then
             ()
           else

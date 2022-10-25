@@ -445,7 +445,10 @@ let rec resolve_binding_partial cx reason loc b =
         let elemt = Tvar.mk cx element_reason in
         if Context.array_literal_providers cx then begin
           Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-          if Context.lti cx then Flow_js.flow_t cx (AnyT.error reason, elemt)
+          if Context.lti cx then
+            Flow_js.flow_t
+              cx
+              (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
         end;
         (elemt, Some [], replace_desc_reason REmptyArrayLit reason)
     in

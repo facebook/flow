@@ -31,7 +31,7 @@ written_thrice[0] = 3;
 written_thrice[1] = "foo";
 written_thrice.push("bar", 4);
 
-let z2 = []; // should not annotate because --default-any is not passed here
+let z2 = [];
 
 let arr2 = ["A", "B", "C"];
 let x2 = []; // no need for annotation

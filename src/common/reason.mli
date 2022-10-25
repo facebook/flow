@@ -24,6 +24,7 @@ type 'loc virtual_reason_desc =
   | RBoolean
   | RMixed
   | REmpty
+  | REmptyArrayElement
   | RVoid
   | RNull
   | RVoidedNull

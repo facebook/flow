@@ -58,16 +58,6 @@ let mapper
           errors
           loc_error_set
 
-    (* Override this method to skip Array<empty> unless --default-any is passed. *)
-    method! private opt_annotate ~f ~error ~expr loc ty_entry annot =
-      match ty_entry with
-      | Ok (Ty.Arr { Ty.arr_elt_t = Ty.Bot _; _ }) when not default_any ->
-        wont_annotate_locs <- LSet.add loc wont_annotate_locs;
-        annot
-      | Ok _
-      | Error _ ->
-        super#opt_annotate ~f ~error ~expr loc ty_entry annot
-
     method! expression (expr : (Loc.t, Loc.t) Ast.Expression.t) =
       let open Ast.Expression in
       match expr with

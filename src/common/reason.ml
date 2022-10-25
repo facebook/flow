@@ -59,6 +59,7 @@ type 'loc virtual_reason_desc =
   | RBoolean
   | RMixed
   | REmpty
+  | REmptyArrayElement
   | RVoid
   | RNull
   | RVoidedNull
@@ -254,7 +255,7 @@ let rec map_desc_locs f = function
     | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess
     | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
-    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext ) as r ->
+    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -525,6 +526,7 @@ let rec string_of_desc = function
   | RBoolean -> "boolean"
   | RMixed -> "mixed"
   | REmpty -> "empty"
+  | REmptyArrayElement -> "unknown element of empty array"
   | RAnyImplicit -> "implicit 'any'"
   | RAnyExplicit -> "explicit 'any'"
   | RVoid -> "undefined"
@@ -1343,6 +1345,7 @@ let classification_of_reason r =
     `Array
   | RMixed
   | REmpty
+  | REmptyArrayElement
   | RAnyExplicit
   | RAnyImplicit
   | RIndexedAccess _

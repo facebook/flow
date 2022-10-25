@@ -12,4 +12,4 @@ declare function f(Array<number>): void;
 []; //err
 f([]);
 
-[].concat([]); // err, but no divergence
+[].concat([]);
