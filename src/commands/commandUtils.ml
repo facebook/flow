@@ -1341,7 +1341,6 @@ let make_options
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
-    opt_experimental_infer_indexers = false;
     opt_array_literal_providers = FlowConfig.array_literal_providers flowconfig;
     opt_array_literal_providers_includes =
       Base.List.map

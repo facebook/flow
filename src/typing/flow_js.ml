@@ -4036,13 +4036,6 @@ struct
         | ( (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
             SetElemT (use_op, reason_op, key, mode, tin, tout)
           ) ->
-          ( if Context.experimental_infer_indexers cx then
-            let dicttype =
-              { dict_name = None; key; value = tin; dict_polarity = Polarity.Neutral }
-            in
-            let loc = def_aloc_of_reason (reason_of_t l) in
-            Context.add_inferred_indexer cx loc dicttype
-          );
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem (tin, tout, mode)))
         | ((DefT (_, _, (ObjT _ | ArrT _)) | AnyT _), GetElemT (use_op, reason_op, annot, key, tout))
           ->

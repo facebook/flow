@@ -41,7 +41,6 @@ type metadata = {
   inference_mode: Options.inference_mode;
   inference_mode_lti_includes: string list;
   exact_by_default: bool;
-  experimental_infer_indexers: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -160,7 +159,6 @@ type component_t = {
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable implicit_instantiation_results: Type.t list ALocFuzzyMap.t;
-  mutable inferred_indexers: Type.dicttype list ALocMap.t;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
   mutable global_value_cache:
     (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result NameUtils.Map.t;
@@ -230,7 +228,6 @@ let metadata_of_options options =
     inference_mode = Options.inference_mode options;
     inference_mode_lti_includes = Options.inference_mode_lti_includes options;
     exact_by_default = Options.exact_by_default options;
-    experimental_infer_indexers = Options.experimental_infer_indexers options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
@@ -337,7 +334,6 @@ let make_ccx master_cx =
     voidable_checks = [];
     implicit_instantiation_checks = [];
     implicit_instantiation_results = ALocFuzzyMap.empty;
-    inferred_indexers = ALocMap.empty;
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -457,8 +453,6 @@ let evaluated cx = cx.ccx.sig_cx.evaluated
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
-
-let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 
 let cycle_errors cx =
   cx.metadata.cycle_errors || lti cx || in_dirlist cx cx.metadata.cycle_errors_includes
@@ -600,8 +594,6 @@ let voidable_checks cx = cx.ccx.voidable_checks
 let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
 
 let implicit_instantiation_results cx = cx.ccx.implicit_instantiation_results
-
-let inferred_indexers cx = cx.ccx.inferred_indexers
 
 let environment cx = cx.environment
 
@@ -758,15 +750,6 @@ let add_implicit_instantiation_jsx
         children
     in
     add_possibly_speculating_implicit_instantiation_check cx check
-
-let add_inferred_indexer cx loc dict =
-  cx.ccx.inferred_indexers <-
-    ALocMap.update
-      loc
-      (function
-        | Some dicts -> Some (dict :: dicts)
-        | None -> Some [dict])
-      cx.ccx.inferred_indexers
 
 let add_call_arg_lower_bound cx loc t =
   let call_arg_lower_bounds = cx.ccx.call_arg_lower_bounds in

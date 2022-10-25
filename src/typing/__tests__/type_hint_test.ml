@@ -32,7 +32,6 @@ let metadata =
     inference_mode = Options.LTI;
     inference_mode_lti_includes = [];
     exact_by_default = true;
-    experimental_infer_indexers = false;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;

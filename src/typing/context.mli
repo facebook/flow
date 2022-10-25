@@ -61,7 +61,6 @@ type metadata = {
   inference_mode: Options.inference_mode;
   inference_mode_lti_includes: string list;
   exact_by_default: bool;
-  experimental_infer_indexers: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -165,8 +164,6 @@ val goals : t -> Type.t IMap.t
 val exact_by_default : t -> bool
 
 val array_literal_providers : t -> bool
-
-val experimental_infer_indexers : t -> bool
 
 val cycle_errors : t -> bool
 
@@ -280,8 +277,6 @@ val implicit_instantiation_checks : t -> Implicit_instantiation_check.t list
 
 val implicit_instantiation_results : t -> Type.t list ALocFuzzyMap.t
 
-val inferred_indexers : t -> Type.dicttype list ALocMap.t
-
 val environment : t -> Loc_env.t
 
 val in_synthesis_mode : t -> bool
@@ -382,8 +377,6 @@ val add_implicit_instantiation_jsx :
   targs:Type.targ list option ->
   Type.t list * Type.t option ->
   unit
-
-val add_inferred_indexer : t -> ALoc.t -> Type.dicttype -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 
