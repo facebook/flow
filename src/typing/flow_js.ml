@@ -805,18 +805,6 @@ struct
         | (_, BecomeT { reason; t; empty_success = _ }) when is_proper_def l ->
           let l = reposition ~trace cx (aloc_of_reason reason) l in
           rec_unify cx trace ~use_op:unknown_use ~unify_any:true l t
-        (***********************)
-        (* guarded unification *)
-        (***********************)
-
-        (* Utility to unify a pair of types based on a trigger. Triggers are
-           commonly type variables that are set up to record when certain
-           operations have been processed: until then, they remain latent. For
-           example, we can respond to events such as "a property is added," "a
-           refinement succeeds," etc., by setting up unification constraints that
-           are processed only when the corresponding triggers fire. *)
-        | (_, UnifyT (t, t_other)) ->
-          rec_unify cx trace ~use_op:unknown_use ~unify_any:true t t_other
         (***************************)
         (* type cast e.g. `(x: T)` *)
         (***************************)
@@ -5565,7 +5553,6 @@ struct
     | OptionalIndexedAccessT _
     | ReposLowerT _
     | ReposUseT _
-    | UnifyT _
     | SealGenericT _
     | ResolveUnionT _ ->
       false
@@ -6071,7 +6058,6 @@ struct
     | ThisSpecializeT _
     | ToStringT _
     | UnaryMinusT _
-    | UnifyT _
     | UseT (_, MaybeT _) (* used to filter maybe *)
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _

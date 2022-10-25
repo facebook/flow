@@ -143,7 +143,6 @@ let rec default_resolve_touts ~flow cx loc u =
   | ObjTestT (_, _, t)
   | ArrRestT (_, _, _, t) ->
     resolve t
-  | UnifyT _ -> ()
   | BecomeT { t; _ } -> resolve t
   | GetKeysT (_, use) -> default_resolve_touts ~flow cx loc use
   | HasOwnPropT _ -> ()

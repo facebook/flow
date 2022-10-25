@@ -143,7 +143,6 @@ and reason_of_use_t = function
   | ThisSpecializeT (reason, _, _) -> reason
   | ToStringT (reason, _) -> reason
   | UnaryMinusT (reason, _) -> reason
-  | UnifyT (_, t) -> reason_of_t t
   | VarianceCheckT (reason, _, _, _) -> reason
   | TypeAppVarianceCheckT (_, reason, _, _) -> reason
   | TypeCastT (_, t) -> reason_of_t t
@@ -332,7 +331,6 @@ and mod_reason_of_use_t f = function
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
   | ToStringT (reason, t) -> ToStringT (f reason, t)
   | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
-  | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
   | VarianceCheckT (reason, tparams, targs, polarity) ->
     VarianceCheckT (f reason, tparams, targs, polarity)
   | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
@@ -455,7 +453,6 @@ let rec util_use_op_of_use_t :
   | ObjRestT (_, _, _, _)
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
-  | UnifyT (_, _)
   | BecomeT { reason = _; t = _; empty_success = _ }
   | GetValuesT (_, _)
   | CJSRequireT (_, _, _)

@@ -899,7 +899,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
     | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
     | UnaryMinusT _ -> p t
-    | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
     | VarianceCheckT (_, _, args, pol) ->
       p
         ~extra:
