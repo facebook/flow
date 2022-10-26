@@ -597,6 +597,11 @@ let eval_hint_tests =
           ~expected:"React$ElementRef<React$AbstractComponent<{...}, string>> | null"
           "React$AbstractComponent<{...}, string>"
           [Decomp_FuncParam 0; Decomp_JsxRef];
+    "jsx_fragment_ref"
+    >:: mk_eval_hint_test_with_type_setup
+          ~expected:"void | React$Node"
+          "declare var Fragment: React$FragmentType; Fragment"
+          [Decomp_ObjProp "children"; Decomp_JsxProps];
   ]
 
 let tests = "type_hint" >::: ["evaluate_hint" >::: eval_hint_tests]
