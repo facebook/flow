@@ -254,6 +254,7 @@ module Print = struct
     | AnnotationHint _ -> "annot hint"
     | ValueHint _ -> "value hint"
     | ProvidersHint _ -> "providers hint"
+    | BuiltinName _ -> "builtin name hint"
 
   let string_of_source = function
     | Binding b -> string_of_binding b
