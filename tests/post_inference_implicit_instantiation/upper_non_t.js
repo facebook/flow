@@ -29,3 +29,5 @@ declare function Values<T>($Values<T>): T;
 ElementProps(3); // Error: T under constrained.
 declare function ElementRef<T>(React$ElementRef<T>): T;
 ElementRef(1); // Error: T under constrained.
+declare function Exact<T>($Exact<T>): T;
+Exact({foo: 3}); // ok

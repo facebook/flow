@@ -177,6 +177,8 @@ struct
       | ReactConfigType _ -> reverse_obj_kit_react_config cx tvar r (OpenT tout)
       | _ -> UpperNonT u)
     | UseT (_, t) -> UpperT t
+    | MakeExactT (_, Lower (_, t)) -> UpperT t
+    | MakeExactT (_, Upper use_t) -> t_of_use_t cx tvar use_t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
     | ResolveSpreadT
         ( _,
