@@ -22,6 +22,21 @@ dump types:
     "end":11
   },
   {
+    "type":"module \"./foo\"",
+    "reasons":[],
+    "loc":{
+      "source":"bar.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":19,"offset":28},
+      "end":{"line":3,"column":25,"offset":35}
+    },
+    "path":"bar.js",
+    "line":3,
+    "endline":3,
+    "start":19,
+    "end":25
+  },
+  {
     "type":"Foo",
     "reasons":[],
     "loc":{

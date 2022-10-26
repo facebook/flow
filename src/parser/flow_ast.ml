@@ -948,7 +948,7 @@ and Statement : sig
 
     and ('M, 'T) t = {
       import_kind: import_kind;
-      source: 'M * 'M StringLiteral.t;
+      source: 'T * 'M StringLiteral.t;
       default: ('M, 'T) Identifier.t option;
       specifiers: ('M, 'T) specifier option;
       comments: ('M, unit) Syntax.t option;

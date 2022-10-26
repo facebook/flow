@@ -1296,8 +1296,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.ImportDeclaration in
       let { import_kind; source; specifiers; default; comments } = decl in
       let source' =
-        let (loc, lit) = source in
-        (this#on_loc_annot loc, this#import_source loc lit)
+        let (annot, lit) = source in
+        (this#on_type_annot annot, this#import_source annot lit)
       in
       let specifiers' = Option.map ~f:(this#import_specifier ~import_kind) specifiers in
       let default' = Option.map ~f:(this#import_default_specifier ~import_kind) default in

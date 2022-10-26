@@ -11,7 +11,8 @@ val require : Context.t -> ALoc.t * string -> ALoc.t -> Type.t
 
 val import : Context.t -> ALoc.t * string -> Type.tvar
 
-val import_ns : Context.t -> Reason.t -> ALoc.t * string -> Type.t
+val import_ns :
+  ?strict:bool -> ?allow_untyped:bool -> Context.t -> Reason.t -> ALoc.t * string -> Type.t
 
 val cjs_clobber : Context.t -> ALoc.t -> Type.t -> unit
 

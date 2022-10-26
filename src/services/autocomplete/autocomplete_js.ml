@@ -564,7 +564,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.Statement.ImportDeclaration in
       let { import_kind = _; source; specifiers = _; default = _; comments = _ } = decl in
       match source with
-      | (loc, Flow_ast.StringLiteral.{ raw; _ }) when this#covers_target loc ->
+      | ((loc, _), Flow_ast.StringLiteral.{ raw; _ }) when this#covers_target loc ->
         this#find loc raw Ac_module
       | _ -> super#import_declaration decl_loc decl
 

@@ -1362,7 +1362,24 @@ module Make
       if File_key.is_lib_file (Context.file cx) && Env.in_global_scope cx then
         Flow_js.add_output cx Error_message.(EToplevelLibraryImport import_loc);
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
-      let (source_loc, { Ast.StringLiteral.value = module_name; _ }) = source in
+      let (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) = source in
+
+      let source_ast =
+        let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
+        (* force a non-strict import and allow an untyped module because we don't
+           want to check for untyped-import or nonstrict-import warnings
+           on the module name, which is not an actual "use" of the module like
+           the specifiers are. *)
+        let source_t =
+          Import_export.import_ns
+            ~strict:false
+            ~allow_untyped:true
+            cx
+            reason
+            (source_loc, module_name)
+        in
+        ((source_loc, source_t), source_literal)
+      in
 
       let specifiers_ast =
         match specifiers with
@@ -1456,7 +1473,7 @@ module Make
       ( import_loc,
         ImportDeclaration
           {
-            ImportDeclaration.source;
+            ImportDeclaration.source = source_ast;
             specifiers = specifiers_ast;
             default = default_ast;
             import_kind;

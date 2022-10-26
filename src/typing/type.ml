@@ -663,7 +663,12 @@ module rec TypeTerm : sig
      * "leader" module, and thus the is_strict flag in the context won't be accurate.
      *)
     | CJSRequireT of reason * t * bool (* is_strict *)
-    | ImportModuleNsT of reason * t * bool (* is_strict *)
+    | ImportModuleNsT of {
+        reason: reason;
+        t: t;
+        is_strict: bool;  (** callee is @flow strict *)
+        allow_untyped: bool;  (** don't warn if the imported module is untyped *)
+      }
     | ImportDefaultT of reason * import_kind * (string * string) * t * bool (* is_strict *)
     | ImportNamedT of reason * import_kind * string * string * t * bool (* is_strict *)
     | ImportTypeT of reason * string * t

@@ -62,10 +62,11 @@ let require cx ((_, module_ref) as source) require_loc =
 
 let import cx source = require_t_of_ref_unsafe cx source
 
-let import_ns cx reason source =
+let import_ns ?strict ?(allow_untyped = false) cx reason source =
   let module_t = require_t_of_ref_unsafe cx source in
+  let is_strict = Base.Option.value strict ~default:(Context.is_strict cx) in
   Tvar.mk_where cx reason (fun t ->
-      Flow.flow cx (OpenT module_t, ImportModuleNsT (reason, t, Context.is_strict cx))
+      Flow.flow cx (OpenT module_t, ImportModuleNsT { reason; t; is_strict; allow_untyped })
   )
 
 (* Module exports are treated differently than `exports`. The latter is a
