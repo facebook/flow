@@ -403,28 +403,23 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     fuse
       [Atom "declare"; space; Atom "var"; space; identifier name; Atom ":"; space; type_ ~depth t]
   in
-  let rec module_ ~depth name exports default =
-    let exports = counted_map (decl ~depth) exports in
-    let default =
-      match default with
-      | Some t -> fuse [Atom "exports"; Atom ":"; space; type_ ~depth t]
-      | None -> Empty
-    in
-    let body = list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ";") (exports @ [default]) in
+  let module_ ~depth:_ name =
     let name =
       match name with
       | Some name ->
-        fuse (in_quotes ~prefer_single_quotes (Reason.display_string_of_name name.Ty.sym_name))
+        fuse
+          (space :: in_quotes ~prefer_single_quotes (Reason.display_string_of_name name.Ty.sym_name))
       | None -> Empty
     in
-    fuse [Atom "module"; space; name; space; body]
-  and decl ~depth = function
+    fuse [Atom "module"; name]
+  in
+  let decl ~depth = function
     | VariableDecl (name, t) -> variable_decl ~depth name t
     | TypeAliasDecl { name; tparams; type_; _ } -> type_alias ~depth name tparams type_
     | ClassDecl (s, ps) -> class_decl ~depth s ps
     | InterfaceDecl (s, ps) -> interface_decl ~depth s ps
     | EnumDecl n -> enum_decl n
-    | ModuleDecl { name; exports; default } -> module_ ~depth name exports default
+    | ModuleDecl { name; exports = _; default = _ } -> module_ ~depth name
   in
   let elt_ ~depth = function
     | Type t -> type_ ~depth t
