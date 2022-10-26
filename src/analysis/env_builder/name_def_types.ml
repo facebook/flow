@@ -38,6 +38,7 @@ type hint_node =
   | AnnotationHint of tparams_map * (ALoc.t, ALoc.t) Ast.Type.annotation
   | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t
   | ProvidersHint of ALoc.t Nel.t
+  | BuiltinName of string
 
 type ast_hint =
   ( hint_node,

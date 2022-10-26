@@ -455,6 +455,7 @@ struct
                 state)
             state
             providers
+        | BuiltinName _ -> state
       in
       let rec depends_of_hint state = function
         | Hint_api.Hint_None -> state

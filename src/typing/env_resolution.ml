@@ -98,6 +98,9 @@ let resolve_hint cx loc hint =
         )
       in
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
+    | BuiltinName name ->
+      let reason = mk_reason (RCustom name) loc in
+      Flow_js.get_builtin cx (OrdinaryName name) reason
   in
   if Context.lti cx then
     let map_base_hint = resolve_hint_node in
