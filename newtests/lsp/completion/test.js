@@ -2786,7 +2786,7 @@ b.te
                 {
                   label: 'React',
                   kind: 9,
-                  detail: 'module React',
+                  detail: 'module "react"',
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
@@ -4339,7 +4339,7 @@ b.te
               items: [
                 {
                   label: 'Tympanic',
-                  kind: 13,
+                  kind: 6,
                   detail: 'type Tympanic = number',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
@@ -4410,7 +4410,7 @@ b.te
                 {
                   label: 'Types',
                   kind: 9,
-                  detail: 'module Types',
+                  detail: 'module "./type-exports.js"',
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
@@ -4549,7 +4549,7 @@ b.te
                 },
                 {
                   label: 'Typhoon',
-                  kind: 13,
+                  kind: 6,
                   detail: 'type Typhoon = string',
                   sortText: '00000000000000000006',
                   insertTextFormat: 1,
@@ -4584,7 +4584,7 @@ b.te
                 },
                 {
                   label: 'Typnotism',
-                  kind: 13,
+                  kind: 6,
                   detail: 'type Typnotism = number',
                   sortText: '00000000000000000007',
                   insertTextFormat: 1,
@@ -4655,7 +4655,7 @@ b.te
                 {
                   label: 'Typologies',
                   kind: 9,
-                  detail: 'module Typologies',
+                  detail: 'module "./type-exports.js"',
                   sortText: '00000000000000000009',
                   insertTextFormat: 1,
                   textEdit: {
@@ -4689,7 +4689,7 @@ b.te
                 },
                 {
                   label: 'Tyrant',
-                  kind: 13,
+                  kind: 6,
                   detail: 'type Tyrant = string',
                   sortText: '00000000000000000010',
                   insertTextFormat: 1,
@@ -6368,7 +6368,7 @@ b.te
                 },
                 {
                   label: 'B',
-                  kind: 13,
+                  kind: 6,
                   detail: 'type B = any',
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
@@ -6403,7 +6403,7 @@ b.te
                 },
                 {
                   label: 'T',
-                  kind: 13,
+                  kind: 6,
                   detail: 'type T = {|bar: string, foo: boolean|}',
                   sortText: '00000000000000000003',
                   insertTextFormat: 1,

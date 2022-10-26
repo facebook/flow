@@ -321,7 +321,7 @@ Flags: --pretty
   "result":[
     {"name":"Bar","type":"(props: Props) => void"},
     {"name":"Foo","type":"(props: Props) => void"},
-    {"name":"React","type":"module React"}
+    {"name":"React","type":"module \"react\""}
   ]
 }
 
@@ -331,7 +331,7 @@ Flags: --pretty
   "result":[
     {"name":"Bar","type":"(props: Props) => void"},
     {"name":"Foo","type":"(props: Props) => void"},
-    {"name":"React","type":"module React"}
+    {"name":"React","type":"module \"react\""}
   ]
 }
 
@@ -2342,7 +2342,6 @@ Flags: --lsp
 }
 {
   "label":"Typesafe",
-  "labelDetails":{"detail":"interface Typesafety"},
   "kind":8,
   "detail":"interface Typesafety",
   "sortText":"00000000000000000000",
@@ -2369,8 +2368,7 @@ Flags: --lsp
 }
 {
   "label":"Typhoon",
-  "labelDetails":{"detail":"type Typhoon = string"},
-  "kind":13,
+  "kind":6,
   "detail":"type Typhoon = string",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -2396,8 +2394,7 @@ Flags: --lsp
 }
 {
   "label":"Typnotism",
-  "labelDetails":{"detail":"type Typnotism = number"},
-  "kind":13,
+  "kind":6,
   "detail":"type Typnotism = number",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -2423,8 +2420,7 @@ Flags: --lsp
 }
 {
   "label":"Tyrant",
-  "labelDetails":{"detail":"type Tyrant = string"},
-  "kind":13,
+  "kind":6,
   "detail":"type Tyrant = string",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -2450,8 +2446,7 @@ Flags: --lsp
 }
 {
   "label":"Tympanic",
-  "labelDetails":{"detail":"type Tympanic = number"},
-  "kind":13,
+  "kind":6,
   "detail":"type Tympanic = number",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -2477,7 +2472,6 @@ Flags: --lsp
 }
 {
   "label":"Typeset",
-  "labelDetails":{"detail":"interface Typeset"},
   "kind":8,
   "detail":"interface Typeset",
   "sortText":"00000000000000000000",
@@ -2505,7 +2499,7 @@ Flags: --lsp
 {
   "label":"Types",
   "kind":9,
-  "detail":"module Types",
+  "detail":"module \"./type-exports.js\"",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -2583,7 +2577,7 @@ Flags: --lsp
 {
   "label":"Typologies",
   "kind":9,
-  "detail":"module Typologies",
+  "detail":"module \"./type-exports.js\"",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -4214,7 +4208,6 @@ Flags: --lsp
 }
 {
   "label":"BooleanEnum",
-  "labelDetails":{"detail":"enum BooleanEnum"},
   "kind":13,
   "detail":"enum BooleanEnum",
   "documentation":{"kind":"markdown","value":"a boolean enum"},
@@ -4242,7 +4235,6 @@ Flags: --lsp
 }
 {
   "label":"DefaultedStringEnum",
-  "labelDetails":{"detail":"enum DefaultedStringEnum"},
   "kind":13,
   "detail":"enum DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"a defaulted string enum"},
@@ -4270,7 +4262,6 @@ Flags: --lsp
 }
 {
   "label":"InitializedStringEnum",
-  "labelDetails":{"detail":"enum InitializedStringEnum"},
   "kind":13,
   "detail":"enum InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"an initialized string enum"},
@@ -4298,7 +4289,6 @@ Flags: --lsp
 }
 {
   "label":"NumberEnum",
-  "labelDetails":{"detail":"enum NumberEnum"},
   "kind":13,
   "detail":"enum NumberEnum",
   "documentation":{"kind":"markdown","value":"a number enum"},
@@ -4326,7 +4316,6 @@ Flags: --lsp
 }
 {
   "label":"SymbolEnum",
-  "labelDetails":{"detail":"enum SymbolEnum"},
   "kind":13,
   "detail":"enum SymbolEnum",
   "documentation":{"kind":"markdown","value":"a symbol enum"},
@@ -8061,8 +8050,7 @@ Flags: --lsp
 }
 {
   "label":"myFoo",
-  "labelDetails":{"detail":"type myFoo = number"},
-  "kind":13,
+  "kind":6,
   "detail":"type myFoo = number",
   "documentation":{"kind":"markdown","value":"**@deprecated** \n\nthis is myFoo."},
   "tags":[1],
@@ -8090,7 +8078,6 @@ Flags: --lsp
 }
 {
   "label":"myBar",
-  "labelDetails":{"detail":"type myBar<T> = ?T"},
   "kind":13,
   "detail":"type myBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is myBar"},
@@ -8118,7 +8105,6 @@ Flags: --lsp
 }
 {
   "label":"myInterface",
-  "labelDetails":{"detail":"interface myInterface"},
   "kind":8,
   "detail":"interface myInterface",
   "documentation":{"kind":"markdown","value":"this is myInterface"},
@@ -8146,8 +8132,7 @@ Flags: --lsp
 }
 {
   "label":"ExportFoo",
-  "labelDetails":{"detail":"type ExportFoo = number"},
-  "kind":13,
+  "kind":6,
   "detail":"type ExportFoo = number",
   "documentation":{
     "kind":"markdown",
@@ -8178,7 +8163,6 @@ Flags: --lsp
 }
 {
   "label":"ExportBar",
-  "labelDetails":{"detail":"type ExportBar<T> = ?T"},
   "kind":13,
   "detail":"type ExportBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is ExportBar"},
@@ -8233,7 +8217,6 @@ Flags: --lsp
 }
 {
   "label":"ExportInterface",
-  "labelDetails":{"detail":"interface ExportInterface"},
   "kind":8,
   "detail":"interface ExportInterface",
   "documentation":{"kind":"markdown","value":"this is ExportInterface"},
@@ -8261,7 +8244,6 @@ Flags: --lsp
 }
 {
   "label":"ExportEnum",
-  "labelDetails":{"detail":"enum ExportEnum"},
   "kind":13,
   "detail":"enum ExportEnum",
   "documentation":{"kind":"markdown","value":"this is ExportEnum"},
@@ -8289,8 +8271,7 @@ Flags: --lsp
 }
 {
   "label":"exportValue",
-  "labelDetails":{"detail":"type exportValue = number"},
-  "kind":13,
+  "kind":6,
   "detail":"type exportValue = number",
   "documentation":{"kind":"markdown","value":"this is ExportValue"},
   "sortText":"00000000000000000000",
@@ -8344,7 +8325,6 @@ Flags: --lsp
 }
 {
   "label":"myEnum",
-  "labelDetails":{"detail":"enum myEnum"},
   "kind":13,
   "detail":"enum myEnum",
   "documentation":{"kind":"markdown","value":"this is myEnum"},
@@ -8375,7 +8355,6 @@ qualified-types-jsdoc.js:5:12
 Flags: --lsp
 {
   "label":"ExportBar",
-  "labelDetails":{"detail":"type ExportBar<T> = ?T"},
   "kind":13,
   "detail":"type ExportBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is ExportBar"},
@@ -8430,7 +8409,6 @@ Flags: --lsp
 }
 {
   "label":"ExportEnum",
-  "labelDetails":{"detail":"enum ExportEnum"},
   "kind":13,
   "detail":"enum ExportEnum",
   "documentation":{"kind":"markdown","value":"this is ExportEnum"},
@@ -8458,7 +8436,6 @@ Flags: --lsp
 }
 {
   "label":"ExportFoo",
-  "labelDetails":{"detail":"type ExportFoo = number"},
   "kind":6,
   "detail":"type ExportFoo = number",
   "documentation":{
@@ -8490,7 +8467,6 @@ Flags: --lsp
 }
 {
   "label":"ExportInterface",
-  "labelDetails":{"detail":"interface ExportInterface"},
   "kind":8,
   "detail":"interface ExportInterface",
   "documentation":{"kind":"markdown","value":"this is ExportInterface"},
@@ -12135,8 +12111,7 @@ Flags: --lsp
 }
 {
   "label":"K",
-  "labelDetails":{"detail":"type K = \"foo\""},
-  "kind":13,
+  "kind":12,
   "detail":"type K = \"foo\"",
   "documentation":{"kind":"markdown","value":"**@deprecated**"},
   "tags":[1],
@@ -12164,8 +12139,7 @@ Flags: --lsp
 }
 {
   "label":"O",
-  "labelDetails":{"detail":"type O = {bar?: string, foo: number, ...}"},
-  "kind":13,
+  "kind":6,
   "detail":"type O = {bar?: string, foo: number, ...}",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -12191,8 +12165,7 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"detail":"type T = any"},
-  "kind":13,
+  "kind":6,
   "detail":"type T = any",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -13112,8 +13085,7 @@ Flags: --lsp
 }
 {
   "label":"K",
-  "labelDetails":{"detail":"type K = \"foo\""},
-  "kind":13,
+  "kind":12,
   "detail":"type K = \"foo\"",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -13139,7 +13111,6 @@ Flags: --lsp
 }
 {
   "label":"O",
-  "labelDetails":{"detail":"type O = ?{bar?: string, foo: number, ...}"},
   "kind":13,
   "detail":"type O = ?{bar?: string, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -13166,7 +13137,6 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"detail":"type T = any | void"},
   "kind":13,
   "detail":"type T = any | void",
   "sortText":"00000000000000000000",
