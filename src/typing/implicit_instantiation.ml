@@ -152,9 +152,30 @@ struct
     | UpperT of Type.t
 
   let rec t_of_use_t cx tvar u =
+    let use_t_result_of_t_option = function
+      | Some t -> UpperT t
+      | None -> UpperEmpty
+    in
     match u with
     | UseT (_, (OpenT (r, _) as t)) -> merge_upper_bounds cx r t
-    | UseT (_, TypeDestructorTriggerT _) -> UpperNonT u
+    | UseT (_, TypeDestructorTriggerT (_, r, _, destructor, tout)) ->
+      (match destructor with
+      | PropertyType _
+      | ElementType _
+      | ValuesType
+      | CallType _
+      | TypeMap _
+      | ReactElementRefType ->
+        UpperEmpty
+      | NonMaybeType ->
+        merge_lower_bounds cx (OpenT tout)
+        |> Base.Option.map ~f:(fun t -> MaybeT (r, t))
+        |> use_t_result_of_t_option
+      | ReadOnlyType
+      | PartialType ->
+        merge_lower_bounds cx (OpenT tout) |> use_t_result_of_t_option
+      | ReactConfigType _ -> reverse_obj_kit_react_config cx tvar r (OpenT tout)
+      | _ -> UpperNonT u)
     | UseT (_, t) -> UpperT t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
     | ResolveSpreadT
@@ -168,6 +189,8 @@ struct
           }
         ) ->
       reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params
+    | ObjKitT (_, _, _, Object.(ReadOnly | Partial), tout) ->
+      merge_lower_bounds cx tout |> use_t_result_of_t_option
     | ObjKitT (_, r, _, Object.ReactConfig _, props) -> reverse_obj_kit_react_config cx tvar r props
     | _ -> UpperNonT u
 
@@ -222,7 +245,7 @@ struct
              UpperEmpty)
     | _ -> failwith "Implicit instantiation is not an OpenT"
 
-  let merge_lower_bounds cx t =
+  and merge_lower_bounds cx t =
     match t with
     | OpenT (_, id) ->
       let constraints = Context.find_graph cx id in

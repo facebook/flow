@@ -144,5 +144,85 @@ References:
                                                   ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:21:1
 
-Found 11 errors
+`T` is underconstrained by call of `IndexedAccess1` [1] and is defined in `T` [2]
+[underconstrained-implicit-instantiation]
+
+   upper_non_t.js:21:1
+   21| IndexedAccess1(1); // Error: T under constrained.
+       ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   upper_non_t.js:20:33
+   20| declare function IndexedAccess1<T>(T['f']): T;
+                                       ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:23:1
+
+`T` is underconstrained by call of `IndexedAccess2` [1] and is defined in `T` [2]
+[underconstrained-implicit-instantiation]
+
+   upper_non_t.js:23:1
+   23| IndexedAccess2(1); // Error: T under constrained.
+       ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   upper_non_t.js:22:33
+   22| declare function IndexedAccess2<T>(T[number]): T;
+                                       ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:25:1
+
+`T` is underconstrained by call of `Call` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+
+   upper_non_t.js:25:1
+   25| Call(undefined); // Error: T under constrained.
+       ^^^^^^^^^^^^^^^ [1]
+
+References:
+   upper_non_t.js:24:23
+   24| declare function Call<T>($Call<T, <V>(V)=>void>): T;
+                             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:27:1
+
+`T` is underconstrained by call of `ObjMap` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+
+   upper_non_t.js:27:1
+   27| ObjMap({}); // Error: T under constrained.
+       ^^^^^^^^^^ [1]
+
+References:
+   upper_non_t.js:26:25
+   26| declare function ObjMap<T>($ObjMap<T, <V>(V)=>void>): T;
+                               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:29:1
+
+Cannot resolve name `ElementProps`. [cannot-resolve-name]
+
+   29| ElementProps(3); // Error: T under constrained.
+       ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:31:1
+
+`T` is underconstrained by call of `ElementRef` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+
+   upper_non_t.js:31:1
+   31| ElementRef(1); // Error: T under constrained.
+       ^^^^^^^^^^^^^ [1]
+
+References:
+   upper_non_t.js:30:29
+   30| declare function ElementRef<T>(React$ElementRef<T>): T;
+                                   ^ [2]
+
+
+
+Found 17 errors
