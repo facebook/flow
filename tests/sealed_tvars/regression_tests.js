@@ -149,3 +149,9 @@ function non_assigning_member_assigns() {
 
   }
 }
+
+{
+  class A {
+    B(defaultValue: boolean = (x: A) => 42): void {}
+  }
+}

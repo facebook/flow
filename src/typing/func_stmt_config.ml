@@ -60,17 +60,35 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
 
   let destruct _cx ~use_op:_ ~name_loc:_ _name t = t
 
-  let eval_default cx = Base.Option.map ~f:(Statement.expression cx)
+  let eval_default cx annot_t has_anno =
+    Base.Option.map ~f:(fun e ->
+        let (((loc, default_t), expr) as e) = Statement.expression cx e in
+        if has_anno then (
+          let open Type in
+          let use_op =
+            Op
+              (AssignVar
+                 {
+                   var = Some (TypeUtil.reason_of_t annot_t);
+                   init = TypeUtil.reason_of_t default_t;
+                 }
+              )
+          in
+          Flow.flow cx (default_t, UseT (use_op, annot_t));
+          ((loc, annot_t), expr)
+        ) else
+          e
+    )
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
     match pattern with
     | Id ({ Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } as id) ->
-      let default = eval_default cx default in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
       let t = Env.find_write cx Env_api.OrdinaryNameLoc reason in
+      let default = eval_default cx t has_anno default in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
     | Object { annot; properties; comments } ->
-      let default = eval_default cx default in
+      let default = eval_default cx t has_anno default in
       let properties =
         let init = Destructuring.empty t ~annot:has_anno in
         let f = destruct cx in
@@ -84,7 +102,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
         }
       )
     | Array { annot; elements; comments } ->
-      let default = eval_default cx default in
+      let default = eval_default cx t has_anno default in
       let elements =
         let init = Destructuring.empty t ~annot:has_anno in
         let f = destruct cx in

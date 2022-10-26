@@ -825,7 +825,7 @@ if (x.y) { x.y }
   |};
   [%expect {|
     [
-      (2, 4) to (2, 7) => exp
+      (2, 4) to (2, 7) => exp (2, 4) to (2, 7) (hint = Hint_None)
     ] |}]
 
 let%expect_test "refi_recorded_read" =
@@ -1244,3 +1244,26 @@ if (values.b === values.a) {
     [%expect {|
       (2, 12) to (2, 18) =>
       (4, 17) to (4, 25) |}]
+
+let%expect_test "def_class" =
+  print_order_test {|
+class A {
+  B(defaultValue: boolean = false): void {}
+}
+|};
+    [%expect {| legal scc: (((2, 6) to (2, 7)); ((3, 4) to (3, 16))) |}]
+
+let%expect_test "def_class_fn_def" =
+  print_order_test {|
+class A {
+  B<T>(
+    localize: mixed = (name: T): string => f(name),
+   ) { }
+}
+declare var f: any;
+|};
+    [%expect {|
+      legal scc: (((2, 6) to (2, 7)); ((3, 4) to (3, 5)); ((4, 4) to (4, 12))) =>
+      (4, 23) to (4, 27) =>
+      (7, 12) to (7, 13) =>
+      (4, 45) to (4, 49) |}]

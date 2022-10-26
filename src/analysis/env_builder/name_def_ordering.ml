@@ -312,17 +312,32 @@ struct
         method function_def ~fully_annotated (expr : ('loc, 'loc) Ast.Function.t) =
           let { Ast.Function.params; body; predicate; return; tparams; _ } = expr in
           let open Flow_ast_mapper in
-          let _ = this#function_params params in
           let _ = this#type_annotation_hint return in
           let _ =
             if fully_annotated then
-              body
+              (body, this#function_params_annotated params)
             else
-              this#function_body_any body
+              (this#function_body_any body, this#function_params params)
           in
           let _ = map_opt this#predicate predicate in
           let _ = map_opt this#type_params tparams in
           ()
+
+        method function_params_annotated (params : ('loc, 'loc) Ast.Function.Params.t) =
+          let open Flow_ast_mapper in
+          let open Ast.Function in
+          let (_, { Params.params = params_list; rest; comments = _; this_ }) = params in
+          let _ = map_list this#function_param_annotated params_list in
+          let _ = map_opt this#function_rest_param rest in
+          let _ = map_opt this#function_this_param this_ in
+          params
+
+        method function_param_annotated (param : ('loc, 'loc) Ast.Function.Param.t) =
+          let open Ast.Function.Param in
+          let (_, { argument; default = _ }) = param in
+          (* Skip default *)
+          let _ = this#function_param_pattern argument in
+          param
 
         method! function_ loc expr =
           let { Ast.Function.id; _ } = expr in
@@ -574,13 +589,7 @@ struct
           EnvMap.empty
       in
       let depends_of_root state = function
-        | Annotation { annot; tparams_map; default_expression; _ } ->
-          let state =
-            Base.Option.value_map default_expression ~default:state ~f:(fun e ->
-                depends_of_expression e state
-            )
-          in
-          depends_of_annotation tparams_map annot state
+        | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
         | Value { hint; expr } ->
           let state = depends_of_hint state hint in
           depends_of_expression expr state
@@ -665,6 +674,7 @@ struct
           state
       in
       let rec depends_of_default state = function
+        | DefaultAnnot (annot, tparams_map) -> depends_of_annotation tparams_map annot state
         | DefaultExpr e -> depends_of_expression e state
         | DefaultCons (e, d) ->
           let state = depends_of_expression e state in
@@ -803,8 +813,7 @@ struct
       let rec bind_loop b =
         match b with
         | Root Catch -> true
-        | Root (Annotation { default_expression = None; _ }) -> true
-        | Root (Annotation { default_expression = Some _; _ }) -> false
+        | Root (Annotation _) -> true
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
         | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
           false

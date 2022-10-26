@@ -66,7 +66,7 @@ type root =
   | Annotation of {
       tparams_map: tparams_map;
       optional: bool;
-      default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
+      has_default_expression: bool;
       param_loc: ALoc.t option;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
@@ -117,6 +117,7 @@ type selector =
   | Default
 
 type default =
+  | DefaultAnnot of (ALoc.t, ALoc.t) Ast.Type.annotation * tparams_map
   | DefaultExpr of (ALoc.t, ALoc.t) Ast.Expression.t
   | DefaultCons of (ALoc.t, ALoc.t) Ast.Expression.t * default
   | DefaultSelector of default * selector
@@ -248,9 +249,15 @@ module Print = struct
     | Namespace -> "namespace"
     | Default _ -> "default"
 
+  let on_hint = function
+    | AnnotationHint _ -> "annot hint"
+    | ValueHint _ -> "value hint"
+    | ProvidersHint _ -> "providers hint"
+
   let string_of_source = function
     | Binding b -> string_of_binding b
-    | ExpressionDef _ -> spf "exp"
+    | ExpressionDef { expr = (expr_loc, _); hint; _ } ->
+      spf "exp %s (hint = %s)" (ALoc.debug_to_string expr_loc) (string_of_hint ~on_hint hint)
     | Update _ -> "[in/de]crement"
     | MemberAssign _ -> "member_assign"
     | OpAssign _ -> "opassign"

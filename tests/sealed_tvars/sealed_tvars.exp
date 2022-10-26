@@ -357,6 +357,20 @@ References:
                      ^ [1]
 
 
+Error --------------------------------------------------------------------------------------- regression_tests.js:155:31
+
+Cannot assign function to `defaultValue` because function [1] is incompatible with boolean [2]. [incompatible-type]
+
+   regression_tests.js:155:31
+   155|     B(defaultValue: boolean = (x: A) => 42): void {}
+                                      ^^^^^^^^^^^^ [1]
+
+References:
+   regression_tests.js:155:21
+   155|     B(defaultValue: boolean = (x: A) => 42): void {}
+                            ^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------- synthesizable_object.js:4:38
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
@@ -382,4 +396,4 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 
 
-Found 34 errors
+Found 35 errors

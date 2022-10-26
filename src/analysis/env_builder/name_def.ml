@@ -14,7 +14,8 @@ module EnvSet = Env_api.EnvSet
 include Name_def_types
 
 let default_of_binding = function
-  | Root (Annotation { default_expression; _ })
+  | Root (Annotation { has_default_expression = true; annot; tparams_map; _ }) ->
+    Some (DefaultAnnot (annot, tparams_map))
   | Root (Contextual { default_expression; _ }) ->
     Base.Option.map default_expression ~f:(fun e -> DefaultExpr e)
   | Select { default; _ } -> default
@@ -581,7 +582,7 @@ class def_finder env_entries providers toplevel_scope =
                  {
                    tparams_map = ALocMap.empty;
                    optional = false;
-                   default_expression = None;
+                   has_default_expression = false;
                    param_loc = None;
                    annot;
                  }
@@ -634,7 +635,7 @@ class def_finder env_entries providers toplevel_scope =
                  {
                    tparams_map = ALocMap.empty;
                    optional = false;
-                   default_expression = None;
+                   has_default_expression = false;
                    param_loc = None;
                    annot;
                  }
@@ -669,7 +670,7 @@ class def_finder env_entries providers toplevel_scope =
             {
               tparams_map = tparams;
               optional;
-              default_expression;
+              has_default_expression = Base.Option.is_some default_expression;
               param_loc = Some param_loc;
               annot;
             }
@@ -714,7 +715,7 @@ class def_finder env_entries providers toplevel_scope =
             {
               tparams_map = tparams;
               optional = false;
-              default_expression = None;
+              has_default_expression = false;
               param_loc = Some param_loc;
               annot;
             }
@@ -748,7 +749,7 @@ class def_finder env_entries providers toplevel_scope =
                  {
                    tparams_map = tparams;
                    optional = false;
-                   default_expression = None;
+                   has_default_expression = false;
                    param_loc = None;
                    annot;
                  }
@@ -1138,7 +1139,7 @@ class def_finder env_entries providers toplevel_scope =
                    {
                      tparams_map = ALocMap.empty;
                      optional = false;
-                     default_expression = None;
+                     has_default_expression = false;
                      param_loc = None;
                      annot;
                    }
@@ -1282,7 +1283,7 @@ class def_finder env_entries providers toplevel_scope =
                 {
                   tparams_map = ALocMap.empty;
                   optional = false;
-                  default_expression = None;
+                  has_default_expression = false;
                   param_loc = None;
                   annot;
                 }
@@ -1315,7 +1316,7 @@ class def_finder env_entries providers toplevel_scope =
                 {
                   tparams_map = ALocMap.empty;
                   optional = false;
-                  default_expression = None;
+                  has_default_expression = false;
                   param_loc = None;
                   annot;
                 }

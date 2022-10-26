@@ -173,11 +173,11 @@ let resolve_annotated_function
 let rec resolve_binding_partial cx reason loc b =
   let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
-  | Root (Annotation { tparams_map; optional; default_expression; param_loc; annot }) ->
+  | Root (Annotation { tparams_map; optional; has_default_expression; param_loc; annot }) ->
     let t = resolve_annotation cx tparams_map annot in
     Base.Option.iter param_loc ~f:(Env.bind_function_param cx t);
     let t =
-      if optional && default_expression = None then
+      if optional && not has_default_expression then
         TypeUtil.optional t
       else
         t
@@ -549,32 +549,6 @@ let resolve_binding cx reason loc binding =
     match (binding, has_annot) with
     (* This is unnecessary if we are directly resolving an annotation. *)
     | (Select _, true) ->
-      let rec subtype_default_against_annotation = function
-        | Root (Annotation { tparams_map; annot; default_expression; _ }) ->
-          let annot_t = resolve_annotation cx tparams_map annot in
-          Base.Option.iter default_expression ~f:(fun e ->
-              let ((default_loc, default_t), default_ast) = Statement.expression cx e in
-              let use_op =
-                Op
-                  (AssignVar
-                     {
-                       var = Some (TypeUtil.reason_of_t annot_t);
-                       init = TypeUtil.reason_of_t default_t;
-                     }
-                  )
-              in
-              Flow_js.flow cx (default_t, UseT (use_op, annot_t));
-              let default_tast = ((default_loc, annot_t), default_ast) in
-              (* When there is an annotation available on the parameter, the default expression will
-                 be constrained to have the type of the annotation. So we store annot_t as the type
-                 of function parameter default to ensure later check on the parameter default will
-                 always return annot_t. *)
-              Node_cache.set_expression (Context.node_cache cx) default_tast
-          )
-        | Root _ -> ()
-        | Select { binding; _ } -> subtype_default_against_annotation binding
-      in
-      subtype_default_against_annotation binding;
       AnnotT
         ( reason,
           Tvar.mk_where cx reason (fun t' ->
@@ -586,29 +560,35 @@ let resolve_binding cx reason loc binding =
   in
   let default = Name_def.default_of_binding binding in
   Base.Option.iter
-    ~f:(fun d ->
-      let rec convert = function
-        | Name_def.DefaultExpr e -> Default.Expr (expression cx e)
-        | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx e, convert d)
-        | Name_def.DefaultSelector (d, s) ->
-          let (s, r) = mk_selector_reason cx loc s in
-          Default.Selector (r, convert d, s)
-      in
-      let default = convert d in
-      let default_t = Flow_js.mk_default cx reason default in
-      let use_op =
-        Op
-          (AssignVar
-             {
-               var = Some reason;
-               init =
-                 (match default with
-                 | Default.Expr t -> TypeUtil.reason_of_t t
-                 | _ -> TypeUtil.reason_of_t t);
-             }
-          )
-      in
-      Flow_js.flow cx (default_t, UseT (use_op, t)))
+    ~f:(function
+      | Name_def.DefaultAnnot _ -> ()
+      | d ->
+        let rec convert = function
+          | Name_def.DefaultAnnot (anno, tparams_map) ->
+            let tparams_map = mk_tparams_map cx tparams_map in
+            let (t, _) = Anno.mk_type_available_annotation cx tparams_map anno in
+            Default.Expr t
+          | Name_def.DefaultExpr e -> Default.Expr (expression cx e)
+          | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx e, convert d)
+          | Name_def.DefaultSelector (d, s) ->
+            let (s, r) = mk_selector_reason cx loc s in
+            Default.Selector (r, convert d, s)
+        in
+        let default = convert d in
+        let default_t = Flow_js.mk_default cx reason default in
+        let use_op =
+          Op
+            (AssignVar
+               {
+                 var = Some reason;
+                 init =
+                   (match default with
+                   | Default.Expr t -> TypeUtil.reason_of_t t
+                   | _ -> TypeUtil.reason_of_t t);
+               }
+            )
+        in
+        Flow_js.flow cx (default_t, UseT (use_op, t)))
     default;
   (t, use_op)
 
