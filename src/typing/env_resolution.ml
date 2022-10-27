@@ -588,37 +588,38 @@ let resolve_binding cx reason loc binding =
     | _ -> t
   in
   let default = Name_def.default_of_binding binding in
-  Base.Option.iter
-    ~f:(function
-      | Name_def.DefaultAnnot _ -> ()
-      | d ->
-        let rec convert = function
-          | Name_def.DefaultAnnot (anno, tparams_map) ->
-            let tparams_map = mk_tparams_map cx tparams_map in
-            let (t, _) = Anno.mk_type_available_annotation cx tparams_map anno in
-            Default.Expr t
-          | Name_def.DefaultExpr e -> Default.Expr (expression cx e)
-          | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx e, convert d)
-          | Name_def.DefaultSelector (d, s) ->
-            let (s, r) = mk_selector_reason cx loc s in
-            Default.Selector (r, convert d, s)
-        in
-        let default = convert d in
-        let default_t = Flow_js.mk_default cx reason default in
-        let use_op =
-          Op
-            (AssignVar
-               {
-                 var = Some reason;
-                 init =
-                   (match default with
-                   | Default.Expr t -> TypeUtil.reason_of_t t
-                   | _ -> TypeUtil.reason_of_t t);
-               }
-            )
-        in
-        Flow_js.flow cx (default_t, UseT (use_op, t)))
-    default;
+  if not has_annot then
+    Base.Option.iter
+      ~f:(function
+        | Name_def.DefaultAnnot _ -> ()
+        | d ->
+          let rec convert = function
+            | Name_def.DefaultAnnot (anno, tparams_map) ->
+              let tparams_map = mk_tparams_map cx tparams_map in
+              let (t, _) = Anno.mk_type_available_annotation cx tparams_map anno in
+              Default.Expr t
+            | Name_def.DefaultExpr e -> Default.Expr (expression cx e)
+            | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx e, convert d)
+            | Name_def.DefaultSelector (d, s) ->
+              let (s, r) = mk_selector_reason cx loc s in
+              Default.Selector (r, convert d, s)
+          in
+          let default = convert d in
+          let default_t = Flow_js.mk_default cx reason default in
+          let use_op =
+            Op
+              (AssignVar
+                 {
+                   var = Some reason;
+                   init =
+                     (match default with
+                     | Default.Expr t -> TypeUtil.reason_of_t t
+                     | _ -> TypeUtil.reason_of_t t);
+                 }
+              )
+          in
+          Flow_js.flow cx (default_t, UseT (use_op, t)))
+      default;
   (t, use_op)
 
 let resolve_inferred_function cx ~statics id_loc reason function_loc function_ =

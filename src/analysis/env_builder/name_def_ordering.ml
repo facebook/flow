@@ -328,12 +328,94 @@ struct
           let _ = map_opt this#type_params tparams in
           ()
 
+        method function_param_pattern_annotated (expr : ('loc, 'loc) Ast.Pattern.t) =
+          let open Ast.Pattern in
+          let open Flow_ast_mapper in
+          let (_, patt) = expr in
+          begin
+            match patt with
+            | Object { Object.properties; annot; comments = _ } ->
+              let _properties' =
+                map_list this#function_param_pattern_object_p_annotated properties
+              in
+              let _annot' = this#type_annotation_hint annot in
+              ()
+            | Array { Array.elements; annot; comments = _ } ->
+              let _elements' = map_list this#function_param_pattern_array_e_annotated elements in
+              let _annot' = this#type_annotation_hint annot in
+              ()
+            | Identifier { Identifier.name; annot; optional = _ } ->
+              let _name' = this#pattern_identifier name in
+              let _annot' = this#type_annotation_hint annot in
+              ()
+            | Expression e -> ignore @@ id this#pattern_expression e patt (fun e -> Expression e)
+          end;
+          expr
+
+        method function_param_pattern_object_p_annotated
+            (p : ('loc, 'loc) Ast.Pattern.Object.property) =
+          let open Ast.Pattern.Object in
+          let open Flow_ast_mapper in
+          match p with
+          | Property prop ->
+            id this#function_param_pattern_object_property_annotated prop p (fun prop ->
+                Property prop
+            )
+          | RestElement prop ->
+            id this#function_param_pattern_object_rest_property_annotated prop p (fun prop ->
+                RestElement prop
+            )
+
+        method function_param_pattern_object_property_annotated
+            (prop : ('loc, 'loc) Ast.Pattern.Object.Property.t) =
+          let open Ast.Pattern.Object.Property in
+          let (_, { key; pattern; default = _; shorthand = _ }) = prop in
+          let _key' = this#pattern_object_property_key key in
+          let _pattern' = this#function_param_pattern_annotated pattern in
+          (* Skip default *)
+          prop
+
+        method function_param_pattern_object_rest_property_annotated
+            (prop : ('loc, 'loc) Ast.Pattern.RestElement.t) =
+          let open Ast.Pattern.RestElement in
+          let (_, { argument; comments = _ }) = prop in
+          let _argument' = this#function_param_pattern_annotated argument in
+          prop
+
+        method function_param_pattern_array_e_annotated (e : ('loc, 'loc) Ast.Pattern.Array.element)
+            =
+          let open Ast.Pattern.Array in
+          let open Flow_ast_mapper in
+          match e with
+          | Hole _ -> e
+          | Element elem ->
+            id this#function_param_pattern_array_element_annotated elem e (fun elem -> Element elem)
+          | RestElement elem ->
+            id this#function_param_pattern_array_rest_element_annotated elem e (fun elem ->
+                RestElement elem
+            )
+
+        method function_param_pattern_array_element_annotated
+            (elem : ('loc, 'loc) Ast.Pattern.Array.Element.t) =
+          let open Ast.Pattern.Array.Element in
+          let (_, { argument; default = _ }) = elem in
+          let _argument' = this#function_param_pattern_annotated argument in
+          (* Skip default *)
+          elem
+
+        method function_param_pattern_array_rest_element_annotated
+            (elem : ('loc, 'loc) Ast.Pattern.RestElement.t) =
+          let open Ast.Pattern.RestElement in
+          let (_, { argument; comments = _ }) = elem in
+          let _argument' = this#function_param_pattern_annotated argument in
+          elem
+
         method function_params_annotated (params : ('loc, 'loc) Ast.Function.Params.t) =
           let open Flow_ast_mapper in
           let open Ast.Function in
           let (_, { Params.params = params_list; rest; comments = _; this_ }) = params in
           let _ = map_list this#function_param_annotated params_list in
-          let _ = map_opt this#function_rest_param rest in
+          let _ = map_opt this#function_rest_param_annotated rest in
           let _ = map_opt this#function_this_param this_ in
           params
 
@@ -341,8 +423,14 @@ struct
           let open Ast.Function.Param in
           let (_, { argument; default = _ }) = param in
           (* Skip default *)
-          let _ = this#function_param_pattern argument in
+          let _ = this#function_param_pattern_annotated argument in
           param
+
+        method function_rest_param_annotated (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
+          let open Ast.Function.RestParam in
+          let (_, { argument; comments = _ }) = expr in
+          let _argument' = this#function_param_pattern_annotated argument in
+          expr
 
         method! function_ loc expr =
           let { Ast.Function.id; _ } = expr in
@@ -853,7 +941,7 @@ struct
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
         | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
           false
-        | Select { selector = Computed _ | Default; _ } -> false
+        | Select { selector = Computed _; _ } -> false
         | Select { binding; _ } -> bind_loop binding
       in
       let rec expression_resolvable (_, expr) =

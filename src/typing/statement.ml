@@ -2223,7 +2223,7 @@ module Make
               | Ast.Type.Missing _ -> false
               | Ast.Type.Available _ -> true)
         in
-        Destructuring.pattern cx init id ~f:(fun ~use_op ~name_loc name t ->
+        Destructuring.pattern cx init id ~f:(fun ~use_op ~name_loc name default t ->
             let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
             declare_var cx (OrdinaryName name) name_loc;
 
@@ -2246,6 +2246,10 @@ module Make
               )
             in
             Flow.flow cx (t, AssertImportIsValueT (reason, name));
+            Base.Option.iter default ~f:(fun d ->
+                let default_t = Flow.mk_default cx reason d in
+                Flow.flow cx (default_t, UseT (use_op, t))
+            );
             id_node_type
         )
     in

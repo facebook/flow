@@ -58,7 +58,14 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     let t = Flow.subst cx map t in
     This { t; loc; annot }
 
-  let destruct _cx ~use_op:_ ~name_loc:_ _name t = t
+  let destruct cx ~use_op ~name_loc name default t =
+    Base.Option.iter
+      ~f:(fun d ->
+        let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
+        let default_t = Flow.mk_default cx reason d in
+        Flow.flow cx (default_t, Type.UseT (use_op, t)))
+      default;
+    t
 
   let eval_default cx annot_t has_anno =
     Base.Option.map ~f:(fun e ->

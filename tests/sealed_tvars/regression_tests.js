@@ -162,3 +162,9 @@ function non_assigning_member_assigns() {
     static isStack: typeof isStack;
   }
 }
+
+{
+  class C {
+   w({ foo = C, bar}: { bar: number, foo?: number }): void { }
+  }
+}

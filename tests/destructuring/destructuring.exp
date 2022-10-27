@@ -393,18 +393,15 @@ References:
               ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- defaults.js:35:3
+Error ------------------------------------------------------------------------------------------------- defaults.js:35:7
 
-Cannot assign `p` to `p` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign boolean to `p` because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   defaults.js:35:3
-   35|   p = true // error: boolean ~> string
-         ^
-
-References:
    defaults.js:35:7
    35|   p = true // error: boolean ~> string
              ^^^^ [1]
+
+References:
    defaults.js:37:6
    37|   p: string
             ^^^^^^ [2]
