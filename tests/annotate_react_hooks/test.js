@@ -1,35 +1,46 @@
 import * as React from 'react';
-import {useState, useCallback} from 'react';
+import {useState, useRef, useCallback} from 'react';
 
 // null
 {
   const [val, setValue] = useState(null); // ANNOTATED
   setValue(1);
+  const ref = useRef(null); // ANNOTATED
+  ref.current = 1;
 }
 {
   const [val, setValue] = useState(null); // NOT ANNOTATED
+  const ref = useRef(null); // NOT ANNOTATED
 }
 
 // undefined
 {
   const [val, setValue] = useState(undefined); // ANNOTATED
   setValue(1);
+  const ref = useRef(undefined); // ANNOTATED
+  ref.current = 1;
 }
 {
   const [val, setValue] = useState(undefined); // NOT ANNOTATED
+  const ref = useRef(undefined); // NOT ANNOTATED
 }
 
 // Empty array
 {
   const [val, setValue] = useState([]); // ANNOTATED
   setValue([1]);
+  const ref = useRef([]); // ANNOTATED
+  ref.current = [1];
 }
 {
   const [val, setValue] = useState([]); // ANNOTATED
   val.push(1);
+  const ref = useRef([]); // ANNOTATED
+  ref.current.push(1);
 }
 {
   const [val, setValue] = useState([]); // NOT ANNOTATED
+  const ref = useRef([]); // NOT ANNOTATED
 }
 
 // Empty Set

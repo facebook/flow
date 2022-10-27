@@ -6,8 +6,12 @@
  *)
 
 module Ast = Flow_ast
+module LMap = Loc_collections.LocMap
+module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
 module Codemod_empty_annotator = Codemod_annotator.Make (Insert_type_utils.UnitStats)
+module Hardcoded_Ty_Fixes = Codemod_hardcoded_ty_fixes.Make (Insert_type_utils.UnitStats)
 module Acc = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
+open Insert_type_utils
 
 let mapper
     ~preserve_literals
@@ -18,6 +22,61 @@ let mapper
     (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
+  let reader = cctx.Codemod_context.Typed.reader in
+  let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+  let implicit_instantiation_aloc_results =
+    Codemod_context.Typed.context cctx |> Context.implicit_instantiation_results
+  in
+  let ty_normalizer_options = Ty_normalizer_env.default_options in
+  let typed_ast = Codemod_context.Typed.typed_ast cctx in
+  let file_sig = Codemod_context.Typed.file_sig cctx in
+  let full_cx = Codemod_context.Typed.context cctx in
+  let file = Codemod_context.Typed.file cctx in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
+  let implicit_instantiation_results =
+    ALocFuzzyMap.fold
+      (fun aloc result acc ->
+        let loc = loc_of_aloc aloc in
+        let call_args =
+          List.map
+            (fun t ->
+              match Ty_normalizer.from_type ~options:ty_normalizer_options ~genv t with
+              | Ok (Ty.Type ty) -> Some (Ok ty)
+              | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ok (Ty.TypeOf (Ty.TSymbol s)))
+              | _ -> None)
+            result
+        in
+        LMap.add loc call_args acc)
+      implicit_instantiation_aloc_results
+      LMap.empty
+  in
+
+  (* Ignore things like `empty`, `Array<empty>`, `Set<empty>`, `Map<empty, empty>`, `{...}` *)
+  let ignore_type = function
+    | Ty.Any _
+    | Ty.Bot _
+    | Ty.Arr { Ty.arr_elt_t = Ty.Any _ | Ty.Bot _; _ }
+    | Ty.Generic ({ Ty_symbol.sym_name = Reason.OrdinaryName "Set"; _ }, _, Some [Ty.Bot _])
+    | Ty.Generic
+        ({ Ty_symbol.sym_name = Reason.OrdinaryName "Map"; _ }, _, Some [Ty.Bot _; Ty.Bot _])
+    | Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_props = []; _ } ->
+      true
+    | _ -> false
+  in
+
+  (* Filter out undesirable types from unions. *)
+  let filter_ty_result ty_result =
+    match ty_result with
+    | Ok (Ty.Union _ as ty) ->
+      let members = Ty.bk_union ty |> Nel.to_list in
+      let filtered = Base.List.filter ~f:(fun ty -> not @@ ignore_type ty) members in
+      (match filtered with
+      | [] -> Ok (Ty.Bot Ty.EmptyType)
+      | [x] -> Ok x
+      | x0 :: x1 :: xs -> Ok (Ty.Union (false, x0, x1, xs)))
+    | _ -> ty_result
+  in
+
   object (this)
     inherit
       Codemod_empty_annotator.mapper
@@ -37,6 +96,21 @@ let mapper
       let f loc _annot ty' = this#annotate_node loc ty' (fun a -> Ast.Type.Available a) in
       let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
       this#opt_annotate ~f ~error ~expr:None ploc ty annot
+
+    method private fix_and_validate loc ty =
+      let (acc', ty) =
+        Hardcoded_Ty_Fixes.run
+          ~cctx
+          ~preserve_literals
+          ~generalize_maybe:false
+          ~merge_arrays:false
+          ~generalize_react_mixed_element:true
+          acc
+          loc
+          ty
+      in
+      this#set_acc acc';
+      Codemod_annotator.validate_ty cctx ~max_type_size ty
 
     method! variable_declarator ~kind decl =
       let open Ast.Expression in
@@ -125,30 +199,7 @@ let mapper
         let ty_result =
           Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size val_loc
         in
-        (* Ignore things like `empty`, `Array<empty>`, `Set<empty>`, `Map<empty, empty>`, `{...}` *)
-        let ignore_type = function
-          | Ty.Any _
-          | Ty.Bot _
-          | Ty.Arr { Ty.arr_elt_t = Ty.Any _ | Ty.Bot _; _ }
-          | Ty.Generic ({ Ty_symbol.sym_name = Reason.OrdinaryName "Set"; _ }, _, Some [Ty.Bot _])
-          | Ty.Generic
-              ({ Ty_symbol.sym_name = Reason.OrdinaryName "Map"; _ }, _, Some [Ty.Bot _; Ty.Bot _])
-          | Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_props = []; _ } ->
-            true
-          | _ -> false
-        in
-        (* Filter out undesirable types from unions. *)
-        let ty_result =
-          match ty_result with
-          | Ok (Ty.Union _ as ty) ->
-            let members = Ty.bk_union ty |> Nel.to_list in
-            let filtered = Base.List.filter ~f:(fun ty -> not @@ ignore_type ty) members in
-            (match filtered with
-            | [] -> Ok (Ty.Bot Ty.EmptyType)
-            | [x] -> Ok x
-            | x0 :: x1 :: xs -> Ok (Ty.Union (false, x0, x1, xs)))
-          | _ -> ty_result
-        in
+        let ty_result = filter_ty_result ty_result in
         (match ty_result with
         (* Don't insert just `void`or just `null` (but these are OK in a union). *)
         | Ok (Ty.Null | Ty.Void) -> super#variable_declarator ~kind decl
@@ -320,6 +371,79 @@ let mapper
                 }
               ))
           | _ -> super#variable_declarator ~kind decl)
+        | _ -> super#variable_declarator ~kind decl)
+      | ( (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.annot = Ast.Type.Missing _; _ }),
+          Some
+            ( call_loc,
+              Call
+                (* Call to `useRef` or `React.useRef` *)
+                {
+                  Call.callee =
+                    ( (_, Identifier (_, { Ast.Identifier.name = "useRef"; _ }))
+                    | ( _,
+                        Member
+                          {
+                            Member._object =
+                              (_, Identifier (_, { Ast.Identifier.name = "React"; _ }));
+                            property =
+                              Member.PropertyIdentifier (_, { Ast.Identifier.name = "useRef"; _ });
+                            _;
+                          }
+                      ) ) as callee;
+                  targs = None;
+                  arguments =
+                    ( _,
+                      {
+                        ArgList.arguments =
+                          [
+                            Expression
+                              (* `null` *)
+                              ( (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ })
+                              (* `undefined` *)
+                              | (_, Identifier (_, { Ast.Identifier.name = "undefined"; _ }))
+                              (* `{}` *)
+                              | (_, Object { Object.properties = []; _ })
+                              (* `[]` *)
+                              | (_, Array { Array.elements = []; _ }) );
+                          ];
+                        _;
+                      }
+                    ) as arguments;
+                  comments;
+                }
+            )
+        ) ->
+        (match LMap.find_opt call_loc implicit_instantiation_results with
+        | Some [targ_ty] ->
+          (match targ_ty with
+          | None -> super#variable_declarator ~kind decl
+          | Some ty ->
+            (match filter_ty_result ty with
+            (* Don't insert just `void`or just `null` (but these are OK in a union). *)
+            | Ok (Ty.Null | Ty.Void) -> super#variable_declarator ~kind decl
+            | Ok t when ignore_type t -> super#variable_declarator ~kind decl
+            | ty ->
+              (match
+                 this#get_annot loc (ty >>= this#fix_and_validate loc) (Ast.Type.Missing loc)
+               with
+              | Ast.Type.Missing _ -> super#variable_declarator ~kind decl
+              | Ast.Type.Available (_, t) ->
+                let targs =
+                  Some
+                    ( call_loc,
+                      {
+                        Ast.Expression.CallTypeArgs.comments = None;
+                        arguments = [Ast.Expression.CallTypeArg.Explicit t];
+                      }
+                    )
+                in
+                ( loc,
+                  {
+                    Ast.Statement.VariableDeclaration.Declarator.id;
+                    (* Add the explicit type argument to `useRef`. *)
+                    init = Some (call_loc, Call { Call.callee; targs; arguments; comments });
+                  }
+                ))))
         | _ -> super#variable_declarator ~kind decl)
       | _ -> super#variable_declarator ~kind decl
 

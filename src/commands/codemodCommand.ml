@@ -469,7 +469,7 @@ module Annotate_react_hooks_command = struct
 
       let reporter = string_reporter (module Acc)
 
-      let check_options o = o
+      let check_options o = { o with Options.opt_save_implicit_instantiation_results = true }
 
       let visit =
         let mapper =
