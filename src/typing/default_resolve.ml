@@ -151,7 +151,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | ElemT (_, _, _, action) -> resolve_elem_action action
   | MakeExactT (_, k) -> resolve_cont k
   | CJSRequireT (_, t, _)
-  | ImportModuleNsT (_, t, _)
+  | ImportModuleNsT { t; _ }
   | ImportDefaultT (_, _, _, t, _)
   | ImportNamedT (_, _, _, _, t, _)
   | ImportTypeT (_, _, t)

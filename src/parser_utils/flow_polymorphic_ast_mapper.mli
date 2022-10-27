@@ -316,7 +316,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Identifier.t ->
       ('N, 'U) Ast.Identifier.t
 
-    method import_source : 'M -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
+    method import_source : 'T -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
 
     method import_specifier :
       import_kind:Ast.Statement.ImportDeclaration.import_kind ->
