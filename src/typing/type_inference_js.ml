@@ -406,7 +406,8 @@ let initialize_env
   let env = Loc_env.with_info Name_def.Global hint_map info in
   Context.set_environment cx env;
   let components = NameDefOrdering.build_ordering cx info name_def_graph in
-  if Context.cycle_errors cx then Base.List.iter ~f:(Cycles.handle_component cx) components;
+  if Context.cycle_errors cx then
+    Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;
   Env.init_env cx toplevel_scope_kind;
   let env = Context.environment cx in
   Base.Option.iter local_exports_var ~f:(fun local_exports_var ->

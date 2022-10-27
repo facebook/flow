@@ -11,20 +11,50 @@ let handle_element cx elt =
   match elt with
   | Normal _
   | Resolvable _ ->
-    ()
+    false
   | Illegal { reason; recursion; payload = _; annot_locs } ->
-    Flow_js.add_output cx (Error_message.ERecursiveDefinition { reason; recursion; annot_locs })
+    Flow_js.add_output cx (Error_message.ERecursiveDefinition { reason; recursion; annot_locs });
+    true
 
-let handle_component cx scc =
+let key_of_element elt =
+  match elt with
+  | Normal key
+  | Resolvable key
+  | Illegal { payload = key; _ } ->
+    key
+
+let handle_component cx graph scc =
   match scc with
-  | Singleton elt -> handle_element cx elt
-  | ResolvableSCC elts -> Nel.iter (handle_element cx) elts
+  | Singleton elt ->
+    let (_ : bool) = handle_element cx elt in
+    ()
+  | ResolvableSCC elts ->
+    let (_ : _ Nel.t) = Nel.map (handle_element cx) elts in
+    ()
   | IllegalSCC elts_blame ->
     let blame =
       Nel.map
         (fun { payload = elt; reason; recursion = blame; annot_locs } ->
-          handle_element cx elt;
-          (reason, blame, annot_locs))
+          let illegal_elt = handle_element cx elt in
+          let (def, _, _, _) = Env_api.EnvMap.find (key_of_element elt) graph in
+          ((def, illegal_elt), (reason, blame, annot_locs)))
         elts_blame
     in
-    Flow_js.add_output cx Error_message.(EDefinitionCycle blame)
+    (* If at least one element of the cycle is recursive, and every element is
+       either an expression or a recursive element, don't emit the cycle error
+       -- the recursion error will contain all the actionable advice *)
+    (match
+       Base.List.fold_result
+         (Nel.to_list blame)
+         ~init:false
+         ~f:(fun has_illegal ((def, illegal_elt), _) ->
+           match def with
+           | Name_def.ExpressionDef _ -> Ok (has_illegal || illegal_elt)
+           | _ when illegal_elt -> Ok true
+           | _ -> Error ()
+       )
+     with
+    | Ok true -> ()
+    | Ok false
+    | Error () ->
+      Flow_js.add_output cx Error_message.(EDefinitionCycle (Nel.map snd blame)))
