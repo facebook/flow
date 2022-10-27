@@ -164,45 +164,6 @@ module Destructure = struct
   let pattern = fold_pattern ~default:() ~join:(fun _ _ -> ())
 end
 
-let func_params_missing_annotations
-    ~allow_this ((param_loc, { Ast.Function.Params.params; rest; this_; _ }) as all_params) body =
-  let is_annotated p = p |> Destructure.type_of_pattern |> Base.Option.is_some in
-  let params =
-    Base.List.concat_map params ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
-        if is_annotated argument then
-          []
-        else
-          Flow_ast_utils.fold_bindings_of_pattern
-            (fun acc (loc, { Ast.Identifier.name; _ }) ->
-              mk_reason (RParameter (Some name)) loc :: acc)
-            []
-            argument
-    )
-  in
-  let rest =
-    Base.Option.value_map rest ~default:[] ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
-        if is_annotated argument then
-          []
-        else
-          Flow_ast_utils.fold_bindings_of_pattern
-            (fun acc (loc, { Ast.Identifier.name; _ }) ->
-              mk_reason (RRestParameter (Some name)) loc :: acc)
-            []
-            argument
-    )
-  in
-  let this_ =
-    if
-      allow_this
-      || (not @@ Signature_utils.This_finder.found_this_in_body_or_params body all_params)
-      || Base.Option.is_some this_
-    then
-      []
-    else
-      [mk_reason (RImplicitThis (RFunction RNormal)) param_loc]
-  in
-  params @ rest @ this_
-
 let predicate_synthesizable predicate body =
   match (predicate, body) with
   | ( Some _,
@@ -223,29 +184,25 @@ let predicate_synthesizable predicate body =
   | (Some (ret_loc, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared expr; comments = _ }), _)
     ->
     FunctionPredicateSynthesizable (ret_loc, expr)
-  | _ -> MissingArguments
+  | _ -> (* Invalid predicate definition *) FunctionSynthesizable
 
 let func_is_synthesizable_from_annotation
-    ~allow_this ({ Ast.Function.predicate; return; generator; params; body; _ } as f) =
-  let params = func_params_missing_annotations ~allow_this params body in
-  if Base.List.length params > 0 then
-    MissingArguments
-  else
-    match return with
-    | Ast.Type.Available _ ->
-      if Base.Option.is_some predicate then
-        predicate_synthesizable predicate body
-      else
-        FunctionSynthesizable
-    | Ast.Type.Missing loc ->
-      if
-        Base.Option.is_some predicate
-        || Nonvoid_return.might_have_nonvoid_return ALoc.none f
-        || generator
-      then
-        MissingReturn loc
-      else
-        FunctionSynthesizable
+    ({ Ast.Function.predicate; return; generator; body; _ } as f) =
+  match return with
+  | Ast.Type.Available _ ->
+    if Base.Option.is_some predicate then
+      predicate_synthesizable predicate body
+    else
+      FunctionSynthesizable
+  | Ast.Type.Missing loc ->
+    if
+      Base.Option.is_some predicate
+      || Nonvoid_return.might_have_nonvoid_return ALoc.none f
+      || generator
+    then
+      MissingReturn loc
+    else
+      FunctionSynthesizable
 
 let obj_this_write_locs { Ast.Expression.Object.properties; _ } =
   let open Ast.Expression.Object in
@@ -291,16 +248,15 @@ let rec obj_properties_synthesizable
             Error ()
           | Property (_, Method { key = Identifier _; value = (_, fn); _ })
           | Property
-              (_, Init { key = Identifier _; value = (_, Ast.Expression.ArrowFunction fn); _ }) ->
-            handle_fun
-              this_write_locs
-              acc
-              (func_is_synthesizable_from_annotation ~allow_this:true fn)
-          | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Function fn); _ }) ->
-            handle_fun
-              this_write_locs
-              acc
-              (func_is_synthesizable_from_annotation ~allow_this:false fn)
+              ( _,
+                Init
+                  {
+                    key = Identifier _;
+                    value = (_, (Ast.Expression.ArrowFunction fn | Ast.Expression.Function fn));
+                    _;
+                  }
+              ) ->
+            handle_fun this_write_locs acc (func_is_synthesizable_from_annotation fn)
           | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Object obj); _ }) ->
             begin
               match obj_properties_synthesizable ~this_write_locs:(obj_this_write_locs obj) obj with
@@ -331,8 +287,7 @@ let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics func
   Function
     {
       hint;
-      synthesizable_from_annotation =
-        func_is_synthesizable_from_annotation ~allow_this:false function_;
+      synthesizable_from_annotation = func_is_synthesizable_from_annotation function_;
       has_this_def;
       function_loc;
       function_;
@@ -821,8 +776,7 @@ class def_finder env_entries providers toplevel_scope =
                  (FunctionValue
                     {
                       hint = func_hint;
-                      synthesizable_from_annotation =
-                        func_is_synthesizable_from_annotation ~allow_this:arrow expr;
+                      synthesizable_from_annotation = func_is_synthesizable_from_annotation expr;
                       function_loc;
                       function_ = expr;
                       statics;

@@ -83,85 +83,93 @@ References:
                                 [6]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:67:7
+Error ------------------------------------------------------------------------------------------------------- a.js:47:18
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   47| function missing(x): number {
+                        ^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:71:7
 
 Cannot compute a type for `math2` because its definition includes references to itself [1],  [2]. Please add an
 annotation to these positions [3] [4] [5] [recursive-definition]
 
-   a.js:67:7
-   67| const math2 = {
+   a.js:71:7
+   71| const math2 = {
              ^^^^^
 
 References:
-   a.js:83:12
-   83|     return math2.odd(x - 1)
+   a.js:87:12
+   87|     return math2.odd(x - 1)
                   ^^^^^ [1]
-   a.js:77:12
-   77|     return math2.even(x - 1)
+   a.js:81:12
+   81|     return math2.even(x - 1)
                   ^^^^^ [2]
-   a.js:79:20
-   79|   even: (x: number) => {
+   a.js:83:20
+   83|   even: (x: number) => {
                            [3]
-   a.js:73:17
-   73|   odd(x: number) {
+   a.js:77:17
+   77|   odd(x: number) {
                         [4]
-   a.js:71:20
-   71|     meth(x: number) { return true }
+   a.js:75:20
+   75|     meth(x: number) { return true }
                            [5]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:87:7
+Error -------------------------------------------------------------------------------------------------------- a.js:91:7
 
 The following definitions recursively depend on each other, and Flow cannot compute their types:
  - `odd_obj` [1] depends on other definition [2]
  - `even_obj` [3] depends on other definition [4]
 Please add type annotations to these definitions [5] [6] [7] [definition-cycle]
 
-   a.js:87:7
-    87| const odd_obj = {
+   a.js:91:7
+    91| const odd_obj = {
               ^^^^^^^ [1]
 
 References:
-   a.js:93:12
-    93|     return even_obj.even(x - 1)
+   a.js:97:12
+    97|     return even_obj.even(x - 1)
                    ^^^^^^^^ [2]
-   a.js:97:7
-    97| const even_obj = {
+   a.js:101:7
+   101| const even_obj = {
               ^^^^^^^^ [3]
-   a.js:102:12
-   102|     return odd_obj.odd(x - 1)
+   a.js:106:12
+   106|     return odd_obj.odd(x - 1)
                    ^^^^^^^ [4]
-   a.js:89:17
-    89|   odd(x: number) {
+   a.js:93:17
+    93|   odd(x: number) {
                          [5]
-   a.js:88:14
-    88|   unrelated() { return 42 },
+   a.js:92:14
+    92|   unrelated() { return 42 },
                       [6]
-   a.js:98:22
-    98|     even: (x: number) => {
+   a.js:102:22
+   102|     even: (x: number) => {
                               [7]
 
 
-Error ------------------------------------------------------------------------------------------------------- a.js:106:7
+Error ------------------------------------------------------------------------------------------------------- a.js:110:7
 
 Cannot compute a type for `recursiveArrow` because its definition includes references to itself [1]. Please add an
 annotation to this definition [2] [recursive-definition]
 
-   a.js:106:7
-   106| const recursiveArrow = () => true ? 1 : recursiveArrow();
+   a.js:110:7
+   110| const recursiveArrow = () => true ? 1 : recursiveArrow();
               ^^^^^^^^^^^^^^
 
 References:
-   a.js:106:41
-   106| const recursiveArrow = () => true ? 1 : recursiveArrow();
+   a.js:110:41
+   110| const recursiveArrow = () => true ? 1 : recursiveArrow();
                                                 ^^^^^^^^^^^^^^ [1]
-   a.js:106:26
-   106| const recursiveArrow = () => true ? 1 : recursiveArrow();
+   a.js:110:26
+   110| const recursiveArrow = () => true ? 1 : recursiveArrow();
                                   [2]
 
 
 
-Found 7 errors
+Found 8 errors
 Annotating cycles...
 >>> a.js (#changes: 11)
 //@flow
@@ -208,6 +216,10 @@ function even(x: number): boolean {
 
 function is_zero(x: number): boolean %checks {
   return x === 0 || is_zero(x);
+}
+
+function missing(x): number {
+  return missing(x);
 }
 
 const math1 = {

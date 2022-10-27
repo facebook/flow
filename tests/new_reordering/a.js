@@ -44,6 +44,10 @@ function is_zero(x: number): boolean %checks {
   return x === 0 || is_zero(x);
 }
 
+function missing(x): number {
+  return missing(x);
+}
+
 const math1 = {
   foo: "Hello",
   subobj: {

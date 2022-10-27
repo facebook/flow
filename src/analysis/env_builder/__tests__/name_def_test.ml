@@ -924,10 +924,10 @@ import * as R from 'foo';
   |};
   [%expect {|
     (2, 15) to (2, 16) =>
+    (2, 9) to (2, 14) =>
     (8, 12) to (8, 13) =>
     (4, 19) to (4, 22) =>
-    (5, 4) to (5, 5) =>
-    (2, 9) to (2, 14) |}]
+    (5, 4) to (5, 5) |}]
 
 let%expect_test "object_prop_assign" =
   print_order_test {|
@@ -937,8 +937,8 @@ function test(obj) {
   |};
   [%expect {|
     (2, 14) to (2, 17) =>
-    (3, 2) to (3, 10) =>
-    (2, 9) to (2, 13) |}]
+    (2, 9) to (2, 13) =>
+    (3, 2) to (3, 10) |}]
 
 let%expect_test "array_index_assign" =
   print_order_test {|
@@ -949,8 +949,8 @@ function test(arr, i) {
   [%expect {|
     (2, 14) to (2, 17) =>
     (2, 19) to (2, 20) =>
-    (3, 6) to (3, 7) =>
-    (2, 9) to (2, 13) |}]
+    (2, 9) to (2, 13) =>
+    (3, 6) to (3, 7) |}]
 
 let%expect_test "this" =
   print_order_test {|
