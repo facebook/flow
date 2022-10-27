@@ -720,8 +720,10 @@ struct
         | ObjectValue { obj; synthesizable = ObjectSynthesizable _; _ } ->
           let open Ast.Expression.Object in
           let open Ast.Expression.Object.Property in
+          let open Ast.Expression.Object.SpreadProperty in
           let rec loop state { Ast.Expression.Object.properties; _ } =
             Base.List.fold properties ~init:state ~f:(fun state -> function
+              | SpreadProperty (_, { argument; _ }) -> depends_of_expression argument state
               | Property
                   ( _,
                     ( Method { key = Identifier _; value = (_, fn); _ }

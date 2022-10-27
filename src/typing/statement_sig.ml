@@ -42,6 +42,8 @@ module type S = sig
 
     val add_prop : (Type.Properties.t -> Type.Properties.t) -> t -> t
 
+    val add_spread : Type.t -> t -> t
+
     val mk_object_from_spread_acc :
       Context.t -> t -> Reason.t -> frozen:bool -> default_proto:Type.t -> Type.t
   end

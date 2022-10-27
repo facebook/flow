@@ -232,6 +232,7 @@ let rec obj_properties_synthesizable
     ~this_write_locs { Ast.Expression.Object.properties; comments = _ } =
   let open Ast.Expression.Object in
   let open Ast.Expression.Object.Property in
+  let open Ast.Expression.Object.SpreadProperty in
   let handle_fun this_write_locs acc = function
     | FunctionSynthesizable -> Ok (acc, this_write_locs)
     | MissingReturn loc -> Ok (loc :: acc, this_write_locs)
@@ -242,6 +243,8 @@ let rec obj_properties_synthesizable
       ~init:([], this_write_locs)
       ~f:
         (fun (acc, this_write_locs) -> function
+          | SpreadProperty (_, { argument = (_, Ast.Expression.Identifier _); _ }) ->
+            Ok (acc, this_write_locs)
           | SpreadProperty _ -> Error ()
           | Property (_, Init { key = Identifier (_, { Ast.Identifier.name = "__proto__"; _ }); _ })
             ->

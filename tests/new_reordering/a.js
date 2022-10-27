@@ -108,3 +108,17 @@ const even_obj = {
 }
 
 const recursiveArrow = () => true ? 1 : recursiveArrow();
+
+const moremath1 = {
+  ...math1,
+  sqrt(x: number): number {
+    return moremath1.odd(x) ? 1 : 0;
+  }
+}
+
+const moremath2 = {
+  ...math2,
+  sqrt(x: number): number {
+    return moremath2.odd(x) ? 1 : 0;
+  }
+}

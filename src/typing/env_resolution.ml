@@ -31,6 +31,44 @@ let expression cx ?cond exp =
   Node_cache.set_expression cache exp;
   t
 
+let rec synthesizable_expression cx ?cond exp =
+  let open Ast.Expression in
+  match exp with
+  | (loc, Identifier (id_loc, name)) ->
+    let t = Statement.identifier cx name loc in
+    ((loc, t), Identifier ((id_loc, t), name))
+  | (loc, Ast.Expression.Literal lit) ->
+    ((loc, Statement.literal cx loc lit), Ast.Expression.Literal lit)
+  | ( loc,
+      Ast.Expression.Member
+        {
+          Ast.Expression.Member._object;
+          property =
+            Ast.Expression.Member.PropertyIdentifier
+              (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+          comments;
+        }
+    ) ->
+    let (((_, t), _) as _object) = synthesizable_expression cx ?cond _object in
+    let tout =
+      match Refinement.get ~allow_optional:false cx exp loc with
+      | Some t -> t
+      | None ->
+        let expr_reason = mk_expression_reason exp in
+        let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
+        let use_op = Op (GetProperty expr_reason) in
+        Statement.get_prop ~use_op ~cond:None cx expr_reason t (prop_reason, name)
+    in
+    ( (loc, tout),
+      Ast.Expression.Member
+        {
+          Ast.Expression.Member._object;
+          property = Ast.Expression.Member.PropertyIdentifier ((ploc, tout), id);
+          comments;
+        }
+    )
+  | _ -> Statement.expression cx ?cond exp
+
 let mk_selector_reason cx loc = function
   | Name_def.Elem n ->
     let key =
@@ -238,6 +276,10 @@ let rec resolve_binding_partial cx reason loc b =
       let acc =
         Base.List.fold properties ~init:(Statement.ObjectExpressionAcc.empty ()) ~f:(fun acc prop ->
             match prop with
+            | SpreadProperty
+                (_, { SpreadProperty.argument = (_, Ast.Expression.Identifier _) as exp; _ }) ->
+              let ((_, spread), _) = synthesizable_expression cx exp in
+              Statement.ObjectExpressionAcc.add_spread spread acc
             | Property
                 ( prop_loc,
                   Property.Method
@@ -290,7 +332,7 @@ let rec resolve_binding_partial cx reason loc b =
                       _;
                     }
                 ) ->
-              let t = expression cx exp in
+              let ((_, t), _) = synthesizable_expression cx exp in
               Statement.ObjectExpressionAcc.add_prop
                 (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
                 acc
@@ -820,45 +862,7 @@ let resolve_write_expression cx ~cond exp =
     | NonConditionalContext -> None
     | OtherConditionalTest -> Some OtherTest
   in
-  let rec expression exp =
-    let open Ast.Expression in
-    match exp with
-    | (loc, Identifier (id_loc, name)) ->
-      let t = Statement.identifier cx name loc in
-      ((loc, t), Identifier ((id_loc, t), name))
-    | (loc, Ast.Expression.Literal lit) ->
-      ((loc, Statement.literal cx loc lit), Ast.Expression.Literal lit)
-    | ( loc,
-        Ast.Expression.Member
-          {
-            Ast.Expression.Member._object;
-            property =
-              Ast.Expression.Member.PropertyIdentifier
-                (ploc, ({ Ast.Identifier.name; comments = _ } as id));
-            comments;
-          }
-      ) ->
-      let (((_, t), _) as _object) = expression _object in
-      let tout =
-        match Refinement.get ~allow_optional:false cx exp loc with
-        | Some t -> t
-        | None ->
-          let expr_reason = mk_expression_reason exp in
-          let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
-          let use_op = Op (GetProperty expr_reason) in
-          Statement.get_prop ~use_op ~cond:None cx expr_reason t (prop_reason, name)
-      in
-      ( (loc, tout),
-        Ast.Expression.Member
-          {
-            Ast.Expression.Member._object;
-            property = Ast.Expression.Member.PropertyIdentifier ((ploc, tout), id);
-            comments;
-          }
-      )
-    | _ -> Statement.expression cx ?cond exp
-  in
-  let (((_, t), _) as exp) = expression exp in
+  let (((_, t), _) as exp) = synthesizable_expression cx ?cond exp in
   Node_cache.set_expression cache exp;
   (t, unknown_use)
 
