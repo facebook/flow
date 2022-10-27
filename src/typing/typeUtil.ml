@@ -861,6 +861,9 @@ let rec eq_predicate (p1, p2) =
   | (PropExistsP (s1, _), PropExistsP (s2, _)) -> s1 = s2
   | (PropNonMaybeP (s1, _), PropNonMaybeP (s2, _)) -> s1 = s2
   (* Complex *)
+  | (LeftP (b1, OpenT (_, id1)), LeftP (b2, OpenT (_, id2)))
+  | (RightP (b1, OpenT (_, id1)), RightP (b2, OpenT (_, id2))) ->
+    b1 = b2 && id1 = id2
   | (LeftP _, LeftP _)
   | (RightP _, RightP _) ->
     p1 = p2

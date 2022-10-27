@@ -154,14 +154,7 @@ struct
                   uses
             )
 
-        method find_writes ~for_type ?(allow_missing = false) loc =
-          let write_locs =
-            try Env_api.write_locs_of_read_loc env_values loc with
-            | Not_found ->
-              if not allow_missing then
-                FlowAPIUtils.add_output cx Error_message.(EInternal (loc, MissingEnvRead loc));
-              []
-          in
+        method add_write_locs ~for_type write_locs =
           let writes =
             write_locs
             |> Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type)
@@ -204,6 +197,16 @@ struct
           in
           Base.List.iter ~f:writes_of_refinement refinements;
           writes
+
+        method find_writes ~for_type ?(allow_missing = false) loc =
+          let write_locs =
+            try Env_api.write_locs_of_read_loc env_values loc with
+            | Not_found ->
+              if not allow_missing then
+                FlowAPIUtils.add_output cx Error_message.(EInternal (loc, MissingEnvRead loc));
+              []
+          in
+          this#add_write_locs ~for_type write_locs
 
         (* In order to resolve a def containing a variable read, the writes that the
            Name_resolver determines reach the variable must be resolved *)
@@ -315,11 +318,13 @@ struct
           let _ = this#type_annotation_hint return in
           let _ =
             if fully_annotated then
-              (body, this#function_params_annotated params)
+              (body, this#function_params_annotated params, predicate)
             else
-              (this#function_body_any body, this#function_params params)
+              ( this#function_body_any body,
+                this#function_params params,
+                map_opt this#predicate predicate
+              )
           in
-          let _ = map_opt this#predicate predicate in
           let _ = map_opt this#type_params tparams in
           ()
 
@@ -415,7 +420,11 @@ struct
 
     (* For all the possible defs, explore the def's structure with the class above
        to find what variables have to be resolved before this def itself can be resolved *)
-    let depends cx this_super_dep_loc_map ({ Env_api.providers; env_entries; _ } as env) id_loc =
+    let depends
+        cx
+        this_super_dep_loc_map
+        ({ Env_api.providers; env_entries; predicate_refinement_maps; _ } as env)
+        id_loc =
       let depends_of_node mk_visit state =
         let visitor = new use_visitor cx this_super_dep_loc_map env EnvMap.empty in
         visitor#set_acc state;
@@ -496,7 +505,33 @@ struct
             ops
       in
 
-      let depends_of_fun fully_annotated tparams_map hint ~statics function_ state =
+      let depends_of_fun synth tparams_map hint ~statics function_ state =
+        let (fully_annotated, state) =
+          match synth with
+          | FunctionSynthesizable -> (true, state)
+          | FunctionPredicateSynthesizable (loc, _) ->
+            let (p_map, n_map) =
+              ALocMap.find_opt loc predicate_refinement_maps
+              |> Base.Option.value ~default:(SMap.empty, SMap.empty)
+            in
+            let state =
+              depends_of_node
+                (fun visitor ->
+                  SMap.iter
+                    (fun _ { Env_api.write_locs; _ } ->
+                      let writes = visitor#add_write_locs ~for_type:false write_locs in
+                      Base.List.iter ~f:(visitor#add ~why:loc) writes)
+                    p_map;
+                  SMap.iter
+                    (fun _ { Env_api.write_locs; _ } ->
+                      let writes = visitor#add_write_locs ~for_type:false write_locs in
+                      Base.List.iter ~f:(visitor#add ~why:loc) writes)
+                    n_map)
+                state
+            in
+            (true, state)
+          | _ -> (false, state)
+        in
         let state = depends_of_hint state hint in
         let state =
           depends_of_node
@@ -609,7 +644,13 @@ struct
                           _;
                         } )
                   ) ->
-                depends_of_fun true ALocMap.empty Hint_api.Hint_None ~statics:SMap.empty fn state
+                depends_of_fun
+                  FunctionSynthesizable
+                  ALocMap.empty
+                  Hint_api.Hint_None
+                  ~statics:SMap.empty
+                  fn
+                  state
               | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Object obj); _ })
                 ->
                 loop state obj
@@ -631,13 +672,7 @@ struct
               arrow = _;
               tparams_map;
             } ->
-          depends_of_fun
-            (synthesizable_from_annotation = FunctionSynthesizable)
-            tparams_map
-            hint
-            ~statics
-            function_
-            state
+          depends_of_fun synthesizable_from_annotation tparams_map hint ~statics function_ state
         | EmptyArray { array_providers; _ } ->
           ALocSet.fold
             (fun loc acc ->
@@ -784,7 +819,7 @@ struct
             hint;
           } ->
         depends_of_fun
-          (synthesizable_from_annotation = FunctionSynthesizable)
+          synthesizable_from_annotation
           tparams_map
           hint
           ~statics
@@ -821,13 +856,33 @@ struct
         | Select { selector = Computed _ | Default; _ } -> false
         | Select { binding; _ } -> bind_loop binding
       in
+      let rec expression_resolvable (_, expr) =
+        (* A variable read or member expression is assumed to be recursively resolvable if the
+           write that reaches the read is also resolvable, and we can extend this to
+           ExpressionDef nodes as long as they only contain such expressions. These nodes will
+           always depend on the definition of the variable or member, and if the definitions
+           are not resolvable, the entire component won't be either. *)
+        match expr with
+        | Ast.Expression.Literal _
+        | Ast.Expression.Identifier _ ->
+          true
+        | Ast.Expression.Member
+            {
+              Ast.Expression.Member._object;
+              property = Ast.Expression.Member.(PropertyIdentifier _);
+              _;
+            } ->
+          expression_resolvable _object
+        | _ -> false
+      in
       function
       | Binding bind -> bind_loop bind
+      | ExpressionDef { hint = Hint_api.Hint_None; expr; chain = false; _ } ->
+        expression_resolvable expr
       | GeneratorNext _
       | TypeAlias _
       | OpaqueType _
       | TypeParam _
-      | Function { synthesizable_from_annotation = FunctionSynthesizable; _ }
       | Interface _
       (* Imports are academic here since they can't be in a cycle anyways, since they depend on nothing *)
       | Import { import_kind = Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ }
@@ -841,7 +896,12 @@ struct
       | NonBindingParam
       | MissingThisAnnot
       | DeclaredClass _
-      | DeclaredModule _ ->
+      | DeclaredModule _
+      | Function
+          {
+            synthesizable_from_annotation = FunctionSynthesizable | FunctionPredicateSynthesizable _;
+            _;
+          } ->
         true
       | ExpressionDef _
       | Update _

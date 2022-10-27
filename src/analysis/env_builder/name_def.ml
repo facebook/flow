@@ -203,25 +203,49 @@ let func_params_missing_annotations
   in
   params @ rest @ this_
 
+let predicate_synthesizable predicate body =
+  match (predicate, body) with
+  | ( Some _,
+      Ast.Function.BodyBlock
+        ( _,
+          {
+            Ast.Statement.Block.body =
+              [
+                ( ret_loc,
+                  Ast.Statement.Return
+                    { Ast.Statement.Return.argument = Some expr; comments = _; return_out = _ }
+                );
+              ];
+            comments = _;
+          }
+        )
+    )
+  | (Some (ret_loc, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared expr; comments = _ }), _)
+    ->
+    FunctionPredicateSynthesizable (ret_loc, expr)
+  | _ -> MissingArguments
+
 let func_is_synthesizable_from_annotation
     ~allow_this ({ Ast.Function.predicate; return; generator; params; body; _ } as f) =
-  if Base.Option.is_some predicate then
-    PredicateFunction
+  let params = func_params_missing_annotations ~allow_this params body in
+  if Base.List.length params > 0 then
+    MissingArguments
   else
-    let params = func_params_missing_annotations ~allow_this params body in
-    let based_on_params =
-      if Base.List.length params > 0 then
-        MissingArguments
+    match return with
+    | Ast.Type.Available _ ->
+      if Base.Option.is_some predicate then
+        predicate_synthesizable predicate body
       else
         FunctionSynthesizable
-    in
-    match return with
-    | Ast.Type.Available _ -> based_on_params
     | Ast.Type.Missing loc ->
-      if (not (Nonvoid_return.might_have_nonvoid_return ALoc.none f)) && not generator then
-        based_on_params
-      else
+      if
+        Base.Option.is_some predicate
+        || Nonvoid_return.might_have_nonvoid_return ALoc.none f
+        || generator
+      then
         MissingReturn loc
+      else
+        FunctionSynthesizable
 
 let obj_this_write_locs { Ast.Expression.Object.properties; _ } =
   let open Ast.Expression.Object in

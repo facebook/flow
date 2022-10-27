@@ -213,4 +213,17 @@ module type S = sig
     Context.t ->
     (ALoc.t, ALoc.t) Ast.Expression.t ->
     Type.t * Type.t Base.Option.t * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
+
+  val literal : Context.t -> ALoc.t -> ALoc.t Ast.Literal.t -> Type.t
+
+  val identifier : Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t
+
+  val get_prop :
+    cond:Type.cond_context option ->
+    Context.t ->
+    Reason.t ->
+    use_op:Type.use_op ->
+    Type.t ->
+    Reason.t * string ->
+    Type.t
 end

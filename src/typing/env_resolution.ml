@@ -137,12 +137,13 @@ let lazily_resolve_hint cx loc hint =
 
 let resolve_annotated_function
     cx
+    synthesizable
     ~bind_this
     ~statics
     reason
     tparams_map
     function_loc
-    ({ Ast.Function.body; params; sig_loc; _ } as function_) =
+    ({ Ast.Function.body; params; sig_loc; return; _ } as function_) =
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this =
@@ -152,7 +153,7 @@ let resolve_annotated_function
     else
       Type.implicit_mixed_this reason
   in
-  let ((func_sig, _) as sig_data) =
+  let ((({ Statement.Func_stmt_sig.Types.return_t; _ } as func_sig), _) as sig_data) =
     Statement.mk_func_sig
       cx
       ~required_this_param_type:(Base.Option.some_if bind_this default_this)
@@ -163,6 +164,23 @@ let resolve_annotated_function
       reason
       function_
   in
+  begin
+    match (synthesizable, Context.current_phase cx) with
+    | (_, Context.InitLib) -> ()
+    | (FunctionPredicateSynthesizable (pred_loc, pred_expr), _) ->
+      let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
+      let reason = mk_reason (RCustom "return") pred_loc in
+      let (return_annot, _) = Anno.mk_type_annotation cx tparams_map reason return in
+      let return_annot = TypeUtil.type_t_of_annotated_or_inferred return_annot in
+      let (p_map, n_map) = Env.predicate_refinement_maps cx pred_loc in
+      let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
+      let pred_t =
+        OpenPredT { reason = pred_reason; base_t = return_annot; m_pos = p_map; m_neg = n_map }
+      in
+      let use_op = Op (FunReturnStatement { value = mk_expression_reason pred_expr }) in
+      Flow_js.flow cx (pred_t, UseT (use_op, return_t))
+    | _ -> ()
+  end;
   Node_cache.set_function_sig cache sig_loc sig_data;
   ( Statement.Func_stmt_sig.functiontype
       cx
@@ -201,7 +219,15 @@ let rec resolve_binding_partial cx reason loc b =
     let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =
       let reason = func_reason ~async:false ~generator:false prop_loc in
       let (t, _) =
-        resolve_annotated_function cx ~bind_this ~statics:SMap.empty reason ALocMap.empty fn_loc fn
+        resolve_annotated_function
+          cx
+          FunctionSynthesizable
+          ~bind_this
+          ~statics:SMap.empty
+          reason
+          ALocMap.empty
+          fn_loc
+          fn
       in
       t
     in
@@ -793,7 +819,45 @@ let resolve_write_expression cx ~cond exp =
     | NonConditionalContext -> None
     | OtherConditionalTest -> Some OtherTest
   in
-  let (((_, t), _) as exp) = Statement.expression ?cond cx exp in
+  let rec expression exp =
+    let open Ast.Expression in
+    match exp with
+    | (loc, Identifier (id_loc, name)) ->
+      let t = Statement.identifier cx name loc in
+      ((loc, t), Identifier ((id_loc, t), name))
+    | (loc, Ast.Expression.Literal lit) ->
+      ((loc, Statement.literal cx loc lit), Ast.Expression.Literal lit)
+    | ( loc,
+        Ast.Expression.Member
+          {
+            Ast.Expression.Member._object;
+            property =
+              Ast.Expression.Member.PropertyIdentifier
+                (ploc, ({ Ast.Identifier.name; comments = _ } as id));
+            comments;
+          }
+      ) ->
+      let (((_, t), _) as _object) = expression _object in
+      let tout =
+        match Refinement.get ~allow_optional:false cx exp loc with
+        | Some t -> t
+        | None ->
+          let expr_reason = mk_expression_reason exp in
+          let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
+          let use_op = Op (GetProperty expr_reason) in
+          Statement.get_prop ~use_op ~cond:None cx expr_reason t (prop_reason, name)
+      in
+      ( (loc, tout),
+        Ast.Expression.Member
+          {
+            Ast.Expression.Member._object;
+            property = Ast.Expression.Member.PropertyIdentifier ((ploc, tout), id);
+            comments;
+          }
+      )
+    | _ -> Statement.expression cx ?cond exp
+  in
+  let (((_, t), _) as exp) = expression exp in
   Node_cache.set_expression cache exp;
   (t, unknown_use)
 
@@ -852,7 +916,9 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Function
         {
           function_;
-          synthesizable_from_annotation = FunctionSynthesizable;
+          synthesizable_from_annotation =
+            (FunctionSynthesizable | FunctionPredicateSynthesizable _) as
+            synthesizable_from_annotation;
           has_this_def = _;
           function_loc;
           tparams_map;
@@ -861,6 +927,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         } ->
       resolve_annotated_function
         cx
+        synthesizable_from_annotation
         ~bind_this:true
         ~statics
         def_reason

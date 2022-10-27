@@ -3677,8 +3677,12 @@ let rec string_of_predicate = function
   | AndP (p1, p2) -> string_of_predicate p1 ^ " && " ^ string_of_predicate p2
   | OrP (p1, p2) -> string_of_predicate p1 ^ " || " ^ string_of_predicate p2
   | NotP p -> "not " ^ string_of_predicate p
+  | LeftP (b, OpenT (_, id)) ->
+    spf "left operand of %s with right operand = OpenT(%d)" (string_of_binary_test b) id
   | LeftP (b, t) ->
     spf "left operand of %s with right operand = %s" (string_of_binary_test b) (string_of_ctor t)
+  | RightP (b, OpenT (_, id)) ->
+    spf "right operand of %s with left operand = OpenT(%d)" (string_of_binary_test b) id
   | RightP (b, t) ->
     spf "right operand of %s with left operand = %s" (string_of_binary_test b) (string_of_ctor t)
   | ExistsP -> "truthy"

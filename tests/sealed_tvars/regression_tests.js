@@ -155,3 +155,10 @@ function non_assigning_member_assigns() {
     B(defaultValue: boolean = (x: A) => 42): void {}
   }
 }
+
+{
+  function isStack(maybeStack: mixed): boolean %checks { return maybeStack instanceof Stack; }
+  declare class Stack {
+    static isStack: typeof isStack;
+  }
+}

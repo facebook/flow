@@ -1267,3 +1267,15 @@ declare var f: any;
       (4, 23) to (4, 27) =>
       (7, 12) to (7, 13) =>
       (4, 45) to (4, 49) |}]
+
+let%expect_test "pred" =
+  print_order_test {|
+function isStack(maybeStack: mixed): boolean %checks { return maybeStack instanceof Stack; }
+declare class Stack {
+  static isStack: typeof isStack;
+}
+
+|};
+    [%expect {|
+      (2, 17) to (2, 27) =>
+      legal scc: (((2, 9) to (2, 16)); ((2, 84) to (2, 89)); ((3, 14) to (3, 19))) |}]
