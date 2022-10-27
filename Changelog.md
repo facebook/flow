@@ -1,3 +1,14 @@
+### 0.191.0
+
+Likely to cause new Flow errors:
+* The `exact_empty_objects` option is now enabled by default. Details about this change and how to update your codebase are covered [on our blog](https://medium.com/flow-type/improved-handling-of-the-empty-object-in-flow-ead91887e40c).
+* The `typeof X` type annotation now respects the initialization state of `X`: if `X` hasn't been declared it will be an error to get its type.
+
+Notable changes:
+* The `enforce_local_inference_annotations` config option was removed. To migrate your codebase, run the following codemod to add the required annotations: `flow codemod annotate-lti`. More details on the changes are explained in the [Requiring More Annotations to Functions and Classes in Flow blog post](https://medium.com/flow-type/requiring-more-annotations-to-functions-and-classes-in-flow-e8aa9b1d76bd).
+* Literals can be suggested by autocomplete in more cases
+* Fixed autocompleting specifiers in an import statement
+
 ### 0.190.1
 
 * Fix a bug on Windows where the server would exit unexpectedly after `hg update`
