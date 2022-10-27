@@ -165,30 +165,32 @@ let mapper
                     ( _,
                       {
                         ArgList.arguments =
-                          [
-                            Expression
-                              (* `null` *)
-                              ( (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ })
-                              (* `undefined` *)
-                              | (_, Identifier (_, { Ast.Identifier.name = "undefined"; _ }))
-                              (* `{}` *)
-                              | (_, Object { Object.properties = []; _ })
-                              (* `[]` *)
-                              | (_, Array { Array.elements = []; _ })
-                              (* `new Set()` | `new Map()` *)
-                              | ( _,
-                                  New
-                                    {
-                                      New.callee =
-                                        ( _,
-                                          Identifier (_, { Ast.Identifier.name = "Map" | "Set"; _ })
-                                        );
-                                      targs = None;
-                                      arguments = None | Some (_, { ArgList.arguments = []; _ });
-                                      _;
-                                    }
-                                ) );
-                          ];
+                          ( []
+                          | [
+                              Expression
+                                (* `null` *)
+                                ( (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ })
+                                (* `undefined` *)
+                                | (_, Identifier (_, { Ast.Identifier.name = "undefined"; _ }))
+                                (* `{}` *)
+                                | (_, Object { Object.properties = []; _ })
+                                (* `[]` *)
+                                | (_, Array { Array.elements = []; _ })
+                                (* `new Set()` | `new Map()` *)
+                                | ( _,
+                                    New
+                                      {
+                                        New.callee =
+                                          ( _,
+                                            Identifier
+                                              (_, { Ast.Identifier.name = "Map" | "Set"; _ })
+                                          );
+                                        targs = None;
+                                        arguments = None | Some (_, { ArgList.arguments = []; _ });
+                                        _;
+                                      }
+                                  ) );
+                            ] );
                         _;
                       }
                     ) as arguments;
@@ -395,17 +397,18 @@ let mapper
                     ( _,
                       {
                         ArgList.arguments =
-                          [
-                            Expression
-                              (* `null` *)
-                              ( (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ })
-                              (* `undefined` *)
-                              | (_, Identifier (_, { Ast.Identifier.name = "undefined"; _ }))
-                              (* `{}` *)
-                              | (_, Object { Object.properties = []; _ })
-                              (* `[]` *)
-                              | (_, Array { Array.elements = []; _ }) );
-                          ];
+                          ( []
+                          | [
+                              Expression
+                                (* `null` *)
+                                ( (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ })
+                                (* `undefined` *)
+                                | (_, Identifier (_, { Ast.Identifier.name = "undefined"; _ }))
+                                (* `{}` *)
+                                | (_, Object { Object.properties = []; _ })
+                                (* `[]` *)
+                                | (_, Array { Array.elements = []; _ }) );
+                            ] );
                         _;
                       }
                     ) as arguments;

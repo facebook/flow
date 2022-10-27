@@ -1,4 +1,4 @@
->>> test.js (#changes: 24)
+>>> test.js (#changes: 26)
 import * as React from 'react';
 import {useState, useRef, useCallback} from 'react';
 
@@ -24,6 +24,18 @@ import {useState, useRef, useCallback} from 'react';
 {
   const [val, setValue] = useState(undefined); // NOT ANNOTATED
   const ref = useRef(undefined); // NOT ANNOTATED
+}
+
+// No-arg
+{
+  const [val, setValue] = useState<void | number>(); // ANNOTATED
+  setValue(1);
+  const ref = useRef<void | number>(); // ANNOTATED
+  ref.current = 1;
+}
+{
+  const [val, setValue] = useState(); // NOT ANNOTATED
+  const ref = useRef(); // NOT ANNOTATED
 }
 
 // Empty array
@@ -105,8 +117,8 @@ import {useState, useRef, useCallback} from 'react';
 
 Stats:
   Files changed:                            1
-  Number of annotations added:             24
-  Total size of annotations:               42
+  Number of annotations added:             26
+  Total size of annotations:               48
 
 Errors:
   Missing annot./normalizer error:          4

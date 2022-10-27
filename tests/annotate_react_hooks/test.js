@@ -25,6 +25,18 @@ import {useState, useRef, useCallback} from 'react';
   const ref = useRef(undefined); // NOT ANNOTATED
 }
 
+// No-arg
+{
+  const [val, setValue] = useState(); // ANNOTATED
+  setValue(1);
+  const ref = useRef(); // ANNOTATED
+  ref.current = 1;
+}
+{
+  const [val, setValue] = useState(); // NOT ANNOTATED
+  const ref = useRef(); // NOT ANNOTATED
+}
+
 // Empty array
 {
   const [val, setValue] = useState([]); // ANNOTATED
