@@ -737,16 +737,29 @@ let autocomplete_id
   let result = { ServerProt.Response.Completion.items = List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
 
-let type_exports_of_module_ty ~edit_locs ~exact_by_default ~documentation_and_tags_of_module_member
-    =
+let exports_of_module_ty
+    ~edit_locs ~exact_by_default ~documentation_and_tags_of_module_member ~kind ?filter_name =
   let open ServerProt.Response.Completion in
   let open Ty in
+  let is_kind export_kind = kind = `Either || export_kind = `Either || export_kind = kind in
+  let filter_name name =
+    match name with
+    | Reason.InternalName _
+    | Reason.InternalModuleName _ ->
+      (* don't show internal names in autocomplete *)
+      false
+    | Reason.OrdinaryName name ->
+      (match filter_name with
+      | Some filter_name -> filter_name name
+      | None -> true)
+  in
+  let is_ok export_kind name = is_kind export_kind && filter_name name in
   function
   | Decl (ModuleDecl { exports; _ }) ->
     Base.List.filter_map
       ~f:(function
-        | TypeAliasDecl { name = { Ty.sym_name; sym_def_loc; _ }; _ } as d ->
-          (* TODO consider omitting items with internal names throughout *)
+        | TypeAliasDecl { name = { Ty.sym_name; sym_def_loc; _ }; _ } as d when is_ok `Type sym_name
+          ->
           let sym_name = Reason.display_string_of_name sym_name in
           let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
           Some
@@ -759,7 +772,7 @@ let type_exports_of_module_ty ~edit_locs ~exact_by_default ~documentation_and_ta
                (sym_name, edit_locs)
                d
             )
-        | InterfaceDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d ->
+        | InterfaceDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d when is_ok `Type sym_name ->
           let sym_name = Reason.display_string_of_name sym_name in
           let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
           Some
@@ -772,7 +785,7 @@ let type_exports_of_module_ty ~edit_locs ~exact_by_default ~documentation_and_ta
                (sym_name, edit_locs)
                d
             )
-        | ClassDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d ->
+        | ClassDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d when is_ok `Either sym_name ->
           let sym_name = Reason.display_string_of_name sym_name in
           let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
           Some
@@ -785,7 +798,7 @@ let type_exports_of_module_ty ~edit_locs ~exact_by_default ~documentation_and_ta
                (sym_name, edit_locs)
                d
             )
-        | EnumDecl { Ty.sym_name; sym_def_loc; _ } as d ->
+        | EnumDecl { Ty.sym_name; sym_def_loc; _ } as d when is_ok `Either sym_name ->
           let sym_name = Reason.display_string_of_name sym_name in
           let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
           Some
@@ -796,6 +809,16 @@ let type_exports_of_module_ty ~edit_locs ~exact_by_default ~documentation_and_ta
                ~exact_by_default
                ~log_info:"qualified enum"
                (sym_name, edit_locs)
+               d
+            )
+        | VariableDecl (name, _) as d when is_ok `Value name ->
+          let name = Reason.display_string_of_name name in
+          Some
+            (autocomplete_create_result_decl
+               ~rank:0
+               ~exact_by_default
+               ~log_info:"qualified variable"
+               (name, edit_locs)
                d
             )
         | _ -> None)
@@ -1041,10 +1064,11 @@ let autocomplete_unqualified_type
              in
              (result :: items_rev, errors_to_log)
            | Ok elt
-             when type_exports_of_module_ty
+             when exports_of_module_ty
                     ~edit_locs
                     ~exact_by_default
                     ~documentation_and_tags_of_module_member:(fun _ -> (None, None))
+                    ~kind:`Type
                     elt
                   <> [] ->
              let result =
@@ -1473,14 +1497,15 @@ let autocomplete_jsx_attribute
     let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
-let autocomplete_qualified_type ~reader ~cx ~file_sig ~typed_ast ~tparams_rev ~qtype ~edit_locs =
-  let qtype_scheme = Type.TypeScheme.{ tparams_rev; type_ = qtype } in
+let autocomplete_module_exports
+    ~reader ~cx ~file_sig ~typed_ast ~tparams_rev ~edit_locs ~kind ?filter_name module_type =
+  let scheme = Type.TypeScheme.{ tparams_rev; type_ = module_type } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
     Ty_normalizer.from_scheme
       ~options:ty_normalizer_options
       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
-      qtype_scheme
+      scheme
   in
   let documentation_and_tags_of_module_member =
     documentation_and_tags_of_def_loc ~reader ~typed_ast
@@ -1489,10 +1514,12 @@ let autocomplete_qualified_type ~reader ~cx ~file_sig ~typed_ast ~tparams_rev ~q
     match module_ty_res with
     | Error err -> ([], [Ty_normalizer.error_to_string err])
     | Ok module_ty ->
-      ( type_exports_of_module_ty
+      ( exports_of_module_ty
           ~edit_locs
           ~exact_by_default
           ~documentation_and_tags_of_module_member
+          ~kind
+          ?filter_name
           module_ty,
         []
       )
@@ -1644,6 +1671,30 @@ let autocomplete_get_results
       | Ac_module ->
         (* TODO: complete module names *)
         ("Acmodule", AcEmpty "Module")
+      | Ac_import_specifier { module_type; used_keys; is_type } ->
+        (* TODO: is_type should be an import_kind:
+           ImportType = `Type
+           ImportTypeof = `Value
+           ImportValue = `Either *)
+        let kind =
+          if is_type then
+            `Type
+          else
+            `Either
+        in
+        let filter_name name = not (SSet.mem name used_keys) in
+        ( "Ac_import_specifier",
+          autocomplete_module_exports
+            ~reader
+            ~cx
+            ~file_sig
+            ~typed_ast
+            ~tparams_rev
+            ~edit_locs
+            ~kind
+            ~filter_name
+            module_type
+        )
       | Ac_enum -> ("Acenum", AcEmpty "Enum")
       | Ac_key { obj_type; used_keys; spreads } ->
         ( "Ackey",
@@ -1822,13 +1873,14 @@ let autocomplete_get_results
         )
       | Ac_qualified_type qtype ->
         ( "Acqualifiedtype",
-          autocomplete_qualified_type
+          autocomplete_module_exports
             ~reader
             ~cx
             ~file_sig
             ~typed_ast
             ~tparams_rev
-            ~qtype
             ~edit_locs
+            ~kind:`Type
+            qtype
         ))
     )

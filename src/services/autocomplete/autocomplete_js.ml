@@ -19,6 +19,11 @@ type autocomplete_type =
   | Ac_id of ac_id  (** identifier references *)
   | Ac_class_key  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
+  | Ac_import_specifier of {
+      module_type: Type.t;
+      used_keys: SSet.t;
+      is_type: bool;
+    }  (** Import named specifiers *)
   | Ac_key of {
       obj_type: Type.t;
       used_keys: SSet.t;
@@ -562,11 +567,40 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! import_declaration decl_loc decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { import_kind = _; source; specifiers = _; default = _; comments = _ } = decl in
-      match source with
-      | ((loc, _), Flow_ast.StringLiteral.{ raw; _ }) when this#covers_target loc ->
-        this#find loc raw Ac_module
-      | _ -> super#import_declaration decl_loc decl
+      let { import_kind; source; specifiers; default = _; comments = _ } = decl in
+      let ((source_loc, module_type), Flow_ast.StringLiteral.{ raw = from; _ }) = source in
+      if this#covers_target source_loc then
+        this#find source_loc from Ac_module
+      else if this#covers_target decl_loc then
+        match specifiers with
+        | Some (ImportNamedSpecifiers ns) ->
+          let (found, used_keys) =
+            Base.List.fold ns ~init:(None, SSet.empty) ~f:(fun (found, used_keys) specifier ->
+                let { remote = ((loc, _), Flow_ast.Identifier.{ name; _ }); kind; _ } = specifier in
+                let found =
+                  if this#covers_target loc then
+                    let is_type =
+                      match Base.Option.value kind ~default:import_kind with
+                      | ImportType -> true
+                      | ImportTypeof -> false
+                      | ImportValue -> false
+                    in
+                    Some (loc, name, is_type)
+                  else
+                    found
+                in
+                (found, SSet.add name used_keys)
+            )
+          in
+          (match found with
+          | None -> decl
+          | Some (loc, token, is_type) ->
+            this#find loc token (Ac_import_specifier { module_type; used_keys; is_type }))
+        | Some (ImportNamespaceSpecifier _)
+        | None ->
+          super#import_declaration decl_loc decl
+      else
+        decl
 
     method indexed_access_type_with_loc loc ia =
       let open Flow_ast in
