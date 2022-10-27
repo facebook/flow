@@ -88,62 +88,69 @@ let get_t = get_t ~depth:3
 
 let rec instantiate_callee cx fn instantiation_hint =
   let { Hint_api.reason; targs; arg_list; return_hint; arg_index } = instantiation_hint in
-  let t =
-    match get_t cx (simplify_callee cx reason unknown_use fn) with
-    | IntersectionT (r, rep) ->
-      synthesis_speculation_call
-        cx
-        reason
-        (r, rep)
-        (Lazy.force targs)
-        (Lazy.force arg_list |> Base.List.map ~f:snd)
+  let resolve_overload_and_targs fn =
+    let t =
+      match get_t cx (simplify_callee cx reason unknown_use fn) with
+      | IntersectionT (r, rep) ->
+        synthesis_speculation_call
+          cx
+          reason
+          (r, rep)
+          (Lazy.force targs)
+          (Lazy.force arg_list |> Base.List.map ~f:snd)
+      | t -> t
+    in
+    match get_t cx t with
+    | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
+      let call_args_tlist =
+        let checked_t t loc =
+          let reason = mk_reason (TypeUtil.reason_of_t t |> Reason.desc_of_reason) loc in
+          Env.find_write cx Env_api.ExpressionLoc reason
+        in
+        let rec loop i = function
+          | [] -> []
+          | (_loc, t) :: rest when i >= arg_index -> t :: loop (i + 1) rest
+          | (loc, t) :: rest ->
+            let t' =
+              match t with
+              | Arg t -> Arg (checked_t t loc)
+              | SpreadArg t -> SpreadArg (checked_t t loc)
+            in
+            t' :: loop (i + 1) rest
+        in
+        loop 0 (Lazy.force arg_list)
+      in
+      let call_targs = Lazy.force targs in
+      let return_hint = evaluate_hint cx reason return_hint in
+      let check =
+        Implicit_instantiation_check.of_call
+          t
+          (tparams_loc, tparams, t_out)
+          unknown_use
+          reason
+          {
+            call_this_t = Unsoundness.unresolved_any reason;
+            call_targs;
+            call_args_tlist;
+            call_tout = (reason, Tvar.mk_no_wrap cx reason);
+            call_strict_arity = true;
+            call_speculation_hint_state = None;
+          }
+      in
+      let subst_map =
+        Context.run_in_implicit_instantiation_mode cx (fun () ->
+            ImplicitInstantiation.solve_targs cx ?return_hint check
+            |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
+        )
+      in
+      Flow_js.subst cx subst_map t_out
     | t -> t
   in
-  match get_t cx t with
-  | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
-    let call_args_tlist =
-      let checked_t t loc =
-        let reason = mk_reason (TypeUtil.reason_of_t t |> Reason.desc_of_reason) loc in
-        Env.find_write cx Env_api.ExpressionLoc reason
-      in
-      let rec loop i = function
-        | [] -> []
-        | (_loc, t) :: rest when i >= arg_index -> t :: loop (i + 1) rest
-        | (loc, t) :: rest ->
-          let t' =
-            match t with
-            | Arg t -> Arg (checked_t t loc)
-            | SpreadArg t -> SpreadArg (checked_t t loc)
-          in
-          t' :: loop (i + 1) rest
-      in
-      loop 0 (Lazy.force arg_list)
-    in
-    let call_targs = Lazy.force targs in
-    let return_hint = evaluate_hint cx reason return_hint in
-    let check =
-      Implicit_instantiation_check.of_call
-        t
-        (tparams_loc, tparams, t_out)
-        unknown_use
-        reason
-        {
-          call_this_t = Unsoundness.unresolved_any reason;
-          call_targs;
-          call_args_tlist;
-          call_tout = (reason, Tvar.mk_no_wrap cx reason);
-          call_strict_arity = true;
-          call_speculation_hint_state = None;
-        }
-    in
-    let subst_map =
-      Context.run_in_implicit_instantiation_mode cx (fun () ->
-          ImplicitInstantiation.solve_targs cx ?return_hint check
-          |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
-      )
-    in
-    Flow_js.subst cx subst_map t_out
-  | t -> t
+  match get_t cx (simplify_callee cx reason unknown_use fn) with
+  | UnionT (_, rep) -> UnionT (reason, UnionRep.ident_map resolve_overload_and_targs rep)
+  | MaybeT (_, t) -> resolve_overload_and_targs t
+  | OptionalT { type_; _ } -> resolve_overload_and_targs type_
+  | fn -> resolve_overload_and_targs fn
 
 and instantiate_component cx component instantiation_hint =
   match get_t cx component with

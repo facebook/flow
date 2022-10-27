@@ -47,3 +47,9 @@ function test5() {
   ["a"].reduce((a, b, i) => a + b); // okay
   ["a"].reduce((a, b, i) => a + b, ''); // okay
 }
+
+function test6() {
+  declare var array: ?Array<string>;
+  (array || []).reduce((acc, item) => acc, {}); // okay
+  (array ?? []).reduce((acc, item) => acc, {}); // okay
+}
