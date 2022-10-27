@@ -23,13 +23,13 @@ let default_autoimport_options =
 let lsp_completion_of_type =
   let open Ty in
   function
-  | InlineInterface _ -> Some Lsp.Completion.Interface
+  | InlineInterface _ -> Lsp.Completion.Interface
   | StrLit _
   | NumLit _
   | BoolLit _ ->
-    Some Lsp.Completion.Value
-  | Fun _ -> Some Lsp.Completion.Function
-  | Union _ -> Some Lsp.Completion.Enum
+    Lsp.Completion.Value
+  | Fun _ -> Lsp.Completion.Function
+  | Union _ -> Lsp.Completion.Enum
   | Tup _
   | Bot _
   | Null
@@ -51,13 +51,16 @@ let lsp_completion_of_type =
   | IndexedAccess _
   | Mu _
   | CharSet _ ->
-    Some Lsp.Completion.Variable
+    Lsp.Completion.Variable
 
 let lsp_completion_of_decl =
   let open Ty in
   function
-  | VariableDecl _ -> Lsp.Completion.Variable
-  | TypeAliasDecl _ -> Lsp.Completion.Enum
+  | VariableDecl (_name, ty) -> lsp_completion_of_type ty
+  | TypeAliasDecl { type_; _ } ->
+    (match type_ with
+    | Some type_ -> lsp_completion_of_type type_
+    | None -> Lsp.Completion.Enum)
   | ClassDecl _ -> Lsp.Completion.Class
   | InterfaceDecl _ -> Lsp.Completion.Interface
   | EnumDecl _ -> Lsp.Completion.Enum
@@ -87,13 +90,23 @@ let detail_of_ty ~exact_by_default ty =
   (cli_detail, Some lsp_detail)
 
 let detail_of_ty_decl ~exact_by_default d =
-  let type_ = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d in
-  (* decls aren't function signatures, so cli_detail and lsp_detail are the same *)
-  let cli_detail = type_ in
+  let cli_detail = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d in
   let lsp_detail =
+    (* this is rendered immediately after the name, with no space.
+       for most of these, there's nothing to show because the "kind" icon
+       captures whether it's a class, enum, interface, etc. *)
     match d with
     | Ty.ClassDecl _ -> None
-    | _ -> Some type_
+    | Ty.EnumDecl _ -> None
+    | Ty.InterfaceDecl _ -> None
+    | Ty.ModuleDecl _ -> None
+    | Ty.TypeAliasDecl _ ->
+      (* TODO: the "signature" of a type alias arguably includes type params,
+         and could include the RHS too like we do for variables. *)
+      None
+    | Ty.VariableDecl (_, ty) ->
+      let (_, lsp_detail) = detail_of_ty ~exact_by_default ty in
+      lsp_detail
   in
   (cli_detail, lsp_detail)
 
@@ -108,7 +121,7 @@ let autocomplete_create_result
     (name, edit_locs)
     ty =
   let (cli_detail, lsp_detail) = detail_of_ty ~exact_by_default ty in
-  let kind = lsp_completion_of_type ty in
+  let kind = Some (lsp_completion_of_type ty) in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
   {
@@ -136,13 +149,8 @@ let autocomplete_create_result_decl
     ~log_info
     (name, edit_locs)
     d =
-  let open Ty in
-  let (kind, (cli_detail, lsp_detail)) =
-    match d with
-    | ModuleDecl _ -> (Some Lsp.Completion.Module, ("module " ^ name, None))
-    | Ty.VariableDecl (_, ty) -> (Some Lsp.Completion.Variable, detail_of_ty ~exact_by_default ty)
-    | d -> (Some (lsp_completion_of_decl d), detail_of_ty_decl ~exact_by_default d)
-  in
+  let kind = Some (lsp_completion_of_decl d) in
+  let (cli_detail, lsp_detail) = detail_of_ty_decl ~exact_by_default d in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
   {
@@ -737,83 +745,59 @@ let type_exports_of_module_ty ~edit_locs ~exact_by_default ~documentation_and_ta
   | Decl (ModuleDecl { exports; _ }) ->
     Base.List.filter_map
       ~f:(function
-        | TypeAliasDecl { name = { Ty.sym_name; sym_def_loc; _ }; type_ = Some t; _ } as d ->
+        | TypeAliasDecl { name = { Ty.sym_name; sym_def_loc; _ }; _ } as d ->
           (* TODO consider omitting items with internal names throughout *)
           let sym_name = Reason.display_string_of_name sym_name in
-          let (cli_detail, lsp_detail) = detail_of_ty_decl ~exact_by_default d in
           let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
           Some
-            {
-              kind = lsp_completion_of_type t;
-              name = sym_name;
-              text_edit = Some (text_edit sym_name edit_locs);
-              additional_text_edits = [];
-              detail = cli_detail;
-              sort_text = None;
-              preselect = false;
-              documentation;
-              tags;
-              log_info = "qualified type alias";
-              source = None;
-              type_ = lsp_detail;
-            }
+            (autocomplete_create_result_decl
+               ~rank:0
+               ?documentation
+               ?tags
+               ~exact_by_default
+               ~log_info:"qualified type alias"
+               (sym_name, edit_locs)
+               d
+            )
         | InterfaceDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d ->
           let sym_name = Reason.display_string_of_name sym_name in
-          let (cli_detail, lsp_detail) = detail_of_ty_decl ~exact_by_default d in
           let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
           Some
-            {
-              kind = Some Lsp.Completion.Interface;
-              name = sym_name;
-              text_edit = Some (text_edit sym_name edit_locs);
-              additional_text_edits = [];
-              detail = cli_detail;
-              sort_text = None;
-              preselect = false;
-              documentation;
-              tags;
-              log_info = "qualified interface";
-              source = None;
-              type_ = lsp_detail;
-            }
+            (autocomplete_create_result_decl
+               ~rank:0
+               ?documentation
+               ?tags
+               ~exact_by_default
+               ~log_info:"qualified interface"
+               (sym_name, edit_locs)
+               d
+            )
         | ClassDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d ->
           let sym_name = Reason.display_string_of_name sym_name in
-          let (cli_detail, lsp_detail) = detail_of_ty_decl ~exact_by_default d in
           let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
           Some
-            {
-              kind = Some Lsp.Completion.Class;
-              name = sym_name;
-              text_edit = Some (text_edit sym_name edit_locs);
-              additional_text_edits = [];
-              detail = cli_detail;
-              sort_text = None;
-              preselect = false;
-              documentation;
-              tags;
-              log_info = "qualified class";
-              source = None;
-              type_ = lsp_detail;
-            }
+            (autocomplete_create_result_decl
+               ~rank:0
+               ?documentation
+               ?tags
+               ~exact_by_default
+               ~log_info:"qualified class"
+               (sym_name, edit_locs)
+               d
+            )
         | EnumDecl { Ty.sym_name; sym_def_loc; _ } as d ->
           let sym_name = Reason.display_string_of_name sym_name in
-          let (cli_detail, lsp_detail) = detail_of_ty_decl ~exact_by_default d in
           let (documentation, tags) = documentation_and_tags_of_module_member sym_def_loc in
           Some
-            {
-              kind = Some Lsp.Completion.Enum;
-              name = sym_name;
-              text_edit = Some (text_edit sym_name edit_locs);
-              additional_text_edits = [];
-              detail = cli_detail;
-              sort_text = None;
-              preselect = false;
-              documentation;
-              tags;
-              log_info = "qualified enum";
-              source = None;
-              type_ = lsp_detail;
-            }
+            (autocomplete_create_result_decl
+               ~rank:0
+               ?documentation
+               ?tags
+               ~exact_by_default
+               ~log_info:"qualified enum"
+               (sym_name, edit_locs)
+               d
+            )
         | _ -> None)
       exports
     |> Base.List.sort ~compare:(fun { name = a; _ } { name = b; _ } -> String.compare a b)
