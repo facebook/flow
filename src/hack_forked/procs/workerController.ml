@@ -315,16 +315,16 @@ let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.
       | Some Exit.Hash_table_full -> raise SharedMem.Hash_table_full
       | Some Exit.Heap_full -> raise SharedMem.Heap_full
       | _ ->
-        let () = Caml.Printf.eprintf "Subprocess(%d): fail %d" worker_pid i in
+        let () = Caml.Printf.eprintf "Subprocess(%d): fail %d\n%!" worker_pid i in
         raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WEXITED i)))))
     | (_, Unix.WSTOPPED i) ->
-      let () = Caml.Printf.eprintf "Subprocess(%d): stopped %d" worker_pid i in
+      let () = Caml.Printf.eprintf "Subprocess(%d): stopped %d\n%!" worker_pid i in
       raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSTOPPED i))))
     | (_, Unix.WSIGNALED i) ->
-      let () = Caml.Printf.eprintf "Subprocess(%d): signaled %d" worker_pid i in
+      let () = Caml.Printf.eprintf "Subprocess(%d): signaled %d\n%!" worker_pid i in
       raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSIGNALED i))))
     | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
-      let () = Caml.Printf.eprintf "Subprocess(%d): gone" worker_pid in
+      let () = Caml.Printf.eprintf "Subprocess(%d): gone\n%!" worker_pid in
       raise (Worker_failed (worker_pid, Worker_quit None)))
 
 (** Send a job to a worker
