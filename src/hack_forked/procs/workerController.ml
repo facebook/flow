@@ -262,7 +262,7 @@ let send worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
   with
   | exn ->
     let exn = Exception.wrap exn in
-    Hh_logger.error ~exn "Failed to read response from work #%d" (worker_id worker);
+    Hh_logger.error ~exn "Failed to send request to worker #%d" (worker_id worker);
 
     (* Failed to send the job to the worker. Is it because the worker is dead or is it
      * something else? *)
