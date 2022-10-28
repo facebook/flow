@@ -558,6 +558,29 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error ---------------------------------------------------------------------------------------------- get_set_elem.js:6:3
+
+Cannot assign `y` to `x[y]` because an index signature declaring the expected key / value type is missing in
+`React.AbstractComponentStatics` [1]. [prop-missing]
+
+   get_set_elem.js:6:3
+     6| x[y] = y; // error: no indexed type
+          ^
+
+References:
+   <BUILTINS>/react.js:122:47
+                                                      v
+   122| declare type React$AbstractComponentStatics = {
+   123|   displayName?: ?string,
+   124|   // This is only on function components, but trying to access name when
+   125|   // displayName is undefined is a common pattern.
+   126|   name?: ?string,
+   127|   propTypes?: {[string] : any, ...},
+   128|   ...
+   129| };
+        ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- get_set_props.js:8:17
 
 Cannot call `x.displayName.toString` because property `toString` is missing in null or undefined [1]. [incompatible-use]
@@ -724,7 +747,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 43 errors
+Found 44 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -4116,7 +4116,14 @@ struct
           let obj =
             match propref_for_elem_t ~on_named_prop key with
             | Computed elem_t ->
-              write_computed_obj_prop cx trace elem_t value reason;
+              write_computed_obj_prop
+                cx
+                trace
+                elem_t
+                value
+                reason
+                ~on_string_or_number_key:(fun () -> ()
+              );
               (* No properties are added in this case. *)
               Obj_type.mk_exact_empty cx reason_obj
             | Named (_, name) ->
@@ -7179,11 +7186,7 @@ struct
                 }
             )
       | Computed elem_t ->
-        if Obj_type.is_exact o.flags.obj_kind then
-          match elem_t with
-          | AnyT _ when Obj_type.is_exact o.flags.obj_kind ->
-            rec_flow_t cx trace ~use_op:unknown_use (prop_t, AnyT.untyped reason_op)
-          | _ ->
+        write_computed_obj_prop cx trace elem_t prop_t reason_op ~on_string_or_number_key:(fun () ->
             add_output
               cx
               ~trace
@@ -7196,10 +7199,9 @@ struct
                    suggestion = None;
                  }
               )
-        else
-          write_computed_obj_prop cx trace elem_t prop_t reason_op)
+        ))
 
-  and write_computed_obj_prop cx trace key_t value_t reason_op =
+  and write_computed_obj_prop cx trace key_t value_t reason_op ~on_string_or_number_key =
     match key_t with
     | OpenT _ ->
       let loc = loc_of_t key_t in
@@ -7213,13 +7215,7 @@ struct
     | GenericT { bound = DefT (_, _, NumT _); _ }
     | DefT (_, _, StrT _)
     | DefT (_, _, NumT _) ->
-      (* string and number keys are allowed, but there's nothing else to
-         flow without knowing their literal values. *)
-      rec_flow_t
-        cx
-        trace
-        ~use_op:unknown_use
-        (value_t, Unsoundness.why ComputedNonLiteralKey reason_op)
+      on_string_or_number_key ()
     | _ ->
       let reason_prop = reason_of_t key_t in
       add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason_op, reason_prop))

@@ -1,3 +1,18 @@
+Error ------------------------------------------------------------------------------------------------- keyMirror.js:9:9
+
+Cannot assign `key` to `ret[key]` because an index signature declaring the expected key / value type is missing in
+object type [1]. [prop-missing]
+
+   keyMirror.js:9:9
+   9|     ret[key] = key; // error: no indexed type
+              ^^^
+
+References:
+   keyMirror.js:4:14
+   4|   const ret: $ObjMapi<T, <K>(K) => K> = {};
+                   ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
 
 Cannot cast `literal.foo` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-cast]
@@ -16,4 +31,4 @@ References:
 
 
 
-Found 1 error
+Found 2 errors

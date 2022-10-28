@@ -6,7 +6,7 @@ function keyMirror<T: {}>(obj: T): $ObjMapi<T, <K>(K) => K> {
     if (!obj.hasOwnProperty(key)) {
       continue;
     }
-    ret[key] = key;
+    ret[key] = key; // error: no indexed type
   }
   return ret;
 }

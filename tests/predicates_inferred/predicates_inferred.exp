@@ -47,6 +47,21 @@ References:
                        ^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- sanity-ordering.js:15:41
+
+Cannot assign object literal to `head[key]` because an index signature declaring the expected key / value type is
+missing in object type [1]. [prop-missing]
+
+   sanity-ordering.js:15:41
+   15|     head = head[key] || create && (head[key] = {}); // error: no indexed type
+                                               ^^^
+
+References:
+   sanity-ordering.js:10:26
+   10| function dotAccess(head: { page: ?Object; }, create?: mixed) {
+                                ^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:13:12
 
 Cannot return `x` because array type [1] is incompatible with string [2]. [incompatible-return]
@@ -247,4 +262,4 @@ References:
 
 
 
-Found 18 errors
+Found 19 errors

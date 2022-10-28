@@ -371,6 +371,21 @@ References:
               ^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- computed_keys.js:13:5
+
+Cannot assign `42` to `b[x]` because an index signature declaring the expected key / value type is missing in object
+type [1]. [prop-missing]
+
+   computed_keys.js:13:5
+   13|   b[x] = 42; // nope
+           ^
+
+References:
+   computed_keys.js:7:6
+    7|   b: {prop: number},
+            ^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- computed_keys.js:14:5
 
 Cannot assign `42` to `b[y]` because property `lit` is missing in object type [1]. [prop-missing]
@@ -1398,7 +1413,7 @@ References:
 
 
 
-Found 83 errors
+Found 84 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
