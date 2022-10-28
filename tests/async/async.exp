@@ -11,7 +11,7 @@ References:
      11| async function f1(): Promise<bool> {
                                       ^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -32,7 +32,7 @@ References:
      30| async function f4(p: Promise<number>): Promise<bool> {
                                                         ^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -100,7 +100,7 @@ undefined in type argument `R` [2]. [incompatible-return]
 
 References:
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [2]
 
 
@@ -143,7 +143,7 @@ References:
       3| async function foo1(): Promise<string> {
                                         ^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -161,7 +161,7 @@ References:
       7| async function foo2(): Promise<string> {
                                         ^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -182,7 +182,7 @@ References:
      11| async function foo3(): Promise<string> {
                                         ^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 

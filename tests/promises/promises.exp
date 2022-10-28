@@ -518,7 +518,7 @@ References:
       3| (Promise.resolve(): Promise<number>); // error
                                      ^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -536,7 +536,7 @@ References:
       5| (Promise.resolve(undefined): Promise<number>); // error
                                               ^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 

@@ -15,7 +15,7 @@ References:
      12| const b: Promise<string> = fetch(myRequest); // incorrect
                           ^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -36,7 +36,7 @@ References:
    1613| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                     ^^^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 

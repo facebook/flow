@@ -77,7 +77,7 @@ References:
     309|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -98,7 +98,7 @@ References:
     309|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1815:24
-   1815| declare class Promise<+R> {
+   1815| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
