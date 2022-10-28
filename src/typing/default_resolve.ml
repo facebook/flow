@@ -207,3 +207,4 @@ let rec default_resolve_touts ~flow cx loc u =
   | FunImplicitVoidReturnT { return; _ } -> resolve return
   | SealGenericT { cont; _ } -> resolve_cont cont
   | OptionalIndexedAccessT { tout_tvar; _ } -> resolve_tvar tout_tvar
+  | CheckUnusedPromiseT _ -> _TODO

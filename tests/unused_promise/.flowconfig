@@ -1,0 +1,2 @@
+[lints]
+unused-promise-in-async-scope=error

@@ -449,6 +449,7 @@ and 'loc t' =
       static: bool;
     }
   | EEmptyArrayNoProvider of { loc: 'loc }
+  | EUnusedPromise of { loc: 'loc }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1062,6 +1063,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDuplicateClassMember { loc; name; static } ->
     EDuplicateClassMember { loc = f loc; name; static }
   | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
+  | EUnusedPromise { loc } -> EUnusedPromise { loc = f loc }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1290,7 +1292,8 @@ let util_use_op_of_msg nope util = function
   | EAnnotationInference _
   | EAnnotationInferenceRecursive _
   | EDuplicateClassMember _
-  | EEmptyArrayNoProvider _ ->
+  | EEmptyArrayNoProvider _
+  | EUnusedPromise _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1467,6 +1470,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EDuplicateClassMember { loc; _ } -> Some loc
   | EEmptyArrayNoProvider { loc } -> Some loc
+  | EUnusedPromise { loc } -> Some loc
   | EUnableToSpread _
   | ECannotSpreadInterface _
   | ECannotSpreadIndexerOnRight _
@@ -1535,6 +1539,7 @@ let kind_of_msg =
     | EThisInExportedFunction _ -> LintError Lints.ThisInExportedFunction
     | EMixedImportAndRequire _ -> LintError Lints.MixedImportAndRequire
     | EExportRenamedDefault _ -> LintError Lints.ExportRenamedDefault
+    | EUnusedPromise _ -> LintError Lints.UnusedPromiseInAsyncScope
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -3927,6 +3932,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       @ text "Please add type annotations to these definitions" :: annot_message
     in
     Normal { features }
+  | EUnusedPromise { loc = _ } ->
+    Normal
+      {
+        features =
+          [
+            code "Promise";
+            text " in async scope is unused. Did you mean to ";
+            code "await";
+            text " it?";
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3943,7 +3959,8 @@ let is_lint_error = function
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
   | EEnumNotAllChecked { default_case = Some _; _ }
-  | EUninitializedInstanceProperty _ ->
+  | EUninitializedInstanceProperty _
+  | EUnusedPromise _ ->
     true
   | _ -> false
 
@@ -4210,7 +4227,8 @@ let error_code_of_message err : error_code option =
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
-  | EUninitializedInstanceProperty _ ->
+  | EUninitializedInstanceProperty _
+  | EUnusedPromise _ ->
     begin
       match kind_of_msg err with
       | Errors.LintError kind -> Some (Error_codes.code_of_lint kind)

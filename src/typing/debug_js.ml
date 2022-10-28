@@ -963,6 +963,7 @@ and dump_use_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:kid unresolved))
              (use_kid upper)
           )
+    | CheckUnusedPromiseT r -> spf "CheckUnusedPromiseT (%s)" (string_of_reason r)
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then
@@ -1763,6 +1764,7 @@ let dump_error_message =
     | EDuplicateClassMember { loc; name; _ } ->
       spf "EDuplicateClassMember (%s) (%s)" (string_of_aloc loc) name
     | EEmptyArrayNoProvider { loc } -> spf "EEmptyArrayNoProvider (%s)" (string_of_aloc loc)
+    | EUnusedPromise { loc } -> spf "EUnusedPromise (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

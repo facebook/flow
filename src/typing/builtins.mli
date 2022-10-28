@@ -9,6 +9,8 @@ type t
 
 val add_not_yet_seen_builtin : t -> Reason.name -> Type.t -> unit
 
+val get_builtin_opt : t -> Reason.name -> Type.t option
+
 val get_builtin :
   t -> Reason.name -> on_missing:(unit -> (Type.t, 'a) result) -> (Type.t, 'a) result
 

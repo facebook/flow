@@ -160,6 +160,7 @@ type error_code =
   | DefinitionCycle
   | RecursiveDefinition
   | LogicalAssignmentOperatorsNotSupported
+  | UnusedPromiseInAsyncScope
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UntypedTypeImport -> UntypedTypeImport
@@ -186,6 +187,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ThisInExportedFunction -> ThisInExportedFunction
   | Lints.MixedImportAndRequire -> MixedImportAndRequire
   | Lints.ExportRenamedDefault -> ExportRenamedDefault
+  | Lints.UnusedPromiseInAsyncScope -> UnusedPromiseInAsyncScope
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -342,3 +344,4 @@ let string_of_code : error_code -> string = function
   | DefinitionCycle -> "definition-cycle"
   | RecursiveDefinition -> "recursive-definition"
   | LogicalAssignmentOperatorsNotSupported -> "logical-assignment-operators-not-supported"
+  | UnusedPromiseInAsyncScope -> "unused-promise-in-async-scope"

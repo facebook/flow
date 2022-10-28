@@ -388,7 +388,18 @@ module Make
       Abnormal.check_stmt_control_flow_exception
         ((loc, Block { Block.body; comments }), abnormal_opt)
     | (loc, Expression { Expression.expression = e; directive; comments }) ->
-      (loc, Expression { Expression.expression = expression cx e; directive; comments })
+      let expr = expression cx e in
+      let ((_, expr_t), expr_ast) = expr in
+      begin
+        if Env.in_async_scope cx then
+          match expr_ast with
+          | Flow_ast.Expression.Assignment _ -> ()
+          | _ ->
+            Flow_js.flow
+              cx
+              (expr_t, CheckUnusedPromiseT (mk_reason (RCustom "unused promise lint") loc))
+      end;
+      (loc, Expression { Expression.expression = expr; directive; comments })
     (* Refinements for `if` are derived by the following Hoare logic rule:
 
        [Pre & c] S1 [Post1]

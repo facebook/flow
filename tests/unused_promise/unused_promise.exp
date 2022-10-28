@@ -1,0 +1,18 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:14:5
+
+`Promise` in async scope is unused. Did you mean to `await` it? [unused-promise-in-async-scope]
+
+   14|     foo(); // error
+           ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:5
+
+`Promise` in async scope is unused. Did you mean to `await` it? [unused-promise-in-async-scope]
+
+   16|     bar(); // error
+           ^^^^^^
+
+
+
+Found 2 errors

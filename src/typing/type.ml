@@ -853,6 +853,7 @@ module rec TypeTerm : sig
         index: optional_indexed_access_index;
         tout_tvar: tvar;
       }
+    | CheckUnusedPromiseT of reason
 
   and enum_check_t =
     | EnumCheck of {
@@ -3668,6 +3669,7 @@ let string_of_use_ctor = function
   | FilterMaybeT _ -> "FilterMaybeT"
   | SealGenericT _ -> "SealGenericT"
   | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
+  | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

@@ -747,9 +747,40 @@ let lookup_builtin_with_default cx x default =
   let builtin = Builtins.get_builtin builtins x ~on_missing:(fun () -> Ok default) in
   Base.Result.ok_exn builtin
 
+let lookup_builtin_opt cx x =
+  let builtins = Context.builtins cx in
+  Builtins.get_builtin_opt builtins x
+
 let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_strict cx x reason in
   typeapp reason t targs
+
+let builtin_promise_class_id cx =
+  let promise_t = lookup_builtin_opt cx (OrdinaryName "Promise") in
+  match promise_t with
+  | Some (OpenT (_, id)) ->
+    let (_, constraints) = Context.find_constraints cx id in
+    begin
+      match constraints with
+      | Constraint.FullyResolved
+          ( _,
+            (lazy
+              (DefT
+                ( _,
+                  _,
+                  PolyT
+                    {
+                      t_out = ThisClassT (_, DefT (_, _, InstanceT (_, _, _, { class_id; _ })), _, _);
+                      _;
+                    }
+                )
+                )
+              )
+          ) ->
+        Some class_id
+      | _ -> None
+    end
+  | _ -> None
 
 (**
  * Determines whether a property name should be considered "munged"/private when

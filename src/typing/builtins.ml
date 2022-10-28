@@ -13,6 +13,13 @@ type t = (Reason.name, entry) Hashtbl.t
 
 let add_not_yet_seen_builtin builtins name t = Hashtbl.add builtins name (NotYetWritten t)
 
+let get_builtin_opt builtins name =
+  match Hashtbl.find_opt builtins name with
+  | None -> None
+  | Some (NotYetWritten t)
+  | Some (Entry t) ->
+    Some t
+
 let get_builtin builtins name ~on_missing =
   match Hashtbl.find_opt builtins name with
   | None -> on_missing ()

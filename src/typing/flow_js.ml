@@ -5379,6 +5379,15 @@ struct
                  use_op;
                }
             )
+        | (DefT (_, _, InstanceT (_, super, _, { class_id; _ })), CheckUnusedPromiseT r) ->
+          (match Flow_js_utils.builtin_promise_class_id cx with
+          | None -> () (* Promise has some unexpected type *)
+          | Some promise_class_id ->
+            if ALoc.equal_id promise_class_id class_id then
+              add_output cx ~trace (Error_message.EUnusedPromise { loc = aloc_of_reason r })
+            else
+              rec_flow cx trace (super, CheckUnusedPromiseT r))
+        | (_, CheckUnusedPromiseT _) -> ()
         | _ ->
           add_output
             cx
@@ -6082,7 +6091,8 @@ struct
        this can be handled by the pre-existing rules *)
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
-    | UseT (_, TypeDestructorTriggerT _) ->
+    | UseT (_, TypeDestructorTriggerT _)
+    | CheckUnusedPromiseT _ ->
       false
     | UseT (use_op, DefT (_, _, ObjT obj)) ->
       any_prop_obj cx trace ~use_op ~covariant_flow ~contravariant_flow any obj;
