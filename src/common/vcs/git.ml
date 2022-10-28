@@ -29,6 +29,14 @@ let merge_base ?cwd a b =
     Lwt.return result
   | Error _ as err -> Lwt.return err
 
+let merge_base_and_timestamp ?cwd a b =
+  match%lwt merge_base ?cwd a b with
+  | Error _ as err -> Lwt.return err
+  | Ok hash ->
+    (match%lwt git ?cwd ["log"; "--format=%ct"; "-n1"; hash] with
+    | Ok stdout -> Lwt.return_ok (hash, int_of_string stdout)
+    | Error _ as err -> Lwt.return err)
+
 let files_changed_since ?cwd hash =
   match%lwt git ?cwd ["diff"; "-z"; "--name-only"; hash] with
   | Ok stdout -> Lwt.return (Ok (split_null_terminated_lines stdout))

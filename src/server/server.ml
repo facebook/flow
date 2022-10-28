@@ -47,6 +47,7 @@ let string_of_saved_state_fetcher options =
   match Options.saved_state_fetcher options with
   | Options.Dummy_fetcher -> "none"
   | Options.Local_fetcher -> "local"
+  | Options.Scm_fetcher -> "scm"
   | Options.Fb_fetcher -> "fb"
 
 let init ~profiling ?focus_targets genv =

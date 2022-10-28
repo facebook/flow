@@ -27,6 +27,17 @@ let merge_base ?cwd a b =
     Lwt.return result
   | Error _ as err -> Lwt.return err
 
+let merge_base_and_timestamp ?cwd a b =
+  let revset = Printf.sprintf "ancestor(%s,%s)" a b in
+  match%lwt hg ?cwd ["log"; "-T"; "{node} {date}"; "-r"; revset] with
+  | Ok stdout ->
+    (match String.split_on_char ' ' stdout with
+    | [hash; timestamp] ->
+      let timestamp = int_of_float @@ float_of_string timestamp in
+      Lwt.return (Ok (hash, timestamp))
+    | _ -> Lwt.return (Error (Errored "Malformed log response")))
+  | Error _ as err -> Lwt.return err
+
 let files_changed_since ?cwd hash =
   match%lwt hg ?cwd ["status"; "--print0"; "-n"; "--rev"; hash] with
   | Ok stdout -> Lwt.return (Ok (split_null_terminated_lines stdout))

@@ -663,7 +663,10 @@ module Opts = struct
   let saved_state_fetcher_parser =
     enum
       [
-        ("none", Options.Dummy_fetcher); ("local", Options.Local_fetcher); ("fb", Options.Fb_fetcher);
+        ("none", Options.Dummy_fetcher);
+        ("local", Options.Local_fetcher);
+        ("scm", Options.Scm_fetcher);
+        ("fb", Options.Fb_fetcher);
       ]
       (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher }
     )

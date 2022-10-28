@@ -2270,6 +2270,7 @@ let load_saved_state ~profiling ~workers options =
     match Options.saved_state_fetcher options with
     | Options.Dummy_fetcher -> Saved_state_dummy_fetcher.fetch ~options
     | Options.Local_fetcher -> Saved_state_local_fetcher.fetch ~options
+    | Options.Scm_fetcher -> Saved_state_scm_fetcher.fetch ~options
     | Options.Fb_fetcher -> Saved_state_fb_fetcher.fetch ~options
   in
   Profiling_js.merge ~from:fetch_profiling ~into:profiling;

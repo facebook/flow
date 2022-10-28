@@ -22,6 +22,7 @@ type jsx_mode =
 type saved_state_fetcher =
   | Dummy_fetcher
   | Local_fetcher
+  | Scm_fetcher
   | Fb_fetcher
 
 type trust_mode =

@@ -1049,6 +1049,7 @@ let saved_state_flags =
               [
                 ("none", Options.Dummy_fetcher);
                 ("local", Options.Local_fetcher);
+                ("scm", Options.Scm_fetcher);
                 ("fb", Options.Fb_fetcher);
               ]
            )
