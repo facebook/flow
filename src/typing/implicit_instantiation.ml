@@ -167,6 +167,17 @@ struct
       | TypeMap _
       | ReactElementRefType ->
         UpperEmpty
+      | ReactElementPropsType
+      | ReactElementConfigType ->
+        merge_lower_bounds cx (OpenT tout)
+        |> Base.Option.map ~f:(fun config ->
+               DefT
+                 ( r,
+                   bogus_trust (),
+                   ReactAbstractComponentT { config; instance = MixedT.why r (bogus_trust ()) }
+                 )
+           )
+        |> use_t_result_of_t_option
       | NonMaybeType ->
         merge_lower_bounds cx (OpenT tout)
         |> Base.Option.map ~f:(fun t -> MaybeT (r, t))
