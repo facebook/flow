@@ -26,7 +26,7 @@ Call(undefined); // Error: T under constrained.
 declare function ObjMap<T>($ObjMap<T, <V>(V)=>void>): T;
 ObjMap({}); // Error: T under constrained.
 declare function Values<T>($Values<T>): T;
-ElementProps(3); // Error: T under constrained.
+Values(3); // Error: T under constrained.
 declare function ElementRef<T>(React$ElementRef<T>): T;
 ElementRef(1); // Error: T under constrained.
 declare function Exact<T>($Exact<T>): T;

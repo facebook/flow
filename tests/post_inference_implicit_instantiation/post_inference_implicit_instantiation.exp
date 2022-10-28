@@ -204,10 +204,16 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:29:1
 
-Cannot resolve name `ElementProps`. [cannot-resolve-name]
+`T` is underconstrained by call of `Values` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
-   29| ElementProps(3); // Error: T under constrained.
-       ^^^^^^^^^^^^
+   upper_non_t.js:29:1
+   29| Values(3); // Error: T under constrained.
+       ^^^^^^^^^ [1]
+
+References:
+   upper_non_t.js:28:25
+   28| declare function Values<T>($Values<T>): T;
+                               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:31:1
