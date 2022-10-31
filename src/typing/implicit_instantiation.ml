@@ -478,7 +478,13 @@ struct
         instantiation_reason
 
   let pin_types
-      cx ~has_new_errors inferred_targ_list marked_tparams tparams_map implicit_instantiation =
+      cx
+      ~has_new_errors
+      ~has_return_hint
+      inferred_targ_list
+      marked_tparams
+      tparams_map
+      implicit_instantiation =
     let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
     let subst_map =
       List.fold_left
@@ -489,13 +495,19 @@ struct
     List.fold_right
       (fun (name, t, bound, is_inferred) acc ->
         let tparam = Subst_name.Map.find name tparams_map in
+        let polarity =
+          if has_return_hint then
+            None
+          else
+            Marked.get name marked_tparams
+        in
         let result =
           if is_inferred then
             pin_type
               cx
               name
               tparam
-              (Marked.get name marked_tparams)
+              polarity
               ~default_bound:
                 (Base.Option.some_if has_new_errors (AnyT.error (TypeUtil.reason_of_t t)))
               instantiation_reason
@@ -586,7 +598,14 @@ struct
         in
         Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (tout, hint));
         let output =
-          pin_types cx ~has_new_errors inferred_targ_list marked_tparams tparams_map check
+          pin_types
+            cx
+            ~has_new_errors
+            ~has_return_hint:(Base.Option.is_some return_hint)
+            inferred_targ_list
+            marked_tparams
+            tparams_map
+            check
         in
         Context.reset_errors cx errors;
         output
