@@ -10,8 +10,6 @@ module Check = Implicit_instantiation_check
 module type OBSERVER = sig
   type output
 
-  val on_constant_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
-
   val on_pinned_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
 
   val on_constant_tparam_missing_bounds : Context.t -> Subst_name.t -> Type.typeparam -> output

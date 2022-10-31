@@ -15,8 +15,6 @@ module Check = Implicit_instantiation_check
 module type OBSERVER = sig
   type output
 
-  val on_constant_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
-
   val on_pinned_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
 
   val on_constant_tparam_missing_bounds : Context.t -> Subst_name.t -> Type.typeparam -> output
@@ -440,7 +438,7 @@ struct
           ~on_upper_empty
           tparam_binder_reason
           instantiation_reason
-      | Some inferred -> (fun () -> Observer.on_constant_tparam cx name tparam inferred))
+      | Some inferred -> (fun () -> Observer.on_pinned_tparam cx name tparam inferred))
     | Some Neutral ->
       (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
        * to avoid cluttering the output we are actually interested in from this module,
@@ -616,8 +614,6 @@ module PinTypes (Flow : Flow_common.S) = struct
   module Observer : OBSERVER with type output = Type.t = struct
     type output = Type.t
 
-    let on_constant_tparam _cx _name _tparam _inferred = failwith "Constant tparam is unsupported."
-
     let on_constant_tparam_missing_bounds _cx _name _tparam =
       failwith "Constant tparam is unsupported."
 
@@ -657,8 +653,6 @@ module Observer : OBSERVER with type output = inferred_targ = struct
   type output = inferred_targ
 
   let any_error = AnyT.why (AnyError None)
-
-  let on_constant_tparam _cx _name tparam inferred = { tparam; inferred }
 
   let on_constant_tparam_missing_bounds _cx _name tparam =
     let inferred =

@@ -10,8 +10,6 @@ module PierceImplicitInstantiation : Implicit_instantiation.S =
     (struct
       type output = unit
 
-      let on_constant_tparam _ _ _ _ = ()
-
       let on_pinned_tparam _ _ _ _ = ()
 
       let on_constant_tparam_missing_bounds _ _ _ = ()
