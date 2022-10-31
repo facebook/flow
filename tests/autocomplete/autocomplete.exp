@@ -1168,6 +1168,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"?.[Symbol.iterator]","type":"void | (() => Iterator<T>)"},
+    {"name":"?.at","type":"void | ((index: number) => (T | void))"},
     {
       "name":"?.concat",
       "type":"void | (<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>)"
@@ -1266,6 +1267,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"[Symbol.iterator]","type":"() => Iterator<T>"},
+    {"name":"at","type":"(index: number) => (T | void)"},
     {
       "name":"concat",
       "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>"

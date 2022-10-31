@@ -181,6 +181,63 @@ References:
                                             ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------------- at.js:8:5
+
+Cannot call `arr.at` because function [1] requires another argument. [incompatible-call]
+
+   at.js:8:5
+     8| arr.at(); // ERROR
+            ^^
+
+References:
+   <BUILTINS>/core.js:699:5
+   699|     at(index: number): T | void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------------- at.js:9:8
+
+Cannot call `arr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   at.js:9:8
+     9| arr.at("1"); // ERROR
+               ^^^ [1]
+
+References:
+   <BUILTINS>/core.js:699:15
+   699|     at(index: number): T | void;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- at.js:16:7
+
+Cannot call `roArr.at` because function [1] requires another argument. [incompatible-call]
+
+   at.js:16:7
+    16| roArr.at(); // ERROR
+              ^^
+
+References:
+   <BUILTINS>/core.js:699:5
+   699|     at(index: number): T | void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ at.js:17:10
+
+Cannot call `roArr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2].
+[incompatible-call]
+
+   at.js:17:10
+    17| roArr.at("1"); // ERROR
+                 ^^^ [1]
+
+References:
+   <BUILTINS>/core.js:699:15
+   699|     at(index: number): T | void;
+                      ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- callback_this.js:8:25
 
 Cannot get `this.y` because property `y` is missing in undefined [1]. [incompatible-use]
@@ -313,8 +370,8 @@ Cannot assign `arr3.flat(...)` to `result3_2` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:815:32
-   815|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:820:32
+   820|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:22:24
     22| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
@@ -331,8 +388,8 @@ Cannot assign `arr2.flat(...)` to `result2_6` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:815:32
-   815|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:820:32
+   820|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:27:24
     27| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
@@ -392,4 +449,4 @@ Cannot assign `7` to `t.length` because property `length` is not writable. [cann
 
 
 
-Found 25 errors
+Found 29 errors

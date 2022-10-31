@@ -41,16 +41,16 @@ Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. 
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:1661:11
-   1661| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1666:11
+   1666| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1062:22
+   <BUILTINS>/core.js:1067:22
                               v----------
-   1062| type $ArrayLike<T> = interface {
-   1063|   +[indexer: number]: T;
-   1064|   @@iterator(): Iterator<T>;
-   1065|   length: number;
-   1066| }
+   1067| type $ArrayLike<T> = interface {
+   1068|   +[indexer: number]: T;
+   1069|   @@iterator(): Iterator<T>;
+   1070|   length: number;
+   1071| }
          ^ [2]
 
 
@@ -66,13 +66,13 @@ References:
    apply-array-like.js:16:17
      16| function * gen() {
                          ^ [1]
-   <BUILTINS>/core.js:1062:22
+   <BUILTINS>/core.js:1067:22
                               v----------
-   1062| type $ArrayLike<T> = interface {
-   1063|   +[indexer: number]: T;
-   1064|   @@iterator(): Iterator<T>;
-   1065|   length: number;
-   1066| }
+   1067| type $ArrayLike<T> = interface {
+   1068|   +[indexer: number]: T;
+   1069|   @@iterator(): Iterator<T>;
+   1070|   length: number;
+   1071| }
          ^ [2]
 
 
@@ -157,8 +157,8 @@ Cannot call `test.apply` because string [1] is incompatible with number [2]. [in
               ^^^^^
 
 References:
-   <BUILTINS>/core.js:1080:28
-   1080|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:1085:28
+   1085|     @@iterator(): Iterator<string>;
                                     ^^^^^^ [1]
    apply.js:1:52
       1| function test(this: number | string, a: string, b: number): number {
