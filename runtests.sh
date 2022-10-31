@@ -43,9 +43,9 @@ saved_state=0
 verbose=0
 quiet=0
 relative="."
-enforced_env=0
+lti=0
 check_only=0
-export saved_state filter check_only enforced_env
+export saved_state filter check_only lti
 while getopts "b:d:f:clqxnrst:vh?" opt; do
   case "$opt" in
   b)
@@ -61,7 +61,7 @@ while getopts "b:d:f:clqxnrst:vh?" opt; do
     check_only=1
     ;;
   n)
-    enforced_env=1
+    lti=1
     ;;
   l)
     list_tests=1

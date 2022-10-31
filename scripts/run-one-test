@@ -194,8 +194,8 @@ runtest() {
     name=${dir##*/}
     exp_file="${name}.exp"
     # Add appropriate extension to expected file
-    if [[ "$enforced_env" -eq 1 ]] && [ -f "${dir}/${exp_file}.enforced_env" ]; then
-      exp_file="${exp_file}.enforced_env"
+    if [[ "$lti" -eq 1 ]] && [ -f "${dir}/${exp_file}.lti" ]; then
+      exp_file="${exp_file}.lti"
     fi
 
     # On Windows we skip some tests as symlinks not available
@@ -349,8 +349,8 @@ runtest() {
                 return $RUNTEST_SKIP
             fi
 
-            if [[ "$enforced_env" -eq 1 ]] && \
-              [ "$(awk '$1=="TODO_enforced_env:"{print $2}' .testconfig)" == "true" ]
+            if [[ "$lti" -eq 1 ]] && \
+              [ "$(awk '$1=="TODO_LTI:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi
@@ -375,7 +375,7 @@ runtest() {
           return $RUNTEST_SKIP
         fi
 
-        if [[ "$enforced_env" -eq 1 ]]; then
+        if [[ "$lti" -eq 1 ]]; then
           inference_flag="--inference-mode experimental.lti"
         fi
 
