@@ -297,6 +297,8 @@ const moremath2 = {
   }
 }
 
+export const foo = (): number => foo();
+
 >>> Launching report...
 
 Stats:

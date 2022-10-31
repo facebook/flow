@@ -122,3 +122,5 @@ const moremath2 = {
     return moremath2.odd(x) ? 1 : 0;
   }
 }
+
+export const foo = (): number => foo();

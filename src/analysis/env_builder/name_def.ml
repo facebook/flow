@@ -488,32 +488,69 @@ class def_finder env_entries providers toplevel_scope =
           loop state xs
         (* const f = () => {}; const f = function () {}; *)
         | ( ( _,
-              VariableDeclaration
-                {
-                  VariableDeclaration.declarations =
-                    [
-                      ( _,
-                        {
-                          VariableDeclaration.Declarator.id =
-                            ( _,
-                              Ast.Pattern.Identifier
-                                {
-                                  Ast.Pattern.Identifier.name =
-                                    (id_loc, { Ast.Identifier.name; _ }) as var_id;
-                                  annot = Ast.Type.Missing _;
-                                  optional = false;
-                                }
-                            );
-                          init =
-                            Some
-                              ( ( (loc, Ast.Expression.ArrowFunction func)
-                                | (loc, Ast.Expression.Function func) ) as init
+              ( VariableDeclaration
+                  {
+                    VariableDeclaration.declarations =
+                      [
+                        ( _,
+                          {
+                            VariableDeclaration.Declarator.id =
+                              ( _,
+                                Ast.Pattern.Identifier
+                                  {
+                                    Ast.Pattern.Identifier.name =
+                                      (id_loc, { Ast.Identifier.name; _ }) as var_id;
+                                    annot = Ast.Type.Missing _;
+                                    optional = false;
+                                  }
                               );
-                        }
-                      );
-                    ];
-                  _;
-                }
+                            init =
+                              Some
+                                ( ( (loc, Ast.Expression.ArrowFunction func)
+                                  | (loc, Ast.Expression.Function func) ) as init
+                                );
+                          }
+                        );
+                      ];
+                    _;
+                  }
+              | ExportNamedDeclaration
+                  {
+                    ExportNamedDeclaration.declaration =
+                      Some
+                        ( _,
+                          VariableDeclaration
+                            {
+                              VariableDeclaration.declarations =
+                                [
+                                  ( _,
+                                    {
+                                      VariableDeclaration.Declarator.id =
+                                        ( _,
+                                          Ast.Pattern.Identifier
+                                            {
+                                              Ast.Pattern.Identifier.name =
+                                                (id_loc, { Ast.Identifier.name; _ }) as var_id;
+                                              annot = Ast.Type.Missing _;
+                                              optional = false;
+                                            }
+                                        );
+                                      init =
+                                        Some
+                                          ( ( (loc, Ast.Expression.ArrowFunction func)
+                                            | (loc, Ast.Expression.Function func) ) as init
+                                          );
+                                    }
+                                  );
+                                ];
+                              _;
+                            }
+                        );
+                    export_kind = ExportValue;
+                    specifiers = None;
+                    source = None;
+                    _;
+                  } )
             ) as stmt
           )
           :: xs ->
