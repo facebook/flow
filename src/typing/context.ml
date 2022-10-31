@@ -458,7 +458,7 @@ let cycle_errors cx =
   cx.metadata.cycle_errors || lti cx || in_dirlist cx cx.metadata.cycle_errors_includes
 
 let run_post_inference_implicit_instantiation cx =
-  cx.metadata.run_post_inference_implicit_instantiation
+  cx.metadata.run_post_inference_implicit_instantiation && not (lti cx)
 
 let aloc_tables cx = cx.ccx.aloc_tables
 
