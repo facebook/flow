@@ -179,6 +179,15 @@ module type S = sig
     refinement_of_id: int -> Refi.refinement;
   }
 
+  type env_invariant_failure =
+    | NameDefOrderingFailure of {
+        all: L.t list;
+        roots: L.t list;
+        missing_roots: L.t list;
+      }
+
+  exception Env_invariant of L.t option * env_invariant_failure
+
   type cacheable_env_error =
     | ReferencedBeforeDeclaration of {
         def_loc: ALoc.t;
@@ -227,6 +236,15 @@ module Make
 
   module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
     Scope_builder.Make (L) (Scope_api)
+
+  type env_invariant_failure =
+    | NameDefOrderingFailure of {
+        all: L.t list;
+        roots: L.t list;
+        missing_roots: L.t list;
+      }
+
+  exception Env_invariant of L.t option * env_invariant_failure
 
   type cacheable_env_error =
     | ReferencedBeforeDeclaration of {

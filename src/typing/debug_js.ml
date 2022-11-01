@@ -1105,6 +1105,7 @@ let dump_error_message =
     | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
     | MissingEnvRead _ -> "MissingEnvRead"
     | MissingEnvWrite _ -> "MissingEnvWrite"
+    | EnvInvariant _ -> "EnvInvariant"
   in
   let dump_upper_kind = function
     | IncompatibleGetPropT _ -> "IncompatibleGetPropT"

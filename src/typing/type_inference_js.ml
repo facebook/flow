@@ -459,24 +459,37 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
         Flow_js.resolve_id cx id init_exports
     )
   in
-  initialize_env ~lib:false ~local_exports_var cx aloc_ast Name_def.Module;
 
-  (* infer *)
-  let typed_statements = infer_core cx aloc_statements in
-  scan_for_suppressions cx lint_severities comments;
+  try
+    initialize_env ~lib:false ~local_exports_var cx aloc_ast Name_def.Module;
 
-  let program =
+    (* infer *)
+    let typed_statements = infer_core cx aloc_statements in
+    scan_for_suppressions cx lint_severities comments;
+
+    let program =
+      ( prog_aloc,
+        {
+          Ast.Program.statements = typed_statements;
+          comments = aloc_comments;
+          all_comments = aloc_all_comments;
+        }
+      )
+    in
+
+    Exists_marker.mark cx program;
+    program
+  with
+  | Env_api.Env_invariant (loc, inv) ->
+    let loc = Base.Option.value ~default:prog_aloc loc in
+    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
     ( prog_aloc,
       {
-        Ast.Program.statements = typed_statements;
+        Ast.Program.statements = Typed_ast_utils.error_mapper#statement_list aloc_statements;
         comments = aloc_comments;
         all_comments = aloc_all_comments;
       }
     )
-  in
-
-  Exists_marker.mark cx program;
-  program
 
 (* infer a parsed library file.
    processing is similar to an ordinary module, except that
@@ -486,17 +499,22 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
 let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_, { Ast.Program.all_comments; _ }) = ast in
-  let (_, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
+  let (prog_aloc, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
 
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
        confident that we don't support them in any sensible way. *)
     add_require_tvars cx file_sig
   in
+  try
+    initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
 
-  initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
+    let t_stmts = infer_core cx aloc_statements in
+    scan_for_suppressions cx lint_severities all_comments;
 
-  let t_stmts = infer_core cx aloc_statements in
-  scan_for_suppressions cx lint_severities all_comments;
-
-  (Env.init_builtins_from_libdef cx, t_stmts)
+    (Env.init_builtins_from_libdef cx, t_stmts)
+  with
+  | Env_api.Env_invariant (loc, inv) ->
+    let loc = Base.Option.value ~default:prog_aloc loc in
+    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
+    ([], Typed_ast_utils.error_mapper#statement_list aloc_statements)

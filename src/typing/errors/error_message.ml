@@ -518,6 +518,7 @@ and internal_error =
   | UnconstrainedTvar of int option
   | ReadOfUnreachedTvar of Env_api.def_loc_type
   | ReadOfUnresolvedTvar of Env_api.def_loc_type
+  | EnvInvariant of Env_api.env_invariant_failure
 
 and 'loc unsupported_syntax =
   | AnnotationInsideDestructuring
@@ -1605,6 +1606,15 @@ let string_of_internal_error = function
   | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
   | MissingEnvRead l -> "missing env entry for read at " ^ ALoc.debug_to_string l
   | MissingEnvWrite loc -> "expected env entry for write location" ^ ALoc.debug_to_string loc
+  | EnvInvariant (Env_api.NameDefOrderingFailure { all; roots; missing_roots }) ->
+    let all = Base.List.map ~f:ALoc.debug_to_string all |> String.concat "," in
+    let roots = Base.List.map ~f:ALoc.debug_to_string roots |> String.concat "," in
+    let missing_roots = Base.List.map ~f:ALoc.debug_to_string missing_roots |> String.concat "," in
+    spf
+      "Please report this error to the Flow team: name_def_ordering tarjan failure, all: { %s } roots: { %s } missing_roots: { %s }"
+      all
+      roots
+      missing_roots
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)

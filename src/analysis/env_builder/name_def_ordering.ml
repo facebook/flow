@@ -1110,23 +1110,12 @@ struct
           |> EnvSet.of_list
           |> EnvSet.elements
         in
-        let all =
-          all_locs
-          |> Base.List.map ~f:(fun (_, l) -> ALoc.debug_to_string ~include_source:false l)
-          |> String.concat ","
-        in
+        let all = List.map snd all_locs in
         let missing_roots =
-          all_locs
-          |> Base.List.filter ~f:(fun l -> not @@ EnvSet.mem l roots)
-          |> Base.List.map ~f:(fun (_, l) -> ALoc.debug_to_string ~include_source:false l)
-          |> String.concat ","
+          all_locs |> Base.List.filter ~f:(fun l -> not @@ EnvSet.mem l roots) |> List.map snd
         in
-        let roots =
-          EnvSet.elements roots
-          |> Base.List.map ~f:(fun (_, l) -> ALoc.debug_to_string ~include_source:true l)
-          |> String.concat ","
-        in
-        failwith (Printf.sprintf "roots: %s\n\nall: %s\nmissing_roots: %s." roots all missing_roots)
+        let roots = EnvSet.elements roots |> List.map snd in
+        raise Env_api.(Env_invariant (None, NameDefOrderingFailure { all; missing_roots; roots }))
     in
     let result_of_scc (fst, rest) =
       let element_of_loc (kind, loc) =
