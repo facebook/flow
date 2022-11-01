@@ -40,7 +40,7 @@ type case = {
   mutable unresolved: ISet.t;
   mutable actions: extended_action list;
   mutable implicit_instantiation_post_inference_checks: Implicit_instantiation_check.t list;
-  mutable implicit_instantiation_results: Type.t list ALocFuzzyMap.t;
+  mutable implicit_instantiation_results: (Type.t * Subst_name.t) list ALocFuzzyMap.t;
   lhs_t: Type.t;
   use_t: Type.use_t;
 }

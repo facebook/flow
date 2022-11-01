@@ -1,4 +1,4 @@
->>> implicit_instantiation.js (#changes: 3)
+>>> implicit_instantiation.js (#changes: 4)
 //@flow
 import type { Opaque } from "./opaque";import {x} from './opaque';
 declare function f<T>(): {x: T}
@@ -11,6 +11,11 @@ map.set('x', 3);
 
 declare function id<T>(x:T): T;
 const b = id(3); // ok!
+
+
+declare function semi<T, U>(x: T): [T, U];
+const c = semi<_, number>(3); // semi<_, number>
+c[1] = 3;
 
 >>> speculation.js (#changes: 2)
 //@flow
@@ -28,8 +33,8 @@ str.add('str')
 
 Stats:
   Files changed:                            2
-  Number of annotations added:              4
-  Total size of annotations:                4
+  Number of annotations added:              5
+  Total size of annotations:                5
 
 Errors:
   Missing annot./normalizer error:          0

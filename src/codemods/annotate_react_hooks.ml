@@ -39,7 +39,7 @@ let mapper
         let loc = loc_of_aloc aloc in
         let call_args =
           List.map
-            (fun t ->
+            (fun (t, _) ->
               match Ty_normalizer.from_type ~options:ty_normalizer_options ~genv t with
               | Ok (Ty.Type ty) -> Some (Ok ty)
               | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ok (Ty.TypeOf (Ty.TSymbol s)))

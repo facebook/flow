@@ -158,7 +158,7 @@ type component_t = {
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
-  mutable implicit_instantiation_results: Type.t list ALocFuzzyMap.t;
+  mutable implicit_instantiation_results: (Type.t * Subst_name.t) list ALocFuzzyMap.t;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
   mutable global_value_cache:
     (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result NameUtils.Map.t;

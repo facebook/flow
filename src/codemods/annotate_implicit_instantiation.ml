@@ -6,7 +6,6 @@
  *)
 
 module Ast = Flow_ast
-module LSet = Loc_collections.LocSet
 module LMap = Loc_collections.LocMap
 module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
 module Codemod_empty_annotator = Codemod_annotator.Make (Insert_type_utils.UnitStats)
@@ -37,11 +36,13 @@ let mapper
         let loc = loc_of_aloc aloc in
         let call_args =
           List.map
-            (fun t ->
-              match Ty_normalizer.from_type ~options:ty_normalizer_options ~genv t with
-              | Ok (Ty.Type ty) -> Some (Ok ty)
-              | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ok (Ty.TypeOf (Ty.TSymbol s)))
-              | _ -> None)
+            (fun (t, name) ->
+              ( (match Ty_normalizer.from_type ~options:ty_normalizer_options ~genv t with
+                | Ok (Ty.Type ty) -> Some (Ok ty)
+                | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ok (Ty.TypeOf (Ty.TSymbol s)))
+                | _ -> None),
+                name
+              ))
             result
         in
         LMap.add loc call_args acc)
@@ -62,7 +63,7 @@ let mapper
         ~generalize_react_mixed_element:true
         () as super
 
-    val mutable loc_error_set = LSet.empty
+    val mutable loc_error_map = LMap.empty
 
     method private get_annot ploc ty annot =
       let f loc _annot ty' = this#annotate_node loc ty' (fun a -> Ast.Type.Available a) in
@@ -101,15 +102,18 @@ let mapper
       | None -> expr
 
     method private get_implicit_instantiation_results loc =
-      match LMap.find_opt loc implicit_instantiation_results with
-      | Some targ_tys when LSet.mem loc loc_error_set ->
+      match (LMap.find_opt loc implicit_instantiation_results, LMap.find_opt loc loc_error_map) with
+      | (Some targ_tys_with_names, Some tparam_names) ->
         let targs =
           {
             Ast.Expression.CallTypeArgs.comments = None;
             arguments =
               List.map
-                (fun ty ->
+                (fun (ty, name) ->
                   match ty with
+                  | _ when not (SSet.mem (Subst_name.string_of_subst_name name) tparam_names) ->
+                    Ast.Expression.CallTypeArg.Implicit
+                      (loc, { Ast.Expression.CallTypeArg.Implicit.comments = None })
                   | None -> Ast.Expression.CallTypeArg.Explicit flowfixme_ast
                   | Some ty ->
                     (match
@@ -117,30 +121,36 @@ let mapper
                      with
                     | Ast.Type.Available (_, t) -> Ast.Expression.CallTypeArg.Explicit t
                     | Ast.Type.Missing _ -> Ast.Expression.CallTypeArg.Explicit flowfixme_ast))
-                targ_tys;
+                targ_tys_with_names;
           }
         in
         Some (loc, targs)
       | _ -> None
 
-    method private init_loc_error_set =
-      loc_error_set <-
+    method private init_loc_error_map =
+      loc_error_map <-
         Flow_error.ErrorSet.fold
           (fun error acc ->
             match Flow_error.msg_of_error error with
-            | Error_message.EImplicitInstantiationUnderconstrainedError _ ->
+            | Error_message.(EImplicitInstantiationUnderconstrainedError { bound; _ }) ->
               (match Flow_error.loc_of_error error with
-              | Some loc -> LSet.add (loc_of_aloc loc) acc
+              | Some loc ->
+                LMap.update
+                  (loc_of_aloc loc)
+                  (function
+                    | None -> Some (SSet.singleton bound)
+                    | Some names -> Some (SSet.add bound names))
+                  acc
               | None -> acc)
             | _ -> acc)
           errors
-          loc_error_set
+          loc_error_map
 
     method private post_run () = ()
 
     method! program prog =
-      this#init_loc_error_set;
-      if LSet.is_empty loc_error_set then
+      this#init_loc_error_map;
+      if LMap.is_empty loc_error_map then
         prog
       else
         super#program prog
