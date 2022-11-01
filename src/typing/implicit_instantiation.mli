@@ -45,7 +45,6 @@ module type S = sig
     default_bound:Type.t option ->
     Reason.reason ->
     Type.t ->
-    unit ->
     output
 
   val solve_targs : Context.t -> ?return_hint:Type.t -> Check.t -> output Subst_name.Map.t
