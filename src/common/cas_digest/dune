@@ -1,0 +1,2 @@
+(library
+ (name cas_digest))

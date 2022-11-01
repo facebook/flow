@@ -306,7 +306,7 @@ typedef uintnat hh_tag_t;
 // Keep these in sync with "tag" type definition in sharedMem.ml
 #define Entity_tag 0
 #define Heap_string_tag 12
-#define Serialized_tag 17
+#define Serialized_tag 18
 
 static _Bool should_scan(hh_tag_t tag) {
   // The zero tag represents "entities" which need to be handled specially.

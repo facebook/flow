@@ -337,11 +337,10 @@ module NewAPI : sig
   val read_imports : imports addr -> string
 
   (* cas_digest *)
-  (* pass sha1 and len to prepare writing cas digest*)
-  val prepare_write_cas_digest : string -> int -> size * (chunk -> cas_digest addr)
 
-  (* get the digest by cas_digest addr *)
-  val read_cas_digest : cas_digest addr -> string * int
+  val prepare_write_cas_digest : Cas_digest.t -> size * (chunk -> cas_digest addr)
+
+  val read_cas_digest : cas_digest addr -> Cas_digest.t
 
   (* docblock *)
 

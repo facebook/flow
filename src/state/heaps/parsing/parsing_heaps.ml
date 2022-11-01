@@ -279,11 +279,11 @@ let read_imports parse : Imports.t =
   let deserialize x = Marshal.from_string x 0 in
   get_imports parse |> read_imports |> deserialize
 
-let read_cas_digest parse : (string * int) option =
+let read_cas_digest parse : Cas_digest.t option =
   let open Heap in
   get_cas_digest parse |> Option.map (fun addr -> read_cas_digest addr)
 
-let read_cas_digest_unsafe parse : string * int =
+let read_cas_digest_unsafe parse : Cas_digest.t =
   match read_cas_digest parse with
   | Some cas_digest -> cas_digest
   | None -> raise (Requires_not_found "cas_digest")
@@ -369,12 +369,11 @@ let prepare_write_ast (ast : (Loc.t, Loc.t) Flow_ast.Program.t) =
   let serialized = Marshal.to_string (compactify_loc ast) [] in
   Heap.prepare_write_serialized_ast serialized
 
-let prepare_write_cas_digest_maybe cas_digest =
-  match cas_digest with
+let prepare_write_cas_digest_maybe = function
   | None -> (0, (fun _ -> None))
-  | Some (sha1, bytelen) ->
+  | Some cas_digest ->
     let open Heap in
-    let (size, write) = prepare_write_cas_digest sha1 bytelen in
+    let (size, write) = prepare_write_cas_digest cas_digest in
     (header_size + size, (fun chunk -> Some (write chunk)))
 
 let prepare_write_docblock (docblock : Docblock.t) =
@@ -1103,7 +1102,7 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
-  val get_cas_digest : reader:reader -> File_key.t -> (string * int) option
+  val get_cas_digest : reader:reader -> File_key.t -> Cas_digest.t option
 
   val get_parse_unsafe :
     reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped ] parse_addr
@@ -1133,7 +1132,7 @@ module type READER = sig
 
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
 
-  val get_cas_digest_unsafe : reader:reader -> File_key.t -> string * int
+  val get_cas_digest_unsafe : reader:reader -> File_key.t -> Cas_digest.t
 
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
 end
@@ -1400,7 +1399,7 @@ type worker_mutator = {
     File_sig.With_Loc.tolerable_t ->
     locs_tbl ->
     type_sig ->
-    (string * int) option ->
+    Cas_digest.t option ->
     MSet.t;
   add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> MSet.t;
   clear_not_found: File_key.t -> MSet.t;

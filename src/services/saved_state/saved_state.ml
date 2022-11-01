@@ -12,7 +12,7 @@ type denormalized_file_data = {
   exports: Exports.t;
   hash: Xx.hash;
   imports: Imports.t;
-  cas_digest: (string * int) option;
+  cas_digest: Cas_digest.t option;
 }
 
 type normalized_file_data = denormalized_file_data

@@ -95,6 +95,7 @@ MODULES=\
   src/common\
   src/common/audit\
   src/common/build_id\
+  src/common/cas_digest\
   src/common/cycle_hash\
   src/common/dirent\
   src/common/errors\
