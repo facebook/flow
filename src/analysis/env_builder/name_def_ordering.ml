@@ -79,6 +79,23 @@ let string_of_component graph = function
       |> String.concat ",\n"
       )
 
+class toplevel_expression_collector =
+  object (this)
+    inherit [(ALoc.t, ALoc.t) Ast.Expression.t list, ALoc.t] Flow_ast_visitor.visitor ~init:[]
+
+    method! expression expr =
+      this#update_acc (fun acc -> expr :: acc);
+      expr
+
+    method! class_ _ x = x
+
+    method! function_declaration _ x = x
+
+    method! function_expression _ x = x
+
+    method! arrow_function _ x = x
+  end
+
 module type S = sig
   type cx
 
@@ -559,6 +576,16 @@ struct
         | Hint_api.Hint_Placeholder -> state
         | Hint_api.Hint_t hint_node -> depends_of_hint_node state hint_node
         | Hint_api.Hint_Decomp (ops, hint_node) ->
+          let depends_on_synthesizable_toplevel_expressions acc ~collect =
+            let collector = new toplevel_expression_collector in
+            collect collector;
+            Base.List.fold collector#acc ~init:acc ~f:(fun acc e ->
+                if Name_def.expression_is_definitely_synthesizable e then
+                  depends_of_expression e acc
+                else
+                  acc
+            )
+          in
           Nel.fold_left
             (fun acc (_id, op) ->
               match op with
@@ -574,10 +601,23 @@ struct
                     | _ -> acc)
                   checks
                   acc
+              | Hint_api.Instantiate_Component { Hint_api.jsx_props; jsx_children; _ } ->
+                depends_on_synthesizable_toplevel_expressions acc ~collect:(fun collector ->
+                    Base.List.iter jsx_props ~f:(fun prop ->
+                        ignore @@ collector#jsx_opening_attribute prop
+                    );
+                    ignore @@ collector#jsx_children jsx_children
+                )
               | Hint_api.Instantiate_Callee { Hint_api.return_hint; arg_list; arg_index; _ } ->
                 let rec loop acc i = function
                   | [] -> acc
-                  | _ when i >= arg_index -> acc
+                  | arg :: rest when i >= arg_index ->
+                    let acc =
+                      depends_on_synthesizable_toplevel_expressions acc ~collect:(fun collector ->
+                          ignore @@ collector#expression_or_spread arg
+                      )
+                    in
+                    loop acc (i + 1) rest
                   | arg :: rest ->
                     let acc =
                       depends_of_node

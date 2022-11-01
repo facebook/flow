@@ -168,3 +168,12 @@ function non_assigning_member_assigns() {
    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
   }
 }
+
+{
+  declare function poly<T>(T=>T, T): T;
+  () => {
+    poly(v => v, [foo1, foo2.bar, (v: number) => v, {foo: 3, bar: foo2.bar}, foo1 = '', 1 + 2]);
+  };
+  declare var foo1: string;
+  declare var foo2: {bar: string};
+}

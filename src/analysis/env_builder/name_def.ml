@@ -286,6 +286,123 @@ let rec obj_properties_synthesizable
   | Ok (hd :: tl, _) -> MissingMemberReturns (hd, tl)
   | Error () -> Unsynthesizable
 
+class returned_expression_collector =
+  object (this)
+    inherit [(ALoc.t, ALoc.t) Ast.Expression.t list, ALoc.t] Flow_ast_visitor.visitor ~init:[]
+
+    method! return _ ({ Ast.Statement.Return.argument; _ } as node) =
+      Base.Option.iter argument ~f:(fun e -> this#update_acc (fun acc -> e :: acc));
+      node
+  end
+
+let expression_is_definitely_synthesizable =
+  let rec synthesizable (_, expr) =
+    let func_is_synthesizable fn =
+      let {
+        Ast.Function.params =
+          (_, { Ast.Function.Params.params = parameters; rest; this_; _ }) as params;
+        body;
+        return;
+        _;
+      } =
+        fn
+      in
+      let parameters_annotated =
+        Base.List.for_all parameters ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
+            argument |> Destructure.type_of_pattern |> Base.Option.is_some
+        )
+        && Base.Option.value_map
+             rest
+             ~default:true
+             ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
+               argument |> Destructure.type_of_pattern |> Base.Option.is_some
+           )
+        && (Base.Option.is_some this_
+           || not (Signature_utils.This_finder.found_this_in_body_or_params body params)
+           )
+      in
+      if parameters_annotated then (
+        match (return, body) with
+        | (Ast.Type.Available _, _) -> true
+        | (Ast.Type.Missing _, Ast.Function.BodyExpression e) -> synthesizable e
+        | (Ast.Type.Missing _, Ast.Function.BodyBlock (loc, block)) ->
+          let collector = new returned_expression_collector in
+          ignore @@ collector#block loc block;
+          collector#acc |> Base.List.for_all ~f:synthesizable
+      ) else
+        false
+    in
+    match expr with
+    | Ast.Expression.ArrowFunction x
+    | Ast.Expression.Function x ->
+      func_is_synthesizable x
+    | Ast.Expression.Array expr ->
+      let { Ast.Expression.Array.elements; comments = _ } = expr in
+      Base.List.for_all elements ~f:(function
+          | Ast.Expression.Array.Expression expr -> synthesizable expr
+          | Ast.Expression.Array.Spread (_, spread) ->
+            synthesizable spread.Ast.Expression.SpreadElement.argument
+          | Ast.Expression.Array.Hole _ -> true
+          )
+      && (not @@ Base.List.is_empty elements)
+    | Ast.Expression.Object expr ->
+      let open Ast.Expression.Object in
+      let { properties; comments = _ } = expr in
+      Base.List.for_all properties ~f:(function
+          | Property p ->
+            let open Ast.Expression.Object.Property in
+            (match p with
+            | (_, Init { key = _; value; shorthand = _ }) -> synthesizable value
+            | (_, Get { key = _; value = (_, fn); comments = _ })
+            | (_, Set { key = _; value = (_, fn); comments = _ })
+            | (_, Method { key = _; value = (_, fn) }) ->
+              func_is_synthesizable fn)
+          | SpreadProperty s ->
+            let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in
+            synthesizable argument
+          )
+    | Ast.Expression.Logical expr ->
+      synthesizable expr.Ast.Expression.Logical.left
+      && synthesizable expr.Ast.Expression.Logical.right
+    | Ast.Expression.Conditional expr ->
+      synthesizable expr.Ast.Expression.Conditional.consequent
+      && synthesizable expr.Ast.Expression.Conditional.alternate
+    | Ast.Expression.Unary expr ->
+      let open Flow_ast.Expression.Unary in
+      let { argument; operator; comments = _ } = expr in
+      (match operator with
+      | Await -> synthesizable argument
+      | _ -> true)
+    | Ast.Expression.Call _
+    | Ast.Expression.OptionalCall _
+    | Ast.Expression.New _
+    | Ast.Expression.JSXElement _ ->
+      (* Implicit instantiation might happen in these nodes, and we might have underconstrained targs. *)
+      false
+    | Ast.Expression.Assignment _
+    | Ast.Expression.Binary _
+    | Ast.Expression.Class _
+    | Ast.Expression.Comprehension _
+    | Ast.Expression.Generator _
+    | Ast.Expression.Identifier _
+    | Ast.Expression.Import _
+    | Ast.Expression.JSXFragment _
+    | Ast.Expression.Literal _
+    | Ast.Expression.Member _
+    | Ast.Expression.MetaProperty _
+    | Ast.Expression.OptionalMember _
+    | Ast.Expression.Sequence _
+    | Ast.Expression.Super _
+    | Ast.Expression.TaggedTemplate _
+    | Ast.Expression.TemplateLiteral _
+    | Ast.Expression.This _
+    | Ast.Expression.TypeCast _
+    | Ast.Expression.Update _
+    | Ast.Expression.Yield _ ->
+      true
+  in
+  (fun e -> synthesizable e)
+
 let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics function_ =
   Function
     {
@@ -1885,6 +2002,12 @@ class def_finder env_entries providers toplevel_scope =
             (ExpressionDef { cond_context = cond; expr = exp; hint = Hint_None; chain = false });
           Hint_None
         | _ -> hint
+      in
+      let hint =
+        if expression_is_definitely_synthesizable exp then
+          Hint_None
+        else
+          hint
       in
       begin
         match EnvMap.find_opt (Env_api.ExpressionLoc, loc) env_entries with
