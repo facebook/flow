@@ -26,6 +26,20 @@ References:
                          ^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- invalid.js:5:8
+
+Cannot call `Import.store` because `store` [1] is not a function. [not-a-function]
+
+   invalid.js:5:8
+   5| Import.store(); // Should not crash.
+             ^^^^^
+
+References:
+   invalid-export.js:4:20
+   4| export opaque type store<T> = mixed;
+                         ^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:4:7
 
 Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
@@ -231,4 +245,4 @@ References:
 
 
 
-Found 17 errors
+Found 18 errors

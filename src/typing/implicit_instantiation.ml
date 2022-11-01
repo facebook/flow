@@ -579,7 +579,12 @@ struct
            * intentionally *)
           ([], Marked.empty, Tvar.mk cx reason_op)
         | (_, _, _) -> check_instance cx ~tparams ~implicit_instantiation)
-      | _ -> failwith "No other possible lower bounds"
+      | _ ->
+        (* There are no other valid cases of implicit instantiation, but it is still possible
+           reach this case via non-sensical cases that usually are downstream of some other error.
+           Since there's no reasonable thing to do in these cases we just ignore it. *)
+        let (_, reason_op, _) = operation in
+        ([], Marked.empty, AnyT.error reason_op)
     in
     (inferred_targ_list, marked_tparams, tparams_map, tout)
 
