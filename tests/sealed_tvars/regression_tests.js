@@ -173,7 +173,9 @@ function non_assigning_member_assigns() {
   declare function poly<T>(T=>T, T): T;
   () => {
     poly(v => v, [foo1, foo2.bar, (v: number) => v, {foo: 3, bar: foo2.bar}, foo1 = '', 1 + 2]);
+    poly(v => v, foo3());
   };
   declare var foo1: string;
   declare var foo2: {bar: string};
+  declare var foo3: () => string;
 }
