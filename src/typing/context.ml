@@ -821,7 +821,6 @@ let run_in_hint_decomp cx f =
 
 let run_with_fresh_constrain_cache cx f =
   let saved_constraint_cache = !(cx.ccx.constraint_cache) in
-  cx.ccx.constraint_cache := Type.FlowSet.empty;
   let result = f () in
   cx.ccx.constraint_cache := saved_constraint_cache;
   result
