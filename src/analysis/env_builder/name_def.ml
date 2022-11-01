@@ -321,6 +321,8 @@ let func_own_props = SSet.of_list ["toString"; "arguments"; "caller"; "length"; 
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
 class def_finder env_entries providers toplevel_scope =
+  let fail loc str = raise Env_api.(Env_invariant (Some loc, ASTStructureOverride str)) in
+
   object (this)
     inherit
       [env_entries_map * hint_map, ALoc.t] Flow_ast_visitor.visitor
@@ -663,7 +665,7 @@ class def_finder env_entries providers toplevel_scope =
         );
       super#declare_variable loc decl
 
-    method! function_param _ = failwith "Should be visited by visit_function_param"
+    method! function_param (loc, _) = fail loc "Should be visited by visit_function_param"
 
     method private visit_function_param ~hint (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
@@ -1175,7 +1177,7 @@ class def_finder env_entries providers toplevel_scope =
         (DeclaredClass (loc, decl));
       super#declare_class loc decl
 
-    method! assignment _ _ = failwith "Should be visited by visit_assignment_expression"
+    method! assignment loc _ = fail loc "Should be visited by visit_assignment_expression"
 
     method private visit_assignment_expression ~is_function_statics_assignment loc expr =
       let open Ast.Expression.Assignment in
@@ -1308,7 +1310,8 @@ class def_finder env_entries providers toplevel_scope =
             | None -> For (Of { await }, right)
           in
           Destructure.pattern ~f:this#add_ordinary_binding (Root source) id
-        | LeftDeclaration _ -> failwith "Invalid AST structure"
+        | LeftDeclaration _ ->
+          raise Env_api.(Env_invariant (Some loc, Impossible "Invalid AST structure"))
         | LeftPattern pat ->
           Destructure.pattern ~f:this#add_ordinary_binding (Root (For (Of { await }, right))) pat
       end;
@@ -1341,7 +1344,8 @@ class def_finder env_entries providers toplevel_scope =
             | None -> For (In, right)
           in
           Destructure.pattern ~f:this#add_ordinary_binding (Root source) id
-        | LeftDeclaration _ -> failwith "Invalid AST structure"
+        | LeftDeclaration _ ->
+          raise Env_api.(Env_invariant (Some loc, Impossible "Invalid AST structure"))
         | LeftPattern pat ->
           Destructure.pattern ~f:this#add_ordinary_binding (Root (For (In, right))) pat
       end;
@@ -1493,7 +1497,7 @@ class def_finder env_entries providers toplevel_scope =
         default;
       super#import_declaration loc decl
 
-    method! call _ _ = failwith "Should be visited by visit_call_expression"
+    method! call loc _ = fail loc "Should be visited by visit_call_expression"
 
     method private visit_call_expression ~hint ~cond ~visit_callee loc expr =
       let {
@@ -1628,7 +1632,7 @@ class def_finder env_entries providers toplevel_scope =
               spread.Ast.Expression.SpreadElement.argument
       )
 
-    method! optional_call _ _ = failwith "Should be visited by visit_optional_call_expression"
+    method! optional_call loc _ = fail loc "Should be visited by visit_optional_call_expression"
 
     method private visit_optional_call_expression ~hint ~cond loc expr =
       let open Ast.Expression.OptionalCall in
@@ -1640,7 +1644,7 @@ class def_finder env_entries providers toplevel_scope =
         ~cond
         ~visit_callee:(this#visit_expression ~cond:NonConditionalContext)
 
-    method! new_ _ _ = failwith "Should be visited by visit_new_expression"
+    method! new_ loc _ = fail loc "Should be visited by visit_new_expression"
 
     method visit_new_expression ~hint loc expr =
       let { Ast.Expression.New.callee; targs; arguments; comments = _ } = expr in
@@ -1655,7 +1659,7 @@ class def_finder env_entries providers toplevel_scope =
       let call_reason = mk_expression_reason (loc, Ast.Expression.New expr) in
       this#visit_call_arguments ~call_reason ~call_argumemts_hint ~return_hint:hint arg_list targs
 
-    method! member _ _ = failwith "Should be visited by visit_member_expression"
+    method! member loc _ = fail loc "Should be visited by visit_member_expression"
 
     method private visit_member_expression ~cond ~hint loc mem =
       begin
@@ -1671,7 +1675,7 @@ class def_finder env_entries providers toplevel_scope =
       end;
       ignore @@ super#member loc mem
 
-    method! optional_member _ _ = failwith "Should be visited by visit_optional_member_expression"
+    method! optional_member loc _ = fail loc "Should be visited by visit_optional_member_expression"
 
     method private visit_optional_member_expression ~cond ~hint loc mem =
       begin
@@ -1704,7 +1708,7 @@ class def_finder env_entries providers toplevel_scope =
       ignore @@ this#type_annotation annot;
       expr
 
-    method! unary_expression _ _ = failwith "Should be visited by visit_unary_expression"
+    method! unary_expression loc _ = fail loc "Should be visited by visit_unary_expression"
 
     method private visit_unary_expression ~hint expr =
       let open Flow_ast.Expression.Unary in
@@ -1939,7 +1943,7 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.Yield _ ->
         ignore @@ super#expression exp
 
-    method! array _ _ = failwith "Should be visited by visit_array_expression"
+    method! array loc _ = fail loc "Should be visited by visit_array_expression"
 
     method private visit_array_expression ~array_hint expr =
       let { Ast.Expression.Array.elements; comments = _ } = expr in
@@ -1958,7 +1962,7 @@ class def_finder env_entries providers toplevel_scope =
           | Ast.Expression.Array.Hole _ -> ()
       )
 
-    method! conditional _ _ = failwith "Should be visited by visit_conditional"
+    method! conditional loc _ = fail loc "Should be visited by visit_conditional"
 
     method visit_conditional ~hint expr =
       let open Ast.Expression.Conditional in
@@ -1970,7 +1974,7 @@ class def_finder env_entries providers toplevel_scope =
         ~cond:NonConditionalContext
         alternate
 
-    method! binary _ _ = failwith "Should be visited by visit_binary_expression"
+    method! binary loc _ = fail loc "Should be visited by visit_binary_expression"
 
     method private visit_binary_expression ~cond expr =
       let open Ast.Expression.Binary in
@@ -2012,7 +2016,7 @@ class def_finder env_entries providers toplevel_scope =
         ignore @@ this#expression left;
         ignore @@ this#expression right
 
-    method! logical _ _ = failwith "Should be visited by visit_logical_expression"
+    method! logical loc _ = fail loc "Should be visited by visit_logical_expression"
 
     method private visit_logical_expression ~hint ~cond expr =
       let open Ast.Expression.Logical in
@@ -2026,7 +2030,7 @@ class def_finder env_entries providers toplevel_scope =
       this#visit_expression ~hint ~cond:left_cond left;
       this#visit_expression ~hint:right_hint ~cond right
 
-    method! object_ _ _ = failwith "Should be visited by visit_object_expression"
+    method! object_ loc _ = fail loc "Should be visited by visit_object_expression"
 
     method private visit_object_expression ~object_hint expr =
       let open Ast.Expression.Object in

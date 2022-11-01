@@ -746,7 +746,8 @@ struct
                 loop state obj
               | Property (_, Init { key = Identifier _; value; _ }) ->
                 depends_of_expression value state
-              | _ -> failwith "Object not synthesizable"
+              | _ ->
+                raise Env_api.(Env_invariant (Some id_loc, Impossible "Object not synthesizable"))
             )
           in
           loop state obj
@@ -1057,10 +1058,9 @@ struct
       (function
         | None -> Some depends
         | Some _ ->
-          failwith
-            (Utils_js.spf
-               "Duplicate name defs for the same location %s"
-               (ALoc.debug_to_string ~include_source:true loc)
+          raise
+            Env_api.(
+              Env_invariant (Some loc, Impossible "Duplicate name defs for the same location")
             ))
       acc
 
@@ -1097,6 +1097,11 @@ struct
     EnvMap.fold (dependencies cx this_super_dep_loc_map env) map EnvMap.empty
 
   let build_ordering cx ({ Env_api.scopes; _ } as env) map =
+    let env_map_find k map =
+      match EnvMap.find_opt k map with
+      | Some t -> t
+      | None -> raise Env_api.(Env_invariant (None, NameDefGraphMismatch))
+    in
     let graph = build_graph cx env map in
     let order_graph = EnvMap.map (fun deps -> EnvMap.keys deps |> EnvSet.of_list) graph in
     let roots = EnvMap.keys order_graph |> EnvSet.of_list in
@@ -1119,13 +1124,13 @@ struct
     in
     let result_of_scc (fst, rest) =
       let element_of_loc (kind, loc) =
-        let (def, _, _, reason) = EnvMap.find (kind, loc) map in
-        if EnvSet.mem (kind, loc) (EnvMap.find (kind, loc) order_graph) then
+        let (def, _, _, reason) = env_map_find (kind, loc) map in
+        if EnvSet.mem (kind, loc) (env_map_find (kind, loc) order_graph) then
           if FindDependencies.recursively_resolvable def then
             Resolvable (kind, loc)
           else
-            let depends = EnvMap.find (kind, loc) graph in
-            let recursion = EnvMap.find (kind, loc) depends in
+            let depends = env_map_find (kind, loc) graph in
+            let recursion = env_map_find (kind, loc) depends in
             Illegal
               {
                 payload = (kind, loc);
@@ -1143,7 +1148,7 @@ struct
         if
           Base.List.for_all
             ~f:(fun m ->
-              let (def, _, _, _) = EnvMap.find m map in
+              let (def, _, _, _) = env_map_find m map in
               FindDependencies.recursively_resolvable def)
             (fst :: rest)
         then
@@ -1152,8 +1157,8 @@ struct
           let elements =
             Nel.map
               (fun (kind, loc) ->
-                let (def, _, _, reason) = EnvMap.find (kind, loc) map in
-                let depends = EnvMap.find (kind, loc) graph in
+                let (def, _, _, reason) = env_map_find (kind, loc) map in
+                let depends = env_map_find (kind, loc) graph in
                 let edges =
                   EnvMap.fold
                     (fun k v acc ->

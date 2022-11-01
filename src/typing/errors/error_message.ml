@@ -1615,6 +1615,14 @@ let string_of_internal_error = function
       all
       roots
       missing_roots
+  | EnvInvariant (Env_api.Impossible str) ->
+    "Internal state should be impossible, please report this to the Flow team: " ^ str
+  | EnvInvariant (Env_api.ASTStructureOverride str) ->
+    "AST visitor issue, please report this to the Flow team: " ^ str
+  | EnvInvariant Env_api.NameDefGraphMismatch ->
+    "EnvMap.find missed, please report this to the Flow team"
+  | EnvInvariant Env_api.(MissingEnvEntry x) ->
+    spf "Did not find %s in name_resolver environment, please report this to the Flow team" x
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)

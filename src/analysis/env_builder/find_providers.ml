@@ -6,8 +6,9 @@
  *)
 
 open Flow_ast_mapper
-open Utils_js
 module Ast = Flow_ast
+
+exception ImpossibleState of string
 
 (* This describes the state of a variable AFTER the provider analysis, suitable for external consumption *)
 type state =
@@ -316,7 +317,7 @@ end = struct
       binding_kind;
     }
 
-  let env_invariant_violated s = failwith ("Environment invariant violated: " ^ s)
+  let env_invariant_violated s = raise (ImpossibleState ("Environment invariant violated: " ^ s))
 
   (* This function finds the right set of entries to add a new variable to in the scope chain
       based on whether it's a let, const, or var; it also returns a function to rebuild an environment
@@ -426,7 +427,7 @@ end = struct
                   if i = j then
                     Some i
                   else
-                    failwith "Inconsistent states")
+                    raise (ImpossibleState "Inconsistent states"))
                 providers1
                 providers2;
             declare_locs = L.LSet.union declares1 declares2;
@@ -940,8 +941,12 @@ end = struct
             @@ this#in_context
                  ~mod_cx:(fun _cx -> { init_state })
                  (fun () -> this#variable_declarator_pattern ~kind id)
-          | _ -> failwith "unexpected AST node")
-        | _ -> failwith "Syntactically valid for-in loops must have exactly one left declaration");
+          | _ -> raise (ImpossibleState "unexpected AST node"))
+        | _ ->
+          raise
+            (ImpossibleState
+               "Syntactically valid for-in loops must have exactly one left declaration"
+            ));
         left
 
       method! for_of_left_declaration left =
@@ -965,8 +970,12 @@ end = struct
             @@ this#in_context
                  ~mod_cx:(fun _cx -> { init_state })
                  (fun () -> this#variable_declarator_pattern ~kind id)
-          | _ -> failwith "unexpected AST node")
-        | _ -> failwith "Syntactically valid for-in loops must have exactly one left declaration");
+          | _ -> raise (ImpossibleState "unexpected AST node"))
+        | _ ->
+          raise
+            (ImpossibleState
+               "Syntactically valid for-in loops must have exactly one left declaration"
+            ));
         left
 
       method! function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
@@ -994,7 +1003,8 @@ end = struct
   (****** pass 2 *******)
 
   let enter_existing_lex_child _ loc (({ children; _ }, _) as env) =
-    Nel.cons (L.LMap.find loc children) env
+    try Nel.cons (L.LMap.find loc children) env with
+    | Not_found -> raise (ImpossibleState "Missing lexical child at expected position")
 
   type find_providers_cx = { mk_state: int -> write_state }
 
@@ -1144,27 +1154,27 @@ end = struct
         (fun loc write_state acc ->
           match (write_state, state) with
           | (Annotation _, Annotated _) -> { acc with writes = L.LMap.add loc Ordinary acc.writes }
-          | (Annotation _, _) -> assert_false "Invariant violated"
+          | (Annotation _, _) -> raise (ImpossibleState "Invariant violated")
           | (Null n, (NullInitialized m | Initialized (_, Some m)))
           | ((ArrayValue n | Value n), Initialized (m, _)) ->
             if n = m then
               { acc with writes = L.LMap.add loc Ordinary acc.writes }
             else if n < m then
-              assert_false "Invariant violated"
+              raise (ImpossibleState "Invariant violated")
             else
               acc
           | (ArrayValue n, ArrInitialized m) ->
             if n = m then
               { acc with writes = L.LMap.add loc Ordinary acc.writes }
             else if n < m then
-              assert_false "Invariant violated"
+              raise (ImpossibleState "Invariant violated")
             else
               acc
           | (ArrWrite n, ArrInitialized m) ->
             if n = m then
               { acc with array_writes = L.LSet.add loc acc.array_writes }
             else if n < m then
-              assert_false "Invariant violated"
+              raise (ImpossibleState "Invariant violated")
             else
               acc
           | (EmptyArr, (EmptyArrInitialized | ArrInitialized _)) ->
@@ -1172,7 +1182,7 @@ end = struct
           | (Nothing, _)
           | (ArrWrite _, Initialized _)
           | (Value _, ArrInitialized _) ->
-            assert_false "Invariant violated"
+            raise (ImpossibleState "Invariant violated")
           | (Null _, (Initialized (_, None) | ArrInitialized _))
           | (EmptyArr, (Uninitialized | Annotated _ | Initialized _ | NullInitialized _))
           | ( (Value _ | ArrayValue _ | ArrWrite _ | Null _),

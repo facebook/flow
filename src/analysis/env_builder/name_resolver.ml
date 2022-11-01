@@ -512,7 +512,8 @@ module Make
           | Exports -> Env_api.Exports
           | ModuleScoped name -> Env_api.ModuleScoped name
           | Global name -> Env_api.Global name
-          | PHI _ -> failwith "A normalized value cannot be a PHI")
+          | PHI _ ->
+            raise Env_api.(Env_invariant (None, Impossible "A normalized value cannot be a PHI")))
         (WriteSet.elements vals)
 
     (* Simplification converts a Val.t to a list of locations. *)
@@ -589,6 +590,21 @@ module Make
     type t = entry SMap.t
   end
 
+  let smap_find x t =
+    match SMap.find_opt x t with
+    | Some r -> r
+    | None -> raise Env_api.(Env_invariant (None, Impossible (Utils_js.spf "%s missing in map" x)))
+
+  let heap_map_find x t =
+    match HeapRefinementMap.find_opt x t with
+    | Some r -> r
+    | None -> raise Env_api.(Env_invariant (None, Impossible "heap entry missing in map"))
+
+  let imap_find x t =
+    match IMap.find_opt x t with
+    | Some r -> r
+    | None -> raise Env_api.(Env_invariant (None, Impossible (Utils_js.spf "%d missing in map" x)))
+
   (* Abrupt completions induce control flows, so modeling them accurately is
      necessary for soundness. *)
   module AbruptCompletion = struct
@@ -645,7 +661,7 @@ module Make
 
         method private init_internal_name name loc def_loc =
           let reason = mk_reason (RIdentifier (internal_name name)) def_loc in
-          let { val_ref; havoc } = SMap.find name ssa_env in
+          let { val_ref; havoc } = smap_find name ssa_env in
           this#any_identifier loc name;
           super_call_loc_list <- loc :: super_call_loc_list;
           val_ref := Val.one reason;
@@ -757,7 +773,7 @@ module Make
     | (x1 :: l1, x2 :: l2, x3 :: l3) ->
       f x1 x2 x3;
       list_iter3 f l1 l2 l3
-    | _ -> assert false
+    | _ -> raise Env_api.(Env_invariant (None, Impossible "list_iter3 mismatch"))
 
   type abrupt_kind = AbruptCompletion.t
 
@@ -1319,7 +1335,10 @@ module Make
         env_state <- { env_state with curr_id };
         new_id
 
-      method env_read x = SMap.find x env_state.env |> Nel.hd
+      method env_read x =
+        match SMap.find_opt x env_state.env with
+        | Some (hd, _) -> hd
+        | None -> raise Env_api.(Env_invariant (None, MissingEnvEntry x))
 
       method env_read_opt x = SMap.find_opt x env_state.env |> Base.Option.map ~f:Nel.hd
 
@@ -1395,7 +1414,7 @@ module Make
           (fun x
                ({ val_ref; havoc; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ }, _) ->
             let { Env.env_val; heap_refinements = heap_refinements2; def_loc = def_loc_2 } =
-              SMap.find x env
+              smap_find x env
             in
             if def_loc_1 = def_loc_2 then (
               val_ref := this#merge_vals_with_havoc ~havoc ~def_loc:def_loc_1 !val_ref env_val;
@@ -1807,11 +1826,21 @@ module Make
                   let reason = mk_reason (RIdentifier (internal_name "super")) loc in
                   let v =
                     match this_super_binding_env with
-                    | FunctionEnv -> failwith "Cannot bind super in function env"
+                    | FunctionEnv ->
+                      raise
+                        Env_api.(
+                          Env_invariant (Some loc, Impossible "Cannot bind super in function env")
+                        )
                     | ClassStaticEnv -> Val.class_static_super reason
                     | ClassInstanceEnv -> Val.class_instance_super reason
                     | IllegalThisEnv ->
-                      failwith "It's impossible to bind super under IllegalThisEnv"
+                      raise
+                        Env_api.(
+                          Env_invariant
+                            ( Some loc,
+                              Impossible "It's impossible to bind super under IllegalThisEnv"
+                            )
+                        )
                   in
                   (v, v, None)
                 | _ ->
@@ -2119,7 +2148,14 @@ module Make
            * initialize those bindings. *)
           | AssignmentWrite when Val.is_undeclared_or_skipped !val_ref ->
             (match def_loc with
-            | None -> failwith "Cannot have an undeclared or skipped binding without a def loc"
+            | None ->
+              raise
+                Env_api.(
+                  Env_invariant
+                    ( Some loc,
+                      Impossible "Cannot have an undeclared or skipped binding without a def loc"
+                    )
+                )
             | Some def_loc ->
               add_output
                 Error_message.(
@@ -2754,24 +2790,24 @@ module Make
           SMap.iter
             (fun name ({ val_ref; heap_refinements; havoc; def_loc; _ }, _) ->
               let { Env.env_val = value1; heap_refinements = heap_entries1; def_loc = _ } =
-                SMap.find name env1
+                smap_find name env1
               in
               let { Env.env_val = value2; heap_refinements = heap_entries2; def_loc = _ } =
-                SMap.find name env2
+                smap_find name env2
               in
               let {
                 Env.env_val = refined_value1;
                 heap_refinements = refined_heap_entries1;
                 def_loc = _;
               } =
-                SMap.find name refined_env1
+                smap_find name refined_env1
               in
               let {
                 Env.env_val = refined_value2;
                 heap_refinements = refined_heap_entries2;
                 def_loc = _;
               } =
-                SMap.find name refined_env2
+                smap_find name refined_env2
               in
               (* If the same key exists on both versions of the object then we can
                * merge the two heap refinements, even though the underlying value
@@ -2782,8 +2818,8 @@ module Make
                   (fun key refined_heap_val1 refined_heap_val2 ->
                     match (refined_heap_val1, refined_heap_val2) with
                     | (Some refined_heap_val1, Some refined_heap_val2) ->
-                      let heap_val1 = HeapRefinementMap.find key heap_entries1 in
-                      let heap_val2 = HeapRefinementMap.find key heap_entries2 in
+                      let heap_val1 = heap_map_find key heap_entries1 in
+                      let heap_val2 = heap_map_find key heap_entries2 in
                       if Val.id_of_val heap_val1 = Val.id_of_val heap_val2 then
                         if Val.is_projection heap_val1 then
                           None
@@ -2834,7 +2870,7 @@ module Make
                    { Env.env_val = env_val1; heap_refinements = heap_refinements1; def_loc = _ }
                    acc ->
                 let { Env.env_val = env_val2; heap_refinements = heap_refinements2; def_loc = _ } =
-                  SMap.find name pre_env
+                  smap_find name pre_env
                 in
                 let acc =
                   HeapRefinementMap.fold
@@ -3119,7 +3155,7 @@ module Make
         stmt
 
       method for_in_or_of_left_declaration left =
-        let (_, decl) = left in
+        let (loc, decl) = left in
         let { Flow_ast.Statement.VariableDeclaration.declarations; kind; comments = _ } = decl in
         match declarations with
         | [(_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init = _ })] ->
@@ -3127,8 +3163,16 @@ module Make
           (match id with
           | (_, (Identifier _ | Object _ | Array _)) ->
             ignore @@ this#variable_declarator_pattern ~kind id
-          | _ -> failwith "unexpected AST node")
-        | _ -> failwith "Syntactically valid for-in loops must have exactly one left declaration"
+          | (loc, _) -> raise Env_api.(Env_invariant (Some loc, Impossible "unexpected AST node")))
+        | _ ->
+          raise
+            Env_api.(
+              Env_invariant
+                ( Some loc,
+                  Impossible
+                    "Syntactically valid for-in loops must have exactly one left declaration"
+                )
+            )
 
       method! for_in_left_declaration left =
         this#for_in_or_of_left_declaration left;
@@ -3658,8 +3702,14 @@ module Make
                                   | Env_api.Write r ->
                                     (Reason.poly_loc_of_reason r :: locs, undeclared)
                                   | _ ->
-                                    failwith
-                                      "Unexpected env state for maybe_exhaustively_checked_var_name")
+                                    raise
+                                      Env_api.(
+                                        Env_invariant
+                                          ( Some fun_loc,
+                                            Impossible
+                                              "Unexpected env state for maybe_exhaustively_checked_var_name"
+                                          )
+                                      ))
                               write_locs
                           in
                           Context.add_exhaustive_check cx loc (locs, undeclared))
@@ -4147,7 +4197,7 @@ module Make
                 r,
               c
             )
-          | Not _ -> failwith "Negations not resolved"
+          | Not _ -> raise Env_api.(Env_invariant (None, Impossible "Negations not resolved"))
           | And (t1, t2) ->
             let (r1, c1) = recur t1 in
             let (r2, c2) = recur t2 in
@@ -4341,7 +4391,7 @@ module Make
       method extend_refinement { RefinementKey.loc; lookup } refi refis =
         LookupMap.union
           ~combine:(fun _ (loc1, (locs1, refi1)) (loc2, (locs2, refi2)) ->
-            if loc1 <> loc2 then failwith "Loc mismatch";
+            if loc1 <> loc2 then raise Env_api.(Env_invariant (Some loc, Impossible "Loc mismatch"));
             Some (loc1, (L.LSet.union locs1 locs2, AndR (refi1, refi2))))
           refis
           (LookupMap.singleton lookup (loc, refi))
@@ -4923,7 +4973,14 @@ module Make
 
             this#commit_refinement refis)
         | _ ->
-          failwith "member_expression_refinement can only be called on OptionalMember or Member"
+          raise
+            Env_api.(
+              Env_invariant
+                ( Some loc,
+                  Impossible
+                    "member_expression_refinement can only be called on OptionalMember or Member"
+                )
+            )
 
       method expression_refinement ((loc, expr) as expression) =
         this#handle_array_providers expression;
@@ -5026,19 +5083,19 @@ module Make
         function
         | BASE refinement -> refinement
         | AND (id1, id2) ->
-          let (locs1, ref1) = this#chain_to_refinement (IMap.find id1 env_state.refinement_heap) in
-          let (locs2, ref2) = this#chain_to_refinement (IMap.find id2 env_state.refinement_heap) in
+          let (locs1, ref1) = this#chain_to_refinement (imap_find id1 env_state.refinement_heap) in
+          let (locs2, ref2) = this#chain_to_refinement (imap_find id2 env_state.refinement_heap) in
           (L.LSet.union locs1 locs2, AndR (ref1, ref2))
         | OR (id1, id2) ->
-          let (locs1, ref1) = this#chain_to_refinement (IMap.find id1 env_state.refinement_heap) in
-          let (locs2, ref2) = this#chain_to_refinement (IMap.find id2 env_state.refinement_heap) in
+          let (locs1, ref1) = this#chain_to_refinement (imap_find id1 env_state.refinement_heap) in
+          let (locs2, ref2) = this#chain_to_refinement (imap_find id2 env_state.refinement_heap) in
           (L.LSet.union locs1 locs2, OrR (ref1, ref2))
         | NOT id ->
-          let (locs, ref) = this#chain_to_refinement (IMap.find id env_state.refinement_heap) in
+          let (locs, ref) = this#chain_to_refinement (imap_find id env_state.refinement_heap) in
           (locs, NotR ref)
 
       method refinement_of_id id =
-        let chain = IMap.find id env_state.refinement_heap in
+        let chain = imap_find id env_state.refinement_heap in
         this#chain_to_refinement chain
 
       method private handle_array_providers ((loc, _) as exp) =
@@ -5416,7 +5473,11 @@ module Make
         ~jsx_ast
         program
     in
-    let providers = Provider_api.find_providers program in
+    let providers =
+      try Provider_api.find_providers program with
+      | Find_providers.ImpossibleState s -> raise Env_api.(Env_invariant (None, Impossible s))
+    in
+
     let env_walk = new name_resolver cx lib exclude_syms prepass providers loc in
     let completion_state = env_walk#visit_program program in
     (* Fill in dead code reads *)

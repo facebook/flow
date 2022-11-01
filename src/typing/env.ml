@@ -126,7 +126,18 @@ let check_readable cx kind loc =
           | _ ->
             Flow_js_utils.add_output cx Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind))
         end
-      | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t))
+      | Some t ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EInternal
+              ( loc,
+                EnvInvariant
+                  (Env_api.Impossible
+                     ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t)
+                  )
+              )
+          ))
 
 let find_var_opt { Env_api.env_values; _ } loc =
   match ALocMap.find_opt loc env_values with
@@ -160,12 +171,22 @@ let provider_type_for_def_loc ?(intersect = false) cx env def_loc =
              | Some Env_api.NonAssigningWrite ->
                None
              | _ ->
-               assert_false
-                 (spf
-                    "Missing provider write at %s for %s"
-                    (Reason.string_of_aloc loc)
-                    (Reason.string_of_aloc def_loc)
-                 ))
+               Flow_js_utils.add_output
+                 cx
+                 Error_message.(
+                   EInternal
+                     ( loc,
+                       EnvInvariant
+                         (Env_api.Impossible
+                            (spf
+                               "Missing provider write at %s for %s"
+                               (Reason.string_of_aloc loc)
+                               (Reason.string_of_aloc def_loc)
+                            )
+                         )
+                     )
+                 );
+               None)
        )
   in
   match providers with
@@ -854,7 +875,15 @@ let get_next cx loc =
 let init_declare_module_synthetic_module_exports cx ~export_type loc reason =
   let env = Context.environment cx in
   let module_toplevel_members =
-    ALocMap.find loc env.Loc_env.var_info.Env_api.module_toplevel_members
+    match ALocMap.find_opt loc env.Loc_env.var_info.Env_api.module_toplevel_members with
+    | Some m -> m
+    | None ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EInternal (loc, EnvInvariant (Env_api.Impossible "Did not find loc in toplevel members"))
+        );
+      []
   in
   match Context.module_kind cx with
   | Module_info.ES _ -> ()

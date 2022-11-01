@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+exception ImpossibleState of string
+
 (* This describes the state of a variable AFTER the provider analysis, suitable for external consumption *)
 type state =
   | AnnotatedVar of {

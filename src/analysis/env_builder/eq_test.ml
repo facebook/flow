@@ -29,7 +29,7 @@ let extract_number_literal node =
         comments = _;
       } ->
     (-.lit, "-" ^ raw)
-  | _ -> Utils_js.assert_false "not a number literal"
+  | _ -> raise Env_api.(Env_invariant (None, Impossible "not a number literal"))
 
 module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS

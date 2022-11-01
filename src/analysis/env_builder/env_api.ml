@@ -185,6 +185,10 @@ module type S = sig
         roots: L.t list;
         missing_roots: L.t list;
       }
+    | Impossible of string
+    | ASTStructureOverride of string
+    | NameDefGraphMismatch
+    | MissingEnvEntry of string
 
   exception Env_invariant of L.t option * env_invariant_failure
 
@@ -243,6 +247,10 @@ module Make
         roots: L.t list;
         missing_roots: L.t list;
       }
+    | Impossible of string
+    | ASTStructureOverride of string
+    | NameDefGraphMismatch
+    | MissingEnvEntry of string
 
   exception Env_invariant of L.t option * env_invariant_failure
 
@@ -434,7 +442,7 @@ module Make
       module_toplevel_members = L.LMap.empty;
       predicate_refinement_maps = L.LMap.empty;
       providers = Provider_api.empty;
-      refinement_of_id = (fun _ -> failwith "Empty env info");
+      refinement_of_id = (fun _ -> raise (Env_invariant (None, Impossible "Empty env info")));
     }
 
   let map_result ~f res =
