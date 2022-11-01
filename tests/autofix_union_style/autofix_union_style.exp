@@ -14,9 +14,9 @@ module.exports = {
     (cond ? true : false),
   b4: (): boolean =>
     (cond ? false : true),
-  b5: (b: bool): boolean =>
+  b5: (b: boolean): boolean =>
     (cond ? b : true),
-  b6: (b: bool): boolean =>
+  b6: (b: boolean): boolean =>
     (cond ? false : b),
   b7: (t: mixed): mixed =>
     (cond ? false: t),
@@ -28,15 +28,15 @@ module.exports = {
     (cond ? 0 : 1),
   n2: (): number =>
     (cond ? 0 : (cond ? 1 : (cond ? 0 : 1))),
-  n3: (n : number): number =>
+  n3: (n: number): number =>
     (cond ? 0 : (cond2 ? 1 : (cond3 ? 0 : n))),
   s1: (): string =>
     (cond ? "0" : "1"),
   s2: (): string =>
     (cond ? "0" : (cond ? "1" : (cond ? "0" : "1"))),
-  s3: (s : string): string =>
+  s3: (s: string): string =>
     (cond ? "0" : (cond2 ? "1" : (cond3 ? s : "1"))),
-  a1: (x:any): any =>
+  a1: (x: any): any =>
     (cond ? x.f : x),
   a2: (n : number, s : string): number | string =>
     cond ? (cond2 ? "0" : 0) : (cond3 ? n : s),

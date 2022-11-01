@@ -710,6 +710,20 @@ class prop_annot_mapper =
       { prop with annot = annot' }
   end
 
+class func_return_annot_mapper =
+  object
+    inherit [Loc.t] Flow_ast_mapper.mapper
+
+    method! function_ _ f =
+      let open Ast.Function in
+      let return' =
+        match f.return with
+        | Type.Available _ -> f.return
+        | Type.Missing _ -> Type.Available (Loc.none, (Loc.none, Type.Number None))
+      in
+      { f with return = return' }
+  end
+
 class insert_typecast_mapper =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
@@ -2961,6 +2975,15 @@ let tests =
              ~source
              ~expected:"++gotRenamed"
              ~mapper:(new useless_mapper)
+         );
+         ( "update_arrow_function_add_return_annot" >:: fun ctxt ->
+           let source = "const x = bla => { return 0; };" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((10, 13), "(bla)"); ((13, 13), ": number")]
+             ~source
+             ~expected:"const x = (bla): number => { return 0; };"
+             ~mapper:(new func_return_annot_mapper)
          );
          ( "update_arrow_function_single_param" >:: fun ctxt ->
            let source = "const x = bla => { return 0; };" in

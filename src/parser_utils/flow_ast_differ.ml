@@ -899,18 +899,26 @@ let program
       let id = diff_if_changed_nonopt_fn identifier id1 id2 in
       let tparams = diff_if_changed_opt type_params tparams1 tparams2 in
       let params = diff_if_changed_ret_opt function_params params1 params2 in
+      let returns = diff_if_changed type_annotation_hint return1 return2 |> Base.Option.return in
       let params =
-        match (is_arrow, params1, params2, params) with
+        match (is_arrow, params1, params2, params, returns) with
+        (* reprint the parameter if it's the single parameter of a lambda, or when return annotation
+           has changed to add () to avoid syntax errors. *)
         | ( true,
             (l, { Params.params = [_p1]; rest = None; this_ = None; comments = _ }),
             (_, { Params.params = [_p2]; rest = None; this_ = None; comments = _ }),
-            Some [_]
+            Some [_],
+            _
+          )
+        | ( true,
+            (l, { Params.params = [_p1]; rest = None; this_ = None; comments = _ }),
+            (_, { Params.params = [_p2]; rest = None; this_ = None; comments = _ }),
+            _,
+            Some (_ :: _)
           ) ->
-          (* reprint the parameter if it's the single parameter of a lambda to add () *)
           Some [replace l (Params params1) (Params params2)]
         | _ -> params
       in
-      let returns = diff_if_changed type_annotation_hint return1 return2 |> Base.Option.return in
       let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
       let comments = syntax_opt loc comments1 comments2 in
       join_diff_list [id; tparams; params; returns; fnbody; comments]
