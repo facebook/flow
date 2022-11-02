@@ -28,7 +28,7 @@ let mk_tparams_map cx tparams_map =
 let expression cx ?cond exp =
   let cache = Context.node_cache cx in
   let (((_, t), _) as exp) = Statement.expression ?cond cx exp in
-  Node_cache.set_expression cache exp;
+  if not (Context.in_synthesis_mode cx) then Node_cache.set_expression cache exp;
   t
 
 let rec synthesizable_expression cx ?cond exp =

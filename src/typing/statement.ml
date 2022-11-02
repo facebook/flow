@@ -6238,7 +6238,8 @@ module Make
                   reason
                   function_
               in
-              Node_cache.set_function_sig cache sig_loc sig_data;
+              if not (Context.in_synthesis_mode cx) then
+                Node_cache.set_function_sig cache sig_loc sig_data;
               let this_t =
                 match expr with
                 | (_, Ast.Expression.ArrowFunction _) -> dummy_this (aloc_of_reason reason)
@@ -7186,7 +7187,7 @@ module Make
               (fun name expr acc ->
                 let (((loc, expr_t), _) as exp) = expression cx expr in
                 let cache = Context.node_cache cx in
-                Node_cache.set_expression cache exp;
+                if not (Context.in_synthesis_mode cx) then Node_cache.set_expression cache exp;
                 let field = Field (Some loc, expr_t, Polarity.Neutral) in
                 NameUtils.Map.add (OrdinaryName name) field acc)
               statics
