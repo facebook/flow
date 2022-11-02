@@ -59,7 +59,7 @@ let is_react_file_key = function
   | _ -> false
 
 let is_react_redux_file_key = function
-  | File_key.LibFile x -> Filename.basename x = "react-redux_v5.x.x.js"
+  | File_key.LibFile x -> Base.String.is_substring ~substring:"react-redux" (Filename.basename x)
   | _ -> false
 
 let is_react_loc loc =
