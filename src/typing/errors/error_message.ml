@@ -519,6 +519,7 @@ and internal_error =
   | ReadOfUnreachedTvar of Env_api.def_loc_type
   | ReadOfUnresolvedTvar of Env_api.def_loc_type
   | EnvInvariant of Env_api.env_invariant_failure
+  | ImplicitInstantiationInvariant of string
 
 and 'loc unsupported_syntax =
   | AnnotationInsideDestructuring
@@ -1623,6 +1624,8 @@ let string_of_internal_error = function
     "EnvMap.find missed, please report this to the Flow team"
   | EnvInvariant Env_api.(MissingEnvEntry x) ->
     spf "Did not find %s in name_resolver environment, please report this to the Flow team" x
+  | ImplicitInstantiationInvariant str ->
+    "Implicit instantiation issue, please report this to the Flow team: " ^ str
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)

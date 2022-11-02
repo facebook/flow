@@ -253,7 +253,16 @@ struct
                | (UpperT _, UpperEmpty) -> acc
                | (UpperEmpty, UpperEmpty) -> acc)
              UpperEmpty)
-    | _ -> failwith "Implicit instantiation is not an OpenT"
+    | _ ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EInternal
+            ( TypeUtil.reason_of_t tvar |> aloc_of_reason,
+              ImplicitInstantiationInvariant "Implicit instantiation is not an OpenT"
+            )
+        );
+      UpperEmpty
 
   and merge_lower_bounds cx t =
     match t with
@@ -269,7 +278,16 @@ struct
           None
         else
           Some (get_t cx t))
-    | _ -> failwith "Implicit instantiation is not an OpenT"
+    | _ ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EInternal
+            ( TypeUtil.reason_of_t t |> aloc_of_reason,
+              ImplicitInstantiationInvariant "Implicit instantiation is not an OpenT"
+            )
+        );
+      None
 
   let on_missing_bounds cx name tparam ~default_bound ~tparam_binder_reason ~instantiation_reason =
     match default_bound with
@@ -648,8 +666,16 @@ module PinTypes (Flow : Flow_common.S) = struct
   module Observer : OBSERVER with type output = Type.t = struct
     type output = Type.t
 
-    let on_constant_tparam_missing_bounds _cx _name _tparam =
-      failwith "Constant tparam is unsupported."
+    let on_constant_tparam_missing_bounds cx _name tparam =
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EInternal
+            ( aloc_of_reason tparam.Type.reason,
+              ImplicitInstantiationInvariant "Constant tparam is unsupported."
+            )
+        );
+      Type.AnyT.error tparam.Type.reason
 
     let on_pinned_tparam _cx _name _tparam inferred = inferred
 
