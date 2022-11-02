@@ -40,7 +40,7 @@ module type OUTPUT = sig
     upper_unresolved:bool ->
     Type.t ->
     Type.use_t ->
-    unit
+    bool
 
   val prep_try_intersection :
     Context.t ->
@@ -263,8 +263,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
     try_flow_continuation cx trace reason speculation_id (SingletonCase (t, u))
 
   and try_singleton_no_throws cx trace reason ~upper_unresolved t u =
-    try try_singleton_throw_on_failure cx trace reason ~upper_unresolved t u with
-    | SpeculationSingletonError -> ()
+    try
+      try_singleton_throw_on_failure cx trace reason ~upper_unresolved t u;
+      true
+    with
+    | SpeculationSingletonError -> false
 
   (** Preprocessing for intersection types.
 

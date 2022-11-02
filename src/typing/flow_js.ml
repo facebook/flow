@@ -1132,15 +1132,18 @@ struct
         | (MaybeT (reason, t), _) ->
           let reason = replace_desc_reason RNullOrVoid reason in
           let t = push_type_alias_reason reason t in
-          let f t =
-            if Context.in_hint_decomp cx then
-              speculation_flow_no_throws cx trace ~reason (t, u)
-            else
-              rec_flow cx trace (t, u)
-          in
-          f (NullT.make reason |> with_trust Trust.bogus_trust);
-          f (VoidT.make reason |> with_trust Trust.bogus_trust);
-          f t
+          let null = NullT.make reason |> with_trust Trust.bogus_trust in
+          let void = VoidT.make reason |> with_trust Trust.bogus_trust in
+          if Context.in_hint_decomp cx then begin
+            let null = speculation_flow_no_throws cx trace ~reason (null, u) in
+            let void = speculation_flow_no_throws cx trace ~reason (void, u) in
+            let t = speculation_flow_no_throws cx trace ~reason (t, u) in
+            if not (null || void || t) then raise SpeculationSingletonError
+          end else begin
+            rec_flow cx trace (null, u);
+            rec_flow cx trace (void, u);
+            rec_flow cx trace (t, u)
+          end
         (******************)
         (* optional types *)
         (******************)
@@ -1183,14 +1186,15 @@ struct
         | (OptionalT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
-          let f t =
-            if Context.in_hint_decomp cx then
-              speculation_flow_no_throws cx trace ~reason:r (t, u)
-            else
-              rec_flow cx trace (t, u)
-          in
-          f (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust);
-          f t
+          let void = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
+          if Context.in_hint_decomp cx then begin
+            let void = speculation_flow_no_throws cx trace ~reason:r (void, u) in
+            let t = speculation_flow_no_throws cx trace ~reason:r (t, u) in
+            if not (void || t) then raise SpeculationSingletonError
+          end else begin
+            rec_flow cx trace (void, u);
+            rec_flow cx trace (t, u)
+          end
         (**************************)
         (* logical types - part A *)
         (**************************)
@@ -9393,13 +9397,22 @@ struct
     SpeculationKit.try_singleton_no_throws cx trace reason ~upper_unresolved:true l u
 
   and flow_all_in_union cx trace reason rep u =
-    let f =
-      if Context.in_hint_decomp cx then
-        speculation_flow_no_throws ~reason
-      else
-        rec_flow
-    in
-    iter_union ~f cx trace rep u
+    if Context.in_hint_decomp cx then begin
+      if
+        not
+          (iter_union
+             ~f:(speculation_flow_no_throws ~reason)
+             ~init:false
+             ~join:( || )
+             cx
+             trace
+             rep
+             u
+          )
+      then
+        raise SpeculationSingletonError
+    end else
+      iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
 
   and call_args_iter f =
     List.iter (function

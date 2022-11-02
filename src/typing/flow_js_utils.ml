@@ -570,12 +570,23 @@ let remove_predicate_from_union reason cx predicate =
   %> Base.List.rev_filter ~f:(predicate %> not)
   %> union_of_ts reason
 
-let iter_union ~f cx trace rep u =
+let iter_union :
+      't.
+      f:(Context.t -> Type.trace -> Type.t * Type.use_t -> 't) ->
+      init:'t ->
+      join:('t -> 't -> 't) ->
+      Context.t ->
+      Type.trace ->
+      Type.UnionRep.t ->
+      Type.use_t ->
+      't =
+ fun ~f ~init ~join cx trace rep u ->
   (* This is required so that our caches don't treat different branches of unions as the same type *)
   let union_reason i r = replace_desc_reason (RUnionBranching (desc_of_reason r, i)) r in
   UnionRep.members rep
-  |> Base.List.iteri ~f:(fun i ->
-         mod_reason_of_t (union_reason i) %> mk_tuple_swapped u %> f cx trace
+  |> Base.List.foldi ~init ~f:(fun i acc b ->
+         let r = (mod_reason_of_t (union_reason i) %> mk_tuple_swapped u %> f cx trace) b in
+         join acc r
      )
 
 let map_union ~f cx trace rep reason =

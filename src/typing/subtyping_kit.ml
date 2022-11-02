@@ -41,14 +41,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
   module SpeculationKit = Speculation_kit.Make (Flow)
 
   let flow_all_in_union cx trace reason rep u =
-    let f =
-      if Context.in_hint_decomp cx then
-        fun cx trace (l, u) ->
-      SpeculationKit.try_singleton_no_throws cx trace reason ~upper_unresolved:true l u
-      else
-        rec_flow
-    in
-    iter_union ~f cx trace rep u
+    if Context.in_hint_decomp cx then begin
+      let f cx trace (l, u) =
+        SpeculationKit.try_singleton_no_throws cx trace reason ~upper_unresolved:true l u
+      in
+      if not (iter_union ~f ~init:false ~join:( || ) cx trace rep u) then
+        raise SpeculationSingletonError
+    end else
+      iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
 
   let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref = function
     (* unification cases *)
@@ -580,8 +580,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (MaybeT (reason, t), _) ->
       let reason = replace_desc_reason RNullOrVoid reason in
       let t = push_type_alias_reason reason t in
-      let f t =
-        if Context.in_hint_decomp cx then
+      let null = NullT.make reason |> with_trust Trust.bogus_trust in
+      let void = VoidT.make reason |> with_trust Trust.bogus_trust in
+      if Context.in_hint_decomp cx then begin
+        let f t =
           SpeculationKit.try_singleton_no_throws
             cx
             trace
@@ -589,20 +591,25 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ~upper_unresolved:true
             t
             (UseT (use_op, u))
-        else
-          rec_flow_t cx trace ~use_op (t, u)
-      in
-      f (NullT.make reason |> with_trust Trust.bogus_trust);
-      f (VoidT.make reason |> with_trust Trust.bogus_trust);
-      f t
+        in
+        let null = f null in
+        let void = f void in
+        let t = f t in
+        if not (t || void || null) then raise SpeculationSingletonError
+      end else begin
+        rec_flow_t cx trace ~use_op (null, u);
+        rec_flow_t cx trace ~use_op (void, u);
+        rec_flow_t cx trace ~use_op (t, u)
+      end
     | (DefT (r, trust, VoidT), OptionalT { reason = _; type_ = tout; use_desc = _ }) ->
       rec_flow_t cx trace ~use_op (EmptyT.why r trust, tout)
     | (OptionalT { reason = _; type_ = t; use_desc = _ }, OptionalT _)
     | (OptionalT { reason = _; type_ = t; use_desc = _ }, MaybeT _) ->
       rec_flow_t cx trace ~use_op (t, u)
     | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
-      let f t =
-        if Context.in_hint_decomp cx then
+      let void = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
+      if Context.in_hint_decomp cx then begin
+        let f t =
           SpeculationKit.try_singleton_no_throws
             cx
             trace
@@ -610,11 +617,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ~upper_unresolved:true
             t
             (UseT (use_op, u))
-        else
-          rec_flow_t cx trace ~use_op (t, u)
-      in
-      f (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust);
-      f t
+        in
+        let void = f void in
+        let t = f t in
+        if not (t || void) then raise SpeculationSingletonError
+      end else begin
+        rec_flow_t cx trace ~use_op (void, u);
+        rec_flow_t cx trace ~use_op (t, u)
+      end
     | (ThisTypeAppT (reason_tapp, c, this, ts), _) ->
       let reason_op = reason_of_t u in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
@@ -893,18 +903,26 @@ module Make (Flow : INPUT) : OUTPUT = struct
            List.exists (TypeUtil.quick_subtype (Context.trust_errors cx) l) ts ->
       ()
     | (_, UnionT (r, rep)) ->
-      if Context.in_hint_decomp cx then
-        UnionRep.members rep
-        |> List.iter (fun u ->
-               SpeculationKit.try_singleton_no_throws
-                 cx
-                 trace
-                 r
-                 ~upper_unresolved:false
-                 l
-                 (UseT (use_op, u))
-           )
-      else
+      if Context.in_hint_decomp cx then begin
+        if
+          not
+            (UnionRep.members rep
+            |> Base.List.fold ~init:false ~f:(fun acc u ->
+                   let r =
+                     SpeculationKit.try_singleton_no_throws
+                       cx
+                       trace
+                       r
+                       ~upper_unresolved:false
+                       l
+                       (UseT (use_op, u))
+                   in
+                   acc || r
+               )
+            )
+        then
+          raise SpeculationSingletonError
+      end else
         (* Try the branches of the union in turn, with the goal of selecting the
          * correct branch. This process is reused for intersections as well. See
          * comments on try_union and try_intersection. *)
