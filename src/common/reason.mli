@@ -344,6 +344,8 @@ val mk_annot_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
 
 module ReasonMap : WrappedMap.S with type key = reason
 
+module ImplicitInstantiationReasonMap : WrappedMap.S with type key = reason * reason * reason Nel.t
+
 val mk_expression_reason : (ALoc.t, ALoc.t) Flow_ast.Expression.t -> reason
 
 val mk_pattern_reason : (ALoc.t, ALoc.t) Flow_ast.Pattern.t -> reason

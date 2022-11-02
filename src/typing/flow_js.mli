@@ -43,8 +43,6 @@ val reposition_reason :
 val filter_optional : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.ident
 
 module Cache : sig
-  val stats_poly_instantiation : Context.t -> Hashtbl.statistics
-
   val summarize_flow_constraint : Context.t -> (string * int) list
 end
 

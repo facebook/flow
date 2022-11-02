@@ -146,7 +146,7 @@ type component_t = {
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t;
-  instantiation_cache: (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t;
+  instantiation_cache: Type.t Reason.ImplicitInstantiationReasonMap.t ref;
   repos_cache: Repos_cache.t ref;
   eval_id_cache:
     (Type.Eval.id, Type.t) Hashtbl.t * (Type.t * Type.defer_use_t, Type.Eval.id) Hashtbl.t;
@@ -341,7 +341,7 @@ let make_ccx master_cx =
     invariants_useful = ALocMap.empty;
     constraint_cache = ref Type.FlowSet.empty;
     subst_cache = Hashtbl.create 0;
-    instantiation_cache = Hashtbl.create 0;
+    instantiation_cache = ref Reason.ImplicitInstantiationReasonMap.empty;
     repos_cache = ref Repos_cache.empty;
     eval_id_cache = (Hashtbl.create 0, Hashtbl.create 0);
     eval_repos_cache = Hashtbl.create 0;
@@ -819,10 +819,12 @@ let run_in_hint_decomp cx f =
   cx.in_hint_decomp <- old;
   Base.Option.iter exn ~f:raise
 
-let run_with_fresh_constrain_cache cx f =
+let run_and_rolled_back_cache cx f =
   let saved_constraint_cache = !(cx.ccx.constraint_cache) in
+  let saved_instantiation_cache = !(cx.ccx.instantiation_cache) in
   let result = f () in
   cx.ccx.constraint_cache := saved_constraint_cache;
+  cx.ccx.instantiation_cache := saved_instantiation_cache;
   result
 
 let run_in_synthesis_mode cx f =
@@ -830,7 +832,7 @@ let run_in_synthesis_mode cx f =
   let old_placeholder_tvars = cx.ccx.placeholder_tvars in
   cx.ccx.placeholder_tvars <- ISet.empty;
   cx.in_synthesis_mode <- true;
-  let result = run_with_fresh_constrain_cache cx f in
+  let result = run_and_rolled_back_cache cx f in
   cx.in_synthesis_mode <- old_synthesis_mode;
   let placeholder_tvars = cx.ccx.placeholder_tvars in
   cx.ccx.placeholder_tvars <- old_placeholder_tvars;

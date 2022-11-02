@@ -589,7 +589,7 @@ struct
     (inferred_targ_list, marked_tparams, tparams_map, tout)
 
   let solve_targs cx ?return_hint check =
-    Context.run_with_fresh_constrain_cache cx (fun () ->
+    Context.run_and_rolled_back_cache cx (fun () ->
         let init_errors = Context.errors cx in
         let (inferred_targ_list, marked_tparams, tparams_map, tout) =
           implicitly_instantiate cx check

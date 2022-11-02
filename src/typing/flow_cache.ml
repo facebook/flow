@@ -58,10 +58,19 @@ end
 module PolyInstantiation = struct
   let find cx reason_tapp typeparam op_reason =
     let cache = Context.instantiation_cache cx in
-    try Hashtbl.find cache (reason_tapp, typeparam.reason, op_reason) with
-    | _ ->
+    match
+      Reason.ImplicitInstantiationReasonMap.find_opt
+        (reason_tapp, typeparam.reason, op_reason)
+        !cache
+    with
+    | Some t -> t
+    | None ->
       let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
-      Hashtbl.add cache (reason_tapp, typeparam.reason, op_reason) t;
+      cache :=
+        Reason.ImplicitInstantiationReasonMap.add
+          (reason_tapp, typeparam.reason, op_reason)
+          t
+          !cache;
       t
 end
 
@@ -110,10 +119,6 @@ module Fix = struct
     let cache_key = (is_this, i) in
     Hashtbl.add cache cache_key tvar
 end
-
-let stats_poly_instantiation cx =
-  let cache = Context.instantiation_cache cx in
-  Hashtbl.stats cache
 
 (* debug util: please don't dead-code-eliminate *)
 (* Summarize flow constraints in cache as ctor/reason pairs, and return counts

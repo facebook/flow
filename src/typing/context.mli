@@ -411,7 +411,7 @@ val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 
 val set_environment : t -> Loc_env.t -> unit
 
-val run_with_fresh_constrain_cache : t -> (unit -> 'a) -> 'a
+val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
 
 val run_in_synthesis_mode : t -> (unit -> 'a) -> ISet.t * 'a
 
@@ -529,7 +529,7 @@ val constraint_cache : t -> Type.FlowSet.t ref
 
 val subst_cache : t -> (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t
 
-val instantiation_cache : t -> (Reason.t * Reason.t * Reason.t Nel.t, Type.t) Hashtbl.t
+val instantiation_cache : t -> Type.t Reason.ImplicitInstantiationReasonMap.t ref
 
 val repos_cache : t -> Repos_cache.t ref
 

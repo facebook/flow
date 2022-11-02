@@ -931,6 +931,12 @@ module ReasonMap = WrappedMap.Make (struct
   let compare = Stdlib.compare
 end)
 
+module ImplicitInstantiationReasonMap = WrappedMap.Make (struct
+  type t = reason * reason * reason Nel.t
+
+  let compare = Stdlib.compare
+end)
+
 (* Creates a description string for an arbitrary expression. This description
  * will be used to describe some code in error messages which are designed to be
  * human readable.

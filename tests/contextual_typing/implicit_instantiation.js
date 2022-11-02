@@ -133,3 +133,11 @@ function test10() {
   declare function poly<-TVariables: Variables>(q: Query<TVariables>): void;
   poly(q); // ok
 }
+
+function test11() {
+  declare var jest: {
+    fn<TArguments: $ReadOnlyArray<any> = $ReadOnlyArray<any>>(): (...args: TArguments)=>void
+  }
+  declare var C: React$AbstractComponent<{+f: () => void}, mixed>;
+  <C f={jest.fn()} />; // ok
+}
