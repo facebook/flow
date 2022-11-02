@@ -946,6 +946,7 @@ end = struct
       | T.AnyError kind -> Ty.AnyError (any_error_kind kind)
       | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
       | T.Untyped -> Ty.Untyped
+      | T.Placeholder -> Ty.Placeholder
 
     and any_error_kind = function
       | Some T.UnresolvedName -> Some Ty.UnresolvedName

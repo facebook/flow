@@ -1028,6 +1028,7 @@ module rec TypeTerm : sig
     | AnyError of any_error_kind option
     | Unsound of unsoundness_kind
     | Untyped
+    | Placeholder
 
   and any_error_kind =
     | UnresolvedName
@@ -3141,6 +3142,8 @@ module AnyT = struct
   let error_of_kind kind = why (AnyError (Some kind))
 
   let untyped = why Untyped
+
+  let placeholder = why Placeholder
 
   let locationless source = desc source |> locationless_reason |> make source
 

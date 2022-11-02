@@ -69,6 +69,7 @@ and any_kind =
   | AnyError of any_error_kind option
   | Unsound of unsoundness_kind
   | Untyped
+  | Placeholder
 
 and any_error_kind =
   | UnresolvedName
@@ -491,6 +492,7 @@ class ['A] comparator_ty =
       | AnyError _ -> 1
       | Unsound _ -> 2
       | Untyped -> 3
+      | Placeholder -> 4
 
     method tag_of_unsoundness_kind _ =
       function

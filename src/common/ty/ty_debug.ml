@@ -66,6 +66,7 @@ and dump_any_kind = function
   | AnyError kind -> spf "AnyError (%s)" (dump_any_error_kind kind)
   | Unsound kind -> spf "Unsound (%s)" (dump_any_unsoundness_kind kind)
   | Untyped -> "Untyped"
+  | Placeholder -> "Placeholder"
 
 and dump_any_error_kind = function
   | Some UnresolvedName -> "UnresolvedName"

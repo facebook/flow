@@ -129,6 +129,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | AnyError _ -> "Error"
     | Unsound _ -> "Unsound"
     | Untyped -> "Untyped"
+    | Placeholder -> "Placeholder"
   in
   let custom_fun =
     let react_prop_type =
