@@ -180,9 +180,9 @@ struct
         |> Base.Option.map ~f:(fun t -> MaybeT (r, t))
         |> use_t_result_of_t_option
       | ReadOnlyType
-      | PartialType ->
+      | PartialType
+      | ReactConfigType _ ->
         merge_lower_bounds cx (OpenT tout) |> use_t_result_of_t_option
-      | ReactConfigType _ -> reverse_obj_kit_react_config cx tvar r (OpenT tout)
       | _ -> UpperNonT u)
     | UseT (_, t) -> UpperT t
     | ChoiceKitUseT _ -> UpperEmpty
@@ -200,13 +200,18 @@ struct
           }
         ) ->
       reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params
-    | ObjKitT (_, _, _, Object.(ReadOnly | Partial), tout) ->
-      merge_lower_bounds cx tout |> use_t_result_of_t_option
-    | ObjKitT (_, r, _, Object.ReactConfig _, props) -> reverse_obj_kit_react_config cx tvar r props
+    | ObjKitT
+        ( _,
+          r,
+          _,
+          Object.(ReadOnly | Partial | ObjectRep | ObjectWiden _ | Object.ReactConfig _),
+          tout
+        ) ->
+      identity_reverse_obj_kit cx tvar r tout
     | _ -> UpperNonT u
 
-  and reverse_obj_kit_react_config cx tvar r props_tvar =
-    let solution = merge_upper_bounds cx r props_tvar in
+  and identity_reverse_obj_kit cx tvar r tout =
+    let solution = merge_upper_bounds cx r tout in
     (match solution with
     | UpperT t -> Flow.flow_t cx (t, tvar)
     | _ -> ());
