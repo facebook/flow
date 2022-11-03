@@ -9,3 +9,6 @@
 {
     const x: { ... } | { ... } = { a: (v) => v };
 }
+{
+    const x: { [number]: (number) => number } = { [42]: (v) => v };
+}

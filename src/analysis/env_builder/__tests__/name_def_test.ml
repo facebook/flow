@@ -252,6 +252,15 @@ let {a, [foo()]: b, ...c} = 42;
       (2, 23) to (2, 24) => (val (2, 28) to (2, 30)){ ... }
     ] |}]
 
+let%expect_test "props_comp_rest2" =
+  print_order_test {|
+let x: { [number]: number => number } = { [42]: v => v };
+  |};
+  [%expect {|
+    (2, 4) to (2, 5) =>
+    (2, 43) to (2, 45) =>
+    (2, 48) to (2, 49) |}]
+
 let%expect_test "function_def" =
   print_init_test {|
 function f(y, z: number) {

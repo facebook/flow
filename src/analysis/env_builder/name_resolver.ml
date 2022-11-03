@@ -4029,6 +4029,23 @@ module Make
         this#havoc_current_env ~all:true;
         expr
 
+      method! object_key_computed (key : ('loc, 'loc) Ast.ComputedKey.t) =
+        let open Ast.ComputedKey in
+        let (_, { expression; comments = _ }) = key in
+
+        let (expression_loc, _) = expression in
+        let reason = Reason.mk_expression_reason expression in
+        let write_entries =
+          EnvMap.add
+            (Env_api.ExpressionLoc, expression_loc)
+            (Env_api.AssigningWrite reason)
+            env_state.write_entries
+        in
+        env_state <- { env_state with write_entries };
+
+        let _expression : (_, _) Ast.Expression.t = this#expression expression in
+        key
+
       (* Labeled statements handle labeled breaks, but also push labeled continues
          that are expected to be handled by immediately nested loops. *)
       method! labeled_statement _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Labeled.t) =

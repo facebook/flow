@@ -31,7 +31,7 @@ and sentinel_refinement =
 
 and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_ObjProp of string
-  | Decomp_ObjComputed
+  | Decomp_ObjComputed of Reason.t
   | Decomp_ObjSpread
   | Decomp_ArrElement of int
   | Decomp_ArrSpread of int

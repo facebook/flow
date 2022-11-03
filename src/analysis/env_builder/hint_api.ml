@@ -39,7 +39,7 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Hint on `{ f: e }` becomes hint on `e` *)
   | Decomp_ObjProp of string
   (* Hint on `{ [k]: e }` becomes hint on `e` *)
-  | Decomp_ObjComputed
+  | Decomp_ObjComputed of Reason.t
   (* Hint on `{ ...e }` becomes hint on `e` *)
   | Decomp_ObjSpread
   (* Hint on array literal `[e]` becomes hint on `e` *)
@@ -90,7 +90,7 @@ and ('t, 'targs, 'args, 'props, 'children) hint =
 
 let string_of_hint_unknown_kind = function
   | Decomp_ObjProp _ -> "Decomp_ObjProp"
-  | Decomp_ObjComputed -> "Decomp_ObjComputed"
+  | Decomp_ObjComputed _ -> "Decomp_ObjComputed"
   | Decomp_ObjSpread -> "Decomp_ObjSpread"
   | Decomp_ArrElement i -> Utils_js.spf "Decomp_ArrElement (%d)" i
   | Decomp_ArrSpread i -> Utils_js.spf "Decomp_ArrSpread (%d)" i
@@ -143,7 +143,7 @@ let is_hint_none = function
 
 let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function
   | Decomp_ObjProp prop -> Decomp_ObjProp prop
-  | Decomp_ObjComputed -> Decomp_ObjComputed
+  | Decomp_ObjComputed l -> Decomp_ObjComputed l
   | Decomp_ObjSpread -> Decomp_ObjSpread
   | Decomp_ArrElement o -> Decomp_ArrElement o
   | Decomp_ArrSpread o -> Decomp_ArrSpread o
