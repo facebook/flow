@@ -398,14 +398,18 @@ let prepare_write_resolved_requires (resolved_requires : resolved_requires) =
   let serialized = Marshal.to_string resolved_requires [] in
   Heap.prepare_write_serialized_resolved_requires serialized
 
+let prepare_write_resolved_requires_maybe (resolved_requires_opt : resolved_requires option) =
+  let open Heap in
+  match resolved_requires_opt with
+  | None -> (0, Fun.const None)
+  | Some resolved_requires ->
+    let (size, write) = prepare_write_resolved_requires resolved_requires in
+    (header_size + size, (fun chunk -> Some (write chunk)))
+
 let prepare_write_resolved_requires_ent resolved_requires_opt =
   let open Heap in
   let (resolved_requires_size, write_resolved_requires_maybe) =
-    match resolved_requires_opt with
-    | None -> (0, Fun.const None)
-    | Some resolved_requires ->
-      let (size, write) = prepare_write_resolved_requires resolved_requires in
-      (header_size + size, (fun chunk -> Some (write chunk)))
+    prepare_write_resolved_requires_maybe resolved_requires_opt
   in
   let size = header_size + entity_size + resolved_requires_size in
   let write chunk =
@@ -594,6 +598,30 @@ let prepare_update_revdeps =
       add_new_dependent
       (0, (fun _ _ -> ()))
       (old_dependencies, new_dependencies)
+
+(** The writer returns whether the resolved requires changed. *)
+let prepare_update_resolved_requires ent resolved_requires =
+  let old_resolved_requires =
+    let* addr = Heap.entity_read_latest ent in
+    Some (read_resolved_requires addr)
+  in
+  match old_resolved_requires with
+  | Some { hash; _ } when Int64.equal hash resolved_requires.hash -> (0, (fun _ _ -> false))
+  | _ ->
+    let (revdeps_size, update_revdeps) =
+      prepare_update_revdeps old_resolved_requires (Some resolved_requires)
+    in
+    let (resolved_requires_size, write_resolved_requires_maybe) =
+      prepare_write_resolved_requires_maybe (Some resolved_requires)
+    in
+    let size = revdeps_size + resolved_requires_size in
+    let write chunk file =
+      update_revdeps chunk file;
+      let resolved_requires_opt = write_resolved_requires_maybe chunk in
+      Heap.entity_advance ent resolved_requires_opt;
+      true
+    in
+    (size, write)
 
 let prepare_create_file size file_key module_name =
   let open Heap in
@@ -1515,29 +1543,10 @@ module Resolved_requires_mutator = struct
 
   let add_resolved_requires () file parse resolved_requires =
     let ent = Heap.get_resolved_requires parse in
-    let old_resolved_requires =
-      let* addr = Heap.entity_read_latest ent in
-      Some (read_resolved_requires addr)
-    in
-    match old_resolved_requires with
-    | Some { hash; _ } when Int64.equal hash resolved_requires.hash -> false
-    | _ ->
-      let (update_size, update_revdeps) =
-        prepare_update_revdeps old_resolved_requires (Some resolved_requires)
-      in
-      let open Heap in
-      let (resolved_requires_size, write_resolved_requires) =
-        prepare_write_resolved_requires resolved_requires
-      in
-      WorkerCancel.with_no_cancellations (fun () ->
-          alloc
-            (update_size + header_size + resolved_requires_size)
-            (fun chunk ->
-              update_revdeps chunk file;
-              let resolved_requires = write_resolved_requires chunk in
-              entity_advance ent (Some resolved_requires));
-          true
-      )
+    let (size, update_resolved_requires) = prepare_update_resolved_requires ent resolved_requires in
+    WorkerCancel.with_no_cancellations (fun () ->
+        Heap.alloc size (fun chunk -> update_resolved_requires chunk file)
+    )
 end
 
 module Merge_context_mutator = struct
