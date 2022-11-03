@@ -104,6 +104,8 @@ end = struct
   open Type_sig_collections
   module P = Type_sig_pack
 
+  let reader = State_reader.create ()
+
   (* NOTE The checks below are only based on the name. Ideally we'd also match
    * with def_loc as well. This was not available for every case originally,
    * when this was based on types-first 1.0 export info. *)
@@ -196,7 +198,7 @@ end = struct
     match ALoc.source loc with
     | None -> Error Error.Loc_source_none
     | Some remote_file ->
-      (match Parsing_heaps.Reader.get_type_sig ~reader:(State_reader.create ()) remote_file with
+      (match Parsing_heaps.Reader.get_type_sig ~reader remote_file with
       | None -> Error Error.Parsing_heaps_get_sig_error
       | Some type_sig ->
         let import_kind = AstHelper.mk_import_declaration_kind use_mode in
@@ -209,7 +211,10 @@ end = struct
             ]
         in
         (match import_info_opt with
-        | None -> Error (Error.No_matching_export (name, loc))
+        | None ->
+          let table = Parsing_heaps.Reader.get_aloc_table_unsafe ~reader remote_file in
+          let loc = ALoc.to_loc (lazy table) loc in
+          Error (Error.No_matching_export (name, loc))
         | Some import_info -> Ok import_info))
 end
 

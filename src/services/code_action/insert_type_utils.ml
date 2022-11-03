@@ -193,7 +193,7 @@ module Error = struct
     | Loc_source_none
     | Parsing_heaps_get_sig_error
     | Indeterminate_module_type
-    | No_matching_export of string * ALoc.t
+    | No_matching_export of string * Loc.t
 
   type import_error_counts = {
     loc_source_none: int;
@@ -254,7 +254,7 @@ module Error = struct
     | Loc_source_none -> "Loc_source_none"
     | Parsing_heaps_get_sig_error -> "Parsing_heaps_get_sig_error"
     | Indeterminate_module_type -> "Indeterminate_module_type"
-    | No_matching_export (x, loc) -> spf "No_matching_export (%s, %s)" x (Reason.string_of_aloc loc)
+    | No_matching_export (x, loc) -> spf "No_matching_export %s %s" x (Reason.string_of_loc loc)
 
   let serialize = function
     | Missing_annotation_or_normalizer_error -> "Missing_annotation_or_normalizer_error"
