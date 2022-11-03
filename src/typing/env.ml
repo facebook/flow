@@ -139,7 +139,7 @@ let checked_find_loc_env_write cx kind loc =
     t_option_value_exn cx loc (Loc_env.find_write env kind loc)
   in
   match (enforced_env_read_error_opt cx kind loc, Context.in_synthesis_mode cx) with
-  | (Some _, true) -> Tvar.mk_placeholder cx (mk_reason (RCustom "Out of order read") loc)
+  | (Some _, true) -> Context.mk_placeholder cx (mk_reason (RCustom "Out of order read") loc)
   | (Some error, false) ->
     Flow_js_utils.add_output cx error;
     get_t ()
@@ -151,7 +151,7 @@ let checked_find_loc_env_write_opt cx kind loc =
     Loc_env.find_write env kind loc
   in
   match (enforced_env_read_error_opt cx kind loc, Context.in_synthesis_mode cx) with
-  | (Some _, true) -> Some (Tvar.mk_placeholder cx (mk_reason (RCustom "Out of order read") loc))
+  | (Some _, true) -> Some (Context.mk_placeholder cx (mk_reason (RCustom "Out of order read") loc))
   | (Some error, false) ->
     Flow_js_utils.add_output cx error;
     get_t ()

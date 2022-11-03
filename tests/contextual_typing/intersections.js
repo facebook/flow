@@ -27,7 +27,7 @@ function test2() {
   bar('obj', (x) => { (x: string); }); // error
 
   declare var bak: (B & S) & (N & B);
-  bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
+  bak('bool', (x) => { (x: boolean); }); // ok
   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
 }
 

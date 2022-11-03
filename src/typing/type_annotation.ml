@@ -1844,7 +1844,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | T.Missing loc ->
       let t =
         if Context.in_synthesis_mode cx then
-          Tvar.mk_placeholder cx reason
+          Context.mk_placeholder cx reason
         else
           Tvar.mk cx reason
       in

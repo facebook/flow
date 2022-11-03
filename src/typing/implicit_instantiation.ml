@@ -293,13 +293,19 @@ struct
     UpperT solution
 
   and merge_upper_bounds cx upper_r tvar =
+    let filter_placeholder t =
+      if Tvar_resolver.has_placeholders cx t then
+        UpperEmpty
+      else
+        UpperT t
+    in
     match tvar with
     | OpenT (_, id) ->
       let constraints = Context.find_graph cx id in
       (match constraints with
       | Constraint.FullyResolved (_, (lazy t))
       | Constraint.Resolved (_, t) ->
-        UpperT t
+        filter_placeholder t
       | Constraint.Unresolved bounds ->
         let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
         uppers
@@ -308,7 +314,8 @@ struct
                match (acc, t_of_use_t cx tvar t) with
                | (UpperNonT u, _) -> UpperNonT u
                | (_, UpperNonT u) -> UpperNonT u
-               | (UpperEmpty, UpperT t) -> UpperT t
+               | (UpperEmpty, UpperT t) -> filter_placeholder t
+               | (UpperT _, UpperT t) when Tvar_resolver.has_placeholders cx t -> acc
                | (UpperT t', UpperT t) ->
                  (match (t', t) with
                  | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
@@ -332,6 +339,19 @@ struct
         );
       UpperEmpty
 
+  and get_t_with_placeholder_removed cx t =
+    match get_t cx t with
+    | UnionT (r, rep) ->
+      (match
+         UnionRep.members rep
+         |> Base.List.filter ~f:(fun t -> not @@ Tvar_resolver.has_placeholders cx t)
+       with
+      | [] -> None
+      | [t] -> Some t
+      | t1 :: t2 :: rest -> Some (UnionT (r, UnionRep.make t1 t2 rest)))
+    | t when Tvar_resolver.has_placeholders cx t -> None
+    | t -> Some t
+
   and merge_lower_bounds cx t =
     match t with
     | OpenT (_, id) ->
@@ -339,13 +359,16 @@ struct
       (match constraints with
       | Constraint.FullyResolved (_, (lazy t))
       | Constraint.Resolved (_, t) ->
-        Some t
+        if Tvar_resolver.has_placeholders cx t then
+          None
+        else
+          Some t
       | Constraint.Unresolved bounds ->
         let lowers = bounds.Constraint.lower in
         if TypeMap.cardinal lowers = 0 then
           None
         else
-          Some (get_t cx t))
+          get_t_with_placeholder_removed cx t)
     | _ ->
       Flow_js_utils.add_output
         cx
@@ -797,7 +820,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
     | Some inferred -> { tparam; inferred }
     | None ->
       if Context.in_synthesis_mode cx then
-        { tparam; inferred = Tvar.mk_placeholder cx tparam_binder_reason }
+        { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
       else (
         Flow_js_utils.add_output
           cx
@@ -813,7 +836,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
 
   let on_upper_non_t cx name u tparam ~tparam_binder_reason ~instantiation_reason:_ =
     if Context.in_synthesis_mode cx then
-      { tparam; inferred = Tvar.mk_placeholder cx tparam_binder_reason }
+      { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
     else
       let msg =
         Subst_name.string_of_subst_name name

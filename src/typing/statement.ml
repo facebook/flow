@@ -2371,7 +2371,7 @@ module Make
       | [] when Context.in_synthesis_mode cx ->
         let reason = replace_desc_reason REmptyArrayLit reason in
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-        let elemt = Tvar.mk_placeholder cx element_reason in
+        let elemt = Context.mk_placeholder cx element_reason in
         ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
           Array { Array.elements = []; comments }
         )
@@ -6899,7 +6899,7 @@ module Make
     in
     let mk_param_annot cx tparams_map reason = function
       | Ast.Type.Missing loc when Context.in_synthesis_mode cx ->
-        let t = Tvar.mk_placeholder cx reason in
+        let t = Context.mk_placeholder cx reason in
         (t, Ast.Type.Missing (loc, t))
       | Ast.Type.Missing loc ->
         let t = Env.find_write cx Env_api.FunctionParamLoc reason in

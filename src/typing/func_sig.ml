@@ -224,7 +224,7 @@ struct
           (match return_t with
           | Inferred t
             when Context.in_synthesis_mode cx && (not @@ F.all_params_annotated x.T.fparams) ->
-            Tvar.mk_placeholder cx (TypeUtil.reason_of_t t)
+            Context.mk_placeholder cx (TypeUtil.reason_of_t t)
           | _ -> TypeUtil.type_t_of_annotated_or_inferred return_t);
         is_predicate = kind = Predicate;
         def_reason = reason;

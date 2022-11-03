@@ -269,8 +269,22 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, trust, CharSetT chars) ->
       p ~trust:(Some trust) ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
     | DefT (_, trust, ClassT inst) -> p ~trust:(Some trust) ~extra:(kid inst) t
-    | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) ->
-      p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
+    | DefT (_, trust, InstanceT (_, _, _, { class_id; type_args; _ })) ->
+      p
+        ~trust:(Some trust)
+        ~extra:
+          (spf
+             "[%s] #%s"
+             (String.concat
+                ", "
+                (Base.List.map
+                   ~f:(fun (n, _, t, _) -> spf "%s=%s" (Subst_name.string_of_subst_name n) (kid t))
+                   type_args
+                )
+             )
+             (ALoc.debug_to_string (class_id :> ALoc.t))
+          )
+        t
     | DefT (_, trust, TypeT (kind, arg)) ->
       p ~trust:(Some trust) ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
     | DefT (_, trust, EnumT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
@@ -1084,6 +1098,7 @@ let dump_error_message =
   let dump_internal_error = function
     | AbnormalControlFlow -> "AbnormalControlFlow"
     | UnconstrainedTvar _ -> "UnconstrainedTvar"
+    | PlaceholderTypeInChecking -> "PlaceholderTypeInChecking"
     | ReadOfUnreachedTvar _ -> "ReadOfUnreachedTvar"
     | ReadOfUnresolvedTvar _ -> "ReadOfUnresolvedTvar"
     | MethodNotAFunction -> "MethodNotAFunction"
