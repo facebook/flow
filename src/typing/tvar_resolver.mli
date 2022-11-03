@@ -12,6 +12,8 @@ type unconstrained_tvar_resolution_strategy =
 
 exception UnconstrainedTvarException of int
 
+val has_placeholders : Context.t -> Type.t -> bool
+
 val resolve :
   Context.t -> on_unconstrained_tvar:unconstrained_tvar_resolution_strategy -> Type.t -> unit
 

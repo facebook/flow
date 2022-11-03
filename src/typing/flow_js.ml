@@ -313,6 +313,12 @@ struct
   module CJSExtractNamedExportsTKit = CJSExtractNamedExportsT_kit (Import_export_helper)
   include InstantiationKit
 
+  (* placeholders *)
+
+  let any_mod_src_keep_placeholder new_src = function
+    | Placeholder -> Placeholder
+    | _ -> new_src
+
   (* get prop *)
 
   let perform_lookup_action cx trace propref p target_kind lreason ureason =
@@ -2900,7 +2906,7 @@ struct
             (reposition cx ~trace (aloc_of_reason reason_callsite) t1, OpenT t2)
         | (AnyT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
-        | ( AnyT (reason_fundef, _),
+        | ( AnyT (reason_fundef, src),
             CallT
               { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint = _ }
           ) ->
@@ -2915,10 +2921,11 @@ struct
           } =
             calltype
           in
-          let any = AnyT.untyped reason_fundef in
+          let src = any_mod_src_keep_placeholder Untyped src in
+          let any = AnyT.why src reason_fundef in
           rec_flow_t cx ~use_op trace (call_this_t, any);
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
-          rec_flow_t cx ~use_op trace (AnyT.untyped reason_op, OpenT call_tout)
+          rec_flow_t cx ~use_op trace (AnyT.why src reason_op, OpenT call_tout)
         | (_, FunImplicitVoidReturnT { use_op; return; void_t; _ }) ->
           rec_flow cx trace (void_t, UseT (use_op, return))
         (* Special handlers for builtin functions *)
@@ -3297,16 +3304,17 @@ struct
           in
           (* return this *)
           rec_flow cx trace (ret, ObjTestT (annot_reason ~annot_loc reason_op, this, t))
-        | ( AnyT _,
+        | ( AnyT (_, src),
             ConstructorT { use_op; reason = reason_op; targs; args; tout = t; return_hint = _ }
           ) ->
           ignore targs;
 
+          let src = any_mod_src_keep_placeholder Untyped src in
           (* An untyped receiver can't do anything with type args *)
           call_args_iter
-            (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op)))
+            (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.why src reason_op)))
             args;
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, t)
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, t)
         (* Only classes (and `any`) can be constructed. *)
         | ( _,
             ConstructorT
@@ -3316,9 +3324,10 @@ struct
           rec_flow_t cx trace ~use_op (AnyT.error reason_op, t)
         (* Since we don't know the signature of a method on AnyT, assume every
            parameter is an AnyT. *)
-        | (AnyT _, MethodT (_, _, _, propref, NoMethodAction, prop_t)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped (reason_of_propref propref), prop_t)
-        | ( AnyT _,
+        | (AnyT (_, src), MethodT (_, _, _, propref, NoMethodAction, prop_t)) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src (reason_of_propref propref), prop_t)
+        | ( AnyT (_, src),
             MethodT
               ( use_op,
                 reason_op,
@@ -3328,12 +3337,14 @@ struct
                 prop_t
               )
           ) ->
-          let any = AnyT.untyped reason_op in
+          let src = any_mod_src_keep_placeholder Untyped src in
+          let any = AnyT.why src reason_op in
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) meth_args_tlist;
           rec_flow_t cx trace ~use_op:unknown_use (any, prop_t);
           rec_flow_t cx trace ~use_op:unknown_use (any, OpenT meth_tout)
-        | (AnyT _, MethodT (use_op, reason_op, _, _, (ChainM _ as chain), prop_t)) ->
-          let any = AnyT.untyped reason_op in
+        | (AnyT (_, src), MethodT (use_op, reason_op, _, _, (ChainM _ as chain), prop_t)) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          let any = AnyT.why src reason_op in
           rec_flow_t cx trace ~use_op:unknown_use (any, prop_t);
           apply_method_action cx trace any use_op reason_op l chain
         (*************************)
@@ -3366,8 +3377,9 @@ struct
         | (FunProtoT reason, GetProtoT (reason_op, t)) ->
           let proto = ObjProtoT (repos_reason (aloc_of_reason reason_op) reason) in
           rec_flow_t cx trace ~use_op:unknown_use (proto, OpenT t)
-        | (AnyT _, GetProtoT (reason_op, t)) ->
-          let proto = AnyT.untyped reason_op in
+        | (AnyT (_, src), GetProtoT (reason_op, t)) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          let proto = AnyT.why src reason_op in
           rec_flow_t cx trace ~use_op:unknown_use (proto, OpenT t)
         (********************)
         (* __proto__ setter *)
@@ -3915,7 +3927,7 @@ struct
                     ids = Base.Option.map ids ~f:(Properties.Set.add o.props_tmap);
                   }
               ))
-        | ( AnyT (reason, _),
+        | ( AnyT (reason, src),
             LookupT
               {
                 reason = reason_op;
@@ -3935,7 +3947,8 @@ struct
              * covariant props, which would always flow into `any`. *)
             ()
           | _ ->
-            let p = Field (None, AnyT.untyped reason_op, Polarity.Neutral) in
+            let src = any_mod_src_keep_placeholder Untyped src in
+            let p = Field (None, AnyT.why src reason_op, Polarity.Neutral) in
             (match lookup_kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
             | _ -> ());
@@ -3969,15 +3982,17 @@ struct
           ->
           write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_t
         (* Since we don't know the type of the prop, use AnyT. *)
-        | (AnyT _, SetPropT (use_op, reason_op, _, _, _, t, prop_t)) ->
+        | (AnyT (_, src), SetPropT (use_op, reason_op, _, _, _, t, prop_t)) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
           Base.Option.iter
-            ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, t))
+            ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, t))
             prop_t;
-          rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op))
+          rec_flow cx trace (t, UseT (use_op, AnyT.why src reason_op))
         | (DefT (reason_obj, _, ObjT o), MatchPropT (use_op, reason_op, propref, proptype)) ->
           match_obj_prop cx trace ~use_op o propref reason_obj reason_op (OpenT proptype)
-        | (AnyT _, MatchPropT (use_op, reason_op, _, t)) ->
-          rec_flow cx trace (OpenT t, UseT (use_op, AnyT.untyped reason_op))
+        | (AnyT (_, src), MatchPropT (use_op, reason_op, _, t)) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow cx trace (OpenT t, UseT (use_op, AnyT.why src reason_op))
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
@@ -3997,9 +4012,10 @@ struct
             )
           in
           GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info tout
-        | (AnyT _, GetPropT (_, reason_op, id, _, tout)) ->
+        | (AnyT (_, src), GetPropT (_, reason_op, id, _, tout)) ->
           Base.Option.iter id ~f:(Context.test_prop_hit cx);
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, OpenT tout)
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, OpenT tout)
         (********************************)
         (* ... and their methods called *)
         (********************************)
@@ -4166,8 +4182,9 @@ struct
         (**************************************************)
         (* function types can be mapped over a structure  *)
         (**************************************************)
-        | (AnyT _, MapTypeT (_, reason_op, _, tout)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, tout)
+        | (AnyT (_, src), MapTypeT (_, reason_op, _, tout)) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, tout)
         | (DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout)) ->
           let f x =
             let use_op = Frame (TupleMapFunCompatibility { value = reason_of_t x }, use_op) in
@@ -4446,7 +4463,7 @@ struct
           rec_flow cx trace (Context.find_call cx id, u)
         | (DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })), BindT _) ->
           rec_flow cx trace (Context.find_call cx id, u)
-        | (AnyT _, BindT (use_op, reason, calltype)) ->
+        | (AnyT (_, src), BindT (use_op, reason, calltype)) ->
           let {
             call_this_t;
             call_targs = _;
@@ -4458,9 +4475,10 @@ struct
           } =
             calltype
           in
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason, call_this_t);
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, call_this_t);
           call_args_iter
-            (fun param_t -> rec_flow cx trace (AnyT.untyped reason, UseT (use_op, param_t)))
+            (fun param_t -> rec_flow cx trace (AnyT.why src reason, UseT (use_op, param_t)))
             call_args_tlist;
           rec_flow_t cx trace ~use_op:unknown_use (l, OpenT call_tout)
         (***************************************************************)
@@ -4558,8 +4576,9 @@ struct
               l
           in
           rec_flow_t cx trace ~use_op:unknown_use (num, t_out)
-        | (AnyT _, UnaryMinusT (reason_op, t_out)) ->
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, t_out)
+        | (AnyT (_, src), UnaryMinusT (reason_op, t_out)) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, t_out)
         (************************)
         (* binary `in` operator *)
         (************************)
@@ -4615,9 +4634,10 @@ struct
             cx
             ~trace
             (Error_message.EEnumNotIterable { reason = enum_reason; for_in = false })
-        | (AnyT _, AssertIterableT { use_op; reason; async = _; targs }) ->
+        | (AnyT (_, src), AssertIterableT { use_op; reason; async = _; targs }) ->
+          let src = any_mod_src_keep_placeholder (AnyError None) src in
           Base.List.iter targs ~f:(fun t ->
-              rec_unify cx trace ~use_op ~unify_any:true t (AnyT.error reason)
+              rec_unify cx trace ~use_op ~unify_any:true t (AnyT.why src reason)
           )
         | (_, AssertIterableT { use_op; reason; async; targs }) ->
           let iterable =
@@ -5147,8 +5167,9 @@ struct
           | DefT (_, _, StrT (Literal _)) ->
             let loc = loc_of_t elem_t in
             add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
-          | AnyT _ ->
-            let p = Field (None, AnyT.untyped reason_op, Polarity.Neutral) in
+          | AnyT (_, src) ->
+            let src = any_mod_src_keep_placeholder Untyped src in
+            let p = Field (None, AnyT.why src reason_op, Polarity.Neutral) in
             perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
           | DefT (_, _, StrT _)
           | DefT (_, _, NumT _) ->
@@ -7224,7 +7245,9 @@ struct
     | DefT (_, _, StrT (Literal _)) ->
       let loc = loc_of_t key_t in
       add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
-    | AnyT _ -> rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.untyped reason_op)
+    | AnyT (_, src) ->
+      let src = any_mod_src_keep_placeholder Untyped src in
+      rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.why src reason_op)
     | GenericT { bound = DefT (_, _, StrT _); _ }
     | GenericT { bound = DefT (_, _, NumT _); _ }
     | DefT (_, _, StrT _)

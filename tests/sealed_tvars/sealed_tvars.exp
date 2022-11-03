@@ -388,6 +388,14 @@ References:
                                                    ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- regression_tests.js:176:10
+
+An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   176|     poly(v => v, foo3()); // Error: missing-local-annot on v
+                 ^
+
+
 Error ------------------------------------------------------------------------------------- synthesizable_object.js:4:38
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
@@ -413,7 +421,7 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 
 
-Found 36 errors
+Found 37 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

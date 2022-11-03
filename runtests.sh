@@ -167,6 +167,9 @@ print_failure() {
     fi
     # Default expected file extension is .exp
     ext=".exp"
+    if [[ "$lti" -eq 1 ]] && [ -f "${dir}${name}${ext}.lti" ]; then
+      ext="${ext}.lti"
+    fi
 
     if [[ "$record" -eq 1 ]]; then
       # Copy .out to .exp, replacing the current version, if present, with

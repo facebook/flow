@@ -147,40 +147,6 @@ References:
                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- intersections.js:30:25
-
-Cannot cast `x` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
-
-   intersections.js:30:25
-   30|   bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
-                               ^
-
-References:
-   intersections.js:15:33
-   15|   type S = (tag: 'str', cb: (x: string) => void) => void;
-                                       ^^^^^^ [1]
-   intersections.js:30:28
-   30|   bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
-                                  ^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- intersections.js:30:25
-
-Cannot cast `x` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
-
-   intersections.js:30:25
-   30|   bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
-                               ^
-
-References:
-   intersections.js:16:33
-   16|   type N = (tag: 'num', cb: (x: number) => void) => void;
-                                       ^^^^^^ [1]
-   intersections.js:30:28
-   30|   bak('bool', (x) => { (x: boolean); }); // error in cast (ideally would pick the right overload)
-                                  ^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- intersections.js:31:25
 
 Cannot cast `x` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
@@ -193,23 +159,6 @@ References:
    intersections.js:14:34
    14|   type B = (tag: 'bool', cb: (x: boolean) => void) => void;
                                         ^^^^^^^ [1]
-   intersections.js:31:28
-   31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
-                                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- intersections.js:31:25
-
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   intersections.js:31:25
-   31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
-                               ^
-
-References:
-   intersections.js:16:33
-   16|   type N = (tag: 'num', cb: (x: number) => void) => void;
-                                       ^^^^^^ [1]
    intersections.js:31:28
    31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
                                   ^^^^^^ [2]
@@ -297,4 +246,4 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 
 
-Found 20 errors
+Found 17 errors

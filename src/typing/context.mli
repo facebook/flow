@@ -325,7 +325,7 @@ val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
 
 val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 
-val add_placeholder_tvar : t -> Type.ident -> unit
+val mk_placeholder : t -> Reason.t -> Type.t
 
 val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit
 
@@ -413,7 +413,7 @@ val set_environment : t -> Loc_env.t -> unit
 
 val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
 
-val run_in_synthesis_mode : t -> (unit -> 'a) -> ISet.t * 'a
+val run_in_synthesis_mode : t -> (unit -> 'a) -> bool * 'a
 
 val clear_master_shared : t -> master_context -> unit
 

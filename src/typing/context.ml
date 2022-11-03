@@ -107,8 +107,7 @@ type component_t = {
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
   mutable all_unresolved: ISet.t IMap.t;
-  (* A set of tvars that should be treated as placeholders. *)
-  mutable placeholder_tvars: ISet.t;
+  mutable produced_placeholders: bool;
   mutable errors: Flow_error.ErrorSet.t;
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
@@ -318,7 +317,7 @@ let make_ccx master_cx =
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
-    placeholder_tvars = ISet.empty;
+    produced_placeholders = false;
     matching_props = [];
     literal_subtypes = [];
     constrained_writes = [];
@@ -676,8 +675,9 @@ let add_trust_var cx id bounds =
   let trust_graph = IMap.add id bounds cx.ccx.sig_cx.trust_graph in
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
-let add_placeholder_tvar cx tvar =
-  cx.ccx.placeholder_tvars <- ISet.add tvar cx.ccx.placeholder_tvars
+let mk_placeholder cx reason =
+  cx.ccx.produced_placeholders <- true;
+  Type.AnyT.placeholder reason
 
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
 
@@ -829,14 +829,14 @@ let run_and_rolled_back_cache cx f =
 
 let run_in_synthesis_mode cx f =
   let old_synthesis_mode = cx.in_synthesis_mode in
-  let old_placeholder_tvars = cx.ccx.placeholder_tvars in
-  cx.ccx.placeholder_tvars <- ISet.empty;
+  let old_produced_placeholders = cx.ccx.produced_placeholders in
+  cx.ccx.produced_placeholders <- false;
   cx.in_synthesis_mode <- true;
   let result = run_and_rolled_back_cache cx f in
   cx.in_synthesis_mode <- old_synthesis_mode;
-  let placeholder_tvars = cx.ccx.placeholder_tvars in
-  cx.ccx.placeholder_tvars <- old_placeholder_tvars;
-  (placeholder_tvars, result)
+  let produced_placeholders = cx.ccx.produced_placeholders in
+  cx.ccx.produced_placeholders <- old_produced_placeholders;
+  (produced_placeholders, result)
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global

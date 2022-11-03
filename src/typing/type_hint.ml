@@ -453,11 +453,17 @@ and type_of_hint_decomposition cx op reason t =
   )
 
 and fully_resolve_final_result cx t =
-  match Tvar_resolver.resolved_t cx ~on_unconstrained_tvar:Tvar_resolver.Exception t with
-  | exception Tvar_resolver.UnconstrainedTvarException i ->
-    Debug_js.Verbose.print_if_verbose cx [spf "Under-constrained tvar %d" i];
+  if Tvar_resolver.has_placeholders cx t then (
+    Debug_js.Verbose.print_if_verbose_lazy
+      cx
+      (lazy [spf "Encountered placeholder type: %s" (Debug_js.dump_t cx ~depth:3 t)]);
     None
-  | t -> Some t
+  ) else
+    match Tvar_resolver.resolved_t cx ~on_unconstrained_tvar:Tvar_resolver.Exception t with
+    | exception Tvar_resolver.UnconstrainedTvarException i ->
+      Debug_js.Verbose.print_if_verbose cx [spf "Under-constrained tvar %d" i];
+      None
+    | t -> Some t
 
 and evaluate_hint_ops cx reason t ops =
   let rec loop t = function
