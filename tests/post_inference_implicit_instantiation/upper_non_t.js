@@ -52,7 +52,7 @@ function spreads() {
   s2.bar; // error in LTI
   s2.baz; // error in LTI
   declare function spread3<Props>({...Props, ...T}): Props;
-  const s3 = spread3({foo: 3, bar: 2, baz: 1}); // non-Type.t upper bound ReposUseT
+  const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
   (s3.foo: number);
   s3.bad; // error in LTI
   s3.bar; // error in LTI
@@ -70,7 +70,7 @@ function spreads() {
   s5.bar; // error in LTI
   s5.baz; // error in LTI
   declare function spread6<Props>({hhh: number, ...Props, ...T}): Props;
-  const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // non-Type.t upper bound ReposUseT
+  const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
   (s6.foo: number);
   s6.bad; // error in LTI
   s6.bar; // error in LTI
