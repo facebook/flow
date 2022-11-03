@@ -138,6 +138,9 @@ function test11() {
   declare var jest: {
     fn<TArguments: $ReadOnlyArray<any> = $ReadOnlyArray<any>>(): (...args: TArguments)=>void
   }
-  declare var C: React$AbstractComponent<{+f: () => void}, mixed>;
-  <C f={jest.fn()} />; // ok
+  declare var C1: React$AbstractComponent<{+f: () => void}, mixed>;
+  <C1 f={jest.fn()} />; // ok
+
+  declare var C2: React$AbstractComponent<{f1: () => void, f2: () => void}, mixed>
+  <C2 f1={jest.fn()} f2={jest.fn()} />; // ok
 }
