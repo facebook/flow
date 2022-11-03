@@ -589,6 +589,11 @@ struct
           Nel.fold_left
             (fun acc (_id, op) ->
               match op with
+              | Hint_api.Decomp_ObjComputed r ->
+                let loc = aloc_of_reason r in
+                depends_of_node
+                  (fun visitor -> visitor#add ~why:loc (Env_api.ExpressionLoc, loc))
+                  acc
               | Hint_api.Decomp_SentinelRefinement checks ->
                 SMap.fold
                   (fun _ check acc ->

@@ -1329,8 +1329,10 @@ class def_finder env_entries providers toplevel_scope =
             | Ast.Expression.Member.PropertyPrivateName _ ->
               (* TODO create a hint based on the current class. *)
               Hint_None
-            | Ast.Expression.Member.PropertyExpression _ ->
-              decompose_hint Decomp_ObjComputed (Hint_t (ValueHint _object)))
+            | Ast.Expression.Member.PropertyExpression expr ->
+              decompose_hint
+                (Decomp_ObjComputed (mk_expression_reason expr))
+                (Hint_t (ValueHint _object)))
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
             Hint_Placeholder
@@ -1345,6 +1347,7 @@ class def_finder env_entries providers toplevel_scope =
             (mk_pattern_reason left)
             (MemberAssign { member_loc; member; rhs = right })
         | (None, _) ->
+          let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
           Destructure.pattern
             ~f:this#add_ordinary_binding
             (Root (Value { hint; expr = right }))
@@ -1371,7 +1374,9 @@ class def_finder env_entries providers toplevel_scope =
             def_loc
             (mk_pattern_reason left)
             (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
-        | _ -> ()
+        | _ ->
+          let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
+          ()
       in
       this#visit_expression ~hint ~cond:NonConditionalContext right
 
@@ -2176,7 +2181,7 @@ class def_finder env_entries providers toplevel_scope =
         | Ast.Expression.Object.Property.Computed computed ->
           let (_, { Ast.ComputedKey.expression; comments = _ }) = computed in
           this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expression;
-          decompose_hint Decomp_ObjComputed object_hint
+          decompose_hint (Decomp_ObjComputed (mk_expression_reason expression)) object_hint
       in
       Base.List.iter properties ~f:(fun prop ->
           match prop with

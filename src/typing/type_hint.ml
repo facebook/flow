@@ -403,17 +403,10 @@ and type_of_hint_decomposition cx op reason t =
             in
             Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
         )
-      | Decomp_ObjComputed ->
+      | Decomp_ObjComputed reason ->
+        let key_t = Env.find_write cx Env_api.ExpressionLoc reason in
         Tvar.mk_no_wrap_where cx reason (fun element_t ->
-            let use_t =
-              GetElemT
-                ( unknown_use,
-                  reason,
-                  true,
-                  DefT (reason, bogus_trust (), StrT AnyLiteral),
-                  element_t
-                )
-            in
+            let use_t = GetElemT (unknown_use, reason, true, key_t, element_t) in
             Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
         )
       | Decomp_ObjSpread ->

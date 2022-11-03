@@ -465,14 +465,6 @@ let eval_hint_tests =
           [Decomp_ObjProp "foo"];
     "obj_prop_from_prototype"
     >:: mk_eval_hint_test ~expected:"number" "string" [Decomp_ObjProp "length"];
-    "obj_computed_from_record_neutral_polarity"
-    >:: mk_eval_hint_test ~expected:"any (implicit)" "{foo: number}" [Decomp_ObjComputed];
-    "obj_computed_from_dict_neutral_polarity"
-    >:: mk_eval_hint_test ~expected:"number" "{[string]: number}" [Decomp_ObjComputed];
-    "obj_computed_from_dict_positive_polarity"
-    >:: mk_eval_hint_test ~expected:"number" "{+[string]: number}" [Decomp_ObjComputed];
-    "obj_computed_from_dict_negative_polarity"
-    >:: mk_eval_hint_test ~expected:"None" "{-[string]: number}" [Decomp_ObjComputed];
     "obj_rest_from_record_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"{foo: number}" "{foo: number}" [Decomp_ObjSpread];
     "obj_rest_from_record_positive_polarity"

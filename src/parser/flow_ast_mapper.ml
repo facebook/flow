@@ -2406,9 +2406,6 @@ class ['loc] mapper =
     method pattern_array_rest_element_pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#pattern ?kind expr
 
-    method pattern_assignment_pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
-      this#pattern ?kind expr
-
     method pattern_expression (expr : ('loc, 'loc) Ast.Expression.t) = this#expression expr
 
     method predicate (pred : ('loc, 'loc) Ast.Type.Predicate.t) =
