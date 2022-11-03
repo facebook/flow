@@ -9,13 +9,6 @@ open Type
 open Reason
 open Utils_js
 
-type unconstrained_tvar_resolution_strategy =
-  | Allow
-  | Error
-  | Exception
-
-exception UnconstrainedTvarException of int
-
 exception EncounteredPlaceholderType
 
 let has_placeholders =
@@ -49,31 +42,19 @@ let has_placeholders =
 
 let resolver =
   object (this)
-    inherit [unconstrained_tvar_resolution_strategy * ISet.t] Type_visitor.t
+    inherit [ISet.t] Type_visitor.t
 
-    method! tvar cx pole ((strategy, seen) as acc) r id =
+    method! tvar cx pole seen r id =
       let module C = Type.Constraint in
       let (root_id, root) = Context.find_root cx id in
       match root.C.constraints with
-      | C.FullyResolved _ -> acc
-      | _ when ISet.mem root_id seen -> acc
+      | C.FullyResolved _ -> seen
+      | _ when ISet.mem root_id seen -> seen
       | _ ->
         let t =
           match Flow_js_utils.merge_tvar_opt cx r root_id with
           | Some t -> Some t
           | None ->
-            (match strategy with
-            | Allow -> ()
-            | Error ->
-              let id_msg =
-                match Context.verbose cx with
-                | Some verbose when Debug_js.Verbose.verbose_in_file cx verbose -> Some root_id
-                | _ -> None
-              in
-              Flow_js_utils.add_output
-                cx
-                Error_message.(EInternal (aloc_of_reason r, UnconstrainedTvar id_msg))
-            | Exception -> raise (UnconstrainedTvarException root_id));
             let desc =
               match desc_of_reason r with
               | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
@@ -81,7 +62,7 @@ let resolver =
             in
             Some (EmptyT.make (replace_desc_reason desc r) (bogus_trust ()))
         in
-        Base.Option.value_map t ~default:acc ~f:(fun t ->
+        Base.Option.value_map t ~default:seen ~f:(fun t ->
             let new_root =
               if Context.in_synthesis_mode cx then
                 C.Root { root with C.constraints = C.Resolved (unknown_use, t) }
@@ -89,16 +70,16 @@ let resolver =
                 C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) }
             in
             Context.add_tvar cx root_id new_root;
-            let acc = (strategy, ISet.add root_id seen) in
-            this#type_ cx pole acc t
+            let seen = ISet.add root_id seen in
+            this#type_ cx pole seen t
         )
 
-    method call_arg cx strategy t =
+    method call_arg cx seen t =
       match t with
       | Arg t
       | SpreadArg t ->
-        let _ = this#type_ cx Polarity.Positive strategy t in
-        strategy
+        let _ = this#type_ cx Polarity.Positive seen t in
+        seen
 
     method fun_call_type cx strategy t =
       let {
@@ -126,35 +107,26 @@ let run_conditionally cx f =
     ignore @@ f ()
   | _ -> ()
 
-let resolve cx ~on_unconstrained_tvar t =
-  run_conditionally cx (fun () ->
-      resolver#type_ cx Polarity.Positive (on_unconstrained_tvar, ISet.empty) t
-  )
+let resolve cx t = run_conditionally cx (fun () -> resolver#type_ cx Polarity.Positive ISet.empty t)
 
-let resolved_t cx ~on_unconstrained_tvar t =
-  resolve cx ~on_unconstrained_tvar t;
+let resolved_t cx t =
+  resolve cx t;
   t
 
-let resolved_fun_call_type cx ~on_unconstrained_tvar funcalltype =
-  run_conditionally cx (fun () ->
-      resolver#fun_call_type cx (on_unconstrained_tvar, ISet.empty) funcalltype
-  );
+let resolved_fun_call_type cx funcalltype =
+  run_conditionally cx (fun () -> resolver#fun_call_type cx ISet.empty funcalltype);
   funcalltype
 
-let resolved_call_arg cx ~on_unconstrained_tvar call_arg =
-  run_conditionally cx (fun () -> resolver#call_arg cx (on_unconstrained_tvar, ISet.empty) call_arg);
+let resolved_call_arg cx call_arg =
+  run_conditionally cx (fun () -> resolver#call_arg cx ISet.empty call_arg);
   call_arg
 
-let resolved_type_args cx ~on_unconstrained_tvar targs =
+let resolved_type_args cx targs =
   run_conditionally cx (fun () ->
-      Option.map
-        (List.map (resolver#targ cx Polarity.Positive (on_unconstrained_tvar, ISet.empty)))
-        targs
+      Option.map (List.map (resolver#targ cx Polarity.Positive ISet.empty)) targs
   );
   targs
 
-let resolved_typeparam cx ~on_unconstrained_tvar typeparam =
-  run_conditionally cx (fun () ->
-      resolver#type_param cx Polarity.Positive (on_unconstrained_tvar, ISet.empty) typeparam
-  );
+let resolved_typeparam cx typeparam =
+  run_conditionally cx (fun () -> resolver#type_param cx Polarity.Positive ISet.empty typeparam);
   typeparam

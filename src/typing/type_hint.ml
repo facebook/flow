@@ -38,7 +38,7 @@ end = struct
 end
 
 let in_sandbox_cx cx t ~f =
-  match f (Tvar_resolver.resolved_t cx ~on_unconstrained_tvar:Tvar_resolver.Allow t) with
+  match f (Tvar_resolver.resolved_t cx t) with
   | exception Flow_js_utils.SpeculationSingletonError -> None
   | t -> Some t
 
@@ -452,11 +452,7 @@ and fully_resolve_final_result cx t =
       (lazy [spf "Encountered placeholder type: %s" (Debug_js.dump_t cx ~depth:3 t)]);
     None
   ) else
-    match Tvar_resolver.resolved_t cx ~on_unconstrained_tvar:Tvar_resolver.Exception t with
-    | exception Tvar_resolver.UnconstrainedTvarException i ->
-      Debug_js.Verbose.print_if_verbose cx [spf "Under-constrained tvar %d" i];
-      None
-    | t -> Some t
+    Some (Tvar_resolver.resolved_t cx t)
 
 and evaluate_hint_ops cx reason t ops =
   let rec loop t = function

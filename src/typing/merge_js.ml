@@ -359,25 +359,20 @@ let reduce_implicit_instantiation_check cx check =
   let { lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in
   (* The tvars get resolved either way.
      Erroring on unresolved tvars is undesirable for the post-inference pass *)
-  let on_unconstrained_tvar = Tvar_resolver.Allow in
-  let lhs' = Tvar_resolver.resolved_t cx ~on_unconstrained_tvar lhs in
-  let tparams' =
-    Nel.ident_map (Tvar_resolver.resolved_typeparam cx ~on_unconstrained_tvar) tparams
-  in
-  let t' = Tvar_resolver.resolved_t cx ~on_unconstrained_tvar t in
+  let lhs' = Tvar_resolver.resolved_t cx lhs in
+  let tparams' = Nel.ident_map (Tvar_resolver.resolved_typeparam cx) tparams in
+  let t' = Tvar_resolver.resolved_t cx t in
   let op' =
     match op with
-    | Call calltype -> Call (Tvar_resolver.resolved_fun_call_type ~on_unconstrained_tvar cx calltype)
+    | Call calltype -> Call (Tvar_resolver.resolved_fun_call_type cx calltype)
     | Constructor (targs, args) ->
-      let targs = Tvar_resolver.resolved_type_args cx ~on_unconstrained_tvar targs in
-      let args =
-        ListUtils.ident_map (Tvar_resolver.resolved_call_arg cx ~on_unconstrained_tvar) args
-      in
+      let targs = Tvar_resolver.resolved_type_args cx targs in
+      let args = ListUtils.ident_map (Tvar_resolver.resolved_call_arg cx) args in
       Constructor (targs, args)
     | Jsx { clone; component; config; targs; children = (children, children_spread) } ->
-      let reduce_t = Tvar_resolver.resolved_t cx ~on_unconstrained_tvar in
+      let reduce_t = Tvar_resolver.resolved_t cx in
       let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
-      let targs = Tvar_resolver.resolved_type_args cx ~on_unconstrained_tvar targs in
+      let targs = Tvar_resolver.resolved_type_args cx targs in
       Jsx { clone; component = reduce_t component; config = reduce_t config; targs; children }
   in
   { lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }

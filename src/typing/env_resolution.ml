@@ -1271,7 +1271,6 @@ let resolve_component cx graph component =
   let env = Context.environment cx in
   EnvSet.iter
     (fun (kind, loc) ->
-      Loc_env.find_write env kind loc
-      |> Base.Option.iter ~f:(Tvar_resolver.resolve ~on_unconstrained_tvar:Tvar_resolver.Error cx))
+      Loc_env.find_write env kind loc |> Base.Option.iter ~f:(Tvar_resolver.resolve cx))
     entries_for_resolution;
   Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])
