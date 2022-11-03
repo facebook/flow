@@ -9,6 +9,9 @@ include module type of Name_def_types
 
 val default_of_binding : binding -> default Base.Option.t
 
+val function_params_all_annotated :
+  (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> (ALoc.t, ALoc.t) Flow_ast.Function.body -> bool
+
 val expression_is_definitely_synthesizable : (ALoc.t, ALoc.t) Flow_ast.Expression.t -> bool
 
 val find_defs :

@@ -149,8 +149,12 @@ struct
 
     (* Helper class for the dependency analysis--traverse the AST nodes
        in a def to determine which variables appear *)
-    class use_visitor cx this_super_dep_loc_map ({ Env_api.env_values; env_entries; _ } as env) init
-      =
+    class use_visitor
+      cx
+      ~named_only_for_synthesis
+      this_super_dep_loc_map
+      ({ Env_api.env_values; env_entries; _ } as env)
+      init =
       object (this)
         inherit [ALoc.t Nel.t EnvMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
 
@@ -450,11 +454,16 @@ struct
           expr
 
         method! function_ loc expr =
-          let { Ast.Function.id; _ } = expr in
-          (match id with
-          | Some _ -> ()
-          | None -> this#add ~why:loc (Env_api.OrdinaryNameLoc, loc));
-          super#function_ loc expr
+          let { Ast.Function.id; params; body; _ } = expr in
+          if (not named_only_for_synthesis) || Name_def.function_params_all_annotated params body
+          then (
+            (match id with
+            | Some _ -> ()
+            | None -> this#add ~why:loc (Env_api.OrdinaryNameLoc, loc));
+
+            super#function_ loc expr
+          ) else
+            expr
 
         method class_body_annotated (cls_body : ('loc, 'loc) Ast.Class.Body.t) =
           let open Ast.Class.Body in
@@ -512,9 +521,11 @@ struct
              Therefore, we need to record these writes. *)
           let writes = this#find_writes ~for_type:false ~allow_missing:true loc in
           Base.List.iter ~f:(this#add ~why:loc) writes;
-          this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
-          this#add ~why:loc (Env_api.ExpressionLoc, loc);
-          this#add ~why:loc (Env_api.ArrayProviderLoc, loc);
+          if not named_only_for_synthesis then (
+            this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
+            this#add ~why:loc (Env_api.ExpressionLoc, loc);
+            this#add ~why:loc (Env_api.ArrayProviderLoc, loc)
+          );
           super#expression expr
 
         method visit_expression_for_expression_writes ((loc, _) as expr) =
@@ -530,8 +541,10 @@ struct
         this_super_dep_loc_map
         ({ Env_api.providers; env_entries; predicate_refinement_maps; _ } as env)
         id_loc =
-      let depends_of_node mk_visit state =
-        let visitor = new use_visitor cx this_super_dep_loc_map env EnvMap.empty in
+      let depends_of_node ?(named_only_for_synthesis = false) mk_visit state =
+        let visitor =
+          new use_visitor cx ~named_only_for_synthesis this_super_dep_loc_map env EnvMap.empty
+        in
         visitor#set_acc state;
         let node_visit () = mk_visit visitor in
         visitor#eval node_visit ()
@@ -550,8 +563,9 @@ struct
         |> depends_of_tparams_map tparams_map
         |> depends_of_node (fun visitor -> ignore @@ visitor#type_annotation anno)
       in
-      let depends_of_expression ?(for_expression_writes = false) expr =
-        depends_of_node (fun visitor ->
+      let depends_of_expression
+          ?(named_only_for_synthesis = false) ?(for_expression_writes = false) expr =
+        depends_of_node ~named_only_for_synthesis (fun visitor ->
             if for_expression_writes then
               visitor#visit_expression_for_expression_writes expr
             else
@@ -583,7 +597,7 @@ struct
                 if Name_def.expression_is_definitely_synthesizable e then
                   depends_of_expression e acc
                 else
-                  acc
+                  depends_of_expression ~named_only_for_synthesis:true e acc
             )
           in
           Nel.fold_left
@@ -835,7 +849,9 @@ struct
         | Prop { prop_loc; _ } ->
           (* In `const {d: {a, b}} = obj`, each prop might be reading from a refined value, \
              which is a write. We need to track these dependencies as well. *)
-          let visitor = new use_visitor cx this_super_dep_loc_map env state in
+          let visitor =
+            new use_visitor cx ~named_only_for_synthesis:false this_super_dep_loc_map env state
+          in
           let writes = visitor#find_writes ~for_type:false ~allow_missing:true prop_loc in
           Base.List.iter ~f:(visitor#add ~why:prop_loc) writes;
           visitor#acc
@@ -904,7 +920,9 @@ struct
         | Some _ -> (* assigning to member *) state
         | None ->
           (* assigning to identifier *)
-          let visitor = new use_visitor cx this_super_dep_loc_map env state in
+          let visitor =
+            new use_visitor cx ~named_only_for_synthesis:false this_super_dep_loc_map env state
+          in
           let writes = visitor#find_writes ~for_type:false id_loc in
           Base.List.iter ~f:(visitor#add ~why:id_loc) writes;
           visitor#acc

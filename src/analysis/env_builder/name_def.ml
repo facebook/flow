@@ -295,33 +295,23 @@ class returned_expression_collector =
       node
   end
 
+let function_params_all_annotated
+    ((_, { Ast.Function.Params.params = parameters; rest; this_; _ }) as params) body =
+  Base.List.for_all parameters ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
+      argument |> Destructure.type_of_pattern |> Base.Option.is_some
+  )
+  && Base.Option.value_map rest ~default:true ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
+         argument |> Destructure.type_of_pattern |> Base.Option.is_some
+     )
+  && (Base.Option.is_some this_
+     || not (Signature_utils.This_finder.found_this_in_body_or_params body params)
+     )
+
 let expression_is_definitely_synthesizable =
   let rec synthesizable (_, expr) =
     let func_is_synthesizable fn =
-      let {
-        Ast.Function.params =
-          (_, { Ast.Function.Params.params = parameters; rest; this_; _ }) as params;
-        body;
-        return;
-        _;
-      } =
-        fn
-      in
-      let parameters_annotated =
-        Base.List.for_all parameters ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
-            argument |> Destructure.type_of_pattern |> Base.Option.is_some
-        )
-        && Base.Option.value_map
-             rest
-             ~default:true
-             ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
-               argument |> Destructure.type_of_pattern |> Base.Option.is_some
-           )
-        && (Base.Option.is_some this_
-           || not (Signature_utils.This_finder.found_this_in_body_or_params body params)
-           )
-      in
-      if parameters_annotated then (
+      let { Ast.Function.params; body; return; _ } = fn in
+      if function_params_all_annotated params body then (
         match (return, body) with
         | (Ast.Type.Available _, _) -> true
         | (Ast.Type.Missing _, Ast.Function.BodyExpression e) -> synthesizable e
