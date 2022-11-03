@@ -142,21 +142,47 @@ let resolve_hint cx loc hint =
   if Context.lti cx then
     let map_base_hint = resolve_hint_node in
     let map_targs = Statement.convert_call_targs_opt' cx in
-    let map_arg_list = synth_arg_list cx in
+    let map_arg_list arg_list =
+      let cache_ref = Context.hint_map_arglist_cache cx in
+      let (l, _) = arg_list in
+      match ALocMap.find_opt l !cache_ref with
+      | Some result -> result
+      | None ->
+        let result = synth_arg_list cx arg_list in
+        cache_ref := ALocMap.add l result !cache_ref;
+        result
+    in
     let map_jsx reason name props children =
-      let (_, (props, _, unresolved_params, _)) =
-        Context.run_in_synthesis_mode cx (fun () ->
-            Statement.jsx_mk_props cx reason name props children
+      let cache = Context.hint_map_jsx_cache cx in
+      let key =
+        ( reason,
+          name,
+          Base.List.map props ~f:(function
+              | Ast.JSX.Opening.Attribute (l, _)
+              | Ast.JSX.Opening.SpreadAttribute (l, _)
+              -> l
+              ),
+          fst children
         )
       in
-      let children =
-        Base.List.map
-          ~f:(function
-            | Type.UnresolvedArg (a, _) -> a
-            | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
-          unresolved_params
-      in
-      (props, (children, None))
+      match Hashtbl.find_opt cache key with
+      | Some result -> result
+      | None ->
+        let (_, (props, _, unresolved_params, _)) =
+          Context.run_in_synthesis_mode cx (fun () ->
+              Statement.jsx_mk_props cx reason name props children
+          )
+        in
+        let children =
+          Base.List.map
+            ~f:(function
+              | Type.UnresolvedArg (a, _) -> a
+              | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
+            unresolved_params
+        in
+        let result = (props, (children, None)) in
+        Hashtbl.add cache key result;
+        result
     in
     Hint_api.map hint ~map_base_hint ~map_targs ~map_arg_list ~map_jsx
   else

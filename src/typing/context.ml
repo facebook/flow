@@ -196,6 +196,9 @@ type t = {
   module_info: Module_info.t;
   mutable require_map: Type.tvar ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
+  hint_map_arglist_cache: (ALoc.t * Type.call_arg) list ALocMap.t ref;
+  hint_map_jsx_cache:
+    (Reason.t * string * ALoc.t list * ALoc.t, Type.t * (Type.t list * Type.t option)) Hashtbl.t;
   mutable hint_eval_cache: Type.t option IMap.t;
   mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;
@@ -363,6 +366,8 @@ let make ccx metadata file aloc_table phase =
     module_info = Module_info.empty_cjs_module ();
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
+    hint_map_arglist_cache = ref ALocMap.empty;
+    hint_map_jsx_cache = Hashtbl.create 0;
     hint_eval_cache = IMap.empty;
     declare_module_ref = None;
     environment = Loc_env.empty Name_def.Global;
@@ -603,6 +608,10 @@ let in_synthesis_mode cx = cx.in_synthesis_mode
 let any_propagation cx = cx.metadata.any_propagation
 
 let node_cache cx = cx.node_cache
+
+let hint_map_arglist_cache cx = cx.hint_map_arglist_cache
+
+let hint_map_jsx_cache cx = cx.hint_map_jsx_cache
 
 let hint_eval_cache_find_opt cx id = IMap.find_opt id cx.hint_eval_cache
 
