@@ -724,7 +724,8 @@ struct
           |> Flow_error.ErrorSet.filter (fun error ->
                  match Flow_error.msg_of_error error with
                  | Error_message.EImplicitInstantiationUnderconstrainedError _
-                 | Error_message.EImplicitInstantiationTemporaryError _ ->
+                 | Error_message.EImplicitInstantiationTemporaryError _
+                 | Error_message.EInternal _ ->
                    true
                  | _ -> false
              )
