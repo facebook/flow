@@ -40,6 +40,21 @@ References:
                          ^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- jsx_fragment_context.js:10:5
+
+`TItem` is underconstrained by `PolyComponent` element [1] and is defined in `TItem` [2]
+[underconstrained-implicit-instantiation]
+
+   jsx_fragment_context.js:10:5
+   10|     <PolyComponent />
+           ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   jsx_fragment_context.js:5:24
+    5| function PolyComponent<TItem>(props: {item?: TItem}) { return null }
+                              ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:4:7
 
 Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
@@ -266,12 +281,152 @@ References:
                                    ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:47:6
+
+Cannot get `s1.bad` because property `bad` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:47:6
+   47|   s1.bad; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:43:22
+   43|   const s1 = spread1({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:51:6
+
+Cannot get `s2.bad` because property `bad` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:51:6
+   51|   s2.bad; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:49:22
+   49|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:52:6
+
+Cannot get `s2.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:52:6
+   52|   s2.bar; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:49:22
+   49|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:53:6
+
+Cannot get `s2.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:53:6
+   53|   s2.baz; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:49:22
+   49|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:55:14
 
 Props contains a non-Type.t upper bound ReposUseT
 
    55|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // non-Type.t upper bound ReposUseT
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:63:6
+
+Cannot get `s4.bad` because property `bad` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:63:6
+   63|   s4.bad; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:61:22
+   61|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:64:6
+
+Cannot get `s4.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:64:6
+   64|   s4.bar; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:61:22
+   61|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:65:6
+
+Cannot get `s4.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:65:6
+   65|   s4.baz; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:61:22
+   61|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:69:6
+
+Cannot get `s5.bad` because property `bad` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:69:6
+   69|   s5.bad; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:67:22
+   67|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:70:6
+
+Cannot get `s5.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:70:6
+   70|   s5.bar; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:67:22
+   67|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:71:6
+
+Cannot get `s5.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:71:6
+   71|   s5.baz; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:67:22
+   67|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:73:14
@@ -283,4 +438,4 @@ Props contains a non-Type.t upper bound ReposUseT
 
 
 
-Found 21 errors
+Found 32 errors
