@@ -1603,7 +1603,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let fresh =
         match desc_of_reason r1 with
         | RArrayLit
-        | RRestArrayLit _ ->
+        | RRestArrayLit _
+        | RReactChildren ->
           true
         | _ -> false
       in
