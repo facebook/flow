@@ -337,12 +337,46 @@ References:
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:55:14
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:57:6
 
-Props contains a non-Type.t upper bound ReposUseT
+Cannot get `s3.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
-   55|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // non-Type.t upper bound ReposUseT
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   upper_non_t.js:57:6
+   57|   s3.bad; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:55:22
+   55|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:58:6
+
+Cannot get `s3.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:58:6
+   58|   s3.bar; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:55:22
+   55|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:59:6
+
+Cannot get `s3.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:59:6
+   59|   s3.baz; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:55:22
+   55|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:63:6
@@ -429,13 +463,47 @@ References:
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:73:14
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:75:6
 
-Props contains a non-Type.t upper bound ReposUseT
+Cannot get `s6.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
-   73|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // non-Type.t upper bound ReposUseT
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   upper_non_t.js:75:6
+   75|   s6.bad; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:73:22
+   73|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:76:6
+
+Cannot get `s6.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:76:6
+   76|   s6.bar; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:73:22
+   73|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:77:6
+
+Cannot get `s6.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:77:6
+   77|   s6.baz; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:73:22
+   73|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 
-Found 32 errors
+Found 36 errors
