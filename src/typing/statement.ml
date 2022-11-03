@@ -2309,7 +2309,7 @@ module Make
         node
       | None -> expression_ ~cond cx loc e
     in
-    Tvar_resolver.resolve cx ~on_unconstrained_tvar:Tvar_resolver.Allow t;
+    Tvar_resolver.resolve cx t;
     res
 
   and this_ cx loc this =
