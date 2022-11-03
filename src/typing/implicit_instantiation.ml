@@ -183,6 +183,13 @@ struct
       | PartialType
       | ReactConfigType _ ->
         merge_lower_bounds cx (OpenT tout) |> use_t_result_of_t_option
+      | SpreadType (_, todo_rev, head_slice) ->
+        let acc_elements =
+          Base.Option.value_map ~f:(fun x -> [Object.Spread.InlineSlice x]) ~default:[] head_slice
+        in
+        reverse_obj_spread cx r todo_rev acc_elements (OpenT tout)
+        |> merge_lower_bounds cx
+        |> use_t_result_of_t_option
       | _ -> UpperNonT u)
     | UseT (_, t) -> UpperT t
     | ChoiceKitUseT _ -> UpperEmpty
@@ -208,6 +215,17 @@ struct
           tout
         ) ->
       identity_reverse_obj_kit cx tvar r tout
+    | ObjKitT (_, r, _, Object.Spread (_, { Object.Spread.todo_rev; acc; _ }), tout) ->
+      let solution = merge_upper_bounds cx r tout in
+      (match solution with
+      | UpperEmpty -> UpperEmpty
+      | UpperNonT u -> UpperNonT u
+      | UpperT t ->
+        (match reverse_obj_spread cx r todo_rev acc t |> merge_lower_bounds cx with
+        | None -> UpperEmpty
+        | Some reversed ->
+          Flow.flow_t cx (reversed, tvar);
+          UpperT reversed))
     | _ -> UpperNonT u
 
   and identity_reverse_obj_kit cx tvar r tout =
@@ -216,6 +234,47 @@ struct
     | UpperT t -> Flow.flow_t cx (t, tvar)
     | _ -> ());
     solution
+
+  and reverse_obj_spread cx r todo_rev acc_elements tout =
+    let inline_slice_to_t { Object.Spread.prop_map; dict; _ } =
+      Obj_type.mk_with_proto
+        cx
+        r
+        ~obj_kind:(Obj_type.obj_kind_from_optional_dict ~dict ~otherwise:Exact)
+        ~props:prop_map
+        (ObjProtoT r)
+    in
+    let slice_to_t (s : Object.slice) =
+      Obj_type.mk_with_proto
+        cx
+        r
+        ~frozen:s.Object.flags.frozen
+        ~obj_kind:s.Object.flags.obj_kind
+        ~props:
+          (NameUtils.Map.map (fun (t, _, _) -> Field (None, t, Polarity.Neutral)) s.Object.props)
+        (ObjProtoT r)
+    in
+    let operand_to_t = function
+      | Object.Spread.Slice s -> inline_slice_to_t s
+      | Object.Spread.Type t -> t
+    in
+    let acc_element_to_ts = function
+      | Object.Spread.InlineSlice s -> [inline_slice_to_t s]
+      | Object.Spread.ResolvedSlice slices -> slices |> Nel.to_list |> Base.List.map ~f:slice_to_t
+    in
+    let rest_type l rest =
+      let open Object in
+      Tvar.mk_where cx r (fun tout ->
+          let u = ObjKitT (unknown_use, r, Resolve Next, Rest (Rest.Sound, Rest.One rest), tout) in
+          Flow.flow cx (l, u)
+      )
+    in
+    let tout =
+      Base.List.fold acc_elements ~init:tout ~f:(fun l e ->
+          Base.List.fold (acc_element_to_ts e) ~init:l ~f:rest_type
+      )
+    in
+    Base.List.fold todo_rev ~init:tout ~f:(fun l o -> rest_type l (operand_to_t o))
 
   and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params =
     let tuple_members = params |> List.map (fun param -> snd param) in
