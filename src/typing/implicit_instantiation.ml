@@ -835,27 +835,39 @@ module Observer : OBSERVER with type output = inferred_targ = struct
         { tparam; inferred = any_error tparam_binder_reason }
       )
 
-  let on_upper_non_t cx name u tparam ~tparam_binder_reason ~instantiation_reason:_ =
+  let on_upper_non_t cx name u tparam ~tparam_binder_reason ~instantiation_reason =
     if Context.in_synthesis_mode cx then
       { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
-    else
-      let msg =
-        Subst_name.string_of_subst_name name
-        ^ " contains a non-Type.t upper bound "
-        ^ Type.string_of_use_ctor u
-        ^ Type.(
-            match u with
-            | UseT (_, TypeDestructorTriggerT (_, _, _, d, _)) ->
-              " " ^ Debug_js.string_of_destructor d
-            | _ -> ""
+    else (
+      if Build_mode.dev then
+        let msg =
+          Subst_name.string_of_subst_name name
+          ^ " contains a non-Type.t upper bound "
+          ^ Type.string_of_use_ctor u
+          ^ Type.(
+              match u with
+              | UseT (_, TypeDestructorTriggerT (_, _, _, d, _)) ->
+                " " ^ Debug_js.string_of_destructor d
+              | _ -> ""
+            )
+        in
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EImplicitInstantiationTemporaryError
+             (Reason.aloc_of_reason tparam_binder_reason, msg)
           )
-      in
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EImplicitInstantiationTemporaryError
-           (Reason.aloc_of_reason tparam_binder_reason, msg)
-        );
+      else
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EImplicitInstantiationUnderconstrainedError
+             {
+               bound = Subst_name.string_of_subst_name name;
+               reason_call = instantiation_reason;
+               reason_l = tparam_binder_reason;
+             }
+          );
       { tparam; inferred = any_error tparam_binder_reason }
+    )
 end
 
 module Pierce : functor (Flow : Flow_common.S) ->
