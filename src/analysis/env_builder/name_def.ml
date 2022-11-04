@@ -1957,8 +1957,12 @@ class def_finder env_entries providers toplevel_scope =
       let { frag_children; frag_opening_element = _; frag_closing_element = _; frag_comments = _ } =
         expr
       in
-      let hint = Hint_t (BuiltinName "React$FragmentType") in
-      this#visit_jsx_children ~hint:(decompose_hint (Decomp_ObjProp "children") hint) frag_children;
+      let hint =
+        decompose_hint
+          (Decomp_ObjProp "children")
+          (decompose_hint (Decomp_FuncParam 0) (Hint_t (BuiltinType "React$FragmentType")))
+      in
+      this#visit_jsx_children ~hint frag_children;
       expr
 
     method private visit_jsx_children ~hint (_, children) =
