@@ -77,7 +77,7 @@ end = struct
     key: key;
   }
 
-  let of_loc : Loc.t -> t = Obj.magic
+  let of_loc loc = loc
 
   let of_key (source : File_key.t option) (key : key) : t =
     let loc : keyed_t = { keyed_source = source; key } in
@@ -94,7 +94,7 @@ end = struct
   let kind (loc : t) : kind =
     if is_keyed loc then
       Keyed
-    else if Loc.is_none (Obj.magic loc) then
+    else if Loc.is_none loc then
       ALocNone
     else
       Concrete
@@ -102,7 +102,7 @@ end = struct
   let kind_ignore_source (loc : t) : kind =
     if is_keyed loc then
       Keyed
-    else if Loc.is_none_ignore_source (Obj.magic loc) then
+    else if Loc.is_none_ignore_source loc then
       ALocNone
     else
       Concrete
@@ -118,7 +118,7 @@ end = struct
     if is_keyed loc then
       invalid_arg "loc must be concrete"
     else
-      (Obj.magic loc : Loc.t)
+      loc
 
   let update_source f loc =
     if is_keyed loc then
