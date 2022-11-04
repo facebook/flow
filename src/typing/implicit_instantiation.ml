@@ -205,6 +205,13 @@ struct
            )
       | _ -> UpperNonT u)
     | UseT (_, t) -> UpperT t
+    | ArrRestT (_, _, i, tout) ->
+      (match get_t cx tout with
+      | DefT (r, _, ArrT (ArrayAT (_, None) | ROArrayAT _)) ->
+        identity_reverse_upper_bound cx tvar r tout
+      | DefT (r, _, ArrT (ArrayAT (_, Some _) | TupleAT _)) when i = 0 ->
+        identity_reverse_upper_bound cx tvar r tout
+      | _ -> UpperEmpty)
     | ChoiceKitUseT _ -> UpperEmpty
     | MakeExactT (_, Lower (_, t)) -> UpperT t
     | MakeExactT (_, Upper use_t) -> t_of_use_t cx tvar use_t
@@ -230,7 +237,7 @@ struct
           Object.(ReadOnly | Partial | ObjectRep | ObjectWiden _ | Object.ReactConfig _),
           tout
         ) ->
-      identity_reverse_obj_kit cx tvar r tout
+      identity_reverse_upper_bound cx tvar r tout
     | ObjKitT (_, r, _, Object.Spread (_, { Object.Spread.todo_rev; acc; _ }), tout) ->
       let solution = merge_upper_bounds cx r tout in
       (match solution with
@@ -244,7 +251,7 @@ struct
           UpperT reversed))
     | _ -> UpperNonT u
 
-  and identity_reverse_obj_kit cx tvar r tout =
+  and identity_reverse_upper_bound cx tvar r tout =
     let solution = merge_upper_bounds cx r tout in
     (match solution with
     | UpperT t -> Flow.flow_t cx (t, tvar)

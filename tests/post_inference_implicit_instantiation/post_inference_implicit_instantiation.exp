@@ -266,5 +266,67 @@ References:
                                    ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:92:6
 
-Found 19 errors
+Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
+
+   upper_non_t.js:92:6
+    92|   r1.bad; // error
+             ^^^
+
+References:
+   <BUILTINS>/core.js:879:15
+   879| declare class Array<T> extends $ReadOnlyArray<T> {
+                      ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:96:4
+
+Cannot cast `r2[2]` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:96:4
+   96|   (r2[2]: empty); // error
+          ^^^^^
+
+References:
+   upper_non_t.js:89:35
+   89|   const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
+                                         ^ [1]
+   upper_non_t.js:96:11
+   96|   (r2[2]: empty); // error
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:96:4
+
+Cannot cast `r2[2]` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:96:4
+   96|   (r2[2]: empty); // error
+          ^^^^^
+
+References:
+   upper_non_t.js:89:38
+   89|   const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
+                                            ^ [1]
+   upper_non_t.js:96:11
+   96|   (r2[2]: empty); // error
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:97:6
+
+Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
+
+   upper_non_t.js:97:6
+    97|   r2.bad; // error
+             ^^^
+
+References:
+   <BUILTINS>/core.js:879:15
+   879| declare class Array<T> extends $ReadOnlyArray<T> {
+                      ^^^^^ [1]
+
+
+
+Found 23 errors

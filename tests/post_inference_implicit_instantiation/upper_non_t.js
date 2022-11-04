@@ -82,3 +82,17 @@ function spreads() {
   (sr.bar: string);
   sr.bad; // error in LTI
 }
+
+function rests() {
+  declare function ArrRest<TArgs: $ReadOnlyArray<mixed>>(...TArgs): TArgs;
+  const r1 = ArrRest(...([]: Array<string>)); // ok
+  const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
+  (r1: Array<string>); // ok
+  (r1[65536]: string); // ok
+  r1.bad; // error
+  (r2: [1, 2]); // ok
+  (r2[0]: 1); // ok
+  (r2[1]: 2); // ok
+  (r2[2]: empty); // error
+  r2.bad; // error
+}
