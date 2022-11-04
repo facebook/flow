@@ -198,24 +198,24 @@ end = struct
     match ALoc.source loc with
     | None -> Error Error.Loc_source_none
     | Some remote_file ->
-      (match Parsing_heaps.Reader.get_type_sig ~reader remote_file with
-      | None -> Error Error.Parsing_heaps_get_sig_error
-      | Some type_sig ->
-        let import_kind = AstHelper.mk_import_declaration_kind use_mode in
-        let import_info_opt =
-          Utils_js.lazy_seq
-            [
-              lazy (from_type_sig import_kind type_sig name);
-              lazy (from_react loc);
-              lazy (from_react_redux loc);
-            ]
-        in
-        (match import_info_opt with
+      let type_sig = Parsing_heaps.Reader.get_type_sig_unsafe ~reader remote_file in
+      let import_kind = AstHelper.mk_import_declaration_kind use_mode in
+      let import_info_opt =
+        Utils_js.lazy_seq
+          [
+            lazy (from_type_sig import_kind type_sig name);
+            lazy (from_react loc);
+            lazy (from_react_redux loc);
+          ]
+      in
+      begin
+        match import_info_opt with
         | None ->
           let table = Parsing_heaps.Reader.get_aloc_table_unsafe ~reader remote_file in
           let loc = ALoc.to_loc (lazy table) loc in
           Error (Error.No_matching_export (name, loc))
-        | Some import_info -> Ok import_info))
+        | Some import_info -> Ok import_info
+      end
 end
 
 module ImportsHelper : sig

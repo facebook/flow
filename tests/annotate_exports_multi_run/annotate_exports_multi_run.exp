@@ -15,7 +15,6 @@ Errors:
   Validation Error:                         0
   Import Error:
     Loc source none:                        0
-    Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
   Serializer error:                         0
@@ -45,7 +44,6 @@ Errors:
   Validation Error:                         0
   Import Error:
     Loc source none:                        0
-    Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
   Serializer error:                         0
@@ -75,7 +73,6 @@ Errors:
   Validation Error:                         0
   Import Error:
     Loc source none:                        0
-    Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
   Serializer error:                         0
@@ -105,7 +102,6 @@ Errors:
   Validation Error:                         0
   Import Error:
     Loc source none:                        0
-    Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
   Serializer error:                         0
@@ -135,7 +131,6 @@ Errors:
   Validation Error:                         0
   Import Error:
     Loc source none:                        0
-    Parsing heaps get ast error:            0
     Indeterminate module type:              0
     No matching export:                     0
   Serializer error:                         0
