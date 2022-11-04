@@ -1,3 +1,24 @@
+### 0.192.0
+
+Notable changes:
+* The `exact_empty_objects` flag and the `annotate_empty_object` codemod are now deleted, See https://medium.com/flow-type/improved-handling-of-the-empty-object-in-flow-ead91887e40c for more details.
+* We have announced in a [previous blog post](https://medium.com/flow-type/introducing-local-type-inference-for-flow-6af65b7830aa) that we are working on a new inference mode in Flow. Now the inference mode is mostly working, but there might still be some bugs remaining. You can try it out by adding `inference_mode=experimental.lti` to your flowconfig.
+
+Likely to cause new Flow errors:
+* Unknown computed properties assignments are now completely banned. Previously, they were still allowed if the object is inexact.
+* `cannot-resolve-name` errors now are emitted for every use of an undefined variable, not just the first.
+
+New Features:
+* Added an experimental flow lint for unused promises in async scope. You can enable it by adding `unused-promise-in-async-scope` in the lint section of your flowconfig.
+
+Misc:
+* `annotate-use-state` and `annotate-use-callback` codemod commands have been merged into `annotate-react-hooks`4
+* Added an experimental "scm" saved state fetcher, which selects a saved state based on your currently source control revision.
+
+Library Definitions:
+* Added support for Array.prototype.at
+* Fixed WeakSet type parameter bound to be `interface {}`
+
 ### 0.191.0
 
 Likely to cause new Flow errors:
