@@ -6,3 +6,7 @@ async function foo(): Promise<number => void> {
 }
 
 let f: () => Promise<(number) => void> = async () => (n) => {}; // ok
+
+async function bar(): Promise<number => void> {
+  return Promise.resolve((n) => {}); // ok
+}
