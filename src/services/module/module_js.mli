@@ -42,16 +42,12 @@ val add_parsed_resolved_requires :
 val add_package : string -> (Package_json.t, 'a) result -> unit
 
 type package_incompatible_reason =
-  (* Didn't exist before, now it exists *)
   | New
-  (* Was valid, now is invalid *)
   | Became_invalid
-  (* Was invalid, now is valid *)
   | Became_valid
-  (* The `name` property changed from the former to the latter *)
   | Name_changed of string option * string option
-  (* The `main` property changed from the former to the latter *)
   | Main_changed of string option * string option
+  | Haste_commonjs_changed of bool
   | Unknown
 
 val string_of_package_incompatible_reason : package_incompatible_reason -> string

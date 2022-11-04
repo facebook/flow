@@ -83,16 +83,14 @@ let add_package filename = function
   | Error _ -> Package_heaps.Package_heap_mutator.add_error filename
 
 type package_incompatible_reason =
-  (* Didn't exist before, now it exists *)
-  | New
-  (* Was valid, now is invalid *)
-  | Became_invalid
-  (* Was invalid, now is valid *)
-  | Became_valid
-  (* The `name` property changed from the former to the latter *)
+  | New  (** Didn't exist before, now it exists *)
+  | Became_invalid  (** Was valid, now is invalid *)
+  | Became_valid  (** Was invalid, now is valid *)
   | Name_changed of string option * string option
-  (* The `main` property changed from the former to the latter *)
+      (** The `name` property changed from the former to the latter *)
   | Main_changed of string option * string option
+      (** The `main` property changed from the former to the latter *)
+  | Haste_commonjs_changed of bool  (** The `haste_commonjs` property changed to this value *)
   | Unknown
 
 let string_of_package_incompatible_reason =
@@ -108,6 +106,8 @@ let string_of_package_incompatible_reason =
     Printf.sprintf "name changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
   | Main_changed (old, new_) ->
     Printf.sprintf "main changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
+  | Haste_commonjs_changed new_ ->
+    Printf.sprintf "haste_commonjs changed from `%b` to `%b`" (not new_) new_
   | Unknown -> "Unknown"
 
 type package_incompatible_return =
@@ -130,10 +130,14 @@ let package_incompatible ~reader filename new_package =
       let new_main = Package_json.main new_package in
       let old_name = Package_json.name old_package in
       let new_name = Package_json.name new_package in
+      let old_haste_commonjs = Package_json.haste_commonjs old_package in
+      let new_haste_commonjs = Package_json.haste_commonjs new_package in
       if old_name <> new_name then
         Incompatible (Name_changed (old_name, new_name))
       else if old_main <> new_main then
         Incompatible (Main_changed (old_main, new_main))
+      else if old_haste_commonjs <> new_haste_commonjs then
+        Incompatible (Haste_commonjs_changed new_haste_commonjs)
       else
         (* This shouldn't happen -- if it does, it probably means we need to add cases above *)
         Incompatible Unknown
