@@ -79,6 +79,8 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Type of Comp in <Comp ... /> is instantiated with props and children.
      Returns Comp if the type of Comp is not polymorphic. *)
   | Instantiate_Component of ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints
+  (* T of Promise<T> becomes hint on return in async scope *)
+  | Decomp_Promise
 
 and ('t, 'targs, 'args, 'props, 'children) hint =
   | Hint_t of 't
@@ -109,6 +111,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_Await -> "Decomp_Await"
   | Instantiate_Callee _ -> "Instantiate_Callee"
   | Instantiate_Component _ -> "Instantiate_Component"
+  | Decomp_Promise -> "Decomp_Promise"
 
 let string_of_hint ~on_hint = function
   | Hint_t t -> Utils_js.spf "Hint_t (%s)" (on_hint t)
@@ -173,6 +176,7 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
     let (jsx_props, jsx_children) = map_jsx jsx_reason jsx_name jsx_props jsx_children in
     let jsx_hint = map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx jsx_hint in
     Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hint }
+  | Decomp_Promise -> Decomp_Promise
 
 and map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function
   | Hint_t t -> Hint_t (map_base_hint t)

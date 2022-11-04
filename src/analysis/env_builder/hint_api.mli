@@ -51,6 +51,7 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Instantiate_Callee of
       ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints
   | Instantiate_Component of ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints
+  | Decomp_Promise
 
 and ('t, 'targs, 'args, 'props, 'children) hint =
   | Hint_t of 't

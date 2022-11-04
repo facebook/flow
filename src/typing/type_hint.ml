@@ -443,6 +443,15 @@ and type_of_hint_decomposition cx op reason t =
           ))
       | Instantiate_Callee instantiation_hint -> instantiate_callee cx t instantiation_hint
       | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint
+      | Decomp_Promise ->
+        Tvar.mk_where cx reason (fun inner_t ->
+            let promise_t =
+              Flow_js.get_builtin_typeapp cx reason (OrdinaryName "Promise") [inner_t]
+            in
+            Context.run_in_hint_decomp cx (fun () ->
+                SpeculationFlow.flow_t cx reason ~upper_unresolved:true (t, promise_t)
+            )
+        )
   )
 
 and fully_resolve_final_result cx t =

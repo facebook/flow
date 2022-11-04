@@ -1060,11 +1060,15 @@ class def_finder env_entries providers toplevel_scope =
             | Ast.Type.Missing loc ->
               loc
           in
-          (* TODO(T122105974): support async function return. *)
           let return_hint =
-            match return with
-            | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
-            | Ast.Type.Missing _ -> decompose_hint Decomp_FuncReturn func_hint
+            let base_hint =
+              match return with
+              | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
+              | Ast.Type.Missing _ -> decompose_hint Decomp_FuncReturn func_hint
+            in
+            match scope_kind with
+            | Async -> base_hint |> decompose_hint Decomp_Promise
+            | _ -> base_hint
           in
           this#record_hint return_loc return_hint;
           let old_stack = return_hint_stack in
