@@ -40,21 +40,6 @@ References:
                          ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- jsx_fragment_context.js:10:5
-
-`TItem` is underconstrained by `PolyComponent` element [1] and is defined in `TItem` [2]
-[underconstrained-implicit-instantiation]
-
-   jsx_fragment_context.js:10:5
-   10|     <PolyComponent />
-           ^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   jsx_fragment_context.js:5:24
-    5| function PolyComponent<TItem>(props: {item?: TItem}) { return null }
-                              ^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:4:7
 
 Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
@@ -529,4 +514,4 @@ References:
 
 
 
-Found 38 errors
+Found 37 errors
