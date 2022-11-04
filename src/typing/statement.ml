@@ -5244,6 +5244,7 @@ module Make
     let (t, opening_element, children, closing_element) =
       jsx_title cx opening_element children closing_element locs
     in
+    Tvar_resolver.resolve cx t;
     (t, { opening_element; children; closing_element; comments })
 
   and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
@@ -5273,6 +5274,7 @@ module Make
         unresolved_params
         locs
     in
+    Tvar_resolver.resolve cx t;
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
 
   and jsx_title cx opening_element children closing_element locs =
