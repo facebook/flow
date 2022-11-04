@@ -285,8 +285,9 @@ module Make (Extra : BASE_STATS) = struct
             error x
           | Error _ -> x
 
-      (* The 'expr' parameter is used for hard-coding type annotations on expressions
-       * matching annotate_exports_hardcoded_expr_fixes.expr_to_type_ast. *)
+      (* - expr: used for hard-coding type annotations on expressions matching
+       *   annotate_exports_hardcoded_expr_fixes.expr_to_type_ast.
+       * - error: used when "default-any" has been set to true. *)
       method private opt_annotate
           : 'a.
             f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) ->

@@ -1,4 +1,4 @@
->>> implicit_instantiation.js (#changes: 4)
+>>> implicit_instantiation.js (#changes: 5)
 //@flow
 import type { Opaque } from "./opaque";import {x} from './opaque';
 declare function f<T>(): {x: T}
@@ -16,6 +16,13 @@ const b = id(3); // ok!
 declare function semi<T, U>(x: T): [T, U];
 const c = semi<_, number>(3); // semi<_, number>
 c[1] = 3;
+
+
+import { foo } from './export';
+const non_exported_return_type  = foo();
+declare function error<X>(): [X];
+const e = error<_>(); // should annotate with <_> instead of <any>
+e[0] = (0: typeof non_exported_return_type);
 
 >>> speculation.js (#changes: 2)
 //@flow
@@ -43,7 +50,7 @@ Errors:
     Loc source none:                        0
     Parsing heaps get ast error:            0
     Indeterminate module type:              0
-    No matching export:                     0
+    No matching export:                     1
   Serializer error:                         0
   Unsupported error kind:                   0
 

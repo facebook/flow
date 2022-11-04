@@ -66,8 +66,10 @@ let mapper
     val mutable loc_error_map = LMap.empty
 
     method private get_annot ploc ty annot =
-      let f loc _annot ty' = this#annotate_node loc ty' (fun a -> Ast.Type.Available a) in
-      let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
+      let f loc _annot ty' =
+        this#annotate_node loc ty' (fun (_, a) -> Ast.Expression.CallTypeArg.Explicit a)
+      in
+      let error _ = Ast.Expression.CallTypeArg.Explicit flowfixme_ast in
       this#opt_annotate ~f ~error ~expr:None ploc ty annot
 
     method private fix_and_validate loc ty =
@@ -110,17 +112,15 @@ let mapper
             arguments =
               List.map
                 (fun (ty, name) ->
+                  let open Ast.Expression.CallTypeArg in
                   match ty with
                   | _ when not (SSet.mem (Subst_name.string_of_subst_name name) tparam_names) ->
-                    Ast.Expression.CallTypeArg.Implicit
-                      (loc, { Ast.Expression.CallTypeArg.Implicit.comments = None })
-                  | None -> Ast.Expression.CallTypeArg.Explicit flowfixme_ast
+                    Implicit (loc, { Implicit.comments = None })
+                  | None -> Explicit flowfixme_ast
                   | Some ty ->
-                    (match
-                       this#get_annot loc (ty >>= this#fix_and_validate loc) (Ast.Type.Missing loc)
-                     with
-                    | Ast.Type.Available (_, t) -> Ast.Expression.CallTypeArg.Explicit t
-                    | Ast.Type.Missing _ -> Ast.Expression.CallTypeArg.Explicit flowfixme_ast))
+                    let default = Implicit (loc, { Implicit.comments = None }) in
+                    let ty_result = ty >>= this#fix_and_validate loc in
+                    this#get_annot loc ty_result default)
                 targ_tys_with_names;
           }
         in
