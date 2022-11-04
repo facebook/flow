@@ -110,7 +110,7 @@ let tests =
            assert_equal ~ctxt ~printer:string_opt (Some "../b/node_modules/module") path
          );
          ( "supports_package_json_main" >:: fun ctxt ->
-           let pkg = Package_json.create ~name:None ~main:(Some "main.js") in
+           let pkg = Package_json.create ~name:None ~main:(Some "main.js") ~haste_commonjs:false in
            Package_heaps.Package_heap_mutator.add_package_json
              "/path/to/root/node_modules/pkg_with_main/package.json"
              pkg;
@@ -125,7 +125,9 @@ let tests =
            assert_equal ~ctxt ~printer:string_opt (Some "pkg_with_main") path
          );
          ( "supports_package_json_relative_main" >:: fun ctxt ->
-           let pkg = Package_json.create ~name:None ~main:(Some "./main.js") in
+           let pkg =
+             Package_json.create ~name:None ~main:(Some "./main.js") ~haste_commonjs:false
+           in
            Package_heaps.Package_heap_mutator.add_package_json
              "/path/to/root/node_modules/pkg_with_relative_main/package.json"
              pkg;
@@ -140,7 +142,9 @@ let tests =
            assert_equal ~ctxt ~printer:string_opt (Some "pkg_with_relative_main") path
          );
          ( "supports_package_json_nested_main" >:: fun ctxt ->
-           let pkg = Package_json.create ~name:None ~main:(Some "dist/main.js") in
+           let pkg =
+             Package_json.create ~name:None ~main:(Some "dist/main.js") ~haste_commonjs:false
+           in
            Package_heaps.Package_heap_mutator.add_package_json
              "/path/to/root/node_modules/pkg_with_nested_main/package.json"
              pkg;
