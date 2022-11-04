@@ -599,11 +599,23 @@ end = struct
       let rec uses_t_aux acc uses =
         match uses with
         | [] ->
-          begin
-            match acc with
-            | [] -> return Ty.NoUpper
-            | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl)))
-          end
+          let acc =
+            (* When combining the upper bounds of a tvar, the zero-element is not
+             * the `empty` type, but rather `mixed`. However, to gather this list of
+             * types below we have abusively used the same normalization function
+             * `cont` that we would for lower bounds. So, to reverse the unwanted
+             * effect of short-circuiting to `empty` when calling `mk_inter` below,
+             * we remove all `empty` types that correspond to "no upper-bounds" here.
+             *)
+            Base.List.filter
+              ~f:(function
+                | Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper) -> false
+                | _ -> true)
+              acc
+          in
+          (match acc with
+          | [] -> return Ty.NoUpper
+          | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl))))
         | T.UseT (_, t) :: rest
         | T.TypeCastT (_, t) :: rest ->
           let%bind t = cont ~env t in

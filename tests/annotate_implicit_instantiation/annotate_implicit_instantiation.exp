@@ -1,4 +1,4 @@
->>> implicit_instantiation.js (#changes: 5)
+>>> implicit_instantiation.js (#changes: 6)
 //@flow
 import type { Opaque } from "./opaque";import {x} from './opaque';
 declare function f<T>(): {x: T}
@@ -24,6 +24,10 @@ declare function error<X>(): [X];
 const e = error<_>(); // should annotate with <_> instead of <any>
 e[0] = (0: typeof non_exported_return_type);
 
+
+declare function useBound<F: () => void>(): F;
+useBound<() => void>(); // () => void
+
 >>> speculation.js (#changes: 2)
 //@flow
 
@@ -40,8 +44,8 @@ str.add('str')
 
 Stats:
   Files changed:                            2
-  Number of annotations added:              5
-  Total size of annotations:                5
+  Number of annotations added:              6
+  Total size of annotations:                8
 
 Errors:
   Missing annot./normalizer error:          0
@@ -58,5 +62,5 @@ Warnings:
   Large type added:                         0
   Location unhandled:                       0
   Empty NoUpper:                            0
-  Empty SomeKnownUpper:                     0
+  Empty SomeKnownUpper:                     1
 

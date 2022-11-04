@@ -22,3 +22,7 @@ const non_exported_return_type  = foo();
 declare function error<X>(): [X];
 const e = error(); // should annotate with <_> instead of <any>
 e[0] = (0: typeof non_exported_return_type);
+
+
+declare function useBound<F: () => void>(): F;
+useBound(); // () => void
