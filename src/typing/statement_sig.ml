@@ -82,7 +82,7 @@ module type S = sig
     Context.t ->
     needs_this_param:bool ->
     general:Type.t ->
-    statics:(ALoc.t, ALoc.t) Flow_ast.Expression.t SMap.t ->
+    statics:Env_api.EnvKey.t SMap.t ->
     Reason.reason ->
     ALoc.t ->
     (ALoc.t, ALoc.t) Ast.Function.t ->
@@ -90,7 +90,7 @@ module type S = sig
 
   val mk_arrow :
     Context.t ->
-    statics:(ALoc.t, ALoc.t) Flow_ast.Expression.t SMap.t ->
+    statics:Env_api.EnvKey.t SMap.t ->
     Reason.reason ->
     (ALoc.t, ALoc.t) Ast.Function.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.t
@@ -100,7 +100,7 @@ module type S = sig
     required_this_param_type:Type.t option ->
     require_return_annot:bool ->
     constructor:bool ->
-    statics:(ALoc.t, ALoc.t) Flow_ast.Expression.t SMap.t ->
+    statics:Env_api.EnvKey.t SMap.t ->
     Type.t Subst_name.Map.t ->
     Reason.reason ->
     (ALoc.t, ALoc.t) Ast.Function.t ->

@@ -497,7 +497,7 @@ class def_finder env_entries providers toplevel_scope =
                           left =
                             ( _,
                               Ast.Pattern.Expression
-                                ( _,
+                                ( member_loc,
                                   Ast.Expression.Member
                                     {
                                       Ast.Expression.Member._object =
@@ -511,7 +511,7 @@ class def_finder env_entries providers toplevel_scope =
                                       _;
                                     }
                                 )
-                            );
+                            ) as left;
                           right = init;
                           _;
                         } as assign
@@ -534,7 +534,31 @@ class def_finder env_entries providers toplevel_scope =
                     SMap.update
                       prop_name
                       (function
-                        | None -> Some init
+                        | None ->
+                          let (entries, _) = this#acc in
+                          let key =
+                            match init with
+                            | (_, Ast.Expression.Function { Ast.Function.id = Some (fun_loc, _); _ })
+                            | (fun_loc, Ast.Expression.Function _) ->
+                              (Env_api.OrdinaryNameLoc, fun_loc)
+                            | _ ->
+                              this#add_ordinary_binding
+                                member_loc
+                                (mk_pattern_reason left)
+                                (ExpressionDef
+                                   {
+                                     cond_context = NonConditionalContext;
+                                     hint = Hint_None;
+                                     chain = false;
+                                     expr = init;
+                                   }
+                                );
+                              (Env_api.OrdinaryNameLoc, member_loc)
+                          in
+                          if EnvMap.mem key entries then
+                            Some key
+                          else
+                            None
                         | x -> x)
                       statics
                   in

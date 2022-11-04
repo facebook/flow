@@ -138,6 +138,23 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
              ^^^
 
 
+Error --------------------------------------------------------------------------------------------------- react.js:19:13
+
+Cannot cast `Dialog.c` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   react.js:19:13
+   19|     return (Dialog.c: empty)
+                   ^^^^^^^^
+
+References:
+   react.js:17:12
+   17| Dialog.c = ""; // OK
+                  ^^ [1]
+   react.js:19:23
+   19|     return (Dialog.c: empty)
+                             ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -405,7 +422,7 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 
 
-Found 35 errors
+Found 36 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

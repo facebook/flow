@@ -79,7 +79,7 @@ type root =
       synthesizable_from_annotation: function_synth_kind;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
-      statics: (ALoc.t, ALoc.t) Ast.Expression.t SMap.t;
+      statics: Env_api.EnvKey.t SMap.t;
       arrow: bool;
       tparams_map: tparams_map;
     }
@@ -182,7 +182,7 @@ type def =
       has_this_def: bool;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
-      statics: (ALoc.t, ALoc.t) Ast.Expression.t SMap.t;
+      statics: Env_api.EnvKey.t SMap.t;
       tparams_map: tparams_map;
     }
   | Class of {

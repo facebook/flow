@@ -685,9 +685,7 @@ struct
             (fun visitor -> visitor#function_def ~fully_annotated function_)
             (depends_of_tparams_map tparams_map state)
         in
-        depends_of_node
-          (fun visitor -> SMap.iter (fun _ expr -> ignore @@ visitor#expression expr) statics)
-          state
+        depends_of_node (fun visitor -> SMap.iter (fun _ -> visitor#add ~why:id_loc) statics) state
       in
       let depends_of_class
           { Ast.Class.id = _; body; tparams; extends; implements; class_decorators; comments = _ } =

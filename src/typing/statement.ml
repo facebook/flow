@@ -7186,10 +7186,10 @@ module Make
         let statics_t =
           let props =
             SMap.fold
-              (fun name expr acc ->
-                let (((loc, expr_t), _) as exp) = expression cx expr in
-                let cache = Context.node_cache cx in
-                if not (Context.in_synthesis_mode cx) then Node_cache.set_expression cache exp;
+              (fun name (kind, loc) acc ->
+                let expr_t =
+                  Env.find_write cx kind (mk_reason (RIdentifier (OrdinaryName name)) loc)
+                in
                 let field = Field (Some loc, expr_t, Polarity.Neutral) in
                 NameUtils.Map.add (OrdinaryName name) field acc)
               statics
