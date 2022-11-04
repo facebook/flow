@@ -212,7 +212,12 @@ struct
       | DefT (r, _, ArrT (ArrayAT (_, Some _) | TupleAT _)) when i = 0 ->
         identity_reverse_upper_bound cx tvar r tout
       | _ -> UpperEmpty)
+    | CallT _ -> UpperEmpty
     | ChoiceKitUseT _ -> UpperEmpty
+    | GetElemT _ -> UpperEmpty
+    | GetPropT _ -> UpperEmpty
+    | GetValuesT _ -> UpperEmpty
+    | MapTypeT _ -> UpperEmpty
     | MakeExactT (_, Lower (_, t)) -> UpperT t
     | MakeExactT (_, Upper use_t) -> t_of_use_t cx tvar use_t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
