@@ -75,4 +75,10 @@ function spreads() {
   s6.bad; // error in LTI
   s6.bar; // error in LTI
   s6.baz; // error in LTI
+
+  declare function spread_and_readonly<Props>($ReadOnly<{...Props}>): Props;
+  const sr = spread_and_readonly({foo: 1, bar: ''});
+  (sr.foo: number);
+  (sr.bar: string);
+  sr.bad; // error in LTI
 }

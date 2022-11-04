@@ -153,6 +153,16 @@ struct
       | Some t -> UpperT t
       | None -> UpperEmpty
     in
+    let merge_lower_or_upper_bounds r t =
+      match merge_lower_bounds cx t with
+      | Some t -> UpperT t
+      | None -> merge_upper_bounds cx r t
+    in
+    let bind_use_t_result ~f = function
+      | UpperEmpty -> UpperEmpty
+      | UpperNonT u -> UpperNonT u
+      | UpperT t -> f t
+    in
     match u with
     | UseT (_, (OpenT (r, _) as t)) -> merge_upper_bounds cx r t
     | UseT (_, TypeDestructorTriggerT (_, r, _, destructor, tout)) ->
@@ -166,30 +176,33 @@ struct
         UpperEmpty
       | ReactElementPropsType
       | ReactElementConfigType ->
-        merge_lower_bounds cx (OpenT tout)
-        |> Base.Option.map ~f:(fun config ->
-               DefT
-                 ( r,
-                   bogus_trust (),
-                   ReactAbstractComponentT { config; instance = MixedT.why r (bogus_trust ()) }
+        merge_lower_or_upper_bounds r (OpenT tout)
+        |> bind_use_t_result ~f:(fun config ->
+               UpperT
+                 (DefT
+                    ( r,
+                      bogus_trust (),
+                      ReactAbstractComponentT { config; instance = MixedT.why r (bogus_trust ()) }
+                    )
                  )
            )
-        |> use_t_result_of_t_option
       | NonMaybeType ->
-        merge_lower_bounds cx (OpenT tout)
-        |> Base.Option.map ~f:(fun t -> MaybeT (r, t))
-        |> use_t_result_of_t_option
+        merge_lower_or_upper_bounds r (OpenT tout)
+        |> bind_use_t_result ~f:(fun t -> UpperT (MaybeT (r, t)))
       | ReadOnlyType
       | PartialType
       | ReactConfigType _ ->
-        merge_lower_bounds cx (OpenT tout) |> use_t_result_of_t_option
+        merge_lower_or_upper_bounds r (OpenT tout)
       | SpreadType (_, todo_rev, head_slice) ->
         let acc_elements =
           Base.Option.value_map ~f:(fun x -> [Object.Spread.InlineSlice x]) ~default:[] head_slice
         in
-        reverse_obj_spread cx r todo_rev acc_elements (OpenT tout)
-        |> merge_lower_bounds cx
-        |> use_t_result_of_t_option
+        merge_lower_or_upper_bounds r (OpenT tout)
+        |> bind_use_t_result ~f:(fun t ->
+               reverse_obj_spread cx r todo_rev acc_elements t
+               |> merge_lower_bounds cx
+               |> use_t_result_of_t_option
+           )
       | _ -> UpperNonT u)
     | UseT (_, t) -> UpperT t
     | ChoiceKitUseT _ -> UpperEmpty
@@ -272,6 +285,7 @@ struct
           Flow.flow cx (l, u)
       )
     in
+    let tout = Tvar.mk_where cx r (fun t' -> Flow.flow_t cx (tout, t')) in
     let tout =
       Base.List.fold acc_elements ~init:tout ~f:(fun l e ->
           Base.List.fold (acc_element_to_ts e) ~init:l ~f:rest_type
@@ -370,6 +384,7 @@ struct
         else
           get_t_with_placeholder_removed cx t)
     | _ ->
+      Debug_js.Verbose.print_if_verbose cx ["cccc 1"];
       Flow_js_utils.add_output
         cx
         Error_message.(

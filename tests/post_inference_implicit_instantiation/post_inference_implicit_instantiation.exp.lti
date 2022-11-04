@@ -514,5 +514,19 @@ References:
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:83:6
 
-Found 37 errors
+Cannot get `sr.bad` because property `bad` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:83:6
+   83|   sr.bad; // error in LTI
+            ^^^
+
+References:
+   upper_non_t.js:80:34
+   80|   const sr = spread_and_readonly({foo: 1, bar: ''});
+                                        ^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 38 errors
