@@ -830,10 +830,8 @@ let run_in_hint_decomp cx f =
 
 let run_and_rolled_back_cache cx f =
   let saved_constraint_cache = !(cx.ccx.constraint_cache) in
-  let saved_instantiation_cache = !(cx.ccx.instantiation_cache) in
   let result = f () in
   cx.ccx.constraint_cache := saved_constraint_cache;
-  cx.ccx.instantiation_cache := saved_instantiation_cache;
   result
 
 let run_in_synthesis_mode cx f =

@@ -932,7 +932,7 @@ module ReasonMap = WrappedMap.Make (struct
 end)
 
 module ImplicitInstantiationReasonMap = WrappedMap.Make (struct
-  type t = reason * reason * reason Nel.t
+  type t = reason * reason * reason Nel.t * bool (* synthesis mode *)
 
   let compare = Stdlib.compare
 end)
