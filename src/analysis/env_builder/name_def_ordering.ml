@@ -454,9 +454,8 @@ struct
           expr
 
         method! function_ loc expr =
-          let { Ast.Function.id; params; body; _ } = expr in
-          if (not named_only_for_synthesis) || Name_def.function_params_all_annotated params body
-          then (
+          let { Ast.Function.id; _ } = expr in
+          if not named_only_for_synthesis then (
             (match id with
             | Some _ -> ()
             | None -> this#add ~why:loc (Env_api.OrdinaryNameLoc, loc));

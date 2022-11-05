@@ -1301,3 +1301,28 @@ Dialog.Prop = function(): void {
       (4, 14) to (6, 1) =>
       (2, 9) to (2, 15) =>
       (4, 0) to (4, 11) |}]
+
+let%expect_test "callee hint cycle" =
+  print_order_test {|
+g(function h() { return f() })
+|};
+    [%expect {|
+      (2, 11) to (2, 12) =>
+      (2, 2) to (2, 29) |}]
+
+let%expect_test "callee hint cycle" =
+  print_order_test {|
+g(function () { return f() })
+|};
+    [%expect {|
+      (2, 2) to (2, 28) =>
+      (2, 2) to (2, 28) |}]
+
+let%expect_test "instantiate hint cycle" =
+  print_order_test {|
+import * as React from 'react';
+<F attr={function () { return f() }} />
+|};
+    [%expect {|
+      (2, 12) to (2, 17) =>
+      (3, 9) to (3, 35) |}]
