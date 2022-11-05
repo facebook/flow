@@ -75,6 +75,8 @@ val read_imports : [ `typed ] parse_addr -> Imports.t
 
 val read_cas_digest : [ `typed ] parse_addr -> Cas_digest.t option
 
+val read_package_info : [ `package ] parse_addr -> (Package_json.t, unit) result
+
 module type READER = sig
   type reader
 
@@ -82,9 +84,11 @@ module type READER = sig
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
-  val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
+  val get_parse : reader:reader -> file_addr -> [ `typed | `untyped | `package ] parse_addr option
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
+
+  val get_package_parse : reader:reader -> file_addr -> [ `package ] parse_addr option
 
   val get_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
@@ -114,10 +118,14 @@ module type READER = sig
 
   val get_cas_digest : reader:reader -> File_key.t -> Cas_digest.t option
 
+  val get_package_info : reader:reader -> File_key.t -> (Package_json.t, unit) result option
+
   val get_parse_unsafe :
-    reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped ] parse_addr
+    reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped | `package ] parse_addr
 
   val get_typed_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `typed ] parse_addr
+
+  val get_package_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `package ] parse_addr
 
   val get_resolved_requires_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
@@ -150,7 +158,8 @@ end
 module Mutator_reader : sig
   include READER with type reader = Mutator_state_reader.t
 
-  val get_old_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
+  val get_old_parse :
+    reader:reader -> file_addr -> [ `typed | `untyped | `package ] parse_addr option
 
   val get_old_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
 
@@ -193,6 +202,8 @@ type worker_mutator = {
     Cas_digest.t option ->
     Modulename.Set.t;
   add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> Modulename.Set.t;
+  add_package:
+    File_key.t -> file_addr option -> Xx.hash -> (Package_json.t, unit) result -> Modulename.Set.t;
   clear_not_found: File_key.t -> Modulename.Set.t;
 }
 
@@ -238,4 +249,6 @@ module From_saved_state : sig
     Modulename.Set.t
 
   val add_unparsed : File_key.t -> Xx.hash -> string option -> Modulename.Set.t
+
+  val add_package : File_key.t -> Xx.hash -> (Package_json.t, unit) result -> Modulename.Set.t
 end

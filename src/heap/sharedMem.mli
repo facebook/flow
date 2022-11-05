@@ -220,6 +220,10 @@ module NewAPI : sig
 
   type imports
 
+  (** Phantom type tag for package info, which contains a serialized representation
+      of the Package_json.t of a package.json file. *)
+  type package_info
+
   type cas_digest
 
   type +'a parse
@@ -336,6 +340,12 @@ module NewAPI : sig
 
   val read_imports : imports addr -> string
 
+  (* package info *)
+
+  val prepare_write_package_info : string -> size * (chunk -> package_info addr)
+
+  val read_package_info : package_info addr -> string
+
   (* cas_digest *)
 
   val prepare_write_cas_digest : Cas_digest.t -> size * (chunk -> cas_digest addr)
@@ -374,6 +384,8 @@ module NewAPI : sig
 
   val typed_parse_size : size
 
+  val package_parse_size : size
+
   val write_untyped_parse : chunk -> heap_int64 addr -> [ `untyped ] parse addr
 
   val write_typed_parse :
@@ -387,9 +399,15 @@ module NewAPI : sig
     cas_digest addr option ->
     [ `typed ] parse addr
 
+  val write_package_parse : chunk -> heap_int64 addr -> package_info addr -> [ `package ] parse addr
+
   val is_typed : [> ] parse addr -> bool
 
+  val is_package : [> ] parse addr -> bool
+
   val coerce_typed : [> ] parse addr -> [ `typed ] parse addr option
+
+  val coerce_package : [> ] parse addr -> [ `package ] parse addr option
 
   val get_file_hash : [> ] parse addr -> heap_int64 addr
 
@@ -414,6 +432,8 @@ module NewAPI : sig
   val get_sig_hash : [ `typed ] parse addr -> heap_int64 entity addr
 
   val get_cas_digest : [ `typed ] parse addr -> cas_digest addr option
+
+  val get_package_info : [ `package ] parse addr -> package_info addr
 
   val set_ast : [ `typed ] parse addr -> ast addr -> unit
 
@@ -451,7 +471,7 @@ module NewAPI : sig
     chunk ->
     file_kind ->
     heap_string addr ->
-    [ `typed | `untyped ] parse entity addr ->
+    [ `typed | `untyped | `package ] parse entity addr ->
     haste_info entity addr ->
     file_module addr option ->
     file addr
@@ -464,7 +484,7 @@ module NewAPI : sig
 
   val get_haste_info : file addr -> haste_info entity addr
 
-  val get_parse : file addr -> [ `typed | `untyped ] parse entity addr
+  val get_parse : file addr -> [ `typed | `untyped | `package ] parse entity addr
 
   val files_equal : file addr -> file addr -> bool
 

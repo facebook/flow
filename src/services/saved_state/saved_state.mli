@@ -25,6 +25,11 @@ type unparsed_file_data = {
   unparsed_hash: Xx.hash;
 }
 
+type package_file_data = {
+  package_hash: Xx.hash;
+  package_info: (Package_json.t, unit) result;
+}
+
 type saved_state_dependency_graph =
   (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
 
@@ -32,7 +37,7 @@ type saved_state_data = {
   flowconfig_hash: Xx.hash;
   parsed_heaps: (File_key.t * parsed_file_data) list;
   unparsed_heaps: (File_key.t * unparsed_file_data) list;
-  package_heaps: (Package_json.t, unit) result Utils_js.FilenameMap.t;
+  package_heaps: (File_key.t * package_file_data) list;
   ordered_non_flowlib_libs: string list;
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;

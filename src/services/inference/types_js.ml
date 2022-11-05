@@ -1967,12 +1967,36 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     in
     let root = Options.root options |> Path.to_string in
     Files.node_modules_containers := node_modules_containers;
-    (* Restore PackageHeap and the ReversePackageHeap *)
-    FilenameMap.iter (fun fn -> Module_js.add_package (File_key.to_string fn)) package_heaps;
 
     (* Verifies that the data in saved state matches what's really on disk *)
     let verify = Options.saved_state_verify options in
     let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
+
+    (* Restore package.json heap and ReversePackageHeap *)
+    let (package_json_files, dirty_package_modules, invalid_package_hashes) =
+      Base.List.fold
+        package_heaps
+        ~init:([], Modulename.Set.empty, [])
+        ~f:(fun (fns, dirty_modules, invalid_hashes) (fn, package_data) ->
+          let { Saved_state.package_hash; package_info } = package_data in
+
+          (* update ReversePackageHeap *)
+          (match package_info with
+          | Ok package ->
+            let filename = File_key.to_string fn in
+            Package_heaps.Package_heap_mutator.add_package_json filename package
+          | Error _ -> ());
+
+          let ms = Parsing_heaps.From_saved_state.add_package fn package_hash package_info in
+          let invalid_hashes =
+            if verify && not (verify_hash ~reader:abstract_reader fn) then
+              fn :: invalid_hashes
+            else
+              invalid_hashes
+          in
+          (fn :: fns, Modulename.Set.union ms dirty_modules, invalid_hashes)
+      )
+    in
 
     let restore_parsed (fns, dirty_modules, invalid_hashes) (fn, parsed_file_data) =
       let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
@@ -2046,6 +2070,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       )
     in
 
+    let dirty_modules = Modulename.Set.union dirty_package_modules dirty_modules in
+    let invalid_hashes = Base.List.rev_append invalid_package_hashes invalid_hashes in
+
     if verify then assert_valid_hashes updates invalid_hashes;
 
     Hh_logger.info "Loading libraries";
@@ -2097,7 +2124,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       mk_init_env
         ~files:parsed
         ~unparsed
-        ~package_json_files:(FilenameMap.keys package_heaps)
+        ~package_json_files
         ~dependency_info
         ~ordered_libs
         ~libs

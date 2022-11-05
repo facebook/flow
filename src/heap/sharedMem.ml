@@ -35,6 +35,7 @@ type tag =
   | Addr_tbl_tag
   | Untyped_tag
   | Typed_tag
+  | Package_tag
   | Haste_info_tag
   | Source_file_tag
   | Json_file_tag
@@ -44,19 +45,20 @@ type tag =
   | File_module_tag
   | Sklist_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 12 *)
+  | String_tag (* 13 -- see Heap_string_tag in hh_shared.c *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   | Cas_digest_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 18 *)
+  | Serialized_tag (* 19 -- see Serialized_tag in hh_shared.c *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
   | Serialized_exports_tag
   | Serialized_imports_tag
+  | Serialized_package_info_tag
 
 let heap_ref : buf option ref = ref None
 
@@ -66,8 +68,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 12);
-  assert (tag_val Serialized_tag = 18)
+  assert (tag_val String_tag = 13);
+  assert (tag_val Serialized_tag = 19)
 
 (* Addresses are relative to the hashtbl pointer, so the null address actually
  * points to the hash field of the first hashtbl entry, which is never a
@@ -826,6 +828,8 @@ module NewAPI = struct
   type resolved_requires
 
   type imports
+
+  type package_info
 
   type cas_digest
 
@@ -1677,6 +1681,17 @@ module NewAPI = struct
 
   let read_imports addr = read_compressed Serialized_imports_tag addr
 
+  (** Package info *)
+
+  let package_info_addr parse = addr_offset parse 2
+
+  let get_package_info = get_generic package_info_addr
+
+  let prepare_write_package_info package_info =
+    prepare_write_compressed Serialized_package_info_tag package_info
+
+  let read_package_info addr = read_compressed Serialized_package_info_tag addr
+
   (** Cas digest  *)
 
   let prepare_write_cas_digest cas_digest =
@@ -1712,6 +1727,8 @@ module NewAPI = struct
 
   let typed_parse_size = 12 * addr_size
 
+  let package_parse_size = 2 * addr_size
+
   let write_untyped_parse chunk hash =
     let addr = write_header chunk Untyped_tag untyped_parse_size in
     unsafe_write_addr chunk hash;
@@ -1735,12 +1752,28 @@ module NewAPI = struct
     | Some cas_digest_addr -> unsafe_write_addr chunk cas_digest_addr);
     addr
 
+  let write_package_parse chunk hash package_info =
+    let addr = write_header chunk Package_tag package_parse_size in
+    unsafe_write_addr chunk hash;
+    unsafe_write_addr chunk package_info;
+    addr
+
   let is_typed parse =
     let hd = read_header (get_heap ()) parse in
     obj_tag hd = tag_val Typed_tag
 
+  let is_package parse =
+    let hd = read_header (get_heap ()) parse in
+    obj_tag hd = tag_val Package_tag
+
   let coerce_typed parse =
     if is_typed parse then
+      Some parse
+    else
+      None
+
+  let coerce_package parse =
+    if is_package parse then
       Some parse
     else
       None

@@ -36,6 +36,9 @@ exception File_not_parsed of string
 
 exception File_not_typed of string
 
+(** File was not a package.json *)
+exception File_not_package of string
+
 exception Ast_not_found of string
 
 exception ALoc_table_not_found of string
@@ -287,6 +290,11 @@ let read_cas_digest_unsafe parse : Cas_digest.t =
   match read_cas_digest parse with
   | Some cas_digest -> cas_digest
   | None -> raise (Requires_not_found "cas_digest")
+
+let read_package_info parse : (Package_json.t, unit) result =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  get_package_info parse |> read_package_info |> deserialize
 
 let read_resolved_requires addr : resolved_requires =
   Marshal.from_string (Heap.read_resolved_requires addr) 0
@@ -787,7 +795,9 @@ let add_checked_file
         let parse =
           write_typed_parse chunk hash exports resolved_requires imports leader sig_hash cas_digest
         in
-        let dirty_modules = add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr) in
+        let dirty_modules =
+          add_file_maybe chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
+        in
         (parse, dirty_modules)
       in
       (size, write)
@@ -828,7 +838,41 @@ let add_unparsed_file file_key file_opt hash module_name =
   alloc size (fun chunk ->
       let hash = write_int64 chunk hash in
       let parse = write_untyped_parse chunk hash in
-      add_file_maybe chunk (parse :> [ `typed | `untyped ] parse_addr)
+      add_file_maybe chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
+  )
+
+let add_package_file file_key file_opt hash (package_info : (Package_json.t, unit) result) =
+  let module_name = (* packages don't provide haste modules *) None in
+  let serialize x = Marshal.to_string x [] in
+  let package_info = serialize package_info in
+  let (package_info_size, write_package_info) = Heap.prepare_write_package_info package_info in
+  let read_resolved_requires_caml = read_resolved_requires in
+  let open Heap in
+  let size = (3 * header_size) + package_parse_size + int64_size + package_info_size in
+  let (size, add_file_maybe) =
+    match file_opt with
+    | None -> prepare_create_file size file_key module_name
+    | Some file ->
+      let parse_ent = get_parse file in
+      let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
+      let old_resolved_requires =
+        let* parse = entity_read_latest parse_ent in
+        let* parse = coerce_typed parse in
+        let* addr = entity_read_latest (get_resolved_requires parse) in
+        Some (read_resolved_requires_caml addr)
+      in
+      let (dep_size, update_revdeps) = prepare_update_revdeps old_resolved_requires None in
+      let update chunk =
+        update_revdeps chunk file;
+        update_file chunk
+      in
+      (size + dep_size, update)
+  in
+  alloc size (fun chunk ->
+      let hash = write_int64 chunk hash in
+      let package_info = write_package_info chunk in
+      let parse = write_package_parse chunk hash package_info in
+      add_file_maybe chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
   )
 
 (* If this file used to exist, but no longer does, then it was deleted. Record
@@ -1071,7 +1115,7 @@ let add_parsed
     file_sig
     locs
     type_sig
-    cas_digest =
+    cas_digest : MSet.t =
   WorkerCancel.with_no_cancellations (fun () ->
       add_checked_file
         file_key
@@ -1088,8 +1132,11 @@ let add_parsed
         cas_digest
   )
 
-let add_unparsed file_key file_opt hash module_name =
+let add_unparsed file_key file_opt hash module_name : MSet.t =
   WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file_key file_opt hash module_name)
+
+let add_package file_key file_opt hash package_info : MSet.t =
+  WorkerCancel.with_no_cancellations (fun () -> add_package_file file_key file_opt hash package_info)
 
 let clear_not_found file_key = WorkerCancel.with_no_cancellations (fun () -> clear_file file_key)
 
@@ -1100,9 +1147,11 @@ module type READER = sig
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
-  val get_parse : reader:reader -> file_addr -> [ `typed | `untyped ] parse_addr option
+  val get_parse : reader:reader -> file_addr -> [ `typed | `untyped | `package ] parse_addr option
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
+
+  val get_package_parse : reader:reader -> file_addr -> [ `package ] parse_addr option
 
   val get_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
@@ -1132,10 +1181,14 @@ module type READER = sig
 
   val get_cas_digest : reader:reader -> File_key.t -> Cas_digest.t option
 
+  val get_package_info : reader:reader -> File_key.t -> (Package_json.t, unit) result option
+
   val get_parse_unsafe :
-    reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped ] parse_addr
+    reader:reader -> File_key.t -> file_addr -> [ `typed | `untyped | `package ] parse_addr
 
   val get_typed_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `typed ] parse_addr
+
+  val get_package_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `package ] parse_addr
 
   val get_resolved_requires_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
@@ -1204,6 +1257,10 @@ module Mutator_reader = struct
   let get_typed_parse ~reader file =
     let* parse = get_parse ~reader file in
     Heap.coerce_typed parse
+
+  let get_package_parse ~reader file =
+    let* parse = get_parse ~reader file in
+    Heap.coerce_package parse
 
   let get_haste_info ~reader file = read ~reader (Heap.get_haste_info file)
 
@@ -1311,6 +1368,11 @@ module Mutator_reader = struct
     let* parse = get_typed_parse ~reader addr in
     read_cas_digest parse
 
+  let get_package_info ~reader file =
+    let* addr = get_file_addr file in
+    let* parse = get_package_parse ~reader addr in
+    Some (read_package_info parse)
+
   let get_parse_unsafe ~reader file addr =
     match get_parse ~reader addr with
     | Some parse -> parse
@@ -1321,6 +1383,12 @@ module Mutator_reader = struct
     match Heap.coerce_typed parse with
     | Some parse -> parse
     | None -> raise (File_not_typed (File_key.to_string file))
+
+  let get_package_parse_unsafe ~reader file addr =
+    let parse = get_parse_unsafe ~reader file addr in
+    match Heap.coerce_package parse with
+    | Some parse -> parse
+    | None -> raise (File_not_package (File_key.to_string file))
 
   let get_resolved_requires_unsafe ~reader file parse =
     let resolved_requires = Heap.get_resolved_requires parse in
@@ -1430,6 +1498,7 @@ type worker_mutator = {
     Cas_digest.t option ->
     MSet.t;
   add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> MSet.t;
+  add_package: File_key.t -> file_addr option -> Xx.hash -> (Package_json.t, unit) result -> MSet.t;
   clear_not_found: File_key.t -> MSet.t;
 }
 
@@ -1438,7 +1507,7 @@ type worker_mutator = {
 module Parse_mutator = struct
   let clear_not_found = Fun.const MSet.empty
 
-  let create () = { add_parsed; add_unparsed; clear_not_found }
+  let create () = { add_parsed; add_unparsed; add_package; clear_not_found }
 end
 
 (* Reparsing is more complicated than parsing, since we need to worry about transactions.
@@ -1495,7 +1564,7 @@ module Reparse_mutator = struct
 
     Transaction.add ~commit ~rollback transaction;
 
-    ((), { add_parsed; add_unparsed; clear_not_found })
+    ((), { add_parsed; add_unparsed; add_package; clear_not_found })
 
   let record_unchanged () unchanged = changed_files := FilenameSet.diff !changed_files unchanged
 
@@ -1631,6 +1700,10 @@ module Reader = struct
     let* parse = get_parse ~reader file in
     Heap.coerce_typed parse
 
+  let get_package_parse ~reader file =
+    let* parse = get_parse ~reader file in
+    Heap.coerce_package parse
+
   let get_haste_info ~reader file = read ~reader (Heap.get_haste_info file)
 
   let get_haste_name ~reader file =
@@ -1708,6 +1781,11 @@ module Reader = struct
     let* parse = get_parse ~reader addr in
     Some (read_file_hash parse)
 
+  let get_package_info ~reader file =
+    let* addr = get_file_addr file in
+    let* parse = get_package_parse ~reader addr in
+    Some (read_package_info parse)
+
   let get_parse_unsafe ~reader file addr =
     match get_parse ~reader addr with
     | Some parse -> parse
@@ -1718,6 +1796,12 @@ module Reader = struct
     match Heap.coerce_typed parse with
     | Some parse -> parse
     | None -> raise (File_not_typed (File_key.to_string file))
+
+  let get_package_parse_unsafe ~reader file addr =
+    let parse = get_parse_unsafe ~reader file addr in
+    match Heap.coerce_package parse with
+    | Some parse -> parse
+    | None -> raise (File_not_package (File_key.to_string file))
 
   let get_resolved_requires_unsafe ~reader file parse =
     let resolved_requires = Heap.get_resolved_requires parse in
@@ -1814,6 +1898,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_typed_parse ~reader
     | State_reader reader -> Reader.get_typed_parse ~reader
 
+  let get_package_parse ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_package_parse ~reader
+    | State_reader reader -> Reader.get_package_parse ~reader
+
   let get_haste_info ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_haste_info ~reader
@@ -1884,6 +1973,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_file_hash ~reader
     | State_reader reader -> Reader.get_file_hash ~reader
 
+  let get_package_info ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_package_info ~reader
+    | State_reader reader -> Reader.get_package_info ~reader
+
   let get_parse_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_parse_unsafe ~reader
@@ -1893,6 +1987,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_typed_parse_unsafe ~reader
     | State_reader reader -> Reader.get_typed_parse_unsafe ~reader
+
+  let get_package_parse_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_package_parse_unsafe ~reader
+    | State_reader reader -> Reader.get_package_parse_unsafe ~reader
 
   let get_resolved_requires_unsafe ~reader =
     match reader with
@@ -2003,7 +2102,9 @@ module From_saved_state = struct
             sig_hash_ent
             cas_digest
         in
-        let parse_ent = write_entity chunk (Some (parse :> [ `typed | `untyped ] parse_addr)) in
+        let parse_ent =
+          write_entity chunk (Some (parse :> [ `typed | `untyped | `package ] parse_addr))
+        in
         let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
         assert (file = FileHeap.add file_key file);
         update_revdeps chunk file;
@@ -2011,4 +2112,6 @@ module From_saved_state = struct
     )
 
   let add_unparsed file_key = add_unparsed file_key None
+
+  let add_package file_key = add_package file_key None
 end

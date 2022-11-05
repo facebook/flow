@@ -134,8 +134,8 @@ let refactor_extract_code_actions
     []
 
 let main_of_package ~reader package_dir =
-  let json_path = package_dir ^ "/package.json" in
-  match Package_heaps.Reader.get_package ~reader json_path with
+  let file_key = File_key.JsonFile (package_dir ^ "/package.json") in
+  match Parsing_heaps.Reader.get_package_info ~reader file_key with
   | Some (Ok package) -> Package_json.main package
   | Some (Error _)
   | None ->

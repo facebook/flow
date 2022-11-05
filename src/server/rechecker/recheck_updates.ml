@@ -27,7 +27,7 @@ let is_incompatible_package_json ~options ~reader =
     | Some content ->
       let node_main_fields = Options.node_main_fields options in
       let result = Parsing_service_js.parse_package_json_file ~node_main_fields content filename in
-      Module_js.package_incompatible ~reader filename_str result
+      Module_js.package_incompatible ~reader filename result
   in
   fun ~want ~sroot ~file_options f ->
     if

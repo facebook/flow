@@ -78,10 +78,6 @@ let module_name_candidates ~options name =
     Hashtbl.add module_name_candidates_cache name candidates;
     candidates
 
-let add_package filename = function
-  | Ok package -> Package_heaps.Package_heap_mutator.add_package_json filename package
-  | Error _ -> Package_heaps.Package_heap_mutator.add_error filename
-
 type package_incompatible_reason =
   | New  (** Didn't exist before, now it exists *)
   | Became_invalid  (** Was valid, now is invalid *)
@@ -115,7 +111,7 @@ type package_incompatible_return =
   | Incompatible of package_incompatible_reason
 
 let package_incompatible ~reader filename new_package =
-  let old_package = Package_heaps.Reader.get_package ~reader filename in
+  let old_package = Parsing_heaps.Reader.get_package_info ~reader filename in
   match (old_package, new_package) with
   | (None, Ok _) -> Incompatible New (* didn't exist before, found a new one *)
   | (None, Error _) -> Compatible (* didn't exist before, new one is invalid *)
@@ -208,7 +204,8 @@ module Node = struct
   let parse_main ~reader ~file_options phantom_acc package_filename file_exts =
     let package_filename = resolve_symlinks package_filename in
     let package =
-      match Package_heaps.Reader_dispatcher.get_package ~reader package_filename with
+      let file_key = File_key.JsonFile package_filename in
+      match Parsing_heaps.Reader_dispatcher.get_package_info ~reader file_key with
       | Some (Ok package) -> package
       | Some (Error ()) ->
         (* invalid, but we already raised an error when building PackageHeap *)

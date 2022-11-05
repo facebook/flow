@@ -39,8 +39,6 @@ val add_parsed_resolved_requires :
   File_key.t ->
   bool
 
-val add_package : string -> (Package_json.t, 'a) result -> unit
-
 type package_incompatible_reason =
   | New
   | Became_invalid
@@ -57,4 +55,4 @@ type package_incompatible_return =
   | Incompatible of package_incompatible_reason
 
 val package_incompatible :
-  reader:State_reader.t -> string -> (Package_json.t, _) result -> package_incompatible_return
+  reader:State_reader.t -> File_key.t -> (Package_json.t, _) result -> package_incompatible_return

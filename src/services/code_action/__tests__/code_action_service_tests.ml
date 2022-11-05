@@ -18,6 +18,12 @@ let node_resolver_dirnames = ["node_modules"]
 
 let reader = State_reader.create ()
 
+let add_package fn pkg =
+  let file_key = File_key.JsonFile fn in
+  let hash = Xx.init 0L |> Xx.digest in
+  let (_ : Modulename.Set.t) = Parsing_heaps.From_saved_state.add_package file_key hash (Ok pkg) in
+  ()
+
 let tests =
   "path_of_modulename"
   >::: [
@@ -111,9 +117,7 @@ let tests =
          );
          ( "supports_package_json_main" >:: fun ctxt ->
            let pkg = Package_json.create ~name:None ~main:(Some "main.js") ~haste_commonjs:false in
-           Package_heaps.Package_heap_mutator.add_package_json
-             "/path/to/root/node_modules/pkg_with_main/package.json"
-             pkg;
+           add_package "/path/to/root/node_modules/pkg_with_main/package.json" pkg;
            let path =
              path_of_modulename
                ~node_resolver_dirnames
@@ -128,9 +132,7 @@ let tests =
            let pkg =
              Package_json.create ~name:None ~main:(Some "./main.js") ~haste_commonjs:false
            in
-           Package_heaps.Package_heap_mutator.add_package_json
-             "/path/to/root/node_modules/pkg_with_relative_main/package.json"
-             pkg;
+           add_package "/path/to/root/node_modules/pkg_with_relative_main/package.json" pkg;
            let path =
              path_of_modulename
                ~node_resolver_dirnames
@@ -145,9 +147,7 @@ let tests =
            let pkg =
              Package_json.create ~name:None ~main:(Some "dist/main.js") ~haste_commonjs:false
            in
-           Package_heaps.Package_heap_mutator.add_package_json
-             "/path/to/root/node_modules/pkg_with_nested_main/package.json"
-             pkg;
+           add_package "/path/to/root/node_modules/pkg_with_nested_main/package.json" pkg;
            let path =
              path_of_modulename
                ~node_resolver_dirnames
