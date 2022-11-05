@@ -229,6 +229,29 @@ module Node = struct
             (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path_w_index file_exts);
         ]
 
+  let resolve_package ~options ~reader ?phantom_acc package_dir =
+    let file_options = Options.file_options options in
+    let file_exts = Files.module_file_exts file_options in
+    lazy_seq
+      [
+        lazy
+          (parse_main
+             ~reader
+             ~file_options
+             phantom_acc
+             (Filename.concat package_dir "package.json")
+             file_exts
+          );
+        lazy
+          (path_if_exists_with_file_exts
+             ~reader
+             ~file_options
+             phantom_acc
+             (Filename.concat package_dir "index")
+             file_exts
+          );
+      ]
+
   let resolve_relative ~options ~reader ?phantom_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
@@ -240,22 +263,7 @@ module Node = struct
       [
         lazy (path_if_exists ~reader ~file_options phantom_acc path);
         lazy (path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts);
-        lazy
-          (parse_main
-             ~reader
-             ~file_options
-             phantom_acc
-             (Filename.concat path "package.json")
-             file_exts
-          );
-        lazy
-          (path_if_exists_with_file_exts
-             ~reader
-             ~file_options
-             phantom_acc
-             (Filename.concat path "index")
-             file_exts
-          );
+        lazy (resolve_package ~options ~reader ?phantom_acc path);
       ]
 
   let rec node_module ~options ~reader node_modules_containers file ?phantom_acc dir r =
@@ -414,16 +422,21 @@ module Haste : MODULE_SYSTEM = struct
       record_phantom_dependency mname phantom_acc;
       None
 
+  (** This is the Haste equivalent of the Node module resolution LOAD_NODE_MODULE
+    step (https://nodejs.org/api/modules.html#all-together). If it doesn't begin
+    with ./ or ../ or /, then it must be a folder with a package.json and we look
+    at the "main" field or fall back to index.js. *)
   let resolve_haste_package ~options ~reader file_dirname ?phantom_acc r =
     let (dir_opt, rest) =
-      match Str.split_delim (Str.regexp_string "/") r with
+      match String.split_on_char '/' r with
       | [] -> (None, [])
       | package :: rest ->
         (Package_heaps.Reader_dispatcher.get_package_directory ~reader package, rest)
     in
-    match dir_opt with
-    | None -> None
-    | Some package_dir ->
+    match (dir_opt, rest) with
+    | (None, _) -> None
+    | (Some package_dir, []) -> Node.resolve_package ~options ~reader ?phantom_acc package_dir
+    | (Some package_dir, rest) ->
       Files.construct_path package_dir rest
       |> Node.resolve_relative ~options ~reader ?phantom_acc file_dirname
 
