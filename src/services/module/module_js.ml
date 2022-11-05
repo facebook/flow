@@ -450,6 +450,7 @@ module Haste : MODULE_SYSTEM = struct
         [
           lazy (resolve_haste_module ~reader ?phantom_acc r);
           lazy (resolve_haste_package ~options ~reader dir ?phantom_acc r);
+          lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
           lazy (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
         ]
 
