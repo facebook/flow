@@ -366,30 +366,17 @@ let mk_num_singleton number_type (lexeme : int array) =
 
 let mk_bignum_singleton kind lexeme =
   let (neg, num, raw) = split_number_type lexeme in
-  (* convert singleton number type into a float *)
+  let postraw = bigint_strip_n num in
   let value =
-    match kind with
-    | BIG_BINARY
-    | BIG_OCTAL ->
-      let postraw = bigint_strip_n num in
-      begin
-        try Int64.to_float (Int64.of_string postraw) with
-        | Failure _ -> failwith ("Invalid (lexer) bigint binary/octal " ^ postraw)
-      end
-    | BIG_NORMAL ->
-      let postraw = bigint_strip_n num in
-      begin
-        try float_of_string postraw with
-        | Failure _ -> failwith ("Invalid (lexer) bigint " ^ postraw)
-      end
+    Int64.of_string_opt postraw
+    |> Option.map (fun value ->
+           if neg then
+             Int64.neg value
+           else
+             value
+       )
   in
-  let approx_value =
-    if neg then
-      ~-.value
-    else
-      value
-  in
-  T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw }
+  T_BIGINT_SINGLETON_TYPE { kind; value; raw }
 
 (* This is valid since the escapes are already tackled*)
 let assert_valid_unicode_in_identifier env loc code =

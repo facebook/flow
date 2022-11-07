@@ -59,7 +59,7 @@ and Literal : sig
     | Boolean of bool
     | Null
     | Number of float
-    | BigInt of float
+    | BigInt of int64 option
     | RegExp of RegExp.t
   [@@deriving show]
 end =
@@ -87,9 +87,9 @@ end =
 
 and BigIntLiteral : sig
   type 'M t = {
-    approx_value: float;
-    (* Warning! Might lose precision! *)
-    bigint: string;
+    (* This will be None if we couldn't parse `raw`. That could be if the number is out of range or invalid (like a float) *)
+    value: int64 option;
+    raw: string;
     comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]

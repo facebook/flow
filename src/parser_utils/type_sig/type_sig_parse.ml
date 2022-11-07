@@ -1220,7 +1220,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.StringLiteral { Ast.StringLiteral.value; _ } -> Annot (SingletonString (loc, value))
     | T.NumberLiteral { Ast.NumberLiteral.value; raw; _ } ->
       Annot (SingletonNumber (loc, value, raw))
-    | T.BigIntLiteral { Ast.BigIntLiteral.bigint; _ } -> Annot (SingletonBigInt (loc, bigint))
+    | T.BigIntLiteral { Ast.BigIntLiteral.raw; _ } -> Annot (SingletonBigInt (loc, raw))
     | T.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Annot (SingletonBoolean (loc, value))
     | T.Nullable { T.Nullable.argument; _ } -> Annot (Maybe (loc, annot opts scope tbls xs argument))
     | T.Array { T.Array.argument; _ } -> Annot (Array (loc, annot opts scope tbls xs argument))

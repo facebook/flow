@@ -1174,22 +1174,8 @@ module Expression
     str
 
   and bigint env kind raw =
-    let value =
-      match kind with
-      | BIG_BINARY
-      | BIG_OCTAL ->
-        let postraw = bigint_strip_n raw in
-        begin
-          try Int64.to_float (Int64.of_string postraw) with
-          | Failure _ -> failwith ("Invalid bigint binary/octal " ^ postraw)
-        end
-      | BIG_NORMAL ->
-        let postraw = bigint_strip_n raw in
-        begin
-          try float_of_string postraw with
-          | Failure _ -> failwith ("Invalid bigint " ^ postraw)
-        end
-    in
+    let postraw = bigint_strip_n raw in
+    let value = Int64.of_string_opt postraw in
     Expect.token env (T_BIGINT { kind; raw });
     value
 

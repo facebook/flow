@@ -327,8 +327,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ((loc, t), t_ast)
     | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw; _ } as t_ast)) ->
       ((loc, mk_singleton_number cx loc value raw), t_ast)
-    | (loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast)) ->
-      let reason = mk_annot_reason (RBigIntLit bigint) loc in
+    | (loc, (BigIntLiteral { Ast.BigIntLiteral.raw; _ } as t_ast)) ->
+      let reason = mk_annot_reason (RBigIntLit raw) loc in
       Flow_js_utils.add_output cx (Error_message.EBigIntNotYetSupported reason);
       ((loc, AnyT.error reason), t_ast)
     | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->

@@ -1050,9 +1050,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method bigint_literal (t : 'M Ast.BigIntLiteral.t) : 'N Ast.BigIntLiteral.t =
       let open Ast.BigIntLiteral in
-      let { approx_value; bigint; comments } = t in
+      let { value; raw; comments } = t in
       let comments' = Option.map ~f:this#syntax comments in
-      { approx_value; bigint; comments = comments' }
+      { value; raw; comments = comments' }
 
     method boolean_literal (t : 'M Ast.BooleanLiteral.t) : 'N Ast.BooleanLiteral.t =
       let open Ast.BooleanLiteral in

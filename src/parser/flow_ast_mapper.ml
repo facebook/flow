@@ -1334,12 +1334,12 @@ class ['loc] mapper =
 
     method bigint_literal_type _loc (lit : 'loc Ast.BigIntLiteral.t) =
       let open Ast.BigIntLiteral in
-      let { approx_value; bigint; comments } = lit in
+      let { value; raw; comments } = lit in
       let comments' = this#syntax_opt comments in
       if comments == comments' then
         lit
       else
-        { approx_value; bigint; comments = comments' }
+        { value; raw; comments = comments' }
 
     method boolean_literal_type _loc (lit : 'loc Ast.BooleanLiteral.t) =
       let open Ast.BooleanLiteral in

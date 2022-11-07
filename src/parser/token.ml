@@ -161,8 +161,7 @@ type t =
     }
   | T_BIGINT_SINGLETON_TYPE of {
       kind: bigint_type;
-      approx_value: float;
-      (* Warning! Might lose precision! *)
+      value: int64 option;
       raw: string;
     }
   | T_STRING_TYPE

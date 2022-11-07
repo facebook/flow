@@ -1366,8 +1366,8 @@ and literal ~opts loc { Ast.Literal.raw; value; comments } =
 and string_literal_type loc { Ast.StringLiteral.value = _; raw; comments } =
   layout_node_with_comments_opt loc comments (Atom raw)
 
-and bigint_literal_type loc { Ast.BigIntLiteral.approx_value = _; bigint; comments } =
-  layout_node_with_comments_opt loc comments (Atom bigint)
+and bigint_literal_type loc { Ast.BigIntLiteral.value = _; raw; comments } =
+  layout_node_with_comments_opt loc comments (Atom raw)
 
 and boolean_literal_type loc { Ast.BooleanLiteral.value; comments } =
   layout_node_with_comments_opt

@@ -1666,8 +1666,7 @@ with type t = Impl.t = struct
         "NumberLiteralTypeAnnotation"
         loc
         [("value", number value); ("raw", string raw)]
-    and bigint_literal_type (loc, { Ast.BigIntLiteral.bigint; comments; _ }) =
-      let raw = bigint in
+    and bigint_literal_type (loc, { Ast.BigIntLiteral.raw; comments; _ }) =
       node ?comments "BigIntLiteralTypeAnnotation" loc [("value", null); ("raw", string raw)]
     and boolean_literal_type (loc, { Ast.BooleanLiteral.value; comments }) =
       node

@@ -344,16 +344,15 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       )
-    | T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw } ->
-      let bigint = raw in
+    | T_BIGINT_SINGLETON_TYPE { kind; value; raw } ->
       let leading = Peek.comments env in
-      Expect.token env (T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw });
+      Expect.token env (T_BIGINT_SINGLETON_TYPE { kind; value; raw });
       let trailing = Eat.trailing_comments env in
       ( loc,
         Type.BigIntLiteral
           {
-            Ast.BigIntLiteral.approx_value;
-            bigint;
+            Ast.BigIntLiteral.value;
+            raw;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       )

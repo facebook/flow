@@ -1404,10 +1404,10 @@ let program
       ((loc1, lit1) : Loc.t * Loc.t Ast.BigIntLiteral.t)
       ((loc2, lit2) : Loc.t * Loc.t Ast.BigIntLiteral.t) : node change list option =
     let open Ast.BigIntLiteral in
-    let { approx_value = value1; bigint = bigint1; comments = comments1 } = lit1 in
-    let { approx_value = value2; bigint = bigint2; comments = comments2 } = lit2 in
+    let { value = value1; raw = raw1; comments = comments1 } = lit1 in
+    let { value = value2; raw = raw2; comments = comments2 } = lit2 in
     let value_diff =
-      if value1 = value2 && String.equal bigint1 bigint2 then
+      if value1 = value2 && String.equal raw1 raw2 then
         Some []
       else
         Some [replace loc1 (BigIntLiteral (loc1, lit1)) (BigIntLiteral (loc2, lit2))]
