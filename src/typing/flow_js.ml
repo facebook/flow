@@ -2588,31 +2588,31 @@ struct
                   calltype.call_args_tlist
               in
               begin
-                match all_explicit_targs calltype.call_targs with
-                | Some targs ->
-                  (match t with
-                  (* We are calling the static callable method of a class. We need to be careful
-                   * not to apply the targs at this point, because this PolyT represents the class
-                   * and not the static function that's being called. We implicitly instantiate
-                   * the instance's tparams using the bounds and then forward the result original call
-                   * instead of consuming the method call's type arguments.
-                   *
-                   * We use the bounds to explicitly instantiate so that we don't create yet another implicit
-                   * instantiation here that would be un-annotatable. *)
-                  | ThisClassT _ ->
-                    let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
-                    let t_ =
-                      instantiate_poly_call_or_new
-                        cx
-                        trace
-                        (tparams_loc, ids, t)
-                        (Nel.to_list targs)
-                        ~use_op
-                        ~reason_op
-                        ~reason_tapp
-                    in
-                    rec_flow cx trace (t_, u)
-                  | _ ->
+                match t with
+                (* We are calling the static callable method of a class. We need to be careful
+                 * not to apply the targs at this point, because this PolyT represents the class
+                 * and not the static function that's being called. We implicitly instantiate
+                 * the instance's tparams using the bounds and then forward the result original call
+                 * instead of consuming the method call's type arguments.
+                 *
+                 * We use the bounds to explicitly instantiate so that we don't create yet another implicit
+                 * instantiation here that would be un-annotatable. *)
+                | ThisClassT _ ->
+                  let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
+                  let t_ =
+                    instantiate_poly_call_or_new
+                      cx
+                      trace
+                      (tparams_loc, ids, t)
+                      (Nel.to_list targs)
+                      ~use_op
+                      ~reason_op
+                      ~reason_tapp
+                  in
+                  rec_flow cx trace (t_, u)
+                | _ ->
+                  (match all_explicit_targs calltype.call_targs with
+                  | Some targs ->
                     let t_ =
                       instantiate_poly_call_or_new
                         cx
@@ -2634,35 +2634,35 @@ struct
                             call_action = Funcalltype { calltype with call_targs = None };
                             return_hint;
                           }
-                      ))
-                | _ ->
-                  let poly_t = (tparams_loc, ids, t) in
-                  let check =
-                    Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype
-                  in
-                  let t_ =
-                    ImplicitInstantiationKit.run
+                      )
+                  | _ ->
+                    let poly_t = (tparams_loc, ids, t) in
+                    let check =
+                      Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype
+                    in
+                    let t_ =
+                      ImplicitInstantiationKit.run
+                        cx
+                        check
+                        ~cache:arg_reasons
+                        trace
+                        ~use_op
+                        ~reason_op
+                        ~reason_tapp
+                        ~return_hint
+                    in
+                    rec_flow
                       cx
-                      check
-                      ~cache:arg_reasons
                       trace
-                      ~use_op
-                      ~reason_op
-                      ~reason_tapp
-                      ~return_hint
-                  in
-                  rec_flow
-                    cx
-                    trace
-                    ( t_,
-                      CallT
-                        {
-                          use_op;
-                          reason = reason_op;
-                          call_action = Funcalltype { calltype with call_targs = None };
-                          return_hint;
-                        }
-                    )
+                      ( t_,
+                        CallT
+                          {
+                            use_op;
+                            reason = reason_op;
+                            call_action = Funcalltype { calltype with call_targs = None };
+                            return_hint;
+                          }
+                      ))
               end
             | ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint } ->
               (match all_explicit_targs targs with
