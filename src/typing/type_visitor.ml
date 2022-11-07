@@ -177,9 +177,11 @@ class ['a] t =
       | SingletonBoolP _ -> acc
       | SingletonStrP _ -> acc
       | SingletonNumP _ -> acc
+      | SingletonBigIntP _ -> acc
       | BoolP _ -> acc
       | FunP -> acc
       | NumP _ -> acc
+      | BigIntP _ -> acc
       | ObjP -> acc
       | StrP _ -> acc
       | SymbolP _ -> acc

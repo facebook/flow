@@ -267,12 +267,14 @@ let rec predicate_of_refinement cx =
     | BoolR loc -> BoolP loc
     | FunctionR -> FunP
     | NumberR loc -> NumP loc
+    | BigIntR loc -> BigIntP loc
     | ObjectR -> ObjP
     | StringR loc -> StrP loc
     | SymbolR loc -> SymbolP loc
     | SingletonBoolR { loc; sense = _; lit } -> SingletonBoolP (loc, lit)
     | SingletonStrR { loc; sense; lit } -> SingletonStrP (loc, sense, lit)
     | SingletonNumR { loc; sense; lit } -> SingletonNumP (loc, sense, lit)
+    | SingletonBigIntR { loc; sense; lit } -> SingletonBigIntP (loc, sense, lit)
     | SentinelR (prop, loc) ->
       Debug_js.Verbose.print_if_verbose_lazy
         cx

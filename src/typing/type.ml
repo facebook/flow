@@ -989,9 +989,11 @@ module rec TypeTerm : sig
     | SingletonBoolP of ALoc.t * bool (* true or false *)
     | SingletonStrP of ALoc.t * bool * string (* string literal *)
     | SingletonNumP of ALoc.t * bool * number_literal
+    | SingletonBigIntP of ALoc.t * bool * bigint_literal
     | BoolP of ALoc.t (* boolean *)
     | FunP (* function *)
     | NumP of ALoc.t (* number *)
+    | BigIntP of ALoc.t
     | ObjP (* object *)
     | StrP of ALoc.t (* string *)
     | SymbolP of ALoc.t (* symbol *)
@@ -3709,11 +3711,13 @@ let rec string_of_predicate = function
   | SingletonBoolP (_, true) -> "true"
   | SingletonStrP (_, _, str) -> spf "string `%s`" str
   | SingletonNumP (_, _, (_, raw)) -> spf "number `%s`" raw
+  | SingletonBigIntP (_, _, (_, raw)) -> spf "bigint `%s`" raw
   (* typeof *)
   | VoidP -> "undefined"
   | BoolP _ -> "boolean"
   | StrP _ -> "string"
   | NumP _ -> "number"
+  | BigIntP _ -> "bigint"
   | FunP -> "function"
   | ObjP -> "object"
   | SymbolP _ -> "symbol"

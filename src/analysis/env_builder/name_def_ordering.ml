@@ -207,12 +207,14 @@ struct
             | BoolR _
             | FunctionR
             | NumberR _
+            | BigIntR _
             | ObjectR
             | StringR _
             | SymbolR _
             | SingletonBoolR _
             | SingletonStrR _
             | SingletonNumR _
+            | SingletonBigIntR _
             | PropExistsR _ ->
               ()
           in

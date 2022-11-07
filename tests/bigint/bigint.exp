@@ -46,5 +46,22 @@ References:
                                                                      ^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
+Error --------------------------------------------------------------------------------------------------- bigint.js:26:6
 
-Found 2 errors
+Cannot cast `foo` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
+
+   bigint.js:26:6
+   26|     (foo : empty); // error
+            ^^^
+
+References:
+   bigint.js:24:5
+   24| if (typeof foo === "bigint") {
+           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   bigint.js:26:12
+   26|     (foo : empty); // error
+                  ^^^^^ [2]
+
+
+
+Found 3 errors

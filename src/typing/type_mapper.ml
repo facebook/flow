@@ -683,9 +683,11 @@ class virtual ['a] t =
       | SingletonBoolP _
       | SingletonStrP _
       | SingletonNumP _
+      | SingletonBigIntP _
       | BoolP _
       | FunP
       | NumP _
+      | BigIntP _
       | ObjP
       | StrP _
       | SymbolP _

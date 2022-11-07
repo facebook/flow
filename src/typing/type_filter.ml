@@ -247,6 +247,29 @@ let not_number_literal expected = function
     DefT (r, trust, EmptyT)
   | t -> t
 
+let bigint_literal expected_loc sense expected t =
+  let (_, expected_raw) = expected in
+  let expected_desc = RBigIntLit expected_raw in
+  let lit_reason = replace_desc_new_reason expected_desc in
+  match t with
+  | DefT (_, trust, BigIntT (Literal (_, (_, actual_raw)))) ->
+    if actual_raw = expected_raw then
+      t
+    else
+      DefT (mk_reason expected_desc expected_loc, trust, BigIntT (Literal (Some sense, expected)))
+  | DefT (r, trust, BigIntT Truthy) when snd expected <> "0n" ->
+    DefT (lit_reason r, trust, BigIntT (Literal (None, expected)))
+  | DefT (r, trust, BigIntT AnyLiteral) ->
+    DefT (lit_reason r, trust, BigIntT (Literal (None, expected)))
+  | DefT (r, trust, MixedT _) -> DefT (lit_reason r, trust, BigIntT (Literal (None, expected)))
+  | AnyT _ as t -> t
+  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
+
+let not_bigint_literal expected = function
+  | DefT (r, trust, BigIntT (Literal (_, actual))) when snd actual = snd expected ->
+    DefT (r, trust, EmptyT)
+  | t -> t
+
 let true_ t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
@@ -350,6 +373,22 @@ let not_number t =
   | DefT (_, trust, EnumT { representation_t = DefT (_, _, NumT _); _ })
   | DefT (_, trust, NumT _) ->
     DefT (reason_of_t t, trust, EmptyT)
+  | _ -> t
+
+let bigint loc t =
+  match t with
+  | DefT (r, trust, MixedT Mixed_truthy) ->
+    DefT (replace_desc_new_reason BigIntT.desc r, trust, BigIntT Truthy)
+  | AnyT _
+  | DefT (_, _, MixedT _) ->
+    DefT (mk_reason RBigInt loc, bogus_trust (), BigIntT AnyLiteral)
+  | DefT (_, _, BigIntT _) -> t
+  | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
+  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
+
+let not_bigint t =
+  match t with
+  | DefT (_, trust, BigIntT _) -> DefT (reason_of_t t, trust, EmptyT)
   | _ -> t
 
 let object_ cx t =

@@ -4624,6 +4624,7 @@ module Make
           | "string" -> (Some (StringR loc), false)
           | "symbol" -> (Some (SymbolR loc), false)
           | "undefined" -> (Some UndefinedR, true)
+          | "bigint" -> (Some (BigIntR loc), false)
           | _ ->
             add_output Error_message.(EInvalidTypeof (str_loc, typename));
             (None, false)

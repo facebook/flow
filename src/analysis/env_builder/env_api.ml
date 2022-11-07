@@ -115,6 +115,7 @@ module type S = sig
       | BoolR of L.t
       | FunctionR
       | NumberR of L.t
+      | BigIntR of L.t
       | ObjectR
       | StringR of L.t
       | SymbolR of L.t
@@ -132,6 +133,11 @@ module type S = sig
           loc: L.t;
           sense: bool;
           lit: float * string;
+        }
+      | SingletonBigIntR of {
+          loc: L.t;
+          sense: bool;
+          lit: int64 option * string;
         }
       (* The location here is the location of expr in x.foo === expr *)
       | SentinelR of string * L.t
@@ -357,6 +363,7 @@ module Make
       | BoolR of L.t
       | FunctionR
       | NumberR of L.t
+      | BigIntR of L.t
       | ObjectR
       | StringR of L.t
       | SymbolR of L.t
@@ -374,6 +381,11 @@ module Make
           loc: L.t;
           sense: bool;
           lit: float * string;
+        }
+      | SingletonBigIntR of {
+          loc: L.t;
+          sense: bool;
+          lit: int64 option * string;
         }
       | SentinelR of string * L.t
       | LatentR of {
@@ -519,6 +531,7 @@ module Make
     | BoolR _ -> "bool"
     | FunctionR -> "function"
     | NumberR _ -> "number"
+    | BigIntR _ -> "bigint"
     | ObjectR -> "object"
     | StringR _ -> "string"
     | SymbolR _ -> "symbol"
@@ -529,6 +542,11 @@ module Make
       else
         lit
     | SingletonNumR { lit = (_, lit); sense; _ } ->
+      if not sense then
+        Printf.sprintf "Not (%s)" lit
+      else
+        lit
+    | SingletonBigIntR { lit = (_, lit); sense; _ } ->
       if not sense then
         Printf.sprintf "Not (%s)" lit
       else

@@ -7393,6 +7393,20 @@ struct
     (***********************)
     | NumP loc -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.number loc l, OpenT t)
     | NotP (NumP _) -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_number l, OpenT t)
+    (*********************)
+    (* _ ~ some bigint n *)
+    (*********************)
+    | SingletonBigIntP (expected_loc, sense, lit) ->
+      let filtered_bigint = Type_filter.bigint_literal expected_loc sense lit l in
+      rec_flow_t cx trace ~use_op:unknown_use (filtered_bigint, OpenT t)
+    | NotP (SingletonBigIntP (_, _, lit)) ->
+      let filtered_bigint = Type_filter.not_bigint_literal lit l in
+      rec_flow_t cx trace ~use_op:unknown_use (filtered_bigint, OpenT t)
+    (***********************)
+    (* typeof _ ~ "bigint" *)
+    (***********************)
+    | BigIntP loc -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.bigint loc l, OpenT t)
+    | NotP (BigIntP _) -> rec_flow_t cx trace ~use_op:unknown_use (Type_filter.not_bigint l, OpenT t)
     (***********************)
     (* typeof _ ~ "function" *)
     (***********************)
