@@ -4380,10 +4380,8 @@ module Make
       | Null -> NullT.at loc |> with_trust make_trust
       | Number f ->
         DefT (mk_annot_reason RNumber loc, make_trust (), NumT (Literal (None, (f, lit.raw))))
-      | BigInt _ ->
-        let reason = mk_annot_reason (RBigIntLit lit.raw) loc in
-        Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-        AnyT.error reason
+      | BigInt n ->
+        DefT (mk_annot_reason RBigInt loc, make_trust (), BigIntT (Literal (None, (n, lit.raw))))
       | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
 
   (* traverse a unary expression, return result type *)

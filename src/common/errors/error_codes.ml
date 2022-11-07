@@ -7,7 +7,6 @@
 
 type error_code =
   | AmbiguousObjectType
-  | BigIntUnsupported
   | CannotDelete
   | CannotImplement
   | CannotInferType
@@ -191,7 +190,6 @@ let code_of_lint : Lints.lint_kind -> error_code = function
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
-  | BigIntUnsupported -> "bigint-unsupported"
   | CannotDelete -> "cannot-delete"
   | CannotImplement -> "cannot-implement"
   | CannotInferType -> "cannot-infer-type"

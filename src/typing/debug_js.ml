@@ -1634,7 +1634,6 @@ let dump_error_message =
     | ESignatureVerification sve ->
       let msg = string_of_signature_error ALoc.debug_to_string sve in
       spf "ESignatureVerification (%s)" msg
-    | EBigIntNotYetSupported reason -> spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
     | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
       spf
         "ECannotSpreadInterface (%s) (%s) (%s)"

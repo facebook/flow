@@ -250,10 +250,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, (Null _ as t_ast)) -> ((loc, NullT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (Symbol _ as t_ast)) -> ((loc, SymbolT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (Number _ as t_ast)) -> ((loc, NumT.at loc |> with_trust_inference cx), t_ast)
-    | (loc, (BigInt _ as t_ast)) ->
-      let reason = mk_annot_reason RBigInt loc in
-      Flow_js_utils.add_output cx (Error_message.EBigIntNotYetSupported reason);
-      ((loc, AnyT.error reason), t_ast)
+    | (loc, (BigInt _ as t_ast)) -> ((loc, BigIntT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
     | (loc, (Boolean _ as t_ast)) -> ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
     | (loc, Nullable { Nullable.argument = t; comments }) ->
@@ -327,10 +324,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ((loc, t), t_ast)
     | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw; _ } as t_ast)) ->
       ((loc, mk_singleton_number cx loc value raw), t_ast)
-    | (loc, (BigIntLiteral { Ast.BigIntLiteral.raw; _ } as t_ast)) ->
-      let reason = mk_annot_reason (RBigIntLit raw) loc in
-      Flow_js_utils.add_output cx (Error_message.EBigIntNotYetSupported reason);
-      ((loc, AnyT.error reason), t_ast)
+    | (loc, (BigIntLiteral { Ast.BigIntLiteral.value; raw; _ } as t_ast)) ->
+      ((loc, mk_singleton_bigint cx loc value raw), t_ast)
     | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
       ((loc, mk_singleton_boolean cx loc value), t_ast)
     | (loc, IndexedAccess { IndexedAccess._object; index; comments }) ->
@@ -1913,6 +1908,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   and mk_singleton_boolean cx loc b =
     let reason = mk_annot_reason (RBooleanLit b) loc in
     DefT (reason, infer_trust cx, SingletonBoolT b)
+
+  and mk_singleton_bigint cx loc num raw =
+    let reason = mk_annot_reason (RBigIntLit raw) loc in
+    DefT (reason, infer_trust cx, SingletonBigIntT (num, raw))
 
   (* Given the type of expression C and type arguments T1...Tn, return the type of
      values described by C<T1,...,Tn>, or C when there are no type arguments. *)

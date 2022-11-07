@@ -3110,6 +3110,12 @@ module BoolT = Primitive (struct
   let make r trust = DefT (r, trust, BoolT None)
 end)
 
+module BigIntT = Primitive (struct
+  let desc = RBigInt
+
+  let make r trust = DefT (r, trust, BigIntT AnyLiteral)
+end)
+
 module SymbolT = Primitive (struct
   let desc = RSymbol
 

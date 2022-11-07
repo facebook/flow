@@ -303,7 +303,6 @@ and 'loc t' =
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
   | ECannotDelete of 'loc * 'loc virtual_reason
-  | EBigIntNotYetSupported of 'loc virtual_reason
   | ESignatureVerification of 'loc Signature_error.t
   | ECannotSpreadInterface of {
       spread_reason: 'loc virtual_reason;
@@ -905,7 +904,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
-  | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification sve -> ESignatureVerification (Signature_error.map f sve)
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     ECannotSpreadInterface
@@ -1264,7 +1262,6 @@ let util_use_op_of_msg nope util = function
   | EUnnecessaryInvariant _
   | EUnexpectedTemporaryBaseType _
   | ECannotDelete _
-  | EBigIntNotYetSupported _
   | ESignatureVerification _
   | EExponentialSpread _
   | EComputedPropertyWithMultipleLowerBounds _
@@ -1313,7 +1310,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
     Some (poly_loc_of_reason primary)
   | ESketchyNumberLint (_, reason)
   | EInvalidExtends reason
-  | EBigIntNotYetSupported reason
   | EUnsupportedSetProto reason
   | EReactElementFunArity (reason, _, _)
   | EUnsupportedImplements reason
@@ -3357,8 +3353,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EBigIntNotYetSupported reason ->
-    Normal { features = [text "BigInt "; ref reason; text " is not yet supported."] }
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     let features =
       [
@@ -4039,7 +4033,6 @@ let error_code_of_message err : error_code option =
   | EBadDefaultImportAccess _ -> Some DefaultImportAccess
   | EBadDefaultImportDestructuring _ -> Some DefaultImportAccess
   | EInvalidImportStarUse _ -> Some InvalidImportStarUse
-  | EBigIntNotYetSupported _ -> Some BigIntUnsupported
   | EBinaryInLHS _ -> Some InvalidInLhs
   | EBinaryInRHS _ -> Some InvalidInRhs
   | EBindingError (binding_error, _, _, _) ->

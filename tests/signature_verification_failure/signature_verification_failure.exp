@@ -264,14 +264,6 @@ expression. [signature-verification-failure]
                          ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:17:18
-
-BigInt bigint literal `42n` [1] is not yet supported. [bigint-unsupported]
-
-   17| export const u = 42n;
-                        ^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------------- misc.js:19:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
@@ -383,4 +375,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 38 errors
+Found 37 errors
