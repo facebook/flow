@@ -295,52 +295,59 @@ end = struct
     let broadcast env =
       if not (SSet.is_empty env.files) then Lwt_condition.broadcast env.changes_condition ()
 
-    (** When watchman restarts, we miss any filesystem changes that might happen while it's
-        down. To re-synchronize, we need to recheck all of the files that could have changed
-        while it wasn't watching:
-
-        1) a file that was previously unchanged is now changed
-        2) a changed file changed again
-        3) a previously changed file was reverted
-        4) the mergebase changed, changing some committed files
-
-        Since we can ask watchman for the changes since mergebase, it can tell us about
-        (1) and (2). We handle (3) separately, by setting [missed_changes = true] which
-        triggers a recheck of all focused (i.e. previously changed) files. But we can't
-        handle (4): watchman can't tell us all the files that changed between the two
-        mergebase commits (`hg` can, but it's not worth implementing this). so if the
-        mergebase changes, we restart. *)
-    let handle_restart env =
-      StatusStream.file_watcher_deferred "Watchman restart";
-      match%lwt Watchman.recover_from_restart env.instance with
-      | Ok (instance, changes) ->
-        Logger.info "Watchman missed changes, but the mergebase didn't change. Recovering...";
-        env.metadata <- { env.metadata with MonitorProt.missed_changes = true };
-        StatusStream.file_watcher_ready ();
-        Lwt.return (Some (instance, Watchman.Files_changed { changes; changed_mergebase = None }))
-      | Error Watchman.Dead
-      | Error Watchman.Restarted ->
-        Logger.info "Watchman missed changes, but we couldn't reconnect or the mergebase changed.";
-        Lwt.return None
-
     let main env =
       let%lwt (instance, pushed_changes) =
         match%lwt Watchman.get_changes env.instance with
         | Ok (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
         | Error Watchman.Dead -> raise (Watchman_failure Watchman.Dead)
         | Error Watchman.Restarted ->
-          (match%lwt handle_restart env with
-          | Some (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
-          | None -> raise (Watchman_failure Watchman.Restarted))
+          StatusStream.file_watcher_deferred "Watchman restart";
+          (match%lwt Watchman.recover_from_restart env.instance with
+          | Ok (instance, pushed_changes) ->
+            StatusStream.file_watcher_ready ();
+            Lwt.return (instance, pushed_changes)
+          | Error err -> raise (Watchman_failure err))
       in
       env.instance <- instance;
       match pushed_changes with
       | Watchman.Files_changed { changes; changed_mergebase } ->
+        (* this event tells us all the files that changed. if changed_mergebase,
+           then some of these changes are upstream files. we could avoid rechecking
+           them if we re-init. we signal this by setting changed_mergebase. *)
         env.files <- SSet.union env.files changes;
         let metadata = { MonitorProt.changed_mergebase; missed_changes = false } in
         env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata metadata;
         broadcast env;
         Lwt.return env
+      | Watchman.Missed_changes { prev_mergebase; mergebase; changes_since_mergebase } ->
+        (* When watchman restarts, we miss any filesystem changes that might happen while it's
+           down. Likewise, if so many files change that Watchman's underlying file watchers
+           can't keep up, it acts like it restarted. To re-synchronize, we need to recheck
+           all of the files that could have changed while it wasn't watching:
+
+           1) a file that was previously unchanged is now changed
+           2) a changed file changed again
+           3) a previously changed file was reverted
+           4) the mergebase changed, changing some committed files
+
+           Since watchman told us the changes since mergebase, we know about (1) and (2).
+           We handle (3) by setting [missed_changes = true], which triggers a recheck of
+           all focused (i.e. previously changed) files. But we can't incrementally
+           handle (4): watchman can't tell us all the files that changed between the two
+           mergebase commits (`hg` can, but it's not worth implementing this). *)
+        if String.equal prev_mergebase mergebase then (
+          Logger.info "Watchman missed changes, but the mergebase didn't change.";
+          env.files <- SSet.union env.files changes_since_mergebase;
+          let metadata = { MonitorProt.changed_mergebase = Some false; missed_changes = true } in
+          env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata metadata;
+          broadcast env;
+          Lwt.return env
+        ) else (
+          Logger.info "Watchman reports mergebase changed from %S to %S" prev_mergebase mergebase;
+          (* ideally, we would re-init from the new mergebase, but we can't do
+             that yet so we fail. *)
+          raise (Watchman_failure Watchman.Restarted)
+        )
       | Watchman.State_enter (name, metadata) ->
         (match name with
         | "hg.update" ->

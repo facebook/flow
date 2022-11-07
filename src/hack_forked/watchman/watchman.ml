@@ -137,6 +137,22 @@ type pushed_changes =
       changed_mergebase: bool option;
           (** Whether the mergebase changed ([None] if we weren't tracking the mergebase). *)
     }
+      (** Notification that files changed. This differs from [Missed_changes]
+          because [changes] includes all of the files that have changed on disk,
+          even the upstream changes between the mergebases. This can be used to
+          decide whether to process all of the changes, or re-init on the new
+          mergebase. *)
+  | Missed_changes of {
+      prev_mergebase: string;  (** Previous mergebase *)
+      mergebase: string;  (** New mergebase *)
+      changes_since_mergebase: SSet.t;  (** Files that are changed locally since the new mergebase *)
+    }
+      (** Notification that Watchman missed some changes (it restarted or
+          overflowed). Includes the mergebase and the files that have changed
+          since the new mergebase. This differs from [Files_changed] in that
+          it's not a complete list of the files that changed on disk. It isn't
+          enough for us to update incrementally, but it could be used to re-init
+          on top of the new mergebase. *)
 
 module Capability = struct
   type t =
@@ -1043,21 +1059,14 @@ let recover_from_restart (env : env) =
            happen: it means that Watchman previously supported SCM queries, but
            no longer does when we reconnect. *)
         Lwt.return (Error Restarted)
-      | Ok (Some (mergebase, changes)) ->
+      | Ok (Some (mergebase, changes_since_mergebase)) ->
         (* this is a new `env`, make sure to store the mergebase! *)
         env.mergebase <- Some mergebase;
-        if String.equal mergebase prev_mergebase then
-          (* the mergebase didn't change, so no upstream files changed. we can
-             recover by rechecking `changes` (the files currently changed
-             locally) plus all of the files that were previously changed locally,
-             which are tracked separately. *)
-          Lwt.return (Ok (env, changes))
-        else
-          (* if the mergebase changed, `changes` is missing all of the files
-             that changed between the two mergebase revisions (it only contains
-             files changed on top of the new mergebase). we could query for
-             these changes, but it's left for future work. *)
-          Lwt.return (Error Restarted))
+        (* it's possible that prev_mergebase and mergebase are equal *)
+        let pushed_changes =
+          Missed_changes { prev_mergebase; mergebase; changes_since_mergebase }
+        in
+        Lwt.return (Ok (env, pushed_changes)))
     | Error _ as err -> Lwt.return err)
 
 let transform_asynchronous_get_changes_response env data =

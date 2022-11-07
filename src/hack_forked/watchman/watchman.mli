@@ -51,6 +51,11 @@ type pushed_changes =
       changes: SSet.t;
       changed_mergebase: bool option;
     }
+  | Missed_changes of {
+      prev_mergebase: string;
+      mergebase: string;
+      changes_since_mergebase: SSet.t;
+    }
 
 type failure =
   | Dead
@@ -60,7 +65,7 @@ type env
 
 val init : init_settings -> (env * SSet.t, string) Result.t Lwt.t
 
-val recover_from_restart : env -> (env * SSet.t, failure) Result.t Lwt.t
+val recover_from_restart : env -> (env * pushed_changes, failure) Result.t Lwt.t
 
 val get_changes : env -> (env * pushed_changes, failure) Result.t Lwt.t
 
