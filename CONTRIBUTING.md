@@ -17,25 +17,23 @@ Generally, the following areas of the project are best understood by these peopl
   * This includes everything that has to do with creating and solving constraints, and issuing error messages.
   * @samwgoldman
   * @panagosg7
-  * @dsainati1
   * @jbrown215
   * @mvitousek
   * @gkz
+  * @SamChou19815
 * Parser
   * @mroch
-  * @Hans-Halverson
   * @gkz
 * Performance
   * Performance-related work that happens outside of the typechecker itself. This includes recheck optimizations, abstract locations, saved state, etc.
-  * @nmote
+  * @samwgoldman
 * Flow server
   * All the pieces that make typechecking happen but not the typechecker itself.
-  * @nmote
+  * @samwgoldman
   * @mroch
 * IDE Integration
   * @mroch
-  * @vrama628
-  * @nmote
+  * @SamChou19815
 * Build systems and CI
   * @mroch
 * Docs: everyone
