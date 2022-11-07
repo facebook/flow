@@ -230,11 +230,10 @@ struct
           {
             rrt_resolved = [];
             rrt_unresolved = [];
-            rrt_resolve_to =
-              ResolveSpreadsToMultiflowSubtypeFull (_, { params; rest_param = None; _ });
+            rrt_resolve_to = ResolveSpreadsToMultiflowSubtypeFull (_, { params; rest_param; _ });
           }
         ) ->
-      reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params
+      reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param
     | ObjKitT
         ( _,
           r,
@@ -305,16 +304,36 @@ struct
     in
     Base.List.fold todo_rev ~init:tout ~f:(fun l o -> rest_type l (operand_to_t o))
 
-  and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params =
+  and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param =
     let tuple_members = params |> List.map (fun param -> snd param) in
-    let general =
-      match tuple_members with
-      | [] -> EmptyT.why reason |> with_trust bogus_trust
-      | [t] -> t
-      | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+    let arr_type =
+      match rest_param with
+      | None ->
+        let general =
+          match tuple_members with
+          | [] -> EmptyT.why reason |> with_trust bogus_trust
+          | [t] -> t
+          | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+        in
+        TupleAT (general, tuple_members)
+      | Some (_, _, rest_param_t) ->
+        let rest_elem_t =
+          Tvar.mk_no_wrap_where cx reason (fun tout ->
+              Flow.flow
+                cx
+                ( rest_param_t,
+                  GetElemT (unknown_use, reason, true, NumT.make reason (bogus_trust ()), tout)
+                )
+          )
+        in
+        let general =
+          match tuple_members with
+          | [] -> rest_elem_t
+          | t :: ts -> UnionT (reason, UnionRep.make rest_elem_t t ts)
+        in
+        ArrayAT (general, None)
     in
-    let tuple = TupleAT (general, tuple_members) in
-    let solution = DefT (reason, bogus_trust (), ArrT tuple) in
+    let solution = DefT (reason, bogus_trust (), ArrT arr_type) in
     Flow.flow_t cx (solution, tvar);
     UpperT solution
 

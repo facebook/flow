@@ -96,3 +96,22 @@ function rests() {
   (r2[2]: empty); // error
   r2.bad; // error
 }
+
+function ResolveSpreadsToMultiflowSubtypeFull() {
+  declare function f<TArguments: $ReadOnlyArray<mixed>>(fn: (...TArguments) => mixed): (...TArguments) => mixed
+
+  function g(x: number): void {}
+  const f1 = f(g);
+  f1(0); // ok
+  f1(""); // error
+
+  function h(x: number, y: string): void {}
+  const f2 = f(h);
+  f2(0, ""); // ok
+  f2("", 0); // error
+
+  function i(...rest: Array<number>): void {}
+  const f3 = f(i);
+  f3(0, 1); // ok
+  f3("") // error
+}

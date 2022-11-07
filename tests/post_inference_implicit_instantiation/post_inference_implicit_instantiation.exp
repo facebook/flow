@@ -328,5 +328,64 @@ References:
                       ^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:106:6
 
-Found 23 errors
+Cannot call `f1` because string [1] is incompatible with number [2] in the first argument. [incompatible-call]
+
+   upper_non_t.js:106:6
+   106|   f1(""); // error
+             ^^ [1]
+
+References:
+   upper_non_t.js:103:17
+   103|   function g(x: number): void {}
+                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:111:6
+
+Cannot call `f2` because string [1] is incompatible with number [2] in the first argument. [incompatible-call]
+
+   upper_non_t.js:111:6
+   111|   f2("", 0); // error
+             ^^ [1]
+
+References:
+   upper_non_t.js:108:17
+   108|   function h(x: number, y: string): void {}
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- upper_non_t.js:111:10
+
+Cannot call `f2` because number [1] is incompatible with string [2] in the second argument. [incompatible-call]
+
+   upper_non_t.js:111:10
+   111|   f2("", 0); // error
+                 ^ [1]
+
+References:
+   upper_non_t.js:108:28
+   108|   function h(x: number, y: string): void {}
+                                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:116:3
+
+Cannot call `f3` because string [1] is incompatible with number [2] in array element. [incompatible-call]
+
+   upper_non_t.js:116:3
+   116|   f3("") // error
+          ^^
+
+References:
+   upper_non_t.js:116:6
+   116|   f3("") // error
+             ^^ [1]
+   upper_non_t.js:113:29
+   113|   function i(...rest: Array<number>): void {}
+                                    ^^^^^^ [2]
+
+
+
+Found 27 errors
