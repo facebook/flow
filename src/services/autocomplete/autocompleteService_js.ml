@@ -26,6 +26,7 @@ let lsp_completion_of_type =
   | InlineInterface _ -> Lsp.Completion.Interface
   | StrLit _
   | NumLit _
+  | BigIntLit _
   | BoolLit _ ->
     Lsp.Completion.Value
   | Fun _ -> Lsp.Completion.Function
@@ -45,6 +46,7 @@ let lsp_completion_of_type =
   | Num _
   | Str _
   | Bool _
+  | BigInt _
   | Arr _
   | TypeOf _
   | Utility _

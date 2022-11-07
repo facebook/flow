@@ -227,6 +227,9 @@ and dump_t ?(depth = 10) t =
     | Bool (Some x) -> spf "Bool (%b)" x
     | Bool None -> "Bool"
     | BoolLit b -> spf "\"%b\"" b
+    | BigInt (Some x) -> spf "BigInt (%s)" x
+    | BigInt None -> "BigInt"
+    | BigIntLit s -> spf "\"%s\"" s
     | Fun f -> dump_fun_t ~depth f
     | Obj o -> dump_obj ~depth o
     | Arr a -> dump_arr ~depth a
@@ -313,9 +316,11 @@ let string_of_ctor_t = function
   | Num _ -> "Num"
   | Str _ -> "Str"
   | Bool _ -> "Bool"
+  | BigInt _ -> "BigInt"
   | NumLit _ -> "NumLit"
   | StrLit _ -> "StrLit"
   | BoolLit _ -> "BoolLit"
+  | BigIntLit _ -> "BigIntLit"
   | Fun _ -> "Fun"
   | Obj _ -> "Obj"
   | Arr _ -> "Arr"
@@ -384,11 +389,13 @@ let json_of_elt ~strip_root =
       | Symbol
       | Num _
       | Str _
-      | Bool _ ->
+      | Bool _
+      | BigInt _ ->
         []
       | NumLit s -> [("literal", JSON_String s)]
       | StrLit s -> [("literal", JSON_String (Reason.display_string_of_name s))]
       | BoolLit b -> [("literal", JSON_Bool b)]
+      | BigIntLit s -> [("literal", JSON_String s)]
       | Fun f -> json_of_fun_t f
       | Obj o -> json_of_obj_t o
       | Arr { arr_readonly; arr_literal; arr_elt_t } ->

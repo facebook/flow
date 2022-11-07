@@ -105,6 +105,7 @@ class ['a] t =
       | NumT _
       | StrT _
       | BoolT _
+      | BigIntT _
       | EmptyT
       | MixedT _
       | SymbolT
@@ -132,7 +133,8 @@ class ['a] t =
         acc
       | SingletonStrT _
       | SingletonNumT _
-      | SingletonBoolT _ ->
+      | SingletonBoolT _
+      | SingletonBigIntT _ ->
         acc
       | TypeT (_, t) -> self#type_ cx pole acc t
       | PolyT { tparams; t_out; tparams_loc = _; id = _ } ->

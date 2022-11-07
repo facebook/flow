@@ -43,6 +43,8 @@ type tvar = reason * ident
 
 type number_literal = float * string [@@deriving ord]
 
+type bigint_literal = int64 option * string [@@deriving ord]
+
 module rec TypeTerm : sig
   type t =
     (* open type variable *)
@@ -194,6 +196,7 @@ module rec TypeTerm : sig
     (* TODO StrT should perhaps not allow internal names *)
     | StrT of name literal
     | BoolT of bool option
+    | BigIntT of bigint_literal literal
     | EmptyT
     | MixedT of mixed_flavor
     | NullT
@@ -214,6 +217,7 @@ module rec TypeTerm : sig
     | SingletonNumT of number_literal
     (* singleton bool, matches exactly a given boolean literal *)
     | SingletonBoolT of bool
+    | SingletonBigIntT of bigint_literal
     (* A subset of StrT that represents a set of characters,
        e.g. RegExp flags *)
     | CharSetT of String_utils.CharSet.t
@@ -3408,6 +3412,7 @@ let string_of_defer_use_ctor = function
 
 let string_of_def_ctor = function
   | ArrT _ -> "ArrT"
+  | BigIntT _ -> "BigIntT"
   | BoolT _ -> "BoolT"
   | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
@@ -3426,6 +3431,7 @@ let string_of_def_ctor = function
   | SingletonBoolT _ -> "SingletonBoolT"
   | SingletonNumT _ -> "SingletonNumT"
   | SingletonStrT _ -> "SingletonStrT"
+  | SingletonBigIntT _ -> "SingletonBigIntT"
   | StrT _ -> "StrT"
   | SymbolT -> "SymbolT"
   | TypeT _ -> "TypeT"

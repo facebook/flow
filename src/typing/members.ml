@@ -425,6 +425,9 @@ let rec extract_type cx this_t =
   | DefT (reason, _, SingletonBoolT _)
   | DefT (reason, _, BoolT _) ->
     get_builtin_type cx reason (OrdinaryName "Boolean") |> extract_type cx
+  | DefT (_, _, SingletonBigIntT _)
+  | DefT (_, _, BigIntT _) ->
+    failwith "BigInt not yet added to lib defs"
   | DefT (reason, _, SymbolT) ->
     get_builtin_type cx reason (OrdinaryName "Symbol") |> extract_type cx
   | DefT (reason, _, CharSetT _) ->

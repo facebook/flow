@@ -192,6 +192,15 @@ let rec dump_t_ (depth, tvars) cx t =
           | Some b -> spf "%B" b
           | None -> "")
         t
+    | DefT (_, trust, BigIntT lit) ->
+      p
+        ~trust:(Some trust)
+        ~extra:
+          (match lit with
+          | Literal (_, (_, raw)) -> raw
+          | Truthy -> "truthy"
+          | AnyLiteral -> "")
+        t
     | DefT (_, trust, FunT (_, { params; return_t; this_t; _ })) ->
       p
         ~trust:(Some trust)
@@ -339,6 +348,7 @@ let rec dump_t_ (depth, tvars) cx t =
       p ~trust:(Some trust) ~extra:(spf "%S" (display_string_of_name s)) t
     | DefT (_, trust, SingletonNumT (_, s)) -> p ~trust:(Some trust) ~extra:s t
     | DefT (_, trust, SingletonBoolT b) -> p ~trust:(Some trust) ~extra:(spf "%B" b) t
+    | DefT (_, trust, SingletonBigIntT (_, s)) -> p ~trust:(Some trust) ~extra:s t
     | ModuleT (_, { exports_tmap; _ }, _) ->
       p
         t

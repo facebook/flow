@@ -91,9 +91,17 @@ let type_ options =
            ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))])
         )
     | Bool None -> just (T.Boolean None)
+    | BigInt (Some lit) ->
+      return
+        (builtin_from_string
+           "$TEMPORARY$bigint"
+           ~targs:(mk_targs [(Loc.none, T.BigIntLiteral (bigint_lit lit))])
+        )
+    | BigInt None -> just (T.BigInt None)
     | NumLit lit -> just (T.NumberLiteral (num_lit lit))
     | StrLit lit -> just (T.StringLiteral (str_lit (Reason.display_string_of_name lit)))
     | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))
+    | BigIntLit lit -> just (T.BigIntLiteral (bigint_lit lit))
     | Fun f ->
       let%map f = function_ f in
       (Loc.none, T.Function f)
@@ -332,6 +340,8 @@ let type_ options =
       comments = None;
     }
   and bool_lit lit = { Ast.BooleanLiteral.value = lit; comments = None }
+  and bigint_lit lit =
+    { Ast.BigIntLiteral.value = Int64.of_string_opt lit; raw = lit; comments = None }
   and getter t =
     function_
       {

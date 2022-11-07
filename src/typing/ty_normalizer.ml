@@ -849,12 +849,16 @@ end = struct
       | DefT (_, _, BoolT (Some x)) when Env.preserve_inferred_literal_types env ->
         return (Ty.Bool (Some x))
       | DefT (_, _, BoolT _) -> return (Ty.Bool None)
+      | DefT (_, _, BigIntT (Literal (_, (_, x)))) when Env.preserve_inferred_literal_types env ->
+        return (Ty.BigInt (Some x))
+      | DefT (_, _, BigIntT (Truthy | AnyLiteral | Literal _)) -> return (Ty.BigInt None)
       | DefT (_, _, EmptyT) -> return (mk_empty Ty.EmptyType)
       | DefT (_, _, NullT) -> return Ty.Null
       | DefT (_, _, SymbolT) -> return Ty.Symbol
       | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
       | DefT (_, _, SingletonStrT lit) -> return (Ty.StrLit lit)
       | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
+      | DefT (_, _, SingletonBigIntT (_, lit)) -> return (Ty.BigIntLit lit)
       | MaybeT (_, t) -> maybe_t ~env ~cont:type__ t
       | OptionalT { type_ = t; _ } -> optional_t ~env ~cont:type__ t
       | DefT (_, _, FunT (static, f)) ->

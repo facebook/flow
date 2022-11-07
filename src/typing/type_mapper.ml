@@ -249,6 +249,7 @@ class virtual ['a] t =
       | NumT _
       | StrT _
       | BoolT _
+      | BigIntT _
       | EmptyT
       | MixedT _
       | SymbolT
@@ -304,7 +305,8 @@ class virtual ['a] t =
           InstanceT (st', su', impl', instt')
       | SingletonStrT _
       | SingletonNumT _
-      | SingletonBoolT _ ->
+      | SingletonBoolT _
+      | SingletonBigIntT _ ->
         t
       | TypeT (s, t') ->
         let t'' = self#type_ cx map_cx t' in

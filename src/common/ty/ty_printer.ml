@@ -90,6 +90,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | Num _ -> Atom "number"
     | Str _ -> Atom "string"
     | Bool _ -> Atom "boolean"
+    | BigInt _ -> Atom "bigint"
     | Symbol -> Atom "symbol"
     | Fun func -> type_function ~depth ~sep:(fuse [pretty_space; Atom "=>"]) func
     | Obj obj -> type_object ~depth obj
@@ -117,6 +118,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         else
           "false"
         )
+    | BigIntLit raw -> Atom raw
     | InlineInterface { if_extends; if_props; if_dict } ->
       type_interface ~depth if_extends if_props if_dict
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]

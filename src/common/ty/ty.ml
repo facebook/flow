@@ -39,9 +39,11 @@ type t =
   | Num of string option
   | Str of Reason.name option
   | Bool of bool option
+  | BigInt of string option
   | NumLit of string
   | StrLit of Reason.name
   | BoolLit of bool
+  | BigIntLit of string
   | Fun of fun_t
   | Obj of obj_t
   | Arr of arr_t
@@ -440,24 +442,26 @@ class ['A] comparator_ty =
       | Bool _ -> 6
       | NumLit _ -> 7
       | Num _ -> 8
-      | StrLit _ -> 9
-      | Str _ -> 10
-      | Symbol -> 11
-      | TVar _ -> 12
-      | Bound _ -> 13
-      | Generic _ -> 14
-      | TypeOf _ -> 15
-      | Utility _ -> 16
-      | IndexedAccess _ -> 17
-      | Tup _ -> 18
-      | Arr _ -> 19
-      | Fun _ -> 20
-      | Obj _ -> 21
-      | Inter _ -> 22
-      | Union _ -> 23
-      | Mu _ -> 24
-      | InlineInterface _ -> 25
-      | CharSet _ -> 26
+      | BigIntLit _ -> 9
+      | BigInt _ -> 10
+      | StrLit _ -> 11
+      | Str _ -> 12
+      | Symbol -> 13
+      | TVar _ -> 14
+      | Bound _ -> 15
+      | Generic _ -> 16
+      | TypeOf _ -> 17
+      | Utility _ -> 18
+      | IndexedAccess _ -> 19
+      | Tup _ -> 20
+      | Arr _ -> 21
+      | Fun _ -> 22
+      | Obj _ -> 23
+      | Inter _ -> 24
+      | Union _ -> 25
+      | Mu _ -> 26
+      | InlineInterface _ -> 27
+      | CharSet _ -> 28
 
     method tag_of_decl _ =
       function
@@ -653,9 +657,11 @@ let rec mk_exact ty =
   | Num _
   | Str _
   | Bool _
+  | BigInt _
   | NumLit _
   | StrLit _
   | BoolLit _
+  | BigIntLit _
   | Fun _
   | Arr _
   | Tup _

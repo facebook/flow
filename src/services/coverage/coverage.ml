@@ -202,6 +202,7 @@ class visitor =
       | OptionalT _ ->
         (Kind.Checked, Taint.Untainted)
       | DefT (_, t, ArrT _)
+      | DefT (_, t, BigIntT _)
       | DefT (_, t, BoolT _)
       | DefT (_, t, CharSetT _)
       | DefT (_, t, ClassT _)
@@ -216,6 +217,7 @@ class visitor =
       | DefT (_, t, ReactAbstractComponentT _)
       | DefT (_, t, SingletonNumT _)
       | DefT (_, t, SingletonStrT _)
+      | DefT (_, t, SingletonBigIntT _)
       | DefT (_, t, SingletonBoolT _)
       | DefT (_, t, StrT _)
       | DefT (_, t, VoidT)
