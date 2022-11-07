@@ -15,5 +15,36 @@ References:
               ^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- bigint.js:21:8
 
-Found 1 error
+Cannot call `BigInt` with `null` bound to `value` because: [incompatible-call]
+ - Either null [1] is incompatible with boolean [2].
+ - Or null [1] is incompatible with string [3].
+ - Or null [1] is incompatible with number [4].
+ - Or null [1] is incompatible with interface type [5].
+ - Or null [1] is incompatible with read-only array type [6].
+
+   bigint.js:21:8
+     21| BigInt(null); // error
+                ^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:2596:18
+   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
+                          ^^^^^^^ [2]
+   <BUILTINS>/core.js:2596:28
+   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
+                                    ^^^^^^ [3]
+   <BUILTINS>/core.js:2596:37
+   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
+                                             ^^^^^^ [4]
+   <BUILTINS>/core.js:2596:46
+   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
+                                                      ^^^^^^^^^^^^ [5]
+   <BUILTINS>/core.js:2596:61
+   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
+                                                                     ^^^^^^^^^^^^^^^^^^^^^ [6]
+
+
+
+Found 2 errors

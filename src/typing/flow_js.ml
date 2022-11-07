@@ -5341,6 +5341,11 @@ struct
         | (DefT (reason, _, BoolT _), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason (OrdinaryName "Boolean"), u)
         (***********************)
+        (* BigInt library call *)
+        (***********************)
+        | (DefT (reason, _, BigIntT _), u) when primitive_promoting_use_t u ->
+          rec_flow cx trace (get_builtin_type cx ~trace reason (OrdinaryName "BigInt"), u)
+        (***********************)
         (* Symbol library call *)
         (***********************)
         | (DefT (reason, _, SymbolT), u) when primitive_promoting_use_t u ->
