@@ -1702,6 +1702,7 @@ struct
                 | UnionEnum.Str v -> SingletonStrT v
                 | UnionEnum.Num v -> SingletonNumT v
                 | UnionEnum.Bool v -> SingletonBoolT v
+                | UnionEnum.BigInt v -> SingletonBigIntT v
                 | UnionEnum.Void -> VoidT
                 | UnionEnum.Null -> NullT
               in
@@ -1726,6 +1727,7 @@ struct
                       | UnionEnum.Str v -> SingletonStrT v
                       | UnionEnum.Num v -> SingletonNumT v
                       | UnionEnum.Bool v -> SingletonBoolT v
+                      | UnionEnum.BigInt v -> SingletonBigIntT v
                       | UnionEnum.Void -> VoidT
                       | UnionEnum.Null -> NullT
                     in
@@ -7671,6 +7673,7 @@ struct
       | UnionEnum.(One (Str s)) -> RStringLit s
       | UnionEnum.(One (Num (_, n))) -> RNumberLit n
       | UnionEnum.(One (Bool b)) -> RBooleanLit b
+      | UnionEnum.(One (BigInt (_, n))) -> RBigIntLit n
       | UnionEnum.(One Null) -> RNull
       | UnionEnum.(One Void) -> RVoid
       | UnionEnum.(Many _enums) -> RUnionEnum
@@ -7749,6 +7752,9 @@ struct
       | DefT (_, _, BoolT (Some value))
       | DefT (_, _, SingletonBoolT value) ->
         Some UnionEnum.(One (Bool value))
+      | DefT (_, _, BigIntT (Literal (_, value)))
+      | DefT (_, _, SingletonBigIntT value) ->
+        Some UnionEnum.(One (BigInt value))
       | DefT (_, _, VoidT) -> Some UnionEnum.(One Void)
       | DefT (_, _, NullT) -> Some UnionEnum.(One Null)
       | UnionT (_, rep) ->
@@ -7812,6 +7818,9 @@ struct
         when value = sentinel != sense ->
         true
       | (DefT (_, _, BoolT (Some value)), Bool sentinel) when value = sentinel != sense -> true
+      | (DefT (_, _, BigIntT (Literal (_, (value, _)))), BigInt (sentinel, _))
+        when value = sentinel != sense ->
+        true
       | (DefT (_, _, NullT), Null)
       | (DefT (_, _, VoidT), Void) ->
         true
@@ -7823,7 +7832,11 @@ struct
       | (DefT (_, _, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) -> ()
       | (DefT (_, _, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) -> ()
       | (DefT (_, _, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) -> ()
-      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), Many enums) when sense ->
+      | (DefT (_, _, BigIntT _), One (BigInt sentinel)) when enum_match sense (v, BigInt sentinel)
+        ->
+        ()
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many enums)
+        when sense ->
         UnionEnumSet.iter
           (fun enum ->
             if enum_match sense (v, enum) |> not then
@@ -7832,16 +7845,17 @@ struct
       | (DefT (_, _, StrT _), One (Str _))
       | (DefT (_, _, NumT _), One (Num _))
       | (DefT (_, _, BoolT _), One (Bool _))
+      | (DefT (_, _, BigIntT _), One (BigInt _))
       | (DefT (_, _, NullT), One Null)
       | (DefT (_, _, VoidT), One Void)
-      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), Many _) ->
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many _) ->
         rec_flow_t cx trace ~use_op:unknown_use (l, OpenT result)
       (* types don't match (would've been matched above) *)
       (* we don't prune other types like objects or instances, even though
          a test like `if (ObjT === StrT)` seems obviously unreachable, but
          we have to be wary of toString and valueOf on objects/instances. *)
-      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), _) when sense -> ()
-      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)), _)
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _) when sense -> ()
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _)
       | _ ->
         (* property exists, but is not something we can use for refinement *)
         rec_flow_t cx trace ~use_op:unknown_use (l, OpenT result)

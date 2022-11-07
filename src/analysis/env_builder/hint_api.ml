@@ -31,6 +31,7 @@ and sentinel_refinement =
   | SingletonNum of float
   | SingletonBool of bool
   | SingletonStr of string
+  | SingletonBigInt of int64
   | Null
   | Void
   | Member of Reason.t

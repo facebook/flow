@@ -31,6 +31,18 @@ let extract_number_literal node =
     (-.lit, "-" ^ raw)
   | _ -> raise Env_api.(Env_invariant (None, Impossible "not a number literal"))
 
+let is_bigint_literal node =
+  let open Flow_ast in
+  match node with
+  | Expression.Literal { Literal.value = Literal.BigInt _; _ } -> true
+  | _ -> false
+
+let extract_bigint_literal node =
+  let open Flow_ast in
+  match node with
+  | Expression.Literal { Literal.value = Literal.BigInt lit; raw; comments = _ } -> (lit, raw)
+  | _ -> Utils_js.assert_false "not a bigint literal"
+
 module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
@@ -314,6 +326,25 @@ module Make
         loc
         expr
         (SingletonNumR { loc = lit_loc; sense; lit = raw })
+        other
+    (* bigint equality *)
+    | (((lit_loc, bigint_literal) as other), expr) when is_bigint_literal bigint_literal ->
+      let raw = extract_bigint_literal bigint_literal in
+      on_literal_test
+        ~strict
+        ~sense
+        loc
+        expr
+        (SingletonBigIntR { loc = lit_loc; sense; lit = raw })
+        other
+    | (expr, ((lit_loc, bigint_literal) as other)) when is_bigint_literal bigint_literal ->
+      let raw = extract_bigint_literal bigint_literal in
+      on_literal_test
+        ~strict
+        ~sense
+        loc
+        expr
+        (SingletonBigIntR { loc = lit_loc; sense; lit = raw })
         other
     (* expr op null *)
     | (((_, Expression.Literal { Literal.value = Literal.Null; _ }) as other), expr)

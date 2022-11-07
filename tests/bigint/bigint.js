@@ -25,3 +25,11 @@ if (typeof foo === "bigint") {
     (foo : bigint);
     (foo : empty); // error
 }
+
+type U = { x: 0n, a: "foo" } | { x: 1n, a: "bar" };
+declare var bar: U;
+if (bar.x === 0n) {
+    (bar.a : "foo");
+} else {
+    (bar.a : "bar");
+}

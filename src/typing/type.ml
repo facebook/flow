@@ -1552,6 +1552,7 @@ and UnionEnum : sig
     | Str of name
     | Num of number_literal
     | Bool of bool
+    | BigInt of bigint_literal
     | Void
     | Null
   [@@deriving ord]
@@ -1564,6 +1565,7 @@ end = struct
     | Str of name
     | Num of number_literal
     | Bool of bool
+    | BigInt of bigint_literal
     | Void
     | Null
   [@@deriving ord]
