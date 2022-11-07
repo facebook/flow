@@ -201,7 +201,8 @@ let is_literal_type t =
   match t with
   | DefT (_, _, SingletonStrT _)
   | DefT (_, _, SingletonNumT _)
-  | DefT (_, _, SingletonBoolT _) ->
+  | DefT (_, _, SingletonBoolT _)
+  | DefT (_, _, SingletonBigIntT _) ->
     true
   | _ -> false
 
@@ -2218,6 +2219,8 @@ struct
           rec_flow cx trace (DefT (reason, trust, NumT (Literal (None, lit))), u)
         | (DefT (reason, trust, SingletonBoolT b), _) ->
           rec_flow cx trace (DefT (reason, trust, BoolT (Some b)), u)
+        | (DefT (reason, trust, SingletonBigIntT lit), _) ->
+          rec_flow cx trace (DefT (reason, trust, BigIntT (Literal (None, lit))), u)
         (* NullProtoT is necessary as an upper bound, to distinguish between
            (ObjT _, NullProtoT _) constraints and (ObjT _, DefT (_, _, NullT)), but as
            a lower bound, it's the same as DefT (_, _, NullT) *)

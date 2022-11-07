@@ -108,6 +108,7 @@ let ground_subtype = function
   | (DefT (_, _, NumT _), UseT (_, DefT (_, _, NumT _)))
   | (DefT (_, _, StrT _), UseT (_, DefT (_, _, StrT _)))
   | (DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _)))
+  | (DefT (_, _, BigIntT _), UseT (_, DefT (_, _, BigIntT _)))
   | (DefT (_, _, SymbolT), UseT (_, DefT (_, _, SymbolT)))
   | (DefT (_, _, NullT), UseT (_, DefT (_, _, NullT)))
   | (DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT))) ->

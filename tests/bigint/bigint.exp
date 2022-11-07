@@ -1,1 +1,19 @@
-Found 0 errors
+Error --------------------------------------------------------------------------------------------------- bigint.js:13:5
+
+Cannot assign `x` to `z` because bigint [1] is incompatible with bigint literal `10n` [2]. [incompatible-type]
+
+   bigint.js:13:5
+   13| z = x; // error, bigint </: 10n
+           ^
+
+References:
+   bigint.js:5:8
+    5| let y: bigint = 10n;
+              ^^^^^^ [1]
+   bigint.js:7:8
+    7| let z: 10n = 10n;
+              ^^^ [2]
+
+
+
+Found 1 error

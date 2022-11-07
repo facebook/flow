@@ -47,6 +47,8 @@ val literal_eq : 'a -> 'a Type.literal -> bool
 
 val number_literal_eq : Type.number_literal -> Type.number_literal Type.literal -> bool
 
+val bigint_literal_eq : Type.bigint_literal -> Type.bigint_literal Type.literal -> bool
+
 val boolean_literal_eq : bool -> bool option -> bool
 
 val quick_subtype : bool -> Type.t -> Type.t -> bool

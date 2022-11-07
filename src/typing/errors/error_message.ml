@@ -78,6 +78,11 @@ and 'loc t' =
       reason_upper: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
+  | EExpectedBigIntLit of {
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EPropNotFound of {
       prop_name: name option;
       reason_prop: 'loc virtual_reason;
@@ -687,6 +692,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_upper = map_reason reason_upper;
         use_op = map_use_op use_op;
       }
+  | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
+    EExpectedBigIntLit
+      {
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+      }
   | EPropNotFound { prop_name; reason_prop; reason_obj; use_op; suggestion } ->
     EPropNotFound
       {
@@ -1090,6 +1102,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EExpectedNumberLit { reason_lower; reason_upper; use_op })
   | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
     util use_op (fun use_op -> EExpectedBooleanLit { reason_lower; reason_upper; use_op })
+  | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
+    util use_op (fun use_op -> EExpectedBigIntLit { reason_lower; reason_upper; use_op })
   | EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion } ->
     util use_op (fun use_op ->
         EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion }
@@ -1504,6 +1518,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExpectedBooleanLit _
   | EExpectedNumberLit _
   | EExpectedStringLit _
+  | EExpectedBigIntLit _
   | EEscapedGeneric _
   | EIncompatibleProp _
   | EIncompatible _
@@ -2020,6 +2035,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op }
   | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+    Incompatible { reason_lower; reason_upper; use_op }
+  | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op }
   | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
     PropMissing
@@ -4097,6 +4114,7 @@ let error_code_of_message err : error_code option =
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExpectedBigIntLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EEnumsNotEnabled _ -> Some IllegalEnum
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg

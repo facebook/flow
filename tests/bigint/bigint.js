@@ -1,7 +1,13 @@
 // @flow
 
-const x = 10n;
+let x = 10n;
 
-declare var y: bigint;
+let y: bigint = 10n;
 
-declare var z: 10n;
+let z: 10n = 10n;
+
+x = y; // ok, bigint <: bigint
+
+y = z; // ok, 10n <: bigint
+
+z = x; // error, bigint </: 10n

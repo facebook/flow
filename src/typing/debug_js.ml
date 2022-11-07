@@ -1241,6 +1241,12 @@ let dump_error_message =
         (dump_reason cx reason_lower)
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
+    | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
+      spf
+        "EExpectedBigIntLit { reason_lower = %s; reason_upper = %s; use_op = %s }"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_use_op use_op)
     | EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion } ->
       spf
         "EPropNotFound (%s, %s, %s, %s, %s)"

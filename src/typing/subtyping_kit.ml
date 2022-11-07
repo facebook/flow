@@ -759,6 +759,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
           cx
           ~trace
           (Error_message.EExpectedBooleanLit { reason_lower = rl; reason_upper = ru; use_op })
+    | (DefT (rl, _, BigIntT actual), DefT (ru, _, SingletonBigIntT expected)) ->
+      if TypeUtil.bigint_literal_eq expected actual then
+        ()
+      else
+        (* TODO: ordered_reasons should not be necessary *)
+        let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
+        add_output
+          cx
+          ~trace
+          (Error_message.EExpectedBigIntLit { reason_lower = rl; reason_upper = ru; use_op })
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
@@ -991,6 +1001,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (DefT (reason, trust, NumT (Literal (None, lit))), u)
     | (DefT (reason, trust, SingletonBoolT b), _) ->
       rec_flow_t cx trace ~use_op (DefT (reason, trust, BoolT (Some b)), u)
+    | (DefT (reason, trust, SingletonBigIntT lit), _) ->
+      rec_flow_t cx trace ~use_op (DefT (reason, trust, BigIntT (Literal (None, lit))), u)
     | (NullProtoT reason, _) -> rec_flow_t cx trace ~use_op (DefT (reason, bogus_trust (), NullT), u)
     (************************************************************************)
     (* exact object types *)

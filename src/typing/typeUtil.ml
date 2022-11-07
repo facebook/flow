@@ -659,6 +659,11 @@ let number_literal_eq (x, _) = function
   | Truthy -> false
   | AnyLiteral -> false
 
+let bigint_literal_eq (x, _) = function
+  | Literal (_, (y, _)) -> x = y
+  | Truthy -> false
+  | AnyLiteral -> false
+
 let boolean_literal_eq x = function
   | Some y -> x = y
   | None -> false
