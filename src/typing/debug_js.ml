@@ -888,7 +888,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | SetElemT (_, _, ix, _, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
     | SetPropT (use_op, _, prop, _, _, ptype, _) ->
       p ~extra:(spf "%s, (%s), %s" (string_of_use_op use_op) (propref prop) (kid ptype)) t
-    | SetPrivatePropT (_, _, prop, _, _, _, ptype, _) ->
+    | SetPrivatePropT (_, _, prop, _, _, _, _, ptype, _) ->
       p ~extra:(spf "(%s), %s" prop (kid ptype)) t
     | SetProtoT (_, arg) -> p ~extra:(kid arg) t
     | SpecializeT (_, _, _, cache, args_opt, ret) ->

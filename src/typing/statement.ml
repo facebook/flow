@@ -4825,6 +4825,11 @@ module Make
     } ->
       let lhs_reason = mk_expression_reason _object in
       let (o, _object) = typecheck_object _object in
+      let wr_ctx =
+        match (_object, Env.var_scope_kind cx) with
+        | ((_, This _), Name_def.Ctor) -> ThisInCtor
+        | _ -> Normal
+      in
       let prop_t =
         (* if we fire this hook, it means the assignment is a sham. *)
         if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
@@ -4841,7 +4846,9 @@ module Make
           let upper =
             maybe_chain
               lhs_reason
-              (SetPrivatePropT (use_op, reason, name, mode, class_entries, false, t, Some prop_t))
+              (SetPrivatePropT
+                 (use_op, reason, name, mode, class_entries, false, wr_ctx, t, Some prop_t)
+              )
           in
           Flow.flow cx (o, upper);
           prop_t

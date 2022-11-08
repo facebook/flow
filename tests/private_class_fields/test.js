@@ -213,3 +213,14 @@ class Calls {
     const optionalBarInvalid3: ?string = Calls.#optionalBar?.('');
   }
 }
+
+class PrivateReadOnly {
+  +#p: number;
+  constructor(other: PrivateReadOnly) {
+    this.#p = 42; // ok
+    other.#p = 42; // error;
+  }
+  f() {
+    this.#p = 42; // error
+  }
+}

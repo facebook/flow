@@ -3494,20 +3494,25 @@ struct
             }
           in
           set_prop cx ~mode ~wr_ctx trace options reason_prop reason_op l super x fields tin prop_t
-        | (DefT (reason_c, _, InstanceT _), SetPrivatePropT (use_op, reason_op, x, _, [], _, _, _))
-          ->
+        | ( DefT (reason_c, _, InstanceT _),
+            SetPrivatePropT (use_op, reason_op, x, _, [], _, _, _, _)
+          ) ->
           add_output
             cx
             ~trace
             (Error_message.EPrivateLookupFailed ((reason_op, reason_c), OrdinaryName x, use_op))
         | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
-            SetPrivatePropT (use_op, reason_op, x, mode, scope :: scopes, static, tin, prop_tout)
+            SetPrivatePropT
+              (use_op, reason_op, x, mode, scope :: scopes, static, write_ctx, tin, prop_tout)
           ) ->
           if not (ALoc.equal_id scope.class_binding_id instance.class_id) then
             rec_flow
               cx
               trace
-              (l, SetPrivatePropT (use_op, reason_op, x, mode, scopes, static, tin, prop_tout))
+              ( l,
+                SetPrivatePropT
+                  (use_op, reason_op, x, mode, scopes, static, write_ctx, tin, prop_tout)
+              )
           else
             let map =
               if static then
@@ -3523,9 +3528,7 @@ struct
                 ~trace
                 (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
             | Some p ->
-              let action =
-                WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx = Normal; mode }
-              in
+              let action = WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx; mode } in
               let propref = Named (reason_op, x) in
               perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action)
         | (DefT (_, _, InstanceT _), SetPropT (_, reason_op, Computed _, _, _, _, _)) ->
@@ -4699,9 +4702,9 @@ struct
           let u = GetPrivatePropT (use_op, reason_op, x, scopes, true, tout) in
           rec_flow cx trace (instance, ReposLowerT (reason, false, u))
         | ( DefT (reason, _, ClassT instance),
-            SetPrivatePropT (use_op, reason_op, x, mode, scopes, _, tout, tp)
+            SetPrivatePropT (use_op, reason_op, x, mode, scopes, _, wr_ctx, tout, tp)
           ) ->
-          let u = SetPrivatePropT (use_op, reason_op, x, mode, scopes, true, tout, tp) in
+          let u = SetPrivatePropT (use_op, reason_op, x, mode, scopes, true, wr_ctx, tout, tp) in
           rec_flow cx trace (instance, ReposLowerT (reason, false, u))
         | ( DefT (reason, _, ClassT instance),
             PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, _, action, tp)

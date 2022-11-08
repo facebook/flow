@@ -85,7 +85,7 @@ let rec default_resolve_touts ~flow cx loc u =
     resolve tout;
     resolve_method_action action
   | SetPropT (_, _, _, _, _, _, topt)
-  | SetPrivatePropT (_, _, _, _, _, _, _, topt) ->
+  | SetPrivatePropT (_, _, _, _, _, _, _, _, topt) ->
     map_opt resolve topt
   | GetPropT (_, _, _, _, tvar)
   | MatchPropT (_, _, _, tvar)

@@ -132,7 +132,7 @@ and reason_of_use_t = function
   | SentinelPropTestT (_, _, _, _, _, (reason, _)) -> reason
   | SetElemT (_, reason, _, _, _, _) -> reason
   | SetPropT (_, reason, _, _, _, _, _) -> reason
-  | SetPrivatePropT (_, reason, _, _, _, _, _, _) -> reason
+  | SetPrivatePropT (_, reason, _, _, _, _, _, _, _) -> reason
   | SetProtoT (reason, _) -> reason
   | SpecializeT (_, _, reason, _, _, _) -> reason
   | StrictEqT { reason; _ } -> reason
@@ -319,8 +319,8 @@ and mod_reason_of_use_t f = function
     SentinelPropTestT (reason_op, l, key, sense, sentinel, (f reason, result))
   | SetElemT (use_op, reason, it, mode, et, t) -> SetElemT (use_op, f reason, it, mode, et, t)
   | SetPropT (use_op, reason, n, mode, i, t, tp) -> SetPropT (use_op, f reason, n, mode, i, t, tp)
-  | SetPrivatePropT (use_op, reason, n, mode, scopes, static, t, tp) ->
-    SetPrivatePropT (use_op, f reason, n, mode, scopes, static, t, tp)
+  | SetPrivatePropT (use_op, reason, n, mode, scopes, static, ctx, t, tp) ->
+    SetPrivatePropT (use_op, f reason, n, mode, scopes, static, ctx, t, tp)
   | SetProtoT (reason, t) -> SetProtoT (f reason, t)
   | SpecializeT (use_op, reason_op, reason_tapp, cache, ts, t) ->
     SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
@@ -386,8 +386,8 @@ let rec util_use_op_of_use_t :
   | PrivateMethodT (op, r1, r2, x, c, s, a, p) ->
     util op (fun op -> PrivateMethodT (op, r1, r2, x, c, s, a, p))
   | SetPropT (op, r, p, m, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, m, w, t, tp))
-  | SetPrivatePropT (op, r, s, m, c, b, t, tp) ->
-    util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, t, tp))
+  | SetPrivatePropT (op, r, s, m, c, b, x, t, tp) ->
+    util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, x, t, tp))
   | GetPropT (op, r, id, p, t) -> util op (fun op -> GetPropT (op, r, id, p, t))
   | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
   | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))

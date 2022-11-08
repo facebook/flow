@@ -583,5 +583,21 @@ References:
                                   ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:221:5
 
-Found 36 errors
+Cannot assign `42` to `other.#p` because property `p` is not writable. [cannot-write]
+
+   221|     other.#p = 42; // error;
+            ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:224:5
+
+Cannot assign `42` to `this.#p` because property `p` is not writable. [cannot-write]
+
+   224|     this.#p = 42; // error
+            ^^^^^^^
+
+
+
+Found 38 errors

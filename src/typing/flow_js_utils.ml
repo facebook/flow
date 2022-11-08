@@ -381,7 +381,7 @@ let error_message_kind_of_upper = function
   | MatchPropT (_, _, Named (r, name), _) ->
     Error_message.IncompatibleMatchPropT (aloc_of_reason r, Some name)
   | MatchPropT (_, _, Computed t, _) -> Error_message.IncompatibleMatchPropT (loc_of_t t, None)
-  | SetPrivatePropT (_, _, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
+  | SetPrivatePropT (_, _, _, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
   | MethodT (_, _, _, Named (r, name), _, _) ->
     Error_message.IncompatibleMethodT (aloc_of_reason r, Some name)
   | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)

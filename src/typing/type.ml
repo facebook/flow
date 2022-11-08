@@ -492,7 +492,7 @@ module rec TypeTerm : sig
      * resolves to a ClassT, we flip the flag to true, which causes us to check the private static
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
     | SetPrivatePropT of
-        use_op * reason * string * set_mode * class_binding list * bool * t * t option
+        use_op * reason * string * set_mode * class_binding list * bool * write_ctx * t * t option
     | GetPropT of use_op * reason * ident option * propref * tvar
     (* For shapes *)
     | MatchPropT of use_op * reason * propref * tvar
