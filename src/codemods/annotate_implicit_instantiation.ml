@@ -22,30 +22,13 @@ let mapper
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
   let errors = Codemod_context.Typed.context cctx |> Context.errors in
   let implicit_instantiation_aloc_results =
-    Codemod_context.Typed.context cctx |> Context.implicit_instantiation_results
+    Codemod_context.Typed.context cctx |> Context.implicit_instantiation_ty_results
   in
-  let ty_normalizer_options = Ty_normalizer_env.default_options in
-  let typed_ast = Codemod_context.Typed.typed_ast cctx in
-  let file_sig = Codemod_context.Typed.file_sig cctx in
-  let full_cx = Codemod_context.Typed.context cctx in
-  let file = Codemod_context.Typed.file cctx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
   let implicit_instantiation_results =
     ALocFuzzyMap.fold
       (fun aloc result acc ->
         let loc = loc_of_aloc aloc in
-        let call_args =
-          List.map
-            (fun (t, name) ->
-              ( (match Ty_normalizer.from_type ~options:ty_normalizer_options ~genv t with
-                | Ok (Ty.Type ty) -> Some (Ok ty)
-                | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ok (Ty.TypeOf (Ty.TSymbol s)))
-                | _ -> None),
-                name
-              ))
-            result
-        in
-        LMap.add loc call_args acc)
+        LMap.add loc result acc)
       implicit_instantiation_aloc_results
       LMap.empty
   in
@@ -119,7 +102,7 @@ let mapper
                   | None -> Explicit flowfixme_ast
                   | Some ty ->
                     let default = Implicit (loc, { Implicit.comments = None }) in
-                    let ty_result = ty >>= this#fix_and_validate loc in
+                    let ty_result = this#fix_and_validate loc ty in
                     this#get_annot loc ty_result default)
                 targ_tys_with_names;
           }

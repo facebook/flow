@@ -383,7 +383,27 @@ let prepare_implicit_instantiation_checks ~cx implicit_instantiation_checks =
   in
   implicit_instantiation_checks
 
-let check_implicit_instantiations cx =
+let check_implicit_instantiations cx typed_ast file_sig =
+  let () =
+    let file = Context.file cx in
+    let ty_normalizer_options = Ty_normalizer_env.default_options in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~file_sig ~typed_ast in
+    let implicit_instantiation_ty_results =
+      Loc_collections.ALocFuzzyMap.map
+        (fun result ->
+          List.map
+            (fun (t, name) ->
+              ( (match Ty_normalizer.from_type ~options:ty_normalizer_options ~genv t with
+                | Ok (Ty.Type ty) -> Some ty
+                | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ty.TypeOf (Ty.TSymbol s))
+                | _ -> None),
+                name
+              ))
+            result)
+        (Context.implicit_instantiation_results cx)
+    in
+    Context.set_implicit_instantiation_ty_results cx implicit_instantiation_ty_results
+  in
   Context.run_in_post_inference_mode cx (fun () ->
       if Context.run_post_inference_implicit_instantiation cx then (
         let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
@@ -622,12 +642,12 @@ let get_lint_severities metadata strict_mode lint_severities =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx master_cx ast tast metadata =
+let post_merge_checks cx master_cx ast tast metadata file_sig =
   let results = [(cx, ast, tast)] in
   check_constrained_writes cx master_cx;
   detect_sketchy_null_checks cx master_cx;
   detect_non_voidable_properties cx;
-  check_implicit_instantiations cx;
+  check_implicit_instantiations cx tast file_sig;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;

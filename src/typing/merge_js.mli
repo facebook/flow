@@ -13,6 +13,7 @@ val post_merge_checks :
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Context.metadata ->
+  File_sig.With_ALoc.t ->
   unit
 
 val get_lint_severities :

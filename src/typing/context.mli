@@ -277,6 +277,8 @@ val implicit_instantiation_checks : t -> Implicit_instantiation_check.t list
 
 val implicit_instantiation_results : t -> (Type.t * Subst_name.t) list ALocFuzzyMap.t
 
+val implicit_instantiation_ty_results : t -> (Ty.t option * Subst_name.t) list ALocFuzzyMap.t
+
 val environment : t -> Loc_env.t
 
 val in_synthesis_mode : t -> bool
@@ -378,6 +380,9 @@ val add_implicit_instantiation_jsx :
   targs:Type.targ list option ->
   Type.t list * Type.t option ->
   unit
+
+val set_implicit_instantiation_ty_results :
+  t -> (Ty.t option * Subst_name.t) list ALocFuzzyMap.t -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 

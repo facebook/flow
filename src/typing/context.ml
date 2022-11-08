@@ -158,6 +158,12 @@ type component_t = {
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable implicit_instantiation_results: (Type.t * Subst_name.t) list ALocFuzzyMap.t;
+  (* This are only used for the implicit instantiation codemod. Right before we run the post-
+   * inference pass to get the error locations we change the implicit_instantiation_results map
+   * into tys and set this field. We do this in order to avoid accidentally resolving types in the
+   * results via the tvar resolver. We really want to get these types fully free from any pollution
+   * that might happen during the post-pass. *)
+  mutable implicit_instantiation_ty_results: (Ty.t option * Subst_name.t) list ALocFuzzyMap.t;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
   mutable global_value_cache:
     (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result NameUtils.Map.t;
@@ -336,6 +342,7 @@ let make_ccx master_cx =
     voidable_checks = [];
     implicit_instantiation_checks = [];
     implicit_instantiation_results = ALocFuzzyMap.empty;
+    implicit_instantiation_ty_results = ALocFuzzyMap.empty;
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -599,6 +606,8 @@ let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
 
 let implicit_instantiation_results cx = cx.ccx.implicit_instantiation_results
 
+let implicit_instantiation_ty_results cx = cx.ccx.implicit_instantiation_ty_results
+
 let environment cx = cx.environment
 
 let in_hint_decomp cx = cx.in_hint_decomp
@@ -705,6 +714,9 @@ let add_env_cache_entry cx ~for_value id t =
 
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
+
+let set_implicit_instantiation_ty_results cx results =
+  cx.ccx.implicit_instantiation_ty_results <- results
 
 let add_implicit_instantiation_result cx loc result =
   cx.ccx.implicit_instantiation_results <-
