@@ -89,25 +89,33 @@ let mapper
     method private get_implicit_instantiation_results loc =
       match (LMap.find_opt loc implicit_instantiation_results, LMap.find_opt loc loc_error_map) with
       | (Some targ_tys_with_names, Some tparam_names) ->
-        let targs =
-          {
-            Ast.Expression.CallTypeArgs.comments = None;
-            arguments =
-              List.map
-                (fun (ty, name) ->
-                  let open Ast.Expression.CallTypeArg in
-                  match ty with
-                  | _ when not (SSet.mem (Subst_name.string_of_subst_name name) tparam_names) ->
-                    Implicit (loc, { Implicit.comments = None })
-                  | None -> Explicit flowfixme_ast
-                  | Some ty ->
-                    let default = Implicit (loc, { Implicit.comments = None }) in
-                    let ty_result = this#fix_and_validate loc ty in
-                    this#get_annot loc ty_result default)
-                targ_tys_with_names;
-          }
+        let arguments =
+          List.map
+            (fun (ty, name) ->
+              let open Ast.Expression.CallTypeArg in
+              match ty with
+              | _ when not (SSet.mem (Subst_name.string_of_subst_name name) tparam_names) ->
+                Implicit (loc, { Implicit.comments = None })
+              | None -> Explicit flowfixme_ast
+              | Some ty ->
+                let default = Implicit (loc, { Implicit.comments = None }) in
+                let ty_result = this#fix_and_validate loc ty in
+                this#get_annot loc ty_result default)
+            targ_tys_with_names
         in
-        Some (loc, targs)
+        let targs = { Ast.Expression.CallTypeArgs.comments = None; arguments } in
+        let has_explicit_targ =
+          List.exists
+            (fun targ ->
+              match targ with
+              | Ast.Expression.CallTypeArg.Explicit _ -> true
+              | _ -> false)
+            arguments
+        in
+        if has_explicit_targ then
+          Some (loc, targs)
+        else
+          None
       | _ -> None
 
     method private init_loc_error_map =

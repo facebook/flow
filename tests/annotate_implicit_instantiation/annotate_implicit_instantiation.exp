@@ -6,7 +6,7 @@ declare function f<T, U>(x: T): {+foo: T, +bar: U};
 
 let x = f<_, mixed>(3);
 
->>> implicit_instantiation.js (#changes: 6)
+>>> implicit_instantiation.js (#changes: 5)
 //@flow
 import type { Opaque } from "./opaque";import {x} from './opaque';
 declare function f<T>(): {x: T}
@@ -29,7 +29,7 @@ c[1] = 3;
 import { foo } from './export';
 const non_exported_return_type  = foo();
 declare function error<X>(): [X];
-const e = error<_>(); // should annotate with <_> instead of <any>
+const e = error(); // should annotate with <_> instead of <any>
 e[0] = (0: typeof non_exported_return_type);
 
 
@@ -57,7 +57,7 @@ Stats:
 
 Errors:
   Missing annot./normalizer error:          0
-  Validation Error:                         0
+  Validation Error:                         1
   Import Error:
     Loc source none:                        0
     Indeterminate module type:              0
@@ -70,5 +70,5 @@ Warnings:
   Large type added:                         0
   Location unhandled:                       0
   Empty NoUpper:                            0
-  Empty SomeKnownUpper:                     2
+  Empty SomeKnownUpper:                     3
 
