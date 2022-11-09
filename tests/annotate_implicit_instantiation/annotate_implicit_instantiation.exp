@@ -48,12 +48,21 @@ num.set('str', 3);
 let str = f<string>('str');
 str.add('str')
 
+>>> underscore.js (#changes: 1)
+//@flow
+
+
+declare function f<T>(): {current: T | null};
+
+let x = f<number>();
+x.current = 3;
+
 >>> Launching report...
 
 Stats:
-  Files changed:                            3
-  Number of annotations added:              7
-  Total size of annotations:                9
+  Files changed:                            4
+  Number of annotations added:              8
+  Total size of annotations:               10
 
 Errors:
   Missing annot./normalizer error:          0

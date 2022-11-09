@@ -913,14 +913,14 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
           errs_ref := Context.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref
       )
     );
-    let (map, _) =
+    let (map, _, all_ts_rev) =
       Nel.fold_left
-        (fun (map, ts) typeparam ->
-          let (t, ts) =
+        (fun (map, ts, all_ts) typeparam ->
+          let (t, ts, all_ts) =
             match (typeparam, ts) with
             | ({ default = Some default; _ }, []) ->
               (* fewer arguments than params and we have a default *)
-              (subst cx ~use_op map default, [])
+              (subst cx ~use_op map default, [], (default, typeparam.name) :: all_ts)
             | ({ default = None; _ }, []) ->
               (* fewer arguments than params but no default *)
               add_output
@@ -930,17 +930,22 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
               Base.Option.iter errs_ref ~f:(fun errs_ref ->
                   errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref
               );
-              (AnyT (reason_op, AnyError None), [])
-            | (_, t :: ts) -> (t, ts)
+              (AnyT (reason_op, AnyError None), [], all_ts)
+            | (_, t :: ts) -> (t, ts, (t, typeparam.name) :: all_ts)
           in
           let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
           let frame = Frame (TypeParamBound { name = typeparam.name }, use_op) in
           if not (Context.in_implicit_instantiation cx) then
             is_subtype cx trace ~use_op:frame (t_, subst cx ~use_op map typeparam.bound);
-          (Subst_name.Map.add typeparam.name t_ map, ts))
-        (Subst_name.Map.empty, ts)
+          (Subst_name.Map.add typeparam.name t_ map, ts, all_ts))
+        (Subst_name.Map.empty, ts, [])
         xs
     in
+    let ts_with_names = List.rev all_ts_rev in
+    Context.add_possibly_speculating_implicit_instantiation_result
+      cx
+      (Reason.aloc_of_reason reason_op)
+      ts_with_names;
     reposition cx ~trace (aloc_of_reason reason_tapp) (subst cx ~use_op map t)
 
   let mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id tparams_loc xs t ts =
@@ -992,15 +997,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
 
   (* Instantiate a polymorphic definition by creating fresh type arguments. *)
   let instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache (tparams_loc, xs, t) =
-    let ts_with_names =
-      xs |> Nel.map (fun typeparam -> (mk_targ cx typeparam reason_op reason_tapp, typeparam.name))
-    in
-    let result = Nel.to_list ts_with_names in
-    Context.add_possibly_speculating_implicit_instantiation_result
-      cx
-      (Reason.aloc_of_reason reason_op)
-      result;
-    let ts = Nel.map fst ts_with_names in
+    let ts = xs |> Nel.map (fun typeparam -> mk_targ cx typeparam reason_op reason_tapp) in
     instantiate_poly_with_targs
       cx
       trace

@@ -985,7 +985,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     | Implicit_instantiation_check.Call { Type.call_targs = Some targs; _ }
     | Implicit_instantiation_check.Constructor (Some targs, _)
     | Implicit_instantiation_check.Jsx { targs = Some targs; _ } ->
-      let (_, ts) =
+      let (_, ts_rev) =
         Nel.fold_left
           (fun (targs, ts) typeparam ->
             match targs with
@@ -1021,7 +1021,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         ~reason_tapp
         ?cache:None
         poly_t
-        (List.rev ts)
+        (List.rev ts_rev)
     | _ -> FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
 
   let run
