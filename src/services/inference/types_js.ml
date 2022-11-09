@@ -1972,32 +1972,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let verify = Options.saved_state_verify options in
     let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
 
-    (* Restore package.json heap and ReversePackageHeap *)
-    let (package_json_files, dirty_package_modules, invalid_package_hashes) =
-      Base.List.fold
-        package_heaps
-        ~init:([], Modulename.Set.empty, [])
-        ~f:(fun (fns, dirty_modules, invalid_hashes) (fn, package_data) ->
-          let { Saved_state.package_hash; package_info } = package_data in
-
-          (* update ReversePackageHeap *)
-          (match package_info with
-          | Ok package ->
-            let filename = File_key.to_string fn in
-            Package_heaps.Package_heap_mutator.add_package_json filename package
-          | Error _ -> ());
-
-          let ms = Parsing_heaps.From_saved_state.add_package fn package_hash package_info in
-          let invalid_hashes =
-            if verify && not (verify_hash ~reader:abstract_reader fn) then
-              fn :: invalid_hashes
-            else
-              invalid_hashes
-          in
-          (fn :: fns, Modulename.Set.union ms dirty_modules, invalid_hashes)
-      )
-    in
-
     let restore_parsed (fns, dirty_modules, invalid_hashes) (fn, parsed_file_data) =
       let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
       let { Saved_state.hash; exports; resolved_requires; imports; cas_digest } =
@@ -2041,8 +2015,30 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules, invalid_hashes)
     in
 
+    let restore_package (fns, dirty_modules, invalid_hashes) (fn, package_data) =
+      let { Saved_state.package_hash; package_info } = package_data in
+
+      (* update ReversePackageHeap *)
+      (match package_info with
+      | Ok package ->
+        let filename = File_key.to_string fn in
+        Package_heaps.Package_heap_mutator.add_package_json filename package
+      | Error _ -> ());
+
+      let ms = Parsing_heaps.From_saved_state.add_package fn package_hash package_info in
+
+      let invalid_hashes =
+        if verify && not (verify_hash ~reader:abstract_reader fn) then
+          fn :: invalid_hashes
+        else
+          invalid_hashes
+      in
+
+      (fn :: fns, Modulename.Set.union ms dirty_modules, invalid_hashes)
+    in
+
     Hh_logger.info "Restoring heaps";
-    let%lwt (parsed, unparsed, dirty_modules, invalid_hashes) =
+    let%lwt (parsed, unparsed, package_json_files, dirty_modules, invalid_hashes) =
       with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
           let neutral = (FilenameSet.empty, Modulename.Set.empty, []) in
           let merge (a1, a2, a3) (b1, b2, b3) =
@@ -2064,14 +2060,22 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               ~neutral
               ~next:(MultiWorkerLwt.next workers unparsed_heaps)
           in
-          let dirty_modules = Modulename.Set.union dirty_modules_parsed dirty_modules_unparsed in
-          let invalid_hashes = Base.List.rev_append invalid_unparsed_hashes invalid_parsed_hashes in
-          Lwt.return (parsed, unparsed, dirty_modules, invalid_hashes)
+          let (package_json_files, dirty_modules_packages, invalid_package_hashes) =
+            Base.List.fold package_heaps ~init:([], Modulename.Set.empty, []) ~f:restore_package
+          in
+          let dirty_modules =
+            dirty_modules_parsed
+            |> Modulename.Set.union dirty_modules_unparsed
+            |> Modulename.Set.union dirty_modules_packages
+          in
+          let invalid_hashes =
+            invalid_parsed_hashes
+            |> Base.List.rev_append invalid_unparsed_hashes
+            |> Base.List.rev_append invalid_package_hashes
+          in
+          Lwt.return (parsed, unparsed, package_json_files, dirty_modules, invalid_hashes)
       )
     in
-
-    let dirty_modules = Modulename.Set.union dirty_package_modules dirty_modules in
-    let invalid_hashes = Base.List.rev_append invalid_package_hashes invalid_hashes in
 
     if verify then assert_valid_hashes updates invalid_hashes;
 
