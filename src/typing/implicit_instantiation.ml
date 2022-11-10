@@ -186,6 +186,13 @@ struct
                     )
                  )
            )
+      | RestType (_, t_rest) ->
+        merge_lower_or_upper_bounds r (OpenT tout)
+        |> bind_use_t_result ~f:(fun tout ->
+               reverse_obj_kit_rest cx r t_rest tout
+               |> merge_lower_bounds cx
+               |> use_t_result_of_t_option
+           )
       | NonMaybeType ->
         merge_lower_or_upper_bounds r (OpenT tout)
         |> bind_use_t_result ~f:(fun t -> UpperT (MaybeT (r, t)))
@@ -253,6 +260,15 @@ struct
         | Some reversed ->
           Flow.flow_t cx (reversed, tvar);
           UpperT reversed))
+    | ObjKitT (_, r, _, Object.Rest (_, Object.Rest.One t_rest), tout) ->
+      merge_upper_bounds cx r tout
+      |> bind_use_t_result ~f:(fun t ->
+             match reverse_obj_kit_rest cx r t_rest t |> merge_lower_bounds cx with
+             | None -> UpperEmpty
+             | Some reversed ->
+               Flow.flow_t cx (reversed, tvar);
+               UpperT reversed
+         )
     | _ -> UpperNonT u
 
   and identity_reverse_upper_bound cx tvar r tout =
@@ -303,6 +319,29 @@ struct
       )
     in
     Base.List.fold todo_rev ~init:tout ~f:(fun l o -> rest_type l (operand_to_t o))
+
+  and reverse_obj_kit_rest cx reason t_rest tout =
+    Tvar.mk_no_wrap_where cx reason (fun t' ->
+        let u =
+          Object.(
+            Object.Spread.(
+              let tool = Resolve Next in
+              let options = Value { make_seal = Obj_type.mk_seal ~frozen:false } in
+              let state =
+                {
+                  todo_rev = [Type t_rest];
+                  acc = [];
+                  spread_id = Reason.mk_id ();
+                  union_reason = None;
+                  curr_resolve_idx = 0;
+                }
+              in
+              ObjKitT (unknown_use, reason, tool, Spread (options, state), OpenT t')
+            )
+          )
+        in
+        Flow.flow cx (tout, u)
+    )
 
   and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param =
     let tuple_members = params |> List.map (fun param -> snd param) in

@@ -115,3 +115,37 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
   f3(0, 1); // ok
   f3("") // error
 }
+
+function Diffs() {
+  declare function Diff0<T>(): $Diff<T, {foo: number}>;
+  Diff0(); // error
+  declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+  const d1 = Diff1({bar: 3});
+  (d1.foo: string);
+  (d1.bar: number);
+  (d1: {|foo: string, bar: number|});
+  (d1: {|foo: string | number, bar: number|}); // error
+  d1.bad; // error
+  (d1: empty); // error
+  declare function Diff2<T>($Diff<T, {|foo?: string|}>): T;
+  const d2 = Diff2({bar: 3});
+  (d2.foo: ?string);
+  (d2.bar: number);
+  d2.bad; // error
+  (d2: empty); // error
+  declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
+  const d3 = Diff3({bar: 3});
+  (d3.foo: string);
+  (d3.bar: number);
+  d3.bad; // error
+  (d3: empty); // error
+  (d3: {|foo: string, bar: number|}); // error
+  declare function Diff4<T>($Diff<T, {[string]: number}>): T;
+  const d4 = Diff4({bar: 3});
+  Diff4({bar: ''}); // error: number is incompatible with string
+  (d4.foo: number);
+  (d4.boz: number);
+  (d4.bar: number);
+  d4[0]; // error
+  (d4: {|[string]: number, bar: number|});
+}

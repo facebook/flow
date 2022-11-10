@@ -94,14 +94,6 @@ An annotation on rest parameter `args` is required because Flow cannot infer its
                ^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ tdt.js:5:11
-
-T contains a non-Type.t upper bound UseT(ImplicitTypeParam, TypeDestructorTriggerT) Rest
-
-   5| const a = f();
-                ^^^
-
-
 Error ------------------------------------------------------------------------ underconstrained_class_constructor.js:5:1
 
 `T` is underconstrained by new `A` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
@@ -631,5 +623,176 @@ References:
                                     ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:121:3
 
-Found 45 errors
+`T` is underconstrained by call of `Diff0` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+
+   upper_non_t.js:121:3
+   121|   Diff0(); // error
+          ^^^^^^^ [1]
+
+References:
+   upper_non_t.js:120:26
+   120|   declare function Diff0<T>(): $Diff<T, {foo: number}>;
+                                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:127:4
+
+Cannot cast `d1` to object type because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-cast]
+
+   upper_non_t.js:127:4
+   127|   (d1: {|foo: string | number, bar: number|}); // error
+           ^^
+
+References:
+   upper_non_t.js:122:45
+   122|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+                                                    ^^^^^^ [1]
+   upper_non_t.js:127:24
+   127|   (d1: {|foo: string | number, bar: number|}); // error
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:128:6
+
+Cannot get `d1.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
+
+   upper_non_t.js:128:6
+   128|   d1.bad; // error
+             ^^^
+
+References:
+   upper_non_t.js:122:29
+   122|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:129:4
+
+Cannot cast `d1` to empty because `$Diff` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:129:4
+   129|   (d1: empty); // error
+           ^^
+
+References:
+   upper_non_t.js:122:29
+   122|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:129:8
+   129|   (d1: empty); // error
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:134:6
+
+Cannot get `d2.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
+
+   upper_non_t.js:134:6
+   134|   d2.bad; // error
+             ^^^
+
+References:
+   upper_non_t.js:130:29
+   130|   declare function Diff2<T>($Diff<T, {|foo?: string|}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:135:4
+
+Cannot cast `d2` to empty because `$Diff` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:135:4
+   135|   (d2: empty); // error
+           ^^
+
+References:
+   upper_non_t.js:130:29
+   130|   declare function Diff2<T>($Diff<T, {|foo?: string|}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:135:8
+   135|   (d2: empty); // error
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:140:6
+
+Cannot get `d3.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
+
+   upper_non_t.js:140:6
+   140|   d3.bad; // error
+             ^^^
+
+References:
+   upper_non_t.js:136:29
+   136|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:141:4
+
+Cannot cast `d3` to empty because `$Diff` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:141:4
+   141|   (d3: empty); // error
+           ^^
+
+References:
+   upper_non_t.js:136:29
+   136|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:141:8
+   141|   (d3: empty); // error
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:142:4
+
+Cannot cast `d3` to object type because inexact `$Diff` [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   upper_non_t.js:142:4
+   142|   (d3: {|foo: string, bar: number|}); // error
+           ^^
+
+References:
+   upper_non_t.js:136:29
+   136|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:142:8
+   142|   (d3: {|foo: string, bar: number|}); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- upper_non_t.js:145:15
+
+Cannot call `Diff4` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   upper_non_t.js:145:15
+   145|   Diff4({bar: ''}); // error: number is incompatible with string
+                      ^^ [1]
+
+References:
+   upper_non_t.js:143:49
+   143|   declare function Diff4<T>($Diff<T, {[string]: number}>): T;
+                                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:149:6
+
+number [1] is incompatible with string [2]. [incompatible-type]
+
+   upper_non_t.js:149:6
+   149|   d4[0]; // error
+             ^ [1]
+
+References:
+   upper_non_t.js:143:40
+   143|   declare function Diff4<T>($Diff<T, {[string]: number}>): T;
+                                               ^^^^^^ [2]
+
+
+
+Found 55 errors

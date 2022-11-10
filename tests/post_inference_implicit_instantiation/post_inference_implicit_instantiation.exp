@@ -85,14 +85,6 @@ References:
                     ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ tdt.js:5:11
-
-T contains a non-Type.t upper bound UseT(ImplicitTypeParam, TypeDestructorTriggerT) Rest
-
-   5| const a = f();
-                ^^^
-
-
 Error ------------------------------------------------------------------------ underconstrained_class_constructor.js:5:1
 
 `T` is underconstrained by new `A` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
@@ -387,5 +379,87 @@ References:
                                     ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:121:3
 
-Found 27 errors
+`T` is underconstrained by call of `Diff0` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+
+   upper_non_t.js:121:3
+   121|   Diff0(); // error
+          ^^^^^^^ [1]
+
+References:
+   upper_non_t.js:120:26
+   120|   declare function Diff0<T>(): $Diff<T, {foo: number}>;
+                                 ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- upper_non_t.js:123:14
+
+Cannot call `Diff1` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   upper_non_t.js:123:14
+   123|   const d1 = Diff1({bar: 3});
+                     ^^^^^
+
+References:
+   upper_non_t.js:127:24
+   127|   (d1: {|foo: string | number, bar: number|}); // error
+                               ^^^^^^ [1]
+   upper_non_t.js:122:45
+   122|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+                                                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:129:4
+
+Cannot cast `d1` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:129:4
+   129|   (d1: empty); // error
+           ^^
+
+References:
+   upper_non_t.js:123:20
+   123|   const d1 = Diff1({bar: 3});
+                           ^^^^^^^^ [1]
+   upper_non_t.js:129:8
+   129|   (d1: empty); // error
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:135:4
+
+Cannot cast `d2` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:135:4
+   135|   (d2: empty); // error
+           ^^
+
+References:
+   upper_non_t.js:131:20
+   131|   const d2 = Diff2({bar: 3});
+                           ^^^^^^^^ [1]
+   upper_non_t.js:135:8
+   135|   (d2: empty); // error
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:141:4
+
+Cannot cast `d3` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:141:4
+   141|   (d3: empty); // error
+           ^^
+
+References:
+   upper_non_t.js:137:20
+   137|   const d3 = Diff3({bar: 3});
+                           ^^^^^^^^ [1]
+   upper_non_t.js:141:8
+   141|   (d3: empty); // error
+               ^^^^^ [2]
+
+
+
+Found 31 errors
