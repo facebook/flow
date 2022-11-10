@@ -38,9 +38,19 @@ end = struct
 end
 
 let in_sandbox_cx cx t ~f =
-  match f (Tvar_resolver.resolved_t cx t) with
-  | exception Flow_js_utils.SpeculationSingletonError -> None
-  | t -> Some t
+  Context.run_and_rolled_back_cache cx (fun () ->
+      let original_errors = Context.errors cx in
+      match f (Tvar_resolver.resolved_t cx t) with
+      | exception Flow_js_utils.SpeculationSingletonError -> None
+      | t ->
+        let new_errors = Context.errors cx in
+        if Flow_error.ErrorSet.equal original_errors new_errors then
+          Some t
+        else (
+          Context.reset_errors cx original_errors;
+          None
+        )
+  )
 
 let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
   let intersection = IntersectionT (reason, rep) in

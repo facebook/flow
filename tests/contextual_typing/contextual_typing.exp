@@ -187,6 +187,14 @@ References:
              ^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- misplaced_error.js:11:31
+
+An annotation on destructuring is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   11|   {...EMPTY_TEMPLATE, title: ({a}) => `${a}`}, // missing-local-annot due to inexact ~> exact
+                                     ^^^
+
+
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:43
 
 Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -246,4 +254,4 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 
 
-Found 17 errors
+Found 18 errors
