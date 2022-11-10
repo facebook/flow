@@ -600,39 +600,55 @@ let split_path =
   in
   (fun path -> f [] path)
 
-(* relative_path: (/path/to/foo, /path/to/bar/baz) -> ../bar/baz
- * absolute_path (/path/to/foo, ../bar/baz) -> /path/to/bar/baz
- *
- * Both of these are designed to avoid using Path and realpath so that we don't actually read the
- * file system *)
-let (relative_path, absolute_path) =
+(** [relative_path_parts "/path/to/foo" "/path/to/bar/baz"] returns [[".."; "bar"; "baz"]]
+
+  Designed to avoid using Path and realpath so that we don't actually read the
+  file system *)
+let relative_path_parts =
   let rec make_relative = function
     | (dir1 :: root, dir2 :: file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) -> List.fold_left (fun path _ -> Filename.parent_dir_name :: path) file root
   in
-  let make_relative root =
+  fun root ->
     let root_components = split_path root in
-    fun file ->
-      (* This functions is only used for displaying error location or creating saved state.
-         We use '/' as file separator even on Windows. This simplify the test-suite script... *)
-      make_relative (root_components, split_path file) |> String.concat "/"
-  in
-  let rec absolute_path = function
-    | (_ :: root, dir2 :: file) when dir2 = Filename.parent_dir_name -> absolute_path (root, file)
+    (fun file -> make_relative (root_components, split_path file))
+
+(** [relative_path "/path/to/foo" "/path/to/bar/baz"] returns ["../bar/baz"]
+
+  This functions is only used for displaying error location or creating saved state.
+  We use '/' as file separator even on Windows. This simplify the test-suite script...
+
+  Designed to avoid using Path and realpath so that we don't actually read the
+  file system *)
+let relative_path root =
+  let relative_path_parts = relative_path_parts root in
+  (fun file -> relative_path_parts file |> String.concat "/")
+
+(** [absolute_path_parts "/path/to/foo" "../bar/baz"] returns [["/path"; "to"; "bar"; "baz"]]
+
+  Designed to avoid using Path and realpath so that we don't actually read the
+  file system *)
+let absolute_path_parts =
+  let rec make_absolute = function
+    | (_ :: root, dir2 :: file) when dir2 = Filename.parent_dir_name -> make_absolute (root, file)
     | (root, file) -> List.rev_append root file
   in
-  let absolute_path root =
+  fun root ->
     let root_components_rev = List.rev (split_path root) in
     fun file ->
       (* Let's avoid creating paths like "/path/to/foo/." *)
       if file = Filename.current_dir_name || file = "" then
-        root
+        [root]
       else
-        absolute_path (root_components_rev, split_path file)
-        (* We may actually use these paths, so use the correct directory sep *)
-        |> String.concat Filename.dir_sep
-  in
-  (make_relative, absolute_path)
+        make_absolute (root_components_rev, split_path file)
+
+(** [absolute_path "/path/to/foo" "../bar/baz"] returns ["/path/to/bar/baz"]
+
+  Designed to avoid using Path and realpath so that we don't actually read the
+  file system *)
+let absolute_path root =
+  let absolute_path_parts = absolute_path_parts root in
+  (fun file -> absolute_path_parts file |> String.concat Filename.dir_sep)
 
 (* helper to get the full path to the "flow-typed" library dir *)
 let get_flowtyped_path root = make_path_absolute root "flow-typed"
@@ -676,12 +692,13 @@ let mkdirp path_str perm =
     )
 
 (* Given a path, we want to know if it's in a node_modules/ directory or not. *)
-let is_within_node_modules ~root ~options path =
-  (* We use paths that are relative to the root, so that we ignore ancestor directories *)
-  let path = relative_path (Path.to_string root) path in
-  let directories = Str.split dir_sep path |> SSet.of_list in
+let is_within_node_modules ~root ~options =
+  let relative_path_parts = relative_path_parts (Path.to_string root) in
   let node_resolver_dirnames = node_resolver_dirnames options |> SSet.of_list in
-  not (SSet.inter directories node_resolver_dirnames |> SSet.is_empty)
+  fun path ->
+    (* We use paths that are relative to the root, so that we ignore ancestor directories *)
+    let directories = relative_path_parts path |> SSet.of_list in
+    not (SSet.inter directories node_resolver_dirnames |> SSet.is_empty)
 
 (* realpath doesn't work for non-existent paths. So let's find the longest existent prefix, run
  * realpath on that, and then append the rest to it

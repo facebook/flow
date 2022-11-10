@@ -745,10 +745,11 @@ let focused_files_to_infer ~implementation_dependency_graph ~sig_dependency_grap
 
 let filter_out_node_modules ~options =
   let root = Options.root options in
-  let file_options = Options.file_options options in
+  let options = Options.file_options options in
+  let is_within_node_modules = Files.is_within_node_modules ~root ~options in
   FilenameSet.filter (fun fn ->
       let filename_str = File_key.to_string fn in
-      not (Files.is_within_node_modules ~root ~options:file_options filename_str)
+      not (is_within_node_modules filename_str)
   )
 
 (* Filesystem lazy mode focuses on any file which changes. Non-lazy mode focuses on every file in
