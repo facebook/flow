@@ -6,6 +6,18 @@ declare function f<T, U>(x: T): {+foo: T, +bar: U};
 
 let x = f<_, mixed>(3);
 
+>>> hook_generic.js (#changes: 1)
+//@flow
+
+type W<X> = {x: X};
+
+declare function use<X>(): X;
+
+function f<XXX>(): XXX {
+    const h = use<XXX>();
+    return h;
+}
+
 >>> implicit_instantiation.js (#changes: 5)
 //@flow
 import type { Opaque } from "./opaque";import {x} from './opaque';
@@ -60,9 +72,9 @@ x.current = 3;
 >>> Launching report...
 
 Stats:
-  Files changed:                            4
-  Number of annotations added:              8
-  Total size of annotations:               10
+  Files changed:                            5
+  Number of annotations added:              9
+  Total size of annotations:               11
 
 Errors:
   Missing annot./normalizer error:          0
@@ -79,5 +91,5 @@ Warnings:
   Large type added:                         0
   Location unhandled:                       0
   Empty NoUpper:                            0
-  Empty SomeKnownUpper:                     3
+  Empty SomeKnownUpper:                     6
 

@@ -153,6 +153,49 @@ end
 
 let find_exact_match_annotation = ExactMatchQuery.find
 
+(* Find exact location match *)
+module TparamsRevQuery = struct
+  exception Found of Type.typeparam list
+
+  let found ~tparams_rev = raise (Found tparams_rev)
+
+  class tparams_searcher (target_loc : ALoc.t) =
+    object (self)
+      inherit type_parameter_mapper as super
+
+      method! type_param ((_, { Ast.Type.TypeParam.name = (loc, _); _ }) as tparam) =
+        if target_loc = loc then (
+          let tparam = self#make_typeparam tparam in
+          rev_bound_tparams <- tparam :: rev_bound_tparams;
+          self#annot_with_tparams found
+        ) else
+          super#type_param tparam
+
+      method! on_type_annot annot =
+        let (loc, _) = annot in
+        if target_loc = loc then
+          self#annot_with_tparams found
+        else
+          super#on_type_annot annot
+
+      method! on_loc_annot loc =
+        if target_loc = loc then
+          self#annot_with_tparams found
+        else
+          super#on_loc_annot loc
+    end
+
+  let find typed_ast aloc =
+    let searcher = new tparams_searcher aloc in
+    try
+      ignore (searcher#program typed_ast);
+      None
+    with
+    | Found scheme -> Some scheme
+end
+
+let find_tparams_rev_at_location = TparamsRevQuery.find
+
 (* Find identifier under location *)
 module Type_at_pos = struct
   exception Found of ALoc.t * Type.TypeScheme.t

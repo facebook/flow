@@ -389,11 +389,17 @@ let check_implicit_instantiations cx typed_ast file_sig =
     let ty_normalizer_options = Ty_normalizer_env.default_options in
     let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~file_sig ~typed_ast in
     let implicit_instantiation_ty_results =
-      Loc_collections.ALocFuzzyMap.map
-        (fun result ->
+      Loc_collections.ALocFuzzyMap.mapi
+        (fun loc result ->
+          let tparams_rev =
+            Base.Option.value
+              ~default:[]
+              (Typed_ast_utils.find_tparams_rev_at_location typed_ast loc)
+          in
           List.map
             (fun (t, name) ->
-              ( (match Ty_normalizer.from_type ~options:ty_normalizer_options ~genv t with
+              let scheme = { Type.TypeScheme.type_ = t; tparams_rev } in
+              ( (match Ty_normalizer.from_scheme ~options:ty_normalizer_options ~genv scheme with
                 | Ok (Ty.Type ty) -> Some ty
                 | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ty.TypeOf (Ty.TSymbol s))
                 | _ -> None),

@@ -27,6 +27,14 @@ val find_exact_match_annotation :
   Context.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t -> Type.TypeScheme.t option
 
 (**
+ * Return the tparams_rev at the location that exactly matches the (abstract) location
+ * passed as input.
+ *
+ *)
+val find_tparams_rev_at_location :
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t -> Type.typeparam list option
+
+(**
  * Find the first typed AST entry for "type-at-pos" related queries. A query
  * succeeds if the location is within the range of a symbol in the AST. The kinds
  * of symbols handled here are:
