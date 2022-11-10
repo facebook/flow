@@ -537,18 +537,17 @@ val hint_map_jsx_cache :
 
 val constraint_cache : t -> Type.FlowSet.t ref
 
-val subst_cache : t -> (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t
+val subst_cache : t -> (subst_cache_err list * Type.t) Type.SubstCacheMap.t ref
 
 val instantiation_cache : t -> Type.t Reason.ImplicitInstantiationReasonMap.t ref
 
 val repos_cache : t -> Repos_cache.t ref
 
-val eval_id_cache :
-  t -> (Type.Eval.id, Type.t) Hashtbl.t * (Type.t * Type.defer_use_t, Type.Eval.id) Hashtbl.t
+val eval_id_cache : t -> Type.t Type.EvalIdCacheMap.t ref * Type.Eval.id Type.IdCacheMap.t ref
 
-val eval_repos_cache : t -> (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) Hashtbl.t
+val eval_repos_cache : t -> Type.t Type.EvalReposCacheMap.t ref
 
-val fix_cache : t -> (bool * Type.t, Type.t) Hashtbl.t
+val fix_cache : t -> Type.t Type.FixCacheMap.t ref
 
 val spread_cache : t -> Spread_cache.t
 

@@ -28,11 +28,11 @@ type reason_state = ALoc.t Error_message.exponential_spread_reason_group
 type cache_state =
   (int option * (Type.Object.slice * reason_state) IMap.t, reason_state * reason_state) result
 
-type t = (int, cache_state) Hashtbl.t
+type t = cache_state IMap.t ref
 
 let add_lower_bound cache spread_id resolve_idx r objtypes =
   let state =
-    match Hashtbl.find_opt cache spread_id with
+    match IMap.find_opt spread_id !cache with
     | None -> Ok (None, IMap.empty)
     | Some state -> state
   in
@@ -67,16 +67,16 @@ let add_lower_bound cache spread_id resolve_idx r objtypes =
       else
         Ok (idx_option, map')
   in
-  Hashtbl.replace cache spread_id state'
+  cache := IMap.add spread_id state' !cache
 
 let get_error_groups cache spread_id =
-  match Hashtbl.find_opt cache spread_id with
+  match IMap.find_opt spread_id !cache with
   | Some (Error (group1, group2)) -> (group1, group2)
   | _ ->
     assert_false
       "Invariant violation: make sure can_spread is false before calling get_error_groups"
 
 let can_spread cache spread_id =
-  match Hashtbl.find_opt cache spread_id with
+  match IMap.find_opt spread_id !cache with
   | Some (Error _) -> false
   | _ -> true

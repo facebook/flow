@@ -963,7 +963,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
     | None ->
       let key = (id, ts) in
       let cache = Context.subst_cache cx in
-      (match Hashtbl.find_opt cache key with
+      (match Type.SubstCacheMap.find_opt key !cache with
       | None ->
         let errs_ref = ref [] in
         let t =
@@ -977,7 +977,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
             (tparams_loc, xs, t)
             ts
         in
-        Hashtbl.add cache key (!errs_ref, t);
+        cache := Type.SubstCacheMap.add key (!errs_ref, t) !cache;
         t
       | Some (errs, t) ->
         errs

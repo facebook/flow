@@ -80,20 +80,20 @@ module Eval = struct
     let (eval_id_cache, id_cache) = Context.eval_id_cache cx in
     match t with
     | EvalT (_, d, i) when d = defer_use ->
-      (match Hashtbl.find_opt eval_id_cache i with
+      (match Type.EvalIdCacheMap.find_opt i !eval_id_cache with
       | Some t -> t
       | None ->
         let i = Type.Eval.generate_id () in
-        Hashtbl.add eval_id_cache i t;
+        eval_id_cache := Type.EvalIdCacheMap.add i t !eval_id_cache;
         EvalT (t, defer_use, i))
     | _ ->
       let cache_key = (t, defer_use) in
       let id =
-        match Hashtbl.find_opt id_cache cache_key with
+        match Type.IdCacheMap.find_opt cache_key !id_cache with
         | Some i -> i
         | None ->
           let i = Type.Eval.generate_id () in
-          Hashtbl.add id_cache cache_key i;
+          id_cache := Type.IdCacheMap.add cache_key i !id_cache;
           i
       in
       EvalT (t, defer_use, id)
@@ -101,24 +101,24 @@ module Eval = struct
   let find_repos cx t defer_use id =
     let repos_cache = Context.eval_repos_cache cx in
     let cache_key = (t, defer_use, id) in
-    Hashtbl.find_opt repos_cache cache_key
+    Type.EvalReposCacheMap.find_opt cache_key !repos_cache
 
   let add_repos cx t defer_use id tvar =
     let repos_cache = Context.eval_repos_cache cx in
     let cache_key = (t, defer_use, id) in
-    Hashtbl.add repos_cache cache_key tvar
+    repos_cache := Type.EvalReposCacheMap.add cache_key tvar !repos_cache
 end
 
 module Fix = struct
   let find cx is_this i =
     let cache = Context.fix_cache cx in
     let cache_key = (is_this, i) in
-    Hashtbl.find_opt cache cache_key
+    Type.FixCacheMap.find_opt cache_key !cache
 
   let add cx is_this i tvar =
     let cache = Context.fix_cache cx in
     let cache_key = (is_this, i) in
-    Hashtbl.add cache cache_key tvar
+    cache := Type.FixCacheMap.add cache_key tvar !cache
 end
 
 (* debug util: please don't dead-code-eliminate *)

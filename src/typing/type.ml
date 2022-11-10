@@ -3045,6 +3045,36 @@ module FlowSet = struct
   let fold f = TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
 end
 
+module SubstCacheMap = WrappedMap.Make (struct
+  type t = Poly.id * TypeTerm.t list
+
+  let compare = Stdlib.compare
+end)
+
+module EvalIdCacheMap = WrappedMap.Make (struct
+  type t = Eval.id
+
+  let compare = Stdlib.compare
+end)
+
+module IdCacheMap = WrappedMap.Make (struct
+  type t = TypeTerm.t * TypeTerm.defer_use_t
+
+  let compare = Stdlib.compare
+end)
+
+module EvalReposCacheMap = WrappedMap.Make (struct
+  type t = TypeTerm.t * TypeTerm.defer_use_t * Eval.id
+
+  let compare = Stdlib.compare
+end)
+
+module FixCacheMap = WrappedMap.Make (struct
+  type t = bool * TypeTerm.t
+
+  let compare = Stdlib.compare
+end)
+
 (* Type scheme: a type and an attendant environment of type parameters.
  * See normalizer for use. *)
 module TypeScheme = struct

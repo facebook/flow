@@ -144,13 +144,12 @@ type component_t = {
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
   constraint_cache: Type.FlowSet.t ref;
-  subst_cache: (Type.Poly.id * Type.t list, subst_cache_err list * Type.t) Hashtbl.t;
+  subst_cache: (subst_cache_err list * Type.t) Type.SubstCacheMap.t ref;
   instantiation_cache: Type.t Reason.ImplicitInstantiationReasonMap.t ref;
   repos_cache: Repos_cache.t ref;
-  eval_id_cache:
-    (Type.Eval.id, Type.t) Hashtbl.t * (Type.t * Type.defer_use_t, Type.Eval.id) Hashtbl.t;
-  eval_repos_cache: (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) Hashtbl.t;
-  fix_cache: (bool * Type.t, Type.t) Hashtbl.t;
+  eval_id_cache: Type.t Type.EvalIdCacheMap.t ref * Type.Eval.id Type.IdCacheMap.t ref;
+  eval_repos_cache: Type.t Type.EvalReposCacheMap.t ref;
+  fix_cache: Type.t Type.FixCacheMap.t ref;
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
   (* Post-inference checks *)
@@ -349,13 +348,13 @@ let make_ccx master_cx =
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
     constraint_cache = ref Type.FlowSet.empty;
-    subst_cache = Hashtbl.create 0;
+    subst_cache = ref Type.SubstCacheMap.empty;
     instantiation_cache = ref Reason.ImplicitInstantiationReasonMap.empty;
     repos_cache = ref Repos_cache.empty;
-    eval_id_cache = (Hashtbl.create 0, Hashtbl.create 0);
-    eval_repos_cache = Hashtbl.create 0;
-    fix_cache = Hashtbl.create 0;
-    spread_cache = Hashtbl.create 0;
+    eval_id_cache = (ref Type.EvalIdCacheMap.empty, ref Type.IdCacheMap.empty);
+    eval_repos_cache = ref Type.EvalReposCacheMap.empty;
+    fix_cache = ref Type.FixCacheMap.empty;
+    spread_cache = ref IMap.empty;
     speculation_state = ref [];
     annot_graph = IMap.empty;
     exhaustive_checks = ALocMap.empty;
@@ -842,8 +841,22 @@ let run_in_hint_decomp cx f =
 
 let run_and_rolled_back_cache cx f =
   let saved_constraint_cache = !(cx.ccx.constraint_cache) in
+  let saved_subst_cache = !(cx.ccx.subst_cache) in
+  let saved_repos_cache = !(cx.ccx.repos_cache) in
+  let (eval_id_cache, id_cache) = cx.ccx.eval_id_cache in
+  let (saved_eval_id_cache, saved_id_cache) = (!eval_id_cache, !id_cache) in
+  let saved_eval_repos_cache = !(cx.ccx.eval_repos_cache) in
+  let saved_fix_cache = !(cx.ccx.fix_cache) in
+  let saved_spread_cache = !(cx.ccx.spread_cache) in
   let result = f () in
   cx.ccx.constraint_cache := saved_constraint_cache;
+  cx.ccx.subst_cache := saved_subst_cache;
+  cx.ccx.repos_cache := saved_repos_cache;
+  eval_id_cache := saved_eval_id_cache;
+  id_cache := saved_id_cache;
+  cx.ccx.eval_repos_cache := saved_eval_repos_cache;
+  cx.ccx.fix_cache := saved_fix_cache;
+  cx.ccx.spread_cache := saved_spread_cache;
   result
 
 let run_in_synthesis_mode cx f =
