@@ -153,7 +153,7 @@ struct
       cx
       ~named_only_for_synthesis
       this_super_dep_loc_map
-      ({ Env_api.env_values; env_entries; _ } as env)
+      ({ Env_api.env_values; env_entries; providers; _ } as env)
       init =
       object (this)
         inherit [ALoc.t Nel.t EnvMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
@@ -253,6 +253,21 @@ struct
         (* In order to resolve a def containing a variable write, the
            write itself should first be resolved *)
         method! pattern_identifier ?kind:_ ((loc, _) as id) =
+          ( if Provider_api.is_provider providers loc then
+            (* If this is a provider, then we still need to have *all* providers,
+               for this location added, because type-at-pos will show their union. We
+               won't call this method directly when resolving an assignment--only when
+               resolving a larger name_def (e.g. an unsynthesizable function) that
+               includes an assignment expression. *)
+            let { Provider_api.providers = provider_entries; _ } =
+              Base.Option.value_exn (Provider_api.providers_of_def providers loc)
+            in
+            Base.List.iter
+              ~f:(fun { Provider_api.reason = r; _ } ->
+                let key = (Env_api.OrdinaryNameLoc, Reason.poly_loc_of_reason r) in
+                this#add ~why:loc key)
+              provider_entries
+          );
           (* Ignore cases that don't have bindings in the environment, like `var x;`
              and illegal or unreachable writes. *)
           this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);

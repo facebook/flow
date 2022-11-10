@@ -1326,3 +1326,17 @@ import * as React from 'react';
     [%expect {|
       (2, 12) to (2, 17) =>
       (3, 9) to (3, 35) |}]
+
+let%expect_test "fwd ref provider" =
+  print_order_test {|
+let cc;
+function foo() {
+    cc = 1;
+    return 42;
+}
+cc = null;
+|};
+    [%expect {|
+      (4, 4) to (4, 6) =>
+      (7, 0) to (7, 2) =>
+      (3, 9) to (3, 12) |}]
