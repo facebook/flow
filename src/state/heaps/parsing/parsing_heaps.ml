@@ -2122,60 +2122,20 @@ end
 
 module From_saved_state = struct
   let add_parsed file_key hash module_name exports resolved_requires imports cas_digest =
-    let (file_kind, file_name) = file_kind_and_name file_key in
-    let open Heap in
-    let (exports_size, write_exports) = prepare_write_exports exports in
-    let (imports_size, write_imports) = prepare_write_imports imports in
-    let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
-    let (deps_size, update_resolved_requires) =
-      prepare_update_resolved_requires None (Some resolved_requires)
-    in
-    let size =
-      (8 * header_size)
-      + (2 * entity_size)
-      + string_size file_name
-      + typed_parse_size
-      + file_size
-      + int64_size
-      + exports_size
-      + imports_size
-      + cas_digest_size
-      + deps_size
-    in
-    let (size, write_parse_ents) = prepare_write_typed_parse_ents size in
-    let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
-    let (size, write_new_haste_info_maybe) =
-      prepare_write_new_haste_info_maybe size None module_name
-    in
-    alloc size (fun chunk ->
-        let file_name = write_string chunk file_name in
-        let file_module = add_file_module_maybe chunk in
-        let hash = write_int64 chunk hash in
-        let haste_info = write_new_haste_info_maybe chunk in
-        let haste_ent = write_entity chunk haste_info in
-        let exports = write_exports chunk in
-        let imports = write_imports chunk in
-        let (resolved_requires_ent, leader_ent, sig_hash_ent) = write_parse_ents chunk in
-        let cas_digest = write_cas_digest chunk in
-        let parse =
-          write_typed_parse
-            chunk
-            hash
-            exports
-            resolved_requires_ent
-            imports
-            leader_ent
-            sig_hash_ent
-            cas_digest
-        in
-        let parse_ent =
-          write_entity chunk (Some (parse :> [ `typed | `untyped | `package ] parse_addr))
-        in
-        let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
-        assert (file = FileHeap.add file_key file);
-        let _did_change : bool = update_resolved_requires chunk file parse in
-        calc_dirty_modules file_key file haste_ent file_module
-    )
+    add_checked_file
+      file_key
+      None
+      hash
+      module_name
+      None
+      None
+      None
+      None
+      None
+      exports
+      imports
+      cas_digest
+      (Some (Some resolved_requires))
 
   let add_unparsed file_key = add_unparsed file_key None
 
