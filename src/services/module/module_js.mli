@@ -6,7 +6,11 @@
  *)
 
 (* export and import functions for the module system *)
-val exported_module : options:Options.t -> File_key.t -> Docblock.t -> string option
+val exported_module :
+  options:Options.t ->
+  File_key.t ->
+  [ `Module of Docblock.t | `Package of Package_json.t ] ->
+  string option
 
 type phantom_acc = Modulename.Set.t ref
 

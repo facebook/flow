@@ -144,7 +144,11 @@ type phantom_acc = Modulename.Set.t ref
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module : Options.t -> File_key.t -> Docblock.t -> string option
+  val exported_module :
+    Options.t ->
+    File_key.t ->
+    [ `Module of Docblock.t | `Package of Package_json.t ] ->
+    string option
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
@@ -389,11 +393,17 @@ module Haste : MODULE_SYSTEM = struct
     let reduce_name name (regexp, template) = Str.global_replace regexp template name in
     (fun options name -> List.fold_left reduce_name name (Options.haste_name_reducers options))
 
+  let is_within_node_modules options =
+    let root = Options.root options in
+    let options = Options.file_options options in
+    Files.is_within_node_modules ~root ~options
+
   let exported_module options =
     let is_haste_file = is_haste_file options in
+    let is_within_node_modules = is_within_node_modules options in
     fun file info ->
-      match file with
-      | File_key.SourceFile _ ->
+      match (file, info) with
+      | (File_key.SourceFile _, `Module info) ->
         if is_mock file then
           Some (short_module_name_of file)
         else if Options.haste_use_name_reducers options then
@@ -407,6 +417,11 @@ module Haste : MODULE_SYSTEM = struct
             None
         else
           Docblock.providesModule info
+      | (File_key.JsonFile path, `Package pkg) ->
+        if Package_json.haste_commonjs pkg || not (is_within_node_modules path) then
+          Package_json.name pkg
+        else
+          None
       | _ ->
         (* Lib files, resource files, etc don't have any fancy haste name *)
         None

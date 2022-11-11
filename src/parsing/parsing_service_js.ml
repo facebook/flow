@@ -588,7 +588,6 @@ let reducer
             else
               info
           in
-          let module_name = exported_module file_key info in
           begin
             match do_parse ~parse_options ~info content file_key with
             | Parse_ok
@@ -596,6 +595,7 @@ let reducer
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
               let file_sig = (file_sig, tolerable_errors) in
+              let module_name = exported_module file_key (`Module info) in
               let dirty_modules =
                 worker_mutator.Parsing_heaps.add_parsed
                   file_key
@@ -615,17 +615,19 @@ let reducer
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with parsed; dirty_modules }
             | Parse_recovered { parse_errors = (error, _); _ } ->
+              let module_name = exported_module file_key (`Module info) in
               let failure = Parse_error error in
               fold_failed acc worker_mutator file_key file_opt hash module_name failure
             | Parse_exn exn ->
+              let module_name = exported_module file_key (`Module info) in
               let failure = Uncaught_exception exn in
               fold_failed acc worker_mutator file_key file_opt hash module_name failure
             | Parse_skip (Skip_package_json result) ->
               let (error, package_info) =
-                let file_str = File_key.to_string file_key in
                 match result with
                 | Ok pkg ->
-                  Package_heaps.Package_heap_mutator.add_package_json file_str pkg;
+                  if Option.is_some (exported_module file_key (`Package pkg)) then
+                    Package_heaps.Package_heap_mutator.add_package_json filename_string pkg;
                   (None, Ok pkg)
                 | Error err -> (Some err, Error ())
               in
@@ -639,6 +641,7 @@ let reducer
               { acc with package_json; dirty_modules }
             | Parse_skip Skip_non_flow_file
             | Parse_skip Skip_resource_file ->
+              let module_name = exported_module file_key (`Module info) in
               let dirty_modules =
                 worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
               in
@@ -647,7 +650,7 @@ let reducer
               { acc with unparsed; dirty_modules }
           end
         | (docblock_errors, info) ->
-          let module_name = exported_module file_key info in
+          let module_name = exported_module file_key (`Module info) in
           let dirty_modules =
             worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
           in

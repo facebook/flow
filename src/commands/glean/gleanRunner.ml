@@ -654,7 +654,7 @@ let file_of_string_modules ~root ~write_root ~options ~docblock ~file:file_key =
     | _ -> []
   in
   let%bind string =
-    match Module_js.exported_module ~options file_key docblock with
+    match Module_js.exported_module ~options file_key (`Module docblock) with
     | Some string -> return string
     | None -> []
   in
