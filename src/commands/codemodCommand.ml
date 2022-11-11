@@ -514,13 +514,23 @@ module Annotate_implicit_instantiation = struct
                truthy
                ~doc:"Generalize annotations containing null or void to maybe types"
           |> flag "--include-widened" truthy ~doc:"Include type arguments that are later widened"
+          |> flag
+               "--annotate-special-function-return"
+               truthy
+               ~doc:"Annotate special-cased function return to constrain type arguments"
           |> common_annotate_flags
         );
     }
 
   let main
-      codemod_flags preserve_literals generalize_maybe include_widened max_type_size default_any ()
-      =
+      codemod_flags
+      preserve_literals
+      generalize_maybe
+      include_widened
+      annotate_special_fun_return
+      max_type_size
+      default_any
+      () =
     let open Codemod_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_implicit_instantiation.Acc
@@ -543,6 +553,7 @@ module Annotate_implicit_instantiation = struct
             ~preserve_literals
             ~generalize_maybe
             ~max_type_size
+            ~annotate_special_fun_return
             ~default_any
         in
         Codemod_utils.make_visitor (Mapper mapper)

@@ -14,8 +14,12 @@ module Acc = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
 open Insert_type_utils
 
 let mapper
-    ~preserve_literals ~generalize_maybe ~max_type_size ~default_any (cctx : Codemod_context.Typed.t)
-    =
+    ~preserve_literals
+    ~generalize_maybe
+    ~annotate_special_fun_return
+    ~max_type_size
+    ~default_any
+    (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   let reader = cctx.Codemod_context.Typed.reader in
@@ -70,21 +74,103 @@ let mapper
       this#set_acc acc';
       Codemod_annotator.validate_ty cctx ~max_type_size ty
 
+    method private annotate_special_call_args loc expr =
+      let { Ast.Expression.Call.callee; arguments; _ } = expr in
+      match callee with
+      | ( _,
+          Ast.Expression.Member
+            {
+              Ast.Expression.Member.property =
+                Ast.Expression.Member.PropertyIdentifier
+                  (_, { Ast.Identifier.name = "map"; comments = _ });
+              _;
+            }
+        ) ->
+        (match this#get_implicit_instantiation_results loc with
+        | Some targs ->
+          let open Ast.Expression.ArgList in
+          let (loc, { arguments; comments }) = arguments in
+          let annotate_not_fully_annotated_function func =
+            match func.Ast.Function.return with
+            | Ast.Type.Available _ -> None
+            | Ast.Type.Missing ret_loc ->
+              (match targs with
+              | ( _,
+                  {
+                    Ast.Expression.CallTypeArgs.arguments =
+                      Ast.Expression.CallTypeArg.Explicit t :: _;
+                    _;
+                  }
+                ) ->
+                Some { func with Ast.Function.return = Ast.Type.Available (ret_loc, t) }
+              | _ -> None)
+          in
+          let annot_expr (loc, expr) =
+            let open Ast.Expression in
+            match expr with
+            | ArrowFunction func ->
+              annotate_not_fully_annotated_function func
+              |> Base.Option.map ~f:(fun f -> (loc, ArrowFunction f))
+            | Function func ->
+              annotate_not_fully_annotated_function func
+              |> Base.Option.map ~f:(fun f -> (loc, Function f))
+            | _ -> None
+          in
+          let (annotated, args_rev) =
+            Base.List.fold arguments ~init:(false, []) ~f:(fun (acc_annotated, acc_args_rev) -> function
+              | Ast.Expression.Expression expr ->
+                let annotated_expr = annot_expr expr in
+                ( acc_annotated || Base.Option.is_some annotated_expr,
+                  Ast.Expression.Expression (Base.Option.value ~default:expr annotated_expr)
+                  :: acc_args_rev
+                )
+              | Ast.Expression.Spread (loc, spread) ->
+                let annotated_expr = annot_expr spread.Ast.Expression.SpreadElement.argument in
+                ( acc_annotated || Base.Option.is_some annotated_expr,
+                  Ast.Expression.Spread
+                    ( loc,
+                      {
+                        spread with
+                        Ast.Expression.SpreadElement.argument =
+                          Base.Option.value
+                            ~default:spread.Ast.Expression.SpreadElement.argument
+                            annotated_expr;
+                      }
+                    )
+                  :: acc_args_rev
+                )
+            )
+          in
+          if annotated then
+            Some (loc, { arguments = List.rev args_rev; comments })
+          else
+            None
+        | _ -> None)
+      | _ -> None
+
     method! call loc expr =
       let expr = super#call loc expr in
-      let targs = this#get_implicit_instantiation_results loc in
-      let open Ast.Expression.Call in
-      match targs with
-      | Some targs -> { expr with targs = Some targs }
-      | None -> expr
+      if annotate_special_fun_return then
+        match this#annotate_special_call_args loc expr with
+        | Some arguments -> { expr with Ast.Expression.Call.arguments }
+        | _ -> expr
+      else
+        let targs = this#get_implicit_instantiation_results loc in
+        let open Ast.Expression.Call in
+        match targs with
+        | Some targs -> { expr with targs = Some targs }
+        | None -> expr
 
     method! new_ loc expr =
       let expr = super#new_ loc expr in
-      let targs = this#get_implicit_instantiation_results loc in
-      let open Ast.Expression.New in
-      match targs with
-      | Some targs -> { expr with targs = Some targs }
-      | None -> expr
+      if annotate_special_fun_return then
+        expr
+      else
+        let targs = this#get_implicit_instantiation_results loc in
+        let open Ast.Expression.New in
+        match targs with
+        | Some targs -> { expr with targs = Some targs }
+        | None -> expr
 
     method private get_implicit_instantiation_results loc =
       match (LMap.find_opt loc implicit_instantiation_results, LMap.find_opt loc loc_error_map) with
