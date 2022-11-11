@@ -437,6 +437,8 @@ module Haste : MODULE_SYSTEM = struct
     let (name, subpath) =
       match String.split_on_char '/' r with
       | [] -> (r, [])
+      | scope :: package :: rest when String.starts_with ~prefix:"@" scope ->
+        (scope ^ "/" ^ package, rest)
       | package :: rest -> (package, rest)
     in
     let mname = Modulename.String name in
