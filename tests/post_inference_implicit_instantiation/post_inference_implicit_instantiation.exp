@@ -258,12 +258,12 @@ References:
                                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:92:6
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:99:6
 
 Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
 
-   upper_non_t.js:92:6
-    92|   r1.bad; // error
+   upper_non_t.js:99:6
+    99|   r1.bad; // error
              ^^^
 
 References:
@@ -272,46 +272,46 @@ References:
                       ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:96:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:4
 
 Cannot cast `r2[2]` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:96:4
-   96|   (r2[2]: empty); // error
-          ^^^^^
+   upper_non_t.js:103:4
+   103|   (r2[2]: empty); // error
+           ^^^^^
 
 References:
-   upper_non_t.js:89:35
-   89|   const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
-                                         ^ [1]
-   upper_non_t.js:96:11
-   96|   (r2[2]: empty); // error
-                 ^^^^^ [2]
+   upper_non_t.js:96:35
+    96|   const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
+                                          ^ [1]
+   upper_non_t.js:103:11
+   103|   (r2[2]: empty); // error
+                  ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:96:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:4
 
 Cannot cast `r2[2]` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:96:4
-   96|   (r2[2]: empty); // error
-          ^^^^^
+   upper_non_t.js:103:4
+   103|   (r2[2]: empty); // error
+           ^^^^^
 
 References:
-   upper_non_t.js:89:38
-   89|   const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
-                                            ^ [1]
-   upper_non_t.js:96:11
-   96|   (r2[2]: empty); // error
-                 ^^^^^ [2]
+   upper_non_t.js:96:38
+    96|   const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
+                                             ^ [1]
+   upper_non_t.js:103:11
+   103|   (r2[2]: empty); // error
+                  ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:97:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:104:6
 
 Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
 
-   upper_non_t.js:97:6
-    97|   r2.bad; // error
+   upper_non_t.js:104:6
+   104|   r2.bad; // error
              ^^^
 
 References:
@@ -320,144 +320,144 @@ References:
                       ^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:106:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:113:6
 
 Cannot call `f1` because string [1] is incompatible with number [2] in the first argument. [incompatible-call]
 
-   upper_non_t.js:106:6
-   106|   f1(""); // error
+   upper_non_t.js:113:6
+   113|   f1(""); // error
              ^^ [1]
 
 References:
-   upper_non_t.js:103:17
-   103|   function g(x: number): void {}
+   upper_non_t.js:110:17
+   110|   function g(x: number): void {}
                         ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:111:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:118:6
 
 Cannot call `f2` because string [1] is incompatible with number [2] in the first argument. [incompatible-call]
 
-   upper_non_t.js:111:6
-   111|   f2("", 0); // error
+   upper_non_t.js:118:6
+   118|   f2("", 0); // error
              ^^ [1]
 
 References:
-   upper_non_t.js:108:17
-   108|   function h(x: number, y: string): void {}
+   upper_non_t.js:115:17
+   115|   function h(x: number, y: string): void {}
                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- upper_non_t.js:111:10
+Error -------------------------------------------------------------------------------------------- upper_non_t.js:118:10
 
 Cannot call `f2` because number [1] is incompatible with string [2] in the second argument. [incompatible-call]
 
-   upper_non_t.js:111:10
-   111|   f2("", 0); // error
+   upper_non_t.js:118:10
+   118|   f2("", 0); // error
                  ^ [1]
 
 References:
-   upper_non_t.js:108:28
-   108|   function h(x: number, y: string): void {}
+   upper_non_t.js:115:28
+   115|   function h(x: number, y: string): void {}
                                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:116:3
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:123:3
 
 Cannot call `f3` because string [1] is incompatible with number [2] in array element. [incompatible-call]
 
-   upper_non_t.js:116:3
-   116|   f3("") // error
+   upper_non_t.js:123:3
+   123|   f3("") // error
           ^^
 
 References:
-   upper_non_t.js:116:6
-   116|   f3("") // error
+   upper_non_t.js:123:6
+   123|   f3("") // error
              ^^ [1]
-   upper_non_t.js:113:29
-   113|   function i(...rest: Array<number>): void {}
+   upper_non_t.js:120:29
+   120|   function i(...rest: Array<number>): void {}
                                     ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:121:3
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:128:3
 
 `T` is underconstrained by call of `Diff0` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
 
-   upper_non_t.js:121:3
-   121|   Diff0(); // error
+   upper_non_t.js:128:3
+   128|   Diff0(); // error
           ^^^^^^^ [1]
 
 References:
-   upper_non_t.js:120:26
-   120|   declare function Diff0<T>(): $Diff<T, {foo: number}>;
+   upper_non_t.js:127:26
+   127|   declare function Diff0<T>(): $Diff<T, {foo: number}>;
                                  ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- upper_non_t.js:123:14
+Error -------------------------------------------------------------------------------------------- upper_non_t.js:130:14
 
 Cannot call `Diff1` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   upper_non_t.js:123:14
-   123|   const d1 = Diff1({bar: 3});
+   upper_non_t.js:130:14
+   130|   const d1 = Diff1({bar: 3});
                      ^^^^^
 
 References:
-   upper_non_t.js:127:24
-   127|   (d1: {|foo: string | number, bar: number|}); // error
+   upper_non_t.js:134:24
+   134|   (d1: {|foo: string | number, bar: number|}); // error
                                ^^^^^^ [1]
-   upper_non_t.js:122:45
-   122|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+   upper_non_t.js:129:45
+   129|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
                                                     ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:129:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:136:4
 
 Cannot cast `d1` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:129:4
-   129|   (d1: empty); // error
+   upper_non_t.js:136:4
+   136|   (d1: empty); // error
            ^^
 
 References:
-   upper_non_t.js:123:20
-   123|   const d1 = Diff1({bar: 3});
+   upper_non_t.js:130:20
+   130|   const d1 = Diff1({bar: 3});
                            ^^^^^^^^ [1]
-   upper_non_t.js:129:8
-   129|   (d1: empty); // error
+   upper_non_t.js:136:8
+   136|   (d1: empty); // error
                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:135:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:142:4
 
 Cannot cast `d2` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:135:4
-   135|   (d2: empty); // error
+   upper_non_t.js:142:4
+   142|   (d2: empty); // error
            ^^
 
 References:
-   upper_non_t.js:131:20
-   131|   const d2 = Diff2({bar: 3});
+   upper_non_t.js:138:20
+   138|   const d2 = Diff2({bar: 3});
                            ^^^^^^^^ [1]
-   upper_non_t.js:135:8
-   135|   (d2: empty); // error
+   upper_non_t.js:142:8
+   142|   (d2: empty); // error
                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:141:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:148:4
 
 Cannot cast `d3` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:141:4
-   141|   (d3: empty); // error
+   upper_non_t.js:148:4
+   148|   (d3: empty); // error
            ^^
 
 References:
-   upper_non_t.js:137:20
-   137|   const d3 = Diff3({bar: 3});
+   upper_non_t.js:144:20
+   144|   const d3 = Diff3({bar: 3});
                            ^^^^^^^^ [1]
-   upper_non_t.js:141:8
-   141|   (d3: empty); // error
+   upper_non_t.js:148:8
+   148|   (d3: empty); // error
                ^^^^^ [2]
 
 

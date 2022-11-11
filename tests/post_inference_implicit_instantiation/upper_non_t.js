@@ -81,6 +81,13 @@ function spreads() {
   (sr.foo: number);
   (sr.bar: string);
   sr.bad; // error in LTI
+
+  declare var cp: {|bar: number|};
+  declare function optional<P>($ReadOnly<{|cp: P, foo?: string, ...P|}>): P;
+  const o = optional({cp, foo: '', bar: 3}); // ok
+  o.cp; // error in LTI
+  o.foo; // error in LTI
+  (o.bar: number); // error in LTI
 }
 
 function rests() {
