@@ -144,6 +144,7 @@ let stub_metadata ~root ~checked =
     relay_integration_module_prefix_includes = [];
     root;
     run_post_inference_implicit_instantiation = false;
+    enable_post_inference_targ_widened_check = false;
     save_implicit_instantiation_results = false;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];

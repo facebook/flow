@@ -80,6 +80,7 @@ type metadata = {
   relay_integration_module_prefix_includes: Str.regexp list;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
+  enable_post_inference_targ_widened_check: bool;
   (* save_implicit_instantiation_results is used for the implicit instantiation
    * annotation codemod *)
   save_implicit_instantiation_results: bool;
@@ -168,6 +169,8 @@ val array_literal_providers : t -> bool
 val cycle_errors : t -> bool
 
 val run_post_inference_implicit_instantiation : t -> bool
+
+val enable_post_inference_targ_widened_check : t -> bool
 
 val file : t -> File_key.t
 

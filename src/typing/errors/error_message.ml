@@ -427,6 +427,10 @@ and 'loc t' =
       reason_l: 'loc virtual_reason;
       bound: string;
     }
+  | EImplicitInstantiationWidenedError of {
+      reason_call: 'loc virtual_reason;
+      bound: string;
+    }
   | EClassToObject of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EMethodUnbinding of {
       use_op: 'loc virtual_use_op;
@@ -1037,6 +1041,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
     EImplicitInstantiationUnderconstrainedError
       { reason_call = map_reason reason_call; reason_l = map_reason reason_l; bound }
+  | EImplicitInstantiationWidenedError { reason_call; bound } ->
+    EImplicitInstantiationWidenedError { reason_call = map_reason reason_call; bound }
   | EClassToObject (r1, r2, op) -> EClassToObject (map_reason r1, map_reason r2, map_use_op op)
   | EMethodUnbinding { use_op; reason_op; reason_prop } ->
     EMethodUnbinding
@@ -1296,6 +1302,7 @@ let util_use_op_of_msg nope util = function
   | EImplicitInstantiationTemporaryError _
   | EImportInternalReactServerModule _
   | EImplicitInstantiationUnderconstrainedError _
+  | EImplicitInstantiationWidenedError _
   | EClassToObject _
   | EMethodUnbinding _
   | EObjectThisReference _
@@ -1456,7 +1463,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EAnnotationInference (loc, _, _, _)
   | EAnnotationInferenceRecursive (loc, _) ->
     Some loc
-  | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
+  | EImplicitInstantiationUnderconstrainedError { reason_call; _ }
+  | EImplicitInstantiationWidenedError { reason_call; _ } ->
     Some (poly_loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -3848,6 +3856,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             ref reason_l;
           ];
       }
+  | EImplicitInstantiationWidenedError { reason_call; bound } ->
+    Normal
+      {
+        features =
+          [
+            code bound;
+            text " is possibly constrained by ";
+            ref reason_call;
+            text " and widened later.";
+          ];
+      }
   | EClassToObject (reason_class, reason_obj, use_op) ->
     let features =
       [
@@ -4227,6 +4246,7 @@ let error_code_of_message err : error_code option =
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
   | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation
+  | EImplicitInstantiationWidenedError _ -> None
   | EObjectThisReference _ -> Some ObjectThisReference
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EMalformedCode _

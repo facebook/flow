@@ -123,7 +123,8 @@ let mapper
         Flow_error.ErrorSet.fold
           (fun error acc ->
             match Flow_error.msg_of_error error with
-            | Error_message.(EImplicitInstantiationUnderconstrainedError { bound; _ }) ->
+            | Error_message.EImplicitInstantiationUnderconstrainedError { bound; _ }
+            | Error_message.EImplicitInstantiationWidenedError { bound; _ } ->
               (match Flow_error.loc_of_error error with
               | Some loc ->
                 LMap.update

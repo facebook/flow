@@ -1772,6 +1772,7 @@ let dump_error_message =
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)
     | EImplicitInstantiationUnderconstrainedError _ -> "EImplicitInstantiationUnderconstrainedError"
+    | EImplicitInstantiationWidenedError _ -> "EImplicitInstantiationWidenedError"
     | EClassToObject _ -> "EClassToObject"
     | EMethodUnbinding { use_op; reason_prop; reason_op } ->
       spf

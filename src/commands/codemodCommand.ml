@@ -513,11 +513,14 @@ module Annotate_implicit_instantiation = struct
                "--generalize-maybe"
                truthy
                ~doc:"Generalize annotations containing null or void to maybe types"
+          |> flag "--include-widened" truthy ~doc:"Include type arguments that are later widened"
           |> common_annotate_flags
         );
     }
 
-  let main codemod_flags preserve_literals generalize_maybe max_type_size default_any () =
+  let main
+      codemod_flags preserve_literals generalize_maybe include_widened max_type_size default_any ()
+      =
     let open Codemod_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_implicit_instantiation.Acc
@@ -530,6 +533,7 @@ module Annotate_implicit_instantiation = struct
         {
           o with
           Options.opt_run_post_inference_implicit_instantiation = true;
+          opt_enable_post_inference_targ_widened_check = include_widened;
           opt_save_implicit_instantiation_results = true;
         }
 

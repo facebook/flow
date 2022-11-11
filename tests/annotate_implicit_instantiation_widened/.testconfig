@@ -1,0 +1,1 @@
+cmd: codemod annotate-implicit-instantiations --strip-root --quiet --include-widened ./

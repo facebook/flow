@@ -1,0 +1,38 @@
+>>> test.js (#changes: 2)
+// @flow
+
+declare function id<T>(x:T): T;
+declare function singletonArray<T>(T): Array<T>;
+
+const arr1 = singletonArray<number | string>("s"); // annotate
+arr1.push(3);
+const set1 = new Set<number | string>(["a"]); // annotate
+set1.add(3);
+
+const arr2 = singletonArray("s"); // don't annotate
+const set2 = new Set(["a"]); // don't annotate
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              2
+  Total size of annotations:                6
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

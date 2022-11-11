@@ -5,14 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module PierceImplicitInstantiation : Implicit_instantiation.S =
+module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
+
+module PierceImplicitInstantiation : Implicit_instantiation.S with type output = Type.t =
   Implicit_instantiation.Make
     (struct
-      type output = unit
+      type output = Type.t
 
-      let on_pinned_tparam _ _ _ _ = ()
+      let on_pinned_tparam _ _ _ inferred = inferred
 
-      let on_constant_tparam_missing_bounds _ _ _ = ()
+      let on_constant_tparam_missing_bounds _ _ tparam =
+        match tparam.Type.default with
+        | None -> tparam.Type.bound
+        | Some t -> t
 
       let on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason =
         if tparam.Type.default = None then
@@ -24,7 +29,8 @@ module PierceImplicitInstantiation : Implicit_instantiation.S =
                  reason_call = instantiation_reason;
                  reason_l = tparam_binder_reason;
                }
-            )
+            );
+        Type.AnyT.error tparam_binder_reason
 
       let on_upper_non_t cx name u _ ~tparam_binder_reason ~instantiation_reason:_ =
         let msg =
@@ -42,7 +48,8 @@ module PierceImplicitInstantiation : Implicit_instantiation.S =
           cx
           (Error_message.EImplicitInstantiationTemporaryError
              (Reason.aloc_of_reason tparam_binder_reason, msg)
-          )
+          );
+        Type.AnyT.error tparam_binder_reason
     end)
     (Flow_js.FlowJs)
 
@@ -418,12 +425,51 @@ let check_implicit_instantiations cx typed_ast file_sig =
         in
         let saved_errors = Context.errors cx in
         Context.reset_errors cx Flow_error.ErrorSet.empty;
+        let run_enable_post_inference_targ_widened_check cx check output_map =
+          let {
+            Implicit_instantiation_check.poly_t = (_, tparams, _);
+            operation = (_, reason_op, _);
+            _;
+          } =
+            check
+          in
+          let pierce_solution =
+            tparams
+            |> Nel.to_list
+            |> Base.List.map ~f:(fun tparam -> Subst_name.Map.find_opt tparam.Type.name output_map)
+            |> Base.Option.all
+          in
+          let inferred_solution =
+            Context.implicit_instantiation_results cx
+            |> ALocFuzzyMap.find_opt (Reason.aloc_of_reason reason_op)
+          in
+          match Base.Option.both inferred_solution pierce_solution with
+          | Some (inferred_solution, pierce_solution)
+            when List.length inferred_solution = List.length pierce_solution ->
+            Base.List.iter2_exn inferred_solution pierce_solution ~f:(fun (t1, name) t2 ->
+                let errors_before = Context.errors cx in
+                Tvar_resolver.resolve cx t1;
+                Tvar_resolver.resolve cx t2;
+                Flow_js.unify cx t1 t2;
+                if not @@ Flow_error.ErrorSet.equal (Context.errors cx) errors_before then
+                  Flow_js_utils.add_output
+                    cx
+                    Error_message.(
+                      EImplicitInstantiationWidenedError
+                        { reason_call = reason_op; bound = Subst_name.string_of_subst_name name }
+                    )
+            )
+          | Some _ -> ()
+          | None -> ()
+        in
         Context.run_in_implicit_instantiation_mode cx (fun () ->
             PierceImplicitInstantiation.fold
               ~implicit_instantiation_cx:cx
               ~cx
               ~init:()
-              ~f:(fun _ _ _ _ -> ())
+              ~f:(fun cx _ check output_map ->
+                if Context.enable_post_inference_targ_widened_check cx then
+                  run_enable_post_inference_targ_widened_check cx check output_map)
               ~post:(fun ~cx ~implicit_instantiation_cx:_ ->
                 let new_errors = Context.errors cx in
                 Context.reset_errors cx saved_errors;
@@ -432,6 +478,7 @@ let check_implicit_instantiations cx typed_ast file_sig =
                     Error_message.(
                       match Flow_error.msg_of_error error with
                       | EImplicitInstantiationUnderconstrainedError _
+                      | EImplicitInstantiationWidenedError _
                       | EImplicitInstantiationTemporaryError _ ->
                         Context.add_error cx error
                       | _ -> ()

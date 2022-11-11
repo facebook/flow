@@ -60,6 +60,7 @@ type metadata = {
   relay_integration_module_prefix_includes: Str.regexp list;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
+  enable_post_inference_targ_widened_check: bool;
   (* save_implicit_instantiation_results is used for the implicit instantiation
    * annotation codemod *)
   save_implicit_instantiation_results: bool;
@@ -256,6 +257,8 @@ let metadata_of_options options =
     root = Options.root options;
     run_post_inference_implicit_instantiation =
       Options.run_post_inference_implicit_instantiation options;
+    enable_post_inference_targ_widened_check =
+      Options.enable_post_inference_targ_widened_check options;
     save_implicit_instantiation_results = Options.save_implicit_instantiation_results options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
@@ -469,6 +472,9 @@ let cycle_errors cx =
 
 let run_post_inference_implicit_instantiation cx =
   cx.metadata.run_post_inference_implicit_instantiation && not (lti cx)
+
+let enable_post_inference_targ_widened_check cx =
+  cx.metadata.enable_post_inference_targ_widened_check
 
 let aloc_tables cx = cx.ccx.aloc_tables
 
@@ -718,8 +724,9 @@ let set_implicit_instantiation_ty_results cx results =
   cx.ccx.implicit_instantiation_ty_results <- results
 
 let add_implicit_instantiation_result cx loc result =
-  cx.ccx.implicit_instantiation_results <-
-    ALocFuzzyMap.add loc result cx.ccx.implicit_instantiation_results
+  if cx.phase <> PostInference then
+    cx.ccx.implicit_instantiation_results <-
+      ALocFuzzyMap.add loc result cx.ccx.implicit_instantiation_results
 
 let add_implicit_instantiation_check cx check =
   cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
