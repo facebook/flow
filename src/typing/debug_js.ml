@@ -639,6 +639,7 @@ and dump_use_t_ (depth, tvars) cx t =
             (match merge_mode with
             | Sound -> "Sound"
             | IgnoreExactAndOwn -> "IgnoreExactAndOwn"
+            | Omit -> "Omit"
             | ReactConfigMerge _ -> "ReactConfigMerge")
             (match state with
             | One t -> spf "One (%s)" (kid t)

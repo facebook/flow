@@ -676,7 +676,7 @@ let object_rest
             Some p
           (* If neither object has the prop then we don't add a prop to our
            * result here. *)
-          | ((Sound | IgnoreExactAndOwn | ReactConfigMerge _), None, None, _) -> None
+          | ((Sound | IgnoreExactAndOwn | Omit | ReactConfigMerge _), None, None, _) -> None
           (* If our first object has a prop and our second object does not have that
            * prop then we will copy over that prop. If the first object's prop is
            * non-own then sometimes we may not copy it over so we mark it
@@ -689,7 +689,7 @@ let object_rest
                 Field (None, t, Polarity.Neutral)
             in
             Some p
-          | (ReactConfigMerge _, Some (t, _, m1), None, _) ->
+          | ((Omit | ReactConfigMerge _), Some (t, _, m1), None, _) ->
             let p =
               if m1 then
                 Method (None, t)
@@ -713,6 +713,9 @@ let object_rest
                 Field (None, optional t, Polarity.Neutral)
             in
             Some p
+          (* Omit works like TypeScript's Omit<Obj, 'a' | 'b'> utility type:
+             it will just drop all the fields that appeared in the second type argument. *)
+          | (Omit, Some _, Some _, _) -> None
           (* React config merging is special. We are trying to solve for C
            * in the equation (where ... represents spread instead of rest):
            *
@@ -763,6 +766,9 @@ let object_rest
                 Field (None, optional t1, Polarity.Positive)
             in
             Some p
+          (* Omit works like TypeScript's Omit<Obj, 'a' | 'b'> utility type.
+             If a field doesn't appear in the first argument, it will never appear in the result. *)
+          | (Omit, None, _, _) -> None
           (* Consider this case:
            *
            *     {...{p}, ...C} = {}
