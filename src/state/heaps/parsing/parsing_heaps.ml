@@ -493,16 +493,12 @@ let prepare_update_revdeps =
   let all_dependencies = function
     | None -> []
     | Some { resolved_modules; phantom_dependencies; _ } ->
-      let xs =
-        let f _ m acc =
-          match m with
-          | Ok m -> MSet.add m acc
-          | Error _ -> acc
-        in
-        MSet.elements (SMap.fold f resolved_modules MSet.empty)
+      let f _ m acc =
+        match m with
+        | Ok m -> MSet.add m acc
+        | Error _ -> acc
       in
-      let ys = MSet.elements phantom_dependencies in
-      Base.List.merge xs ys ~compare:Modulename.compare
+      MSet.elements (SMap.fold f resolved_modules phantom_dependencies)
   in
   (* Partition two sorted lists. Elements in both `xs` and `ys` are skipped.
    * Otherwise, elements in `xs` are passed to `f` while elements in `ys` are

@@ -7,8 +7,51 @@ Cannot resolve module `package/sub`. [cannot-resolve-module]
                       ^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test2.js:5:17
 
-Found 1 error
+Cannot resolve module `package/sub`. [cannot-resolve-module]
+
+   5| import sub from 'package/sub';
+                      ^^^^^^^^^^^^^
+
+
+
+Found 2 errors
+
+duplicate provider:
+Error ----------------------------------------------------------------------------------------- package/package.json:1:1
+
+Duplicate module provider for `package`. Change either this module provider or the current module provider [1].
+[duplicate-module]
+
+   package/package.json:1:1
+   1| {
+      
+
+References:
+   package.js:1:1
+   1| /**
+       [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:3:17
+
+Cannot resolve module `package/sub`. [cannot-resolve-module]
+
+   3| import sub from 'package/sub';
+                      ^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test2.js:5:17
+
+Cannot resolve module `package/sub`. [cannot-resolve-module]
+
+   5| import sub from 'package/sub';
+                      ^^^^^^^^^^^^^
+
+
+
+Found 3 errors
 
 'package/sub' module resolves to package:
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
@@ -28,8 +71,25 @@ References:
             ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test2.js:6:2
 
-Found 1 error
+Cannot cast `sub` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test2.js:6:2
+   6| (sub: string);
+       ^^^
+
+References:
+   package/sub.js:3:16
+   3| export default 123;
+                     ^^^ [1]
+   test2.js:6:7
+   6| (sub: string);
+            ^^^^^^ [2]
+
+
+
+Found 2 errors
 
 'package/sub' does not resolve again:
 Error ----------------------------------------------------------------------------------------------------- test.js:3:17
@@ -40,5 +100,13 @@ Cannot resolve module `package/sub`. [cannot-resolve-module]
                       ^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test2.js:5:17
 
-Found 1 error
+Cannot resolve module `package/sub`. [cannot-resolve-module]
+
+   5| import sub from 'package/sub';
+                      ^^^^^^^^^^^^^
+
+
+
+Found 2 errors

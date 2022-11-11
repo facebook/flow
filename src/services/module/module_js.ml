@@ -433,7 +433,6 @@ module Haste : MODULE_SYSTEM = struct
       None
 
   let resolve_haste_module ~options ~reader ?phantom_acc ~dir r =
-    let ( let* ) = Option.bind in
     let (name, subpath) =
       match String.split_on_char '/' r with
       | [] -> (r, [])
@@ -442,21 +441,26 @@ module Haste : MODULE_SYSTEM = struct
       | package :: rest -> (package, rest)
     in
     let mname = Modulename.String name in
-    let m =
-      let* addr = Parsing_heaps.Reader_dispatcher.get_provider ~reader mname in
-      match (package_dir_opt ~reader addr, subpath) with
+    match Parsing_heaps.Reader_dispatcher.get_provider ~reader mname with
+    | Some addr ->
+      (match (package_dir_opt ~reader addr, subpath) with
       | (Some package_dir, []) -> Node.resolve_package ~options ~reader ?phantom_acc package_dir
       | (Some package_dir, subpath) ->
+        (* add a phantom dep on the package name, so we re-resolve the subpath
+           if the package gets a new provider *)
+        record_phantom_dependency mname phantom_acc;
+
         let path = Files.construct_path package_dir subpath in
         Node.resolve_relative ~options ~reader ?phantom_acc dir path
       | (None, []) -> Some mname
       | (None, _ :: _) ->
-        (* if r = foo/bar and foo is a regular module, don't resolve
-           TODO: could we provide a better error than just failing to resolve? *)
-        None
-    in
-    match m with
-    | Some m -> Some m
+        (* if r = foo/bar and foo is a regular module, don't resolve.
+           TODO: could we provide a better error than just failing to resolve?
+
+           we do need to add a phantom dep on the module, so we re-resolve
+           if the provider changes to a package. *)
+        record_phantom_dependency mname phantom_acc;
+        None)
     | None ->
       record_phantom_dependency mname phantom_acc;
       None
