@@ -1,9 +1,9 @@
 /**
  * (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
  *
- * @emails oncall+landline
  * @flow strict-local
  * @format
+ * @oncall landline
  */
 
 'use strict';
