@@ -1,3 +1,19 @@
+### 0.193.0
+
+New Features:
+* Add support for bigint. This includes the bigint type itself, subtyping with literals, libdefs, typeof, and sentinel refinement. For now, literal types are limited to 64 bit ints. Later changes may lift this restriction as well as implement support for operators.
+
+Notable bug fixes:
+* Fix a few bugs related to the Haste package resolver. The Haste resolver falls back to the Node resolver when resolving packages. It now obeys the `module.system.node.root_relative_dirname` setting when doing so. Also, scoped package names are now supported in the Haste module resolver.
+* Allow private readonly properties to be written to in constructors, just like regular readonly properties.
+
+Misc:
+* Update team members in CONTRIBUTING.md.
+* When using `module.system=haste`, importing packages in `node_modules` folders now obeys Node's resolution algorithm, rather than being able to be required from anywhere in the project.
+
+Library Definitions:
+* Add a default generic value for getOwnPropertyDescriptor.
+
 ### 0.192.0
 
 Notable changes:
