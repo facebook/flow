@@ -38,6 +38,7 @@ type hint_node =
   | AnnotationHint of tparams_map * (ALoc.t, ALoc.t) Ast.Type.annotation
   | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t
   | ProvidersHint of ALoc.t Nel.t
+  | StringLiteralType of string
   | BuiltinType of string
 
 type ast_hint =
@@ -253,6 +254,7 @@ module Print = struct
     | AnnotationHint _ -> "annot hint"
     | ValueHint _ -> "value hint"
     | ProvidersHint _ -> "providers hint"
+    | StringLiteralType s -> "string literal hint: " ^ s
     | BuiltinType _ -> "builtin type hint"
 
   let string_of_source = function

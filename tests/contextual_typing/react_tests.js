@@ -8,3 +8,9 @@ function ref_tests() {
   declare class Component2 extends React.Component<{}> {}
   <Component2 ref={(s) => (s: Component2 | null)} />;
 }
+
+function cannot_resolve_name_regression_tests() {
+  <div>{new Array(1)}</div>; // ok
+  <fbs>{new Array(1)}</fbs>; // ok
+  <fbt>{new Array(1)}</fbt>; // ok
+}

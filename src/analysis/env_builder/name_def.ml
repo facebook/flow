@@ -1875,8 +1875,13 @@ class def_finder env_entries providers toplevel_scope =
       let hint =
         match opening_name with
         | Ast.JSX.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
-          Hint_t
-            (ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })))
+          if name = "fbs" || name = "fbt" then
+            Hint_None
+          else if name = String.capitalize_ascii name then
+            Hint_t
+              (ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })))
+          else
+            Hint_t (StringLiteralType name)
         | Ast.JSX.NamespacedName _ -> Hint_None
         | Ast.JSX.MemberExpression member ->
           let rec jsx_title_member_to_expression member =

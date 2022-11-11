@@ -599,6 +599,7 @@ struct
                 state)
             state
             providers
+        | StringLiteralType _ -> state
         | BuiltinType _ -> state
       in
       let rec depends_of_hint state = function
