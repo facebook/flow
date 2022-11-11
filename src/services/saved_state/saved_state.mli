@@ -26,6 +26,7 @@ type unparsed_file_data = {
 }
 
 type package_file_data = {
+  package_module_name: string option;
   package_hash: Xx.hash;
   package_info: (Package_json.t, unit) result;
 }

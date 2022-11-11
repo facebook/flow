@@ -426,31 +426,38 @@ module Haste : MODULE_SYSTEM = struct
         (* Lib files, resource files, etc don't have any fancy haste name *)
         None
 
-  let resolve_haste_module ~reader ?phantom_acc r =
-    let mname = Modulename.String r in
-    match Parsing_heaps.Reader_dispatcher.get_provider ~reader mname with
-    | Some _ -> Some mname
+  let package_dir_opt ~reader addr =
+    if Parsing_heaps.Reader_dispatcher.is_package_file ~reader addr then
+      Some (Parsing_heaps.read_file_name addr |> Filename.dirname)
+    else
+      None
+
+  let resolve_haste_module ~options ~reader ?phantom_acc ~dir r =
+    let ( let* ) = Option.bind in
+    let (name, subpath) =
+      match String.split_on_char '/' r with
+      | [] -> (r, [])
+      | package :: rest -> (package, rest)
+    in
+    let mname = Modulename.String name in
+    let m =
+      let* addr = Parsing_heaps.Reader_dispatcher.get_provider ~reader mname in
+      match (package_dir_opt ~reader addr, subpath) with
+      | (Some package_dir, []) -> Node.resolve_package ~options ~reader ?phantom_acc package_dir
+      | (Some package_dir, subpath) ->
+        let path = Files.construct_path package_dir subpath in
+        Node.resolve_relative ~options ~reader ?phantom_acc dir path
+      | (None, []) -> Some mname
+      | (None, _ :: _) ->
+        (* if r = foo/bar and foo is a regular module, don't resolve
+           TODO: could we provide a better error than just failing to resolve? *)
+        None
+    in
+    match m with
+    | Some m -> Some m
     | None ->
       record_phantom_dependency mname phantom_acc;
       None
-
-  (** This is the Haste equivalent of the Node module resolution LOAD_NODE_MODULE
-    step (https://nodejs.org/api/modules.html#all-together). If it doesn't begin
-    with ./ or ../ or /, then it must be a folder with a package.json and we look
-    at the "main" field or fall back to index.js. *)
-  let resolve_haste_package ~options ~reader file_dirname ?phantom_acc r =
-    let (dir_opt, rest) =
-      match String.split_on_char '/' r with
-      | [] -> (None, [])
-      | package :: rest ->
-        (Package_heaps.Reader_dispatcher.get_package_directory ~reader package, rest)
-    in
-    match (dir_opt, rest) with
-    | (None, _) -> None
-    | (Some package_dir, []) -> Node.resolve_package ~options ~reader ?phantom_acc package_dir
-    | (Some package_dir, rest) ->
-      Files.construct_path package_dir rest
-      |> Node.resolve_relative ~options ~reader ?phantom_acc file_dirname
 
   let resolve_import ~options ~reader node_modules_containers f ?phantom_acc r =
     let file = File_key.to_string f in
@@ -460,8 +467,7 @@ module Haste : MODULE_SYSTEM = struct
     else
       lazy_seq
         [
-          lazy (resolve_haste_module ~reader ?phantom_acc r);
-          lazy (resolve_haste_package ~options ~reader dir ?phantom_acc r);
+          lazy (resolve_haste_module ~options ~reader ?phantom_acc ~dir r);
           lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
           lazy (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
         ]

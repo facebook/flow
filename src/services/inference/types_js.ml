@@ -2017,16 +2017,11 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     in
 
     let restore_package (fns, dirty_modules, invalid_hashes) (fn, package_data) =
-      let { Saved_state.package_hash; package_info } = package_data in
+      let { Saved_state.package_module_name; package_hash; package_info } = package_data in
 
-      (* update ReversePackageHeap *)
-      (match package_info with
-      | Ok package ->
-        let filename = File_key.to_string fn in
-        Package_heaps.Package_heap_mutator.add_package_json filename package
-      | Error _ -> ());
-
-      let ms = Parsing_heaps.From_saved_state.add_package fn package_hash package_info in
+      let ms =
+        Parsing_heaps.From_saved_state.add_package fn package_hash package_module_name package_info
+      in
 
       let invalid_hashes =
         if verify && not (verify_hash ~reader:abstract_reader fn) then

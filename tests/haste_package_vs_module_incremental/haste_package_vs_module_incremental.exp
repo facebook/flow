@@ -1,0 +1,62 @@
+'package' module resolves to file:
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+
+Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:4:2
+   4| (pkg: string); // error
+       ^^^
+
+References:
+   package.js:6:16
+   6| export default 123;
+                     ^^^ [1]
+   test.js:4:7
+   4| (pkg: string); // error
+            ^^^^^^ [2]
+
+
+
+Found 1 error
+
+'package' module resolves to package:
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+
+Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:4:2
+   4| (pkg: string); // error
+       ^^^
+
+References:
+   package/index.js:3:16
+   3| export default 123;
+                     ^^^ [1]
+   test.js:4:7
+   4| (pkg: string); // error
+            ^^^^^^ [2]
+
+
+
+Found 1 error
+
+'package' module resolves to file again:
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+
+Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:4:2
+   4| (pkg: string); // error
+       ^^^
+
+References:
+   package.js:6:16
+   6| export default 123;
+                     ^^^ [1]
+   test.js:4:7
+   4| (pkg: string); // error
+            ^^^^^^ [2]
+
+
+
+Found 1 error

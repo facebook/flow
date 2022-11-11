@@ -841,8 +841,8 @@ let add_unparsed_file file_key file_opt hash module_name =
       add_file_maybe chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
   )
 
-let add_package_file file_key file_opt hash (package_info : (Package_json.t, unit) result) =
-  let module_name = (* packages don't provide haste modules *) None in
+let add_package_file
+    file_key file_opt hash module_name (package_info : (Package_json.t, unit) result) =
   let serialize x = Marshal.to_string x [] in
   let package_info = serialize package_info in
   let (package_info_size, write_package_info) = Heap.prepare_write_package_info package_info in
@@ -1135,8 +1135,10 @@ let add_parsed
 let add_unparsed file_key file_opt hash module_name : MSet.t =
   WorkerCancel.with_no_cancellations (fun () -> add_unparsed_file file_key file_opt hash module_name)
 
-let add_package file_key file_opt hash package_info : MSet.t =
-  WorkerCancel.with_no_cancellations (fun () -> add_package_file file_key file_opt hash package_info)
+let add_package file_key file_opt hash module_name package_info : MSet.t =
+  WorkerCancel.with_no_cancellations (fun () ->
+      add_package_file file_key file_opt hash module_name package_info
+  )
 
 let clear_not_found file_key = WorkerCancel.with_no_cancellations (fun () -> clear_file file_key)
 
@@ -1146,6 +1148,8 @@ module type READER = sig
   val get_provider : reader:reader -> Modulename.t -> file_addr option
 
   val is_typed_file : reader:reader -> file_addr -> bool
+
+  val is_package_file : reader:reader -> file_addr -> bool
 
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped | `package ] parse_addr option
 
@@ -1250,6 +1254,11 @@ module Mutator_reader = struct
   let is_typed_file ~reader file =
     match read ~reader (Heap.get_parse file) with
     | Some parse -> Heap.is_typed parse
+    | None -> false
+
+  let is_package_file ~reader file =
+    match read ~reader (Heap.get_parse file) with
+    | Some parse -> Heap.is_package parse
     | None -> false
 
   let get_parse ~reader file = read ~reader (Heap.get_parse file)
@@ -1498,7 +1507,13 @@ type worker_mutator = {
     Cas_digest.t option ->
     MSet.t;
   add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> MSet.t;
-  add_package: File_key.t -> file_addr option -> Xx.hash -> (Package_json.t, unit) result -> MSet.t;
+  add_package:
+    File_key.t ->
+    file_addr option ->
+    Xx.hash ->
+    string option ->
+    (Package_json.t, unit) result ->
+    MSet.t;
   clear_not_found: File_key.t -> MSet.t;
 }
 
@@ -1694,6 +1709,11 @@ module Reader = struct
     | Some parse -> Heap.is_typed parse
     | None -> false
 
+  let is_package_file ~reader file =
+    match read ~reader (Heap.get_parse file) with
+    | Some parse -> Heap.is_package parse
+    | None -> false
+
   let get_parse ~reader file = read ~reader (Heap.get_parse file)
 
   let get_typed_parse ~reader file =
@@ -1887,6 +1907,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.is_typed_file ~reader
     | State_reader reader -> Reader.is_typed_file ~reader
+
+  let is_package_file ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.is_package_file ~reader
+    | State_reader reader -> Reader.is_package_file ~reader
 
   let get_parse ~reader =
     match reader with

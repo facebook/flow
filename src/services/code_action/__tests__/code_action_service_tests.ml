@@ -20,8 +20,11 @@ let reader = State_reader.create ()
 
 let add_package fn pkg =
   let file_key = File_key.JsonFile fn in
+  let module_name = None in
   let hash = Xx.init 0L |> Xx.digest in
-  let (_ : Modulename.Set.t) = Parsing_heaps.From_saved_state.add_package file_key hash (Ok pkg) in
+  let (_ : Modulename.Set.t) =
+    Parsing_heaps.From_saved_state.add_package file_key hash module_name (Ok pkg)
+  in
   ()
 
 let tests =

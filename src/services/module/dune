@@ -9,7 +9,6 @@
   flow_procs
   flow_state_heaps_parsing
   flow_state_readers
-  flow_typing
-  flow_package)
+  flow_typing)
  (preprocess
   (pps lwt_ppx ppx_let)))

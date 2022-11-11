@@ -31,6 +31,7 @@ type unparsed_file_data = {
 
 (** info for package.json files *)
 type package_file_data = {
+  package_module_name: string option;
   package_hash: Xx.hash;
   package_info: (Package_json.t, unit) result;
 }
@@ -239,6 +240,7 @@ end = struct
     let parse = Parsing_heaps.Reader.get_package_parse_unsafe ~reader fn addr in
     let relative_file_data =
       {
+        package_module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
         package_hash = Parsing_heaps.read_file_hash parse;
         package_info = Parsing_heaps.read_package_info parse;
       }

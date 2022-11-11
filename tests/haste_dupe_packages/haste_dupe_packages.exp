@@ -1,0 +1,34 @@
+Error ------------------------------------------------------------------------------------------- b/pkg/package.json:1:1
+
+Duplicate module provider for `pkg`. Change either this module provider or the current module provider [1].
+[duplicate-module]
+
+   b/pkg/package.json:1:1
+   1| {
+      
+
+References:
+   a/pkg/package.json:1:1
+   1| {
+       [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:2
+
+Cannot cast `pkg` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:10:2
+   10| (pkg: empty);
+        ^^^
+
+References:
+   a/pkg/index.js:3:16
+    3| export default 123;
+                      ^^^ [1]
+   test.js:10:7
+   10| (pkg: empty);
+             ^^^^^ [2]
+
+
+
+Found 2 errors

@@ -84,6 +84,8 @@ module type READER = sig
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
+  val is_package_file : reader:reader -> file_addr -> bool
+
   val get_parse : reader:reader -> file_addr -> [ `typed | `untyped | `package ] parse_addr option
 
   val get_typed_parse : reader:reader -> file_addr -> [ `typed ] parse_addr option
@@ -203,7 +205,12 @@ type worker_mutator = {
     Modulename.Set.t;
   add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> Modulename.Set.t;
   add_package:
-    File_key.t -> file_addr option -> Xx.hash -> (Package_json.t, unit) result -> Modulename.Set.t;
+    File_key.t ->
+    file_addr option ->
+    Xx.hash ->
+    string option ->
+    (Package_json.t, unit) result ->
+    Modulename.Set.t;
   clear_not_found: File_key.t -> Modulename.Set.t;
 }
 
@@ -250,5 +257,6 @@ module From_saved_state : sig
 
   val add_unparsed : File_key.t -> Xx.hash -> string option -> Modulename.Set.t
 
-  val add_package : File_key.t -> Xx.hash -> (Package_json.t, unit) result -> Modulename.Set.t
+  val add_package :
+    File_key.t -> Xx.hash -> string option -> (Package_json.t, unit) result -> Modulename.Set.t
 end

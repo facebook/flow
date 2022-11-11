@@ -1,0 +1,44 @@
+'package/sub' does not resolve:
+Error ----------------------------------------------------------------------------------------------------- test.js:3:17
+
+Cannot resolve module `package/sub`. [cannot-resolve-module]
+
+   3| import sub from 'package/sub';
+                      ^^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+'package/sub' module resolves to package:
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+
+Cannot cast `sub` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:4:2
+   4| (sub: string);
+       ^^^
+
+References:
+   package/sub.js:3:16
+   3| export default 123;
+                     ^^^ [1]
+   test.js:4:7
+   4| (sub: string);
+            ^^^^^^ [2]
+
+
+
+Found 1 error
+
+'package/sub' does not resolve again:
+Error ----------------------------------------------------------------------------------------------------- test.js:3:17
+
+Cannot resolve module `package/sub`. [cannot-resolve-module]
+
+   3| import sub from 'package/sub';
+                      ^^^^^^^^^^^^^
+
+
+
+Found 1 error

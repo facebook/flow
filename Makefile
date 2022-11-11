@@ -171,7 +171,6 @@ MODULES=\
   src/state/heaps/context\
   src/state/heaps/diffing\
   src/state/heaps/module\
-  src/state/heaps/package\
   src/state/heaps/parsing\
   src/state/heaps/parsing/exceptions\
   src/state/locals/module\

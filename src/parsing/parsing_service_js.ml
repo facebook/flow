@@ -623,16 +623,20 @@ let reducer
               let failure = Uncaught_exception exn in
               fold_failed acc worker_mutator file_key file_opt hash module_name failure
             | Parse_skip (Skip_package_json result) ->
-              let (error, package_info) =
+              let (error, module_name, package_info) =
                 match result with
                 | Ok pkg ->
-                  if Option.is_some (exported_module file_key (`Package pkg)) then
-                    Package_heaps.Package_heap_mutator.add_package_json filename_string pkg;
-                  (None, Ok pkg)
-                | Error err -> (Some err, Error ())
+                  let module_name = exported_module file_key (`Package pkg) in
+                  (None, module_name, Ok pkg)
+                | Error err -> (Some err, None, Error ())
               in
               let dirty_modules =
-                worker_mutator.Parsing_heaps.add_package file_key file_opt hash package_info
+                worker_mutator.Parsing_heaps.add_package
+                  file_key
+                  file_opt
+                  hash
+                  module_name
+                  package_info
               in
               let package_json =
                 (file_key :: fst acc.package_json, error :: snd acc.package_json)

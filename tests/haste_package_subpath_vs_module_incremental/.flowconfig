@@ -1,0 +1,6 @@
+[ignore]
+<PROJECT_ROOT>/fixtures
+
+[options]
+module.system=haste
+file_watcher=none
