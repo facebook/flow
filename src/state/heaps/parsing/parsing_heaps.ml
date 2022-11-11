@@ -631,10 +631,13 @@ let prepare_update_resolved_requires ent resolved_requires =
     in
     (size, write)
 
-let prepare_create_file size file_key module_name =
+let prepare_create_file size file_key module_name resolved_requires_opt =
   let open Heap in
   let (file_kind, file_name) = file_kind_and_name file_key in
-  let size = size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size in
+  let (dep_size, update_revdeps) = prepare_update_revdeps None resolved_requires_opt in
+  let size =
+    size + (4 * header_size) + (2 * entity_size) + string_size file_name + file_size + dep_size
+  in
   let (size, write_new_haste_info_maybe) =
     prepare_write_new_haste_info_maybe size None module_name
   in
@@ -646,9 +649,10 @@ let prepare_create_file size file_key module_name =
     let haste_ent = write_entity chunk haste_info in
     let file_module = add_file_module_maybe chunk in
     let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
-    if file = FileHeap.add file_key file then
+    if file = FileHeap.add file_key file then (
+      update_revdeps chunk file;
       calc_dirty_modules file_key file haste_ent file_module
-    else
+    ) else
       (* Two threads raced to add this file and the other thread won. We don't
        * need to mark any files as dirty; the other thread will have done that
        * for us. *)
@@ -656,7 +660,14 @@ let prepare_create_file size file_key module_name =
   in
   (size, write)
 
-let prepare_update_file size file_key file parse_ent module_name =
+(**
+ @param resolved_requires_opt_opt The resolved requires to update. This is a
+    nested [option]: to update the resolved requires to [x], pass [Some (Some x)];
+    to remove the resolved requires (e.g. for a deleted file), pass [Some None]; to
+    leave them as is (e.g. when updating other parts of the file), pass [None].
+ *)
+let prepare_update_file size file_key file parse_ent module_name resolved_requires_opt_opt =
+  let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   let haste_ent = get_haste_info file in
   let old_haste_info = entity_read_latest haste_ent in
@@ -671,6 +682,19 @@ let prepare_update_file size file_key file parse_ent module_name =
     | None -> get_file_module file
     | Some _ -> None
   in
+  let (dep_size, update_revdeps_maybe) =
+    match resolved_requires_opt_opt with
+    | None -> (0, (fun _ _ -> ()))
+    | Some resolved_requires_opt ->
+      let old_resolved_requires =
+        let* parse = entity_read_latest parse_ent in
+        let* parse = coerce_typed parse in
+        let* addr = entity_read_latest (get_resolved_requires parse) in
+        Some (read_resolved_requires_caml addr)
+      in
+      prepare_update_revdeps old_resolved_requires resolved_requires_opt
+  in
+  let size = size + dep_size in
   let write chunk parse =
     entity_advance parse_ent (Some parse);
     let new_haste_info = write_new_haste_info_maybe chunk in
@@ -680,6 +704,7 @@ let prepare_update_file size file_key file parse_ent module_name =
       | (Some old_info, Some new_info) when haste_info_equal old_info new_info -> ()
       | _ -> entity_advance haste_ent new_haste_info
     in
+    update_revdeps_maybe chunk file;
     calc_dirty_modules file_key file haste_ent new_file_module
   in
   (size, write)
@@ -745,7 +770,7 @@ let add_checked_file
     match file_opt with
     | None ->
       let (size, write_parse_ents) = prepare_write_typed_parse_ents size None in
-      let (size, add_file) = prepare_create_file size file_key module_name in
+      let (size, add_file) = prepare_create_file size file_key module_name None in
       Either.Right (size, write_parse_ents, add_file)
     | Some file ->
       let parse_ent = get_parse file in
@@ -756,7 +781,9 @@ let add_checked_file
       (match typed_parse with
       | None ->
         let (size, write_parse_ents) = prepare_write_typed_parse_ents size None in
-        let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
+        let (size, update_file) =
+          prepare_update_file size file_key file parse_ent module_name None
+        in
         Either.Right (size, write_parse_ents, update_file)
       | Some parse ->
         let old_hash = read_int64 (get_file_hash parse) in
@@ -766,7 +793,9 @@ let add_checked_file
            * parse information. *)
           Either.Left parse
         else
-          let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
+          let (size, update_file) =
+            prepare_update_file size file_key file parse_ent module_name None
+          in
           let parse_ents _ = (get_resolved_requires parse, get_leader parse, get_sig_hash parse) in
           Either.Right (size, parse_ents, update_file))
   in
@@ -813,27 +842,14 @@ let add_checked_file
   )
 
 let add_unparsed_file file_key file_opt hash module_name =
-  let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   let size = (2 * header_size) + untyped_parse_size + int64_size in
   let (size, add_file_maybe) =
     match file_opt with
-    | None -> prepare_create_file size file_key module_name
+    | None -> prepare_create_file size file_key module_name None
     | Some file ->
       let parse_ent = get_parse file in
-      let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
-      let old_resolved_requires =
-        let* parse = entity_read_latest parse_ent in
-        let* parse = coerce_typed parse in
-        let* addr = entity_read_latest (get_resolved_requires parse) in
-        Some (read_resolved_requires_caml addr)
-      in
-      let (dep_size, update_revdeps) = prepare_update_revdeps old_resolved_requires None in
-      let update chunk =
-        update_revdeps chunk file;
-        update_file chunk
-      in
-      (size + dep_size, update)
+      prepare_update_file size file_key file parse_ent module_name (Some None)
   in
   alloc size (fun chunk ->
       let hash = write_int64 chunk hash in
@@ -846,27 +862,14 @@ let add_package_file
   let serialize x = Marshal.to_string x [] in
   let package_info = serialize package_info in
   let (package_info_size, write_package_info) = Heap.prepare_write_package_info package_info in
-  let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
   let size = (3 * header_size) + package_parse_size + int64_size + package_info_size in
   let (size, add_file_maybe) =
     match file_opt with
-    | None -> prepare_create_file size file_key module_name
+    | None -> prepare_create_file size file_key module_name None
     | Some file ->
       let parse_ent = get_parse file in
-      let (size, update_file) = prepare_update_file size file_key file parse_ent module_name in
-      let old_resolved_requires =
-        let* parse = entity_read_latest parse_ent in
-        let* parse = coerce_typed parse in
-        let* addr = entity_read_latest (get_resolved_requires parse) in
-        Some (read_resolved_requires_caml addr)
-      in
-      let (dep_size, update_revdeps) = prepare_update_revdeps old_resolved_requires None in
-      let update chunk =
-        update_revdeps chunk file;
-        update_file chunk
-      in
-      (size + dep_size, update)
+      prepare_update_file size file_key file parse_ent module_name (Some None)
   in
   alloc size (fun chunk ->
       let hash = write_int64 chunk hash in
