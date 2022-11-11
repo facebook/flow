@@ -911,6 +911,23 @@ let clear_file file_key =
         let m = get_haste_module haste_info in
         MSet.add (haste_modulename m) dirty_modules))
 
+let rollback_resolved_requires file ent =
+  if Heap.entity_changed ent then (
+    let old_resolved_requires =
+      let* addr = Heap.entity_read_committed ent in
+      Some (read_resolved_requires addr)
+    in
+    let new_resolved_requires =
+      let* addr = Heap.entity_read_latest ent in
+      Some (read_resolved_requires addr)
+    in
+    let (size, update_revdeps) =
+      prepare_update_revdeps new_resolved_requires old_resolved_requires
+    in
+    Heap.alloc size (fun chunk -> update_revdeps chunk file);
+    Heap.entity_rollback ent
+  )
+
 (* Rolling back a transaction requires that we undo changes we made to the file
  * as well as changes we made to modules affected by the file changes. Rolling
  * back changes to all_providers in particular is kind of tricky...
@@ -990,20 +1007,40 @@ let rollback_file =
       else
         (None, None)
     in
-    (* Roll back changes to reverse dependency graph. During parse, the only
-     * changes we make are when a checked file is deleted or becomes unparsed.
-     * Any other changes to the dependency graph happen when resolving requires,
-     * and are rolled back as part of that step. *)
+    (* Roll back changes to dependency graph. The resolved requires usually
+       don't get updated during parsing -- there's a separate step for resolving
+       requires -- except when loading or reloading from saved state, or when
+       a file goes from parsed to unparsed/deleted. We have to update both the
+       resolved_requires ent on the parse record, and the revdeps. *)
     let () =
       match (old_typed_parse, new_typed_parse) with
+      | (None, None) -> ()
       | (Some old_parse, None) ->
+        (* the file was deleted or became untyped. to undo that, we have to restore
+           the revdeps, but rolling back the parse ent will restore the
+           resolved_requires ent. *)
         let old_resolved_requires =
           let* addr = entity_read_latest (get_resolved_requires old_parse) in
           Some (read_resolved_requires_caml addr)
         in
         let (size, update_revdeps) = prepare_update_revdeps None old_resolved_requires in
         alloc size (fun chunk -> update_revdeps chunk file)
-      | _ -> ()
+      | (None, Some new_parse) ->
+        (* the file was added or became typed. to undo that, we have to remove
+           the revdeps, but rolling back the parse ent will remove the
+           resolved_requires ent. *)
+        let new_resolved_requires =
+          let* addr = entity_read_latest (get_resolved_requires new_parse) in
+          Some (read_resolved_requires_caml addr)
+        in
+        let (size, update_revdeps) = prepare_update_revdeps new_resolved_requires None in
+        alloc size (fun chunk -> update_revdeps chunk file)
+      | (Some _, Some new_parse) ->
+        (* the resolved_requires ent is copied from the old parse to the
+           new parse, so we can just roll back the new_parse's copy. this
+           also updates the revdeps. *)
+        let ent = get_resolved_requires new_parse in
+        rollback_resolved_requires file ent
     in
     (* Remove new providers and process deferred deletions for old providers
      * before rolling back this file's parse and haste entities. *)
@@ -1590,7 +1627,6 @@ module Resolved_requires_mutator = struct
   type t = unit
 
   let rollback_resolved_requires file_key =
-    let read_resolved_requires_caml = read_resolved_requires in
     let open Heap in
     match get_file_addr file_key with
     | None -> ()
@@ -1600,22 +1636,7 @@ module Resolved_requires_mutator = struct
         let* parse = coerce_typed parse in
         Some (get_resolved_requires parse)
       in
-      (match resolved_requires_ent with
-      | Some ent when entity_changed ent ->
-        let old_resolved_requires =
-          let* addr = entity_read_committed ent in
-          Some (read_resolved_requires_caml addr)
-        in
-        let new_resolved_requires =
-          let* addr = entity_read_latest ent in
-          Some (read_resolved_requires_caml addr)
-        in
-        let (size, update_revdeps) =
-          prepare_update_revdeps new_resolved_requires old_resolved_requires
-        in
-        alloc size (fun chunk -> update_revdeps chunk file);
-        entity_rollback ent
-      | _ -> ())
+      Option.iter (rollback_resolved_requires file) resolved_requires_ent
 
   let create transaction files =
     let commit () = Hh_logger.info "Committing resolved requires" in
