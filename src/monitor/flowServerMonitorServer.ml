@@ -179,11 +179,18 @@ end = struct
            it here. *)
         Logger.debug "Server connection is closed. Throwing away request"
 
+    let file_watcher_notification_is_relevant files metadata =
+      (not (SSet.is_empty files))
+      || Base.Option.value_map
+           ~default:false
+           ~f:(fun metadata -> metadata.MonitorProt.missed_changes)
+           metadata
+
     (* In order to try and avoid races between the file system and a command (like `flow status`),
      * we check for file system notification before sending a request to the server *)
     let send_file_watcher_notification watcher conn =
       let%lwt (files, metadata, initial) = watcher#get_and_clear_changed_files in
-      if not (SSet.is_empty files) then (
+      if file_watcher_notification_is_relevant files metadata then (
         let count = SSet.cardinal files in
         Logger.info
           "File watcher reported %d file%s changed"
@@ -194,7 +201,8 @@ end = struct
             "s"
           );
         send_request ~msg:(MonitorProt.FileWatcherNotification { files; metadata; initial }) conn
-      );
+      ) else
+        Logger.debug "Ignoring irrelevant file watcher notification";
       Lwt.return_unit
 
     let main (watcher, conn) =

@@ -293,7 +293,8 @@ end = struct
         ~data:(Base.Option.value_map ~f:Hh_json.json_to_string ~default:"" metadata)
 
     let broadcast env =
-      if not (SSet.is_empty env.files) then Lwt_condition.broadcast env.changes_condition ()
+      if (not (SSet.is_empty env.files)) || env.metadata.MonitorProt.missed_changes then
+        Lwt_condition.broadcast env.changes_condition ()
 
     let main env =
       let%lwt (instance, pushed_changes) =
@@ -343,6 +344,9 @@ end = struct
             mergebase
         else
           Logger.info "Watchman missed changes, but the mergebase didn't change.";
+        Logger.info
+          "Watchman reports %d files have changed since the mergebase"
+          (SSet.cardinal changes_since_mergebase);
         env.files <- SSet.union env.files changes_since_mergebase;
         let metadata =
           { MonitorProt.changed_mergebase = Some changed_mergebase; missed_changes = true }
