@@ -48,6 +48,14 @@ e[0] = (0: typeof non_exported_return_type);
 declare function useBound<F: () => void>(): F;
 useBound<() => void>(); // () => void
 
+>>> partial.js (#changes: 1)
+//@flow
+
+
+let x = new Map<string, number>();
+
+x.set('x', 3);
+
 >>> speculation.js (#changes: 2)
 //@flow
 
@@ -72,9 +80,9 @@ x.current = 3;
 >>> Launching report...
 
 Stats:
-  Files changed:                            5
-  Number of annotations added:              9
-  Total size of annotations:               11
+  Files changed:                            6
+  Number of annotations added:             10
+  Total size of annotations:               12
 
 Errors:
   Missing annot./normalizer error:          0

@@ -75,7 +75,7 @@ let mapper
       Codemod_annotator.validate_ty cctx ~max_type_size ty
 
     method private annotate_special_call_args loc expr =
-      let { Ast.Expression.Call.callee; arguments; _ } = expr in
+      let { Ast.Expression.Call.callee; arguments; targs; _ } = expr in
       match callee with
       | ( _,
           Ast.Expression.Member
@@ -86,7 +86,7 @@ let mapper
               _;
             }
         ) ->
-        (match this#get_implicit_instantiation_results loc with
+        (match this#get_implicit_instantiation_results loc targs with
         | Some targs ->
           let open Ast.Expression.ArgList in
           let (loc, { arguments; comments }) = arguments in
@@ -155,8 +155,8 @@ let mapper
         | Some arguments -> { expr with Ast.Expression.Call.arguments }
         | _ -> expr
       else
-        let targs = this#get_implicit_instantiation_results loc in
         let open Ast.Expression.Call in
+        let targs = this#get_implicit_instantiation_results loc expr.targs in
         match targs with
         | Some targs -> { expr with targs = Some targs }
         | None -> expr
@@ -166,21 +166,31 @@ let mapper
       if annotate_special_fun_return then
         expr
       else
-        let targs = this#get_implicit_instantiation_results loc in
         let open Ast.Expression.New in
+        let targs = this#get_implicit_instantiation_results loc expr.targs in
         match targs with
         | Some targs -> { expr with targs = Some targs }
         | None -> expr
 
-    method private get_implicit_instantiation_results loc =
+    method private get_implicit_instantiation_results loc current_targs =
+      let is_ith_targ_annotated i =
+        match current_targs with
+        | None -> false
+        | Some (_, { Ast.Expression.CallTypeArgs.arguments = targs; _ }) ->
+          (match List.nth_opt targs i with
+          | Some (Ast.Expression.CallTypeArg.Explicit _) -> true
+          | _ -> false)
+      in
       match (LMap.find_opt loc implicit_instantiation_results, LMap.find_opt loc loc_error_map) with
       | (Some targ_tys_with_names, Some tparam_names) ->
         let arguments =
-          List.map
-            (fun (ty, name) ->
+          List.mapi
+            (fun i (ty, name) ->
               let open Ast.Expression.CallTypeArg in
               match ty with
-              | _ when not (SSet.mem (Subst_name.string_of_subst_name name) tparam_names) ->
+              | _
+                when (not (SSet.mem (Subst_name.string_of_subst_name name) tparam_names))
+                     && not (is_ith_targ_annotated i) ->
                 Implicit (loc, { Implicit.comments = None })
               | None -> Explicit flowfixme_ast
               | Some ty ->
