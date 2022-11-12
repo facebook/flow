@@ -335,19 +335,21 @@ end = struct
            all focused (i.e. previously changed) files. But we can't incrementally
            handle (4): watchman can't tell us all the files that changed between the two
            mergebase commits (`hg` can, but it's not worth implementing this). *)
-        if String.equal prev_mergebase mergebase then (
+        let changed_mergebase = not (String.equal prev_mergebase mergebase) in
+        if changed_mergebase then
+          Logger.info
+            "Watchman missed changes, and the mergebase changed from %S to %S."
+            prev_mergebase
+            mergebase
+        else
           Logger.info "Watchman missed changes, but the mergebase didn't change.";
-          env.files <- SSet.union env.files changes_since_mergebase;
-          let metadata = { MonitorProt.changed_mergebase = Some false; missed_changes = true } in
-          env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata metadata;
-          broadcast env;
-          Lwt.return env
-        ) else (
-          Logger.info "Watchman reports mergebase changed from %S to %S" prev_mergebase mergebase;
-          (* ideally, we would re-init from the new mergebase, but we can't do
-             that yet so we fail. *)
-          raise (Watchman_failure Watchman.Restarted)
-        )
+        env.files <- SSet.union env.files changes_since_mergebase;
+        let metadata =
+          { MonitorProt.changed_mergebase = Some changed_mergebase; missed_changes = true }
+        in
+        env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata metadata;
+        broadcast env;
+        Lwt.return env
       | Watchman.State_enter (name, metadata) ->
         (match name with
         | "hg.update" ->
