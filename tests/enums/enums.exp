@@ -190,6 +190,23 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- cast.js:72:2
+
+Cannot cast `S.A` to empty because `S` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   cast.js:72:2
+   72| (S.A: empty); // Error
+        ^^^
+
+References:
+   cast.js:13:6
+   13| enum S of string {
+            ^ [1]
+   cast.js:72:7
+   72| (S.A: empty); // Error
+             ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
 
 Cannot cast `F` to `EO` because enum `F` [1] is incompatible with enum `E` [2]. [incompatible-cast]
@@ -3529,7 +3546,7 @@ References:
 
 
 
-Found 212 errors
+Found 213 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

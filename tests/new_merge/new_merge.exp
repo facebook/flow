@@ -321,6 +321,23 @@ References:
              ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- main.js:74:2
+
+Cannot cast `E17.A` to empty because `E` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:74:2
+   74| (E17.A: empty); // error enum ~> empty
+        ^^^^^
+
+References:
+   enums.js:3:13
+    3| export enum E {
+                   ^ [1]
+   main.js:74:9
+   74| (E17.A: empty); // error enum ~> empty
+               ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- main.js:75:6
 
 Cannot access `C` because `C` is not a member of enum `E` [1]. [invalid-enum-access]
@@ -815,4 +832,4 @@ References:
 
 
 
-Found 51 errors
+Found 52 errors

@@ -71,7 +71,7 @@ if (d16.kind === 'kind1') {
 
 import { E as E17 } from './enums';
 (E17: empty); // error enum ~> empty
-(E17.A: empty); // okay?
+(E17.A: empty); // error enum ~> empty
 (E17.C: empty); // error - not a member
 
 import { x as x18, y as y18, z as z18 } from './eval_readonly';

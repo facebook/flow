@@ -5604,7 +5604,8 @@ struct
     | ReposLowerT _
     | ReposUseT _
     | SealGenericT _
-    | ResolveUnionT _ ->
+    | ResolveUnionT _
+    | EnumCastT _ ->
       false
     | BecomeT { empty_success; _ } -> empty_success
     | _ -> true

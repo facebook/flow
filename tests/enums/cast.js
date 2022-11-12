@@ -69,3 +69,4 @@ declare var sb: S | B;
 (sb: string | boolean); // Error
 
 (S.A: interface {}); // Error
+(S.A: empty); // Error
