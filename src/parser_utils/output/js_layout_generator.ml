@@ -4041,7 +4041,12 @@ and declare_export_declaration
     | Interface (loc, interface) ->
       source_location_with_comments
         ?comments
-        (loc, fuse [Atom "declare"; space; s_export; interface_declaration ~opts loc interface]))
+        (loc, fuse [Atom "declare"; space; s_export; interface_declaration ~opts loc interface])
+    (* declare export enum *)
+    | Enum (loc, enum) ->
+      source_location_with_comments
+        ?comments
+        (loc, fuse [Atom "declare"; space; s_export; enum_declaration ~def:(Atom "enum") loc enum]))
   | (None, Some specifier) ->
     source_location_with_comments
       ?comments

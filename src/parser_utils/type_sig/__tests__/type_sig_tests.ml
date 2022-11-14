@@ -4714,6 +4714,23 @@ let%expect_test "enum_unknown_members" =
          members = { "A" -> [1:16-17]; "B" -> [1:19-20] };
          has_unknown_members = true} |}]
 
+let%expect_test "enum_declared" =
+  print_sig {|
+    declare export enum E { A, B };
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"E"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. EnumBinding {id_loc = [1:20-21];
+         name = "E"; rep = StringRep {truthy = true};
+         members = { "A" -> [1:24-25]; "B" -> [1:27-28] };
+         has_unknown_members = false} |}]
+
 let%expect_test "enum_disabled" =
   print_sig ~enable_enums:false {|
     export enum E {}

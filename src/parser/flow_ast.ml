@@ -919,6 +919,8 @@ and Statement : sig
       | NamedOpaqueType of ('M * ('M, 'T) OpaqueType.t)
       (* declare export interface *)
       | Interface of ('M * ('M, 'T) Interface.t)
+      (* declare export enum *)
+      | Enum of ('M * ('M, 'T) EnumDeclaration.t)
 
     and ('M, 'T) t = {
       default: 'M option;

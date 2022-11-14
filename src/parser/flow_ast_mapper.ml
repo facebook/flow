@@ -680,6 +680,12 @@ class ['loc] mapper =
           decl
         else
           Interface (loc, i')
+      | Enum (loc, enum) ->
+        let enum' = this#enum_declaration loc enum in
+        if enum' == enum then
+          decl
+        else
+          Enum (loc, enum')
 
     method declare_function _loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       let open Ast.Statement.DeclareFunction in

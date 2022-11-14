@@ -1,3 +1,29 @@
+Error ------------------------------------------------------------------------------------------------------- lib.js:4:3
+
+Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
+`.flowconfig`. [illegal-enum]
+
+        v-------------------------------------------
+   4|   declare enum G { // ERROR: enums not enabled
+   5|     J,
+   6|     K,
+   7|   }
+        ^
+
+
+Error ------------------------------------------------------------------------------------------------------ lib.js:8:18
+
+Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
+`.flowconfig`. [illegal-enum]
+
+                        v-----------------------------------
+    8|   declare export enum H { // ERROR: enums not enabled
+    9|     X,
+   10|     Y,
+   11|   }
+         ^
+
+
 Error -------------------------------------------------------------------------------------------------- declared.js:3:1
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
@@ -41,4 +67,4 @@ Cannot resolve name `E`. [cannot-resolve-name]
 
 
 
-Found 4 errors
+Found 6 errors

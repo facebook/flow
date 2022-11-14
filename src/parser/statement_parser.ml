@@ -1840,6 +1840,18 @@ module Statement
                 source = None;
                 comments;
               }
+          | T_ENUM when (parse_options env).enums ->
+            (* declare export enum ... *)
+            let enum = with_loc Enum.declaration env in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+            Statement.DeclareExportDeclaration
+              {
+                default = None;
+                declaration = Some (Enum enum);
+                specifiers = None;
+                source = None;
+                comments;
+              }
           | _ ->
             (match Peek.token env with
             | T_TYPE -> error env Parse_error.DeclareExportType

@@ -4010,6 +4010,7 @@ let declare_export_decl opts scope tbls default =
     declare_variable_decl opts scope tbls v (Scope.export_binding scope S.ExportValue)
   | D.Function (_, f) -> declare_function_decl opts scope tbls f export_maybe_default_binding
   | D.Class (_, c) -> declare_class_decl opts scope tbls c export_maybe_default_binding
+  | D.Enum (_, enum) -> enum_decl opts scope tbls enum (Scope.export_binding scope S.ExportValue)
   | D.DefaultType t ->
     let default_loc = Base.Option.value_exn default in
     let def = annot opts scope tbls SSet.empty t in

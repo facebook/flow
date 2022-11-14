@@ -535,7 +535,8 @@ struct
               | Variable _
               | Function _
               | Class _
-              | DefaultType _ ->
+              | DefaultType _
+              | Enum _ ->
                 ExportValue
               | NamedType _
               | NamedOpaqueType _

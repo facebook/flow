@@ -1254,6 +1254,12 @@ module Make
               | (_, InterfaceDeclaration i_ast) -> D.Interface (loc, i_ast)
               | _ -> assert_false "InterfaceDeclaration typed AST doesn't preserve structure"
             end
+          | D.Enum (loc, ({ EnumDeclaration.id; _ } as enum)) ->
+            let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+            let enum_ast = enum_declaration cx loc enum in
+            if Context.enable_enums cx then
+              Import_export.export_binding cx (OrdinaryName name) id_loc Ast.Statement.ExportType;
+            D.Enum (loc, enum_ast)
         in
         Option.map f declaration
       in

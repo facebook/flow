@@ -284,6 +284,7 @@ with type t = Impl.t = struct
               | Some (DeclareExportDeclaration.NamedType t) -> type_alias t
               | Some (DeclareExportDeclaration.NamedOpaqueType t) -> opaque_type ~declare:true t
               | Some (DeclareExportDeclaration.Interface i) -> interface_declaration i
+              | Some (DeclareExportDeclaration.Enum enum) -> declare_enum enum
               | None -> null
             in
             node

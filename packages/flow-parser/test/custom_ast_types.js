@@ -54,7 +54,34 @@ function custom_ast_types(fork) {
     .build('exported')
     .field('exported', def('Identifier'));
 
-  def('DeclareEnum').bases('EnumDeclaration');
+  def('DeclareEnum')
+    .bases('Declaration')
+    .build('id', 'body')
+    .field('id', def('Identifier'))
+    .field(
+      'body',
+      or(
+        def('EnumBooleanBody'),
+        def('EnumNumberBody'),
+        def('EnumStringBody'),
+        def('EnumSymbolBody'),
+      ),
+    );
+
+  def('DeclareExportDeclaration').field(
+    'declaration',
+    or(
+      def('DeclareVariable'),
+      def('DeclareFunction'),
+      def('DeclareClass'),
+      def('DeclareEnum'), // <-- ADDITION
+      def('FlowType'), // Implies default.
+      def('TypeAlias'), // Implies named type
+      def('DeclareOpaqueType'), // Implies named opaque type
+      def('InterfaceDeclaration'),
+      null,
+    ),
+  );
 
   /////////
   // es2018

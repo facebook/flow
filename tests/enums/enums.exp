@@ -224,6 +224,23 @@ References:
             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- declared.js:17:2
+
+Cannot cast `F.N` to empty because `F` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   declared.js:17:2
+   17| (F.N: empty); // ERROR
+        ^^^
+
+References:
+   declared.js:11:21
+   11| declare export enum F {
+                           ^ [1]
+   declared.js:17:7
+   17| (F.N: empty); // ERROR
+             ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
 
 Cannot cast `F` to `EO` because enum `F` [1] is incompatible with enum `E` [2]. [incompatible-cast]
@@ -1918,6 +1935,40 @@ References:
              ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- import-declared.js:6:2
+
+Cannot cast `F.M` to boolean because `F` [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   import-declared.js:6:2
+    6| (F.M: boolean); // ERROR
+        ^^^
+
+References:
+   declared.js:11:21
+   11| declare export enum F {
+                           ^ [1]
+   import-declared.js:6:7
+    6| (F.M: boolean); // ERROR
+             ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ import-declared.js:12:2
+
+Cannot cast `H.X` to boolean because `H` [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   import-declared.js:12:2
+   12| (H.X: boolean); // ERROR
+        ^^^
+
+References:
+   lib.js:8:23
+    8|   declare export enum H {
+                             ^ [1]
+   import-declared.js:12:7
+   12| (H.X: boolean); // ERROR
+             ^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- import-type.js:10:2
 
 Cannot cast `b` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
@@ -3563,7 +3614,7 @@ References:
 
 
 
-Found 214 errors
+Found 217 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

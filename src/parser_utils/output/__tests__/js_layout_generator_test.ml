@@ -2136,6 +2136,7 @@ let tests =
            assert_statement_string ~ctxt "declare export default function a():a;";
            assert_statement_string ~ctxt "declare export class a{}";
            assert_statement_string ~ctxt "declare export default class a{}";
+           assert_statement_string ~ctxt "declare export enum E{A,}";
            assert_statement_string ~ctxt "declare export{}";
            assert_statement_string ~ctxt "declare export{a,b}";
            assert_statement_string ~ctxt "declare export{a,b}from\"a\"";
