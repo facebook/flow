@@ -1114,32 +1114,8 @@ module Make
       let (_, _, node) = function_ loc func in
       node
     | (loc, EnumDeclaration enum) ->
-      let open EnumDeclaration in
-      let { id = (name_loc, ident); body; comments } = enum in
-      let { Ast.Identifier.name; _ } = ident in
-      let reason = mk_reason (REnum name) name_loc in
-      let t =
-        if Context.enable_enums cx then (
-          let enum_t = mk_enum cx ~enum_reason:reason name_loc body in
-          let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
-          let use_op =
-            Op
-              (AssignVar
-                 {
-                   var = Some (mk_reason (RIdentifier (OrdinaryName name)) name_loc);
-                   init = reason;
-                 }
-              )
-          in
-          Env.init_implicit_const cx ~use_op t name_loc;
-          t
-        ) else (
-          Flow.add_output cx (Error_message.EEnumsNotEnabled loc);
-          AnyT.error reason
-        )
-      in
-      let id' = ((name_loc, t), ident) in
-      (loc, EnumDeclaration { id = id'; body; comments })
+      let enum_ast = enum_declaration cx loc enum in
+      (loc, EnumDeclaration enum_ast)
     | (loc, DeclareVariable { DeclareVariable.id = (id_loc, id); annot; comments }) ->
       let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
       (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
@@ -1192,7 +1168,9 @@ module Make
       in
       Env.init_var cx ~use_op t name_loc;
       (loc, DeclareClass decl_ast)
-    | (_, DeclareEnum _) -> failwith "TODO: implemented later in stack"
+    | (loc, DeclareEnum enum) ->
+      let decl_ast = enum_declaration cx loc enum in
+      (loc, DeclareEnum decl_ast)
     | (loc, DeclareInterface decl) ->
       let (_, decl_ast) = interface cx loc decl in
       (loc, DeclareInterface decl_ast)
@@ -7456,6 +7434,31 @@ module Make
       (* As we process `possible_checks` into `checks`, we reverse the list back
        * into the correct order. *)
       exhaustive_check
+
+  and enum_declaration cx loc enum =
+    let open Ast.Statement.EnumDeclaration in
+    let { id = (name_loc, ident); body; comments } = enum in
+    let { Ast.Identifier.name; _ } = ident in
+    let reason = mk_reason (REnum name) name_loc in
+    let t =
+      if Context.enable_enums cx then (
+        let enum_t = mk_enum cx ~enum_reason:reason name_loc body in
+        let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
+        let use_op =
+          Op
+            (AssignVar
+               { var = Some (mk_reason (RIdentifier (OrdinaryName name)) name_loc); init = reason }
+            )
+        in
+        Env.init_implicit_const cx ~use_op t name_loc;
+        t
+      ) else (
+        Flow.add_output cx (Error_message.EEnumsNotEnabled loc);
+        AnyT.error reason
+      )
+    in
+    let id' = ((name_loc, t), ident) in
+    { id = id'; body; comments }
 
   and mk_enum cx ~enum_reason name_loc body =
     let open Ast.Statement.EnumDeclaration in
