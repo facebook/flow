@@ -1,0 +1,2494 @@
+Error ----------------------------------------------------------------------------------------------- all_arith.js:21:12
+
+Cannot add `aNumber` and `aBigint` because bigint [1] is incompatible with number [2]. [incompatible-type]
+
+   all_arith.js:21:12
+   21| (aNumber + aBigint); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:5:22
+    5| declare var aNumber: number;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:22:12
+
+Cannot add `aNumber` and `aDate` because `Date` [1] is incompatible with number [2]. [incompatible-type]
+
+   all_arith.js:22:12
+   22| (aNumber + aDate); // error
+                  ^^^^^
+
+References:
+   all_arith.js:8:20
+    8| declare var aDate: Date;
+                          ^^^^ [1]
+   all_arith.js:5:22
+    5| declare var aNumber: number;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:24:12
+
+Cannot add `aNumber` and `aT` because `T` [1] is incompatible with number [2]. [incompatible-type]
+
+   all_arith.js:24:12
+   24| (aNumber + aT); // error
+                  ^^
+
+References:
+   all_arith.js:10:17
+   10| declare var aT: T;
+                       ^ [1]
+   all_arith.js:5:22
+    5| declare var aNumber: number;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:25:12
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   25| (aNumber + null); // error
+                  ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:26:12
+
+Cannot add `aNumber` and `anArray` because array type [1] is incompatible with number [2]. [incompatible-type]
+
+   all_arith.js:26:12
+   26| (aNumber + anArray); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:12:22
+   12| declare var anArray: Array<anEmpty>
+                            ^^^^^^^^^^^^^^ [1]
+   all_arith.js:5:22
+    5| declare var aNumber: number;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:27:12
+
+Cannot add `aNumber` and `anObject` because object type [1] is incompatible with number [2]. [incompatible-type]
+
+   all_arith.js:27:12
+   27| (aNumber + anObject); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+   13| declare var anObject: {}
+                             ^^ [1]
+   all_arith.js:5:22
+    5| declare var aNumber: number;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:28:12
+
+Cannot add `aNumber` and `aMixed` because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
+
+   all_arith.js:28:12
+   28| (aNumber + aMixed); // error
+                  ^^^^^^
+
+References:
+   all_arith.js:14:21
+   14| declare var aMixed: mixed;
+                           ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:34:12
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:34:12
+   34| (aNumber * aString); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:35:12
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:35:12
+   35| (aNumber * aBigint); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:37:12
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:37:12
+   37| (aNumber * aBoolean); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+    9| declare var aBoolean: boolean;
+                             ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:38:12
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:38:12
+   38| (aNumber * aT); // error
+                  ^^
+
+References:
+   all_arith.js:10:17
+   10| declare var aT: T;
+                       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:39:12
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   39| (aNumber * null); // error
+                  ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:40:12
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:40:12
+   40| (aNumber * anArray); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:12:22
+   12| declare var anArray: Array<anEmpty>
+                            ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:41:12
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:41:12
+   41| (aNumber * anObject); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+   13| declare var anObject: {}
+                             ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:42:12
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:42:12
+   42| (aNumber * aMixed); // error
+                  ^^^^^^
+
+References:
+   all_arith.js:14:21
+   14| declare var aMixed: mixed;
+                           ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:48:12
+
+Cannot add `aString` and `aBigint` because bigint [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:48:12
+   48| (aString + aBigint); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:49:12
+
+Cannot add `aString` and `aDate` because `Date` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:49:12
+   49| (aString + aDate); // error
+                  ^^^^^
+
+References:
+   all_arith.js:8:20
+    8| declare var aDate: Date;
+                          ^^^^ [1]
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:50:12
+
+Cannot add `aString` and `aBoolean` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:50:12
+   50| (aString + aBoolean); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+    9| declare var aBoolean: boolean;
+                             ^^^^^^^ [1]
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:51:12
+
+Cannot add `aString` and `aT` because `T` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:51:12
+   51| (aString + aT); // error
+                  ^^
+
+References:
+   all_arith.js:10:17
+   10| declare var aT: T;
+                       ^ [1]
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:52:12
+
+Cannot add `aString` and `null` because null [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:52:12
+   52| (aString + null); // error
+                  ^^^^ [1]
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:53:12
+
+Cannot add `aString` and `anArray` because array type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:53:12
+   53| (aString + anArray); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:12:22
+   12| declare var anArray: Array<anEmpty>
+                            ^^^^^^^^^^^^^^ [1]
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:54:12
+
+Cannot add `aString` and `anObject` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:54:12
+   54| (aString + anObject); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+   13| declare var anObject: {}
+                             ^^ [1]
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:55:12
+
+Cannot add `aString` and `aMixed` because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
+
+   all_arith.js:55:12
+   55| (aString + aMixed); // error
+                  ^^^^^^
+
+References:
+   all_arith.js:14:21
+   14| declare var aMixed: mixed;
+                           ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:60:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:60:2
+   60| (aString * aString); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:60:12
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:60:12
+   60| (aString * aString); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:61:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:61:2
+   61| (aString * aBigint); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:61:12
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:61:12
+   61| (aString * aBigint); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:62:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:62:2
+   62| (aString * aDate); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:63:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:63:2
+   63| (aString * aBoolean); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:63:12
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:63:12
+   63| (aString * aBoolean); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+    9| declare var aBoolean: boolean;
+                             ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:64:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:64:2
+   64| (aString * aT); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:64:12
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:64:12
+   64| (aString * aT); // error
+                  ^^
+
+References:
+   all_arith.js:10:17
+   10| declare var aT: T;
+                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:65:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:65:2
+   65| (aString * null); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:65:12
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   65| (aString * null); // error
+                  ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:66:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:66:2
+   66| (aString * anArray); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:66:12
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:66:12
+   66| (aString * anArray); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:12:22
+   12| declare var anArray: Array<anEmpty>
+                            ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:67:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:67:2
+   67| (aString * anObject); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:67:12
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:67:12
+   67| (aString * anObject); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+   13| declare var anObject: {}
+                             ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:68:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:68:2
+   68| (aString * aMixed); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:68:12
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:68:12
+   68| (aString * aMixed); // error
+                  ^^^^^^
+
+References:
+   all_arith.js:14:21
+   14| declare var aMixed: mixed;
+                           ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:69:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:69:2
+   69| (aString * anAny); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:70:2
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   all_arith.js:70:2
+   70| (aString * anEmpty); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:6:22
+    6| declare var aString: string;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:73:2
+
+Cannot add `aBigint` and `aBigint` because bigint [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:73:2
+   73| (aBigint + aBigint); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:73:2
+   73| (aBigint + aBigint); // error
+        ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:73:12
+
+Cannot add `aBigint` and `aBigint` because bigint [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:73:12
+   73| (aBigint + aBigint); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:73:2
+   73| (aBigint + aBigint); // error
+        ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:74:2
+
+Cannot add `aBigint` and `aDate` because bigint [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:74:2
+   74| (aBigint + aDate); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:74:2
+   74| (aBigint + aDate); // error
+        ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:74:12
+
+Cannot add `aBigint` and `aDate` because `Date` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:74:12
+   74| (aBigint + aDate); // error
+                  ^^^^^
+
+References:
+   all_arith.js:8:20
+    8| declare var aDate: Date;
+                          ^^^^ [1]
+   all_arith.js:74:2
+   74| (aBigint + aDate); // error
+        ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:75:2
+
+Cannot add `aBigint` and `aBoolean` because bigint [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:75:2
+   75| (aBigint + aBoolean); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:75:2
+   75| (aBigint + aBoolean); // error
+        ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:75:12
+
+Cannot add `aBigint` and `aBoolean` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:75:12
+   75| (aBigint + aBoolean); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+    9| declare var aBoolean: boolean;
+                             ^^^^^^^ [1]
+   all_arith.js:75:2
+   75| (aBigint + aBoolean); // error
+        ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:76:2
+
+Cannot add `aBigint` and `aT` because bigint [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:76:2
+   76| (aBigint + aT); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:76:2
+   76| (aBigint + aT); // error
+        ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:76:12
+
+Cannot add `aBigint` and `aT` because `T` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:76:12
+   76| (aBigint + aT); // error
+                  ^^
+
+References:
+   all_arith.js:10:17
+   10| declare var aT: T;
+                       ^ [1]
+   all_arith.js:76:2
+   76| (aBigint + aT); // error
+        ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:77:12
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   77| (aBigint + null); // error
+                  ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:78:2
+
+Cannot add `aBigint` and `anArray` because bigint [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:78:2
+   78| (aBigint + anArray); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:78:2
+   78| (aBigint + anArray); // error
+        ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:78:12
+
+Cannot add `aBigint` and `anArray` because array type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:78:12
+   78| (aBigint + anArray); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:12:22
+   12| declare var anArray: Array<anEmpty>
+                            ^^^^^^^^^^^^^^ [1]
+   all_arith.js:78:2
+   78| (aBigint + anArray); // error
+        ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:79:2
+
+Cannot add `aBigint` and `anObject` because bigint [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:79:2
+   79| (aBigint + anObject); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+   all_arith.js:79:2
+   79| (aBigint + anObject); // error
+        ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:79:12
+
+Cannot add `aBigint` and `anObject` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:79:12
+   79| (aBigint + anObject); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+   13| declare var anObject: {}
+                             ^^ [1]
+   all_arith.js:79:2
+   79| (aBigint + anObject); // error
+        ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:80:12
+
+Cannot add `aBigint` and `aMixed` because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
+
+   all_arith.js:80:12
+   80| (aBigint + aMixed); // error
+                  ^^^^^^
+
+References:
+   all_arith.js:14:21
+   14| declare var aMixed: mixed;
+                           ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:85:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:85:2
+   85| (aBigint * aBigint); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:85:12
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:85:12
+   85| (aBigint * aBigint); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:86:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:86:2
+   86| (aBigint * aDate); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:87:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:87:2
+   87| (aBigint * aBoolean); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:87:12
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:87:12
+   87| (aBigint * aBoolean); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+    9| declare var aBoolean: boolean;
+                             ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:88:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:88:2
+   88| (aBigint * aT); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:88:12
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:88:12
+   88| (aBigint * aT); // error
+                  ^^
+
+References:
+   all_arith.js:10:17
+   10| declare var aT: T;
+                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:89:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:89:2
+   89| (aBigint * null); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:89:12
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   89| (aBigint * null); // error
+                  ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:90:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:90:2
+   90| (aBigint * anArray); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:90:12
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:90:12
+   90| (aBigint * anArray); // error
+                  ^^^^^^^
+
+References:
+   all_arith.js:12:22
+   12| declare var anArray: Array<anEmpty>
+                            ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:91:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:91:2
+   91| (aBigint * anObject); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:91:12
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:91:12
+   91| (aBigint * anObject); // error
+                  ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+   13| declare var anObject: {}
+                             ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:92:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:92:2
+   92| (aBigint * aMixed); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:92:12
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:92:12
+   92| (aBigint * aMixed); // error
+                  ^^^^^^
+
+References:
+   all_arith.js:14:21
+   14| declare var aMixed: mixed;
+                           ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:93:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:93:2
+   93| (aBigint * anAny); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:94:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:94:2
+   94| (aBigint * anEmpty); // error
+        ^^^^^^^
+
+References:
+   all_arith.js:7:22
+    7| declare var aBigint: bigint;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:97:2
+
+Cannot add `aDate` and `aDate` because `Date` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:97:2
+   97| (aDate + aDate); // error
+        ^^^^^
+
+References:
+   all_arith.js:8:20
+    8| declare var aDate: Date;
+                          ^^^^ [1]
+   all_arith.js:97:2
+   97| (aDate + aDate); // error
+        ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:97:10
+
+Cannot add `aDate` and `aDate` because `Date` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:97:10
+   97| (aDate + aDate); // error
+                ^^^^^
+
+References:
+   all_arith.js:8:20
+    8| declare var aDate: Date;
+                          ^^^^ [1]
+   all_arith.js:97:2
+   97| (aDate + aDate); // error
+        ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:98:2
+
+Cannot add `aDate` and `aBoolean` because `Date` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:98:2
+   98| (aDate + aBoolean); // error
+        ^^^^^
+
+References:
+   all_arith.js:8:20
+    8| declare var aDate: Date;
+                          ^^^^ [1]
+   all_arith.js:98:2
+   98| (aDate + aBoolean); // error
+        ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:98:10
+
+Cannot add `aDate` and `aBoolean` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:98:10
+   98| (aDate + aBoolean); // error
+                ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+    9| declare var aBoolean: boolean;
+                             ^^^^^^^ [1]
+   all_arith.js:98:2
+   98| (aDate + aBoolean); // error
+        ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ all_arith.js:99:2
+
+Cannot add `aDate` and `aT` because `Date` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:99:2
+   99| (aDate + aT); // error
+        ^^^^^
+
+References:
+   all_arith.js:8:20
+    8| declare var aDate: Date;
+                          ^^^^ [1]
+   all_arith.js:99:2
+   99| (aDate + aT); // error
+        ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:99:10
+
+Cannot add `aDate` and `aT` because `T` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:99:10
+   99| (aDate + aT); // error
+                ^^
+
+References:
+   all_arith.js:10:17
+   10| declare var aT: T;
+                       ^ [1]
+   all_arith.js:99:2
+   99| (aDate + aT); // error
+        ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:100:10
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   100| (aDate + null); // error
+                 ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:101:2
+
+Cannot add `aDate` and `anArray` because `Date` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:101:2
+   101| (aDate + anArray); // error
+         ^^^^^
+
+References:
+   all_arith.js:8:20
+     8| declare var aDate: Date;
+                           ^^^^ [1]
+   all_arith.js:101:2
+   101| (aDate + anArray); // error
+         ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:101:10
+
+Cannot add `aDate` and `anArray` because array type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:101:10
+   101| (aDate + anArray); // error
+                 ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+   all_arith.js:101:2
+   101| (aDate + anArray); // error
+         ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:102:2
+
+Cannot add `aDate` and `anObject` because `Date` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:102:2
+   102| (aDate + anObject); // error
+         ^^^^^
+
+References:
+   all_arith.js:8:20
+     8| declare var aDate: Date;
+                           ^^^^ [1]
+   all_arith.js:102:2
+   102| (aDate + anObject); // error
+         ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:102:10
+
+Cannot add `aDate` and `anObject` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:102:10
+   102| (aDate + anObject); // error
+                 ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+   all_arith.js:102:2
+   102| (aDate + anObject); // error
+         ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:103:10
+
+Cannot add `aDate` and `aMixed` because mixed [1] could either behave like a string or like a number. [unclear-addition]
+
+   all_arith.js:103:10
+   103| (aDate + aMixed); // error
+                 ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:109:10
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:109:10
+   109| (aDate * aBoolean); // error
+                 ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:110:10
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:110:10
+   110| (aDate * aT); // error
+                 ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:111:10
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   111| (aDate * null); // error
+                 ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:112:10
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:112:10
+   112| (aDate * anArray); // error
+                 ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:113:10
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:113:10
+   113| (aDate * anObject); // error
+                 ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:114:10
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:114:10
+   114| (aDate * aMixed); // error
+                 ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:120:2
+
+Cannot add `aBoolean` and `aT` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:120:2
+   120| (aBoolean + aT); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+   all_arith.js:120:2
+   120| (aBoolean + aT); // error
+         ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:120:13
+
+Cannot add `aBoolean` and `aT` because `T` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:120:13
+   120| (aBoolean + aT); // error
+                    ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+   all_arith.js:120:2
+   120| (aBoolean + aT); // error
+         ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:121:13
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   121| (aBoolean + null); // error
+                    ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:122:2
+
+Cannot add `aBoolean` and `anArray` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:122:2
+   122| (aBoolean + anArray); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+   all_arith.js:122:2
+   122| (aBoolean + anArray); // error
+         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:122:13
+
+Cannot add `aBoolean` and `anArray` because array type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:122:13
+   122| (aBoolean + anArray); // error
+                    ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+   all_arith.js:122:2
+   122| (aBoolean + anArray); // error
+         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:123:2
+
+Cannot add `aBoolean` and `anObject` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:123:2
+   123| (aBoolean + anObject); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+   all_arith.js:123:2
+   123| (aBoolean + anObject); // error
+         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:123:13
+
+Cannot add `aBoolean` and `anObject` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:123:13
+   123| (aBoolean + anObject); // error
+                    ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+   all_arith.js:123:2
+   123| (aBoolean + anObject); // error
+         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:124:13
+
+Cannot add `aBoolean` and `aMixed` because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
+
+   all_arith.js:124:13
+   124| (aBoolean + aMixed); // error
+                    ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:129:2
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:129:2
+   129| (aBoolean * aBoolean); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:129:13
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:129:13
+   129| (aBoolean * aBoolean); // error
+                    ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:130:2
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:130:2
+   130| (aBoolean * aT); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:130:13
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:130:13
+   130| (aBoolean * aT); // error
+                    ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:131:2
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:131:2
+   131| (aBoolean * null); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:131:13
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   131| (aBoolean * null); // error
+                    ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:132:2
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:132:2
+   132| (aBoolean * anArray); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:132:13
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:132:13
+   132| (aBoolean * anArray); // error
+                    ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:133:2
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:133:2
+   133| (aBoolean * anObject); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:133:13
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:133:13
+   133| (aBoolean * anObject); // error
+                    ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:134:2
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:134:2
+   134| (aBoolean * aMixed); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:134:13
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:134:13
+   134| (aBoolean * aMixed); // error
+                    ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:135:2
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:135:2
+   135| (aBoolean * anAny); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:136:2
+
+Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+
+   all_arith.js:136:2
+   136| (aBoolean * anEmpty); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:9:23
+     9| declare var aBoolean: boolean;
+                              ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:139:2
+
+Cannot add `aT` and `aT` because `T` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:139:2
+   139| (aT + aT); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+   all_arith.js:139:2
+   139| (aT + aT); // error
+         ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:139:7
+
+Cannot add `aT` and `aT` because `T` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:139:7
+   139| (aT + aT); // error
+              ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+   all_arith.js:139:2
+   139| (aT + aT); // error
+         ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:140:7
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   140| (aT + null); // error
+              ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:141:2
+
+Cannot add `aT` and `anArray` because `T` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:141:2
+   141| (aT + anArray); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+   all_arith.js:141:2
+   141| (aT + anArray); // error
+         ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:141:7
+
+Cannot add `aT` and `anArray` because array type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:141:7
+   141| (aT + anArray); // error
+              ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+   all_arith.js:141:2
+   141| (aT + anArray); // error
+         ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:142:2
+
+Cannot add `aT` and `anObject` because `T` [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:142:2
+   142| (aT + anObject); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+   all_arith.js:142:2
+   142| (aT + anObject); // error
+         ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:142:7
+
+Cannot add `aT` and `anObject` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:142:7
+   142| (aT + anObject); // error
+              ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+   all_arith.js:142:2
+   142| (aT + anObject); // error
+         ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:143:7
+
+Cannot add `aT` and `aMixed` because mixed [1] could either behave like a string or like a number. [unclear-addition]
+
+   all_arith.js:143:7
+   143| (aT + aMixed); // error
+              ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:148:2
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:148:2
+   148| (aT * aT); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:148:7
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:148:7
+   148| (aT * aT); // error
+              ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:149:2
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:149:2
+   149| (aT * null); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:149:7
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   149| (aT * null); // error
+              ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:150:2
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:150:2
+   150| (aT * anArray); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:150:7
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:150:7
+   150| (aT * anArray); // error
+              ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:151:2
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:151:2
+   151| (aT * anObject); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:151:7
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:151:7
+   151| (aT * anObject); // error
+              ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:152:2
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:152:2
+   152| (aT * aMixed); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:152:7
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:152:7
+   152| (aT * aMixed); // error
+              ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:153:2
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:153:2
+   153| (aT * anAny); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:154:2
+
+Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+
+   all_arith.js:154:2
+   154| (aT * anEmpty); // error
+         ^^
+
+References:
+   all_arith.js:10:17
+    10| declare var aT: T;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:157:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   157| (null + null); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:158:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   158| (null + anArray); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:159:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   159| (null + anObject); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:160:9
+
+Cannot add `null` and `aMixed` because mixed [1] could either behave like a string or like a number. [unclear-addition]
+
+   all_arith.js:160:9
+   160| (null + aMixed); // error
+                ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:161:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   161| (null + anAny); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:165:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   165| (null * null); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:165:9
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   165| (null * null); // error
+                ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:166:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   166| (null * anArray); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:166:9
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:166:9
+   166| (null * anArray); // error
+                ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:167:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   167| (null * anObject); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:167:9
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:167:9
+   167| (null * anObject); // error
+                ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:168:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   168| (null * aMixed); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:168:9
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:168:9
+   168| (null * aMixed); // error
+                ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:169:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   169| (null * anAny); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:170:2
+
+Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+
+   170| (null * anEmpty); // error
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:173:2
+
+Cannot add `anArray` and `anArray` because array type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:173:2
+   173| (anArray + anArray); // error
+         ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+   all_arith.js:173:2
+   173| (anArray + anArray); // error
+         ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:173:12
+
+Cannot add `anArray` and `anArray` because array type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:173:12
+   173| (anArray + anArray); // error
+                   ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+   all_arith.js:173:2
+   173| (anArray + anArray); // error
+         ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:174:2
+
+Cannot add `anArray` and `anObject` because array type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:174:2
+   174| (anArray + anObject); // error
+         ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+   all_arith.js:174:2
+   174| (anArray + anObject); // error
+         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:174:12
+
+Cannot add `anArray` and `anObject` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:174:12
+   174| (anArray + anObject); // error
+                   ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+   all_arith.js:174:2
+   174| (anArray + anObject); // error
+         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:175:12
+
+Cannot add `anArray` and `aMixed` because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
+
+   all_arith.js:175:12
+   175| (anArray + aMixed); // error
+                   ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:180:2
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:180:2
+   180| (anArray * anArray); // error
+         ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:180:12
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:180:12
+   180| (anArray * anArray); // error
+                   ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:181:2
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:181:2
+   181| (anArray * anObject); // error
+         ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:181:12
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:181:12
+   181| (anArray * anObject); // error
+                   ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:182:2
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:182:2
+   182| (anArray * aMixed); // error
+         ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:182:12
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:182:12
+   182| (anArray * aMixed); // error
+                   ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:183:2
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:183:2
+   183| (anArray * anAny); // error
+         ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:184:2
+
+Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:184:2
+   184| (anArray * anEmpty); // error
+         ^^^^^^^
+
+References:
+   all_arith.js:12:22
+    12| declare var anArray: Array<anEmpty>
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:187:2
+
+Cannot add `anObject` and `anObject` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:187:2
+   187| (anObject + anObject); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+   all_arith.js:187:2
+   187| (anObject + anObject); // error
+         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:187:13
+
+Cannot add `anObject` and `anObject` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   all_arith.js:187:13
+   187| (anObject + anObject); // error
+                    ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+   all_arith.js:187:2
+   187| (anObject + anObject); // error
+         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:188:13
+
+Cannot add `anObject` and `aMixed` because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
+
+   all_arith.js:188:13
+   188| (anObject + aMixed); // error
+                    ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:193:2
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:193:2
+   193| (anObject * anObject); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:193:13
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:193:13
+   193| (anObject * anObject); // error
+                    ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:194:2
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:194:2
+   194| (anObject * aMixed); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:194:13
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:194:13
+   194| (anObject * aMixed); // error
+                    ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:195:2
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:195:2
+   195| (anObject * anAny); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:196:2
+
+Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+
+   all_arith.js:196:2
+   196| (anObject * anEmpty); // error
+         ^^^^^^^^
+
+References:
+   all_arith.js:13:23
+    13| declare var anObject: {}
+                              ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:199:2
+
+Cannot add `aMixed` and `aMixed` because mixed [1] could either behave like a string or like a number.
+[unclear-addition]
+
+   all_arith.js:199:2
+   199| (aMixed + aMixed); // error
+         ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:200:2
+
+Cannot add `aMixed` and `anAny` because mixed [1] could either behave like a string or like a number. [unclear-addition]
+
+   all_arith.js:200:2
+   200| (aMixed + anAny); // error
+         ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:204:2
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:204:2
+   204| (aMixed * aMixed); // error
+         ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- all_arith.js:204:11
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:204:11
+   204| (aMixed * aMixed); // error
+                  ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:205:2
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:205:2
+   205| (aMixed * anAny); // error
+         ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:206:2
+
+Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+
+   all_arith.js:206:2
+   206| (aMixed * anEmpty); // error
+         ^^^^^^
+
+References:
+   all_arith.js:14:21
+    14| declare var aMixed: mixed;
+                            ^^^^^ [1]
+
+
+
+Found 176 errors
