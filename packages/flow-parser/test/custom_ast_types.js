@@ -54,6 +54,8 @@ function custom_ast_types(fork) {
     .build('exported')
     .field('exported', def('Identifier'));
 
+  def('DeclareEnum').bases('EnumDeclaration');
+
   /////////
   // es2018
   /////////

@@ -982,6 +982,7 @@ and Statement : sig
     | Continue of 'M Continue.t
     | Debugger of 'M Debugger.t
     | DeclareClass of ('M, 'T) DeclareClass.t
+    | DeclareEnum of ('M, 'T) EnumDeclaration.t
     | DeclareExportDeclaration of ('M, 'T) DeclareExportDeclaration.t
     | DeclareFunction of ('M, 'T) DeclareFunction.t
     | DeclareInterface of ('M, 'T) Interface.t

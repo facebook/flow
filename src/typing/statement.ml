@@ -1192,6 +1192,7 @@ module Make
       in
       Env.init_var cx ~use_op t name_loc;
       (loc, DeclareClass decl_ast)
+    | (_, DeclareEnum _) -> failwith "TODO: implemented later in stack"
     | (loc, DeclareInterface decl) ->
       let (_, decl_ast) = interface cx loc decl in
       (loc, DeclareInterface decl_ast)

@@ -4294,7 +4294,9 @@ let rec statement opts scope tbls (loc, stmt) =
     let (_, { S.Block.body = stmts; comments = _ }) = body in
     List.iter (statement opts scope tbls) stmts;
     Scope.finalize_declare_module_exports_exn scope
-  | S.EnumDeclaration decl -> enum_decl opts scope tbls decl ignore2
+  | S.DeclareEnum decl
+  | S.EnumDeclaration decl ->
+    enum_decl opts scope tbls decl ignore2
   (* unsupported *)
   | S.With _ -> ()
   (* statements that won't introduce a top-level type or name in module scope *)

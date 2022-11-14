@@ -489,6 +489,8 @@ let statement_add_comments
     | Debugger { Debugger.comments } -> Debugger { Debugger.comments = merge_comments comments }
     | DeclareClass ({ DeclareClass.comments; _ } as s) ->
       DeclareClass { s with DeclareClass.comments = merge_comments comments }
+    | DeclareEnum ({ EnumDeclaration.comments; _ } as s) ->
+      DeclareEnum { s with EnumDeclaration.comments = merge_comments comments }
     | DeclareExportDeclaration ({ DeclareExportDeclaration.comments; _ } as s) ->
       DeclareExportDeclaration
         { s with DeclareExportDeclaration.comments = merge_comments comments }

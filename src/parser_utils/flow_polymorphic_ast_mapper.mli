@@ -118,6 +118,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method declare_class :
       ('M, 'T) Ast.Statement.DeclareClass.t -> ('N, 'U) Ast.Statement.DeclareClass.t
 
+    method declare_enum :
+      ('M, 'T) Ast.Statement.EnumDeclaration.t -> ('N, 'U) Ast.Statement.EnumDeclaration.t
+
     method declare_export_declaration :
       'M ->
       ('M, 'T) Ast.Statement.DeclareExportDeclaration.t ->

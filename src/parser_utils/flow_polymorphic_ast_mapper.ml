@@ -36,6 +36,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Continue cont -> Continue (this#continue cont)
         | Debugger dbg -> Debugger (this#debugger dbg)
         | DeclareClass stuff -> DeclareClass (this#declare_class stuff)
+        | DeclareEnum enum -> DeclareEnum (this#declare_enum enum)
         | DeclareExportDeclaration decl ->
           DeclareExportDeclaration (this#declare_export_declaration annot decl)
         | DeclareFunction stuff -> DeclareFunction (this#declare_function stuff)
@@ -431,6 +432,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let id' = this#t_identifier id_ in
       let targs' = Option.map ~f:this#type_args targs in
       (annot', { id = id'; targs = targs' })
+
+    method declare_enum (enum : ('M, 'T) Ast.Statement.EnumDeclaration.t)
+        : ('N, 'U) Ast.Statement.EnumDeclaration.t =
+      this#enum_declaration enum
 
     method declare_export_declaration
         _annot (decl : ('M, 'T) Ast.Statement.DeclareExportDeclaration.t)

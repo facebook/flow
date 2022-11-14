@@ -2109,6 +2109,10 @@ let tests =
              ~pretty:true
              ("declare class a {\n  static a: b,\n  static d(): " ^ String.make 80 'c' ^ ",\n}")
          );
+         ( "declare_enum_statements" >:: fun ctxt ->
+           assert_statement_string ~ctxt "declare enum E{A,}";
+           assert_statement_string ~ctxt ~pretty:true "declare enum E {\n  A,\n}"
+         );
          ( "declare_function_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare function a():b;";
            assert_statement_string ~ctxt ~pretty:true "declare function a(): b;";

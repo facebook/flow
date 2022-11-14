@@ -56,7 +56,7 @@ module type DECLARATION = sig
 
   val _function : env -> (Loc.t, Loc.t) Statement.t
 
-  val enum_declaration : env -> (Loc.t, Loc.t) Statement.t
+  val enum_declaration : ?leading:Loc.t Comment.t list -> env -> (Loc.t, Loc.t) Statement.t
 end
 
 module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DECLARATION = struct
@@ -428,5 +428,9 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     let env = env |> with_no_let true in
     declarations T_LET env
 
-  let enum_declaration = Enum.declaration
+  let enum_declaration ?leading =
+    with_loc (fun env ->
+        let enum = Enum.declaration ?leading env in
+        Statement.EnumDeclaration enum
+    )
 end

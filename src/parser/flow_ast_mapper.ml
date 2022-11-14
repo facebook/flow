@@ -102,6 +102,8 @@ class ['loc] mapper =
       | (loc, Debugger dbg) -> id_loc this#debugger loc dbg stmt (fun dbg -> (loc, Debugger dbg))
       | (loc, DeclareClass stuff) ->
         id_loc this#declare_class loc stuff stmt (fun stuff -> (loc, DeclareClass stuff))
+      | (loc, DeclareEnum enum) ->
+        id_loc this#declare_enum loc enum stmt (fun enum -> (loc, DeclareEnum enum))
       | (loc, DeclareExportDeclaration decl) ->
         id_loc this#declare_export_declaration loc decl stmt (fun decl ->
             (loc, DeclareExportDeclaration decl)
@@ -604,6 +606,9 @@ class ['loc] mapper =
           implements = implements';
           comments = comments';
         }
+
+    method declare_enum loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
+      this#enum_declaration loc enum
 
     method declare_export_declaration
         _loc (decl : ('loc, 'loc) Ast.Statement.DeclareExportDeclaration.t) =

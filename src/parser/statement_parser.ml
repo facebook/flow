@@ -75,6 +75,8 @@ module Statement
     (Declaration : Declaration_parser.DECLARATION)
     (Object : Object_parser.OBJECT)
     (Pattern_cover : Pattern_cover.COVER) : STATEMENT = struct
+  module Enum = Enum_parser.Enum (Parse)
+
   type for_lhs =
     | For_expression of pattern_cover
     | For_declaration of (Loc.t * (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
@@ -1154,6 +1156,15 @@ module Statement
         Statement.DeclareClass fn)
       env
 
+  and declare_enum env =
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_DECLARE;
+        let enum = Enum.declaration ~leading env in
+        Statement.DeclareEnum enum)
+      env
+
   and declare_function ?(leading = []) env =
     let leading = leading @ Peek.comments env in
     Expect.token env T_FUNCTION;
@@ -1372,6 +1383,7 @@ module Statement
     (* eventually, just emit a wrapper AST node *)
     match Peek.ith_token ~i:1 env with
     | T_CLASS -> declare_class_statement env
+    | T_ENUM when (parse_options env).enums -> declare_enum env
     | T_INTERFACE -> declare_interface env
     | T_TYPE ->
       (match Peek.token env with

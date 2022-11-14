@@ -854,7 +854,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
         in
         variable_declaration ?semicolon ~opts (loc, decl)
       | S.ClassDeclaration class_ -> class_base ~opts loc class_
-      | S.EnumDeclaration enum -> enum_declaration loc enum
+      | S.EnumDeclaration enum -> enum_declaration ~def:(Atom "enum") loc enum
       | S.ForOf { S.ForOf.left; right; body; await; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse
@@ -887,6 +887,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
       | S.OpaqueType opaqueType -> opaque_type ~opts ~declare:false loc opaqueType
       | S.InterfaceDeclaration interface -> interface_declaration ~opts loc interface
       | S.DeclareClass interface -> declare_class ~opts loc interface
+      | S.DeclareEnum enum -> declare_enum loc enum
       | S.DeclareFunction func -> declare_function ~opts loc func
       | S.DeclareInterface interface -> declare_interface ~opts loc interface
       | S.DeclareVariable var -> declare_variable ~opts loc var
@@ -2261,7 +2262,7 @@ and class_base
   in
   group [decorator_parts; source_location_with_comments ?comments (loc, group parts)]
 
-and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
+and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; comments } =
   let open Ast.Statement.EnumDeclaration in
   let representation_type name explicit =
     if explicit then
@@ -2367,7 +2368,10 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
           @ unknown_members has_unknown_members;
         ]
   in
-  layout_node_with_comments_opt loc comments (fuse [Atom "enum"; space; identifier id; body])
+  layout_node_with_comments_opt loc comments (fuse [def; space; identifier id; body])
+
+and declare_enum loc enum =
+  enum_declaration ~def:(fuse [Atom "declare"; space; Atom "enum"]) loc enum
 
 (* given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary *)
 and list_with_newlines
