@@ -114,14 +114,16 @@ class ['loc] mapper =
         id_loc this#declare_interface loc stuff stmt (fun stuff -> (loc, DeclareInterface stuff))
       | (loc, DeclareModule m) ->
         id_loc this#declare_module loc m stmt (fun m -> (loc, DeclareModule m))
-      | (loc, DeclareTypeAlias stuff) ->
-        id_loc this#declare_type_alias loc stuff stmt (fun stuff -> (loc, DeclareTypeAlias stuff))
-      | (loc, DeclareVariable stuff) ->
-        id_loc this#declare_variable loc stuff stmt (fun stuff -> (loc, DeclareVariable stuff))
       | (loc, DeclareModuleExports annot) ->
         id_loc this#declare_module_exports loc annot stmt (fun annot ->
             (loc, DeclareModuleExports annot)
         )
+      | (loc, DeclareOpaqueType otype) ->
+        id_loc this#opaque_type loc otype stmt (fun otype -> (loc, DeclareOpaqueType otype))
+      | (loc, DeclareTypeAlias stuff) ->
+        id_loc this#declare_type_alias loc stuff stmt (fun stuff -> (loc, DeclareTypeAlias stuff))
+      | (loc, DeclareVariable stuff) ->
+        id_loc this#declare_variable loc stuff stmt (fun stuff -> (loc, DeclareVariable stuff))
       | (loc, DoWhile stuff) ->
         id_loc this#do_while loc stuff stmt (fun stuff -> (loc, DoWhile stuff))
       | (loc, Empty empty) -> id_loc this#empty loc empty stmt (fun empty -> (loc, Empty empty))
@@ -169,8 +171,6 @@ class ['loc] mapper =
       | (loc, With stuff) -> id_loc this#with_ loc stuff stmt (fun stuff -> (loc, With stuff))
       | (loc, TypeAlias stuff) ->
         id_loc this#type_alias loc stuff stmt (fun stuff -> (loc, TypeAlias stuff))
-      | (loc, DeclareOpaqueType otype) ->
-        id_loc this#opaque_type loc otype stmt (fun otype -> (loc, OpaqueType otype))
 
     method comment (c : 'loc Ast.Comment.t) = c
 
