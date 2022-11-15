@@ -12,7 +12,8 @@
   flow_server_monitor_listener_state
   flow_server_rechecker_updates
   flow_service_inference
-  flow_service_inference_module)
+  flow_service_inference_module
+  procs_procs)
  (preprocess
   (pps lwt_ppx)))
 

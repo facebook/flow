@@ -55,6 +55,8 @@ module Request = struct
     | FORCE_RECHECK of {
         files: string list;
         focus: bool;
+        missed_changes: bool;
+        changed_mergebase: bool;
       }
     | GET_DEF of {
         filename: File_input.t;
@@ -122,8 +124,22 @@ module Request = struct
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
     | FIND_MODULE { moduleref; filename; wait_for_recheck = _ } ->
       Printf.sprintf "find-module %s %s" moduleref filename
-    | FORCE_RECHECK { files; focus } ->
-      Printf.sprintf "force-recheck %s (focus = %b)" (String.concat " " files) focus
+    | FORCE_RECHECK { files; focus; missed_changes; changed_mergebase } ->
+      let parts =
+        [
+          (focus, Printf.sprintf "focus = %b" focus);
+          (missed_changes, Printf.sprintf "missed_changes = %b" missed_changes);
+          (changed_mergebase, Printf.sprintf "changed_mergebase = %b" changed_mergebase);
+        ]
+        |> Base.List.filter_map ~f:(fun (x, str) ->
+               if x then
+                 Some str
+               else
+                 None
+           )
+        |> String.concat "; "
+      in
+      Printf.sprintf "force-recheck %s (%s)" (String.concat " " files) parts
     | GET_DEF { filename; line; char; wait_for_recheck = _ } ->
       Printf.sprintf "get-def %s:%d:%d" (File_input.filename_of_file_input filename) line char
     | GET_IMPORTS { module_names; wait_for_recheck = _ } ->

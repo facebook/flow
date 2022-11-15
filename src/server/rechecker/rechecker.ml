@@ -216,6 +216,13 @@ type recheck_outcome =
       recheck_count: int;
     }
 
+(** Determines whether the file watcher missed changes, and if so, whether we can figure
+    out what changed. Returns true if we _cannot_ tell what changed -- this is fatal. *)
+let file_watcher_fatally_missed_changes ~missed_changes ~changed_mergebase =
+  match (missed_changes, changed_mergebase) with
+  | (true, Some true) -> true
+  | _ -> false
+
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
  * to include the new changes
@@ -248,6 +255,12 @@ let rec recheck_single ~recheck_count genv env =
   } =
     workload
   in
+
+  ( if file_watcher_fatally_missed_changes ~missed_changes ~changed_mergebase then
+    let () = WorkerController.killall () in
+    Exit.exit ~msg:"File watcher missed changes" Exit.File_watcher_missed_changes
+  );
+
   let files_to_recheck =
     CheckedSet.add ~focused:files_to_recheck ~dependencies:files_to_prioritize CheckedSet.empty
   in

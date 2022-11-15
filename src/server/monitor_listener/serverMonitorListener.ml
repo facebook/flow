@@ -15,13 +15,6 @@ let kill_workers () =
   Hh_logger.info "Killing the worker processes";
   WorkerController.killall ()
 
-(** Determines whether the file watcher missed changes, and if so, whether we can figure
-    out what changed. Returns true if we _cannot_ tell what changed -- this is fatal. *)
-let file_watcher_fatally_missed_changes metadata =
-  match metadata with
-  | Some { MonitorProt.missed_changes = true; changed_mergebase = Some true } -> true
-  | _ -> false
-
 let handle_message genv = function
   | MonitorProt.Request (request_id, command) ->
     CommandHandler.enqueue_or_handle_ephemeral genv (request_id, command)
@@ -51,9 +44,6 @@ let handle_message genv = function
     if initial then
       let reason = Lazy_init_typecheck in
       ServerMonitorListenerState.push_files_to_force_focused_and_recheck ~reason changed_files
-    else if file_watcher_fatally_missed_changes metadata then
-      let () = kill_workers () in
-      Exit.exit ~msg:"File watcher missed changes" Exit.File_watcher_missed_changes
     else
       let reason =
         match metadata with

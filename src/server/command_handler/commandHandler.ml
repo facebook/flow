@@ -947,12 +947,19 @@ let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_
   let response = find_module ~options ~reader (moduleref, filename) in
   Lwt.return (ServerProt.Response.FIND_MODULE response, None)
 
-let handle_force_recheck ~files ~focus ~profiling:_ =
+let handle_force_recheck ~files ~focus ~missed_changes ~changed_mergebase ~profiling:_ =
   let fileset = SSet.of_list files in
+  let metadata = { MonitorProt.missed_changes; changed_mergebase = Some changed_mergebase } in
   let reason =
-    match files with
-    | [filename] -> LspProt.Single_file_changed { filename }
-    | _ -> LspProt.Many_files_changed { file_count = List.length files }
+    let file_count = List.length files in
+    if missed_changes then
+      LspProt.File_watcher_missed_changes
+    else if changed_mergebase then
+      LspProt.Rebased { file_count }
+    else
+      match files with
+      | [filename] -> LspProt.Single_file_changed { filename }
+      | _ -> LspProt.Many_files_changed { file_count }
   in
   (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
    * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
@@ -960,7 +967,7 @@ let handle_force_recheck ~files ~focus ~profiling:_ =
   if focus then
     ServerMonitorListenerState.push_files_to_force_focused_and_recheck ~reason fileset
   else
-    ServerMonitorListenerState.push_files_to_recheck ?metadata:None ~reason fileset;
+    ServerMonitorListenerState.push_files_to_recheck ~metadata ~reason fileset;
   (ServerProt.Response.FORCE_RECHECK, None)
 
 let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
@@ -1244,8 +1251,8 @@ let get_ephemeral_handler genv command =
       ~wait_for_recheck
       ~options
       (handle_find_module ~options ~reader ~moduleref ~filename)
-  | ServerProt.Request.FORCE_RECHECK { files; focus } ->
-    Handle_immediately (handle_force_recheck ~files ~focus)
+  | ServerProt.Request.FORCE_RECHECK { files; focus; missed_changes; changed_mergebase } ->
+    Handle_immediately (handle_force_recheck ~files ~focus ~missed_changes ~changed_mergebase)
   | ServerProt.Request.GET_DEF { filename; line; char; wait_for_recheck } ->
     mk_parallelizable
       ~wait_for_recheck
