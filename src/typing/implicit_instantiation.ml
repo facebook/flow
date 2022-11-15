@@ -241,34 +241,31 @@ struct
           }
         ) ->
       reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param
-    | ObjKitT
-        ( _,
-          r,
-          _,
-          Object.(ReadOnly | Partial | ObjectRep | ObjectWiden _ | Object.ReactConfig _),
-          tout
-        ) ->
-      identity_reverse_upper_bound cx tvar r tout
-    | ObjKitT (_, r, _, Object.Spread (_, { Object.Spread.todo_rev; acc; _ }), tout) ->
-      let solution = merge_upper_bounds cx r tout in
-      (match solution with
-      | UpperEmpty -> UpperEmpty
-      | UpperNonT u -> UpperNonT u
-      | UpperT t ->
-        (match reverse_obj_spread cx r todo_rev acc t |> merge_lower_bounds cx with
-        | None -> UpperEmpty
-        | Some reversed ->
-          Flow.flow_t cx (reversed, tvar);
-          UpperT reversed))
-    | ObjKitT (_, r, _, Object.Rest (_, Object.Rest.One t_rest), tout) ->
-      merge_upper_bounds cx r tout
-      |> bind_use_t_result ~f:(fun t ->
-             match reverse_obj_kit_rest cx r t_rest t |> merge_lower_bounds cx with
-             | None -> UpperEmpty
-             | Some reversed ->
-               Flow.flow_t cx (reversed, tvar);
-               UpperT reversed
-         )
+    | ObjKitT (_, r, _, tool, tout) ->
+      (match tool with
+      | Object.(ReadOnly | Partial | ObjectRep | ObjectWiden _ | Object.ReactConfig _) ->
+        identity_reverse_upper_bound cx tvar r tout
+      | Object.Spread (_, { Object.Spread.todo_rev; acc; _ }) ->
+        let solution = merge_upper_bounds cx r tout in
+        (match solution with
+        | UpperEmpty -> UpperEmpty
+        | UpperNonT u -> UpperNonT u
+        | UpperT t ->
+          (match reverse_obj_spread cx r todo_rev acc t |> merge_lower_bounds cx with
+          | None -> UpperEmpty
+          | Some reversed ->
+            Flow.flow_t cx (reversed, tvar);
+            UpperT reversed))
+      | Object.Rest (_, Object.Rest.One t_rest) ->
+        merge_upper_bounds cx r tout
+        |> bind_use_t_result ~f:(fun t ->
+               match reverse_obj_kit_rest cx r t_rest t |> merge_lower_bounds cx with
+               | None -> UpperEmpty
+               | Some reversed ->
+                 Flow.flow_t cx (reversed, tvar);
+                 UpperT reversed
+           )
+      | Object.Rest (_, Object.Rest.Done _) -> UpperNonT u)
     | _ -> UpperNonT u
 
   and identity_reverse_upper_bound cx tvar r tout =
