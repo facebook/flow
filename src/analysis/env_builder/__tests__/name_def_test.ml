@@ -1340,3 +1340,14 @@ cc = null;
       (4, 4) to (4, 6) =>
       (7, 0) to (7, 2) =>
       (3, 9) to (3, 12) |}]
+
+let%expect_test "declare function overload read by typeof" =
+  print_order_test {|
+type T = typeof foo;
+declare function foo(): void;
+declare function foo(): void;
+|};
+    [%expect {|
+      (3, 17) to (3, 20) =>
+      (4, 17) to (4, 20) =>
+      (2, 5) to (2, 6) |}]

@@ -220,7 +220,7 @@ module type S = sig
 
   val write_locs_of_read_loc : values -> read_loc -> write_locs
 
-  val writes_of_write_loc : for_type:bool -> write_loc -> EnvKey.t list
+  val writes_of_write_loc : for_type:bool -> Provider_api.info -> write_loc -> EnvKey.t list
 
   val refinements_of_write_loc : env_info -> write_loc -> refinement_kind list
 
@@ -475,10 +475,10 @@ module Make
     let { write_locs; def_loc = _; val_kind = _; name = _; id = _ } = L.LMap.find read_loc values in
     write_locs
 
-  let rec writes_of_write_loc ~for_type write_loc =
+  let rec writes_of_write_loc ~for_type providers write_loc =
     match write_loc with
     | Refinement { refinement_id = _; write_id = _; writes } ->
-      writes |> List.map (writes_of_write_loc ~for_type) |> List.flatten
+      writes |> List.map (writes_of_write_loc ~for_type providers) |> List.flatten
     | Write r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
     | EmptyArray { reason; arr_providers } ->
       (OrdinaryNameLoc, Reason.poly_loc_of_reason reason)
@@ -501,7 +501,12 @@ module Make
     | Unreachable _ -> []
     | Undefined _ -> []
     | Number _ -> []
-    | DeclaredFunction l -> [(OrdinaryNameLoc, l)]
+    | DeclaredFunction l ->
+      Provider_api.providers_of_def providers l
+      |> Base.Option.value_map ~f:(fun { Provider_api.providers; _ } -> providers) ~default:[]
+      |> Base.List.map ~f:(fun { Provider_api.reason; _ } ->
+             (OrdinaryNameLoc, Reason.poly_loc_of_reason reason)
+         )
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
     match write_loc with

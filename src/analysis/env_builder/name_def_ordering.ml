@@ -178,7 +178,7 @@ struct
         method add_write_locs ~for_type write_locs =
           let writes =
             write_locs
-            |> Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type)
+            |> Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type providers)
             |> Base.List.map ~f:(fun kind_and_loc ->
                    EnvMap.find_opt kind_and_loc this_super_dep_loc_map
                    |> Base.Option.value ~default:kind_and_loc
