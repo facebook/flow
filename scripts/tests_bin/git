@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# FLOW_GIT_BINARY is set by runtests.sh
+exec "$FLOW_GIT_BINARY" "$@"

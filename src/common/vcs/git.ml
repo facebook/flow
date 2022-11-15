@@ -34,7 +34,9 @@ let merge_base_and_timestamp ?cwd a b =
   | Error _ as err -> Lwt.return err
   | Ok hash ->
     (match%lwt git ?cwd ["log"; "--format=%ct"; "-n1"; hash] with
-    | Ok stdout -> Lwt.return_ok (hash, int_of_string stdout)
+    | Ok stdout ->
+      (try Lwt.return_ok (hash, Scanf.sscanf stdout "%d" Fun.id) with
+      | _ -> Lwt.return (Error (Errored (Printf.sprintf "Failed to convert timestamp %S" stdout))))
     | Error _ as err -> Lwt.return err)
 
 let files_changed_since ?cwd hash =

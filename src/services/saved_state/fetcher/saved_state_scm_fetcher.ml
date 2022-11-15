@@ -15,7 +15,7 @@ let merge_base_and_timestamp vcs vcs_root =
   let merge_base_and_timestamp =
     match vcs with
     | Vcs.Hg -> Hg.merge_base_and_timestamp ~cwd "master" "."
-    | Vcs.Git -> Git.merge_base_and_timestamp ~cwd "master" "."
+    | Vcs.Git -> Git.merge_base_and_timestamp ~cwd "master" "HEAD"
   in
   match%lwt merge_base_and_timestamp with
   | Error err ->

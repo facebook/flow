@@ -37,6 +37,12 @@ export IN_FLOW_TEST=1
 export FLOW_LOG_LEVEL=debug
 export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 
+# find git. to skip git tests even when git is available,
+# set FLOW_GIT_BINARY to empty string
+if [ -n "${FLOW_GIT_BINARY-unset}" ]; then
+  export FLOW_GIT_BINARY=${FLOW_GIT_BINARY:-$(which git)}
+fi
+
 OPTIND=1
 record=0
 saved_state=0
