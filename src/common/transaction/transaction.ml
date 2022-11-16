@@ -33,3 +33,15 @@ let with_transaction name f =
   in
   let () = commit name transaction in
   Lwt.return result
+
+let with_transaction_sync name f =
+  let transaction = ref [] in
+  let result =
+    try f transaction with
+    | exn ->
+      let exn = Exception.wrap exn in
+      let () = rollback name transaction in
+      Exception.reraise exn
+  in
+  let () = commit name transaction in
+  result

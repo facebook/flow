@@ -1098,6 +1098,8 @@ module Reader_cache : sig
   val add_aloc_table : File_key.t -> ALoc.table -> unit
 
   val remove_batch : FilenameSet.t -> unit
+
+  val clear : unit -> unit
 end = struct
   module ASTCache = SharedMem.LocalCache (struct
     type key = File_key.t
@@ -1128,6 +1130,10 @@ end = struct
     ALocTableCache.remove file
 
   let remove_batch files = FilenameSet.iter remove files
+
+  let clear () =
+    ASTCache.clear ();
+    ALocTableCache.clear ()
 end
 
 module Mutator_cache : sig
@@ -2116,8 +2122,13 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 end
 
-module From_saved_state = struct
-  let add_parsed file_key hash module_name exports resolved_requires imports cas_digest =
+module Saved_state_mutator = struct
+  type worker_mutator = unit
+
+  (** Saved state contains all files, so if we roll back, we need to undo every file. *)
+  let iter_files = ref (Fun.const ())
+
+  let add_parsed () file_key hash module_name exports resolved_requires imports cas_digest =
     add_checked_file
       file_key
       None
@@ -2133,7 +2144,26 @@ module From_saved_state = struct
       cas_digest
       (Some (Some resolved_requires))
 
-  let add_unparsed file_key = add_unparsed file_key None
+  let add_unparsed () file_key = add_unparsed file_key None
 
-  let add_package file_key = add_package file_key None
+  let add_package () file_key = add_package file_key None
+
+  let reset_refs () = iter_files := Fun.const ()
+
+  let create transaction iter_files_ =
+    iter_files := iter_files_;
+    let commit () =
+      Hh_logger.info "Committing saved state";
+      Mutator_cache.clear ();
+      Reader_cache.clear ();
+      reset_refs ()
+    in
+    let rollback () =
+      Hh_logger.info "Rolling back saved state";
+      Mutator_cache.clear ();
+      !iter_files rollback_file;
+      reset_refs ()
+    in
+    Transaction.add ~commit ~rollback transaction;
+    ()
 end

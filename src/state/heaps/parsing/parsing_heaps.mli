@@ -244,8 +244,13 @@ module Merge_context_mutator : sig
   val add_merge_on_diff : t -> component_file Nel.t -> Xx.hash -> bool
 end
 
-module From_saved_state : sig
+module Saved_state_mutator : sig
+  type worker_mutator
+
+  val create : Transaction.t -> ((File_key.t -> unit) -> unit) -> worker_mutator
+
   val add_parsed :
+    worker_mutator ->
     File_key.t ->
     Xx.hash ->
     string option ->
@@ -255,8 +260,13 @@ module From_saved_state : sig
     Cas_digest.t option ->
     Modulename.Set.t
 
-  val add_unparsed : File_key.t -> Xx.hash -> string option -> Modulename.Set.t
+  val add_unparsed : worker_mutator -> File_key.t -> Xx.hash -> string option -> Modulename.Set.t
 
   val add_package :
-    File_key.t -> Xx.hash -> string option -> (Package_json.t, unit) result -> Modulename.Set.t
+    worker_mutator ->
+    File_key.t ->
+    Xx.hash ->
+    string option ->
+    (Package_json.t, unit) result ->
+    Modulename.Set.t
 end

@@ -16,16 +16,39 @@ let string_opt = function
 
 let node_resolver_dirnames = ["node_modules"]
 
+(** Creates a mutator so we can write some files to sharedmem, and
+    cleans up at the end. *)
+let with_transaction iter_files f =
+  let exception Rollback of Exception.t option in
+  try
+    Transaction.with_transaction_sync "test" (fun transaction ->
+        let mutator = Parsing_heaps.Saved_state_mutator.create transaction iter_files in
+        (try f mutator with
+        | exn ->
+          let exn = Exception.wrap exn in
+          raise (Rollback (Some exn)));
+        raise (Rollback None)
+    )
+  with
+  | Rollback None -> ()
+  | Rollback (Some exn) -> Exception.reraise exn
+
 let reader = State_reader.create ()
 
-let add_package fn pkg =
-  let file_key = File_key.JsonFile fn in
+let add_package mutator file_key pkg =
   let module_name = None in
   let hash = Xx.init 0L |> Xx.digest in
   let (_ : Modulename.Set.t) =
-    Parsing_heaps.From_saved_state.add_package file_key hash module_name (Ok pkg)
+    Parsing_heaps.Saved_state_mutator.add_package mutator file_key hash module_name (Ok pkg)
   in
   ()
+
+let with_package fn pkg f =
+  let file_key = File_key.JsonFile fn in
+  let iter_files f = f file_key in
+  with_transaction iter_files @@ fun mutator ->
+  add_package mutator file_key pkg;
+  f ()
 
 let tests =
   "path_of_modulename"
@@ -119,8 +142,9 @@ let tests =
            assert_equal ~ctxt ~printer:string_opt (Some "../b/node_modules/module") path
          );
          ( "supports_package_json_main" >:: fun ctxt ->
+           let fn = "/path/to/root/node_modules/pkg_with_main/package.json" in
            let pkg = Package_json.create ~name:None ~main:(Some "main.js") ~haste_commonjs:false in
-           add_package "/path/to/root/node_modules/pkg_with_main/package.json" pkg;
+           with_package fn pkg @@ fun () ->
            let path =
              path_of_modulename
                ~node_resolver_dirnames
@@ -132,10 +156,11 @@ let tests =
            assert_equal ~ctxt ~printer:string_opt (Some "pkg_with_main") path
          );
          ( "supports_package_json_relative_main" >:: fun ctxt ->
+           let fn = "/path/to/root/node_modules/pkg_with_relative_main/package.json" in
            let pkg =
              Package_json.create ~name:None ~main:(Some "./main.js") ~haste_commonjs:false
            in
-           add_package "/path/to/root/node_modules/pkg_with_relative_main/package.json" pkg;
+           with_package fn pkg @@ fun () ->
            let path =
              path_of_modulename
                ~node_resolver_dirnames
@@ -147,10 +172,11 @@ let tests =
            assert_equal ~ctxt ~printer:string_opt (Some "pkg_with_relative_main") path
          );
          ( "supports_package_json_nested_main" >:: fun ctxt ->
+           let fn = "/path/to/root/node_modules/pkg_with_nested_main/package.json" in
            let pkg =
              Package_json.create ~name:None ~main:(Some "dist/main.js") ~haste_commonjs:false
            in
-           add_package "/path/to/root/node_modules/pkg_with_nested_main/package.json" pkg;
+           with_package fn pkg @@ fun () ->
            let path =
              path_of_modulename
                ~node_resolver_dirnames

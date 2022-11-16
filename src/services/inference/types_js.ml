@@ -1949,11 +1949,14 @@ let assert_valid_hashes updates invalid_hashes =
 
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
   let%lwt (env, libs_ok) =
-    with_transaction "init" @@ fun _transaction reader ->
+    with_transaction "init" @@ fun transaction reader ->
+    let root = Options.root options |> Path.to_string in
     let file_options = Options.file_options options in
+
     (* We don't want to walk the file system for the checked in files. But we still need to find the
      * flowlibs *)
     let (ordered_flowlib_libs, _) = Files.init ~flowlibs_only:true file_options in
+
     let {
       Saved_state.flowconfig_hash = _;
       parsed_heaps;
@@ -1966,7 +1969,17 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     } =
       saved_state
     in
-    let root = Options.root options |> Path.to_string in
+
+    let mutator =
+      let iter_files f =
+        let f (fn, _) = f fn in
+        Base.List.iter ~f parsed_heaps;
+        Base.List.iter ~f unparsed_heaps;
+        Base.List.iter ~f package_heaps
+      in
+      Parsing_heaps.Saved_state_mutator.create transaction iter_files
+    in
+
     Files.node_modules_containers := node_modules_containers;
 
     (* Verifies that the data in saved state matches what's really on disk *)
@@ -1980,7 +1993,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       in
       (* Restore the FileHeap *)
       let ms =
-        Parsing_heaps.From_saved_state.add_parsed
+        Parsing_heaps.Saved_state_mutator.add_parsed
+          mutator
           fn
           hash
           module_name
@@ -2004,7 +2018,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
 
       (* Restore the FileHeap *)
-      let ms = Parsing_heaps.From_saved_state.add_unparsed fn unparsed_hash unparsed_module_name in
+      let ms =
+        Parsing_heaps.Saved_state_mutator.add_unparsed mutator fn unparsed_hash unparsed_module_name
+      in
 
       let invalid_hashes =
         if verify && not (verify_hash ~reader:abstract_reader fn) then
@@ -2020,7 +2036,12 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       let { Saved_state.package_module_name; package_hash; package_info } = package_data in
 
       let ms =
-        Parsing_heaps.From_saved_state.add_package fn package_hash package_module_name package_info
+        Parsing_heaps.Saved_state_mutator.add_package
+          mutator
+          fn
+          package_hash
+          package_module_name
+          package_info
       in
 
       let invalid_hashes =

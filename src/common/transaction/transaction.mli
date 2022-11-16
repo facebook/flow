@@ -10,3 +10,5 @@ type t
 val add : commit:(unit -> unit) -> rollback:(unit -> unit) -> t -> unit
 
 val with_transaction : string -> (t -> 'a Lwt.t) -> 'a Lwt.t
+
+val with_transaction_sync : string -> (t -> 'a) -> 'a
