@@ -245,13 +245,16 @@ module Merge_context_mutator : sig
 end
 
 module Saved_state_mutator : sig
+  type master_mutator
+
   type worker_mutator
 
-  val create : Transaction.t -> ((File_key.t -> unit) -> unit) -> worker_mutator
+  val create : Transaction.t -> ((File_key.t -> unit) -> unit) -> master_mutator * worker_mutator
 
   val add_parsed :
     worker_mutator ->
     File_key.t ->
+    file_addr option ->
     Xx.hash ->
     string option ->
     Exports.t ->
@@ -260,13 +263,19 @@ module Saved_state_mutator : sig
     Cas_digest.t option ->
     Modulename.Set.t
 
-  val add_unparsed : worker_mutator -> File_key.t -> Xx.hash -> string option -> Modulename.Set.t
+  val add_unparsed :
+    worker_mutator -> File_key.t -> file_addr option -> Xx.hash -> string option -> Modulename.Set.t
 
   val add_package :
     worker_mutator ->
     File_key.t ->
+    file_addr option ->
     Xx.hash ->
     string option ->
     (Package_json.t, unit) result ->
     Modulename.Set.t
+
+  val clear_not_found : worker_mutator -> File_key.t -> Modulename.Set.t
+
+  val record_not_found : master_mutator -> Utils_js.FilenameSet.t -> unit
 end

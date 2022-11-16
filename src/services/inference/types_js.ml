@@ -1908,8 +1908,16 @@ let make_next_files ~libs ~file_options root =
 
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
-let mk_init_env
-    ~files ~unparsed ~package_json_files ~dependency_info ~ordered_libs ~libs ~errors ~exports =
+let mk_env
+    ~connections
+    ~files
+    ~unparsed
+    ~package_json_files
+    ~dependency_info
+    ~ordered_libs
+    ~libs
+    ~errors
+    ~exports =
   {
     ServerEnv.files;
     unparsed;
@@ -1921,7 +1929,7 @@ let mk_init_env
     errors;
     coverage = FilenameMap.empty;
     collated_errors = ref None;
-    connections = Persistent_connection.empty;
+    connections;
     exports;
   }
 
@@ -1947,9 +1955,10 @@ let assert_valid_hashes updates invalid_hashes =
     Exit.(exit ~msg:"Saved state verification failed" Invalid_saved_state)
   )
 
-let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
+let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
   let%lwt (env, libs_ok) =
     with_transaction "init" @@ fun transaction reader ->
+    let is_init = Option.is_none env in
     let root = Options.root options |> Path.to_string in
     let file_options = Options.file_options options in
 
@@ -1970,7 +1979,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       saved_state
     in
 
-    let mutator =
+    let (master_mutator, mutator) =
       let iter_files f =
         let f (fn, _) = f fn in
         Base.List.iter ~f parsed_heaps;
@@ -1991,11 +2000,20 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       let { Saved_state.hash; exports; resolved_requires; imports; cas_digest } =
         Saved_state.denormalize_file_data ~root normalized_file_data
       in
+
+      let file_opt =
+        if is_init then
+          None
+        else
+          Parsing_heaps.get_file_addr fn
+      in
+
       (* Restore the FileHeap *)
       let ms =
         Parsing_heaps.Saved_state_mutator.add_parsed
           mutator
           fn
+          file_opt
           hash
           module_name
           exports
@@ -2017,9 +2035,21 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let restore_unparsed (fns, dirty_modules, invalid_hashes) (fn, unparsed_file_data) =
       let { Saved_state.unparsed_module_name; unparsed_hash } = unparsed_file_data in
 
+      let file_opt =
+        if is_init then
+          None
+        else
+          Parsing_heaps.get_file_addr fn
+      in
+
       (* Restore the FileHeap *)
       let ms =
-        Parsing_heaps.Saved_state_mutator.add_unparsed mutator fn unparsed_hash unparsed_module_name
+        Parsing_heaps.Saved_state_mutator.add_unparsed
+          mutator
+          fn
+          file_opt
+          unparsed_hash
+          unparsed_module_name
       in
 
       let invalid_hashes =
@@ -2035,10 +2065,18 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     let restore_package (fns, dirty_modules, invalid_hashes) (fn, package_data) =
       let { Saved_state.package_module_name; package_hash; package_info } = package_data in
 
+      let file_opt =
+        if is_init then
+          None
+        else
+          Parsing_heaps.get_file_addr fn
+      in
+
       let ms =
         Parsing_heaps.Saved_state_mutator.add_package
           mutator
           fn
+          file_opt
           package_hash
           package_module_name
           package_info
@@ -2051,11 +2089,16 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
           invalid_hashes
       in
 
-      (fn :: fns, Modulename.Set.union ms dirty_modules, invalid_hashes)
+      (FilenameSet.add fn fns, Modulename.Set.union ms dirty_modules, invalid_hashes)
+    in
+
+    let delete_unused dirty_modules fn =
+      let ms = Parsing_heaps.Saved_state_mutator.clear_not_found mutator fn in
+      Modulename.Set.union ms dirty_modules
     in
 
     Hh_logger.info "Restoring heaps";
-    let%lwt (parsed, unparsed, package_json_files, dirty_modules, invalid_hashes) =
+    let%lwt (parsed, unparsed, packages, dirty_modules, invalid_hashes) =
       with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
           let neutral = (FilenameSet.empty, Modulename.Set.empty, []) in
           let merge (a1, a2, a3) (b1, b2, b3) =
@@ -2077,20 +2120,43 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               ~neutral
               ~next:(MultiWorkerLwt.next workers unparsed_heaps)
           in
-          let (package_json_files, dirty_modules_packages, invalid_package_hashes) =
-            Base.List.fold package_heaps ~init:([], Modulename.Set.empty, []) ~f:restore_package
+          let (packages, dirty_modules_packages, invalid_package_hashes) =
+            Base.List.fold
+              package_heaps
+              ~init:(FilenameSet.empty, Modulename.Set.empty, [])
+              ~f:restore_package
+          in
+          let deleted_heaps =
+            match env with
+            | None -> FilenameSet.empty
+            | Some
+                { ServerEnv.files; unparsed = old_unparsed; package_json_files = old_packages; _ }
+              ->
+              let open FilenameSet in
+              let old_files = union (union files old_unparsed) old_packages in
+              diff (diff (diff old_files parsed) unparsed) packages
+          in
+          Parsing_heaps.Saved_state_mutator.record_not_found master_mutator deleted_heaps;
+          let%lwt dirty_modules_deleted =
+            MultiWorkerLwt.call
+              workers
+              ~job:(List.fold_left delete_unused)
+              ~merge:Modulename.Set.union
+              ~neutral:Modulename.Set.empty
+              ~next:(MultiWorkerLwt.next workers (FilenameSet.elements deleted_heaps))
           in
           let dirty_modules =
             dirty_modules_parsed
             |> Modulename.Set.union dirty_modules_unparsed
             |> Modulename.Set.union dirty_modules_packages
+            |> Modulename.Set.union dirty_modules_deleted
           in
           let invalid_hashes =
             invalid_parsed_hashes
             |> Base.List.rev_append invalid_unparsed_hashes
             |> Base.List.rev_append invalid_package_hashes
           in
-          Lwt.return (parsed, unparsed, package_json_files, dirty_modules, invalid_hashes)
+          Lwt.return (parsed, unparsed, packages, dirty_modules, invalid_hashes)
       )
     in
 
@@ -2141,16 +2207,24 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       )
     in
 
+    let connections =
+      Base.Option.value_map
+        ~f:(fun env -> env.ServerEnv.connections)
+        ~default:Persistent_connection.empty
+        env
+    in
+
     let env =
-      mk_init_env
+      mk_env
         ~files:parsed
         ~unparsed
-        ~package_json_files
+        ~package_json_files:packages
         ~dependency_info
         ~ordered_libs
         ~libs
         ~errors
         ~exports
+        ~connections
     in
     Lwt.return (env, libs_ok)
   in
@@ -2262,6 +2336,7 @@ let init_from_scratch ~profiling ~workers options =
       package_json_files
       package_json_errors
   in
+  let package_json_files = FilenameSet.of_list package_json_files in
   let local_errors = merge_error_maps package_errors local_errors in
 
   Hh_logger.info "Loading libraries";
@@ -2297,7 +2372,7 @@ let init_from_scratch ~profiling ~workers options =
     { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
   in
   let env =
-    mk_init_env
+    mk_env
       ~files:parsed_set
       ~unparsed:unparsed_set
       ~package_json_files
@@ -2306,6 +2381,7 @@ let init_from_scratch ~profiling ~workers options =
       ~libs
       ~errors
       ~exports
+      ~connections:Persistent_connection.empty
   in
   Lwt.return (env, libs_ok)
 

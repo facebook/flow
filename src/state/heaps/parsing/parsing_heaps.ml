@@ -2123,15 +2123,23 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 end
 
 module Saved_state_mutator = struct
+  type master_mutator = unit
+
   type worker_mutator = unit
 
   (** Saved state contains all files, so if we roll back, we need to undo every file. *)
   let iter_files = ref (Fun.const ())
 
-  let add_parsed () file_key hash module_name exports resolved_requires imports cas_digest =
+  (** When loading a new saved state, some previously-known files may not exist in the
+      new state (i.e. they were deleted). When the transaction commits, we will remove
+      these from the shared hash table, so sharedmem GC can collect them. *)
+  let not_found_files = ref FilenameSet.empty
+
+  let add_parsed () file_key file_opt hash module_name exports resolved_requires imports cas_digest
+      =
     add_checked_file
       file_key
-      None
+      file_opt
       hash
       module_name
       None
@@ -2144,11 +2152,17 @@ module Saved_state_mutator = struct
       cas_digest
       (Some (Some resolved_requires))
 
-  let add_unparsed () file_key = add_unparsed file_key None
+  let add_unparsed () = add_unparsed
 
-  let add_package () file_key = add_package file_key None
+  let add_package () = add_package
 
-  let reset_refs () = iter_files := Fun.const ()
+  let clear_not_found () = clear_file
+
+  let record_not_found () not_found = not_found_files := not_found
+
+  let reset_refs () =
+    iter_files := Fun.const ();
+    not_found_files := FilenameSet.empty
 
   let create transaction iter_files_ =
     iter_files := iter_files_;
@@ -2156,14 +2170,16 @@ module Saved_state_mutator = struct
       Hh_logger.info "Committing saved state";
       Mutator_cache.clear ();
       Reader_cache.clear ();
+      FileHeap.remove_batch !not_found_files;
       reset_refs ()
     in
     let rollback () =
       Hh_logger.info "Rolling back saved state";
       Mutator_cache.clear ();
       !iter_files rollback_file;
+      FilenameSet.iter rollback_file !not_found_files;
       reset_refs ()
     in
     Transaction.add ~commit ~rollback transaction;
-    ()
+    ((), ())
 end

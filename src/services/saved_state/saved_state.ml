@@ -296,10 +296,10 @@ end = struct
     in
     let package_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectPackageJson" ~f:(fun () ->
-          Base.List.fold
-            ~f:(fun m fn -> collect_normalized_data_for_package_json_file ~normalizer ~reader fn m)
+          FilenameSet.fold
+            (collect_normalized_data_for_package_json_file ~normalizer ~reader)
             env.ServerEnv.package_json_files
-            ~init:[]
+            []
       )
     in
     let ordered_non_flowlib_libs =

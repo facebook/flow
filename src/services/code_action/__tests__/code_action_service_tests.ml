@@ -36,17 +36,18 @@ let with_transaction iter_files f =
 let reader = State_reader.create ()
 
 let add_package mutator file_key pkg =
+  let file_opt = None in
   let module_name = None in
   let hash = Xx.init 0L |> Xx.digest in
   let (_ : Modulename.Set.t) =
-    Parsing_heaps.Saved_state_mutator.add_package mutator file_key hash module_name (Ok pkg)
+    Parsing_heaps.Saved_state_mutator.add_package mutator file_key file_opt hash module_name (Ok pkg)
   in
   ()
 
 let with_package fn pkg f =
   let file_key = File_key.JsonFile fn in
   let iter_files f = f file_key in
-  with_transaction iter_files @@ fun mutator ->
+  with_transaction iter_files @@ fun (_master_mutator, mutator) ->
   add_package mutator file_key pkg;
   f ()
 
