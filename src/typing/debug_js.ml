@@ -1801,6 +1801,7 @@ let dump_error_message =
       spf "EDuplicateClassMember (%s) (%s)" (string_of_aloc loc) name
     | EEmptyArrayNoProvider { loc } -> spf "EEmptyArrayNoProvider (%s)" (string_of_aloc loc)
     | EUnusedPromise { loc } -> spf "EUnusedPromise (%s)" (string_of_aloc loc)
+    | EBigIntRShift3 reason -> spf "EBigIntRShift3 (%s)" (dump_reason cx reason)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

@@ -603,40 +603,6 @@ References:
                             ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ all_arith.js:73:2
-
-Cannot add `aBigint` and `aBigint` because bigint [1] is incompatible with string [2]. [incompatible-type]
-
-   all_arith.js:73:2
-   73| (aBigint + aBigint); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-   all_arith.js:73:2
-   73| (aBigint + aBigint); // error
-        ^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- all_arith.js:73:12
-
-Cannot add `aBigint` and `aBigint` because bigint [1] is incompatible with string [2]. [incompatible-type]
-
-   all_arith.js:73:12
-   73| (aBigint + aBigint); // error
-                  ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-   all_arith.js:73:2
-   73| (aBigint + aBigint); // error
-        ^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ all_arith.js:74:2
 
 Cannot add `aBigint` and `aDate` because bigint [1] is incompatible with string [2]. [incompatible-type]
@@ -828,34 +794,6 @@ References:
    all_arith.js:14:21
    14| declare var aMixed: mixed;
                            ^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ all_arith.js:85:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
-
-   all_arith.js:85:2
-   85| (aBigint * aBigint); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- all_arith.js:85:12
-
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
-
-   all_arith.js:85:12
-   85| (aBigint * aBigint); // error
-                  ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:86:2
@@ -2490,5 +2428,28 @@ References:
                             ^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- all_arith.js:224:2
 
-Found 176 errors
+Cannot perform unsigned right shift because `aBigint` arithmetic operation `aBigint` [1] is a bigint, and all bigints
+are signed. [bigint-unsigned-right-shift]
+
+   224| (aBigint >>> aBigint); // error
+         ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:225:2
+
+Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+
+   all_arith.js:225:2
+   225| (aBigint >>> aNumber); // error
+         ^^^^^^^
+
+References:
+   all_arith.js:7:22
+     7| declare var aBigint: bigint;
+                             ^^^^^^ [1]
+
+
+
+Found 174 errors

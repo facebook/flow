@@ -5535,6 +5535,12 @@ struct
       | (Plus, AnyT (_, src), _)
       | (Plus, _, AnyT (_, src)) ->
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.at src loc, u)
+      (* bigint <> bigint *)
+      | (_, DefT (_, _, BigIntT _), DefT (_, _, BigIntT _)) ->
+        if kind = RShift3 then
+          add_output cx ~trace (Error_message.EBigIntRShift3 reason)
+        else
+          rec_flow_t cx trace ~use_op:unknown_use (BigIntT.at loc |> with_trust bogus_trust, u)
       (* + error cases *)
       | (Plus, DefT (_, _, NumT _), _) ->
         rec_flow cx trace (r, UseT (use_op, l));

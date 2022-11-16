@@ -458,6 +458,7 @@ and 'loc t' =
     }
   | EEmptyArrayNoProvider of { loc: 'loc }
   | EUnusedPromise of { loc: 'loc }
+  | EBigIntRShift3 of 'loc virtual_reason
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1083,6 +1084,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EDuplicateClassMember { loc = f loc; name; static }
   | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
   | EUnusedPromise { loc } -> EUnusedPromise { loc = f loc }
+  | EBigIntRShift3 r -> EBigIntRShift3 (map_reason r)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1314,7 +1316,8 @@ let util_use_op_of_msg nope util = function
   | EAnnotationInferenceRecursive _
   | EDuplicateClassMember _
   | EEmptyArrayNoProvider _
-  | EUnusedPromise _ ->
+  | EUnusedPromise _
+  | EBigIntRShift3 _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1377,7 +1380,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ERecursiveDefinition { reason; _ }
   | EDefinitionCycle ((reason, _, _), _)
   | EInvalidConstructor reason
-  | EInvalidDeclaration { declaration = reason; _ } ->
+  | EInvalidDeclaration { declaration = reason; _ }
+  | EBigIntRShift3 reason ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3996,6 +4000,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " it?";
           ];
       }
+  | EBigIntRShift3 reason ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot perform unsigned right shift because ";
+            ref reason;
+            text " ";
+            text "is a bigint, and all bigints are signed.";
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -4267,6 +4282,7 @@ let error_code_of_message err : error_code option =
   | ERecursiveDefinition _ -> Some RecursiveDefinition
   | EDuplicateClassMember _ -> Some DuplicateClassMember
   | EEmptyArrayNoProvider _ -> Some EmptyArrayNoAnnot
+  | EBigIntRShift3 _ -> Some BigIntRShift3
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _

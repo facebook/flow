@@ -70,7 +70,7 @@ declare var anEmpty: empty;
 (aString * anEmpty); // error
 
 // aBigint + _
-(aBigint + aBigint); // error
+(aBigint + aBigint : bigint); // ok
 (aBigint + aDate); // error
 (aBigint + aBoolean); // error
 (aBigint + aT); // error
@@ -82,7 +82,7 @@ declare var anEmpty: empty;
 (aBigint + anEmpty : empty); // ok
 
 // aBigint * _
-(aBigint * aBigint); // error
+(aBigint * aBigint : bigint); // ok
 (aBigint * aDate); // error
 (aBigint * aBoolean); // error
 (aBigint * aT); // error
@@ -218,3 +218,8 @@ declare var anEmpty: empty;
 
 // anEmpty * _
 (anEmpty * anEmpty : number); // ok
+
+// Extra test for >>> with bigint since it's not allowed
+// aBigint >>> _
+(aBigint >>> aBigint); // error
+(aBigint >>> aNumber); // error
