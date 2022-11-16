@@ -386,7 +386,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             | Op (ObjectSpread { op }) -> `Root (op, None, [text "Cannot spread "; desc op])
             | Op (ObjectChain { op }) ->
               `Root (op, None, [text "Incorrect arguments passed to "; desc op])
-            | Op (Addition { op; left; right }) ->
+            | Op (Arith { op; left; right }) ->
               `Root (op, None, [text "Cannot add "; desc left; text " and "; desc right])
             | Op (AssignVar { var; init }) ->
               `Root

@@ -4598,6 +4598,7 @@ module Make
       let reason = mk_reason desc loc in
       Flow.flow cx (t1, ComparatorT { reason; flip = false; arg = t2 });
       (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
+    | Plus
     | LShift
     | RShift
     | RShift3
@@ -4609,23 +4610,17 @@ module Make
     | BitOr
     | Xor
     | BitAnd ->
-      let reason = mk_reason (RCustom "arithmetic operation") loc in
-      let (((_, t1), _) as left) = expression cx left in
-      let (((_, t2), _) as right) = expression cx right in
-      Flow.flow cx (t1, AssertArithmeticOperandT reason);
-      Flow.flow cx (t2, AssertArithmeticOperandT reason);
-      (NumT.at loc |> with_trust literal_trust, { operator; left; right; comments })
-    | Plus ->
       let (((_, t1), _) as left_ast) = expression cx left in
       let (((_, t2), _) as right_ast) = expression cx right in
       let desc =
-        RBinaryOperator ("+", desc_of_reason (reason_of_t t1), desc_of_reason (reason_of_t t2))
+        RBinaryOperator
+          ("arithmetic operation", desc_of_reason (reason_of_t t1), desc_of_reason (reason_of_t t2))
       in
       let reason = mk_reason desc loc in
       ( Tvar.mk_where cx reason (fun t ->
             let use_op =
               Op
-                (Addition
+                (Arith
                    {
                      op = reason;
                      left = mk_expression_reason left;
@@ -4633,7 +4628,19 @@ module Make
                    }
                 )
             in
-            Flow.flow cx (t1, AdderT (use_op, reason, false, t2, t))
+            Flow.flow
+              cx
+              ( t1,
+                ArithT
+                  {
+                    use_op;
+                    reason;
+                    flip = false;
+                    rhs_t = t2;
+                    result_t = t;
+                    kind = ArithKind.arith_kind_of_binary_operator operator;
+                  }
+              )
         ),
         { operator; left = left_ast; right = right_ast; comments }
       )
@@ -4933,39 +4940,41 @@ module Make
     in
     (t, lhs, typed_rhs)
 
-  and plus_assign cx ~reason ~lhs_reason ~rhs_reason lhs_t rhs_t =
-    let result_t = Tvar.mk cx reason in
-    (* lhs = lhs + rhs *)
-    let () =
-      let use_op = Op (Addition { op = reason; left = lhs_reason; right = rhs_reason }) in
-      Flow.flow cx (lhs_t, AdderT (use_op, reason, false, rhs_t, result_t))
-    in
-    result_t
-
-  and arith_assign cx reason lhs_t rhs_t =
-    let loc = aloc_of_reason reason in
-    (* lhs = lhs (numop) rhs *)
-    Flow.flow cx (lhs_t, AssertArithmeticOperandT reason);
-    Flow.flow cx (rhs_t, AssertArithmeticOperandT reason);
-    NumT.at loc |> with_trust literal_trust
+  and arith_assign cx ~reason ~lhs_reason ~rhs_reason lhs_t rhs_t kind =
+    Tvar.mk_where cx reason (fun result_t ->
+        let use_op = Op (Arith { op = reason; left = lhs_reason; right = rhs_reason }) in
+        Flow.flow cx (lhs_t, ArithT { use_op; reason; flip = false; rhs_t; result_t; kind })
+    )
 
   (* traverse assignment expressions with operators (`lhs += rhs`, `lhs *= rhs`, etc) *)
   and op_assignment cx loc lhs op rhs =
     let open Ast.Expression in
+    let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) loc in
     match op with
-    | Assignment.PlusAssign ->
-      (* lhs += rhs *)
-      let reason = mk_reason (RCustom "+=") loc in
+    | Assignment.PlusAssign
+    | Assignment.MinusAssign
+    | Assignment.MultAssign
+    | Assignment.ExpAssign
+    | Assignment.DivAssign
+    | Assignment.ModAssign
+    | Assignment.LShiftAssign
+    | Assignment.RShiftAssign
+    | Assignment.RShift3Assign
+    | Assignment.BitOrAssign
+    | Assignment.BitXorAssign
+    | Assignment.BitAndAssign ->
+      (* lhs (op)= rhs *)
       let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
       let (((_, rhs_t), _) as rhs_ast) = expression cx rhs in
       let result_t =
-        plus_assign
+        arith_assign
           cx
           ~reason
           ~lhs_reason:(mk_pattern_reason lhs)
           ~rhs_reason:(mk_expression_reason rhs)
           lhs_t
           rhs_t
+          (ArithKind.arith_kind_of_assignment_operator op)
       in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
@@ -4996,58 +5005,9 @@ module Make
              mem
       | _ -> ());
       (lhs_t, lhs_ast, rhs_ast)
-    | Assignment.MinusAssign
-    | Assignment.MultAssign
-    | Assignment.ExpAssign
-    | Assignment.DivAssign
-    | Assignment.ModAssign
-    | Assignment.LShiftAssign
-    | Assignment.RShiftAssign
-    | Assignment.RShift3Assign
-    | Assignment.BitOrAssign
-    | Assignment.BitXorAssign
-    | Assignment.BitAndAssign ->
-      (* lhs (numop)= rhs *)
-      let reason = mk_reason (RCustom "(numop)=") loc in
-      let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
-      let (((_, rhs_t), _) as rhs_ast) = expression cx rhs in
-      let result_t = arith_assign cx reason lhs_t rhs_t in
-      (* enforce state-based guards for binding update, e.g., const *)
-      (match lhs with
-      | ( _,
-          Ast.Pattern.Identifier
-            { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
-        ) ->
-        let use_op =
-          Op
-            (AssignVar
-               {
-                 var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc);
-                 init = reason_of_t result_t;
-               }
-            )
-        in
-        Env.set_var cx ~use_op name result_t id_loc
-      | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
-        let lhs_prop_reason = mk_pattern_reason lhs in
-        let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
-        let reconstruct_ast mem _ = Ast.Expression.Member mem in
-        ignore
-        @@ assign_member
-             cx
-             ~make_op
-             ~t:result_t
-             ~lhs_loc
-             ~lhs_prop_reason
-             ~reconstruct_ast
-             ~mode:Assign
-             mem
-      | _ -> ());
-      (lhs_t, lhs_ast, rhs_ast)
     | Assignment.NullishAssign
     | Assignment.AndAssign
     | Assignment.OrAssign ->
-      let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) loc in
       let (((_, lhs_t), _) as lhs_pattern_ast) = assignment_lhs cx lhs in
       let left_expr =
         match lhs with

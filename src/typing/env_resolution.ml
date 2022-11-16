@@ -720,23 +720,9 @@ let resolve_class cx id_loc reason class_loc class_ =
 
 let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
   let open Ast.Expression in
+  let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) exp_loc in
   match op with
-  | Assignment.PlusAssign ->
-    (* lhs += rhs *)
-    let reason = mk_reason (RCustom "+=") exp_loc in
-    let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
-    let rhs_t = expression cx rhs in
-    let result_t =
-      Statement.plus_assign
-        cx
-        ~reason
-        ~lhs_reason:id_reason
-        ~rhs_reason:(mk_expression_reason rhs)
-        lhs_t
-        rhs_t
-    in
-    let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
-    (result_t, use_op)
+  | Assignment.PlusAssign
   | Assignment.MinusAssign
   | Assignment.MultAssign
   | Assignment.ExpAssign
@@ -748,17 +734,24 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
   | Assignment.BitOrAssign
   | Assignment.BitXorAssign
   | Assignment.BitAndAssign ->
-    (* lhs (numop)= rhs *)
-    let reason = mk_reason (RCustom "(numop)=") exp_loc in
+    (* lhs (op)= rhs *)
     let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
     let rhs_t = expression cx rhs in
-    let result_t = Statement.arith_assign cx reason lhs_t rhs_t in
+    let result_t =
+      Statement.arith_assign
+        cx
+        ~reason
+        ~lhs_reason:id_reason
+        ~rhs_reason:(mk_expression_reason rhs)
+        lhs_t
+        rhs_t
+        (ArithKind.arith_kind_of_assignment_operator op)
+    in
     let use_op = Op (AssignVar { var = Some id_reason; init = reason }) in
     (result_t, use_op)
   | Assignment.AndAssign
   | Assignment.OrAssign
   | Assignment.NullishAssign ->
-    let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) exp_loc in
     let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
     let (((_, rhs_t), _), right_abnormal) =
       Abnormal.catch_expr_control_flow_exception (fun () -> Statement.expression cx rhs)

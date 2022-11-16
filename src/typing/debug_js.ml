@@ -705,8 +705,8 @@ and dump_use_t_ (depth, tvars) cx t =
         )
         (kid t)
     | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
-    | AdderT (use_op, _, _, x, y) ->
-      p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid x) (kid y)) t
+    | ArithT { use_op; rhs_t; result_t; _ } ->
+      p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid rhs_t) (kid result_t)) t
     | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
     | AssertArithmeticOperandT _ -> p t

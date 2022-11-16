@@ -547,7 +547,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
 
-Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign **= to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    exponent.js:7:1
    7| y **= 2; // error
@@ -661,7 +661,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mult.js:12:1
 
-Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign *= to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    mult.js:12:1
    12| y *= 2; // error

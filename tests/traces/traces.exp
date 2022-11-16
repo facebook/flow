@@ -62,11 +62,11 @@ References:
 Trace:
 * path 1:
  14: f2(function(x) { return x * x });
-                             ^ StrT [string]
+                                 ^ StrT [string]
  14: f2(function(x) { return x * x });
-                             ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
+                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
  14: f2(function(x) { return x * x });
-                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
 
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
@@ -89,7 +89,7 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
  14: f2(function(x) { return x * x });
-                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
 
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37
@@ -110,7 +110,7 @@ Trace:
  19: function double(n: string) { return n * 2 }
                                          ^ StrT [string]
  19: function double(n: string) { return n * 2 }
-                                         ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation] (from [not shown])
+                                         ^^^^^ ~> ArithT [`n` arithmetic operation number] (from [not shown])
 
 
 
@@ -199,11 +199,11 @@ References:
 Trace:
 * path 1:
  14: f2(function(x) { return x * x });
-                             ^ StrT [string]
+                                 ^ StrT [string]
  14: f2(function(x) { return x * x });
-                             ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
+                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
-                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
 * path 2:
  13: function f2(xlam: (s:string) => number) { g2(xlam) }
                           ^^^^^^ StrT [string]
@@ -212,7 +212,7 @@ Trace:
  14: f2(function(x) { return x * x });
                  ^ OpenT [`x`]
  14: f2(function(x) { return x * x });
-                             ^ ~> ReposLowerT [`x`]
+                                 ^ ~> ReposLowerT [`x`]
 * path 3:
  14: f2(function(x) { return x * x });
         ^^^^^^^^^^^ FunT [function]
@@ -240,7 +240,7 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
-                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
 * path 2:
  13: function f2(xlam: (s:string) => number) { g2(xlam) }
                           ^^^^^^ StrT [string]
@@ -275,12 +275,12 @@ Trace:
  19: function double(n: string) { return n * 2 }
                                          ^ StrT [string]
  19: function double(n: string) { return n * 2 }
-                                         ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation] (from path 2)
+                                         ^^^^^ ~> ArithT [`n` arithmetic operation number] (from path 2)
 * path 2:
  19: function double(n: string) { return n * 2 }
                                          ^ OpenT [`n`]
  19: function double(n: string) { return n * 2 }
-                                         ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+                                         ^^^^^ ~> ArithT [`n` arithmetic operation number]
 
 
 
@@ -379,11 +379,11 @@ References:
 Trace:
 * path 1:
  14: f2(function(x) { return x * x });
-                             ^ StrT [string]
+                                 ^ StrT [string]
  14: f2(function(x) { return x * x });
-                             ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
+                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
-                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
 * path 2:
  13: function f2(xlam: (s:string) => number) { g2(xlam) }
                           ^^^^^^ StrT [string]
@@ -392,7 +392,7 @@ Trace:
  14: f2(function(x) { return x * x });
                  ^ OpenT [`x`]
  14: f2(function(x) { return x * x });
-                             ^ ~> ReposLowerT [`x`]
+                                 ^ ~> ReposLowerT [`x`]
 * path 3:
  14: f2(function(x) { return x * x });
         ^^^^^^^^^^^ FunT [function]
@@ -430,7 +430,7 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
  14: f2(function(x) { return x * x });
-                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
 * path 2:
  13: function f2(xlam: (s:string) => number) { g2(xlam) }
                           ^^^^^^ StrT [string]
@@ -475,12 +475,12 @@ Trace:
  19: function double(n: string) { return n * 2 }
                                          ^ StrT [string]
  19: function double(n: string) { return n * 2 }
-                                         ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation] (from path 2)
+                                         ^^^^^ ~> ArithT [`n` arithmetic operation number] (from path 2)
 * path 2:
  19: function double(n: string) { return n * 2 }
                                          ^ OpenT [`n`]
  19: function double(n: string) { return n * 2 }
-                                         ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+                                         ^^^^^ ~> ArithT [`n` arithmetic operation number]
 
 
 

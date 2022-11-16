@@ -108,7 +108,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | ImplementsT _ -> ()
   | MixinT (_, t) -> resolve t
   | ToStringT (_, use) -> default_resolve_touts ~flow cx loc use
-  | AdderT (_, _, _, _, tout) -> resolve tout
+  | ArithT { result_t; _ } -> resolve result_t
   | ComparatorT _ -> ()
   | UnaryMinusT (_, t) -> resolve t
   | AssertArithmeticOperandT _

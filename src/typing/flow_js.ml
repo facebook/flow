@@ -4552,12 +4552,12 @@ struct
         (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
         | (OpaqueT (_, { super_t = Some t; _ }), _) -> rec_flow cx trace (t, u)
         (***********************************************************)
-        (* addition                                                *)
+        (* binary arithmetic operators                             *)
         (***********************************************************)
-        | (l, AdderT (use_op, reason, flip, r, u)) ->
-          flow_addition cx trace use_op reason flip l r u
+        | (l, ArithT { use_op; reason; flip; rhs_t; result_t; kind }) ->
+          flow_arith cx trace use_op reason flip l rhs_t result_t kind
         (*********************************************************)
-        (* arithmetic/bitwise/update operations besides addition *)
+        (* assert operand of update operation is numberesque     *)
         (*********************************************************)
         | (_, AssertArithmeticOperandT _) when numberesque l -> ()
         | (_, AssertArithmeticOperandT _) ->
@@ -5445,6 +5445,13 @@ struct
             u
     )
 
+  and valid_operand t =
+    match t with
+    | AnyT _
+    | DefT (_, _, EmptyT) ->
+      true
+    | _ -> numberesque t
+
   (**
    * Addition
    *
@@ -5473,9 +5480,12 @@ struct
    * TODO: handle symbols (which raise a TypeError, so should be banned)
    *
    **)
-  and flow_addition cx trace use_op reason flip l r u =
+  and flow_arith cx trace use_op reason flip l r u kind =
     if needs_resolution r || is_generic r then
-      rec_flow cx trace (r, AdderT (use_op, reason, not flip, l, u))
+      rec_flow
+        cx
+        trace
+        (r, ArithT { use_op; reason; flip = not flip; rhs_t = l; result_t = u; kind })
     else
       let (l, r) =
         if flip then
@@ -5484,44 +5494,90 @@ struct
           (l, r)
       in
       let loc = aloc_of_reason reason in
-      match (l, r) with
-      | (DefT (_, _, StrT _), DefT (_, _, StrT _))
-      | (DefT (_, _, StrT _), DefT (_, _, NumT _))
-      | (DefT (_, _, NumT _), DefT (_, _, StrT _)) ->
+      let open ArithKind in
+      match (kind, l, r) with
+      (* num + num *)
+      (* num + bool *)
+      (* bool + num *)
+      (* bool + bool *)
+      | (Plus, DefT (_, _, (NumT _ | BoolT _)), DefT (_, _, (NumT _ | BoolT _))) ->
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
+      (* str + str *)
+      (* num + str *)
+      (* str + num *)
+      | (Plus, DefT (_, _, (NumT _ | StrT _)), DefT (_, _, (NumT _ | StrT _))) ->
         rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
-      (* unreachable additions are unreachable *)
-      | (DefT (_, _, EmptyT), _)
-      | (_, DefT (_, _, EmptyT)) ->
+      (* empty + _ *)
+      (* _ + empty *)
+      | (Plus, DefT (_, _, EmptyT), _)
+      | (Plus, _, DefT (_, _, EmptyT)) ->
         rec_flow_t cx trace ~use_op:unknown_use (EmptyT.at loc |> with_trust bogus_trust, u)
-      | (DefT (reason, _, MixedT _), _)
-      | (_, DefT (reason, _, MixedT _)) ->
+      (* mixed + _ *)
+      (* _ + mixed *)
+      | (Plus, DefT (reason, _, MixedT _), _)
+      | (Plus, _, DefT (reason, _, MixedT _)) ->
         add_output cx ~trace (Error_message.EAdditionMixed (reason, use_op))
-      | (DefT (_, _, (NumT _ | BoolT _)), DefT (_, _, (NumT _ | BoolT _))) ->
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | (DefT (_, _, StrT _), _) ->
+      (* str + _ *)
+      (* _ + str *)
+      | (Plus, DefT (_, _, StrT _), _) ->
         rec_flow cx trace (r, UseT (use_op, l));
         rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
-      | (_, DefT (_, _, StrT _)) ->
+      | (Plus, _, DefT (_, _, StrT _)) ->
         rec_flow cx trace (l, UseT (use_op, r));
         rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
-      | (DefT (reason, _, (VoidT | NullT)), _)
-      | (_, DefT (reason, _, (VoidT | NullT))) ->
-        add_output cx ~trace (Error_message.EArithmeticOperand reason);
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | (AnyT (_, src), _)
-      | (_, AnyT (_, src)) ->
+      (* null + _ *)
+      (* _ + null *)
+      | (Plus, DefT (reason, _, (VoidT | NullT)), _)
+      | (Plus, _, DefT (reason, _, (VoidT | NullT))) ->
+        add_output cx ~trace (Error_message.EArithmeticOperand reason)
+      (* any + _ *)
+      (* _ + any *)
+      | (Plus, AnyT (_, src), _)
+      | (Plus, _, AnyT (_, src)) ->
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.at src loc, u)
-      | (DefT (_, _, NumT _), _) ->
+      (* + error cases *)
+      | (Plus, DefT (_, _, NumT _), _) ->
         rec_flow cx trace (r, UseT (use_op, l));
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | (_, DefT (_, _, NumT _)) ->
+      | (Plus, _, DefT (_, _, NumT _)) ->
         rec_flow cx trace (l, UseT (use_op, r));
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | (_, _) ->
+      | (Plus, _, _) ->
         let fake_str = StrT.why reason |> with_trust bogus_trust in
         rec_flow cx trace (l, UseT (use_op, fake_str));
         rec_flow cx trace (r, UseT (use_op, fake_str));
         rec_flow cx trace (fake_str, UseT (use_op, u))
+      (* numberesque <> any *)
+      (* any <> numberesque *)
+      (* for <> except + *)
+      | ((RShift3 | Other), AnyT _, r) when numberesque r ->
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
+      | ((RShift3 | Other), l, AnyT _) when numberesque l ->
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
+      (* numberesque <> empty *)
+      (* empty <> numberesque *)
+      (* for <> except + *)
+      | ((RShift3 | Other), DefT (_, _, EmptyT), r) when numberesque r ->
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
+      | ((RShift3 | Other), l, DefT (_, _, EmptyT)) when numberesque l ->
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
+      (* any <> any *)
+      (* any <> empty *)
+      (* empty <> any *)
+      (* empty <> empty *)
+      (* for <> except + *)
+      | ((RShift3 | Other), (DefT (_, _, EmptyT) | AnyT _), (DefT (_, _, EmptyT) | AnyT _)) ->
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
+      (* numberesque <> numberesque *)
+      (* for <> except + *)
+      | ((RShift3 | Other), l, r) when numberesque l && numberesque r ->
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
+      | (_, l, r) ->
+        if not (valid_operand l) then
+          add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t l));
+        if not (valid_operand r) then
+          add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t r));
+        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
 
   (**
    * relational comparisons like <, >, <=, >=
@@ -5605,7 +5661,8 @@ struct
     | ReposUseT _
     | SealGenericT _
     | ResolveUnionT _
-    | EnumCastT _ ->
+    | EnumCastT _
+    | ArithT _ ->
       false
     | BecomeT { empty_success; _ } -> empty_success
     | _ -> true
@@ -5696,7 +5753,7 @@ struct
       match u with
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
-      | AdderT _
+      | ArithT _
       | EqT _
       | StrictEqT _
       | ComparatorT _
@@ -6035,7 +6092,7 @@ struct
     | UseT (_, OpenT (_, id)) -> any_prop_tvar cx id
     (* AnnotTs are 0->1, so there's no need to propagate any inside them *)
     | UseT (_, AnnotT _) -> true
-    | AdderT _
+    | ArithT _
     | AndT _
     | ArrRestT _
     | AssertIterableT _
@@ -7901,7 +7958,7 @@ struct
               | FunCall { local; _ }
               | FunCallMethod { local; _ } ->
                 local
-              | Addition _
+              | Arith _
               | AssignVar _
               | Coercion _
               | DeleteVar _

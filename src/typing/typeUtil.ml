@@ -53,7 +53,7 @@ and reason_of_defer_use_t = function
 
 and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
-  | AdderT (_, reason, _, _, _) -> reason
+  | ArithT { reason; _ } -> reason
   | AndT (reason, _, _) -> reason
   | ArrRestT (_, reason, _, _) -> reason
   | AssertArithmeticOperandT reason -> reason
@@ -219,7 +219,8 @@ and mod_reason_of_defer_use_t f = function
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
   | CheckUnusedPromiseT reason -> CheckUnusedPromiseT (f reason)
-  | AdderT (use_op, reason, flip, rt, lt) -> AdderT (use_op, f reason, flip, rt, lt)
+  | ArithT { use_op; reason; flip; rhs_t; result_t; kind } ->
+    ArithT { use_op; reason = f reason; flip; rhs_t; result_t; kind }
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
   | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
@@ -401,7 +402,8 @@ let rec util_use_op_of_use_t :
   | ConstructorT { use_op; reason; targs; args; tout; return_hint } ->
     util use_op (fun use_op -> ConstructorT { use_op; reason; targs; args; tout; return_hint })
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
-  | AdderT (op, d, f, l, r) -> util op (fun op -> AdderT (op, d, f, l, r))
+  | ArithT { use_op; reason; flip; rhs_t; result_t; kind } ->
+    util use_op (fun use_op -> ArithT { use_op; reason; flip; rhs_t; result_t; kind })
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
   | ToStringT (r, u2) -> nested_util u2 (fun u2 -> ToStringT (r, u2))
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
@@ -518,8 +520,8 @@ let rec mod_loc_of_virtual_use_op f =
     | InitField { op; body } -> InitField { op = mod_reason op; body = mod_reason body }
     | ObjectSpread { op } -> ObjectSpread { op = mod_reason op }
     | ObjectChain { op } -> ObjectChain { op = mod_reason op }
-    | Addition { op; left; right } ->
-      Addition { op = mod_reason op; left = mod_reason left; right = mod_reason right }
+    | Arith { op; left; right } ->
+      Arith { op = mod_reason op; left = mod_reason left; right = mod_reason right }
     | AssignVar { var; init } ->
       AssignVar { var = Base.Option.map ~f:mod_reason var; init = mod_reason init }
     | Cast { lower; upper } -> Cast { lower = mod_reason lower; upper = mod_reason upper }

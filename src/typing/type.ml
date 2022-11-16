@@ -277,7 +277,7 @@ module rec TypeTerm : sig
   and 'loc virtual_root_use_op =
     | ObjectSpread of { op: 'loc virtual_reason }
     | ObjectChain of { op: 'loc virtual_reason }
-    | Addition of {
+    | Arith of {
         op: 'loc virtual_reason;
         left: 'loc virtual_reason;
         right: 'loc virtual_reason;
@@ -526,8 +526,15 @@ module rec TypeTerm : sig
     | ImplementsT of use_op * t
     | MixinT of reason * t
     | ToStringT of reason * use_t
-    (* overloaded +, could be subsumed by general overloading *)
-    | AdderT of use_op * reason * bool * t * t
+    (* overloaded arithmetic operators *)
+    | ArithT of {
+        use_op: use_op;
+        reason: reason;
+        flip: bool;
+        rhs_t: t;
+        result_t: t;
+        kind: ArithKind.t;
+      }
     (* overloaded relational operator, could be subsumed by general
        overloading *)
     | ComparatorT of {
@@ -2625,6 +2632,34 @@ and React : sig
 end =
   React
 
+and ArithKind : sig
+  type t =
+    | Plus
+    | RShift3
+    | Other
+
+  val arith_kind_of_binary_operator : Flow_ast.Expression.Binary.operator -> t
+
+  val arith_kind_of_assignment_operator : Flow_ast.Expression.Assignment.operator -> t
+end = struct
+  open Flow_ast.Expression
+
+  type t =
+    | Plus
+    | RShift3
+    | Other
+
+  let arith_kind_of_binary_operator = function
+    | Binary.Plus -> Plus
+    | Binary.RShift3 -> RShift3
+    | _ -> Other
+
+  let arith_kind_of_assignment_operator = function
+    | Assignment.PlusAssign -> Plus
+    | Assignment.RShift3Assign -> RShift3
+    | _ -> Other
+end
+
 let unknown_use = TypeTerm.(Op UnknownUse)
 
 let name_of_propref = function
@@ -3391,7 +3426,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | InitField { op; _ }
   | ObjectSpread { op }
   | ObjectChain { op }
-  | Addition { op; _ }
+  | Arith { op; _ }
   | AssignVar { init = op; _ }
   | Cast { lower = op; _ }
   | ClassExtendsCheck { def = op; _ }
@@ -3526,7 +3561,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | InitField _ -> "InitField"
   | ObjectSpread _ -> "ObjectSpread"
   | ObjectChain _ -> "ObjectChain"
-  | Addition _ -> "Addition"
+  | Arith _ -> "Arith"
   | AssignVar _ -> "AssignVar"
   | Cast _ -> "Cast"
   | ClassExtendsCheck _ -> "ClassExtendsCheck"
@@ -3588,7 +3623,7 @@ let string_of_use_op_rec : use_op -> string =
 
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
-  | AdderT _ -> "AdderT"
+  | ArithT _ -> "ArithT"
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
   | AssertArithmeticOperandT _ -> "AssertArithmeticOperandT"
