@@ -5604,6 +5604,7 @@ struct
       in
       match (l, r) with
       | (DefT (_, _, StrT _), DefT (_, _, StrT _)) -> ()
+      | (DefT (_, _, BigIntT _), DefT (_, _, BigIntT _)) -> ()
       | (_, _) when numberesque l && numberesque r -> ()
       | (DefT (_, _, EmptyT), _)
       | (_, DefT (_, _, EmptyT)) ->
