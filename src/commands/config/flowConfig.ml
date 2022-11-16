@@ -117,6 +117,7 @@ module Opts = struct
     relay_integration_module_prefix_includes: string list;
     root_name: string option;
     run_post_inference_implicit_instantiation: bool;
+    saved_state_allow_reinit: bool option;
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_hash_table_pow: int;
     shm_heap_size: int;
@@ -241,6 +242,7 @@ module Opts = struct
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
       root_name = None;
       run_post_inference_implicit_instantiation = false;
+      saved_state_allow_reinit = None;
       saved_state_fetcher = Options.Dummy_fetcher;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
@@ -660,6 +662,9 @@ module Opts = struct
         Ok { opts with root_name = Some v }
     )
 
+  let saved_state_allow_reinit_parser =
+    boolean (fun opts v -> Ok { opts with saved_state_allow_reinit = Some v })
+
   let saved_state_fetcher_parser =
     enum
       [
@@ -828,6 +833,7 @@ module Opts = struct
         string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v })
       );
       ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
+      ("saved_state.allow_reinit", saved_state_allow_reinit_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = Some v }));
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
@@ -1522,6 +1528,8 @@ let root_name c = c.options.Opts.root_name
 
 let run_post_inference_implicit_instantiation c =
   c.options.Opts.run_post_inference_implicit_instantiation
+
+let saved_state_allow_reinit c = c.options.Opts.saved_state_allow_reinit
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 

@@ -79,7 +79,8 @@ let dummy_options_flags =
 
 let dummy_saved_state_flags =
   {
-    CommandUtils.Saved_state_flags.saved_state_fetcher = None;
+    CommandUtils.Saved_state_flags.saved_state_allow_reinit = None;
+    saved_state_fetcher = None;
     saved_state_force_recheck = false;
     saved_state_no_fallback = false;
     saved_state_skip_version_check = false;
