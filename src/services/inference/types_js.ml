@@ -2463,6 +2463,49 @@ let init ~profiling ~workers options =
   in
   Lwt.return (libs_ok, env, last_estimates)
 
+let reinit
+    ~profiling
+    ~workers
+    ~options
+    ~updates
+    ~files_to_force
+    ~recheck_reasons
+    ~will_be_checked_files
+    env =
+  let%lwt (env, libs_ok) =
+    match%lwt
+      if Options.saved_state_allow_reinit options then
+        load_saved_state ~profiling ~workers options
+      else
+        Lwt.return_none
+    with
+    | None ->
+      (* Either there is no saved state or we failed to load it for some reason *)
+
+      (* TODO: fully re-initializing from scratch doesn't make sense. instead, we should
+         recrawl to find the files that changed (since the file watcher can't tell us)
+         and recheck all of that.
+
+         for now, we exit and get restarted from scratch like we've done historically. *)
+      Exit.exit ~msg:"File watcher missed changes" Exit.File_watcher_missed_changes
+    | Some (saved_state, updates) ->
+      (* We loaded a saved state successfully! We are awesome! *)
+      Hh_logger.info "Reinitializing from saved state";
+      init_from_saved_state ~profiling ~workers ~saved_state ~updates ~env options
+  in
+  (* TODO: what do we do if they're not? exit? *)
+  ignore libs_ok;
+  recheck
+    ~profiling
+    ~options
+    ~workers
+    ~updates
+    ~files_to_force
+    ~changed_mergebase:None
+    ~recheck_reasons
+    ~will_be_checked_files
+    env
+
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in
   with_transaction "full check" (fun transaction reader ->

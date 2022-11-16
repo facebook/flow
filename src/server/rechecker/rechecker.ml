@@ -119,6 +119,42 @@ let send_end_recheck ~profiling ~options recheck_reasons env =
 
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up
 
+(** Reinitialize the server. This should be just like starting up a new server,
+    except that the existing server stays running and can answer requests
+    using committed data until the re-init is complete. *)
+let reinit
+    genv env ?(files_to_force = CheckedSet.empty) ~recheck_reasons ~will_be_checked_files updates =
+  let options = genv.ServerEnv.options in
+  let workers = genv.ServerEnv.workers in
+  let%lwt (profiling, (log_recheck_event, recheck_stats, env)) =
+    let should_print_summary = Options.should_profile options in
+    Profiling_js.with_profiling_lwt ~label:"Reinit" ~should_print_summary (fun profiling ->
+        send_start_recheck env;
+        let%lwt (log_recheck_event, recheck_stats, env) =
+          Types_js.reinit
+            ~profiling
+            ~workers
+            ~options
+            ~updates
+            ~files_to_force
+            ~recheck_reasons
+            ~will_be_checked_files
+            env
+        in
+        send_end_recheck ~profiling ~options recheck_reasons env;
+        Lwt.return (log_recheck_event, recheck_stats, env)
+    )
+  in
+  let%lwt () = log_recheck_event ~profiling in
+
+  let event =
+    let duration = Profiling_js.get_profiling_duration profiling in
+    LspProt.Recheck_summary { duration; stats = recheck_stats }
+  in
+  MonitorRPC.send_telemetry event;
+
+  Lwt.return (profiling, env)
+
 (* on notification, execute client commands or recheck files *)
 let recheck
     genv
@@ -128,9 +164,6 @@ let recheck
     ~recheck_reasons
     ~will_be_checked_files
     updates =
-  (* Caller should have already checked this *)
-  assert (not (CheckedSet.is_empty updates && CheckedSet.is_empty files_to_force));
-
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
   let%lwt (profiling, (log_recheck_event, recheck_stats, env)) =
@@ -216,13 +249,6 @@ type recheck_outcome =
       recheck_count: int;
     }
 
-(** Determines whether the file watcher missed changes, and if so, whether we can figure
-    out what changed. Returns true if we _cannot_ tell what changed -- this is fatal. *)
-let file_watcher_fatally_missed_changes ~missed_changes ~changed_mergebase =
-  match (missed_changes, changed_mergebase) with
-  | (true, Some true) -> true
-  | _ -> false
-
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
  * to include the new changes
@@ -246,6 +272,25 @@ let rec recheck_single ~recheck_count genv env =
   let (priority, workload) =
     ServerMonitorListenerState.get_and_clear_recheck_workload ~process_updates ~get_forced
   in
+  (* When watchman restarts, we miss any filesystem changes that might happen while it's
+     down. Likewise, if so many files change that Watchman's underlying file watchers
+     can't keep up, it acts like it restarted.
+
+     This is signaled by [missed_changes = true].
+
+     To re-synchronize, we need to recheck all of the files that could have changed
+     while it wasn't watching:
+
+       1) a file that was previously unchanged is now changed
+       2) a changed file changed again
+       3) a previously changed file was reverted
+       4) the mergebase changed, changing some committed files
+
+     The changes since mergebase are included in files_to_recheck, which tells us about
+     (1) and (2). To handle (3), we recheck all focused (i.e. previously changed) files.
+     But we can't incrementally handle (4): watchman can't tell us all the files that
+     changed between the two mergebase commits (`hg` can, but it's not worth implementing
+     this). To handle (4) we reinitialize when we missed a mergebase change. *)
   let {
     ServerMonitorListenerState.metadata = { MonitorProt.changed_mergebase; missed_changes };
     files_to_recheck;
@@ -255,25 +300,25 @@ let rec recheck_single ~recheck_count genv env =
   } =
     workload
   in
-
-  ( if file_watcher_fatally_missed_changes ~missed_changes ~changed_mergebase then
-    let () = WorkerController.killall () in
-    Exit.exit ~msg:"File watcher missed changes" Exit.File_watcher_missed_changes
-  );
-
+  let did_change_mergebase = Base.Option.value ~default:false changed_mergebase in
   let files_to_recheck =
     CheckedSet.add ~focused:files_to_recheck ~dependencies:files_to_prioritize CheckedSet.empty
   in
   let files_to_recheck =
-    if missed_changes then
+    if missed_changes && not did_change_mergebase then
       (* If the file watcher missed some changes, it's possible that previously-modified
          files have been reverted when it wasn't watching. Since previously-modified
-         files are focused, we recheck all focused files. *)
+         files are focused, we recheck all focused files. However, if the mergebase
+         changed, then we're going to re-init instead. *)
       CheckedSet.add ~focused:(CheckedSet.focused env.checked_files) files_to_recheck
     else
       files_to_recheck
   in
-  if CheckedSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then
+  if
+    (not did_change_mergebase)
+    && CheckedSet.is_empty files_to_recheck
+    && CheckedSet.is_empty files_to_force
+  then
     Lwt.return (Nothing_to_do env)
   else
     (* Start the parallelizable workloads loop and return a function which will stop the loop *)
@@ -298,14 +343,17 @@ let rec recheck_single ~recheck_count genv env =
       let recheck_reasons = List.rev recheck_reasons_rev in
       let%lwt (profiling, env) =
         try%lwt
-          recheck
-            genv
-            env
-            ~files_to_force
-            ~changed_mergebase
-            ~recheck_reasons
-            ~will_be_checked_files
-            files_to_recheck
+          if missed_changes && did_change_mergebase then
+            reinit genv env ~files_to_force ~recheck_reasons ~will_be_checked_files files_to_recheck
+          else
+            recheck
+              genv
+              env
+              ~files_to_force
+              ~changed_mergebase
+              ~recheck_reasons
+              ~will_be_checked_files
+              files_to_recheck
         with
         | exn ->
           let exn = Exception.wrap exn in
