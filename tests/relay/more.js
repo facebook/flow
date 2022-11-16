@@ -7,6 +7,8 @@
  * Misc Relay types              *
  *********************************/
 
+// https://github.com/prettier/prettier/issues/13848
+// prettier-ignore
 declare opaque type FragmentTypeof;
 declare opaque type FragmentReference<T: FragmentTypeof>;
 declare opaque type BadFragmentReference<T>;
