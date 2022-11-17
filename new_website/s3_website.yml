@@ -1,0 +1,15 @@
+s3_id: <%= ENV['AWS_ACCESS_KEY_ID'] %>
+s3_secret: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
+s3_bucket: <%= ENV['S3_BUCKET_NEW_WEBSITE'] %>
+
+exclude_from_upload:
+  - .git
+  - .hg
+
+cloudfront_distribution_id: <%= ENV['CLOUDFRONT_ID'] %>
+cloudfront_invalidate_root: true
+cloudfront_wildcard_invalidation: true
+
+ignore_on_server:
+  - static/flow/v.*
+  - static/flow/master
