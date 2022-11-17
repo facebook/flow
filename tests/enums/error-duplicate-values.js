@@ -34,3 +34,9 @@ enum I {
   B = 9007199254740992,
   C = 9007199254740993, // Error: duplicate member initializer
 }
+
+enum J of bigint {
+  // Since we only support bigint literals up to 64 bits, both below values are the same
+  A = 10000000000000000000n,
+  B = 100000000000000000000n, // Error: duplicate member initializer
+}

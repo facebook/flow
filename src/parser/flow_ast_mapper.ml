@@ -779,6 +779,8 @@ class ['loc] mapper =
         id this#enum_string_body string_body body (fun body -> (loc, StringBody body))
       | (loc, SymbolBody symbol_body) ->
         id this#enum_symbol_body symbol_body body (fun body -> (loc, SymbolBody body))
+      | (loc, BigIntBody bigint_body) ->
+        id this#enum_bigint_body bigint_body body (fun body -> (loc, BigIntBody body))
 
     method enum_boolean_body (body : 'loc Ast.Statement.EnumDeclaration.BooleanBody.t) =
       let open Ast.Statement.EnumDeclaration.BooleanBody in
@@ -824,6 +826,16 @@ class ['loc] mapper =
       else
         { body with members = members'; comments = comments' }
 
+    method enum_bigint_body (body : 'loc Ast.Statement.EnumDeclaration.BigIntBody.t) =
+      let open Ast.Statement.EnumDeclaration.BigIntBody in
+      let { members; explicit_type = _; has_unknown_members = _; comments } = body in
+      let members' = map_list this#enum_bigint_member members in
+      let comments' = this#syntax_opt comments in
+      if members == members' && comments == comments' then
+        body
+      else
+        { body with members = members'; comments = comments' }
+
     method enum_defaulted_member (member : 'loc Ast.Statement.EnumDeclaration.DefaultedMember.t) =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
       let (loc, { id = ident }) = member in
@@ -858,6 +870,17 @@ class ['loc] mapper =
 
     method enum_string_member
         (member : ('loc Ast.StringLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t)
+        =
+      let open Ast.Statement.EnumDeclaration.InitializedMember in
+      let (loc, { id = ident; init }) = member in
+      let id' = this#enum_member_identifier ident in
+      if ident == id' then
+        member
+      else
+        (loc, { id = id'; init })
+
+    method enum_bigint_member
+        (member : ('loc Ast.BigIntLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t)
         =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in

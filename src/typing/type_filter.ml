@@ -100,6 +100,7 @@ let rec not_exists t =
         | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | SingletonNumT _
         | NumT (Literal _ | Truthy)
         | EnumT { representation_t = DefT (_, _, NumT Truthy); _ }
+        | EnumT { representation_t = DefT (_, _, BigIntT Truthy); _ }
         | MixedT Mixed_truthy )
       ) ->
     DefT (r, trust, EmptyT)
@@ -382,13 +383,17 @@ let bigint loc t =
   | AnyT _
   | DefT (_, _, MixedT _) ->
     DefT (mk_reason RBigInt loc, bogus_trust (), BigIntT AnyLiteral)
-  | DefT (_, _, BigIntT _) -> t
+  | DefT (_, _, BigIntT _)
+  | DefT (_, _, EnumT { representation_t = DefT (_, _, BigIntT _); _ }) ->
+    t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
 let not_bigint t =
   match t with
-  | DefT (_, trust, BigIntT _) -> DefT (reason_of_t t, trust, EmptyT)
+  | DefT (_, trust, EnumT { representation_t = DefT (_, _, BigIntT _); _ })
+  | DefT (_, trust, BigIntT _) ->
+    DefT (reason_of_t t, trust, EmptyT)
   | _ -> t
 
 let object_ cx t =

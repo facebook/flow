@@ -221,6 +221,14 @@ let merge_enum file reason id_loc rep members has_unknown_members =
       in
       rep_t Reason.RString (StrT lit)
     | SymbolRep -> rep_t Reason.RSymbol SymbolT
+    | BigIntRep { truthy } ->
+      let lit =
+        if truthy then
+          Truthy
+        else
+          AnyLiteral
+      in
+      rep_t Reason.RBigInt (BigIntT lit)
   in
   let enum_id = Context.make_aloc_id file.cx id_loc in
   Type.(

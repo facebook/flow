@@ -1066,6 +1066,24 @@ References:
             ^ [2]
 
 
+Error ----------------------------------------------------------------------------------- error-duplicate-values.js:41:7
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `J` [2]. [duplicate-enum-init]
+
+   error-duplicate-values.js:41:7
+   41|   B = 100000000000000000000n, // Error: duplicate member initializer
+             ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   error-duplicate-values.js:40:3
+   40|   A = 10000000000000000000n,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error-duplicate-values.js:38:6
+   38| enum J of bigint {
+            ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- error-modification.js:9:1
 
 Cannot change member of enum `E` [1] because enums are frozen. [cannot-write-enum]
@@ -3419,6 +3437,317 @@ References:
                             ^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- refinement.js:361:4
+
+Cannot cast `bigVoidable` to `Big` because undefined [1] is incompatible with `Big` [2]. [incompatible-cast]
+
+   refinement.js:361:4
+   361|   (bigVoidable: Big); // Error
+           ^^^^^^^^^^^
+
+References:
+   refinement.js:357:26
+   357| declare var bigVoidable: void | Big;
+                                 ^^^^ [1]
+   refinement.js:361:17
+   361|   (bigVoidable: Big); // Error
+                        ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:365:4
+
+Cannot cast `bigVoidable` to undefined because `Big` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   refinement.js:365:4
+   365|   (bigVoidable: void); // Error
+           ^^^^^^^^^^^
+
+References:
+   refinement.js:357:33
+   357| declare var bigVoidable: void | Big;
+                                        ^^^ [1]
+   refinement.js:365:17
+   365|   (bigVoidable: void); // Error
+                        ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:370:4
+
+Cannot cast `bigVoidable` to undefined because `Big` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   refinement.js:370:4
+   370|   (bigVoidable: void); // Error
+           ^^^^^^^^^^^
+
+References:
+   refinement.js:357:33
+   357| declare var bigVoidable: void | Big;
+                                        ^^^ [1]
+   refinement.js:370:17
+   370|   (bigVoidable: void); // Error
+                        ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:376:4
+
+Cannot cast `bigVoidable` to `Big` because undefined [1] is incompatible with `Big` [2]. [incompatible-cast]
+
+   refinement.js:376:4
+   376|   (bigVoidable: Big); // Error
+           ^^^^^^^^^^^
+
+References:
+   refinement.js:357:26
+   357| declare var bigVoidable: void | Big;
+                                 ^^^^ [1]
+   refinement.js:376:17
+   376|   (bigVoidable: Big); // Error
+                        ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:383:4
+
+Cannot cast `bigMaybe` to `Big` because null or undefined [1] is incompatible with `Big` [2]. [incompatible-cast]
+
+   refinement.js:383:4
+   383|   (bigMaybe: Big); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:379:23
+   379| declare var bigMaybe: ?Big;
+                              ^^^^ [1]
+   refinement.js:383:14
+   383|   (bigMaybe: Big); // Error
+                     ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:387:4
+
+Cannot cast `bigMaybe` to null because `Big` [1] is incompatible with null [2]. [incompatible-cast]
+
+   refinement.js:387:4
+   387|   (bigMaybe: null); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:379:24
+   379| declare var bigMaybe: ?Big;
+                               ^^^ [1]
+   refinement.js:387:14
+   387|   (bigMaybe: null); // Error
+                     ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:388:4
+
+Cannot cast `bigMaybe` to undefined because `Big` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   refinement.js:388:4
+   388|   (bigMaybe: void); // Error
+           ^^^^^^^^
+
+References:
+   refinement.js:379:24
+   379| declare var bigMaybe: ?Big;
+                               ^^^ [1]
+   refinement.js:388:14
+   388|   (bigMaybe: void); // Error
+                     ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:395:4
+
+Cannot cast `bigBigintVoid` to undefined because `Big` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   refinement.js:395:4
+   395|   (bigBigintVoid: void); // Error
+           ^^^^^^^^^^^^^
+
+References:
+   refinement.js:392:28
+   392| declare var bigBigintVoid: Big | bigint | void;
+                                   ^^^ [1]
+   refinement.js:395:19
+   395|   (bigBigintVoid: void); // Error
+                          ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:395:4
+
+Cannot cast `bigBigintVoid` to undefined because bigint [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   refinement.js:395:4
+   395|   (bigBigintVoid: void); // Error
+           ^^^^^^^^^^^^^
+
+References:
+   refinement.js:392:34
+   392| declare var bigBigintVoid: Big | bigint | void;
+                                         ^^^^^^ [1]
+   refinement.js:395:19
+   395|   (bigBigintVoid: void); // Error
+                          ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:397:4
+
+Cannot cast `bigBigintVoid` to `Big` because bigint [1] is incompatible with `Big` [2]. [incompatible-cast]
+
+   refinement.js:397:4
+   397|   (bigBigintVoid: Big); // Error
+           ^^^^^^^^^^^^^
+
+References:
+   refinement.js:392:34
+   392| declare var bigBigintVoid: Big | bigint | void;
+                                         ^^^^^^ [1]
+   refinement.js:397:19
+   397|   (bigBigintVoid: Big); // Error
+                          ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:403:4
+
+Cannot cast `bigBigintVoid` to bigint because undefined [1] is incompatible with bigint [2]. [incompatible-cast]
+
+   refinement.js:403:4
+   403|   (bigBigintVoid: bigint); // Error
+           ^^^^^^^^^^^^^
+
+References:
+   refinement.js:392:43
+   392| declare var bigBigintVoid: Big | bigint | void;
+                                                  ^^^^ [1]
+   refinement.js:403:19
+   403|   (bigBigintVoid: bigint); // Error
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:404:4
+
+Cannot cast `bigBigintVoid` to `Big` because undefined [1] is incompatible with `Big` [2]. [incompatible-cast]
+
+   refinement.js:404:4
+   404|   (bigBigintVoid: Big); // Error
+           ^^^^^^^^^^^^^
+
+References:
+   refinement.js:392:43
+   392| declare var bigBigintVoid: Big | bigint | void;
+                                                  ^^^^ [1]
+   refinement.js:404:19
+   404|   (bigBigintVoid: Big); // Error
+                          ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:405:4
+
+Cannot cast `bigBigintVoid` to union type because: [incompatible-cast]
+ - Either undefined [1] is incompatible with `Big` [2].
+ - Or undefined [1] is incompatible with bigint [3].
+
+   refinement.js:405:4
+   405|   (bigBigintVoid: Big | bigint); // Error
+           ^^^^^^^^^^^^^
+
+References:
+   refinement.js:392:43
+   392| declare var bigBigintVoid: Big | bigint | void;
+                                                  ^^^^ [1]
+   refinement.js:405:19
+   405|   (bigBigintVoid: Big | bigint); // Error
+                          ^^^ [2]
+   refinement.js:405:25
+   405|   (bigBigintVoid: Big | bigint); // Error
+                                ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:409:4
+
+Cannot cast `bigVoidable` to undefined because `Big` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   refinement.js:409:4
+   409|   (bigVoidable: void); // Error
+           ^^^^^^^^^^^
+
+References:
+   refinement.js:357:33
+   357| declare var bigVoidable: void | Big;
+                                        ^^^ [1]
+   refinement.js:409:17
+   409|   (bigVoidable: void); // Error
+                        ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:415:4
+
+Cannot cast `bigVoidable` to `Big` because undefined [1] is incompatible with `Big` [2]. [incompatible-cast]
+
+   refinement.js:415:4
+   415|   (bigVoidable: Big); // Error
+           ^^^^^^^^^^^
+
+References:
+   refinement.js:357:26
+   357| declare var bigVoidable: void | Big;
+                                 ^^^^ [1]
+   refinement.js:415:17
+   415|   (bigVoidable: Big); // Error
+                        ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:416:4
+
+Cannot cast `bigVoidable` to undefined because `Big` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   refinement.js:416:4
+   416|   (bigVoidable: void); // Error
+           ^^^^^^^^^^^
+
+References:
+   refinement.js:357:33
+   357| declare var bigVoidable: void | Big;
+                                        ^^^ [1]
+   refinement.js:416:17
+   416|   (bigVoidable: void); // Error
+                        ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:426:4
+
+Cannot cast `bigTruthy` to undefined because `BigTruthy` [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   refinement.js:426:4
+   426|   (bigTruthy: void); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:423:24
+   423| declare var bigTruthy: BigTruthy | void;
+                               ^^^^^^^^^ [1]
+   refinement.js:426:15
+   426|   (bigTruthy: void); // Error
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:432:4
+
+Cannot cast `bigTruthy` to `BigTruthy` because undefined [1] is incompatible with `BigTruthy` [2]. [incompatible-cast]
+
+   refinement.js:432:4
+   432|   (bigTruthy: BigTruthy); // Error
+           ^^^^^^^^^
+
+References:
+   refinement.js:423:36
+   423| declare var bigTruthy: BigTruthy | void;
+                                           ^^^^ [1]
+   refinement.js:432:15
+   432|   (bigTruthy: BigTruthy); // Error
+                      ^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- spread.js:8:15
 
 Cannot spread object literal because enum `E` [1] is not an object. [not-an-object]
@@ -3614,7 +3943,7 @@ References:
 
 
 
-Found 217 errors
+Found 236 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

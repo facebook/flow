@@ -437,6 +437,8 @@ module rec Parse : PARSER = struct
 
   and number = Expression.number
 
+  and bigint = Expression.bigint
+
   and identifier_with_type =
     let with_loc_helper no_optional restricted_error env =
       let name = identifier ~restricted_error env in

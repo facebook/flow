@@ -584,7 +584,8 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
         Base.List.iter members ~f:defaulted_member
       | StringBody StringBody.{ members = Initialized members; _ } ->
         Base.List.iter members ~f:initialized_member
-      | SymbolBody SymbolBody.{ members; _ } -> Base.List.iter members ~f:defaulted_member);
+      | SymbolBody SymbolBody.{ members; _ } -> Base.List.iter members ~f:defaulted_member
+      | BigIntBody BigIntBody.{ members; _ } -> Base.List.iter members ~f:initialized_member);
       super#enum_declaration enum
   end
 

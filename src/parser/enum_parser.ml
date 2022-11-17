@@ -20,6 +20,7 @@ end = struct
     boolean_members: (Loc.t BooleanLiteral.t, Loc.t) InitializedMember.t list;
     number_members: (Loc.t NumberLiteral.t, Loc.t) InitializedMember.t list;
     string_members: (Loc.t StringLiteral.t, Loc.t) InitializedMember.t list;
+    bigint_members: (Loc.t BigIntLiteral.t, Loc.t) InitializedMember.t list;
     defaulted_members: Loc.t DefaultedMember.t list;
   }
 
@@ -36,9 +37,16 @@ end = struct
     | BooleanInit of Loc.t * Loc.t BooleanLiteral.t
     | NumberInit of Loc.t * Loc.t NumberLiteral.t
     | StringInit of Loc.t * Loc.t StringLiteral.t
+    | BigIntInit of Loc.t * Loc.t BigIntLiteral.t
 
   let empty_members =
-    { boolean_members = []; number_members = []; string_members = []; defaulted_members = [] }
+    {
+      boolean_members = [];
+      number_members = [];
+      string_members = [];
+      bigint_members = [];
+      defaulted_members = [];
+    }
 
   let empty_acc =
     {
@@ -97,6 +105,20 @@ end = struct
           ( loc,
             {
               BooleanLiteral.value = token = T_TRUE;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            }
+          )
+      else
+        InvalidInit loc
+    | T_BIGINT { kind; raw } ->
+      let value = Parse.bigint env kind raw in
+      let trailing = Eat.trailing_comments env in
+      if end_of_member_init env then
+        BigIntInit
+          ( loc,
+            {
+              BigIntLiteral.value;
+              raw;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             }
           )
@@ -163,6 +185,10 @@ end = struct
         check_explicit_type_mismatch Enum_common.String loc;
         let member = (member_loc, { InitializedMember.id; init = (loc, value) }) in
         { acc with members = { members with string_members = member :: members.string_members } }
+      | BigIntInit (loc, value) ->
+        check_explicit_type_mismatch Enum_common.BigInt loc;
+        let member = (member_loc, { InitializedMember.id; init = (loc, value) }) in
+        { acc with members = { members with bigint_members = member :: members.bigint_members } }
       | InvalidInit loc ->
         error_at
           env
@@ -180,6 +206,11 @@ end = struct
             error_at
               env
               (member_loc, Parse_error.EnumNumberMemberNotInitialized { enum_name; member_name });
+            acc
+          | Some Enum_common.BigInt ->
+            error_at
+              env
+              (member_loc, Parse_error.EnumBigIntMemberNotInitialized { enum_name; member_name });
             acc
           | Some Enum_common.String
           | Some Enum_common.Symbol
@@ -200,6 +231,7 @@ end = struct
           boolean_members = List.rev acc.members.boolean_members;
           number_members = List.rev acc.members.number_members;
           string_members = List.rev acc.members.string_members;
+          bigint_members = List.rev acc.members.bigint_members;
           defaulted_members = List.rev acc.members.defaulted_members;
         },
         acc.has_unknown_members,
@@ -291,6 +323,7 @@ end = struct
         | T_NUMBER_TYPE -> Some Enum_common.Number
         | T_STRING_TYPE -> Some Enum_common.String
         | T_SYMBOL_TYPE -> Some Enum_common.Symbol
+        | T_BIGINT_TYPE -> Some Enum_common.BigInt
         | T_IDENTIFIER { value; _ } ->
           let supplied_type = Some value in
           error env (Parse_error.EnumInvalidExplicitType { enum_name; supplied_type });
@@ -361,6 +394,14 @@ end = struct
           | Some Enum_common.Symbol ->
             SymbolBody
               { SymbolBody.members = members.defaulted_members; has_unknown_members; comments }
+          | Some Enum_common.BigInt ->
+            BigIntBody
+              {
+                BigIntBody.members = members.bigint_members;
+                explicit_type = true;
+                has_unknown_members;
+                comments;
+              }
           | None ->
             let bools_len = List.length members.boolean_members in
             let nums_len = List.length members.number_members in

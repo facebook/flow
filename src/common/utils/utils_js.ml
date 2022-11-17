@@ -294,6 +294,17 @@ module NumberMap = Flow_map.Make (struct
   let compare = Base.Float.compare
 end)
 
+module BigIntOptionMap = Flow_map.Make (struct
+  type t = int64 option
+
+  let compare x y =
+    match (x, y) with
+    | (Some x, Some y) -> Int64.compare x y
+    | (Some _, None) -> 1
+    | (None, Some _) -> -1
+    | (None, None) -> 0
+end)
+
 let in_flow_test =
   match Sys.getenv_opt "IN_FLOW_TEST" with
   | Some "1"

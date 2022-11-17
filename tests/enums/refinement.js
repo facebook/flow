@@ -345,3 +345,89 @@ if (sTruthy) { } // Valid
 if (!sTruthy) { } // Valid
 
 // flowlint sketchy-null:off
+
+////////////
+// bigint //
+////////////
+enum Big of bigint {
+  A = 0n,
+  B = 1n,
+}
+
+declare var bigVoidable: void | Big;
+
+if (typeof bigVoidable === "undefined") {
+  (bigVoidable: void); // Valid
+  (bigVoidable: Big); // Error
+}
+
+if (typeof bigVoidable !== "undefined") {
+  (bigVoidable: void); // Error
+  (bigVoidable: Big); // Valid
+}
+
+if (typeof bigVoidable === "bigint") {
+  (bigVoidable: void); // Error
+  (bigVoidable: Big); // Valid
+}
+
+if (typeof bigVoidable !== "bigint") {
+  (bigVoidable: void); // Valid
+  (bigVoidable: Big); // Error
+}
+
+declare var bigMaybe: ?Big;
+
+if (bigMaybe == null) {
+  (bigMaybe: null | void); // Valid
+  (bigMaybe: Big); // Error
+}
+
+if (bigMaybe != null) {
+  (bigMaybe: null); // Error
+  (bigMaybe: void); // Error
+  (bigMaybe: Big); // Valid
+}
+
+declare var bigBigintVoid: Big | bigint | void;
+
+if (typeof bigBigintVoid === "bigint") {
+  (bigBigintVoid: void); // Error
+  (bigBigintVoid: bigint); // Valid
+  (bigBigintVoid: Big); // Error
+  (bigBigintVoid: Big | bigint); // Valid
+}
+
+if (typeof bigBigintVoid !== "bigint") {
+  (bigBigintVoid: void); // Valid
+  (bigBigintVoid: bigint); // Error
+  (bigBigintVoid: Big); // Error
+  (bigBigintVoid: Big | bigint); // Error
+}
+
+if (bigVoidable) {
+  (bigVoidable: void); // Error
+  (bigVoidable: Big); // Valid
+}
+
+if (!bigVoidable) {
+  (bigVoidable: void | Big); // Valid
+  (bigVoidable: Big); // Error
+  (bigVoidable: void); // Error
+}
+
+enum BigTruthy {
+  A = 1n,
+  B = 2n,
+}
+declare var bigTruthy: BigTruthy | void;
+
+if (bigTruthy) {
+  (bigTruthy: void); // Error
+  (bigTruthy: BigTruthy); // Valid
+}
+
+if (!bigTruthy) {
+  (bigTruthy: void); // Valid
+  (bigTruthy: BigTruthy); // Error
+}

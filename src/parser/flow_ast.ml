@@ -774,6 +774,16 @@ and Statement : sig
       [@@deriving show]
     end
 
+    module BigIntBody : sig
+      type 'M t = {
+        members: ('M BigIntLiteral.t, 'M) InitializedMember.t list;
+        explicit_type: bool;
+        has_unknown_members: bool;
+        comments: ('M, 'M Comment.t list) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       body: 'M body;
@@ -787,6 +797,7 @@ and Statement : sig
       | NumberBody of 'M NumberBody.t
       | StringBody of 'M StringBody.t
       | SymbolBody of 'M SymbolBody.t
+      | BigIntBody of 'M BigIntBody.t
     [@@deriving show]
   end
 

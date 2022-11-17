@@ -2301,6 +2301,10 @@ and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; comments
       (_, { InitializedMember.id; init = (loc, { Ast.StringLiteral.raw; comments; _ }) }) =
     initialized_member id (layout_node_with_comments_opt loc comments (Atom raw))
   in
+  let bigint_member
+      (_, { InitializedMember.id; init = (loc, { Ast.BigIntLiteral.raw; comments; _ }) }) =
+    initialized_member id (layout_node_with_comments_opt loc comments (Atom raw))
+  in
   let unknown_members has_unknown_members =
     if has_unknown_members then
       [Atom "..."]
@@ -2364,6 +2368,17 @@ and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; comments
           layout_node_with_comments_opt loc comments
           @@ wrap_body
           @@ Base.List.map ~f:defaulted_member members
+          @ enum_internal_comments comments
+          @ unknown_members has_unknown_members;
+        ]
+    | (loc, BigIntBody { BigIntBody.members; explicit_type; has_unknown_members; comments }) ->
+      fuse
+        [
+          representation_type "bigint" explicit_type;
+          pretty_space;
+          layout_node_with_comments_opt loc comments
+          @@ wrap_body
+          @@ Base.List.map ~f:bigint_member members
           @ enum_internal_comments comments
           @ unknown_members has_unknown_members;
         ]

@@ -3944,9 +3944,17 @@ let enum_decl =
     else
       truthy
   in
+  let bigint_rep truthy init =
+    let (_, { Ast.BigIntLiteral.value; _ }) = init in
+    if value = Some 0L then
+      false
+    else
+      truthy
+  in
   let boolean_member = initialized_member boolean_rep in
   let string_member = initialized_member string_rep in
   let number_member = initialized_member number_rep in
+  let bigint_member = initialized_member bigint_rep in
   let defaulted_members tbls = List.fold_left (defaulted_member tbls) SMap.empty in
   let initialized_members tbls f rep = List.fold_left (f tbls) (rep, SMap.empty) in
   let string_enum_def tbls has_unknown_members = function
@@ -3969,6 +3977,9 @@ let enum_decl =
     | E.SymbolBody { E.SymbolBody.members; has_unknown_members; _ } ->
       let members = defaulted_members tbls members in
       (SymbolRep, members, has_unknown_members)
+    | E.BigIntBody { E.BigIntBody.members; has_unknown_members; _ } ->
+      let (truthy, members) = initialized_members tbls bigint_member true members in
+      (BigIntRep { truthy }, members, has_unknown_members)
   in
   fun opts scope tbls decl ->
     let { E.id; body = (_, body); comments = _ } = decl in

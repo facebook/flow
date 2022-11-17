@@ -10,6 +10,7 @@ type explicit_type =
   | Number
   | String
   | Symbol
+  | BigInt
 [@@deriving ord]
 
 let string_of_explicit_type = function
@@ -17,3 +18,4 @@ let string_of_explicit_type = function
   | Number -> "number"
   | String -> "string"
   | Symbol -> "symbol"
+  | BigInt -> "bigint"

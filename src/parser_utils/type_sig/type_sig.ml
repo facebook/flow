@@ -228,6 +228,7 @@ type enum_rep =
   | NumberRep of { truthy: bool }
   | StringRep of { truthy: bool }
   | SymbolRep
+  | BigIntRep of { truthy: bool }
 [@@deriving iter, map, show { with_path = false }]
 
 (* Definitions represent the structure of things which can be found when

@@ -172,6 +172,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method enum_symbol_body :
       'M Ast.Statement.EnumDeclaration.SymbolBody.t -> 'N Ast.Statement.EnumDeclaration.SymbolBody.t
 
+    method enum_bigint_body :
+      'M Ast.Statement.EnumDeclaration.BigIntBody.t -> 'N Ast.Statement.EnumDeclaration.BigIntBody.t
+
     method enum_defaulted_member :
       'M Ast.Statement.EnumDeclaration.DefaultedMember.t ->
       'N Ast.Statement.EnumDeclaration.DefaultedMember.t
@@ -187,6 +190,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method enum_string_member :
       ('M Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
       ('N Ast.StringLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
+
+    method enum_bigint_member :
+      ('M Ast.BigIntLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+      ('N Ast.BigIntLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
 
     method enum_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 

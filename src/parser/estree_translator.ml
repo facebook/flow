@@ -1109,6 +1109,21 @@ with type t = Impl.t = struct
             );
             ("hasUnknownMembers", bool has_unknown_members);
           ]
+      | (loc, BigIntBody { BigIntBody.members; explicit_type; has_unknown_members; comments }) ->
+        node
+          ?comments:(format_internal_comments comments)
+          "EnumBigIntBody"
+          loc
+          [
+            ( "members",
+              array_of_list
+                (fun (loc, { InitializedMember.id; init }) ->
+                  node "EnumBigIntMember" loc [("id", identifier id); ("init", bigint_literal init)])
+                members
+            );
+            ("explicitType", bool explicit_type);
+            ("hasUnknownMembers", bool has_unknown_members);
+          ]
     and enum_declaration (loc, { Statement.EnumDeclaration.id; body; comments }) =
       node ?comments "EnumDeclaration" loc [("id", identifier id); ("body", enum_body body)]
     and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends; comments }) =
