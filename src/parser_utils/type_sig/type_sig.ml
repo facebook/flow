@@ -45,15 +45,18 @@ type ('key, 'loc, 'a) predicate =
   | SingletonStrP of 'key * 'loc * bool * string
   | SingletonBoolP of 'key * 'loc * bool
   | SingletonNumP of 'key * 'loc * bool * float * string
+  | SingletonBigIntP of 'key * 'loc * bool * int64 option * string
   | BoolP of 'key * 'loc
   | FunP of 'key
   | NumP of 'key * 'loc
+  | BigIntP of 'key * 'loc
   | ObjP of 'key
   | StrP of 'key * 'loc
   | SymbolP of 'key * 'loc
   | VoidP of 'key
   | SentinelStrP of 'key * string * 'loc * string
   | SentinelNumP of 'key * string * 'loc * float * string
+  | SentinelBigIntP of 'key * string * 'loc * int64 option * string
   | SentinelBoolP of 'key * string * 'loc * bool
   | SentinelNullP of 'key * string * 'loc
   | SentinelVoidP of 'key * string * 'loc
@@ -348,6 +351,8 @@ type ('loc, 'a) value =
   | LongStringLit of 'loc
   | NumberVal of 'loc
   | NumberLit of 'loc * float * string
+  | BigIntVal of 'loc
+  | BigIntLit of 'loc * int64 option * string
   | BooleanVal of 'loc
   | BooleanLit of 'loc * bool
   | NullLit of 'loc
@@ -406,7 +411,7 @@ type ('loc, 'a) annot =
   | ReadOnlyArray of 'loc * 'a
   | SingletonString of 'loc * string
   | SingletonNumber of 'loc * float * string
-  | SingletonBigInt of 'loc * string
+  | SingletonBigInt of 'loc * int64 option * string
   | SingletonBoolean of 'loc * bool
   | Typeof of {
       loc: 'loc;
