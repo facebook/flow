@@ -7317,6 +7317,8 @@ module Make
             update_excuses (fun excuse -> { excuse with bool_loc = Some right_loc })
           | Ast.Literal.Number 0. ->
             update_excuses (fun excuse -> { excuse with number_loc = Some right_loc })
+          | Ast.Literal.BigInt (Some 0L) ->
+            update_excuses (fun excuse -> { excuse with bigint_loc = Some right_loc })
           (* There's no valid default value for mixed to create an excuse. *)
           | _ -> ()
         end

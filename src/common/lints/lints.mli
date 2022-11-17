@@ -9,10 +9,12 @@ type sketchy_null_kind =
   | SketchyNullBool
   | SketchyNullString
   | SketchyNullNumber
+  | SketchyNullBigInt
   | SketchyNullMixed
   | SketchyNullEnumBool
   | SketchyNullEnumString
   | SketchyNullEnumNumber
+  | SketchyNullEnumBigInt
 
 type sketchy_number_kind = SketchyNumberAnd
 

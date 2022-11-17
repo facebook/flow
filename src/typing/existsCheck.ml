@@ -10,10 +10,12 @@ type t = {
   bool_loc: ALoc.t option;
   string_loc: ALoc.t option;
   number_loc: ALoc.t option;
+  bigint_loc: ALoc.t option;
   mixed_loc: ALoc.t option;
   enum_bool_loc: ALoc.t option;
   enum_string_loc: ALoc.t option;
   enum_number_loc: ALoc.t option;
+  enum_bigint_loc: ALoc.t option;
 }
 
 let empty =
@@ -22,10 +24,12 @@ let empty =
     bool_loc = None;
     string_loc = None;
     number_loc = None;
+    bigint_loc = None;
     mixed_loc = None;
     enum_bool_loc = None;
     enum_string_loc = None;
     enum_number_loc = None;
+    enum_bigint_loc = None;
   }
 
 let debug_to_string t =
@@ -38,10 +42,12 @@ let debug_to_string t =
     ("bool_loc", t.bool_loc);
     ("string_loc", t.string_loc);
     ("number_loc", t.number_loc);
+    ("bigint_loc", t.bigint_loc);
     ("mixed_loc", t.mixed_loc);
     ("enum_bool_loc", t.enum_bool_loc);
     ("enum_string_loc", t.enum_string_loc);
     ("enum_number_loc", t.enum_number_loc);
+    ("enum_bigint_loc", t.enum_bigint_loc);
   ]
   |> Base.List.map ~f:(fun (name, loc_opt) -> (name, string_of_loc_option loc_opt))
   |> Base.List.map ~f:(fun (name, loc) -> Printf.sprintf "  %s: %s;\n" name loc)

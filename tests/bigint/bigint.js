@@ -36,3 +36,6 @@ if (bar.x === 0n) {
 
 (0n < 0n : boolean); // ok
 (0n > ""); // error
+
+declare var b: ?bigint;
+if (b) {} // error

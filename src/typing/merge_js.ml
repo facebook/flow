@@ -89,6 +89,8 @@ let detect_sketchy_null_checks cx master_cx =
           Base.Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyNullBool);
         if Base.Option.is_none exists_excuse.number_loc then
           Base.Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNullNumber);
+        if Base.Option.is_none exists_excuse.bigint_loc then
+          Base.Option.iter exists_check.bigint_loc ~f:(add_error Lints.SketchyNullBigInt);
         if Base.Option.is_none exists_excuse.string_loc then
           Base.Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyNullString);
         if Base.Option.is_none exists_excuse.mixed_loc then
@@ -97,6 +99,8 @@ let detect_sketchy_null_checks cx master_cx =
           Base.Option.iter exists_check.enum_bool_loc ~f:(add_error Lints.SketchyNullEnumBool);
         if Base.Option.is_none exists_excuse.enum_number_loc then
           Base.Option.iter exists_check.enum_number_loc ~f:(add_error Lints.SketchyNullEnumNumber);
+        if Base.Option.is_none exists_excuse.enum_bigint_loc then
+          Base.Option.iter exists_check.enum_bigint_loc ~f:(add_error Lints.SketchyNullEnumBigInt);
         if Base.Option.is_none exists_excuse.enum_string_loc then
           Base.Option.iter exists_check.enum_string_loc ~f:(add_error Lints.SketchyNullEnumString);
         ()
@@ -186,6 +190,7 @@ let detect_sketchy_null_checks cx master_cx =
             | DefT (_, _, BoolT _) -> { exists_check with bool_loc = t_loc }
             | DefT (_, _, StrT _) -> { exists_check with string_loc = t_loc }
             | DefT (_, _, NumT _) -> { exists_check with number_loc = t_loc }
+            | DefT (_, _, BigIntT _) -> { exists_check with bigint_loc = t_loc }
             | DefT (_, _, MixedT _) -> { exists_check with mixed_loc = t_loc }
             | DefT (_, _, EnumT { representation_t = DefT (_, _, BoolT _); _ }) ->
               { exists_check with enum_bool_loc = t_loc }
@@ -193,6 +198,8 @@ let detect_sketchy_null_checks cx master_cx =
               { exists_check with enum_string_loc = t_loc }
             | DefT (_, _, EnumT { representation_t = DefT (_, _, NumT _); _ }) ->
               { exists_check with enum_number_loc = t_loc }
+            | DefT (_, _, EnumT { representation_t = DefT (_, _, BigIntT _); _ }) ->
+              { exists_check with enum_bigint_loc = t_loc }
             | _ -> exists_check
           in
           if exists_check = ExistsCheck.empty then
