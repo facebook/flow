@@ -154,7 +154,7 @@
       "loc":{"source":null,"start":{"line":11,"column":19},"end":{"line":11,"column":41}},
       "range":[220,242],
       "expression":{
-        "type":"BigIntLiteral",
+        "type":"Literal",
         "trailingComments":[
           {
             "type":"Block",
@@ -174,7 +174,7 @@
         "loc":{"source":null,"start":{"line":11,"column":19},"end":{"line":11,"column":21}},
         "range":[220,222],
         "value":null,
-        "bigint":"1n"
+        "bigint":"1"
       },
       "directive":null
     }

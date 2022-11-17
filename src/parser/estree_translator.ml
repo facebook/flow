@@ -629,8 +629,6 @@ with type t = Impl.t = struct
             ("filter", option expression filter);
           ]
       | (_loc, Identifier id) -> identifier id
-      | (loc, Literal ({ Literal.value = Ast.Literal.BigInt _; _ } as lit)) ->
-        bigint_literal (loc, lit)
       | (loc, Literal lit) -> literal (loc, lit)
       | (loc, TemplateLiteral lit) -> template_literal (loc, lit)
       | (loc, TaggedTemplate tagged) -> tagged_template (loc, tagged)
@@ -1295,28 +1293,11 @@ with type t = Impl.t = struct
         "ComprehensionBlock"
         loc
         [("left", pattern left); ("right", expression right); ("each", bool each)]
-    and literal (loc, { Literal.value; raw; comments }) =
-      let value_ =
-        match value with
-        | Literal.String str -> string str
-        | Literal.Boolean b -> bool b
-        | Literal.Null -> null
-        | Literal.Number f -> number f
-        | Literal.BigInt _ -> failwith "We should not create Literal nodes for bigints"
-        | Literal.RegExp { Literal.RegExp.pattern; flags } -> regexp loc pattern flags
-      in
-      let props =
-        match value with
-        | Literal.RegExp { Literal.RegExp.pattern; flags } ->
-          let regex = obj [("pattern", string pattern); ("flags", string flags)] in
-          [("value", value_); ("raw", string raw); ("regex", regex)]
-        | _ -> [("value", value_); ("raw", string raw)]
-      in
-      node ?comments "Literal" loc props
     and number_literal (loc, { NumberLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", number value); ("raw", string raw)]
-    and bigint_literal (loc, { Literal.raw; comments; _ }) =
-      node ?comments "BigIntLiteral" loc [("value", null); ("bigint", string raw)]
+    and bigint_literal (loc, { BigIntLiteral.raw; comments; _ }) =
+      let raw = String.sub raw 0 (String.length raw - 1) in
+      node ?comments "Literal" loc [("value", null); ("bigint", string raw)]
     and string_literal (loc, { StringLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", string value); ("raw", string raw)]
     and boolean_literal (loc, { BooleanLiteral.value; comments }) =
@@ -1327,6 +1308,20 @@ with type t = Impl.t = struct
           "false"
       in
       node ?comments "Literal" loc [("value", bool value); ("raw", string raw)]
+    and regexp_literal (loc, { Literal.raw; comments; _ }, { Literal.RegExp.pattern; flags }) =
+      let value = regexp loc pattern flags in
+      let regex = obj [("pattern", string pattern); ("flags", string flags)] in
+      node ?comments "Literal" loc [("value", value); ("raw", string raw); ("regex", regex)]
+    and null_literal (loc, { Literal.raw; comments; _ }) =
+      node ?comments "Literal" loc [("value", null); ("raw", string raw)]
+    and literal (loc, ({ Literal.value; raw; comments } as lit)) =
+      match value with
+      | Literal.String str -> string_literal (loc, { StringLiteral.value = str; raw; comments })
+      | Literal.Boolean b -> boolean_literal (loc, { BooleanLiteral.value = b; comments })
+      | Literal.Null -> null_literal (loc, lit)
+      | Literal.Number f -> number_literal (loc, { NumberLiteral.value = f; raw; comments })
+      | Literal.BigInt n -> bigint_literal (loc, { BigIntLiteral.value = n; raw; comments })
+      | Literal.RegExp r -> regexp_literal (loc, lit, r)
     and template_literal (loc, { Expression.TemplateLiteral.quasis; expressions; comments }) =
       node
         ?comments
