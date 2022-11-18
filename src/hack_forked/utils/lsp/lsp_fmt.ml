@@ -135,14 +135,17 @@ let parse_textDocumentPositionParams (params : json option) : TextDocumentPositi
     position = Jget.obj_exn params "position" |> parse_position;
   }
 
-let parse_textEdit (params : json option) : TextEdit.t =
-  {
-    TextEdit.range = Jget.obj_exn params "range" |> parse_range_exn;
-    newText = Jget.string_exn params "newText";
-  }
+module TextEditFmt = struct
+  let of_json (params : json option) : TextEdit.t =
+    {
+      TextEdit.range = Jget.obj_exn params "range" |> parse_range_exn;
+      newText = Jget.string_exn params "newText";
+    }
 
-let print_textEdit (edit : TextEdit.t) : json =
-  TextEdit.(JSON_Object [("range", print_range edit.range); ("newText", JSON_String edit.newText)])
+  let to_json (edit : TextEdit.t) : json =
+    let { TextEdit.range; newText } = edit in
+    JSON_Object [("range", print_range range); ("newText", JSON_String newText)]
+end
 
 module InsertReplaceEditFmt = struct
   open InsertReplaceEdit
@@ -166,7 +169,7 @@ end
 let print_workspaceEdit (r : WorkspaceEdit.t) : json =
   WorkspaceEdit.(
     let print_workspace_edit_changes (uri, text_edits) =
-      (DocumentUri.to_string uri, JSON_Array (Base.List.map ~f:print_textEdit text_edits))
+      (DocumentUri.to_string uri, JSON_Array (Base.List.map ~f:TextEditFmt.to_json text_edits))
     in
     JSON_Object
       [
@@ -794,11 +797,11 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
       | None -> None
       | edit ->
         (match Jget.obj_opt edit "range" with
-        | Some _ -> Some (`TextEdit (parse_textEdit edit))
+        | Some _ -> Some (`TextEdit (TextEditFmt.of_json edit))
         | None -> Some (`InsertReplaceEdit (InsertReplaceEditFmt.of_json edit)))
     in
     let additionalTextEdits =
-      Jget.array_d params "additionalTextEdits" ~default:[] |> Base.List.map ~f:parse_textEdit
+      Jget.array_d params "additionalTextEdits" ~default:[] |> Base.List.map ~f:TextEditFmt.of_json
     in
     let command =
       match Jget.obj_opt params "command" with
@@ -871,14 +874,14 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
         );
         ( "textEdit",
           Base.Option.map item.textEdit ~f:(function
-              | `TextEdit edit -> print_textEdit edit
+              | `TextEdit edit -> TextEditFmt.to_json edit
               | `InsertReplaceEdit edit -> InsertReplaceEditFmt.to_json edit
               )
         );
         ( "additionalTextEdits",
           match item.additionalTextEdits with
           | [] -> None
-          | l -> Some (JSON_Array (Base.List.map l ~f:print_textEdit))
+          | l -> Some (JSON_Array (Base.List.map l ~f:TextEditFmt.to_json))
         );
         ("command", Base.Option.map item.command ~f:(print_command ~key));
         ("data", item.data);
@@ -1098,7 +1101,7 @@ let parse_documentFormatting (params : json option) : DocumentFormatting.params 
   }
 
 let print_documentFormatting (r : DocumentFormatting.result) : json =
-  JSON_Array (Base.List.map r ~f:print_textEdit)
+  JSON_Array (Base.List.map r ~f:TextEditFmt.to_json)
 
 (************************************************************************)
 (* textDocument/rangeFormatting request                                 *)
@@ -1113,7 +1116,7 @@ let parse_documentRangeFormatting (params : json option) : DocumentRangeFormatti
   }
 
 let print_documentRangeFormatting (r : DocumentRangeFormatting.result) : json =
-  JSON_Array (Base.List.map r ~f:print_textEdit)
+  JSON_Array (Base.List.map r ~f:TextEditFmt.to_json)
 
 (************************************************************************)
 (* textDocument/onTypeFormatting request                                *)
@@ -1129,7 +1132,7 @@ let parse_documentOnTypeFormatting (params : json option) : DocumentOnTypeFormat
   }
 
 let print_documentOnTypeFormatting (r : DocumentOnTypeFormatting.result) : json =
-  JSON_Array (Base.List.map r ~f:print_textEdit)
+  JSON_Array (Base.List.map r ~f:TextEditFmt.to_json)
 
 (************************************************************************)
 (* initialize request                                                   *)
