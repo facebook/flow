@@ -26,8 +26,6 @@ orbs:
               name: Install opam
               command: .\scripts\windows\install_opam.ps1
 
-  node: circleci/node@5.0.3
-
 executors:
   linux-opam:
     docker:
@@ -58,7 +56,7 @@ executors:
     working_directory: /flow
   flow-website:
     docker:
-      - image: flowtype/flow-website:0.0.5
+      - image: ghcr.io/facebook/flow-website:latest
     working_directory: ~/flow
   awscli:
     docker:
@@ -676,8 +674,6 @@ jobs:
     - restore_cache:
         keys:
           - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
-    - node/install:
-        node-version: '16'
     - run:
         name: Install yarn deps
         command: cd new_website && yarn install
