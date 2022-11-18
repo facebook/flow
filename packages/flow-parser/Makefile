@@ -20,10 +20,8 @@ flow_parser.js:
 	elif [[ "${INTERNAL_BUILD}" -eq 1 ]]; then \
 		buck2 build @//mode/opt //flow/src/parser:flow_parser.js --out $@; \
 	else \
-		cd ../../ && \
-			opam exec -- $(MAKE) -C src/parser js && \
-			cd packages/flow-parser && \
-			cp ../../src/parser/flow_parser.js $@; \
+		$(MAKE) -C ../../src/parser js; \
+		cp ../../src/parser/flow_parser.js $@; \
 	fi
 
 js: flow_parser.js
