@@ -426,6 +426,7 @@ and 'loc t' =
       reason_call: 'loc virtual_reason;
       reason_l: 'loc virtual_reason;
       bound: string;
+      use_op: 'loc virtual_use_op;
     }
   | EImplicitInstantiationWidenedError of {
       reason_call: 'loc virtual_reason;
@@ -1039,9 +1040,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EImplicitInstantiationTemporaryError (loc, msg) ->
     EImplicitInstantiationTemporaryError (f loc, msg)
   | EImportInternalReactServerModule loc -> EImportInternalReactServerModule (f loc)
-  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound; use_op } ->
     EImplicitInstantiationUnderconstrainedError
-      { reason_call = map_reason reason_call; reason_l = map_reason reason_l; bound }
+      {
+        reason_call = map_reason reason_call;
+        reason_l = map_reason reason_l;
+        bound;
+        use_op = map_use_op use_op;
+      }
   | EImplicitInstantiationWidenedError { reason_call; bound } ->
     EImplicitInstantiationWidenedError { reason_call = map_reason reason_call; bound }
   | EClassToObject (r1, r2, op) -> EClassToObject (map_reason r1, map_reason r2, map_use_op op)
@@ -1187,6 +1193,10 @@ let util_use_op_of_msg nope util = function
         EEscapedGeneric
           { reason; blame_reason; annot_reason; use_op; bound_loc; bound_name; is_this }
     )
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound; use_op } ->
+    util use_op (fun use_op ->
+        EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound; use_op }
+    )
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1303,7 +1313,6 @@ let util_use_op_of_msg nope util = function
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
   | EImportInternalReactServerModule _
-  | EImplicitInstantiationUnderconstrainedError _
   | EImplicitInstantiationWidenedError _
   | EClassToObject _
   | EMethodUnbinding _
@@ -1467,9 +1476,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EAnnotationInference (loc, _, _, _)
   | EAnnotationInferenceRecursive (loc, _) ->
     Some loc
-  | EImplicitInstantiationUnderconstrainedError { reason_call; _ }
-  | EImplicitInstantiationWidenedError { reason_call; _ } ->
-    Some (poly_loc_of_reason reason_call)
+  | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (poly_loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
   | ESketchyNullLint { loc; _ } -> Some loc
@@ -1536,6 +1543,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIncompatible _
   | ECannotResolveOpenTvar _
   | EMethodUnbinding _
+  | EImplicitInstantiationUnderconstrainedError _
   | EClassToObject _ ->
     None
 
@@ -3850,9 +3858,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " normally.";
           ];
       }
-  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
-    Normal
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound; use_op } ->
+    UseOp
       {
+        use_op;
         features =
           [
             code bound;
@@ -3861,6 +3870,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " and is defined in ";
             ref reason_l;
           ];
+        loc = loc_of_reason reason_call;
       }
   | EImplicitInstantiationWidenedError { reason_call; bound } ->
     Normal

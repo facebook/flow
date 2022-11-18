@@ -19,7 +19,7 @@ module PierceImplicitInstantiation : Implicit_instantiation.S with type output =
         | None -> tparam.Type.bound
         | Some t -> t
 
-      let on_missing_bounds cx name tparam ~tparam_binder_reason ~instantiation_reason =
+      let on_missing_bounds cx ~use_op name tparam ~tparam_binder_reason ~instantiation_reason =
         if tparam.Type.default = None then
           Flow_js.add_output
             cx
@@ -28,11 +28,12 @@ module PierceImplicitInstantiation : Implicit_instantiation.S with type output =
                  bound = Subst_name.string_of_subst_name name;
                  reason_call = instantiation_reason;
                  reason_l = tparam_binder_reason;
+                 use_op;
                }
             );
         Type.AnyT.error tparam_binder_reason
 
-      let on_upper_non_t cx name u _ ~tparam_binder_reason ~instantiation_reason:_ =
+      let on_upper_non_t cx ~use_op:_ name u _ ~tparam_binder_reason ~instantiation_reason:_ =
         let msg =
           Subst_name.string_of_subst_name name
           ^ " contains a non-Type.t upper bound "

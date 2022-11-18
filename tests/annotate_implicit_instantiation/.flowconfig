@@ -1,0 +1,2 @@
+[options]
+experimental.run_post_inference_implicit_instantiation=true

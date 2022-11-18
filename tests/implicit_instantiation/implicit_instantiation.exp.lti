@@ -31,14 +31,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:11
 
-`T` is underconstrained by call of `unimplementable` [1] and is defined in `T` [2]
-[underconstrained-implicit-instantiation]
+Cannot call `unimplementable` because `T` is underconstrained by call of `unimplementable` [1] and is defined in
+`T` [2]. [underconstrained-implicit-instantiation]
 
    test.js:10:11
    10| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
-                 ^^^^^^^^^^^^^^^^^^^^ [1]
+                 ^^^^^^^^^^^^^^^
 
 References:
+   test.js:10:11
+   10| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
+                 ^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:7:34
     7| declare function unimplementable<T>(): {x: T};
                                         ^ [2]
@@ -63,14 +66,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:6
 
-`T` is underconstrained by call of `unimplementable` [1] and is defined in `T` [2]
-[underconstrained-implicit-instantiation]
+Cannot call `unimplementable` because `T` is underconstrained by call of `unimplementable` [1] and is defined in
+`T` [2]. [underconstrained-implicit-instantiation]
 
    test.js:22:6
    22|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
-            ^^^^^^^^^^^^^^^^^^^^ [1]
+            ^^^^^^^^^^^^^^^
 
 References:
+   test.js:22:6
+   22|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
+            ^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:7:34
     7| declare function unimplementable<T>(): {x: T};
                                         ^ [2]
@@ -78,13 +84,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:6
 
-`T` is underconstrained by call of `readOnly` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `readOnly` because `T` is underconstrained by call of `readOnly` [1] and is defined in `T` [2].
+[underconstrained-implicit-instantiation]
 
    test.js:23:6
    23|   y: readOnly<_>(), // Error in LTI
-            ^^^^^^^^^^^^^ [1]
+            ^^^^^^^^
 
 References:
+   test.js:23:6
+   23|   y: readOnly<_>(), // Error in LTI
+            ^^^^^^^^^^^^^ [1]
    test.js:19:27
    19| declare function readOnly<T>(): {+x :T};
                                  ^ [2]

@@ -16,6 +16,7 @@ module type OBSERVER = sig
 
   val on_missing_bounds :
     Context.t ->
+    use_op:Type.use_op ->
     Subst_name.t ->
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
@@ -24,6 +25,7 @@ module type OBSERVER = sig
 
   val on_upper_non_t :
     Context.t ->
+    use_op:Type.use_op ->
     Subst_name.t ->
     Type.use_t ->
     Type.typeparam ->
@@ -39,6 +41,7 @@ module type S = sig
 
   val pin_type :
     Context.t ->
+    use_op:Type.use_op ->
     Subst_name.t ->
     Type.typeparam ->
     Polarity.t option ->
@@ -47,7 +50,8 @@ module type S = sig
     Type.t ->
     output
 
-  val solve_targs : Context.t -> ?return_hint:Type.t -> Check.t -> output Subst_name.Map.t
+  val solve_targs :
+    Context.t -> use_op:Type.use_op -> ?return_hint:Type.t -> Check.t -> output Subst_name.Map.t
 
   val run :
     Context.t ->
@@ -69,7 +73,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) :
   S with type output = Observer.output with module Flow = Flow
 
 module PinTypes (_ : Flow_common.S) : sig
-  val pin_type : Context.t -> Reason.reason -> Type.t -> Type.t
+  val pin_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 end
 
 type inferred_targ = {
