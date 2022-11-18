@@ -110,7 +110,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | ToStringT (_, use) -> default_resolve_touts ~flow cx loc use
   | ArithT { result_t; _ } -> resolve result_t
   | ComparatorT _ -> ()
-  | UnaryMinusT (_, t) -> resolve t
+  | UnaryArithT { result_t; _ } -> resolve result_t
   | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _

@@ -1067,7 +1067,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       | IncompatibleTypeAppVarianceCheckT ->
         nope "is not a polymorphic type"
       | IncompatibleSuperT -> nope "is not inheritable"
-      | IncompatibleUnaryMinusT -> nope "is not a number"
+      | IncompatibleUnaryArithT -> nope "is not a number"
       | IncompatibleGetPropT (prop_loc, prop)
       | IncompatibleSetPropT (prop_loc, prop)
       | IncompatibleMatchPropT (prop_loc, prop)

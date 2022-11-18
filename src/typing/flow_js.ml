@@ -4569,24 +4569,30 @@ struct
         | (l, EqT { reason; flip; arg = r }) -> flow_eq cx trace reason flip l r
         | (l, StrictEqT { reason; cond_context; flip; arg = r }) ->
           flow_strict_eq cx trace reason cond_context flip l r
-        (************************)
-        (* unary minus operator *)
-        (************************)
-        | (DefT (_, trust, NumT lit), UnaryMinusT (reason_op, t_out)) ->
+        (******************************)
+        (* unary arithmetic operators *)
+        (******************************)
+        | ( DefT (_, trust, NumT (Literal (_, (value, raw)))),
+            UnaryArithT { reason; result_t; kind = UnaryArithKind.Minus }
+          ) ->
+          let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
           let num =
-            match lit with
-            | Literal (_, (value, raw)) ->
-              let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
-              DefT
-                (replace_desc_reason RNumber reason_op, trust, NumT (Literal (None, (value, raw))))
-            | AnyLiteral
-            | Truthy ->
-              l
+            DefT (replace_desc_reason RNumber reason, trust, NumT (Literal (None, (value, raw))))
           in
-          rec_flow_t cx trace ~use_op:unknown_use (num, t_out)
-        | (AnyT (_, src), UnaryMinusT (reason_op, t_out)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (num, result_t)
+        | ( DefT (_, _, NumT (AnyLiteral | Truthy)),
+            UnaryArithT { reason = _; result_t; kind = UnaryArithKind.Minus }
+          ) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, result_t)
+        | (AnyT (_, src), UnaryArithT { reason; result_t; kind = UnaryArithKind.Minus }) ->
           let src = any_mod_src_keep_placeholder Untyped src in
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, t_out)
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, result_t)
+        | (_, UnaryArithT { reason; result_t; kind = UnaryArithKind.Plus }) ->
+          rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t)
+        | (DefT (_, _, NumT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot }) ->
+          rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t)
+        | (_, UnaryArithT { reason; result_t = _; kind = UnaryArithKind.BitNot }) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, NumT.why reason (bogus_trust ()))
         (************************)
         (* binary `in` operator *)
         (************************)
@@ -5764,7 +5770,7 @@ struct
       | EqT _
       | StrictEqT _
       | ComparatorT _
-      | UnaryMinusT _
+      | UnaryArithT _
       | AssertArithmeticOperandT _
       | AssertForInRHST _
       | AssertInstanceofRHST _
@@ -6172,7 +6178,7 @@ struct
     | TestPropT _
     | ThisSpecializeT _
     | ToStringT _
-    | UnaryMinusT _
+    | UnaryArithT _
     | UseT (_, MaybeT _) (* used to filter maybe *)
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
