@@ -7,10 +7,10 @@ homepage: "https://github.com/facebook/flow/tree/master/src/parser"
 bug-reports: "https://github.com/facebook/flow/issues"
 license: "MIT"
 
-build: [ make "-C" "src/parser" "build-parser" ]
-install: [ make "-C" "src/parser" "ocamlfind-install"]
+build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
   "ocaml" {>= "4.14.0"}
+  "dune" {>= "3.0"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "ppx_deriving" {build}

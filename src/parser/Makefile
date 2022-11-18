@@ -35,7 +35,7 @@ OCAML_HEADERS=\
 			$(CC) -I $(OCAML_PATH) -MM -MT deps libflowparser.h \
 	))))
 
-all: build-parser
+all:
 
 clean:
 	$(OCB) -clean; \
@@ -43,10 +43,6 @@ clean:
 	$(OCB) -clean; \
 	rm -f $(REL_DIR)/flow_parser.js; \
 	rm -rf $(REL_DIR)/dist
-
-build-parser:
-	cd $(TOP); \
-	$(OCB) -no-links $(REL_DIR)/parser_flow.cmxa
 
 .PHONY: libflowparser.native.o
 libflowparser.native.o:
@@ -96,12 +92,3 @@ test-hardcoded-ocaml:
 test-ocaml: test-esprima-ocaml test-hardcoded-ocaml
 
 test: test-js test-ocaml
-
-ocamlfind-install:
-	cd $(TOP); \
-	$(OCB) $(REL_DIR)/parser_flow.cma $(REL_DIR)/parser_flow.cmxa; \
-	ocamlfind install flow_parser $(REL_DIR)/META \
-		_build/$(REL_DIR)/parser_flow.a \
-		_build/$(REL_DIR)/parser_flow.cma \
-		_build/$(REL_DIR)/parser_flow.cmxa \
-		_build/$(REL_DIR)/*.cmi
