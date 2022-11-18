@@ -27,7 +27,7 @@ module PierceImplicitInstantiation : Implicit_instantiation.S with type output =
                {
                  bound = Subst_name.string_of_subst_name name;
                  reason_call = instantiation_reason;
-                 reason_l = tparam_binder_reason;
+                 reason_tparam = tparam_binder_reason;
                  use_op;
                }
             );
