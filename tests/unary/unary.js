@@ -51,3 +51,19 @@ function x11(y: number): number {
 function x12(y: number): number {
   return ~y; // ok
 }
+
+function x13(): bigint {
+  return -10n; // ok
+}
+
+function x14(y: bigint): bigint {
+  return -y; // ok
+}
+
+function x15(y: bigint) {
+  return +y; // error, bigint cannot be coerced to number
+}
+
+function x16(y: bigint): bigint {
+  return ~y; // ok
+}
