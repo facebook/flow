@@ -87,23 +87,11 @@ js:
 test-js: js
 	cd $(TOP)/packages/flow-parser; npm test
 
-../../_build/$(REL_DIR)/test/run_tests.native: build-parser
-	cd $(TOP); \
-	$(OCB) -no-links \
-		-ocamlc "ocamlopt" \
-		$(NATIVE_OBJECT_FILES); \
-	$(OCB) -no-links \
-		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
-	 	-lflags "$(NATIVE_OBJECT_FILES)" \
-		$(REL_DIR)/test/run_tests.native
+test-esprima-ocaml:
+	dune build @parser_esprima_tests
 
-test-esprima-ocaml: ../../_build/$(REL_DIR)/test/run_tests.native
-	cd $(TOP); \
-	_build/$(REL_DIR)/test/run_tests.native $(REL_DIR)/test/esprima/
-
-test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_tests.native
-	cd $(TOP); \
-	_build/$(REL_DIR)/test/run_tests.native $(REL_DIR)/test/flow/
+test-hardcoded-ocaml:
+	dune build @parser_flow_tests
 
 test-ocaml: test-esprima-ocaml test-hardcoded-ocaml
 
@@ -117,6 +105,3 @@ ocamlfind-install:
 		_build/$(REL_DIR)/parser_flow.cma \
 		_build/$(REL_DIR)/parser_flow.cmxa \
 		_build/$(REL_DIR)/*.cmi
-
-lexer.native: lexer.ml
-	$(OCB) $@

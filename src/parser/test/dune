@@ -1,9 +1,34 @@
+(data_only_dirs esprima flow)
+
 (executables
  (names run_tests parse_test262)
- (libraries
-  unix
-  flow_parser
-  str
-  sys_utils
-  hh_json
-  flow_parser_utils))
+ (libraries unix flow_parser str sys_utils hh_json flow_parser_utils))
+
+; Run: dune build @parser_flow_tests
+; Record: dune exec src/parser/test/run_tests.exe -- -r src/parser/test/flow/
+
+(rule
+ (alias parser_flow_tests)
+ (package flow_parser)
+ (deps
+  (source_tree flow))
+ (action
+  (run ./run_tests.exe -q flow/)))
+
+; Run: dune build @parser_esprima_tests
+; Record: dune exec src/parser/test/run_tests.exe -- -r src/parser/test/esprima/
+
+(rule
+ (alias parser_esprima_tests)
+ (package flow_parser)
+ (deps
+  (source_tree esprima))
+ (action
+  (run ./run_tests.exe -q esprima/)))
+
+(alias
+ (name runtest)
+ (package flow_parser)
+ (deps
+  (alias parser_flow_tests)
+  (alias parser_esprima_tests)))
