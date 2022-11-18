@@ -82,8 +82,7 @@ js:
 	cd $(TOP); \
 	$(OCB) -no-links -pkgs js_of_ocaml $(REL_DIR)/flow_parser_dot_js.byte; \
 	[ -e "$(REL_DIR)/flow_parser.js" -a "$(REL_DIR)/flow_parser.js" -nt "_build/$(REL_DIR)/flow_parser_dot_js.byte" ] || \
-		js_of_ocaml --opt 3 \
-			--no-extern-fs \
+		js_of_ocaml --Werror --disable genprim --opt 3 --no-extern-fs \
 			-o $(REL_DIR)/flow_parser.js \
 			_build/$(REL_DIR)/flow_parser_dot_js.byte
 

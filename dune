@@ -1,4 +1,6 @@
 (env
  (_
   (flags
-   (:standard -w @a-4-29-35-41-42-44-45-48-50-58-70))))
+   (:standard -w @a-4-29-35-41-42-44-45-48-50-58-70))
+  (js_of_ocaml
+    (flags --disable genprim --Werror))))

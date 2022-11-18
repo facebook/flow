@@ -517,23 +517,13 @@ bin/flow.js: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OB
 		$(INCLUDE_OPTS) $(JS_FINDLIB_OPTS) \
 		-lflags "$(BYTECODE_LINKER_FLAGS)" \
 		src/flow_dot_js.byte
-	# js_of_ocaml has no ability to upgrade warnings to errors, but we want to
-	# error if, for example, there are any unimplemented C primitives.
 	js_of_ocaml \
+			--Werror \
 			--opt 3 \
 			--disable genprim \
 			--extern-fs \
 			-o bin/flow.js \
-			$(JS_STUBS) _build/src/flow_dot_js.byte \
-			2>_build/js_of_ocaml.err; \
-	ret=$$?; \
-	if [ ! $$ret ]; then \
-		exit $$ret; \
-	elif [ -s _build/js_of_ocaml.err ]; then \
-		printf "js_of_ocaml produced output on stderr:\n" 1>&2; \
-		cat _build/js_of_ocaml.err 1>&2; \
-		exit 1; \
-	fi
+			$(JS_STUBS) _build/src/flow_dot_js.byte
 
 js: bin/flow.js
 
