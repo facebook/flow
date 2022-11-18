@@ -79,12 +79,10 @@ dist/libflowparser.zip: \
 	cd dist && zip -r $(@F) libflowparser
 
 js:
-	cd $(TOP); \
-	$(OCB) -no-links -pkgs js_of_ocaml $(REL_DIR)/flow_parser_dot_js.byte; \
-	[ -e "$(REL_DIR)/flow_parser.js" -a "$(REL_DIR)/flow_parser.js" -nt "_build/$(REL_DIR)/flow_parser_dot_js.byte" ] || \
-		js_of_ocaml --Werror --disable genprim --opt 3 --no-extern-fs \
-			-o $(REL_DIR)/flow_parser.js \
-			_build/$(REL_DIR)/flow_parser_dot_js.byte
+	dune build --no-print-directory --profile opt flow_parser_dot_js.bc.js
+	@if [ ! -e flow_parser.js -o "$(TOP)/_build/default/$(REL_DIR)/flow_parser_dot_js.bc.js" -nt flow_parser.js ]; then \
+		cp "$(TOP)/_build/default/$(REL_DIR)/flow_parser_dot_js.bc.js" flow_parser.js; \
+	fi
 
 test-js: js
 	cd $(TOP)/packages/flow-parser; npm test
