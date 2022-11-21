@@ -214,7 +214,10 @@ struct
                |> merge_lower_bounds cx
                |> use_t_result_of_t_option
            )
-      | _ -> UpperNonT u)
+      | IdxUnwrapType
+      | OptionalIndexedAccessNonMaybeType _
+      | OptionalIndexedAccessResultType _ ->
+        UpperNonT u)
     | UseT (_, t) -> UpperT t
     | ArrRestT (_, _, i, tout) ->
       (match get_t cx tout with
@@ -308,23 +311,47 @@ struct
     | CheckUnusedPromiseT _
     (* When we have ChoiceKitUseT, we are already stuck. *)
     | ChoiceKitUseT _ ->
-      UpperEmpty
+      UpperEmpty (* Remaining unhandled upper bounds *)
+    | AssertForInRHST _
+    | AssertInstanceofRHST _
+    | AssertIterableT _
+    | SpecializeT _
+    | ThisSpecializeT _
+    | VarianceCheckT _
+    | TypeAppVarianceCheckT _
+    | ConcretizeTypeAppsT _
+    | ObjRestT _
+    | BecomeT _
+    | ElemT _
+    | ReactKitT _
+    | IntersectionPreprocessKitT _
+    | IdxUnwrap _
+    | IdxUnMaybeifyT _
+    | ReactPropsToOut _
+    | ReactInToProps _
+    | ResolveUnionT _
+    | FilterOptionalT _
+    | FilterMaybeT _
+    | SealGenericT _ ->
+      UpperNonT u
     | MakeExactT (_, Lower (_, t)) -> UpperT t
     | MakeExactT (_, Upper use_t) -> t_of_use_t cx tvar use_t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
     | ReposUseT (_, _, _use_op, t) ->
       Flow.flow_t cx (t, tvar);
       UpperT t
-    | ResolveSpreadT
-        ( _,
-          reason,
-          {
-            rrt_resolved = [];
-            rrt_unresolved = [];
-            rrt_resolve_to = ResolveSpreadsToMultiflowSubtypeFull (_, { params; rest_param; _ });
-          }
-        ) ->
-      reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param
+    | ResolveSpreadT (_, reason, { rrt_resolved = []; rrt_unresolved = []; rrt_resolve_to }) ->
+      (match rrt_resolve_to with
+      | ResolveSpreadsToMultiflowSubtypeFull (_, { params; rest_param; _ }) ->
+        reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param
+      | ResolveSpreadsToArrayLiteral _
+      | ResolveSpreadsToArray _
+      | ResolveSpreadsToMultiflowCallFull _
+      | ResolveSpreadsToCustomFunCall _
+      | ResolveSpreadsToMultiflowPartial _
+      | ResolveSpreadsToCallT _ ->
+        UpperNonT u)
+    | ResolveSpreadT _ -> UpperNonT u
     | ObjKitT (_, r, _, tool, tout) ->
       (match tool with
       | Object.(ReadOnly | Partial | ObjectRep | ObjectWiden _ | Object.ReactConfig _) ->
@@ -350,7 +377,6 @@ struct
                  UpperT reversed
            )
       | Object.Rest (_, Object.Rest.Done _) -> UpperNonT u)
-    | _ -> UpperNonT u
 
   and identity_reverse_upper_bound cx tvar r tout =
     let solution = merge_upper_bounds cx r tout in
