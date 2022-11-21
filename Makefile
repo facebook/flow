@@ -281,8 +281,13 @@ COPIED_PRELUDE=\
 
 FINDLIB_JS_STUBS=$(shell ocamlfind query $(FINDLIB_PACKAGES) -predicates javascript -o-format -r)
 JS_STUBS=\
-	$(FINDLIB_JS_STUBS)\
-	$(wildcard js/*.js)
+	src/common/xx/xx_stubs.js\
+	src/hack_forked/utils/core/fast_compare.js\
+	src/hack_forked/utils/core/get_build_id.js\
+	src/hack_forked/utils/sys/nproc.js\
+	src/hack_forked/utils/sys/sysinfo.js\
+	src/heap/hh_shared.js\
+	src/js/unix.js
 
 OUNIT_TESTS=\
 	src/common/lwt/__tests__/lwt_tests.native\
@@ -508,7 +513,7 @@ test-tool: bin/flow$(EXE)
 test: bin/flow$(EXE) bin/flow.js
 	${MAKE} do-test
 
-bin/flow.js: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
+bin/flow.js: _build/scripts/ppx_gen_flowlibs.exe $(JS_STUBS) $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	mkdir -p bin
 	$(OCB) \
 		-pkg js_of_ocaml \
@@ -523,7 +528,9 @@ bin/flow.js: _build/scripts/ppx_gen_flowlibs.exe $(LIBFUZZY_PATH_DEP) $(BUILT_OB
 			--disable genprim \
 			--extern-fs \
 			-o bin/flow.js \
-			$(JS_STUBS) _build/src/flow_dot_js.byte
+			$(FINDLIB_JS_STUBS) \
+			$(JS_STUBS) \
+			_build/src/flow_dot_js.byte
 
 js: bin/flow.js
 
