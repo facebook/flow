@@ -89,6 +89,7 @@ include%: dist/libflowparser-$(PLATFORM).zip
 	DIR="$(basename $<)"; \
 	mkdir -p "$$DIR"; \
 	unzip "$<" "libflowparser/include/**" -d "$$DIR" && \
+	rm -rf include && \
 	mv "$$DIR/libflowparser/include" include; \
 	rm -rf "$$DIR"
 

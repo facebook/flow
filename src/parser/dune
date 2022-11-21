@@ -8,6 +8,15 @@
  (preprocess
   (pps ppx_gen_rec ppx_deriving.std sedlex.ppx)))
 
+; dune build ./libflowparser.exe.o
+
+(executable
+  (name libflowparser)
+  (modes (native object))
+  (modules libflowparser)
+  (flags (-runtime-variant=_pic))
+  (libraries flow_parser))
+
 (executable
  (name flow_parser_dot_js)
  (modes js)
