@@ -371,8 +371,8 @@ jobs:
           command: |
             cd /cygdrive/c/Users/circleci/project
             eval $(opam env)
-            make -C src/parser/ ../../_build/src/parser/test/run_tests.native
-            cp _build/src/parser/test/run_tests.native bin/win64/run_parser_tests.exe
+            dune build src/parser/test/run_tests.exe
+            cp _build/default/src/parser/test/run_tests.exe bin/win64/run_parser_tests.exe
       - persist_to_workspace:
           root: .
           paths:
@@ -516,6 +516,10 @@ jobs:
             .\bin\win64\run_parser_tests.exe .\src\parser\test\flow\
             if ($LASTEXITCODE -gt 0) {
               Throw "flow parser hardcoded ocaml tests exited with error code: $LASTEXITCODE"
+            }
+            .\bin\win64\run_parser_tests.exe .\src\parser\test\esprima\
+            if ($LASTEXITCODE -gt 0) {
+              Throw "flow parser esprima ocaml tests exited with error code: $LASTEXITCODE"
             }
 
   npm_pack:
