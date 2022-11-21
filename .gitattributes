@@ -2,6 +2,8 @@
 * text eol=lf
 *.png binary
 *.gif binary
+*.ml linguist-language=OCaml
+*.mli linguist-language=OCaml
 
 src/parser/test/esprima/JSX/multiline-crlf-text.js binary
 src/parser/test/esprima/comment/migrated_0011.js binary
