@@ -76,10 +76,6 @@ module Progress_bar = struct
     let spaces = String.make len ' ' in
     Printf.printf "\r%s\r%!" spaces
 
-  let print_final status bar =
-    print status bar;
-    Printf.printf "\n%!"
-
   let make ~chunks ~frequency total = { count = 0; last_update = 0.; total; chunks; frequency }
 end
 
@@ -134,18 +130,12 @@ let print_error err =
 
 module Frontmatter = struct
   type t = {
-    es5id: string option;
-    es6id: string option;
-    esid: string option;
     features: string list;
     flags: strictness;
     negative: negative option;
   }
 
-  and negative = {
-    phase: string;
-    type_: string;
-  }
+  and negative = { phase: string }
 
   and strictness =
     | Raw
@@ -157,16 +147,12 @@ module Frontmatter = struct
     let start_regexp = Str.regexp "/\\*---" in
     let end_regexp = Str.regexp "---\\*/" in
     let cr_regexp = Str.regexp "\r\n?" in
-    let es5id_regexp = Str.regexp "^ *es5id: *\\(.*\\)" in
-    let es6id_regexp = Str.regexp "^ *es6id: *\\(.*\\)" in
-    let esid_regexp = Str.regexp "^ *esid: *\\(.*\\)" in
     let features_regexp = Str.regexp "^ *features: *\\[\\(.*\\)\\]" in
     let flags_regexp = Str.regexp "^ *flags: *\\[\\(.*\\)\\]" in
     let only_strict_regexp = Str.regexp_string "onlyStrict" in
     let no_strict_regexp = Str.regexp_string "noStrict" in
     let raw_regexp = Str.regexp_string "raw" in
     let negative_regexp = Str.regexp "^ *negative:$" in
-    let type_regexp = Str.regexp "^ +type: *\\(.*\\)" in
     let phase_regexp = Str.regexp "^ +phase: *\\(.*\\)" in
     let matched_group regex str =
       let _ = Str.search_forward regex str 0 in
@@ -189,9 +175,6 @@ module Frontmatter = struct
         let end_idx = Str.search_forward end_regexp source start_idx in
         let text = String.sub source start_idx (end_idx - start_idx) in
         let text = Str.global_replace cr_regexp "\n" text in
-        let es5id = opt_matched_group es5id_regexp text in
-        let es6id = opt_matched_group es6id_regexp text in
-        let esid = opt_matched_group esid_regexp text in
         let features =
           match opt_matched_group features_regexp text with
           | Some str -> Str.split (Str.regexp ", *") str
@@ -214,56 +197,19 @@ module Frontmatter = struct
         in
         let negative =
           if contains negative_regexp text then
-            Some { phase = matched_group phase_regexp text; type_ = matched_group type_regexp text }
+            Some { phase = matched_group phase_regexp text }
           else
             None
         in
-        Some { es5id; es6id; esid; features; flags; negative }
+        Some { features; flags; negative }
       with
       | Not_found -> None
-
-  let to_string fm =
-    let opt_cons key x acc =
-      match x with
-      | Some x -> Printf.sprintf "%s: %s" key x :: acc
-      | None -> acc
-    in
-    []
-    |> opt_cons "es5id" fm.es5id
-    |> opt_cons "es6id" fm.es6id
-    |> opt_cons "esid" fm.esid
-    |> (fun acc ->
-         let flags =
-           match fm.flags with
-           | Only_strict -> Some "onlyStrict"
-           | No_strict -> Some "noStrict"
-           | Raw -> Some "raw"
-           | Both_strictnesses -> None
-         in
-         match flags with
-         | Some flags -> Printf.sprintf "flags: [%s]" flags :: acc
-         | None -> acc)
-    |> List.rev
-    |> String.concat "\n"
 
   let negative_phase fm =
     match fm.negative with
     | Some { phase; _ } -> Some phase
     | None -> None
 end
-
-let options_by_strictness frontmatter =
-  Parser_env.(
-    Frontmatter.(
-      let o = Parser_env.default_parse_options in
-      match frontmatter.flags with
-      | Both_strictnesses -> failwith "should have been split by split_by_strictness"
-      | Only_strict -> { o with use_strict = true }
-      | No_strict
-      | Raw ->
-        { o with use_strict = false }
-    )
-  )
 
 let split_by_strictness frontmatter =
   Frontmatter.(
