@@ -9,3 +9,4 @@ declare class A<T> {
 
 f<string>((v) => { (v: string) }); // ok
 new A<string>((v) => { (v: string) }); // ok
+new A<any>(v => {}); // ok
