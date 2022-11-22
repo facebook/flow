@@ -57,9 +57,6 @@ executors:
   flow-website:
     docker:
       - image: ghcr.io/facebook/flow-website:latest
-        auth:
-          username: flow-bot
-          password: $FLOW_BOT_TOKEN
     working_directory: ~/flow
   awscli:
     docker:
