@@ -27,12 +27,14 @@ export default function Home(): React.MixedElement {
             static type <br className={styles.hiddenLargerUp} /> checker for{' '}
             <br className={styles.hiddenLargerUp} /> <span>JavaScript.</span>
           </p>
-          <Link className={styles.featureButton} to={useBaseUrl('docs/')}>
+          <Link
+            className={styles.featureButton}
+            to={useBaseUrl('en/docs/getting-started')}>
             Get Started
           </Link>
           <Link
             className={styles.featureButton}
-            to={useBaseUrl('docs/install')}>
+            to={useBaseUrl('en/docs/install')}>
             Install Flow
           </Link>
           <iframe
@@ -215,12 +217,14 @@ export default function Home(): React.MixedElement {
           <div className="container">
             <h2 className={styles.featureHeading}>Ready to get going?</h2>
             <div>
-              <Link className={styles.featureButton} to={useBaseUrl('docs/')}>
+              <Link
+                className={styles.featureButton}
+                to={useBaseUrl('en/docs/getting-started')}>
                 Get Started
               </Link>
               <Link
                 className={styles.featureButton}
-                to={useBaseUrl('docs/install')}>
+                to={useBaseUrl('en/docs/install')}>
                 Install Flow
               </Link>
             </div>
