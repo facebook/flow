@@ -74,6 +74,61 @@ let get_filenames_from_input ?(allow_imaginary = false) input_file filenames =
   in
   cli_filenames @ input_file_filenames
 
+let get_error_locs_from_input input_file =
+  let parse_json () =
+    let json =
+      match input_file with
+      | Some "-" ->
+        Sys_utils.lines_of_in_channel stdin |> String.concat "\n" |> Hh_json.json_of_string
+      | Some input_file -> Hh_json.json_of_file input_file
+      | None -> Hh_json.JSON_Null
+    in
+    let position_json_to_pos json =
+      let obj = Hh_json.get_object_exn json in
+      {
+        Loc.line = obj |> List.assoc "line" |> Hh_json.get_number_int_exn;
+        column = obj |> List.assoc "column" |> Hh_json.get_number_int_exn;
+      }
+    in
+    let message_json_to_loc json =
+      match json |> Hh_json.get_object_exn |> List.assoc_opt "loc" with
+      | None -> None
+      | Some loc_json ->
+        let loc_json_obj = Hh_json.get_object_exn loc_json in
+        let source = loc_json_obj |> List.assoc "source" |> Hh_json.get_string_exn in
+        let start =
+          let start = loc_json_obj |> List.assoc "start" |> position_json_to_pos in
+          { start with Loc.column = start.Loc.column - 1 }
+        in
+        let _end = loc_json_obj |> List.assoc "end" |> position_json_to_pos in
+        let loc = { Loc.source = Some (File_key.SourceFile source); start; _end } in
+        Some loc
+    in
+    json
+    |> Hh_json.get_object_exn
+    |> List.assoc "errors"
+    |> Hh_json.get_array_exn
+    |> List.map (fun json ->
+           let error_json = Hh_json.get_object_exn json in
+           let error_codes =
+             error_json
+             |> List.assoc "error_codes"
+             |> Hh_json.get_array_exn
+             |> List.map Hh_json.get_string_exn
+           in
+           let error_locs =
+             error_json
+             |> List.assoc "message"
+             |> Hh_json.get_array_exn
+             |> List.filter_map message_json_to_loc
+           in
+           (error_codes, error_locs)
+       )
+  in
+  match parse_json () with
+  | exception _ -> None
+  | errors -> Some errors
+
 let print_version () =
   print_endlinef "Flow, a static type checker for JavaScript, version %s" Flow_version.version
 

@@ -173,9 +173,11 @@ let mapper
     ~skip_normal_params
     ~skip_this_params
     ~skip_class_properties
+    ~(provided_error_locs : Loc.t list)
     (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
+  let provided_error_locs = LSet.of_list provided_error_locs in
   object (this)
     inherit
       Codemod_lti_annotator.mapper
@@ -193,7 +195,10 @@ let mapper
 
     method private post_run () =
       this#add_unannotated_loc_warnings loc_error_map;
-      ErrorStats.{ num_total_errors = LMap.cardinal loc_error_map }
+      {
+        ErrorStats.num_total_errors =
+          LMap.cardinal loc_error_map + LSet.cardinal provided_error_locs;
+      }
 
     method private get_annot loc ty annot =
       let f loc _annot ty' = this#annotate_node loc ty' (fun a -> Ast.Type.Available a) in
@@ -250,7 +255,10 @@ let mapper
       { prop with annot }
 
     method! function_param_pattern ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
-      if (not skip_normal_params) && LMap.mem ploc loc_error_map then (
+      if
+        (not skip_normal_params)
+        && (LMap.mem ploc loc_error_map || LSet.mem ploc provided_error_locs)
+      then (
         let ty_result =
           Codemod_annotator.get_ty cctx ~preserve_literals ploc
           >>| Normalize_union.normalize
@@ -361,15 +369,16 @@ let mapper
 
     method! program prog =
       let errors = Context.errors @@ Codemod_context.Typed.context cctx in
-      loc_error_map <-
-        Flow_error.ErrorSet.fold
-          (fun error acc ->
-            match loc_of_lti_error cctx error with
-            | Some loc -> LMap.add loc error acc
-            | None -> acc)
-          errors
-          LMap.empty;
-      if LMap.is_empty loc_error_map then
+      if LSet.is_empty provided_error_locs then
+        loc_error_map <-
+          Flow_error.ErrorSet.fold
+            (fun error acc ->
+              match loc_of_lti_error cctx error with
+              | Some loc -> LMap.add loc error acc
+              | None -> acc)
+            errors
+            LMap.empty;
+      if LMap.is_empty loc_error_map && LSet.is_empty provided_error_locs then
         prog
       else
         super#program prog
