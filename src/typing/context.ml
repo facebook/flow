@@ -805,9 +805,9 @@ let run_in_implicit_instantiation_mode cx f =
 let run_in_post_inference_mode cx f =
   let saved = cx.phase in
   cx.phase <- PostInference;
-  let result = f () in
+  let result = Base.Result.try_with f in
   cx.phase <- saved;
-  result
+  Base.Result.ok_exn result
 
 let set_trust_graph cx trust_graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
@@ -836,15 +836,9 @@ let set_environment cx env = cx.environment <- env
 let run_in_hint_decomp cx f =
   let old = cx.in_hint_decomp in
   cx.in_hint_decomp <- true;
-  let exn =
-    try
-      f ();
-      None
-    with
-    | exn -> Some exn
-  in
+  let result = Base.Result.try_with f in
   cx.in_hint_decomp <- old;
-  Base.Option.iter exn ~f:raise
+  Base.Result.ok_exn result
 
 let run_and_rolled_back_cache cx f =
   let saved_constraint_cache = !(cx.ccx.constraint_cache) in
@@ -855,7 +849,7 @@ let run_and_rolled_back_cache cx f =
   let saved_eval_repos_cache = !(cx.ccx.eval_repos_cache) in
   let saved_fix_cache = !(cx.ccx.fix_cache) in
   let saved_spread_cache = !(cx.ccx.spread_cache) in
-  let result = f () in
+  let result = Base.Result.try_with f in
   cx.ccx.constraint_cache := saved_constraint_cache;
   cx.ccx.subst_cache := saved_subst_cache;
   cx.ccx.repos_cache := saved_repos_cache;
@@ -864,18 +858,18 @@ let run_and_rolled_back_cache cx f =
   cx.ccx.eval_repos_cache := saved_eval_repos_cache;
   cx.ccx.fix_cache := saved_fix_cache;
   cx.ccx.spread_cache := saved_spread_cache;
-  result
+  Base.Result.ok_exn result
 
 let run_in_synthesis_mode cx f =
   let old_synthesis_mode = cx.in_synthesis_mode in
   let old_produced_placeholders = cx.ccx.produced_placeholders in
   cx.ccx.produced_placeholders <- false;
   cx.in_synthesis_mode <- true;
-  let result = run_and_rolled_back_cache cx f in
+  let result = Base.Result.try_with f in
   cx.in_synthesis_mode <- old_synthesis_mode;
   let produced_placeholders = cx.ccx.produced_placeholders in
   cx.ccx.produced_placeholders <- old_produced_placeholders;
-  (produced_placeholders, result)
+  (produced_placeholders, Base.Result.ok_exn result)
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
