@@ -926,7 +926,7 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
     | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
-    | UnaryMinusT _ -> p t
+    | UnaryArithT _ -> p t
     | VarianceCheckT (_, _, args, pol) ->
       p
         ~extra:
@@ -1161,7 +1161,7 @@ let dump_error_message =
     | IncompatibleGetKeysT -> "IncompatibleGetKeysT"
     | IncompatibleHasOwnPropT _ -> "IncompatibleHasOwnPropT"
     | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
-    | IncompatibleUnaryMinusT -> "IncompatibleUnaryMinusT"
+    | IncompatibleUnaryArithT -> "IncompatibleUnaryArithT"
     | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
     | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
     | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
@@ -1804,6 +1804,7 @@ let dump_error_message =
     | EEmptyArrayNoProvider { loc } -> spf "EEmptyArrayNoProvider (%s)" (string_of_aloc loc)
     | EUnusedPromise { loc } -> spf "EUnusedPromise (%s)" (string_of_aloc loc)
     | EBigIntRShift3 reason -> spf "EBigIntRShift3 (%s)" (dump_reason cx reason)
+    | EBigIntNumCoerce reason -> spf "EBigIntNumCoerce (%s)" (dump_reason cx reason)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

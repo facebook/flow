@@ -37,6 +37,8 @@ val is_call_to_object_static_method : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val negate_number_literal : float * string -> float * string
 
+val negate_bigint_literal : int64 option * string -> int64 option * string
+
 val loc_of_expression : ('a, 'a) Flow_ast.Expression.t -> 'a
 
 val loc_of_statement : ('a, 'a) Flow_ast.Statement.t -> 'a

@@ -1,29 +1,36 @@
-Error ------------------------------------------------------------------------------------------- contextual_ctor.js:5:9
+Error ------------------------------------------------------------------------------------------ contextual_ctor.js:5:13
 
-`T` is underconstrained by new `C` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `C` because `T` [1] is underconstrained by new `C` [2]. [underconstrained-implicit-instantiation]
 
-   contextual_ctor.js:5:9
+   contextual_ctor.js:5:13
    5| let x = new C(); // Error
-              ^^^^^^^ [1]
+                  ^
 
 References:
    contextual_ctor.js:3:9
    3| class C<T> {}
-              ^ [2]
+              ^ [1]
+   contextual_ctor.js:5:9
+   5| let x = new C(); // Error
+              ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- contextual_jsx.js:6:9
+Error ------------------------------------------------------------------------------------------- contextual_jsx.js:6:10
 
-`T` is underconstrained by `Component` element [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot create `Component` element because `T` [1] is underconstrained by `Component` element [2].
+[underconstrained-implicit-instantiation]
 
-   contextual_jsx.js:6:9
+   contextual_jsx.js:6:10
    6| let x = <Component />; // Error
-              ^^^^^^^^^^^^^ [1]
+               ^^^^^^^^^
 
 References:
    contextual_jsx.js:4:20
    4| function Component<T>(props: {foo?: T}): React.Node { return null; }
-                         ^ [2]
+                         ^ [1]
+   contextual_jsx.js:6:9
+   6| let x = <Component />; // Error
+              ^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- invalid.js:5:8
@@ -55,34 +62,40 @@ References:
                                 ^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- react_children.js:5:1
+Error ------------------------------------------------------------------------------------------- react_children.js:5:16
 
-`T` is underconstrained by call of method `toArray` [1] and is defined in `T` [2]
+Cannot call `React.Children.toArray` because `T` [1] is underconstrained by call of method `toArray` [2].
 [underconstrained-implicit-instantiation]
 
+   react_children.js:5:16
+     5| React.Children.toArray(1); // underconstrained
+                       ^^^^^^^
+
+References:
+   <BUILTINS>/react.js:292:13
+   292|     toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
+                    ^ [1]
    react_children.js:5:1
      5| React.Children.toArray(1); // underconstrained
-        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/react.js:292:13
-   292|     toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
-                    ^ [2]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- react_children.js:6:1
+Error ------------------------------------------------------------------------------------------- react_children.js:6:16
 
-`T` is underconstrained by call of method `toArray` [1] and is defined in `T` [2]
+Cannot call `React.Children.toArray` because `T` [1] is underconstrained by call of method `toArray` [2].
 [underconstrained-implicit-instantiation]
 
-   react_children.js:6:1
+   react_children.js:6:16
      6| React.Children.toArray([1]); // underconstrained
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                       ^^^^^^^
 
 References:
    <BUILTINS>/react.js:292:13
    292|     toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
-                    ^ [2]
+                    ^ [1]
+   react_children.js:6:1
+     6| React.Children.toArray([1]); // underconstrained
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- speculation.js:21:9
@@ -94,177 +107,216 @@ An annotation on rest parameter `args` is required because Flow cannot infer its
                ^^^^
 
 
-Error ------------------------------------------------------------------------ underconstrained_class_constructor.js:5:1
+Error ------------------------------------------------------------------------ underconstrained_class_constructor.js:5:5
 
-`T` is underconstrained by new `A` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `A` because `T` [1] is underconstrained by new `A` [2]. [underconstrained-implicit-instantiation]
 
-   underconstrained_class_constructor.js:5:1
+   underconstrained_class_constructor.js:5:5
    5| new A(); // Error: T underconstrained
-      ^^^^^^^ [1]
+          ^
 
 References:
    underconstrained_class_constructor.js:2:17
    2| declare class A<T>{
-                      ^ [2]
+                      ^ [1]
+   underconstrained_class_constructor.js:5:1
+   5| new A(); // Error: T underconstrained
+      ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- underconstrained_fun_call.js:3:1
 
-`T` is underconstrained by call of `f` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `f` because `T` [1] is underconstrained by call of `f` [2]. [underconstrained-implicit-instantiation]
 
    underconstrained_fun_call.js:3:1
    3| f(); // Error: T underconstrained
-      ^^^ [1]
+      ^
 
 References:
    underconstrained_fun_call.js:2:20
    2| declare function f<T>(): T;
-                         ^ [2]
+                         ^ [1]
+   underconstrained_fun_call.js:3:1
+   3| f(); // Error: T underconstrained
+      ^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- underconstrained_fun_call.js:12:1
 
-`T` is underconstrained by call of `i` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `i` because `T` [1] is underconstrained by call of `i` [2]. [underconstrained-implicit-instantiation]
 
    underconstrained_fun_call.js:12:1
    12| i(); // Error: T underconstrained
-       ^^^ [1]
+       ^
 
 References:
    underconstrained_fun_call.js:11:20
    11| declare function i<T>(): Array<T>;
-                          ^ [2]
+                          ^ [1]
+   underconstrained_fun_call.js:12:1
+   12| i(); // Error: T underconstrained
+       ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ underconstrained_react.js:7:1
+Error ------------------------------------------------------------------------------------ underconstrained_react.js:7:2
 
-`T` is underconstrained by `PolyReactClass` element [1] and is defined in `T` [2]
+Cannot create `PolyReactClass` element because `T` [1] is underconstrained by `PolyReactClass` element [2].
 [underconstrained-implicit-instantiation]
 
-   underconstrained_react.js:7:1
+   underconstrained_react.js:7:2
    7| <PolyReactClass />;
-      ^^^^^^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^
 
 References:
    underconstrained_react.js:5:22
    5| class PolyReactClass<T> extends React.Component<{}> {}
-                           ^ [2]
+                           ^ [1]
+   underconstrained_react.js:7:1
+   7| <PolyReactClass />;
+      ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------- underconstrained_react.js:11:1
+Error ----------------------------------------------------------------------------------- underconstrained_react.js:11:2
 
-`T` is underconstrained by `PolyFunctionComponent` element [1] and is defined in `T` [2]
-[underconstrained-implicit-instantiation]
+Cannot create `PolyFunctionComponent` element because `T` [1] is underconstrained by `PolyFunctionComponent`
+element [2]. [underconstrained-implicit-instantiation]
 
-   underconstrained_react.js:11:1
+   underconstrained_react.js:11:2
    11| <PolyFunctionComponent foo={() => {}}/>;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+        ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    underconstrained_react.js:9:32
     9| function PolyFunctionComponent<T>(props: {foo: ({x: T} => mixed)}): React.Node { return null }
-                                      ^ [2]
+                                      ^ [1]
+   underconstrained_react.js:11:1
+   11| <PolyFunctionComponent foo={() => {}}/>;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:11:1
 
-`T` is underconstrained by call of `ReposLowerTRegressionTest` [1] and is defined in `T` [2]
+Cannot call `ReposLowerTRegressionTest` because `T` [1] is underconstrained by call of `ReposLowerTRegressionTest` [2].
 [underconstrained-implicit-instantiation]
 
    upper_non_t.js:11:1
    11| ReposLowerTRegressionTest({}) // Error: T under constrained.
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    upper_non_t.js:10:44
    10| declare function ReposLowerTRegressionTest<T>({o?: T}): T;
-                                                  ^ [2]
+                                                  ^ [1]
+   upper_non_t.js:11:1
+   11| ReposLowerTRegressionTest({}) // Error: T under constrained.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:21:1
 
-`T` is underconstrained by call of `IndexedAccess1` [1] and is defined in `T` [2]
+Cannot call `IndexedAccess1` because `T` [1] is underconstrained by call of `IndexedAccess1` [2].
 [underconstrained-implicit-instantiation]
 
    upper_non_t.js:21:1
    21| IndexedAccess1(1); // Error: T under constrained.
-       ^^^^^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^
 
 References:
    upper_non_t.js:20:33
    20| declare function IndexedAccess1<T>(T['f']): T;
-                                       ^ [2]
+                                       ^ [1]
+   upper_non_t.js:21:1
+   21| IndexedAccess1(1); // Error: T under constrained.
+       ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:23:1
 
-`T` is underconstrained by call of `IndexedAccess2` [1] and is defined in `T` [2]
+Cannot call `IndexedAccess2` because `T` [1] is underconstrained by call of `IndexedAccess2` [2].
 [underconstrained-implicit-instantiation]
 
    upper_non_t.js:23:1
    23| IndexedAccess2(1); // Error: T under constrained.
-       ^^^^^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^
 
 References:
    upper_non_t.js:22:33
    22| declare function IndexedAccess2<T>(T[number]): T;
-                                       ^ [2]
+                                       ^ [1]
+   upper_non_t.js:23:1
+   23| IndexedAccess2(1); // Error: T under constrained.
+       ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:25:1
 
-`T` is underconstrained by call of `Call` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `Call` because `T` [1] is underconstrained by call of `Call` [2]. [underconstrained-implicit-instantiation]
 
    upper_non_t.js:25:1
    25| Call(undefined); // Error: T under constrained.
-       ^^^^^^^^^^^^^^^ [1]
+       ^^^^
 
 References:
    upper_non_t.js:24:23
    24| declare function Call<T>($Call<T, <V>(V)=>void>): T;
-                             ^ [2]
+                             ^ [1]
+   upper_non_t.js:25:1
+   25| Call(undefined); // Error: T under constrained.
+       ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:27:1
 
-`T` is underconstrained by call of `ObjMap` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `ObjMap` because `T` [1] is underconstrained by call of `ObjMap` [2].
+[underconstrained-implicit-instantiation]
 
    upper_non_t.js:27:1
    27| ObjMap({}); // Error: T under constrained.
-       ^^^^^^^^^^ [1]
+       ^^^^^^
 
 References:
    upper_non_t.js:26:25
    26| declare function ObjMap<T>($ObjMap<T, <V>(V)=>void>): T;
-                               ^ [2]
+                               ^ [1]
+   upper_non_t.js:27:1
+   27| ObjMap({}); // Error: T under constrained.
+       ^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:29:1
 
-`T` is underconstrained by call of `Values` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `Values` because `T` [1] is underconstrained by call of `Values` [2].
+[underconstrained-implicit-instantiation]
 
    upper_non_t.js:29:1
    29| Values(3); // Error: T under constrained.
-       ^^^^^^^^^ [1]
+       ^^^^^^
 
 References:
    upper_non_t.js:28:25
    28| declare function Values<T>($Values<T>): T;
-                               ^ [2]
+                               ^ [1]
+   upper_non_t.js:29:1
+   29| Values(3); // Error: T under constrained.
+       ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:31:1
 
-`T` is underconstrained by call of `ElementRef` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `ElementRef` because `T` [1] is underconstrained by call of `ElementRef` [2].
+[underconstrained-implicit-instantiation]
 
    upper_non_t.js:31:1
    31| ElementRef(1); // Error: T under constrained.
-       ^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^
 
 References:
    upper_non_t.js:30:29
    30| declare function ElementRef<T>(React$ElementRef<T>): T;
-                                   ^ [2]
+                                   ^ [1]
+   upper_non_t.js:31:1
+   31| ElementRef(1); // Error: T under constrained.
+       ^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:47:6
@@ -653,16 +705,20 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:128:3
 
-`T` is underconstrained by call of `Diff0` [1] and is defined in `T` [2] [underconstrained-implicit-instantiation]
+Cannot call `Diff0` because `T` [1] is underconstrained by call of `Diff0` [2].
+[underconstrained-implicit-instantiation]
 
    upper_non_t.js:128:3
    128|   Diff0(); // error
-          ^^^^^^^ [1]
+          ^^^^^
 
 References:
    upper_non_t.js:127:26
    127|   declare function Diff0<T>(): $Diff<T, {foo: number}>;
-                                 ^ [2]
+                                 ^ [1]
+   upper_non_t.js:128:3
+   128|   Diff0(); // error
+          ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:134:4

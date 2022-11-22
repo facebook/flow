@@ -542,8 +542,12 @@ module rec TypeTerm : sig
         flip: bool;
         arg: t;
       }
-    (* unary minus operator on numbers, allows negative number literals *)
-    | UnaryMinusT of reason * t
+    (* unary arithmetic operators on numbers *)
+    | UnaryArithT of {
+        reason: reason;
+        result_t: t;
+        kind: UnaryArithKind.t;
+      }
     | AssertArithmeticOperandT of reason
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
@@ -2660,6 +2664,14 @@ end = struct
     | _ -> Other
 end
 
+and UnaryArithKind : sig
+  type t =
+    | Plus
+    | Minus
+    | BitNot
+end =
+  UnaryArithKind
+
 let unknown_use = TypeTerm.(Op UnknownUse)
 
 let name_of_propref = function
@@ -3739,7 +3751,7 @@ let string_of_use_ctor = function
   | TestPropT _ -> "TestPropT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | ToStringT _ -> "ToStringT"
-  | UnaryMinusT _ -> "UnaryMinusT"
+  | UnaryArithT _ -> "UnaryArithT"
   | VarianceCheckT _ -> "VarianceCheckT"
   | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
   | TypeCastT _ -> "TypeCastT"

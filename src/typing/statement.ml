@@ -2387,7 +2387,7 @@ module Make
                   cx
                   (DefT (reason, make_trust (), ArrT (ArrayAT (elemt', Some []))), hint)
               then
-                Flow.unify cx elemt (PinTypes.pin_type cx element_reason elemt')
+                Flow.unify cx elemt (PinTypes.pin_type cx ~use_op:unknown_use element_reason elemt')
               else
                 default_init ()
         );
@@ -4383,8 +4383,13 @@ module Make
       in
       (tout, { operator = Not; argument; comments })
     | { operator = Plus; argument; comments } ->
-      let argument = expression cx argument in
-      (NumT.at loc |> with_trust literal_trust, { operator = Plus; argument; comments })
+      let (((_, argt), _) as argument) = expression cx argument in
+      let reason = mk_reason (desc_of_t argt) loc in
+      ( Tvar.mk_where cx reason (fun result_t ->
+            Flow.flow cx (argt, UnaryArithT { reason; result_t; kind = UnaryArithKind.Plus })
+        ),
+        { operator = Plus; argument; comments }
+      )
     | { operator = Minus; argument; comments } ->
       let (((_, argt), _) as argument) = expression cx argument in
       ( begin
@@ -4400,15 +4405,20 @@ module Make
             DefT (reason, trust, NumT (Literal (sense, (value, raw))))
           | arg ->
             let reason = mk_reason (desc_of_t arg) loc in
-            Tvar.mk_where cx reason (fun t -> Flow.flow cx (arg, UnaryMinusT (reason, t)))
+            Tvar.mk_where cx reason (fun result_t ->
+                Flow.flow cx (arg, UnaryArithT { reason; result_t; kind = UnaryArithKind.Minus })
+            )
         end,
         { operator = Minus; argument; comments }
       )
     | { operator = BitNot; argument; comments } ->
-      let t = NumT.at loc |> with_trust literal_trust in
       let (((_, argt), _) as argument) = expression cx argument in
-      Flow.flow_t cx (argt, t);
-      (t, { operator = BitNot; argument; comments })
+      let reason = mk_reason (desc_of_t argt) loc in
+      ( Tvar.mk_where cx reason (fun result_t ->
+            Flow.flow cx (argt, UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot })
+        ),
+        { operator = BitNot; argument; comments }
+      )
     | { operator = Typeof; argument; comments } ->
       let argument = expression cx argument in
       (StrT.at loc |> with_trust literal_trust, { operator = Typeof; argument; comments })

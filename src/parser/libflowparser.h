@@ -30,7 +30,7 @@ static value list_tail(value props) {
   return Field(props, 1);
 }
 
-static char* get_prop_key(value prop) {
+static const char* get_prop_key(value prop) {
   return String_val(Field(prop, 0));
 }
 
@@ -51,7 +51,7 @@ template <class T>
 class AbstractTranslator {
  public:
   virtual ~AbstractTranslator() = default;
-  virtual T convert_string(char* str) = 0;
+  virtual T convert_string(const char* str) = 0;
   virtual T convert_number(double n) = 0;
   virtual T convert_bool(long b) = 0;
   virtual T convert_null() = 0;
@@ -98,7 +98,7 @@ class AbstractTranslator {
     CAMLparam0();
     CAMLlocal4(content_val, option_val, options_val, result_val);
 
-    static value* func = caml_named_value("flow_parse");
+    static const value* func = caml_named_value("flow_parse");
 
     content_val = caml_copy_string(content);
 

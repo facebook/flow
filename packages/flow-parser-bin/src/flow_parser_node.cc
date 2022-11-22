@@ -14,7 +14,7 @@ using namespace flowparser;
 
 class V8Translator : public AbstractTranslator<Local<Value>> {
  public:
-  Local<Value> convert_string(char* str) {
+  Local<Value> convert_string(const char* str) {
     return Nan::New(str).ToLocalChecked();
   };
   Local<Value> convert_number(double n) {

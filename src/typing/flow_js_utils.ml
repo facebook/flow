@@ -411,7 +411,7 @@ let error_message_kind_of_upper = function
     Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
-  | UnaryMinusT _ -> Error_message.IncompatibleUnaryMinusT
+  | UnaryArithT _ -> Error_message.IncompatibleUnaryArithT
   | MapTypeT (_, _, (ObjectMap _ | ObjectMapi _ | ObjectMapConst _ | ObjectKeyMirror), _) ->
     Error_message.IncompatibleMapTypeTObject
   | TypeAppVarianceCheckT _ -> Error_message.IncompatibleTypeAppVarianceCheckT

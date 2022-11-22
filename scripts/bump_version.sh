@@ -22,7 +22,6 @@ set -x
 sed -i 's/^\(let version = "\)[^"]*\("\)/\1'"$VERSION"'\2/' src/common/flow_version.ml
 sed -i 's/^\(version: "\)[^"]*\("\)/\1'"$OPAM_VERSION"'\2/' flowtype.opam
 sed -i 's/^\(version: "\)[^"]*\("\)/\1'"$OPAM_VERSION"'\2/' flow_parser.opam
-sed -i 's/^\(version="\)[^"]*\("\)/\1'"$OPAM_VERSION"'\2/' src/parser/META
 sed -i 's/\("version": "\)[^"]*\("\)/\1'"$VERSION"'\2/' packages/flow-parser-bin/package.json
 sed -i 's/\("version": "\)[^"]*\("\)/\1'"$VERSION"'\2/' packages/flow-parser/package.json
 sed -i 's/\("version": "\)[^"]*\("\)/\1'"$REMOVE_TYPES_VERSION"'\2/' packages/flow-remove-types/package.json

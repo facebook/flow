@@ -52,6 +52,11 @@ module.exports = {
     prism: {
       theme: require('prism-react-renderer/themes/github'),
     },
+    colorMode: {
+      defaultMode: 'light',
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
+    },
     navbar: {
       logo: {
         alt: 'My Facebook Project Logo',
@@ -59,8 +64,14 @@ module.exports = {
       },
       items: [
         {
-          to: 'docs/',
-          activeBasePath: 'docs',
+          to: 'en/docs/getting-started',
+          activeBasePath: 'en/docs/getting-started',
+          label: 'Getting Started',
+          position: 'left',
+        },
+        {
+          to: 'en/docs/getting-started',
+          activeBasePath: 'en/docs',
           label: 'Docs',
           position: 'left',
         },
@@ -104,7 +115,7 @@ module.exports = {
           items: [
             {
               label: 'Getting Started',
-              to: 'docs/',
+              to: 'en/docs/getting-started',
             },
           ],
         },
@@ -174,6 +185,7 @@ module.exports = {
       '@docusaurus/preset-classic',
       {
         docs: {
+          routeBasePath: 'en/docs',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/facebook/flow/edit/main/new_website/',
           remarkPlugins: [

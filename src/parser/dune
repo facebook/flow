@@ -1,11 +1,21 @@
 (library
  (name flow_parser)
+ (public_name flow_parser)
  (wrapped false)
  (modules
-  (:standard \ flow_parser_js flow_parser_dot_js))
+  (:standard \ flow_parser_js flow_parser_dot_js libflowparser))
  (libraries base sedlex wtf8 flow_sedlexing collections)
  (preprocess
   (pps ppx_gen_rec ppx_deriving.std sedlex.ppx)))
+
+; dune build ./libflowparser.exe.o
+
+(executable
+  (name libflowparser)
+  (modes (native object))
+  (modules libflowparser)
+  (flags (-runtime-variant=_pic))
+  (libraries flow_parser))
 
 (executable
  (name flow_parser_dot_js)

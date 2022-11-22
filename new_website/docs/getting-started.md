@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-slug: /
+slug: /getting-started
 ---
 
 Flow is a static type checker for your JavaScript code. It does a lot of work

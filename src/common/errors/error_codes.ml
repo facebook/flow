@@ -162,6 +162,7 @@ type error_code =
   | LogicalAssignmentOperatorsNotSupported
   | UnusedPromiseInAsyncScope
   | BigIntRShift3
+  | BigIntNumCoerce
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UntypedTypeImport -> UntypedTypeImport
@@ -348,3 +349,4 @@ let string_of_code : error_code -> string = function
   | LogicalAssignmentOperatorsNotSupported -> "logical-assignment-operators-not-supported"
   | UnusedPromiseInAsyncScope -> "unused-promise-in-async-scope"
   | BigIntRShift3 -> "bigint-unsigned-right-shift"
+  | BigIntNumCoerce -> "bigint-num-coerce"

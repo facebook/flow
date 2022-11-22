@@ -149,7 +149,7 @@ let rec instantiate_callee cx fn instantiation_hint =
       in
       let subst_map =
         Context.run_in_implicit_instantiation_mode cx (fun () ->
-            ImplicitInstantiation.solve_targs cx ?return_hint check
+            ImplicitInstantiation.solve_targs cx ~use_op:unknown_use ?return_hint check
             |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
         )
       in
@@ -190,7 +190,7 @@ and instantiate_component cx component instantiation_hint =
     in
     let subst_map =
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          ImplicitInstantiation.solve_targs cx ?return_hint check
+          ImplicitInstantiation.solve_targs cx ~use_op:unknown_use ?return_hint check
           |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
       )
     in
