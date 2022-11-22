@@ -15,83 +15,87 @@ References:
               ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- bigint.js:21:8
+Error --------------------------------------------------------------------------------------------------- bigint.js:22:8
 
 Cannot call `BigInt` with `null` bound to `value` because: [incompatible-call]
  - Either null [1] is incompatible with boolean [2].
  - Or null [1] is incompatible with string [3].
  - Or null [1] is incompatible with number [4].
- - Or null [1] is incompatible with interface type [5].
- - Or null [1] is incompatible with read-only array type [6].
+ - Or null [1] is incompatible with bigint [5].
+ - Or null [1] is incompatible with interface type [6].
+ - Or null [1] is incompatible with read-only array type [7].
 
-   bigint.js:21:8
-     21| BigInt(null); // error
+   bigint.js:22:8
+     22| BigInt(null); // error
                 ^^^^ [1]
 
 References:
    <BUILTINS>/core.js:2596:18
-   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
+   2596|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                           ^^^^^^^ [2]
    <BUILTINS>/core.js:2596:28
-   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
+   2596|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                     ^^^^^^ [3]
    <BUILTINS>/core.js:2596:37
-   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
+   2596|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                              ^^^^^^ [4]
    <BUILTINS>/core.js:2596:46
-   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
-                                                      ^^^^^^^^^^^^ [5]
-   <BUILTINS>/core.js:2596:61
-   2596|   static (value: boolean | string | number | interface {} | $ReadOnlyArray<mixed>): bigint;
-                                                                     ^^^^^^^^^^^^^^^^^^^^^ [6]
+   2596|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+                                                      ^^^^^^ [5]
+   <BUILTINS>/core.js:2596:55
+   2596|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+                                                               ^^^^^^^^^^^^ [6]
+   <BUILTINS>/core.js:2596:70
+   2596|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+                                                                              ^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
-Error --------------------------------------------------------------------------------------------------- bigint.js:26:6
+Error --------------------------------------------------------------------------------------------------- bigint.js:27:6
 
 Cannot cast `foo` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
 
-   bigint.js:26:6
-   26|     (foo : empty); // error
+   bigint.js:27:6
+   27|     (foo : empty); // error
             ^^^
 
 References:
-   bigint.js:24:5
-   24| if (typeof foo === "bigint") {
+   bigint.js:25:5
+   25| if (typeof foo === "bigint") {
            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   bigint.js:26:12
-   26|     (foo : empty); // error
+   bigint.js:27:12
+   27|     (foo : empty); // error
                   ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- bigint.js:38:2
+Error --------------------------------------------------------------------------------------------------- bigint.js:39:2
 
 Cannot compare bigint [1] to string [2]. [invalid-compare]
 
-   bigint.js:38:2
-   38| (0n > ""); // error
+   bigint.js:39:2
+   39| (0n > ""); // error
         ^^ [1]
 
 References:
-   bigint.js:38:7
-   38| (0n > ""); // error
+   bigint.js:39:7
+   39| (0n > ""); // error
              ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- bigint.js:41:5
+Error --------------------------------------------------------------------------------------------------- bigint.js:42:5
 
 Sketchy null check on bigint [1] which is potentially 0n. Perhaps you meant to check for null or undefined [2]?
 [sketchy-null-bigint]
 
-   bigint.js:41:5
-   41| if (b) {} // error
+   bigint.js:42:5
+   42| if (b) {} // error
            ^
 
 References:
-   bigint.js:40:17
-   40| declare var b: ?bigint;
+   bigint.js:41:17
+   41| declare var b: ?bigint;
                        ^^^^^^ [1]
-   bigint.js:40:16
-   40| declare var b: ?bigint;
+   bigint.js:41:16
+   41| declare var b: ?bigint;
                       ^^^^^^^ [2]
 
 
