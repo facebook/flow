@@ -1,0 +1,4 @@
+source 'https://rubygems.org'
+ruby '~> 2.6'
+
+gem 's3_website', '~>3.4.0'

@@ -1,0 +1,38 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    aws-eventstream (1.2.0)
+    aws-sdk (2.11.632)
+      aws-sdk-resources (= 2.11.632)
+    aws-sdk-core (2.11.632)
+      aws-sigv4 (~> 1.0)
+      jmespath (~> 1.0)
+    aws-sdk-resources (2.11.632)
+      aws-sdk-core (= 2.11.632)
+    aws-sigv4 (1.5.2)
+      aws-eventstream (~> 1, >= 1.0.2)
+    colored (1.2)
+    configure-s3-website (2.3.0)
+      aws-sdk (~> 2)
+      deep_merge (~> 1.0.0)
+    deep_merge (1.0.1)
+    dotenv (1.0.2)
+    jmespath (1.6.1)
+    s3_website (3.4.0)
+      colored (= 1.2)
+      configure-s3-website (= 2.3.0)
+      dotenv (~> 1.0)
+      thor (~> 0.18)
+    thor (0.20.3)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  s3_website (~> 3.4.0)
+
+RUBY VERSION
+   ruby 2.6.10p210
+
+BUNDLED WITH
+   2.2.24
