@@ -64,6 +64,17 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Flow Enums',
+      items: [
+        'enums/index',
+        'enums/enabling-enums',
+        'enums/defining-enums',
+        'enums/using-enums',
+        'enums/migrating-legacy-patterns',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Flow CLI',
       items: ['cli/index', 'cli/coverage', 'cli/annotate-exports'],
     },
