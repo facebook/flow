@@ -59,9 +59,7 @@ This flag is in the form of a normal JavaScript comment annotated with `@flow`. 
 
 Now that all the setup and initialization is complete, you are ready to write actual Flow code. For each file that you have flagged with `// @flow`, you now have the full power of Flow and its type-checking available to you. Here is an example Flow file:
 
-```js
-// @flow
-
+```js flow-check
 function foo(x: ?number): string {
   if (x) {
     return x;
@@ -86,9 +84,5 @@ The first time this is run, the [Flow background process](#toc-run-flow-backgrou
 For the [code above](#toc-write-flow-code), running `flow` will yield:
 
 ```sh
-test.js:5
-  5:     return x;
-                ^ number. This type is incompatible with the expected return type of
-  3: function foo(x: ?number): string {
-                               ^^^^^^ string
+3:12-3:12: Cannot return `x` because number is incompatible with string. [incompatible-return]
 ```

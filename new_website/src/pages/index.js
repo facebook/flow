@@ -240,24 +240,6 @@ export default function Home(): React.MixedElement {
           <div className="container">
             <div className="row">
               <div className={clsx('col col--6', styles.featurette)}>
-                <h2 className={styles.featuretteHeading}>Type Inference</h2>
-                <p className={styles.featuretteText}>
-                  Using data flow analysis, Flow infers types and tracks data as
-                  it moves through your code. You don't need to fully annotate
-                  your code before Flow can start to find bugs.
-                </p>
-              </div>
-              <div className={clsx('col col--6', styles.featurette)}>
-                <h2 className={styles.featuretteHeading}>
-                  JavaScript, Your Way
-                </h2>
-                <p className={styles.featuretteText}>
-                  Flow is designed to understand idiomatic JavaScript. It
-                  understands common JavaScript patterns and many of the weird
-                  things we JavaScript developers love to do.
-                </p>
-              </div>
-              <div className={clsx('col col--6', styles.featurette)}>
                 <h2 className={styles.featuretteHeading}>Realtime Feedback</h2>
                 <p className={styles.featuretteText}>
                   Flow gives you fast feedback while you code by incrementally
