@@ -140,11 +140,10 @@ module.exports = {
       label: 'Editors',
       items: [
         'editors/index',
-        'editors/atom',
+        'editors/vscode',
         'editors/sublime-text',
         'editors/vim',
         'editors/emacs',
-        'editors/vscode',
         'editors/webstorm',
       ],
     },
