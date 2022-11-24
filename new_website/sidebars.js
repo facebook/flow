@@ -108,6 +108,7 @@ module.exports = {
       label: 'Tools',
       items: [
         'tools/babel',
+        'tools/eslint',
         'tools/flow-remove-types',
         'tools/create-react-app',
       ],
