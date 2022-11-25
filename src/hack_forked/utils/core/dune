@@ -9,6 +9,7 @@
   (flags
    (:standard
     (:include config/build-timestamp-opt))))
+ (js_of_ocaml (javascript_files fast_compare.js get_build_id.js))
  (libraries base string hh_json str unix)
  (preprocess
   (pps lwt_ppx ppx_deriving.std ppx_deriving.enum)))

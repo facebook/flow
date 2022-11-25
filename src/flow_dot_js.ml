@@ -94,15 +94,6 @@ let load_lib_files ~ccx ~metadata files =
   in
   leader
 
-let stub_docblock =
-  {
-    Docblock.flow = None;
-    preventMunge = false;
-    providesModule = None;
-    jsx = None;
-    jsxRuntime = None;
-  }
-
 let stub_metadata ~root ~checked =
   {
     Context.checked (* local *);

@@ -4,6 +4,7 @@
  (foreign_stubs
   (language c)
   (names xx_stubs))
+ (js_of_ocaml (javascript_files xx_stubs.js))
  (libraries lz4))
 
 (dirs
