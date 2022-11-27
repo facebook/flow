@@ -1683,8 +1683,7 @@ let handle_persistent_get_def
     let { TextDocumentPositionParams.textDocument; position = _ } = params in
     let default_uri = textDocument.TextDocumentIdentifier.uri in
     let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
-    let definition_location = { Lsp.DefinitionLocation.location; title = None } in
-    let response = ResponseMessage (id, DefinitionResult [definition_location]) in
+    let response = ResponseMessage (id, DefinitionResult [location]) in
     Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
 

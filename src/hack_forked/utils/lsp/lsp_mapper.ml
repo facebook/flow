@@ -26,7 +26,6 @@ type t = {
   of_configuration_params: t -> Configuration.params -> Configuration.params;
   of_configuration_result: t -> Configuration.result -> Configuration.result;
   of_connection_status_params: t -> ConnectionStatus.params -> ConnectionStatus.params;
-  of_definition_location: t -> DefinitionLocation.t -> DefinitionLocation.t;
   of_definition_params: t -> Definition.params -> Definition.params;
   of_definition_result: t -> Definition.result -> Definition.result;
   of_diagnostic: t -> PublishDiagnostics.diagnostic -> PublishDiagnostics.diagnostic;
@@ -253,12 +252,9 @@ let default_mapper =
           relatedInformation;
           relatedLocations;
         });
-    of_definition_location =
-      (fun mapper { DefinitionLocation.location; title } ->
-        { DefinitionLocation.location = mapper.of_location mapper location; title });
     of_definition_params = (fun mapper t -> mapper.of_text_document_position_params mapper t);
     of_definition_result =
-      (fun mapper results -> Base.List.map ~f:(mapper.of_definition_location mapper) results);
+      (fun mapper results -> Base.List.map ~f:(mapper.of_location mapper) results);
     of_did_change_configuration_params =
       (fun _mapper { DidChangeConfiguration.settings } -> { DidChangeConfiguration.settings });
     of_did_change_content_change_event =
@@ -638,7 +634,7 @@ let default_mapper =
     of_type_definition_params =
       (fun mapper params -> mapper.of_text_document_position_params mapper params);
     of_type_definition_result =
-      (fun mapper results -> Base.List.map ~f:(mapper.of_definition_location mapper) results);
+      (fun mapper results -> Base.List.map ~f:(mapper.of_location mapper) results);
     of_versioned_text_document_identifier =
       (fun mapper { VersionedTextDocumentIdentifier.uri; version } ->
         let uri = mapper.of_document_uri mapper uri in
