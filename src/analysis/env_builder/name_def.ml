@@ -21,7 +21,24 @@ let default_of_binding = function
   | Select { default; _ } -> default
   | Root _ -> None
 
-module Destructure = struct
+module Destructure : sig
+  val type_of_pattern :
+    (ALoc.t, ALoc.t) Ast.Pattern.t -> (ALoc.t, ALoc.t) Ast.Type.annotation option
+
+  val fold_pattern :
+    f:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> 'a) ->
+    join:('a -> 'a -> 'a) ->
+    default:'a ->
+    binding ->
+    (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
+    'a
+
+  val pattern :
+    f:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> unit) ->
+    binding ->
+    (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
+    unit
+end = struct
   open Ast.Pattern
 
   let type_of_pattern (_, p) =
@@ -109,7 +126,7 @@ module Destructure = struct
     | Property.Literal (_, _) -> (acc, xs, false)
 
   let identifier ~f acc (name_loc, { Ast.Identifier.name; _ }) =
-    f name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) (Binding acc)
+    f name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) acc
 
   let rec fold_pattern ~f ~join ~default acc (_, p) =
     match p with
@@ -459,6 +476,10 @@ class def_finder env_entries providers toplevel_scope =
 
     method add_ordinary_binding loc = this#add_binding (Env_api.OrdinaryNameLoc, loc)
 
+    method add_destructure_bindings root pattern =
+      let f loc reason binding = this#add_ordinary_binding loc reason (Binding binding) in
+      Destructure.pattern ~f (Root root) pattern
+
     method private in_scope : 'a 'b. ('a -> 'b) -> scope_kind -> 'a -> 'b =
       fun f scope' node ->
         let scope0 = scope_kind in
@@ -766,9 +787,7 @@ class def_finder env_entries providers toplevel_scope =
         | (None, Some init, _) -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
         | (None, None, _) -> (None, Hint_None)
       in
-      Base.Option.iter
-        ~f:(fun acc -> Destructure.pattern ~f:this#add_ordinary_binding (Root acc) id)
-        source;
+      Base.Option.iter ~f:(fun acc -> this#add_destructure_bindings acc id) source;
       ignore @@ this#variable_declarator_pattern ~kind id;
       Base.Option.iter init ~f:(fun init ->
           this#visit_expression ~hint ~cond:NonConditionalContext init
@@ -842,8 +861,8 @@ class def_finder env_entries providers toplevel_scope =
           this#record_hint param_loc hint;
           Contextual { reason; hint; optional; default_expression }
       in
-      let f loc reason src =
-        this#add_ordinary_binding loc reason src;
+      let f loc reason binding =
+        this#add_ordinary_binding loc reason (Binding binding);
         true
       in
       if
@@ -887,7 +906,7 @@ class def_finder env_entries providers toplevel_scope =
           this#record_hint param_loc hint;
           Contextual { reason; hint; optional = false; default_expression = None }
       in
-      Destructure.pattern ~f:this#add_ordinary_binding (Root source) argument;
+      this#add_destructure_bindings source argument;
       ignore @@ super#function_rest_param expr
 
     method! function_this_param this_ =
@@ -911,7 +930,7 @@ class def_finder env_entries providers toplevel_scope =
       super#function_this_param this_
 
     method! catch_clause_pattern pat =
-      Destructure.pattern ~f:this#add_ordinary_binding (Root Catch) pat;
+      this#add_destructure_bindings Catch pat;
       super#catch_clause_pattern pat
 
     method visit_function_expr
@@ -942,23 +961,25 @@ class def_finder env_entries providers toplevel_scope =
       this#in_new_tparams_env (fun () ->
           this#visit_function ~scope_kind ~func_hint expr;
           (match var_assigned_to with
-          | Some id ->
-            Destructure.identifier
-              ~f:this#add_ordinary_binding
-              (Root
-                 (FunctionValue
-                    {
-                      hint = func_hint;
-                      synthesizable_from_annotation = func_is_synthesizable_from_annotation expr;
-                      function_loc;
-                      function_ = expr;
-                      statics;
-                      arrow;
-                      tparams_map = tparams;
-                    }
+          | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+            this#add_ordinary_binding
+              name_loc
+              (mk_reason (RIdentifier (OrdinaryName name)) name_loc)
+              (Binding
+                 (Root
+                    (FunctionValue
+                       {
+                         hint = func_hint;
+                         synthesizable_from_annotation = func_is_synthesizable_from_annotation expr;
+                         function_loc;
+                         function_ = expr;
+                         statics;
+                         arrow;
+                         tparams_map = tparams;
+                       }
+                    )
                  )
               )
-              id
           | None -> ());
           let add_def binding_loc =
             let reason =
@@ -1366,10 +1387,7 @@ class def_finder env_entries providers toplevel_scope =
             (MemberAssign { member_loc; member; rhs = right })
         | (None, _) ->
           let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
-          Destructure.pattern
-            ~f:this#add_ordinary_binding
-            (Root (Value { hint; expr = right }))
-            left
+          this#add_destructure_bindings (Value { hint; expr = right }) left
         | ( Some operator,
             Ast.Pattern.Identifier
               { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
@@ -1449,11 +1467,10 @@ class def_finder env_entries providers toplevel_scope =
                 }
             | None -> For (Of { await }, right)
           in
-          Destructure.pattern ~f:this#add_ordinary_binding (Root source) id
+          this#add_destructure_bindings source id
         | LeftDeclaration _ ->
           raise Env_api.(Env_invariant (Some loc, Impossible "Invalid AST structure"))
-        | LeftPattern pat ->
-          Destructure.pattern ~f:this#add_ordinary_binding (Root (For (Of { await }, right))) pat
+        | LeftPattern pat -> this#add_destructure_bindings (For (Of { await }, right)) pat
       end;
       super#for_of_statement loc stuff
 
@@ -1483,11 +1500,10 @@ class def_finder env_entries providers toplevel_scope =
                 }
             | None -> For (In, right)
           in
-          Destructure.pattern ~f:this#add_ordinary_binding (Root source) id
+          this#add_destructure_bindings source id
         | LeftDeclaration _ ->
           raise Env_api.(Env_invariant (Some loc, Impossible "Invalid AST structure"))
-        | LeftPattern pat ->
-          Destructure.pattern ~f:this#add_ordinary_binding (Root (For (In, right))) pat
+        | LeftPattern pat -> this#add_destructure_bindings (For (In, right)) pat
       end;
       super#for_in_statement loc stuff
 
