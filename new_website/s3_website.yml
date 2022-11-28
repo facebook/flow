@@ -11,5 +11,5 @@ cloudfront_invalidate_root: true
 cloudfront_wildcard_invalidation: true
 
 ignore_on_server:
-  - static/flow/v.*
-  - static/flow/master
+  - flow/v.*
+  - flow/master
