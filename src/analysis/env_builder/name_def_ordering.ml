@@ -25,7 +25,7 @@ module Tarjan =
 type 'k blame = {
   payload: 'k;
   reason: ALoc.t virtual_reason;
-  annot_locs: ALoc.t list;
+  annot_locs: ALoc.t Env_api.annot_loc list;
   recursion: ALoc.t list;
 }
 
@@ -1097,43 +1097,65 @@ struct
         false
   end
 
-  let annotation_locs scopes loc =
+  let annotation_locs scopes providers kind loc =
     let bind_loop b =
       match b with
       | Root Catch
       | Root (Annotation _)
       | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) ->
         []
-      | Root (FunctionValue { synthesizable_from_annotation = MissingReturn loc; _ }) -> [loc]
-      | Root (ObjectValue { synthesizable = MissingMemberAnnots { locs; all_functions }; _ }) ->
-        let locs = Nel.to_list locs in
-        if all_functions then
-          locs
+      | Root (FunctionValue { synthesizable_from_annotation = MissingReturn loc; _ }) ->
+        [Env_api.Loc loc]
+      | Root (ObjectValue { synthesizable = MissingMemberAnnots { locs }; _ }) ->
+        let (functions, others) =
+          Base.List.fold
+            ~f:
+              (fun (functions, others) -> function
+                | OtherMissingAnnot l -> (functions, l :: others)
+                | FuncMissingAnnot l -> (Env_api.Loc l :: functions, others))
+            ~init:([], [])
+            (Nel.to_list locs)
+        in
+        if List.length others = 0 then
+          functions
         else begin
           try
-            let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
-              Scope_api.With_ALoc.def_of_use scopes loc
+            let { Provider_api.state; _ } =
+              Base.Option.value_exn (Provider_api.providers_of_def providers loc)
             in
-            loc :: locs
+            match state with
+            | Find_providers.AnnotatedVar { contextual = false; _ } -> functions
+            | _ ->
+              let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
+                Scope_api.With_ALoc.def_of_use scopes loc
+              in
+              Env_api.Object { loc; props = others } :: functions
           with
-          | Scope_api.With_ALoc.Missing_def _ -> locs
+          | Scope_api.With_ALoc.Missing_def _ -> functions
         end
       | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
         begin
           try
-            let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
-              Scope_api.With_ALoc.def_of_use scopes loc
+            let { Provider_api.state; _ } =
+              Base.Option.value_exn (Provider_api.providers_of_def providers loc)
             in
-            [loc]
+            match state with
+            | Find_providers.AnnotatedVar { contextual = false; _ } -> []
+            | _ ->
+              let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
+                Scope_api.With_ALoc.def_of_use scopes loc
+              in
+              [Env_api.Loc loc]
           with
           | Scope_api.With_ALoc.Missing_def _ -> []
         end
       | Select _ -> []
     in
     function
+    | _ when kind = Env_api.PatternLoc -> []
     | Binding bind -> bind_loop bind
-    | GeneratorNext None -> [loc]
-    | Function { synthesizable_from_annotation = MissingReturn loc; _ } -> [loc]
+    | GeneratorNext None -> [Env_api.Loc loc]
+    | Function { synthesizable_from_annotation = MissingReturn loc; _ } -> [Env_api.Loc loc]
     | TypeAlias _
     | OpaqueType _
     | TypeParam _
@@ -1200,7 +1222,7 @@ struct
     in
     EnvMap.fold (dependencies cx this_super_dep_loc_map env) map EnvMap.empty
 
-  let build_ordering cx ({ Env_api.scopes; _ } as env) map =
+  let build_ordering cx ({ Env_api.scopes; providers; _ } as env) map =
     let env_map_find k map =
       match EnvMap.find_opt k map with
       | Some t -> t
@@ -1240,7 +1262,7 @@ struct
                 payload = (kind, loc);
                 reason;
                 recursion;
-                annot_locs = annotation_locs scopes loc def;
+                annot_locs = annotation_locs scopes providers kind loc def;
               }
         else
           Normal (kind, loc)
@@ -1306,7 +1328,10 @@ struct
                   EnvMap.fold
                     (fun ((_, kl) as k) v acc ->
                       if (not (ALoc.equal kl loc)) && EnvSet.mem k cycle_elts then
-                        Nel.to_list v @ acc
+                        let v =
+                          Base.List.filter ~f:(fun l -> not (ALoc.equal l loc)) (Nel.to_list v)
+                        in
+                        v @ acc
                       else
                         acc)
                     depends
@@ -1317,7 +1342,7 @@ struct
                     payload = element_of_loc (kind, loc);
                     reason;
                     recursion = edges;
-                    annot_locs = annotation_locs scopes loc def;
+                    annot_locs = annotation_locs scopes providers kind loc def;
                   },
                   display
                 ))

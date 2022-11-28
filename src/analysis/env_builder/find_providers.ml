@@ -13,6 +13,7 @@ exception ImpossibleState of string
 (* This describes the state of a variable AFTER the provider analysis, suitable for external consumption *)
 type state =
   | AnnotatedVar of {
+      contextual: bool;
       predicate: bool; (* true iff this annotation corresponds to a predicate function (%checks) *)
     }
   | InitializedVar
@@ -83,7 +84,10 @@ end = struct
      initializers were discovered. They will be simplified later on. *)
   type intermediate_state =
     (* Annotations are always on declarations, so they don't need depth *)
-    | Annotated of { predicate: bool }
+    | Annotated of {
+        predicate: bool;
+        contextual: bool;
+      }
     (* number of var scope levels deep that the initializer, and null initializer if applicable, was found from the
        scope in which it was declared--lets us prioritize initializers from nearer
        scopes even if they're lexically later in the program.
@@ -102,7 +106,10 @@ end = struct
   (* This describes a single assingment/initialization of a var (rather than the var's state as a whole). ints are
      number of scopes deeper than the variable's declaration that the assignment occurs *)
   type write_state =
-    | Annotation of { predicate: bool }
+    | Annotation of {
+        predicate: bool;
+        contextual: bool;
+      }
     | Value of int
     | ArrayValue of int
     | Null of int
@@ -171,10 +178,11 @@ end = struct
   (* Compute the joined state of a variable, when modified in separate branches *)
   let combine_states init1 init2 =
     match (init1, init2) with
-    | (Annotated { predicate = p1 }, Annotated { predicate = p2 }) ->
-      Annotated { predicate = p1 || p2 }
-    | (Annotated { predicate }, _) -> Annotated { predicate }
-    | (_, Annotated { predicate }) -> Annotated { predicate }
+    | (Annotated { predicate = p1; contextual = c1 }, Annotated { predicate = p2; contextual = c2 })
+      ->
+      Annotated { predicate = p1 || p2; contextual = c1 && c2 }
+    | (Annotated { predicate; contextual }, _) -> Annotated { predicate; contextual }
+    | (_, Annotated { predicate; contextual }) -> Annotated { predicate; contextual }
     | (Uninitialized, other)
     | (other, Uninitialized) ->
       other
@@ -223,11 +231,11 @@ end = struct
       var x: string; var x: number; provider is string
       *)
       None
-    | (_, Annotation { predicate }) ->
+    | (_, Annotation { predicate; contextual }) ->
       (*
        var x = 42; var x: string, provider is string
       *)
-      Some (Annotated { predicate })
+      Some (Annotated { predicate; contextual })
     | (Uninitialized, Null d) ->
       (*
        var x; x = null provider is null
@@ -747,7 +755,9 @@ end = struct
              * make it clear that certain providers are meant to be intersected and others
              * are meant to be unioned. *)
             let predicate = p1 || p2 in
-            (Annotated { predicate }, L.LMap.add loc (Annotation { predicate }) provider_locs)
+            ( Annotated { predicate; contextual = false },
+              L.LMap.add loc (Annotation { predicate; contextual = false }) provider_locs
+            )
           | (_, Bindings.DeclaredFunction _) -> (cur_state, provider_locs)
           | _ ->
             let new_state = extended_state_opt ~state:cur_state ~write_state in
@@ -766,7 +776,8 @@ end = struct
         let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
         let (_ : ('a, 'b) Ast.Identifier.t) =
           this#in_context
-            ~mod_cx:(fun _cx -> { init_state = Annotation { predicate = false } })
+            ~mod_cx:(fun _cx ->
+              { init_state = Annotation { predicate = false; contextual = false } })
             (fun () -> this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident)
         in
         decl
@@ -785,7 +796,7 @@ end = struct
         in
         let init_state =
           match (init, annot) with
-          | (_, Some (Ast.Type.Available _)) -> Annotation { predicate = false }
+          | (_, Some (Ast.Type.Available _)) -> Annotation { predicate = false; contextual = false }
           | (None, _) -> Nothing
           | (Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }), _) ->
             EmptyArr
@@ -824,7 +835,8 @@ end = struct
         in
         let init_state =
           match return with
-          | Ast.Type.Available _ -> Annotation { predicate = Option.is_some predicate }
+          | Ast.Type.Available _ ->
+            Annotation { predicate = Option.is_some predicate; contextual = false }
           | _ -> Value 0
         in
 
@@ -867,7 +879,8 @@ end = struct
         in
         let init_state =
           match return with
-          | Ast.Type.Available _ -> Annotation { predicate = Option.is_some predicate }
+          | Ast.Type.Available _ ->
+            Annotation { predicate = Option.is_some predicate; contextual = false }
           | _ -> Value 0
         in
 
@@ -934,7 +947,7 @@ end = struct
               | (_, Array { Array.annot = Ast.Type.Available _; _ })
               | (_, Object { Object.annot = Ast.Type.Available _; _ })
               | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
-                Annotation { predicate = false }
+                Annotation { predicate = false; contextual = false }
               | _ -> Value 0
             in
             ignore
@@ -963,7 +976,7 @@ end = struct
               | (_, Array { Array.annot = Ast.Type.Available _; _ })
               | (_, Object { Object.annot = Ast.Type.Available _; _ })
               | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
-                Annotation { predicate = false }
+                Annotation { predicate = false; contextual = false }
               | _ -> Value 0
             in
             ignore
@@ -982,7 +995,16 @@ end = struct
         (* NOTE: All function parameters are considered annotated, whether this
          * annotation is explicitly provided, is contextually inferred, or is
          * implicitly `any` when missing. *)
-        let init_state = Annotation { predicate = false } in
+        let contextual =
+          let open Ast.Pattern in
+          match expr with
+          | (_, Array { Array.annot = Ast.Type.Available _; _ })
+          | (_, Object { Object.annot = Ast.Type.Available _; _ })
+          | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
+            false
+          | _ -> true
+        in
+        let init_state = Annotation { predicate = false; contextual } in
         ignore
         @@ this#in_context
              ~mod_cx:(fun _cx -> { init_state })
@@ -1194,7 +1216,7 @@ end = struct
     in
     let state =
       match state with
-      | Annotated { predicate } -> AnnotatedVar { predicate }
+      | Annotated { predicate; contextual } -> AnnotatedVar { predicate; contextual }
       | ArrInitialized _ -> ArrayInitializedVar
       | EmptyArrInitialized -> EmptyArrayInitializedVar
       | Initialized _ -> InitializedVar

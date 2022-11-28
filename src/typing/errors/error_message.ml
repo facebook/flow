@@ -446,11 +446,11 @@ and 'loc t' =
   | EInvalidGraphQL of 'loc * Graphql.error
   | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason * string option
   | EAnnotationInferenceRecursive of 'loc * 'loc virtual_reason
-  | EDefinitionCycle of ('loc virtual_reason * 'loc list * 'loc list) Nel.t
+  | EDefinitionCycle of ('loc virtual_reason * 'loc list * 'loc Env_api.annot_loc list) Nel.t
   | ERecursiveDefinition of {
       reason: 'loc virtual_reason;
       recursion: 'loc list;
-      annot_locs: 'loc list;
+      annot_locs: 'loc Env_api.annot_loc list;
     }
   | EDuplicateClassMember of {
       loc: 'loc;
@@ -1074,18 +1074,32 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EAnnotationInference (f loc, map_reason r1, map_reason r2, suggestion)
   | EAnnotationInferenceRecursive (loc, r) -> EAnnotationInferenceRecursive (f loc, map_reason r)
   | EDefinitionCycle elts ->
+    let open Env_api in
     EDefinitionCycle
       (Nel.map
          (fun (reason, recur, annot) ->
-           (map_reason reason, Base.List.map ~f recur, Base.List.map ~f annot))
+           ( map_reason reason,
+             Base.List.map ~f recur,
+             Base.List.map
+               ~f:(function
+                 | Loc l -> Loc (f l)
+                 | Object { loc; props } -> Object { loc = f loc; props = Base.List.map ~f props })
+               annot
+           ))
          elts
       )
   | ERecursiveDefinition { reason; recursion; annot_locs } ->
+    let open Env_api in
     ERecursiveDefinition
       {
         reason = map_reason reason;
+        annot_locs =
+          Base.List.map
+            ~f:(function
+              | Loc l -> Loc (f l)
+              | Object { loc; props } -> Object { loc = f loc; props = Base.List.map ~f props })
+            annot_locs;
         recursion = Base.List.map ~f recursion;
-        annot_locs = Base.List.map ~f annot_locs;
       }
   | EDuplicateClassMember { loc; name; static } ->
     EDuplicateClassMember { loc = f loc; name; static }
@@ -1649,7 +1663,7 @@ let string_of_internal_error = function
     let roots = Base.List.map ~f:ALoc.debug_to_string roots |> String.concat "," in
     let missing_roots = Base.List.map ~f:ALoc.debug_to_string missing_roots |> String.concat "," in
     spf
-      "Please report this error to the Flow team: name_def_ordering tarjan failure, all: { %s } roots: { %s } missing_roots: { %s }"
+      "Please report this error to the Flow team: Env_api tarjan failure, all: { %s } roots: { %s } missing_roots: { %s }"
       all
       roots
       missing_roots
@@ -3945,18 +3959,67 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let (itself, tl_recur) =
       match recursion with
       | hd :: tl ->
+        let (suffix, tl) =
+          if List.length tl > 4 then
+            ([text ", [...]"], Base.List.take tl 4)
+          else
+            ([], tl)
+        in
         ( ref (mk_reason (RCustom "itself") hd),
-          Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl
+          (Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl
           |> List.flatten
+          )
+          @ suffix
         )
       | [] -> (text "itself", [])
     in
     let annot_message =
       match annot_locs with
       | [] -> [text "this definition"]
-      | [l] -> [ref (mk_reason (RCustom "this definition") l)]
+      | [Env_api.Loc loc]
+      | [Env_api.Object { loc; props = [] }] ->
+        [ref (mk_reason (RCustom "this definition") loc)]
+      | [Env_api.Object { loc; props }] when List.length props > 5 ->
+        [ref (mk_reason (RCustom "this definition") loc)]
+      | [Env_api.Object { loc; props = [prop] }] ->
+        [
+          ref (mk_reason (RCustom "this definition") loc);
+          text "or to";
+          ref (mk_reason (RCustom "its property") prop);
+        ]
+      | [Env_api.Object { loc; props }] ->
+        [ref (mk_reason (RCustom "this definition") loc); text " or to its properties"]
+        @ Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) props
       | ls ->
-        text "these positions" :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) ls
+        let (locs, properties) =
+          Base.List.fold
+            ~init:([], [])
+            ~f:(fun (locs, properties) annot_locs ->
+              match annot_locs with
+              | Env_api.Loc l -> (l :: locs, properties)
+              | Env_api.Object { loc; props } -> (loc :: locs, props @ properties))
+            ls
+        in
+        let (locs, properties) =
+          ( Base.List.take (Base.List.dedup_and_sort ~compare:Loc.compare locs) 10,
+            Base.List.dedup_and_sort ~compare:Loc.compare properties
+          )
+        in
+        let props =
+          if List.length properties <= 5 && List.length properties > 0 then
+            let these =
+              if List.length properties > 1 then
+                text "these object properties"
+              else
+                text "this object property"
+            in
+            text " or to "
+            :: these :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) properties
+          else
+            []
+        in
+        text "these definitions" :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) locs
+        @ props
     in
     let features =
       [
@@ -3971,39 +4034,68 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EDefinitionCycle dependencies ->
     let deps =
-      Nel.map
-        (function
-          | (_, [], _) -> []
-          | (reason, hd :: tl, _) ->
-            let tl_dep =
-              Base.List.map ~f:(fun loc -> [text ","; ref (mk_reason (RCustom "") loc)]) tl
-              |> List.flatten
-            in
-            [
-              text " - ";
-              ref reason;
-              text " depends on ";
-              ref (mk_reason (RCustom "other definition") hd);
-            ]
-            @ tl_dep
-            @ [text "\n"])
-        dependencies
-      |> Nel.to_list
+      Base.List.filter_mapi
+        ~f:
+          (fun i -> function
+            | (_, [], _) -> None
+            | _ when i = 10 -> Some [text " - ...\n"]
+            | _ when i > 10 -> None
+            | (reason, (_ :: _ as dep), _) ->
+              let (hd, tl) = Base.List.dedup_and_sort ~compare:Loc.compare dep |> Nel.of_list_exn in
+              let (suffix, tl) =
+                if List.length tl > 4 then
+                  ([text ", [...]"], Base.List.take tl 4)
+                else
+                  ([], tl)
+              in
+              let tl_dep =
+                Base.List.map ~f:(fun loc -> [text ","; ref (mk_reason (RCustom "") loc)]) tl
+                |> List.flatten
+              in
+              Some
+                ([
+                   text " - ";
+                   ref reason;
+                   text " depends on ";
+                   ref (mk_reason (RCustom "other definition") hd);
+                 ]
+                @ tl_dep
+                @ suffix
+                @ [text "\n"]
+                ))
+        (Nel.to_list dependencies)
       |> List.flatten
     in
-    let annot_message =
-      Nel.map
-        (fun (_, _, annot_locs) ->
-          Base.List.map annot_locs ~f:(fun annot_loc -> ref (mk_reason (RCustom "") annot_loc)))
-        dependencies
-      |> Nel.to_list
-      |> List.flatten
+    let (locs, properties) =
+      Base.List.fold
+        ~init:([], [])
+        ~f:(fun (locs, properties) (_, _, annot_locs) ->
+          Base.List.fold annot_locs ~init:(locs, properties) ~f:(fun (locs, properties) annot_loc ->
+              match annot_loc with
+              | Env_api.Loc l -> (l :: locs, properties)
+              | Env_api.Object { loc; props } -> (loc :: locs, props @ properties)
+          ))
+        (Nel.to_list dependencies)
+    in
+    let (locs, properties) =
+      ( Base.List.take (Base.List.dedup_and_sort ~compare:Loc.compare locs) 10,
+        Base.List.dedup_and_sort ~compare:Loc.compare properties
+      )
+    in
+    let annot_message ls =
+      Base.List.map ~f:(fun annot_loc -> ref (mk_reason (RCustom "") annot_loc)) ls
     in
     let features =
       text
         "The following definitions recursively depend on each other, and Flow cannot compute their types:\n"
       :: deps
-      @ text "Please add type annotations to these definitions" :: annot_message
+      @ text "Please add type annotations to these definitions" :: annot_message locs
+    in
+    let features =
+      if List.length properties <= 5 && List.length properties > 0 then
+        features @ text " or to these object properties" :: annot_message properties
+      else
+        features
     in
     Normal { features }
   | EUnusedPromise { loc = _ } ->

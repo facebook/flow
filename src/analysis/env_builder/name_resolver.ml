@@ -1212,7 +1212,7 @@ module Make
     let is_def_loc_predicate_function loc =
       let providers = Env_api.Provider_api.providers_of_def provider_info loc in
       match providers with
-      | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar { predicate }; _ } ->
+      | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar { predicate; _ }; _ } ->
         predicate
       | _ -> false
     in
