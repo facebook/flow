@@ -878,16 +878,6 @@ struct
         | ArrRest _ ->
           state
       in
-      let rec depends_of_default state = function
-        | DefaultAnnot (annot, tparams_map) -> depends_of_annotation tparams_map annot state
-        | DefaultExpr e -> depends_of_expression e state
-        | DefaultCons (e, d) ->
-          let state = depends_of_expression e state in
-          depends_of_default state d
-        | DefaultSelector (d, s) ->
-          let state = depends_of_default state d in
-          depends_of_selector state s
-      in
       let depends_of_lhs id_loc lhs_member_expression =
         (* When looking at a binding def, like `x = y`, in order to resolve this def we need
              to have resolved the providers for `x`, as well as the type of `y`, in order to check
@@ -926,14 +916,11 @@ struct
         in
         match bind with
         | Root root -> depends_of_root state root
-        | Select { selector; default; parent = (parent_loc, _) } ->
+        | Select { selector; parent = (parent_loc, _) } ->
           let state = depends_of_selector state selector in
-          let state =
-            depends_of_node
-              (fun visitor -> visitor#add ~why:parent_loc (Env_api.PatternLoc, parent_loc))
-              state
-          in
-          Base.Option.value_map default ~default:state ~f:(depends_of_default state)
+          depends_of_node
+            (fun visitor -> visitor#add ~why:parent_loc (Env_api.PatternLoc, parent_loc))
+            state
       in
       let depends_of_update lhs =
         let state = depends_of_lhs id_loc lhs in

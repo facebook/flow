@@ -123,17 +123,10 @@ type selector =
   | ArrRest of int
   | Default
 
-type default =
-  | DefaultAnnot of (ALoc.t, ALoc.t) Ast.Type.annotation * tparams_map
-  | DefaultExpr of (ALoc.t, ALoc.t) Ast.Expression.t
-  | DefaultCons of (ALoc.t, ALoc.t) Ast.Expression.t * default
-  | DefaultSelector of default * selector
-
 type binding =
   | Root of root
   | Select of {
       selector: selector;
-      default: default option;
       parent: ALoc.t * binding;
     }
 
