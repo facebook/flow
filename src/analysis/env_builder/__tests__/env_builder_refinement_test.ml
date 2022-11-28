@@ -6839,3 +6839,27 @@ if (values.bxxxx === values.axxxx) {
           {refinement = SentinelR bxxxx; writes = (2, 12) to (2, 18): (`values`)}
         }]
         |}]
+
+let%expect_test "destruct_default" =
+  print_ssa_test {|
+let x = 42;
+let y;
+
+({x = x, y = x} = {});
+([x = x, y = x] = []);
+|};
+    [%expect {|
+      [
+        (5, 6) to (5, 7) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 13) to (5, 14) => {
+          (5, 2) to (5, 3): (`x`)
+        };
+        (6, 6) to (6, 7) => {
+          (5, 2) to (5, 3): (`x`)
+        };
+        (6, 13) to (6, 14) => {
+          (6, 2) to (6, 3): (`x`)
+        }]
+        |}]
