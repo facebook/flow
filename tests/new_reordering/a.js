@@ -137,3 +137,21 @@ import * as React from 'react';
   declare function f(): any;
   <F attr={function () { return f() }} />
 }
+
+{
+  const Utils = {
+    foo: [{x: function(): number { return 42 }}, 42],
+    f(): Array<number | { x: () => number }> { return Utils.foo }, //ok
+    g(): [{ x: () => number }, number] { return Utils.foo }, //ok
+    h(): empty { return Utils.foo } //err
+  };
+
+  (Utils.foo: Array<number | { x:() => number }>);
+}
+
+{
+  const Utils = {
+    foo: [{x: function() { return 42 }}, 42],
+    f() { return Utils.foo }
+  };
+}

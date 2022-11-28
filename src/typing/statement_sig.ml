@@ -227,4 +227,6 @@ module type S = sig
     Type.t ->
     Reason.t * string ->
     Type.t
+
+  val empty_array : Context.t -> ALoc.t -> Reason.t * Type.t
 end

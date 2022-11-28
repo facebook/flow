@@ -61,7 +61,10 @@ type object_synth_kind =
       (* A set of this write locations that can be resolved by resolving the object. *)
       this_write_locs: Env_api.EnvSet.t;
     }
-  | MissingMemberReturns of ALoc.t Nel.t
+  | MissingMemberAnnots of {
+      locs: ALoc.t Nel.t;
+      all_functions: bool;
+    }
   | Unsynthesizable
 
 type root =

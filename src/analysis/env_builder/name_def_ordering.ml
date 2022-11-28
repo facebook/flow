@@ -811,19 +811,33 @@ struct
           let open Ast.Expression.Object in
           let open Ast.Expression.Object.Property in
           let open Ast.Expression.Object.SpreadProperty in
-          let rec loop state { Ast.Expression.Object.properties; _ } =
+          let rec depends_of_synthesizable_expression state ((_, exp) as expression) =
+            match exp with
+            | Ast.Expression.Object obj -> loop state obj
+            | Ast.Expression.TypeCast { Ast.Expression.TypeCast.annot; _ } ->
+              depends_of_annotation ALocMap.empty annot state
+            | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
+              Base.List.fold elements ~init:state ~f:(fun state -> function
+                | Ast.Expression.Array.Expression exp
+                | Ast.Expression.Array.Spread (_, { Ast.Expression.SpreadElement.argument = exp; _ })
+                  ->
+                  depends_of_synthesizable_expression state exp
+                | Ast.Expression.Array.Hole _ -> state
+              )
+            | Ast.Expression.Function fn
+            | Ast.Expression.ArrowFunction fn ->
+              depends_of_fun
+                FunctionSynthesizable
+                ALocMap.empty
+                Hint_api.Hint_None
+                ~statics:SMap.empty
+                fn
+                state
+            | _ -> depends_of_expression expression state
+          and loop state { Ast.Expression.Object.properties; _ } =
             Base.List.fold properties ~init:state ~f:(fun state -> function
               | SpreadProperty (_, { argument; _ }) -> depends_of_expression argument state
-              | Property
-                  ( _,
-                    ( Method { key = Identifier _; value = (_, fn); _ }
-                    | Init
-                        {
-                          key = Identifier _;
-                          value = (_, (Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn));
-                          _;
-                        } )
-                  ) ->
+              | Property (_, Method { key = Identifier _; value = (_, fn); _ }) ->
                 depends_of_fun
                   FunctionSynthesizable
                   ALocMap.empty
@@ -831,11 +845,8 @@ struct
                   ~statics:SMap.empty
                   fn
                   state
-              | Property (_, Init { key = Identifier _; value = (_, Ast.Expression.Object obj); _ })
-                ->
-                loop state obj
               | Property (_, Init { key = Identifier _; value; _ }) ->
-                depends_of_expression value state
+                depends_of_synthesizable_expression state value
               | _ ->
                 raise Env_api.(Env_invariant (Some id_loc, Impossible "Object not synthesizable"))
             )
@@ -1086,7 +1097,19 @@ struct
       | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) ->
         []
       | Root (FunctionValue { synthesizable_from_annotation = MissingReturn loc; _ }) -> [loc]
-      | Root (ObjectValue { synthesizable = MissingMemberReturns locs; _ }) -> Nel.to_list locs
+      | Root (ObjectValue { synthesizable = MissingMemberAnnots { locs; all_functions }; _ }) ->
+        let locs = Nel.to_list locs in
+        if all_functions then
+          locs
+        else begin
+          try
+            let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
+              Scope_api.With_ALoc.def_of_use scopes loc
+            in
+            loc :: locs
+          with
+          | Scope_api.With_ALoc.Missing_def _ -> locs
+        end
       | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
         begin
           try

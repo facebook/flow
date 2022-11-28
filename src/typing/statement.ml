@@ -2280,6 +2280,37 @@ module Make
        )
       )
 
+  and empty_array cx loc =
+    let reason = mk_reason REmptyArrayLit loc in
+    let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
+    let (has_hint, lazy_hint) = Env.get_hint cx loc in
+    let elemt = Tvar.mk cx element_reason in
+    (* empty array, analogous to object with implicit properties *)
+    ( if Context.array_literal_providers cx then
+      if not has_hint then begin
+        if Context.lti cx then
+          Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
+      end else if not (Context.lti cx) then
+        ()
+      else
+        let default_init () = if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt) in
+        match lazy_hint element_reason with
+        | None ->
+          (* If there's a hint, but the hint doesn't provide a type for this array, then this type will never be read from *)
+          default_init ()
+        | Some hint ->
+          let elemt' = Tvar.mk cx element_reason in
+          if
+            Type_hint.sandbox_flow_succeeds
+              cx
+              (DefT (reason, bogus_trust (), ArrT (ArrayAT (elemt', Some []))), hint)
+          then
+            Flow.unify cx elemt (PinTypes.pin_type cx ~use_op:unknown_use element_reason elemt')
+          else
+            default_init ()
+    );
+    (reason, elemt)
+
   (* can raise Abnormal.(Exn (Stmt _, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
@@ -2351,50 +2382,21 @@ module Make
       let (t, properties) = object_ ~frozen:false cx reason properties in
       ((loc, t), Object { Object.properties; comments })
     | Array { Array.elements; comments } ->
-      let reason = mk_reason RArrayLit loc in
       (match elements with
       | [] when Context.in_synthesis_mode cx ->
-        let reason = replace_desc_reason REmptyArrayLit reason in
+        let reason = mk_reason REmptyArrayLit loc in
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elemt = Context.mk_placeholder cx element_reason in
         ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
           Array { Array.elements = []; comments }
         )
       | [] ->
-        let reason = replace_desc_reason REmptyArrayLit reason in
-        let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-        let (has_hint, lazy_hint) = Env.get_hint cx loc in
-        let elemt = Tvar.mk cx element_reason in
-        (* empty array, analogous to object with implicit properties *)
-        ( if Context.array_literal_providers cx then
-          if not has_hint then begin
-            if Context.lti cx then
-              Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
-          end else if not (Context.lti cx) then
-            ()
-          else
-            let default_init () =
-              if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
-            in
-            match lazy_hint element_reason with
-            | None ->
-              (* If there's a hint, but the hint doesn't provide a type for this array, then this type will never be read from *)
-              default_init ()
-            | Some hint ->
-              let elemt' = Tvar.mk cx element_reason in
-              if
-                Type_hint.sandbox_flow_succeeds
-                  cx
-                  (DefT (reason, make_trust (), ArrT (ArrayAT (elemt', Some []))), hint)
-              then
-                Flow.unify cx elemt (PinTypes.pin_type cx ~use_op:unknown_use element_reason elemt')
-              else
-                default_init ()
-        );
+        let (reason, elemt) = empty_array cx loc in
         ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
           Array { Array.elements = []; comments }
         )
       | elems ->
+        let reason = mk_reason RArrayLit loc in
         let (elem_spread_list, elements) = array_elements cx loc elems in
         ( ( loc,
             Tvar.mk_where cx reason (fun tout ->
