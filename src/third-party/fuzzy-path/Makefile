@@ -6,7 +6,7 @@ endif
 
 OCAML_INCLUDES := $(shell ocamlc 2>/dev/null -where || echo /usr/local/lib/ocaml)
 
-CFLAGS= -I $(OCAML_INCLUDES) -fPIC
+CFLAGS= -I $(OCAML_INCLUDES) -std=c11 -fPIC
 
 CXXFLAGS=-std=c++11 -Wall -O3 -fPIC
 
