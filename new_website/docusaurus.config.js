@@ -7,6 +7,8 @@
  * @format
  */
 
+const getFlowVersions = require('./src/js/flow-versions');
+
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
   title: 'Flow',
@@ -24,7 +26,7 @@ module.exports = {
       return {
         name: 'polyfillNodeBuiltinsForFlowJS',
         configureWebpack() {
-          return {resolve: {fallback: {fs: false, constants: false}}};
+          return { resolve: { fallback: { fs: false, constants: false } } };
         },
       };
     },
@@ -33,7 +35,7 @@ module.exports = {
         name: 'enableWasm',
         configureWebpack() {
           return {
-            experiments: {syncWebAssembly: true},
+            experiments: { syncWebAssembly: true },
             module: {
               rules: [
                 {
@@ -179,6 +181,10 @@ module.exports = {
   },
   customFields: {
     flowVersion: 'v0.193.0',
+    allFlowVersions: getFlowVersions(
+      Boolean(process.env.EXCLUDE_FLOW_RELEASES),
+      Boolean(process.env.EXCLUDE_FLOW_MASTER)
+    ),
   },
   presets: [
     [
@@ -189,7 +195,7 @@ module.exports = {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/facebook/flow/edit/main/new_website/',
           remarkPlugins: [
-            [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],
+            [require('@docusaurus/remark-plugin-npm2yarn'), { sync: true }],
             require('./src/js/flow-check-remark-plugin'),
           ],
         },
