@@ -111,7 +111,6 @@ let rec default_resolve_touts ~flow cx loc u =
   | ArithT { result_t; _ } -> resolve result_t
   | ComparatorT _ -> ()
   | UnaryArithT { result_t; _ } -> resolve result_t
-  | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
   | AssertForInRHST _

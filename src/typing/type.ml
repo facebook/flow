@@ -548,7 +548,6 @@ module rec TypeTerm : sig
         result_t: t;
         kind: UnaryArithKind.t;
       }
-    | AssertArithmeticOperandT of reason
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
     | AssertForInRHST of reason
@@ -3639,7 +3638,6 @@ let string_of_use_ctor = function
   | ArithT _ -> "ArithT"
   | AndT _ -> "AndT"
   | ArrRestT _ -> "ArrRestT"
-  | AssertArithmeticOperandT _ -> "AssertArithmeticOperandT"
   | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertForInRHST _ -> "AssertForInRHST"

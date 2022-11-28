@@ -709,7 +709,6 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid rhs_t) (kid result_t)) t
     | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
-    | AssertArithmeticOperandT _ -> p t
     | AssertBinaryInLHST _ -> p t
     | AssertBinaryInRHST _ -> p t
     | AssertForInRHST _ -> p t
