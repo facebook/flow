@@ -11,8 +11,6 @@ build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
   "ocaml" {>= "4.14.0"}
   "dune" {>= "3.0"}
-  "ocamlfind" {build}
-  "ocamlbuild" {build}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
   "sedlex" {>= "2.3"}
