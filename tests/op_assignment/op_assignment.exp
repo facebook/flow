@@ -228,7 +228,7 @@ Cannot get `o.p` because property `p` is not readable. [cannot-read]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:119:9
 
-Cannot assign &&= to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:119:9
    119|   x &&= 3; // Error: number not assignable to boolean
@@ -242,7 +242,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:120:9
 
-Cannot assign ||= to `y` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `y` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:120:9
    120|   y ||= 3; // Error: number not assignable to boolean
@@ -256,7 +256,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:121:9
 
-Cannot assign ??= to `z` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `z` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:121:9
    121|   z ??= 3; // Error: number not assignable to boolean
