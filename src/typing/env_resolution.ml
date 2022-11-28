@@ -308,7 +308,8 @@ let resolve_binding_partial cx reason loc b =
         match expr with
         | Ast.Expression.Literal _
         | Ast.Expression.Identifier _
-        | Ast.Expression.TypeCast _ ->
+        | Ast.Expression.TypeCast _
+        | Ast.Expression.Member _ ->
           synthesizable_expression cx (loc, expr)
         | Ast.Expression.Function fn
         | Ast.Expression.ArrowFunction fn ->

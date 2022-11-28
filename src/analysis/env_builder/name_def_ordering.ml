@@ -841,6 +841,13 @@ struct
                 ~statics:SMap.empty
                 fn
                 state
+            | Ast.Expression.Member
+                {
+                  Ast.Expression.Member._object;
+                  property = Ast.Expression.Member.PropertyIdentifier _;
+                  _;
+                } ->
+              depends_of_synthesizable_expression state _object
             | _ -> depends_of_expression expression state
           and loop state { Ast.Expression.Object.properties; _ } =
             Base.List.fold properties ~init:state ~f:(fun state -> function
