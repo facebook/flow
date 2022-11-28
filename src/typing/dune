@@ -53,6 +53,7 @@
   flow_common_modulename
   flow_common_monad
   flow_common_tarjan
+  flow_parser
   flow_type_sig
   flow_typing_errors
   flow_typing_polarity

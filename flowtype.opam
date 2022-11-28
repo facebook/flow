@@ -15,8 +15,7 @@ depends: [
   "core_kernel" {>= "v0.14.1" & < "v0.15.0"}
   "dtoa" {>= "0.3.2"}
   "fileutils" {>= "0.6.3"}
-  "ocamlbuild" {build}
-  "ocamlfind" {build}
+  "flow_parser" {= "0.193.0"}
   "ounit2" {with-test}
   "sedlex" {>= "2.3"}
   "lwt" {>= "5.4.0"}
@@ -29,7 +28,7 @@ depends: [
   "visitors" {build}
   "wtf8"
 ]
-build: ["env" "FLOW_RELEASE=1" make]
+build: ["dune" "build" "-p" name "-j" jobs]
 depexts: ["linux-headers"] {os-distribution = "alpine"}
 dev-repo: "git+https://github.com/facebook/flow.git"
 synopsis: "Flow is a static typechecker for JavaScript"
