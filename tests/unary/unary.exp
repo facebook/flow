@@ -103,7 +103,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:12:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign update to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:12:5
    12|     y++; // error, we don't allow coercion here
@@ -117,7 +117,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:14:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign update to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:14:5
    14|     y++; // error, but you still can't write a number to a string
@@ -145,7 +145,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:18:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign update to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:18:5
    18|     y--; // error, we don't allow coercion here
@@ -159,7 +159,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:22:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign update to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:22:5
    22|     ++y; // error, we don't allow coercion here
@@ -187,7 +187,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:26:5
 
-Cannot assign number to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign update to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    update.js:26:5
    26|     --y; // error, we don't allow coercion here

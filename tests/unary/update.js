@@ -49,6 +49,11 @@ let tests = [
   },
 
   function(y: any) {
-    y++; // ok
+    (y++: number); // ok (because any)
+    (y++: bigint); // ok (because any)
+  },
+
+  function(y: empty) {
+    (y++: empty); // ok
   },
 ];

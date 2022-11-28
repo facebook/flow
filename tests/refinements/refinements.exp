@@ -3526,7 +3526,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot assign number to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign update to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    not.js:5:5
    5|     x++; // should error for null, void and bool (false)

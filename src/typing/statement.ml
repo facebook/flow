@@ -4464,15 +4464,16 @@ module Make
   and update cx loc expr =
     let open Ast.Expression.Update in
     let reason = mk_reason (RCustom "update") loc in
-    let result_t = NumT.at loc |> with_trust literal_trust in
     let { argument; _ } = expr in
-    ( result_t,
+    let (((_, arg_t), _) as arg_ast) = expression cx argument in
+    let result_t =
+      Tvar.mk_where cx reason (fun result_t ->
+          Flow.flow cx (arg_t, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
+      )
+    in
+    let arg_ast =
       match argument with
-      | ( arg_loc,
-          Ast.Expression.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name))
-        ) ->
-        Flow.flow cx (identifier cx id_name id_loc, AssertArithmeticOperandT reason);
-
+      | (_, Ast.Expression.Identifier (id_loc, { Ast.Identifier.name; _ })) ->
         (* enforce state-based guards for binding update, e.g., const *)
         let use_op =
           Op
@@ -4484,13 +4485,10 @@ module Make
             )
         in
         Env.set_var cx ~use_op name result_t id_loc;
-        let t = NumT.at arg_loc |> with_trust bogus_trust in
-        { expr with argument = ((arg_loc, t), Ast.Expression.Identifier ((id_loc, t), id_name)) }
+        arg_ast
       | (lhs_loc, Ast.Expression.Member mem) ->
         (* Updating involves both reading and writing. We need to model both of these, and ensuring
          * an arithmetic operand should use the read type, which is affected by refinements. *)
-        let ((_, arg_val_t), _) = expression cx argument in
-        Flow.flow cx (arg_val_t, AssertArithmeticOperandT reason);
         let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
         let lhs_prop_reason = mk_expression_reason argument in
         let reconstruct_ast mem _ = Ast.Expression.Member mem in
@@ -4505,12 +4503,10 @@ module Make
             ~mode:Assign
             mem
         in
-        { expr with argument = arg_update_ast }
-      | _ ->
-        let (((_, arg_t), _) as arg_ast) = expression cx argument in
-        Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
-        { expr with argument = arg_ast }
-    )
+        arg_update_ast
+      | _ -> arg_ast
+    in
+    (result_t, { expr with argument = arg_ast })
 
   (* Returns a function that type check LHS or RHS of eq_test under correct conditional context. *)
   and visit_eq_test cx ~cond loc left right =

@@ -12,7 +12,7 @@ function bar(x:B) {
     x.a();
     x.c(); // error
   } else {
-    x++; // TODO no error? since unreachable (x: B implies x: A)
+    x++; // ok since unreachable (x: B implies x: A)
   }
 }
 

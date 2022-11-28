@@ -2669,6 +2669,7 @@ and UnaryArithKind : sig
     | Plus
     | Minus
     | BitNot
+    | Update
 end =
   UnaryArithKind
 
