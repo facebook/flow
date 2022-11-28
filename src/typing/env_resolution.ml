@@ -670,6 +670,16 @@ let resolve_binding cx reason loc_kind loc binding =
     match binding with
     | Select _ when has_annot && loc_kind <> Env_api.PatternLoc ->
       (* This is unnecessary if we are directly resolving an annotation. *)
+      (* If we are destructuring an annotation, the chain of constraints leading
+       * to here will preserve the 0->1 constraint. The mk_typeof_annotation
+       * helper will wrap the destructured type in an AnnotT, to ensure it is
+       * resolved before it is used as an upper bound. The helper also enforces
+       * the destructured type is 0->1 via BecomeT.
+       *
+       * The BecomeT part should not be necessary, but for now it is. Ideally an
+       * annotation would recursively be 0->1, but it's possible for them to
+       * contain inferred parts. For example, a class's instance type where one of
+       * the fields is unannotated. *)
       AnnotT
         ( reason,
           Tvar.mk_where cx reason (fun t' ->
@@ -679,38 +689,6 @@ let resolve_binding cx reason loc_kind loc binding =
         )
     | _ -> t
   in
-  if (not has_annot) && loc_kind <> Env_api.PatternLoc then
-    Base.Option.iter
-      ~f:(function
-        | Name_def.DefaultAnnot _ -> ()
-        | d ->
-          let rec convert = function
-            | Name_def.DefaultAnnot (anno, tparams_map) ->
-              let tparams_map = mk_tparams_map cx tparams_map in
-              let (t, _) = Anno.mk_type_available_annotation cx tparams_map anno in
-              Default.Expr t
-            | Name_def.DefaultExpr e -> Default.Expr (expression cx e)
-            | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx e, convert d)
-            | Name_def.DefaultSelector (d, s) ->
-              let (s, r, _) = mk_selector_reason_has_default cx loc s in
-              Default.Selector (r, convert d, s)
-          in
-          let default = convert d in
-          let default_t = Flow_js.mk_default cx reason default in
-          let use_op =
-            Op
-              (AssignVar
-                 {
-                   var = Some reason;
-                   init =
-                     (match default with
-                     | Default.Expr t -> TypeUtil.reason_of_t t
-                     | _ -> TypeUtil.reason_of_t t);
-                 }
-              )
-          in
-          Flow_js.flow cx (default_t, UseT (use_op, t)))
-      (Name_def.default_of_binding binding);
   (t, use_op)
 
 let resolve_inferred_function cx ~statics id_loc reason function_loc function_ =
