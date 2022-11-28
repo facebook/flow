@@ -14,7 +14,7 @@ type 'k blame = {
   payload: 'k;
   reason: ALoc.t virtual_reason;
   annot_locs: ALoc.t list;
-  recursion: ALoc.t Nel.t;
+  recursion: ALoc.t list;
 }
 
 type element =
@@ -25,7 +25,7 @@ type element =
 type result =
   | Singleton of element
   | ResolvableSCC of element Nel.t
-  | IllegalSCC of element blame Nel.t
+  | IllegalSCC of (element blame * bool) Nel.t
 
 val string_of_component :
   (Name_def.def * 'a * ALoc.t list * ALoc.t Reason.virtual_reason) EnvMap.t -> result -> string

@@ -33,7 +33,11 @@ module type S = sig
     | DeclareModuleExportsLoc
   [@@deriving show]
 
-  module EnvKey : Flow_map.OrderedType with type t = def_loc_type * L.t
+  module EnvKey : sig
+    include Flow_map.OrderedType with type t = def_loc_type * L.t
+
+    val equal : t -> t -> bool
+  end
 
   module EnvMap : sig
     include WrappedMap.S with type key = EnvKey.t
@@ -301,6 +305,8 @@ module Make
         L.compare l1 l2
       else
         Stdlib.compare t1 t2
+
+    let equal k1 k2 = compare k1 k2 = 0
   end
 
   module EnvMap = struct

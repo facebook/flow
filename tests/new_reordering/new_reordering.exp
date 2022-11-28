@@ -206,10 +206,47 @@ References:
                                  [3]
 
 
+Error ------------------------------------------------------------------------------------------------------- a.js:160:9
 
-Found 10 errors
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `m` [1] depends on other definition [2], [3], [4], [5]
+ - `x` [3] depends on other definition [4]
+ - `H` [6] depends on other definition [7]
+ - `x` [5] depends on other definition [2]
+Please add type annotations to these definitions [8] [3] [definition-cycle]
+
+   a.js:160:9
+   160|   const m = {
+                ^ [1]
+
+References:
+   a.js:161:10
+   161|     f(x: H) {
+                 ^ [2]
+   a.js:162:16
+   162|       return x(x => 42)
+                       ^ [3]
+   a.js:162:14
+   162|       return x(x => 42)
+                     ^ [4]
+   a.js:161:7
+   161|     f(x: H) {
+              ^ [5]
+   a.js:168:8
+   168|   type H = { (number => number): void, m: typeof m, s: S }
+               ^ [6]
+   a.js:168:50
+   168|   type H = { (number => number): void, m: typeof m, s: S }
+                                                         ^ [7]
+   a.js:161:12
+   161|     f(x: H) {
+                    [8]
+
+
+
+Found 11 errors
 Annotating cycles...
->>> a.js (#changes: 15)
+>>> a.js (#changes: 16)
 //@flow
 
 
@@ -368,13 +405,25 @@ import * as React from 'react';
   };
 }
 
+{
+  const m = {
+    f(x: H): void {
+      return x(x => 42)
+    }
+  }
+
+  type S = H; // not included in error message
+
+  type H = { (number => number): void, m: typeof m, s: S }
+}
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:             13
-  Total size of annotations:               19
-  Number of cycles:                        13
+  Number of annotations added:             14
+  Total size of annotations:               20
+  Number of cycles:                        15
   Number of annotations skipped:            0
   Number of unannotatable cycles:           0
 
@@ -391,7 +440,7 @@ Errors:
 Warnings:
   Skipping arrow function:                  0
   Large type added:                         0
-  Location unhandled:                       0
+  Location unhandled:                       1
   Empty NoUpper:                            0
   Empty SomeKnownUpper:                     0
 

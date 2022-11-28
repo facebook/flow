@@ -1071,7 +1071,7 @@ let entries_of_component graph component =
     Nel.fold_left (fun acc def -> EnvSet.union acc (entries_of_elt def)) EnvSet.empty elts
   | IllegalSCC elts ->
     Nel.fold_left
-      (fun acc { payload = elt; _ } -> EnvSet.union acc (entries_of_elt elt))
+      (fun acc ({ payload = elt; _ }, _) -> EnvSet.union acc (entries_of_elt elt))
       EnvSet.empty
       elts
 
@@ -1208,15 +1208,17 @@ let resolve_component_type_params cx graph component =
   match component with
   | IllegalSCC elts when Context.lti cx ->
     Nel.iter
-      (fun {
-             payload =
-               Illegal { payload; _ } | Resolvable payload | Name_def_ordering.Normal payload;
-             _;
-           } -> resolve_illegal (snd payload) (EnvMap.find payload graph))
+      (fun ( {
+               payload =
+                 Illegal { payload; _ } | Resolvable payload | Name_def_ordering.Normal payload;
+               _;
+             },
+             _
+           ) -> resolve_illegal (snd payload) (EnvMap.find payload graph))
       elts
   | Singleton elt -> resolve_element elt
   | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
-  | IllegalSCC elts -> Nel.iter (fun { payload = elt; _ } -> resolve_element elt) elts
+  | IllegalSCC elts -> Nel.iter (fun ({ payload = elt; _ }, _) -> resolve_element elt) elts
 
 let resolve_component cx graph component =
   let open Name_def_ordering in
@@ -1264,7 +1266,7 @@ let resolve_component cx graph component =
     | IllegalSCC _ when Context.lti cx -> resolve_illegal entries_for_resolution
     | Singleton elt -> resolve_element elt
     | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
-    | IllegalSCC elts -> Nel.iter (fun { payload; _ } -> resolve_element payload) elts
+    | IllegalSCC elts -> Nel.iter (fun ({ payload; _ }, _) -> resolve_element payload) elts
   in
   let env = Context.environment cx in
   EnvSet.iter

@@ -26,7 +26,7 @@ type 'k blame = {
   payload: 'k;
   reason: ALoc.t virtual_reason;
   annot_locs: ALoc.t list;
-  recursion: ALoc.t Nel.t;
+  recursion: ALoc.t list;
 }
 
 type element =
@@ -37,7 +37,7 @@ type element =
 type result =
   | Singleton of element
   | ResolvableSCC of element Nel.t
-  | IllegalSCC of element blame Nel.t
+  | IllegalSCC of (element blame * bool) Nel.t
 
 let string_of_element graph =
   let print_elt k =
@@ -75,7 +75,7 @@ let string_of_component graph = function
     Utils_js.spf
       "{(illegal cycle)\n%s\n}"
       (Nel.to_list elts
-      |> Base.List.map ~f:(fun { payload = elt; _ } -> string_of_element graph elt)
+      |> Base.List.map ~f:(fun ({ payload = elt; _ }, _) -> string_of_element graph elt)
       |> String.concat ",\n"
       )
 
@@ -520,7 +520,11 @@ struct
           let { key; value; annot; static = _; variance = _; comments = _ } = prop in
           let _ = this#object_key key in
           let _ = this#type_annotation_hint annot in
-          let _ = this#class_property_value_annotated value in
+          let _ =
+            match annot with
+            | Ast.Type.Missing _ -> this#class_property_value_annotated value
+            | Ast.Type.Available _ -> value
+          in
           ()
 
         method class_private_field_annotated (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
@@ -528,7 +532,11 @@ struct
           let { key; value; annot; static = _; variance = _; comments = _ } = prop in
           let _ = this#private_name key in
           let _ = this#type_annotation_hint annot in
-          let _ = this#class_property_value_annotated value in
+          let _ =
+            match annot with
+            | Ast.Type.Missing _ -> this#class_property_value_annotated value
+            | Ast.Type.Available _ -> value
+          in
           ()
 
         (* In order to resolve a def containing a read, the writes that the
@@ -1226,7 +1234,7 @@ struct
             Resolvable (kind, loc)
           else
             let depends = env_map_find (kind, loc) graph in
-            let recursion = env_map_find (kind, loc) depends in
+            let recursion = env_map_find (kind, loc) depends |> Nel.to_list in
             Illegal
               {
                 payload = (kind, loc);
@@ -1250,6 +1258,45 @@ struct
         then
           ResolvableSCC (Nel.map element_of_loc component)
         else
+          let rec shortest_cycle targ seen parents q =
+            (* BFS search *)
+            match Queue.take_opt q with
+            | None -> None
+            | Some cur ->
+              let adj = env_map_find cur order_graph in
+              if EnvSet.mem targ adj then
+                let rec path x =
+                  match EnvMap.find_opt x parents with
+                  | Some y -> x :: path y
+                  | None -> [x]
+                in
+                Some (targ :: path cur)
+              else
+                let seen = EnvSet.add cur seen in
+                let adj = EnvSet.diff adj seen in
+                let parents =
+                  EnvSet.fold
+                    (fun next parents ->
+                      Queue.add next q;
+                      EnvMap.add next cur parents)
+                    adj
+                    parents
+                in
+                shortest_cycle targ seen parents q
+          in
+          let cycle_elts =
+            Base.List.filter_map (Nel.to_list component) ~f:(fun payload ->
+                let (def, _, _, _) = EnvMap.find payload map in
+                if FindDependencies.recursively_resolvable def then
+                  None
+                else
+                  let q = Queue.create () in
+                  Queue.add payload q;
+                  shortest_cycle payload EnvSet.empty EnvMap.empty q
+            )
+            |> Base.List.concat
+            |> EnvSet.of_list
+          in
           let elements =
             Nel.map
               (fun (kind, loc) ->
@@ -1257,29 +1304,26 @@ struct
                 let depends = env_map_find (kind, loc) graph in
                 let edges =
                   EnvMap.fold
-                    (fun k v acc ->
-                      if
-                        k != (kind, loc)
-                        && Nel.mem
-                             ~equal:(fun k1 k2 -> Env_api.EnvKey.compare k1 k2 = 0)
-                             k
-                             component
-                      then
+                    (fun ((_, kl) as k) v acc ->
+                      if (not (ALoc.equal kl loc)) && EnvSet.mem k cycle_elts then
                         Nel.to_list v @ acc
                       else
                         acc)
                     depends
                     []
-                  |> Nel.of_list_exn
                 in
-                {
-                  payload = element_of_loc (kind, loc);
-                  reason;
-                  recursion = edges;
-                  annot_locs = annotation_locs scopes loc def;
-                })
+                let display = EnvSet.mem (kind, loc) cycle_elts in
+                ( {
+                    payload = element_of_loc (kind, loc);
+                    reason;
+                    recursion = edges;
+                    annot_locs = annotation_locs scopes loc def;
+                  },
+                  display
+                ))
               component
           in
+
           IllegalSCC elements
     in
     Base.List.map ~f:result_of_scc sort

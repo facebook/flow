@@ -76,7 +76,7 @@ let print_order lst =
       else
         c
     in
-    let compare_blame { payload = a; _ } { payload = b; _ } =
+    let compare_blame ({ payload = a; _ }, _) ({ payload = b; _ }, _) =
       let c = ALoc.compare (loc_of_elt a) (loc_of_elt b) in
       if c = 0 then
         Stdlib.compare a b
@@ -91,7 +91,7 @@ let print_order lst =
             "illegal scc: ((%s))"
             (Nel.to_list keys
             |> Base.List.sort ~compare:compare_blame
-            |> Base.List.map ~f:(fun { payload = elt; _ } -> msg_of_elt elt)
+            |> Base.List.map ~f:(fun ({ payload = elt; _ }, _) -> msg_of_elt elt)
             |> String.concat "); ("
             )
         | ResolvableSCC keys ->
