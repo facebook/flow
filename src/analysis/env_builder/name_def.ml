@@ -26,7 +26,8 @@ module Destructure : sig
     (ALoc.t, ALoc.t) Ast.Pattern.t -> (ALoc.t, ALoc.t) Ast.Type.annotation option
 
   val fold_pattern :
-    f:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> 'a) ->
+    record_identifier:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> 'a) ->
+    record_destructuring_intermediate:(ALoc.t -> binding -> unit) ->
     join:('a -> 'a -> 'a) ->
     default:'a ->
     binding ->
@@ -34,7 +35,8 @@ module Destructure : sig
     'a
 
   val pattern :
-    f:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> unit) ->
+    record_identifier:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> unit) ->
+    record_destructuring_intermediate:(ALoc.t -> binding -> unit) ->
     binding ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
     unit
@@ -50,35 +52,38 @@ end = struct
       Some t
     | _ -> None
 
-  let pattern_default acc = function
-    | None -> acc
+  let pattern_default direct_default default =
+    match direct_default with
+    | None -> default
     | Some e ->
       let default =
-        match default_of_binding acc with
+        match default with
         | Some default -> DefaultCons (e, default)
         | None -> DefaultExpr e
       in
-      Select { selector = Default; default = Some default; binding = acc }
+      Some default
 
-  let array_element acc i =
-    let selector = Elem i in
+  let array_element (parent_loc, acc) index direct_default =
+    let selector = Elem { index; has_default = direct_default <> None } in
     let default =
       acc
       |> default_of_binding
       |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
+      |> pattern_default direct_default
     in
-    Select { selector; default; binding = acc }
+    Select { selector; default; parent = (parent_loc, acc) }
 
-  let array_rest_element acc i =
+  let array_rest_element (parent_loc, acc) i =
     let selector = ArrRest i in
     let default =
       acc
       |> default_of_binding
       |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
     in
-    Select { selector; default; binding = acc }
+    Select { selector; default; parent = (parent_loc, acc) }
 
-  let object_named_property acc prop_loc x ~has_default =
+  let object_named_property (parent_loc, acc) prop_loc x direct_default =
+    let has_default = direct_default <> None in
     let selector = Prop { prop = x; prop_loc; has_default } in
     let default =
       acc
@@ -90,54 +95,73 @@ end = struct
              else
                d
          )
+      |> pattern_default direct_default
     in
-    Select { selector; default; binding = acc }
+    Select { selector; default; parent = (parent_loc, acc) }
 
-  let object_computed_property acc e =
-    let selector = Computed e in
+  let object_computed_property (parent_loc, acc) e direct_default =
+    let selector = Computed { expression = e; has_default = direct_default <> None } in
     let default =
       acc
       |> default_of_binding
       |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
+      |> pattern_default direct_default
     in
-    Select { selector; default; binding = acc }
+    Select { selector; default; parent = (parent_loc, acc) }
 
-  let object_rest_property acc xs has_computed =
+  let object_rest_property (parent_loc, acc) xs has_computed =
     let selector = ObjRest { used_props = xs; after_computed = has_computed } in
     let default =
       acc
       |> default_of_binding
       |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
     in
-    Select { selector; default; binding = acc }
+    Select { selector; default; parent = (parent_loc, acc) }
 
-  let object_property acc xs key ~has_default =
+  let object_property (parent_loc, acc) xs key direct_default =
     let open Ast.Pattern.Object in
     match key with
     | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ }) ->
-      let acc = object_named_property acc loc x ~has_default in
+      let acc = object_named_property (parent_loc, acc) loc x direct_default in
       (acc, x :: xs, false)
     | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String x; _ }) ->
-      let acc = object_named_property acc loc x ~has_default in
+      let acc = object_named_property (parent_loc, acc) loc x direct_default in
       (acc, x :: xs, false)
     | Property.Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
-      let acc = object_computed_property acc expression in
+      let acc = object_computed_property (parent_loc, acc) expression direct_default in
       (acc, xs, true)
     | Property.Literal (_, _) -> (acc, xs, false)
 
-  let identifier ~f acc (name_loc, { Ast.Identifier.name; _ }) =
-    f name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) acc
+  let identifier ~record_identifier acc (name_loc, { Ast.Identifier.name; _ }) =
+    record_identifier name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) acc
 
-  let rec fold_pattern ~f ~join ~default acc (_, p) =
+  let rec fold_pattern
+      ~record_identifier ~record_destructuring_intermediate ~join ~default acc (ploc, p) =
     match p with
     | Array { Array.elements; annot = _; comments = _ } ->
-      array_elements ~f ~join ~default acc elements
+      record_destructuring_intermediate ploc acc;
+      array_elements
+        ~record_identifier
+        ~record_destructuring_intermediate
+        ~join
+        ~default
+        (ploc, acc)
+        elements
     | Object { Object.properties; annot = _; comments = _ } ->
-      object_properties ~f ~join ~default acc properties
-    | Identifier { Identifier.name = id; optional = _; annot = _ } -> identifier ~f acc id
+      record_destructuring_intermediate ploc acc;
+      object_properties
+        ~record_identifier
+        ~record_destructuring_intermediate
+        ~join
+        ~default
+        (ploc, acc)
+        properties
+    | Identifier { Identifier.name = id; optional = _; annot = _ } ->
+      identifier ~record_identifier acc id
     | Expression _ -> default
 
-  and array_elements ~f ~join ~default acc elts =
+  and array_elements
+      ~record_identifier ~record_destructuring_intermediate ~join ~default (parent_loc, acc) elts =
     let open Ast.Pattern.Array in
     Base.List.fold
       ~init:(0, default)
@@ -146,12 +170,11 @@ end = struct
           match elt with
           | Hole _ -> default
           | Element (_, { Element.argument = p; default = d }) ->
-            let acc = array_element acc i in
-            let acc = pattern_default acc d in
-            fold_pattern ~f ~join ~default acc p
+            let acc = array_element (parent_loc, acc) i d in
+            fold_pattern ~record_identifier ~record_destructuring_intermediate ~join ~default acc p
           | RestElement (_, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
-            let acc = array_rest_element acc i in
-            fold_pattern ~f ~join ~default acc p
+            let acc = array_rest_element (parent_loc, acc) i in
+            fold_pattern ~record_identifier ~record_destructuring_intermediate ~join ~default acc p
         in
         (i + 1, join prev res))
       elts
@@ -159,24 +182,73 @@ end = struct
 
   and object_properties =
     let open Ast.Pattern.Object in
-    let prop ~f ~join ~default acc xs has_computed p =
+    let prop
+        ~record_identifier
+        ~record_destructuring_intermediate
+        ~join
+        ~default
+        (parent_loc, acc)
+        xs
+        has_computed
+        p =
       match p with
       | Property (_, { Property.key; pattern = p; default = d; shorthand = _ }) ->
-        let has_default = d <> None in
-        let (acc, xs, has_computed') = object_property acc xs key ~has_default in
-        let acc = pattern_default acc d in
-        (fold_pattern ~f ~join ~default acc p, xs, has_computed || has_computed')
+        let (acc, xs, has_computed') = object_property (parent_loc, acc) xs key d in
+        ( fold_pattern ~record_identifier ~record_destructuring_intermediate ~join ~default acc p,
+          xs,
+          has_computed || has_computed'
+        )
       | RestElement (_, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
-        let acc = object_rest_property acc xs has_computed in
-        (fold_pattern ~f ~join ~default acc p, xs, false)
+        let acc = object_rest_property (parent_loc, acc) xs has_computed in
+        ( fold_pattern ~record_identifier ~record_destructuring_intermediate ~join ~default acc p,
+          xs,
+          false
+        )
     in
-    let rec loop ~f ~join ~default res_acc acc xs has_computed = function
+    let rec loop
+        ~record_identifier
+        ~record_destructuring_intermediate
+        ~join
+        ~default
+        res_acc
+        acc
+        xs
+        has_computed = function
       | [] -> res_acc
       | p :: ps ->
-        let (res, xs, has_computed) = prop ~f ~join ~default acc xs has_computed p in
-        loop ~f ~join ~default (join res_acc res) acc xs has_computed ps
+        let (res, xs, has_computed) =
+          prop
+            ~record_identifier
+            ~record_destructuring_intermediate
+            ~join
+            ~default
+            acc
+            xs
+            has_computed
+            p
+        in
+        loop
+          ~record_identifier
+          ~record_destructuring_intermediate
+          ~join
+          ~default
+          (join res_acc res)
+          acc
+          xs
+          has_computed
+          ps
     in
-    (fun ~f ~join ~default acc ps -> loop ~f ~join ~default default acc [] false ps)
+    fun ~record_identifier ~record_destructuring_intermediate ~join ~default acc ps ->
+      loop
+        ~record_identifier
+        ~record_destructuring_intermediate
+        ~join
+        ~default
+        default
+        acc
+        []
+        false
+        ps
 
   let pattern = fold_pattern ~default:() ~join:(fun _ _ -> ())
 end
@@ -476,9 +548,18 @@ class def_finder env_entries providers toplevel_scope =
 
     method add_ordinary_binding loc = this#add_binding (Env_api.OrdinaryNameLoc, loc)
 
+    method add_destructure_binding loc binding =
+      this#add_binding (Env_api.PatternLoc, loc) (mk_reason RDestructuring loc) (Binding binding)
+
     method add_destructure_bindings root pattern =
-      let f loc reason binding = this#add_ordinary_binding loc reason (Binding binding) in
-      Destructure.pattern ~f (Root root) pattern
+      let record_identifier loc reason binding =
+        this#add_ordinary_binding loc reason (Binding binding)
+      in
+      Destructure.pattern
+        ~record_identifier
+        ~record_destructuring_intermediate:this#add_destructure_binding
+        (Root root)
+        pattern
 
     method private in_scope : 'a 'b. ('a -> 'b) -> scope_kind -> 'a -> 'b =
       fun f scope' node ->
@@ -861,12 +942,21 @@ class def_finder env_entries providers toplevel_scope =
           this#record_hint param_loc hint;
           Contextual { reason; hint; optional; default_expression }
       in
-      let f loc reason binding =
+      let record_identifier loc reason binding =
         this#add_ordinary_binding loc reason (Binding binding);
         true
       in
       if
-        (not (Destructure.fold_pattern ~f ~default:false ~join:( || ) (Root source) argument))
+        (not
+           (Destructure.fold_pattern
+              ~record_identifier
+              ~record_destructuring_intermediate:this#add_destructure_binding
+              ~default:false
+              ~join:( || )
+              (Root source)
+              argument
+           )
+        )
         && Base.Option.is_none annot
       then
         this#add_binding

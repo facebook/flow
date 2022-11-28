@@ -2071,9 +2071,16 @@ module Make
          We use acc to keep track of the current parent expr *)
       method private binding_pattern_track_object_destructuring ?kind ~acc expr =
         let open Ast.Pattern in
-        let (_, patt) = expr in
+        let (ploc, patt) = expr in
         (match patt with
         | Object { Object.properties; annot; comments = _ } ->
+          let write_entries =
+            EnvMap.add
+              (Env_api.PatternLoc, ploc)
+              (Env_api.AssigningWrite (mk_reason RDestructuring ploc))
+              env_state.write_entries
+          in
+          env_state <- { env_state with write_entries };
           Base.List.iter properties ~f:(fun prop ->
               let open Ast.Pattern.Object in
               match prop with
@@ -2121,6 +2128,48 @@ module Make
         | Expression _ ->
           ignore @@ this#pattern ?kind expr);
         expr
+
+      method private record_pattern_loc_writes expr =
+        let (ploc, patt) = expr in
+        let write_entries =
+          EnvMap.add
+            (Env_api.PatternLoc, ploc)
+            (Env_api.AssigningWrite (mk_reason RDestructuring ploc))
+            env_state.write_entries
+        in
+        env_state <- { env_state with write_entries };
+        let open Ast.Pattern in
+        match patt with
+        | Array { Array.elements; _ } ->
+          Base.List.iter elements ~f:(fun element ->
+              let open Ast.Pattern.Array in
+              match element with
+              | Hole _ -> ()
+              | Element (_, { Element.argument = p; _ })
+              | RestElement (_, { RestElement.argument = p; _ }) ->
+                this#record_pattern_loc_writes p
+          )
+        | Object { Object.properties; _ } ->
+          Base.List.iter properties ~f:(fun prop ->
+              let open Ast.Pattern.Object in
+              match prop with
+              | Property (_, { Property.pattern = p; _ })
+              | RestElement (_, { RestElement.argument = p; _ }) ->
+                this#record_pattern_loc_writes p
+          )
+        | Identifier _ -> ()
+        | Expression _ -> ()
+
+      method! pattern ?kind expr =
+        let (ploc, _) = expr in
+        let write_entries =
+          EnvMap.add
+            (Env_api.PatternLoc, ploc)
+            (Env_api.AssigningWrite (mk_reason RDestructuring ploc))
+            env_state.write_entries
+        in
+        env_state <- { env_state with write_entries };
+        super#pattern ?kind expr
 
       method! pattern_identifier ?kind ident =
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
@@ -2531,6 +2580,7 @@ module Make
                   in
                   env_state <- { env_state with write_entries }
                 | _ ->
+                  this#record_pattern_loc_writes id;
                   this#havoc_heap_refinements heap_refinements;
                   let write_entries =
                     if not (Val.is_declared_function !val_ref) then (
@@ -2559,6 +2609,7 @@ module Make
               | (None, _) ->
                 (* No rhs means no write occurs, but the variable moves from undeclared to
                  * uninitialized. *)
+                this#record_pattern_loc_writes id;
                 Flow_ast_utils.fold_bindings_of_pattern
                   (fun () (loc, { Flow_ast.Identifier.name; _ }) ->
                     if this#is_excluded_ordinary_name name then
@@ -5441,6 +5492,16 @@ module Make
       method! function_declaration loc expr =
         this#mark_dead_write (Env_api.FunctionThisLoc, loc);
         super#function_declaration loc expr
+
+      method! pattern ?kind ((loc, _) as patt) =
+        write_entries <-
+          EnvMap.update
+            (Env_api.PatternLoc, loc)
+            (function
+              | None -> Some Env_api.NonAssigningWrite
+              | x -> x)
+            write_entries;
+        super#pattern ?kind patt
 
       method! function_param_pattern ((loc, _) as patt) =
         write_entries <-

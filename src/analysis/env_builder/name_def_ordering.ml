@@ -115,6 +115,7 @@ struct
       Context.t ->
       EnvMap.key EnvMap.t ->
       Env_api.env_info ->
+      Env_api.def_loc_type ->
       ALoc.t ->
       Name_def.def ->
       ALoc.t Nel.t EnvMap.t
@@ -556,6 +557,7 @@ struct
         cx
         this_super_dep_loc_map
         ({ Env_api.providers; env_entries; predicate_refinement_maps; _ } as env)
+        kind
         id_loc =
       let depends_of_node ?(named_only_for_synthesis = false) mk_visit state =
         let visitor =
@@ -860,7 +862,7 @@ struct
         | Catch -> state
       in
       let depends_of_selector state = function
-        | Computed exp -> depends_of_expression exp state
+        | Computed { expression; _ } -> depends_of_expression expression state
         | Prop { prop_loc; _ } ->
           (* In `const {d: {a, b}} = obj`, each prop might be reading from a refined value, \
              which is a write. We need to track these dependencies as well. *)
@@ -916,18 +918,22 @@ struct
         | Some e -> depends_of_expression ~for_expression_writes:true e EnvMap.empty
       in
       let depends_of_binding bind =
-        let state = depends_of_lhs id_loc None in
-        let rec rhs_loop bind state =
-          match bind with
-          | Root root -> depends_of_root state root
-          | Select { selector; default; binding } ->
-            let state = depends_of_selector state selector in
-            let state =
-              Base.Option.value_map default ~default:state ~f:(depends_of_default state)
-            in
-            rhs_loop binding state
+        let state =
+          if kind = Env_api.PatternLoc then
+            EnvMap.empty
+          else
+            depends_of_lhs id_loc None
         in
-        rhs_loop bind state
+        match bind with
+        | Root root -> depends_of_root state root
+        | Select { selector; default; parent = (parent_loc, _) } ->
+          let state = depends_of_selector state selector in
+          let state =
+            depends_of_node
+              (fun visitor -> visitor#add ~why:parent_loc (Env_api.PatternLoc, parent_loc))
+              state
+          in
+          Base.Option.value_map default ~default:state ~f:(depends_of_default state)
       in
       let depends_of_update lhs =
         let state = depends_of_lhs id_loc lhs in
@@ -1023,7 +1029,7 @@ struct
         | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
           false
         | Select { selector = Computed _; _ } -> false
-        | Select { binding; _ } -> bind_loop binding
+        | Select { parent = (_, binding); _ } -> bind_loop binding
       in
       let rec expression_resolvable (_, expr) =
         (* A variable read or member expression is assumed to be recursively resolvable if the
@@ -1083,7 +1089,7 @@ struct
   end
 
   let annotation_locs scopes loc =
-    let rec bind_loop b =
+    let bind_loop b =
       match b with
       | Root Catch
       | Root (Annotation _)
@@ -1101,8 +1107,7 @@ struct
           with
           | Scope_api.With_ALoc.Missing_def _ -> []
         end
-      | Select { selector = Computed _ | Default; _ } -> []
-      | Select { binding; _ } -> bind_loop binding
+      | Select _ -> []
     in
     function
     | Binding bind -> bind_loop bind
@@ -1130,7 +1135,7 @@ struct
       []
 
   let dependencies cx this_super_dep_loc_map env (kind, loc) (def, _, _, _) acc =
-    let depends = FindDependencies.depends cx this_super_dep_loc_map env loc def in
+    let depends = FindDependencies.depends cx this_super_dep_loc_map env kind loc def in
     EnvMap.update
       (kind, loc)
       (function

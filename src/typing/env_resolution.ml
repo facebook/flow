@@ -69,22 +69,25 @@ let rec synthesizable_expression cx ?cond exp =
     )
   | _ -> Statement.expression cx ?cond exp
 
-let mk_selector_reason cx loc = function
-  | Name_def.Elem n ->
+let mk_selector_reason_has_default cx loc = function
+  | Name_def.Elem { index = n; has_default } ->
     let key =
       DefT (mk_reason RNumber loc, bogus_trust (), NumT (Literal (None, (float n, string_of_int n))))
     in
-    (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc)
+    (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc, has_default)
   | Name_def.Prop { prop; prop_loc; has_default } ->
-    (Type.Prop (prop, has_default), mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc)
-  | Name_def.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc)
+    ( Type.Prop (prop, has_default),
+      mk_reason (RProperty (Some (OrdinaryName prop))) prop_loc,
+      has_default
+    )
+  | Name_def.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc, false)
   | Name_def.ObjRest { used_props; after_computed = _ } ->
     (* TODO: eveyrthing after a computed prop should be optional *)
-    (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc)
-  | Name_def.Computed exp ->
+    (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc, false)
+  | Name_def.Computed { expression = exp; has_default } ->
     let t = expression cx exp in
-    (Type.Elem t, mk_reason (RProperty None) loc)
-  | Name_def.Default -> (Type.Default, mk_reason RDefaultValue loc)
+    (Type.Elem t, mk_reason (RProperty None) loc, has_default)
+  | Name_def.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
 
 let resolve_annotation cx tparams_map anno =
   let cache = Context.node_cache cx in
@@ -260,7 +263,12 @@ let resolve_annotated_function
     unknown_use
   )
 
-let rec resolve_binding_partial cx reason loc b =
+let rec binding_has_annot = function
+  | Root (Annotation _) -> true
+  | Select { parent = (_, b); _ } -> binding_has_annot b
+  | _ -> false
+
+let resolve_binding_partial cx reason loc b =
   let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
   | Root (Annotation { tparams_map; optional; has_default_expression; param_loc; annot }) ->
@@ -278,11 +286,11 @@ let rec resolve_binding_partial cx reason loc b =
       else
         unknown_use
     in
-    (t, use_op, true)
+    (t, use_op)
   | Root (Value { hint = _; expr }) ->
     let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
-    (t, use_op, false)
+    (t, use_op)
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
     let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =
@@ -394,12 +402,12 @@ let rec resolve_binding_partial cx reason loc b =
         ~default_proto:obj_proto
     in
     let t = mk_obj loc obj in
-    (t, unknown_use, true)
+    (t, unknown_use)
   | Root (ObjectValue { obj_loc; obj; _ }) ->
     let expr = (obj_loc, Ast.Expression.Object obj) in
     let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
-    (t, use_op, false)
+    (t, use_op)
   | Root
       (FunctionValue
         {
@@ -445,8 +453,7 @@ let rec resolve_binding_partial cx reason loc b =
     in
     Node_cache.set_function_sig cache sig_loc sig_data;
     ( Statement.Func_stmt_sig.functiontype cx ~arrow (Some function_loc) default_this func_sig,
-      Op (AssignVar { var = Some reason; init = reason_fun }),
-      true
+      Op (AssignVar { var = Some reason; init = reason_fun })
     )
   | Root
       (FunctionValue
@@ -501,7 +508,7 @@ let rec resolve_binding_partial cx reason loc b =
     in
     Node_cache.set_expression cache expr;
     let use_op = Op (AssignVar { var = Some reason; init = reason_fun }) in
-    (func_type, use_op, false)
+    (func_type, use_op)
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let env = Context.environment cx in
     let (elem_t, elems, reason) =
@@ -561,7 +568,7 @@ let rec resolve_binding_partial cx reason loc b =
     in
     Node_cache.set_expression cache exp;
     let use_op = Op (AssignVar { var = Some reason; init = mk_reason (RCode "[]") arr_loc }) in
-    (t, use_op, false)
+    (t, use_op)
   | Root (Contextual { reason; hint; optional; default_expression }) ->
     let param_loc = Reason.poly_loc_of_reason reason in
     let contextual_typing_enabled = Context.lti cx in
@@ -594,10 +601,10 @@ let rec resolve_binding_partial cx reason loc b =
       else
         t
     in
-    (t, mk_use_op t, false)
+    (t, mk_use_op t)
   | Root Catch ->
     let t = AnyT.annot (mk_reason (RCustom "catch parameter") loc) in
-    (t, mk_use_op t, false)
+    (t, mk_use_op t)
   | Root (For (kind, exp)) ->
     let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
     let right_t = expression cx ~cond:OtherTest exp in
@@ -608,8 +615,8 @@ let rec resolve_binding_partial cx reason loc b =
         StrT.at loc |> with_trust bogus_trust
       | Of { await } -> Statement.for_of_elemt cx right_t reason await
     in
-    (t, mk_use_op t, false)
-  | Select { selector; default = _; binding } ->
+    (t, mk_use_op t)
+  | Select { selector; default = _; parent = (parent_loc, binding) } ->
     let refined_type =
       match selector with
       | Name_def.Prop { prop; prop_loc; _ } ->
@@ -621,36 +628,48 @@ let rec resolve_binding_partial cx reason loc b =
     in
     (match refined_type with
     | Some t ->
-      let rec binding_has_annot = function
-        | Root (Annotation _) -> true
-        | Root _ -> false
-        | Select { binding; _ } -> binding_has_annot binding
-      in
       (* When we can get a refined value on a destructured property,
          we must be in an assignment position and the type must have been resolved. *)
-      (t, mk_use_op t, binding_has_annot binding)
+      (t, mk_use_op t)
     | None ->
-      let (t, use_op, has_anno) = resolve_binding_partial cx reason loc binding in
-      let (selector, reason) = mk_selector_reason cx loc selector in
+      let t =
+        Env.t_option_value_exn
+          cx
+          parent_loc
+          (Loc_env.find_write (Context.environment cx) Env_api.PatternLoc parent_loc)
+      in
+      let has_anno = binding_has_annot binding in
+      let (selector, reason, has_default) = mk_selector_reason_has_default cx loc selector in
       let kind =
         if has_anno then
           DestructAnnot
         else
           DestructInfer
       in
-      ( Tvar.mk_no_wrap_where cx reason (fun tout ->
+      let t =
+        Tvar.mk_no_wrap_where cx reason (fun tout ->
             Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
-        ),
-        use_op,
-        has_anno
-      ))
+        )
+      in
+      let t =
+        if has_default then
+          let (selector, reason, _) = mk_selector_reason_has_default cx loc Name_def.Default in
+          Tvar.mk_no_wrap_where cx reason (fun tout ->
+              Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+          )
+        else
+          t
+      in
+      (t, unknown_use))
 
-let resolve_binding cx reason loc binding =
-  let (t, use_op, has_annot) = resolve_binding_partial cx reason loc binding in
+let resolve_binding cx reason loc_kind loc binding =
+  let (t, use_op) = resolve_binding_partial cx reason loc binding in
+  let has_annot = binding_has_annot binding in
+
   let t =
-    match (binding, has_annot) with
-    (* This is unnecessary if we are directly resolving an annotation. *)
-    | (Select _, true) ->
+    match binding with
+    | Select _ when has_annot && loc_kind <> Env_api.PatternLoc ->
+      (* This is unnecessary if we are directly resolving an annotation. *)
       AnnotT
         ( reason,
           Tvar.mk_where cx reason (fun t' ->
@@ -660,8 +679,7 @@ let resolve_binding cx reason loc binding =
         )
     | _ -> t
   in
-  let default = Name_def.default_of_binding binding in
-  if not has_annot then
+  if (not has_annot) && loc_kind <> Env_api.PatternLoc then
     Base.Option.iter
       ~f:(function
         | Name_def.DefaultAnnot _ -> ()
@@ -674,7 +692,7 @@ let resolve_binding cx reason loc binding =
             | Name_def.DefaultExpr e -> Default.Expr (expression cx e)
             | Name_def.DefaultCons (e, d) -> Default.Cons (expression cx e, convert d)
             | Name_def.DefaultSelector (d, s) ->
-              let (s, r) = mk_selector_reason cx loc s in
+              let (s, r, _) = mk_selector_reason_has_default cx loc s in
               Default.Selector (r, convert d, s)
           in
           let default = convert d in
@@ -692,7 +710,7 @@ let resolve_binding cx reason loc binding =
               )
           in
           Flow_js.flow cx (default_t, UseT (use_op, t)))
-      default;
+      (Name_def.default_of_binding binding);
   (t, use_op)
 
 let resolve_inferred_function cx ~statics id_loc reason function_loc function_ =
@@ -937,7 +955,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   Context.set_environment cx { env with Loc_env.scope_kind = def_scope_kind; class_stack };
   let (t, use_op) =
     match def with
-    | Binding b -> resolve_binding cx def_reason id_loc b
+    | Binding b -> resolve_binding cx def_reason def_kind id_loc b
     | ExpressionDef { cond_context = cond; expr; chain = true; hint = _ } ->
       resolve_chain_expression cx ~cond expr
     | ExpressionDef { cond_context = cond; expr; chain = false; hint = _ } ->
@@ -1015,7 +1033,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
 let entries_of_def graph (kind, loc) =
   let open Name_def_ordering in
   let acc = EnvSet.singleton (kind, loc) in
-  let rec add_from_bindings acc = function
+  let add_from_bindings acc = function
     | Root (Annotation { param_loc = Some l; _ }) -> EnvSet.add (Env_api.FunctionParamLoc, l) acc
     | Root (Contextual { reason; _ }) ->
       let l = Reason.poly_loc_of_reason reason in
@@ -1033,7 +1051,7 @@ let entries_of_def graph (kind, loc) =
     | Root (ObjectValue { synthesizable = ObjectSynthesizable { this_write_locs }; _ }) ->
       EnvSet.union this_write_locs acc
     | Root _ -> acc
-    | Select { binding; _ } -> add_from_bindings acc binding
+    | Select _ -> acc
   in
   match EnvMap.find (kind, loc) graph with
   | (Binding b, _, _, _) -> add_from_bindings acc b
