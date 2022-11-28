@@ -38,6 +38,7 @@ type hint_node =
   | AnnotationHint of tparams_map * (ALoc.t, ALoc.t) Ast.Type.annotation
   | ValueHint of (ALoc.t, ALoc.t) Ast.Expression.t
   | ProvidersHint of ALoc.t Nel.t
+  | WriteLocHint of Env_api.With_ALoc.def_loc_type * ALoc.t
   | StringLiteralType of string
   | BuiltinType of string
 
@@ -253,6 +254,7 @@ module Print = struct
     | AnnotationHint _ -> "annot hint"
     | ValueHint _ -> "value hint"
     | ProvidersHint _ -> "providers hint"
+    | WriteLocHint _ -> "write loc hint"
     | StringLiteralType s -> "string literal hint: " ^ s
     | BuiltinType _ -> "builtin type hint"
 

@@ -138,6 +138,10 @@ let resolve_hint cx loc hint =
         )
       in
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
+    | WriteLocHint (kind, loc) ->
+      let env = Context.environment cx in
+      Env.check_readable cx kind loc;
+      Base.Option.value_exn (Loc_env.find_write env kind loc)
     | StringLiteralType name ->
       DefT
         ( mk_reason (RIdentifier (OrdinaryName name)) loc,
