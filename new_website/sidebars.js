@@ -64,6 +64,21 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'React',
+      items: [
+        'react/index',
+        'react/components',
+        'react/events',
+        'react/refs',
+        'react/children',
+        'react/hoc',
+        'react/context',
+        'react/redux',
+        'react/types',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Flow Enums',
       items: [
         'enums/index',
@@ -72,6 +87,23 @@ module.exports = {
         'enums/using-enums',
         'enums/migrating-legacy-patterns',
       ],
+    },
+    'errors/index',
+    {
+      type: 'category',
+      label: 'Linting',
+      items: [
+        'linting/index',
+        'linting/flowlint-comments',
+        'linting/ide-integration',
+        'linting/rule-reference',
+      ],
+    },
+    'strict/index',
+    {
+      type: 'category',
+      label: 'Library Definitions',
+      items: ['libdefs/index', 'libdefs/creation'],
     },
     {
       type: 'category',
@@ -91,27 +123,6 @@ module.exports = {
         'config/options',
         'config/version',
         'config/declarations',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Library Definitions',
-      items: ['libdefs/index', 'libdefs/creation'],
-    },
-    'errors/index',
-    {
-      type: 'category',
-      label: 'React',
-      items: [
-        'react/index',
-        'react/components',
-        'react/events',
-        'react/refs',
-        'react/children',
-        'react/hoc',
-        'react/context',
-        'react/redux',
-        'react/types',
       ],
     },
     {
@@ -136,21 +147,6 @@ module.exports = {
         'editors/vscode',
         'editors/webstorm',
       ],
-    },
-    {
-      type: 'category',
-      label: 'Linting',
-      items: [
-        'linting/index',
-        'linting/flowlint-comments',
-        'linting/ide-integration',
-        'linting/rule-reference',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Flow Strict',
-      items: ['strict/index'],
     },
   ],
 };
