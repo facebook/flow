@@ -789,7 +789,6 @@ workflows:
             branches:
               only:
                 - main
-                - master
 
       - new_website_deploy:
           requires:
@@ -799,8 +798,6 @@ workflows:
             branches:
               only:
                 - main
-                # Include this branch while we test the new website deployment workflow
-                - new_website_deploy
 
   build_and_deploy:
     jobs:
