@@ -2387,7 +2387,7 @@ module Make
                   cx
                   (DefT (reason, make_trust (), ArrT (ArrayAT (elemt', Some []))), hint)
               then
-                Flow.unify cx elemt (PinTypes.pin_type cx element_reason elemt')
+                Flow.unify cx elemt (PinTypes.pin_type cx ~use_op:unknown_use element_reason elemt')
               else
                 default_init ()
         );

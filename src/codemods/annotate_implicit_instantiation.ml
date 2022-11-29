@@ -219,17 +219,15 @@ let mapper
         Flow_error.ErrorSet.fold
           (fun error acc ->
             match Flow_error.msg_of_error error with
-            | Error_message.EImplicitInstantiationUnderconstrainedError { bound; _ }
-            | Error_message.EImplicitInstantiationWidenedError { bound; _ } ->
-              (match Flow_error.loc_of_error error with
-              | Some loc ->
-                LMap.update
-                  (loc_of_aloc loc)
-                  (function
-                    | None -> Some (SSet.singleton bound)
-                    | Some names -> Some (SSet.add bound names))
-                  acc
-              | None -> acc)
+            | Error_message.EImplicitInstantiationUnderconstrainedError { bound; reason_call; _ }
+            | Error_message.EImplicitInstantiationWidenedError { bound; reason_call; _ } ->
+              let loc = Reason.aloc_of_reason reason_call in
+              LMap.update
+                (loc_of_aloc loc)
+                (function
+                  | None -> Some (SSet.singleton bound)
+                  | Some names -> Some (SSet.add bound names))
+                acc
             | _ -> acc)
           errors
           loc_error_map
