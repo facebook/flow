@@ -12,6 +12,15 @@
 %token <string> ID
 %token <string> NR
 
+%type <Semver_comparator.t> comparator
+%type <Semver_version.identifier list> identifier_list prerelease build
+%type <Semver_version.identifier> identifier_part
+%type <int> number part
+%type <Semver_comparator.op option> op
+%type <Semver_range.part list> range
+%type <Semver_range.part> range_part
+%type <Semver_version.t> version
+
 %start version_top comparator_top range_top range_top
 %type <Semver_version.t> version_top
 %type <Semver_comparator.t> comparator_top
