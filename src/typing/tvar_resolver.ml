@@ -40,7 +40,15 @@ let has_placeholders =
     | exception EncounteredPlaceholderType -> true
     | _ -> false
 
-let resolver =
+let default_no_lowers r =
+  let desc =
+    match desc_of_reason r with
+    | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
+    | _ -> REmpty
+  in
+  EmptyT.make (replace_desc_reason desc r) (bogus_trust ())
+
+class resolver ~no_lowers =
   object (this)
     inherit [ISet.t] Type_visitor.t
 
@@ -54,13 +62,7 @@ let resolver =
         let t =
           match Flow_js_utils.merge_tvar_opt cx r root_id with
           | Some t -> Some t
-          | None ->
-            let desc =
-              match desc_of_reason r with
-              | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
-              | _ -> REmpty
-            in
-            Some (EmptyT.make (replace_desc_reason desc r) (bogus_trust ()))
+          | None -> Some (no_lowers r)
         in
         Base.Option.value_map t ~default:seen ~f:(fun t ->
             let new_root =
@@ -107,26 +109,40 @@ let run_conditionally cx f =
     ignore @@ f ()
   | _ -> ()
 
-let resolve cx t = run_conditionally cx (fun () -> resolver#type_ cx Polarity.Positive ISet.empty t)
+let resolve ?(no_lowers = default_no_lowers) cx t =
+  run_conditionally cx (fun () ->
+      let resolver = new resolver ~no_lowers in
+      resolver#type_ cx Polarity.Positive ISet.empty t
+  )
 
-let resolved_t cx t =
-  resolve cx t;
+let resolved_t ?(no_lowers = default_no_lowers) cx t =
+  resolve ~no_lowers cx t;
   t
 
-let resolved_fun_call_type cx funcalltype =
-  run_conditionally cx (fun () -> resolver#fun_call_type cx ISet.empty funcalltype);
+let resolved_fun_call_type ?(no_lowers = default_no_lowers) cx funcalltype =
+  run_conditionally cx (fun () ->
+      let resolver = new resolver ~no_lowers in
+      resolver#fun_call_type cx ISet.empty funcalltype
+  );
   funcalltype
 
-let resolved_call_arg cx call_arg =
-  run_conditionally cx (fun () -> resolver#call_arg cx ISet.empty call_arg);
+let resolved_call_arg ?(no_lowers = default_no_lowers) cx call_arg =
+  run_conditionally cx (fun () ->
+      let resolver = new resolver ~no_lowers in
+      resolver#call_arg cx ISet.empty call_arg
+  );
   call_arg
 
-let resolved_type_args cx targs =
+let resolved_type_args ?(no_lowers = default_no_lowers) cx targs =
   run_conditionally cx (fun () ->
+      let resolver = new resolver ~no_lowers in
       Option.map (List.map (resolver#targ cx Polarity.Positive ISet.empty)) targs
   );
   targs
 
-let resolved_typeparam cx typeparam =
-  run_conditionally cx (fun () -> resolver#type_param cx Polarity.Positive ISet.empty typeparam);
+let resolved_typeparam ?(no_lowers = default_no_lowers) cx typeparam =
+  run_conditionally cx (fun () ->
+      let resolver = new resolver ~no_lowers in
+      resolver#type_param cx Polarity.Positive ISet.empty typeparam
+  );
   typeparam

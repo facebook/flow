@@ -7,14 +7,18 @@
 
 val has_placeholders : Context.t -> Type.t -> bool
 
-val resolve : Context.t -> Type.t -> unit
+val resolve : ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.t -> unit
 
-val resolved_t : Context.t -> Type.t -> Type.t
+val resolved_t : ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.t -> Type.t
 
-val resolved_fun_call_type : Context.t -> Type.funcalltype -> Type.funcalltype
+val resolved_fun_call_type :
+  ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.funcalltype -> Type.funcalltype
 
-val resolved_call_arg : Context.t -> Type.call_arg -> Type.call_arg
+val resolved_call_arg :
+  ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.call_arg -> Type.call_arg
 
-val resolved_type_args : Context.t -> Type.targ list option -> Type.targ list option
+val resolved_type_args :
+  ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.targ list option -> Type.targ list option
 
-val resolved_typeparam : Context.t -> Type.typeparam -> Type.typeparam
+val resolved_typeparam :
+  ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.typeparam -> Type.typeparam
