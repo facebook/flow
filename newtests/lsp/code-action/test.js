@@ -2266,5 +2266,72 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide quickfix for unused promise errors', [
+      addFile('insert-await.js.ignored', 'insert-await.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/insert-await.js',
+        },
+        range: {
+          start: {
+            line: 5,
+            character: 5,
+          },
+          end: {
+            line: 5,
+            character: 5,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Insert `await`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/insert-await.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 5,
+                              "character": 4
+                            },
+                            "end": {
+                              "line": 5,
+                              "character": 9
+                            }
+                          },
+                          "newText": "await foo()"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "insert_await",
+                      "Insert `await`"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ])
   ],
 ): Suite);

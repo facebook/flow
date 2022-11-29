@@ -1,2 +1,5 @@
 [options]
 enums=true
+
+[lints]
+unused-promise-in-async-scope=error
