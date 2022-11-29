@@ -778,9 +778,12 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
 
 let resolve_update cx ~id_loc ~exp_loc id_reason =
   let reason = mk_reason (RCustom "update") exp_loc in
-  let result_t = NumT.at exp_loc |> with_trust literal_trust in
   let id_t = Env.ref_entry_exn ~lookup_mode:Env.LookupMode.ForValue cx id_loc id_reason in
-  Flow_js.flow cx (id_t, AssertArithmeticOperandT reason);
+  let result_t =
+    Tvar.mk_where cx reason (fun result_t ->
+        Flow_js.flow cx (id_t, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
+    )
+  in
   let use_op = Op (AssignVar { var = Some id_reason; init = TypeUtil.reason_of_t id_t }) in
   (result_t, use_op)
 

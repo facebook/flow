@@ -210,6 +210,13 @@ let inherited_method = function
   | OrdinaryName "constructor" -> false
   | _ -> true
 
+let valid_arith_operand t =
+  match t with
+  | AnyT _
+  | DefT (_, _, EmptyT) ->
+    true
+  | _ -> numberesque t
+
 (********************** start of slab **********************************)
 module M__flow
     (FlowJs : Flow_common.S)
@@ -4610,6 +4617,14 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (BigIntT.why reason (bogus_trust ()), result_t)
         | (_, UnaryArithT { reason; result_t = _; kind = UnaryArithKind.BitNot }) ->
           rec_flow_t cx trace ~use_op:unknown_use (l, NumT.why reason (bogus_trust ()))
+        | (DefT (_, _, NumT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.Update }) ->
+          rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t)
+        | (AnyT (_, src), UnaryArithT { reason; result_t; kind = UnaryArithKind.Update }) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, result_t)
+        | (_, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update }) ->
+          rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t);
+          add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t l))
         (************************)
         (* binary `in` operator *)
         (************************)
@@ -5468,13 +5483,6 @@ struct
             u
     )
 
-  and valid_operand t =
-    match t with
-    | AnyT _
-    | DefT (_, _, EmptyT) ->
-      true
-    | _ -> numberesque t
-
   (**
    * Addition
    *
@@ -5602,9 +5610,9 @@ struct
       | ((RShift3 | Other), l, r) when numberesque l && numberesque r ->
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       | (_, l, r) ->
-        if not (valid_operand l) then
+        if not (valid_arith_operand l) then
           add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t l));
-        if not (valid_operand r) then
+        if not (valid_arith_operand r) then
           add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t r));
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
 
