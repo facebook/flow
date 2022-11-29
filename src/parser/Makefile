@@ -6,27 +6,7 @@
 DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TOP=$(DIR)/../..
 REL_DIR=src/parser
-
-OCB = ocamlbuild -use-ocamlfind -I src/third-party/sedlex -I src/hack_forked/utils/collections
-
-NATIVE_OBJECT_FILES=\
-	src/hack_forked/utils/sys/gc_profiling.o\
-	src/hack_forked/utils/sys/nproc.o\
-	src/hack_forked/utils/sys/sysinfo.o\
-	src/hack_forked/utils/sys/processor_info.o
-
-RUNNER_DEPS=\
-	src/heap\
-	src/hack_forked/injection/default_injector\
-	src/hack_forked/utils/collections\
-	src/hack_forked/utils/core\
-	src/hack_forked/utils/disk\
-	src/hack_forked/utils/hh_json\
-	src/hack_forked/utils/string\
-	src/hack_forked/utils/sys\
-	src/common/utils\
-	src/parser\
-	src/parser_utils
+DUNE_OUT="$(TOP)/_build/default/$(REL_DIR)"
 
 OCAML_PATH=$(shell ocamlc -where)
 OCAML_HEADERS=\
@@ -38,27 +18,18 @@ OCAML_HEADERS=\
 all:
 
 clean:
-	$(OCB) -clean; \
-	cd $(TOP); \
-	$(OCB) -clean; \
-	rm -f $(REL_DIR)/flow_parser.js; \
-	rm -rf $(REL_DIR)/dist
+	rm -f flow_parser.js
+	rm -rf dist
 
-.PHONY: libflowparser.native.o
-libflowparser.native.o:
-	cd $(TOP) && $(OCB) -no-links -tag "runtime_variant(_pic)" \
-		$(REL_DIR)/libflowparser.native.o
+.PHONY: libflowparser.exe.o
+libflowparser.exe.o:
+	dune build --profile opt ./libflowparser.exe.o
 
-dist/libflowparser/lib/libflowparser.a: libflowparser.native.o
+dist/libflowparser/lib/libflowparser.a: libflowparser.exe.o libflowparser.h
 	@mkdir -p "$(@D)"
-	if [ ! -e "$@" -o "$(OCAML_PATH)/libasmrun_pic.a" -nt "$@" -o  "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o" -nt "$@" ]; then \
-		echo "Rebuilding $@"; \
-		cp "$(OCAML_PATH)/libasmrun_pic.a" "$@"; \
-		ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"; \
-	else \
-		echo "Not rebuilding $@, already up to date"; \
+	if [ ! -e "$@" -o "$(DUNE_OUT)/libflowparser.exe.o" -nt "$@" -o libflowparser.h -nt "$@" ]; then \
+		ar rcs "$@" "$(DUNE_OUT)/libflowparser.exe.o"; \
 	fi
-	test -e "$@" || exit 1
 
 $(OCAML_HEADERS): dist/libflowparser/include/%: $(OCAML_PATH)/%
 	@mkdir -p "$(@D)"
