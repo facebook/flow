@@ -409,16 +409,7 @@ struct
                | (UpperT _, UpperEmpty) -> acc
                | (UpperEmpty, UpperEmpty) -> acc)
              UpperEmpty)
-    | _ ->
-      Flow_js_utils.add_output
-        cx
-        Error_message.(
-          EInternal
-            ( TypeUtil.reason_of_t tvar |> aloc_of_reason,
-              ImplicitInstantiationInvariant "Implicit instantiation is not an OpenT"
-            )
-        );
-      UpperEmpty
+    | t -> UpperT t
 
   and get_t_with_placeholder_removed cx t =
     match get_t cx t with
@@ -450,17 +441,7 @@ struct
           None
         else
           get_t_with_placeholder_removed cx t)
-    | _ ->
-      Debug_js.Verbose.print_if_verbose cx ["cccc 1"];
-      Flow_js_utils.add_output
-        cx
-        Error_message.(
-          EInternal
-            ( TypeUtil.reason_of_t t |> aloc_of_reason,
-              ImplicitInstantiationInvariant "Implicit instantiation is not an OpenT"
-            )
-        );
-      None
+    | t -> Some t
 
   let on_missing_bounds cx name tparam ~default_bound ~tparam_binder_reason ~instantiation_reason =
     match default_bound with
