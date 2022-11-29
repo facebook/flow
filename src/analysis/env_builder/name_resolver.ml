@@ -2177,6 +2177,14 @@ module Make
         this#bind_pattern_identifier_customized ~kind loc x;
         super#identifier ident
 
+      method! pattern_array_element ?kind (elem : ('loc, 'loc) Ast.Pattern.Array.Element.t) =
+        let open Ast.Pattern.Array.Element in
+        let (_, { argument; default }) = elem in
+        (* Flip order compared to base class *)
+        let _default' = Flow_ast_mapper.map_opt this#expression default in
+        let _argument' = this#pattern_array_element_pattern ?kind argument in
+        elem
+
       method private bind_pattern_identifier_customized ~kind ?(get_assigned_val = Val.one) loc x =
         if this#is_excluded_ordinary_name x then
           ()
@@ -2434,7 +2442,7 @@ module Make
               | (_, (Identifier _ | Object _ | Array _)) ->
                 (* given `x = e`, read e then write x *)
                 ignore @@ this#expression right;
-                ignore @@ this#assignment_pattern left
+                ignore @@ this#binding_pattern_track_object_destructuring ?kind:None ~acc:right left
               | (_, Expression e) ->
                 (* given `o.x = e`, read o then read e *)
                 this#assign_expression e right
