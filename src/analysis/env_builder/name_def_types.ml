@@ -184,6 +184,7 @@ type def =
   | Function of {
       hint: ast_hint;
       synthesizable_from_annotation: function_synth_kind;
+      arrow: bool;
       has_this_def: bool;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;

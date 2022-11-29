@@ -513,11 +513,12 @@ let expression_is_definitely_synthesizable =
   in
   (fun e -> synthesizable e)
 
-let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics function_ =
+let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics ~arrow function_ =
   Function
     {
       hint;
       synthesizable_from_annotation = func_is_synthesizable_from_annotation function_;
+      arrow;
       has_this_def;
       function_loc;
       function_;
@@ -673,7 +674,8 @@ class def_finder env_entries providers toplevel_scope =
                           let key =
                             match init with
                             | (_, Ast.Expression.Function { Ast.Function.id = Some (fun_loc, _); _ })
-                            | (fun_loc, Ast.Expression.Function _) ->
+                            | (fun_loc, (Ast.Expression.Function _ | Ast.Expression.ArrowFunction _))
+                              ->
                               (Env_api.OrdinaryNameLoc, fun_loc)
                             | _ ->
                               this#add_ordinary_binding
@@ -1132,6 +1134,7 @@ class def_finder env_entries providers toplevel_scope =
                 ~tparams_map:tparams
                 ~hint:func_hint
                 ~has_this_def
+                ~arrow:false
                 ~function_loc
                 ~statics
                 expr
@@ -1187,6 +1190,7 @@ class def_finder env_entries providers toplevel_scope =
               ~hint:Hint_None
               ~has_this_def:true
               ~function_loc:loc
+              ~arrow:false
               ~statics
               expr
           in
@@ -2206,7 +2210,23 @@ class def_finder env_entries providers toplevel_scope =
       | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr
       | Ast.Expression.ArrowFunction x ->
         let scope_kind = func_scope_kind x in
-        this#in_new_tparams_env (fun () -> this#visit_function ~func_hint:hint ~scope_kind x)
+        this#in_new_tparams_env (fun () ->
+            this#visit_function ~func_hint:hint ~scope_kind x;
+            match EnvMap.find_opt_ordinary loc env_entries with
+            | Some (Env_api.AssigningWrite reason) ->
+              let def =
+                def_of_function
+                  ~tparams_map:tparams
+                  ~hint
+                  ~has_this_def:false
+                  ~arrow:true
+                  ~function_loc:loc
+                  ~statics:SMap.empty
+                  x
+              in
+              this#add_ordinary_binding loc reason def
+            | _ -> ()
+        )
       | Ast.Expression.Assignment expr ->
         this#visit_assignment_expression ~is_function_statics_assignment:false loc expr
       | Ast.Expression.Function x ->
