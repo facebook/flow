@@ -103,13 +103,19 @@ type root =
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
 type selector =
-  | Elem of int
+  | Elem of {
+      index: int;
+      has_default: bool;
+    }
   | Prop of {
       prop: string;
       prop_loc: ALoc.t;
       has_default: bool;
     }
-  | Computed of (ALoc.t, ALoc.t) Ast.Expression.t
+  | Computed of {
+      expression: (ALoc.t, ALoc.t) Ast.Expression.t;
+      has_default: bool;
+    }
   | ObjRest of {
       used_props: string list;
       after_computed: bool;
@@ -128,7 +134,7 @@ type binding =
   | Select of {
       selector: selector;
       default: default option;
-      binding: binding;
+      parent: ALoc.t * binding;
     }
 
 type import =
@@ -225,7 +231,7 @@ module Print = struct
     | For (Of _, (loc, _)) -> spf "for of %s" (ALoc.debug_to_string loc)
 
   let string_of_selector = function
-    | Elem n -> spf "[%d]" n
+    | Elem { index; _ } -> spf "[%d]" index
     | Prop { prop; _ } -> spf ".%s" prop
     | Computed _ -> ".[computed]"
     | ObjRest _ -> "{ ... }"
@@ -234,7 +240,7 @@ module Print = struct
 
   let rec string_of_binding = function
     | Root r -> string_of_root r
-    | Select { selector; binding; _ } ->
+    | Select { selector; parent = (_, binding); _ } ->
       spf "(%s)%s" (string_of_binding binding) (string_of_selector selector)
 
   let string_of_import_kind =

@@ -188,7 +188,8 @@ let [a,b] = 42;
   [%expect {|
     [
       (2, 5) to (2, 6) => (val (2, 12) to (2, 14))[0];
-      (2, 7) to (2, 8) => (val (2, 12) to (2, 14))[1]
+      (2, 7) to (2, 8) => (val (2, 12) to (2, 14))[1];
+      (2, 4) to (2, 9) => val (2, 12) to (2, 14)
     ] |}]
 
 let%expect_test "elems_hole" =
@@ -198,7 +199,8 @@ let [a,,b] = 42;
   [%expect {|
     [
       (2, 5) to (2, 6) => (val (2, 13) to (2, 15))[0];
-      (2, 8) to (2, 9) => (val (2, 13) to (2, 15))[2]
+      (2, 8) to (2, 9) => (val (2, 13) to (2, 15))[2];
+      (2, 4) to (2, 10) => val (2, 13) to (2, 15)
     ] |}]
 
 let%expect_test "elems_rest" =
@@ -209,7 +211,8 @@ let [a,,b,...c] = 42;
     [
       (2, 5) to (2, 6) => (val (2, 18) to (2, 20))[0];
       (2, 8) to (2, 9) => (val (2, 18) to (2, 20))[2];
-      (2, 13) to (2, 14) => (val (2, 18) to (2, 20))[...]
+      (2, 13) to (2, 14) => (val (2, 18) to (2, 20))[...];
+      (2, 4) to (2, 15) => val (2, 18) to (2, 20)
     ] |}]
 
 let%expect_test "elems_def" =
@@ -218,7 +221,8 @@ let [a=42] = 42;
   |};
   [%expect {|
     [
-      (2, 5) to (2, 6) => ((val (2, 13) to (2, 15))[0])<with default>
+      (2, 5) to (2, 6) => (val (2, 13) to (2, 15))[0];
+      (2, 4) to (2, 10) => val (2, 13) to (2, 15)
     ] |}]
 
 let%expect_test "props" =
@@ -228,7 +232,8 @@ let {a, b} = 42;
   [%expect {|
     [
       (2, 5) to (2, 6) => (val (2, 13) to (2, 15)).a;
-      (2, 8) to (2, 9) => (val (2, 13) to (2, 15)).b
+      (2, 8) to (2, 9) => (val (2, 13) to (2, 15)).b;
+      (2, 4) to (2, 10) => val (2, 13) to (2, 15)
     ] |}]
 
 let%expect_test "props_lit" =
@@ -238,7 +243,8 @@ let {a, '42':b} = 42;
   [%expect {|
     [
       (2, 5) to (2, 6) => (val (2, 18) to (2, 20)).a;
-      (2, 13) to (2, 14) => (val (2, 18) to (2, 20)).42
+      (2, 13) to (2, 14) => (val (2, 18) to (2, 20)).42;
+      (2, 4) to (2, 15) => val (2, 18) to (2, 20)
     ] |}]
 
 let%expect_test "props_comp_rest" =
@@ -249,7 +255,8 @@ let {a, [foo()]: b, ...c} = 42;
     [
       (2, 5) to (2, 6) => (val (2, 28) to (2, 30)).a;
       (2, 17) to (2, 18) => (val (2, 28) to (2, 30)).[computed];
-      (2, 23) to (2, 24) => (val (2, 28) to (2, 30)){ ... }
+      (2, 23) to (2, 24) => (val (2, 28) to (2, 30)){ ... };
+      (2, 4) to (2, 25) => val (2, 28) to (2, 30)
     ] |}]
 
 let%expect_test "props_comp_rest2" =
@@ -737,7 +744,8 @@ for (var [x,y] = [1,2];;) { }
   [%expect {|
     [
       (2, 10) to (2, 11) => (val (2, 17) to (2, 22))[0];
-      (2, 12) to (2, 13) => (val (2, 17) to (2, 22))[1]
+      (2, 12) to (2, 13) => (val (2, 17) to (2, 22))[1];
+      (2, 9) to (2, 14) => val (2, 17) to (2, 22)
     ] |}]
 
 let%expect_test "for4" =
@@ -747,7 +755,8 @@ for (var [x,y]: T = [1,2];;) { }
   [%expect {|
     [
       (2, 10) to (2, 11) => (annot (2, 14) to (2, 17))[0];
-      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1]
+      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1];
+      (2, 9) to (2, 17) => annot (2, 14) to (2, 17)
     ] |}]
 
 let%expect_test "for_in1" =
@@ -776,7 +785,8 @@ for (var [x,y] in foo) { }
   [%expect {|
     [
       (2, 10) to (2, 11) => (for in (2, 18) to (2, 21))[0];
-      (2, 12) to (2, 13) => (for in (2, 18) to (2, 21))[1]
+      (2, 12) to (2, 13) => (for in (2, 18) to (2, 21))[1];
+      (2, 9) to (2, 14) => for in (2, 18) to (2, 21)
     ] |}]
 
 let%expect_test "for_in4" =
@@ -786,7 +796,8 @@ for (var [x,y]: T in foo) { }
   [%expect {|
     [
       (2, 10) to (2, 11) => (annot (2, 14) to (2, 17))[0];
-      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1]
+      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1];
+      (2, 9) to (2, 17) => annot (2, 14) to (2, 17)
     ] |}]
 
 let%expect_test "for_of1" =
@@ -815,7 +826,8 @@ for (var [x,y] of foo) { }
   [%expect {|
     [
       (2, 10) to (2, 11) => (for of (2, 18) to (2, 21))[0];
-      (2, 12) to (2, 13) => (for of (2, 18) to (2, 21))[1]
+      (2, 12) to (2, 13) => (for of (2, 18) to (2, 21))[1];
+      (2, 9) to (2, 14) => for of (2, 18) to (2, 21)
     ] |}]
 
 let%expect_test "for_of4" =
@@ -825,7 +837,8 @@ for (var [x,y]: T of foo) { }
   [%expect {|
     [
       (2, 10) to (2, 11) => (annot (2, 14) to (2, 17))[0];
-      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1]
+      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1];
+      (2, 9) to (2, 17) => annot (2, 14) to (2, 17)
     ] |}]
 
 let%expect_test "heap_init" =
@@ -836,6 +849,32 @@ if (x.y) { x.y }
     [
       (2, 4) to (2, 7) => exp (2, 4) to (2, 7) (hint = Hint_None)
     ] |}]
+
+let%expect_test "destructuring init" =
+  print_init_test {|
+const {foo: [bar, baz = 3], hello: {world: flow}} = global;
+  |};
+  [%expect {|
+    [
+      (2, 13) to (2, 16) => ((val (2, 52) to (2, 58)).foo)[0];
+      (2, 18) to (2, 21) => ((val (2, 52) to (2, 58)).foo)[1];
+      (2, 43) to (2, 47) => ((val (2, 52) to (2, 58)).hello).world;
+      (2, 6) to (2, 49) => val (2, 52) to (2, 58);
+      (2, 12) to (2, 26) => (val (2, 52) to (2, 58)).foo;
+      (2, 35) to (2, 48) => (val (2, 52) to (2, 58)).hello
+    ] |}]
+
+let%expect_test "destructuring order" =
+  print_order_test {|
+const {foo: [bar, baz = 3], hello: {world: flow}} = global;
+  |};
+  [%expect {|
+    (2, 6) to (2, 49) =>
+    (2, 12) to (2, 26) =>
+    (2, 13) to (2, 16) =>
+    (2, 18) to (2, 21) =>
+    (2, 35) to (2, 48) =>
+    (2, 43) to (2, 47) |}]
 
 let%expect_test "refi_recorded_read" =
   print_order_test {|
@@ -856,7 +895,9 @@ if (obj.d.type === "a") {
   [%expect {|
     (2, 4) to (2, 9) =>
     (2, 4) to (2, 14) =>
+    (3, 6) to (3, 26) =>
     (2, 19) to (2, 22) =>
+    (3, 10) to (3, 25) =>
     (3, 11) to (3, 18) =>
     (3, 20) to (3, 24) |}]
 
