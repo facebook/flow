@@ -707,14 +707,14 @@ let resolve_binding cx reason loc_kind loc binding =
   in
   (t, use_op)
 
-let resolve_inferred_function cx ~statics id_loc reason function_loc function_ =
+let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason function_loc function_ =
   let cache = Context.node_cache cx in
   (* TODO: This is intended to be the general type for the variable in the old environment, needed
      for generic escape detection. We can do generic escape differently in the future and remove
      this when we kill the old env. *)
   let general = Tvar.mk cx reason in
   let ((fun_type, _) as fn) =
-    Statement.mk_function cx ~needs_this_param:true ~statics ~general reason function_loc function_
+    Statement.mk_function cx ~needs_this_param ~statics ~general reason function_loc function_
   in
   Flow_js.flow_t cx (fun_type, general);
   Node_cache.set_function cache id_loc fn;
@@ -961,6 +961,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           synthesizable_from_annotation =
             (FunctionSynthesizable | FunctionPredicateSynthesizable _) as
             synthesizable_from_annotation;
+          arrow;
           has_this_def = _;
           function_loc;
           tparams_map;
@@ -970,7 +971,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
       resolve_annotated_function
         cx
         synthesizable_from_annotation
-        ~bind_this:true
+        ~bind_this:(not arrow)
         ~statics
         def_reason
         tparams_map
@@ -980,13 +981,21 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         {
           function_;
           synthesizable_from_annotation = _;
+          arrow;
           has_this_def = _;
           function_loc;
           tparams_map = _;
           statics;
           hint = _;
         } ->
-      resolve_inferred_function cx ~statics id_loc def_reason function_loc function_
+      resolve_inferred_function
+        cx
+        ~statics
+        ~needs_this_param:(not arrow)
+        id_loc
+        def_reason
+        function_loc
+        function_
     | Class { class_; class_loc; class_implicit_this_tparam = _; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
     | MemberAssign { member_loc = _; member = _; rhs } -> (expression cx rhs, unknown_use)

@@ -2360,7 +2360,17 @@ module Make
           ignore @@ this#expression rhs;
           let reason = mk_reason RSomeProperty loc in
           let assigned_val = Val.one reason in
-          this#assign_member ~delete:false member loc assigned_val reason
+          this#assign_member ~delete:false member loc assigned_val reason;
+          begin
+            match rhs with
+            | (fun_loc, Ast.Expression.ArrowFunction _) ->
+              let reason = mk_reason (RCustom "<<arrow function>>") fun_loc in
+              let write_entries =
+                EnvMap.add_ordinary fun_loc (Env_api.AssigningWrite reason) env_state.write_entries
+              in
+              env_state <- { env_state with write_entries }
+            | _ -> ()
+          end
         | _ -> statement_error
 
       method assign_member ~delete lhs_member lhs_loc assigned_val val_reason =

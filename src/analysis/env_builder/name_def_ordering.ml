@@ -1002,6 +1002,7 @@ struct
       | Function
           {
             synthesizable_from_annotation;
+            arrow = _;
             function_;
             has_this_def = _;
             function_loc = _;

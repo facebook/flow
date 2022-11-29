@@ -167,3 +167,9 @@ import * as React from 'react';
 
   type H = { (number => number): void, m: typeof m, s: S }
 }
+
+{
+  function F(): number { return F.B() }
+  F.A = (): number => 42;
+  F.B = (): number => F.A();
+}
