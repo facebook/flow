@@ -49,6 +49,7 @@ js:
 	dune build --no-print-directory --profile opt flow_parser_dot_js.bc.js
 	@if [ ! -e flow_parser.js -o "$(TOP)/_build/default/$(REL_DIR)/flow_parser_dot_js.bc.js" -nt flow_parser.js ]; then \
 		cp "$(TOP)/_build/default/$(REL_DIR)/flow_parser_dot_js.bc.js" flow_parser.js; \
+		chmod +w flow_parser.js; \
 	fi
 
 test-js: js
