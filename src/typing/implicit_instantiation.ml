@@ -312,6 +312,9 @@ struct
     | SentinelPropTestT _
     | FunImplicitVoidReturnT _
     | CheckUnusedPromiseT _
+    (* We don't care about idx, as they are deprecated. *)
+    | IdxUnwrap _
+    | IdxUnMaybeifyT _
     (* When we have ChoiceKitUseT, we are already stuck. *)
     | ChoiceKitUseT _ ->
       UpperEmpty (* Remaining unhandled upper bounds *)
@@ -325,8 +328,6 @@ struct
     | ElemT _
     | ReactKitT _
     | IntersectionPreprocessKitT _
-    | IdxUnwrap _
-    | IdxUnMaybeifyT _
     | ReactPropsToOut _
     | ReactInToProps _
     | ResolveUnionT _
