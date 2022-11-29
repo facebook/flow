@@ -387,18 +387,18 @@ let check_file ~options ~env ~profiling ~force file_input =
   | Error (Failed _reason)
   | Error (Skipped _reason) ->
     ServerProt.Response.NOT_COVERED
-  | Ok (file, content) ->
+  | Ok (file_key, content) ->
     let result =
       let ((_, parse_errs) as intermediate_result) =
-        Type_contents.parse_contents ~options ~profiling content file
+        Type_contents.parse_contents ~options ~profiling content file_key
       in
       if not (Flow_error.ErrorSet.is_empty parse_errs) then
         Error parse_errs
       else
-        Type_contents.type_parse_artifacts ~options ~profiling file intermediate_result
+        Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
     in
     let (errors, warnings) =
-      Type_contents.printable_errors_of_file_artifacts_result ~options ~env file result
+      Type_contents.printable_errors_of_file_artifacts_result ~options ~env file_key result
     in
     convert_errors ~errors ~warnings ~suppressed_errors:[]
 
@@ -472,15 +472,15 @@ let infer_type
     in
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
-  | Ok (file, content) ->
+  | Ok (file_key, content) ->
     let options = { options with Options.opt_verbose = verbose } in
     let (file_artifacts_result, did_hit_cache) =
-      let parse_result = Type_contents.parse_contents ~options ~profiling content file in
+      let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
       type_parse_artifacts_with_cache
         ~options
         ~profiling
         ~type_parse_artifacts_cache
-        file
+        file_key
         parse_result
     in
     (match file_artifacts_result with
@@ -499,13 +499,18 @@ let infer_type
           ~evaluate_type_destructors
           ~max_depth
           ~verbose_normalizer
-          file
+          file_key
           line
           column
       in
       let (getdef_loc_result, _) =
         try_with_json (fun () ->
-            get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, column)
+            get_def_of_check_result
+              ~options
+              ~reader
+              ~profiling
+              ~check_result
+              (file_key, line, column)
         )
       in
       let documentation =
@@ -635,18 +640,18 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
 
 let dump_types ~options ~profiling ~evaluate_type_destructors file_input =
   let open Base.Result in
-  let file = file_key_of_file_input ~options file_input in
+  let file_key = file_key_of_file_input ~options file_input in
   File_input.content_of_file_input file_input >>= fun content ->
   let file_artifacts_result =
-    let parse_result = Type_contents.parse_contents ~options ~profiling content file in
-    Type_contents.type_parse_artifacts ~options ~profiling file parse_result
+    let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
+    Type_contents.type_parse_artifacts ~options ~profiling file_key parse_result
   in
   match file_artifacts_result with
   | Error _parse_errors -> Error "Couldn't parse file in parse_contents"
   | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
     Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast)
 
-let coverage ~options ~profiling ~type_parse_artifacts_cache ~force ~trust file content =
+let coverage ~options ~profiling ~type_parse_artifacts_cache ~force ~trust file_key content =
   if Options.trust_mode options = Options.NoTrust && trust then
     ( Error
         "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command.",
@@ -654,12 +659,12 @@ let coverage ~options ~profiling ~type_parse_artifacts_cache ~force ~trust file 
     )
   else
     let (file_artifacts_result, did_hit_cache) =
-      let parse_result = Type_contents.parse_contents ~options ~profiling content file in
+      let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
       type_parse_artifacts_with_cache
         ~options
         ~profiling
         ~type_parse_artifacts_cache
-        file
+        file_key
         parse_result
     in
     let extra_data =
@@ -670,7 +675,7 @@ let coverage ~options ~profiling ~type_parse_artifacts_cache ~force ~trust file 
     | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
       let coverage =
         Profiling_js.with_timer profiling ~timer:"Coverage" ~f:(fun () ->
-            Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content
+            Type_info_service.coverage ~cx ~typed_ast ~force ~trust file_key content
         )
       in
       (Ok coverage, Some extra_data)
@@ -784,15 +789,15 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
   | Error (Skipped reason) ->
     let json_props = ("result", Hh_json.JSON_String "SKIPPED") :: json_props_of_skipped reason in
     (Ok Loc.none, Some (Hh_json.JSON_Object json_props))
-  | Ok (file, content) ->
+  | Ok (file_key, content) ->
     let (check_result, did_hit_cache) =
       match
-        let parse_result = Type_contents.parse_contents ~options ~profiling content file in
+        let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
         type_parse_artifacts_with_cache
           ~options
           ~profiling
           ~type_parse_artifacts_cache
-          file
+          file_key
           parse_result
       with
       | (Ok result, did_hit_cache) -> (Ok result, did_hit_cache)
@@ -806,7 +811,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
       (Error msg, Some (Hh_json.JSON_Object json_props))
     | Ok check_result ->
       let (result, json_props) =
-        get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col)
+        get_def_of_check_result ~options ~reader ~profiling ~check_result (file_key, line, col)
       in
       let json =
         let json_props = Base.Option.value ~default:[] json_props in
@@ -970,16 +975,10 @@ let handle_force_recheck ~files ~focus ~missed_changes ~changed_mergebase ~profi
     ServerMonitorListenerState.push_files_to_recheck ~metadata ~reason fileset;
   (ServerProt.Response.FORCE_RECHECK, None)
 
-let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
+let handle_get_def ~reader ~options ~input ~line ~char ~profiling ~env =
   let (result, json_data) =
     try_with_json (fun () ->
-        get_def
-          ~reader
-          ~options
-          ~env
-          ~profiling
-          ~type_parse_artifacts_cache:None
-          (filename, line, char)
+        get_def ~reader ~options ~env ~profiling ~type_parse_artifacts_cache:None (input, line, char)
     )
   in
   Lwt.return (ServerProt.Response.GET_DEF result, json_data)
@@ -995,7 +994,7 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~types_only ~profiling:_ ~
 let handle_infer_type
     ~options
     ~reader
-    ~input
+    ~file_input
     ~line
     ~char
     ~verbose
@@ -1007,7 +1006,7 @@ let handle_infer_type
     ~env =
   let input =
     {
-      file_input = input;
+      file_input;
       query_position = { Loc.line; column = char };
       verbose;
       omit_targ_defaults;
@@ -1253,11 +1252,8 @@ let get_ephemeral_handler genv command =
       (handle_find_module ~options ~reader ~moduleref ~filename)
   | ServerProt.Request.FORCE_RECHECK { files; focus; missed_changes; changed_mergebase } ->
     Handle_immediately (handle_force_recheck ~files ~focus ~missed_changes ~changed_mergebase)
-  | ServerProt.Request.GET_DEF { filename; line; char; wait_for_recheck } ->
-    mk_parallelizable
-      ~wait_for_recheck
-      ~options
-      (handle_get_def ~reader ~options ~filename ~line ~char)
+  | ServerProt.Request.GET_DEF { input; line; char; wait_for_recheck } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_get_def ~reader ~options ~input ~line ~char)
   | ServerProt.Request.GET_IMPORTS { module_names; wait_for_recheck } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_get_imports ~options ~reader ~module_names)
   | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; types_only } ->
@@ -1265,7 +1261,7 @@ let get_ephemeral_handler genv command =
     Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~types_only ~outfile)
   | ServerProt.Request.INFER_TYPE
       {
-        input;
+        input = file_input;
         line;
         char;
         verbose;
@@ -1281,7 +1277,7 @@ let get_ephemeral_handler genv command =
       (handle_infer_type
          ~options
          ~reader
-         ~input
+         ~file_input
          ~line
          ~char
          ~verbose
@@ -1294,7 +1290,7 @@ let get_ephemeral_handler genv command =
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.INSERT_TYPE
       {
-        input;
+        input = file_input;
         target;
         wait_for_recheck;
         verbose;
@@ -1306,7 +1302,7 @@ let get_ephemeral_handler genv command =
       ~wait_for_recheck
       ~options
       (handle_insert_type
-         ~file_input:input
+         ~file_input
          ~options
          ~target
          ~verbose

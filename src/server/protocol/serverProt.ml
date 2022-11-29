@@ -59,7 +59,7 @@ module Request = struct
         changed_mergebase: bool;
       }
     | GET_DEF of {
-        filename: File_input.t;
+        input: File_input.t;
         line: int;
         char: int;
         wait_for_recheck: bool option;
@@ -140,8 +140,8 @@ module Request = struct
         |> String.concat "; "
       in
       Printf.sprintf "force-recheck %s (%s)" (String.concat " " files) parts
-    | GET_DEF { filename; line; char; wait_for_recheck = _ } ->
-      Printf.sprintf "get-def %s:%d:%d" (File_input.filename_of_file_input filename) line char
+    | GET_DEF { input; line; char; wait_for_recheck = _ } ->
+      Printf.sprintf "get-def %s:%d:%d" (File_input.filename_of_file_input input) line char
     | GET_IMPORTS { module_names; wait_for_recheck = _ } ->
       Printf.sprintf "get-imports %s" (String.concat " " module_names)
     | INFER_TYPE
