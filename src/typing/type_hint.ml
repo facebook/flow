@@ -40,16 +40,24 @@ end
 let in_sandbox_cx cx t ~f =
   Context.run_and_rolled_back_cache cx (fun () ->
       let original_errors = Context.errors cx in
+      Context.reset_errors cx Flow_error.ErrorSet.empty;
       match f (Tvar_resolver.resolved_t cx t) with
-      | exception Flow_js_utils.SpeculationSingletonError -> None
+      | exception Flow_js_utils.SpeculationSingletonError ->
+        Context.reset_errors cx original_errors;
+        None
       | t ->
-        let new_errors = Context.errors cx in
-        if Flow_error.ErrorSet.equal original_errors new_errors then
+        let has_new_non_lint_errors =
+          Context.errors cx
+          |> Flow_error.ErrorSet.filter (fun e ->
+                 e |> Flow_error.msg_of_error |> Error_message.is_lint_error |> not
+             )
+          |> Flow_error.ErrorSet.is_empty
+        in
+        Context.reset_errors cx original_errors;
+        if has_new_non_lint_errors then
           Some t
-        else (
-          Context.reset_errors cx original_errors;
+        else
           None
-        )
   )
 
 let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
