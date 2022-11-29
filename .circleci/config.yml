@@ -720,7 +720,9 @@ jobs:
           cp -r lib ~/try_flow/flowlib
     - run:
         name: Upload to AWS
-        command: aws s3 cp ~/try_flow s3://${S3_BUCKET}/static/${CIRCLE_TAG}/ --recursive
+        command: |
+          aws s3 cp ~/try_flow s3://${S3_BUCKET}/static/${CIRCLE_TAG}/ --recursive
+          aws s3 cp ~/try_flow s3://${S3_BUCKET_NEW_WEBSITE}/static/flow/${CIRCLE_TAG}/ --recursive
 
 workflows:
   build_and_test:
