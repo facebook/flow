@@ -684,6 +684,8 @@ let quick_subtype trust_checked t1 t2 =
     | (DefT (_, ltrust, SingletonStrT _), DefT (_, rtrust, StrT _))
     | (DefT (_, ltrust, BoolT _), DefT (_, rtrust, BoolT _))
     | (DefT (_, ltrust, SingletonBoolT _), DefT (_, rtrust, BoolT _))
+    | (DefT (_, ltrust, BigIntT _), DefT (_, rtrust, BigIntT _))
+    | (DefT (_, ltrust, SingletonBigIntT _), DefT (_, rtrust, SingletonBigIntT _))
     | (DefT (_, ltrust, NullT), DefT (_, rtrust, NullT))
     | (DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT))
     | (DefT (_, ltrust, SymbolT), DefT (_, rtrust, SymbolT))

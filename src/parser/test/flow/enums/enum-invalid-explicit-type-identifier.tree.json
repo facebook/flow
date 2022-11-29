@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":13}},
-      "message":"Enum type `xxx` is not valid. Use one of `boolean`, `number`, `string`, or `symbol` in enum `E`."
+      "message":"Enum type `xxx` is not valid. Use one of `boolean`, `number`, `string`, `symbol`, or `bigint` in enum `E`."
     }
   ],
   "type":"Program",

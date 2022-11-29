@@ -1856,6 +1856,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | DefT (_, _, NumT _) -> Some "number"
         | DefT (_, _, StrT _) -> Some "string"
         | DefT (_, _, SymbolT) -> Some "symbol"
+        | DefT (_, _, BigIntT _) -> Some "bigint"
         | _ -> None
       in
       add_output

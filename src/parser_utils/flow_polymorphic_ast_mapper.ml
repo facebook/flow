@@ -551,6 +551,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           (this#on_loc_annot annot, StringBody (this#enum_string_body string_body))
         | (annot, SymbolBody symbol_body) ->
           (this#on_loc_annot annot, SymbolBody (this#enum_symbol_body symbol_body))
+        | (annot, BigIntBody bigint_body) ->
+          (this#on_loc_annot annot, BigIntBody (this#enum_bigint_body bigint_body))
       in
       let comments' = Option.map ~f:this#syntax comments in
       { id = this#t_identifier id; body = body'; comments = comments' }
@@ -591,6 +593,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Option.map ~f:this#syntax_with_internal comments in
       { members = members'; has_unknown_members; comments = comments' }
 
+    method enum_bigint_body (body : 'M Ast.Statement.EnumDeclaration.BigIntBody.t)
+        : 'N Ast.Statement.EnumDeclaration.BigIntBody.t =
+      let open Ast.Statement.EnumDeclaration.BigIntBody in
+      let { members; explicit_type; has_unknown_members; comments } = body in
+      let members' = List.map ~f:this#enum_bigint_member members in
+      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      { members = members'; explicit_type; has_unknown_members; comments = comments' }
+
     method enum_defaulted_member (member : 'M Ast.Statement.EnumDeclaration.DefaultedMember.t)
         : 'N Ast.Statement.EnumDeclaration.DefaultedMember.t =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
@@ -619,6 +629,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
       let init' = (this#on_loc_annot init_annot, this#string_literal init_val) in
+      (this#on_loc_annot annot, { id = this#enum_identifier id; init = init' })
+
+    method enum_bigint_member
+        (member : ('M Ast.BigIntLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
+        : ('N Ast.BigIntLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t =
+      let open Ast.Statement.EnumDeclaration.InitializedMember in
+      let (annot, { id; init = (init_annot, init_val) }) = member in
+      let init' = (this#on_loc_annot init_annot, this#bigint_literal init_val) in
       (this#on_loc_annot annot, { id = this#enum_identifier id; init = init' })
 
     method enum_identifier (ident : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =

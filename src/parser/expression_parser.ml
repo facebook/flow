@@ -25,6 +25,8 @@ module type EXPRESSION = sig
 
   val number : env -> number_type -> string -> float
 
+  val bigint : env -> bigint_type -> string -> int64 option
+
   val sequence :
     env -> start_loc:Loc.t -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
 end

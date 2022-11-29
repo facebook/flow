@@ -7499,6 +7499,36 @@ module Make
             members
         in
         (DefT (reason, literal_trust (), NumT num_type), members, has_unknown_members)
+      | (_, BigIntBody { BigIntBody.members; has_unknown_members; _ }) ->
+        let reason = mk_reason (REnumRepresentation RBigInt) (aloc_of_reason enum_reason) in
+        let (members, num_type, _) =
+          Base.List.fold_left
+            ~f:
+              (fun (members_map, bigint_type, seen_values)
+                   (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+              let (init_loc, { Ast.BigIntLiteral.value = init_value; _ }) = init in
+              let bigint_type =
+                if init_value = Some 0L then
+                  AnyLiteral
+                else
+                  bigint_type
+              in
+              let seen_values =
+                match BigIntOptionMap.find_opt init_value seen_values with
+                | Some prev_use_loc ->
+                  Flow.add_output
+                    cx
+                    (Error_message.EEnumMemberDuplicateValue
+                       { loc = init_loc; prev_use_loc; enum_reason }
+                    );
+                  seen_values
+                | None -> BigIntOptionMap.add init_value member_loc seen_values
+              in
+              (SMap.add name member_loc members_map, bigint_type, seen_values))
+            ~init:(SMap.empty, Truthy, BigIntOptionMap.empty)
+            members
+        in
+        (DefT (reason, literal_trust (), BigIntT num_type), members, has_unknown_members)
       | ( _,
           StringBody { StringBody.members = StringBody.Initialized members; has_unknown_members; _ }
         ) ->

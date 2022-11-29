@@ -73,6 +73,8 @@ module type PARSER = sig
   val number : env -> Token.number_type -> string -> float
 
   val annot : env -> (Loc.t, Loc.t) Type.annotation
+
+  val bigint : env -> Token.bigint_type -> string -> int64 option
 end
 
 let identifier_name_raw env =

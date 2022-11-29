@@ -36,6 +36,10 @@ type t =
       enum_name: string;
       member_name: string;
     }
+  | EnumBigIntMemberNotInitialized of {
+      enum_name: string;
+      member_name: string;
+    }
   | EnumStringMemberInconsistentlyInitailized of { enum_name: string }
   | Unexpected of string
   | UnexpectedWithExpected of string * string
@@ -188,7 +192,7 @@ module PP = struct
     | EnumInvalidExplicitType { enum_name; supplied_type } ->
       let suggestion =
         Printf.sprintf
-          "Use one of `boolean`, `number`, `string`, or `symbol` in enum `%s`."
+          "Use one of `boolean`, `number`, `string`, `symbol`, or `bigint` in enum `%s`."
           enum_name
       in
       begin
@@ -209,7 +213,8 @@ module PP = struct
         match explicit_type with
         | Some (Enum_common.Boolean as explicit_type)
         | Some (Enum_common.Number as explicit_type)
-        | Some (Enum_common.String as explicit_type) ->
+        | Some (Enum_common.String as explicit_type)
+        | Some (Enum_common.BigInt as explicit_type) ->
           let explicit_type_str = Enum_common.string_of_explicit_type explicit_type in
           Printf.sprintf
             "Enum `%s` has type `%s`, so the initializer of `%s` needs to be a %s literal."
@@ -245,6 +250,11 @@ module PP = struct
     | EnumNumberMemberNotInitialized { enum_name; member_name } ->
       Printf.sprintf
         "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
+        member_name
+        enum_name
+    | EnumBigIntMemberNotInitialized { enum_name; member_name } ->
+      Printf.sprintf
+        "bigint enum members need to be initialized, e.g. `%s = 1n,` in enum `%s`."
         member_name
         enum_name
     | EnumStringMemberInconsistentlyInitailized { enum_name } ->
