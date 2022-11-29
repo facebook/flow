@@ -33,21 +33,21 @@ let handle_component cx graph scc =
     ()
   | IllegalSCC elts_blame ->
     let blame =
-      Nel.map
-        (fun { payload = elt; reason; recursion = blame; annot_locs } ->
+      Base.List.filter_map
+        ~f:(fun ({ payload = elt; reason; recursion = blame; annot_locs }, display) ->
           let illegal_elt = handle_element cx elt in
-          let (def, _, _, _) = Env_api.EnvMap.find (key_of_element elt) graph in
-          ((def, illegal_elt), (reason, blame, annot_locs)))
-        elts_blame
+          if display then
+            let (def, _, _, _) = Env_api.EnvMap.find (key_of_element elt) graph in
+            Some ((def, illegal_elt), (reason, blame, annot_locs))
+          else
+            None)
+        (Nel.to_list elts_blame)
     in
     (* If at least one element of the cycle is recursive, and every element is
        either an expression or a recursive element, don't emit the cycle error
        -- the recursion error will contain all the actionable advice *)
     (match
-       Base.List.fold_result
-         (Nel.to_list blame)
-         ~init:false
-         ~f:(fun has_illegal ((def, illegal_elt), _) ->
+       Base.List.fold_result blame ~init:false ~f:(fun has_illegal ((def, illegal_elt), _) ->
            match def with
            | Name_def.ExpressionDef _ -> Ok (has_illegal || illegal_elt)
            | _ when illegal_elt -> Ok true
@@ -57,4 +57,6 @@ let handle_component cx graph scc =
     | Ok true -> ()
     | Ok false
     | Error () ->
-      Flow_js.add_output cx Error_message.(EDefinitionCycle (Nel.map snd blame)))
+      Flow_js.add_output
+        cx
+        Error_message.(EDefinitionCycle (Base.List.map ~f:snd blame |> Nel.of_list_exn)))

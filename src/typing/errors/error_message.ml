@@ -446,10 +446,10 @@ and 'loc t' =
   | EInvalidGraphQL of 'loc * Graphql.error
   | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason * string option
   | EAnnotationInferenceRecursive of 'loc * 'loc virtual_reason
-  | EDefinitionCycle of ('loc virtual_reason * 'loc Nel.t * 'loc list) Nel.t
+  | EDefinitionCycle of ('loc virtual_reason * 'loc list * 'loc list) Nel.t
   | ERecursiveDefinition of {
       reason: 'loc virtual_reason;
-      recursion: 'loc Nel.t;
+      recursion: 'loc list;
       annot_locs: 'loc list;
     }
   | EDuplicateClassMember of {
@@ -1077,14 +1077,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EDefinitionCycle
       (Nel.map
          (fun (reason, recur, annot) ->
-           (map_reason reason, Nel.map f recur, Base.List.map ~f annot))
+           (map_reason reason, Base.List.map ~f recur, Base.List.map ~f annot))
          elts
       )
   | ERecursiveDefinition { reason; recursion; annot_locs } ->
     ERecursiveDefinition
       {
         reason = map_reason reason;
-        recursion = Nel.map f recursion;
+        recursion = Base.List.map ~f recursion;
         annot_locs = Base.List.map ~f annot_locs;
       }
   | EDuplicateClassMember { loc; name; static } ->
@@ -3941,9 +3941,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | ERecursiveDefinition { reason; recursion = (hd, tl); annot_locs } ->
-    let tl_recur =
-      Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl |> List.flatten
+  | ERecursiveDefinition { reason; recursion; annot_locs } ->
+    let (itself, tl_recur) =
+      match recursion with
+      | hd :: tl ->
+        ( ref (mk_reason (RCustom "itself") hd),
+          Base.List.map ~f:(fun loc -> [text ", "; ref (mk_reason (RCustom "") loc)]) tl
+          |> List.flatten
+        )
+      | [] -> (text "itself", [])
     in
     let annot_message =
       match annot_locs with
@@ -3957,7 +3963,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Cannot compute a type for ";
         desc reason;
         text " because its definition includes references to ";
-        ref (mk_reason (RCustom "itself") hd);
+        itself;
       ]
       @ tl_recur
       @ text ". Please add an annotation to " :: annot_message
@@ -3966,19 +3972,21 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EDefinitionCycle dependencies ->
     let deps =
       Nel.map
-        (fun (reason, (hd, tl), _) ->
-          let tl_dep =
-            Base.List.map ~f:(fun loc -> [text ","; ref (mk_reason (RCustom "") loc)]) tl
-            |> List.flatten
-          in
-          [
-            text " - ";
-            ref reason;
-            text " depends on ";
-            ref (mk_reason (RCustom "other definition") hd);
-          ]
-          @ tl_dep
-          @ [text "\n"])
+        (function
+          | (_, [], _) -> []
+          | (reason, hd :: tl, _) ->
+            let tl_dep =
+              Base.List.map ~f:(fun loc -> [text ","; ref (mk_reason (RCustom "") loc)]) tl
+              |> List.flatten
+            in
+            [
+              text " - ";
+              ref reason;
+              text " depends on ";
+              ref (mk_reason (RCustom "other definition") hd);
+            ]
+            @ tl_dep
+            @ [text "\n"])
         dependencies
       |> Nel.to_list
       |> List.flatten

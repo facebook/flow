@@ -155,3 +155,15 @@ import * as React from 'react';
     f() { return Utils.foo }
   };
 }
+
+{
+  const m = {
+    f(x: H) {
+      return x(x => 42)
+    }
+  }
+
+  type S = H; // not included in error message
+
+  type H = { (number => number): void, m: typeof m, s: S }
+}
