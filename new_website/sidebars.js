@@ -59,6 +59,7 @@ module.exports = {
         'lang/refinements',
         'lang/lazy-modes',
         'lang/types-first',
+        'lang/constrained-writes',
       ],
     },
     {
