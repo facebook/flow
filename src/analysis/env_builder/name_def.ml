@@ -332,82 +332,71 @@ let rec obj_properties_synthesizable
   let open Ast.Expression.Object in
   let open Ast.Expression.Object.Property in
   let open Ast.Expression.Object.SpreadProperty in
-  let handle_fun elem_loc all_functions this_write_locs acc = function
-    | FunctionSynthesizable -> Ok (acc, all_functions, this_write_locs)
-    | MissingReturn loc -> Ok (loc :: acc, all_functions, this_write_locs)
+  let handle_fun elem_loc this_write_locs acc = function
+    | FunctionSynthesizable -> Ok (acc, this_write_locs)
+    | MissingReturn loc -> Ok (FuncMissingAnnot loc :: acc, this_write_locs)
     | _ ->
       (match elem_loc with
-      | Some elem_loc -> Ok (elem_loc :: acc, false, this_write_locs)
+      | Some elem_loc -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
       | None -> Error ())
   in
-  let rec synthesizable_expression (acc, all_functions, this_write_locs) (elem_loc, expr) =
+  let rec synthesizable_expression (acc, this_write_locs) (elem_loc, expr) =
     match expr with
     | Ast.Expression.Literal _
     | Ast.Expression.Identifier _
     | Ast.Expression.TypeCast _ ->
-      Ok (acc, all_functions, this_write_locs)
+      Ok (acc, this_write_locs)
     | Ast.Expression.ArrowFunction fn
     | Ast.Expression.Function fn ->
-      handle_fun
-        (Some elem_loc)
-        all_functions
-        this_write_locs
-        acc
-        (func_is_synthesizable_from_annotation fn)
+      handle_fun (Some elem_loc) this_write_locs acc (func_is_synthesizable_from_annotation fn)
     | Ast.Expression.Object obj ->
       begin
         match obj_properties_synthesizable ~this_write_locs:(obj_this_write_locs obj) obj with
         | ObjectSynthesizable { this_write_locs = new_this_write_locs } ->
-          Ok (acc, all_functions, EnvSet.union this_write_locs new_this_write_locs)
-        | MissingMemberAnnots { locs = (hd, tl); all_functions } ->
-          Ok (hd :: tl @ acc, all_functions, this_write_locs)
-        | Unsynthesizable -> Ok (elem_loc :: acc, false, this_write_locs)
+          Ok (acc, EnvSet.union this_write_locs new_this_write_locs)
+        | MissingMemberAnnots { locs = (hd, tl) } -> Ok (hd :: tl @ acc, this_write_locs)
+        | Unsynthesizable -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
       end
     | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
       begin
         match
           Base.List.fold_result
             elements
-            ~init:(acc, all_functions, this_write_locs)
-            ~f:(fun (acc, all_functions, this_write_locs) -> function
+            ~init:(acc, this_write_locs)
+            ~f:(fun (acc, this_write_locs) -> function
             | Ast.Expression.Array.Expression exp
             | Ast.Expression.Array.Spread (_, { Ast.Expression.SpreadElement.argument = exp; _ }) ->
-              synthesizable_expression (acc, all_functions, this_write_locs) exp
+              synthesizable_expression (acc, this_write_locs) exp
             | Ast.Expression.Array.Hole _ -> Error ()
           )
         with
         | Ok res -> Ok res
-        | Error () -> Ok (elem_loc :: acc, false, this_write_locs)
+        | Error () -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
       end
-    | _ -> Ok (elem_loc :: acc, false, this_write_locs)
+    | _ -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
   in
 
   let missing =
     Base.List.fold_result
-      ~init:([], true, this_write_locs)
+      ~init:([], this_write_locs)
       ~f:
-        (fun (acc, all_functions, this_write_locs) -> function
+        (fun (acc, this_write_locs) -> function
           | SpreadProperty (_, { argument = (_, Ast.Expression.Identifier _); _ }) ->
-            Ok (acc, all_functions, this_write_locs)
+            Ok (acc, this_write_locs)
           | SpreadProperty _ -> Error ()
           | Property (_, Init { key = Identifier (_, { Ast.Identifier.name = "__proto__"; _ }); _ })
             ->
             Error ()
           | Property (_, Method { key = Identifier _; value = (_, fn); _ }) ->
-            handle_fun
-              None
-              all_functions
-              this_write_locs
-              acc
-              (func_is_synthesizable_from_annotation fn)
+            handle_fun None this_write_locs acc (func_is_synthesizable_from_annotation fn)
           | Property (_, Init { key = Identifier _; value = expr; _ }) ->
-            synthesizable_expression (acc, all_functions, this_write_locs) expr
+            synthesizable_expression (acc, this_write_locs) expr
           | Property _ -> Error ())
       properties
   in
   match missing with
-  | Ok ([], _, this_write_locs) -> ObjectSynthesizable { this_write_locs }
-  | Ok (hd :: tl, all_functions, _) -> MissingMemberAnnots { locs = (hd, tl); all_functions }
+  | Ok ([], this_write_locs) -> ObjectSynthesizable { this_write_locs }
+  | Ok (hd :: tl, _) -> MissingMemberAnnots { locs = (hd, tl) }
   | Error () -> Unsynthesizable
 
 class returned_expression_collector =

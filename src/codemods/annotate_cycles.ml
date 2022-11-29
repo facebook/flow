@@ -81,7 +81,12 @@ class annotate_cycles_mapper
             | ERecursiveDefinition { annot_locs = []; _ } -> (acc, ct + 1)
             | ERecursiveDefinition { annot_locs; _ } ->
               let acc =
-                Base.List.map ~f:(ALoc.to_loc_with_tables tables) annot_locs
+                Base.List.map
+                  ~f:(function
+                    | Env_api.Loc loc
+                    | Env_api.Object { loc; _ } ->
+                      ALoc.to_loc_with_tables tables loc)
+                  annot_locs
                 |> LSet.of_list
                 |> LSet.union acc
               in
@@ -90,7 +95,12 @@ class annotate_cycles_mapper
               let annotations =
                 Nel.to_list cycle
                 |> Base.List.map ~f:(fun (_, _, annot_locs) ->
-                       Base.List.map ~f:(ALoc.to_loc_with_tables tables) annot_locs
+                       Base.List.map
+                         ~f:(function
+                           | Env_api.Loc loc
+                           | Env_api.Object { loc; _ } ->
+                             ALoc.to_loc_with_tables tables loc)
+                         annot_locs
                    )
                 |> List.flatten
               in

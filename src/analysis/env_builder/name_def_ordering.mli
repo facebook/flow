@@ -13,7 +13,7 @@ module EnvSet = Env_api.EnvSet
 type 'k blame = {
   payload: 'k;
   reason: ALoc.t virtual_reason;
-  annot_locs: ALoc.t list;
+  annot_locs: ALoc.t Env_api.annot_loc list;
   recursion: ALoc.t list;
 }
 

@@ -10,6 +10,7 @@ exception ImpossibleState of string
 (* This describes the state of a variable AFTER the provider analysis, suitable for external consumption *)
 type state =
   | AnnotatedVar of {
+      contextual: bool;
       predicate: bool; (* true iff this annotation corresponds to a predicate function (%checks) *)
     }
   | InitializedVar

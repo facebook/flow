@@ -56,15 +56,16 @@ type function_synth_kind =
   | FunctionPredicateSynthesizable of ALoc.t * (ALoc.t, ALoc.t) Ast.Expression.t
   | MissingReturn of ALoc.t
 
+type object_missing_annot =
+  | FuncMissingAnnot of ALoc.t
+  | OtherMissingAnnot of ALoc.t
+
 type object_synth_kind =
   | ObjectSynthesizable of {
       (* A set of this write locations that can be resolved by resolving the object. *)
       this_write_locs: Env_api.EnvSet.t;
     }
-  | MissingMemberAnnots of {
-      locs: ALoc.t Nel.t;
-      all_functions: bool;
-    }
+  | MissingMemberAnnots of { locs: object_missing_annot Nel.t }
   | Unsynthesizable
 
 type root =

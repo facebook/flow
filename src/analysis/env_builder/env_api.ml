@@ -190,6 +190,13 @@ module type S = sig
     refinement_of_id: int -> Refi.refinement;
   }
 
+  type 'l annot_loc =
+    | Loc of 'l
+    | Object of {
+        loc: 'l;
+        props: 'l list;
+      }
+
   type env_invariant_failure =
     | NameDefOrderingFailure of {
         all: L.t list;
@@ -451,6 +458,13 @@ module Make
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
+
+  type 'l annot_loc =
+    | Loc of 'l
+    | Object of {
+        loc: 'l;
+        props: 'l list;
+      }
 
   let empty =
     {
