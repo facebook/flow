@@ -8,4 +8,7 @@
   flow_typing
   collections)
  (preprocess
-  (pps lwt_ppx ppx_let)))
+  (pps ppx_deriving.std lwt_ppx ppx_let)))
+
+(dirs
+ (:standard __tests__))

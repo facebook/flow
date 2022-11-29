@@ -1,0 +1,5 @@
+(test
+ (name code_action_tests)
+ (libraries ounit2 flow_code_action)
+ (preprocess
+  (pps ppx_deriving.std)))
