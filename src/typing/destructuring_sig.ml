@@ -35,6 +35,7 @@ module type S = sig
   val object_properties :
     Context.t ->
     f:callback ->
+    parent_loc:ALoc.t ->
     state ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.Object.property list ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Object.property list

@@ -67,24 +67,26 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
       default;
     t
 
-  let eval_default cx annot_t has_anno =
+  let flow_default cx annot_t default_t =
+    let open Type in
+    let use_op =
+      Op
+        (AssignVar
+           { var = Some (TypeUtil.reason_of_t annot_t); init = TypeUtil.reason_of_t default_t }
+        )
+    in
+    Flow.flow cx (default_t, UseT (use_op, annot_t))
+
+  let eval_default cx ?(always_flow_default = false) annot_t has_anno =
     Base.Option.map ~f:(fun e ->
         let (((loc, default_t), expr) as e) = Statement.expression cx e in
         if has_anno then (
-          let open Type in
-          let use_op =
-            Op
-              (AssignVar
-                 {
-                   var = Some (TypeUtil.reason_of_t annot_t);
-                   init = TypeUtil.reason_of_t default_t;
-                 }
-              )
-          in
-          Flow.flow cx (default_t, UseT (use_op, annot_t));
+          flow_default cx annot_t default_t;
           ((loc, annot_t), expr)
-        ) else
+        ) else (
+          if always_flow_default then flow_default cx annot_t default_t;
           e
+        )
     )
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
@@ -92,14 +94,14 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
     | Id ({ Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } as id) ->
       let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
       let t = Env.find_write cx Env_api.OrdinaryNameLoc reason in
-      let default = eval_default cx t has_anno default in
+      let default = eval_default cx ~always_flow_default:true t has_anno default in
       (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
     | Object { annot; properties; comments } ->
       let default = eval_default cx t has_anno default in
       let properties =
         let init = Destructuring.empty t ~annot:has_anno in
         let f = destruct cx in
-        Destructuring.object_properties cx ~f init properties
+        Destructuring.object_properties cx ~f ~parent_loc:ploc init properties
       in
       ( loc,
         {
