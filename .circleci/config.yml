@@ -56,7 +56,7 @@ executors:
     working_directory: /flow
   flow-website:
     docker:
-      - image: flowtype/flow-website:0.0.5
+      - image: ghcr.io/facebook/flow-website:latest
     working_directory: ~/flow
   awscli:
     docker:
@@ -670,6 +670,41 @@ jobs:
           cd website
           bundle exec s3_website push --site ~/flow/dist/flow.org
 
+  new_website_deploy:
+    executor: flow-website
+    steps:
+    - attach_workspace:
+        at: ~/flow
+    - restore_cache:
+        keys:
+          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
+    - run:
+        name: Install yarn deps
+        command: cd new_website && yarn install
+    - save_cache:
+        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
+        paths:
+          - new_website/node_modules
+    - run:
+        name: Build website
+        command: PATH=~/flow/bin/linux:$PATH .circleci/build_new_website.sh
+    - restore_cache:
+        keys:
+          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/Gemfile.lock" }}
+    - run:
+        name: Install gems
+        command: |
+          cd new_website
+          bundle config set path 'vendor/bundle'
+          bundle install
+    - save_cache:
+        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/Gemfile.lock" }}
+        paths:
+          - new_website/vendor/bundle
+    - run:
+        name: Publish website
+        command: cd new_website && bundle exec s3_website push --site build
+
   # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
     executor: awscli
@@ -755,6 +790,17 @@ workflows:
               only:
                 - main
                 - master
+
+      - new_website_deploy:
+          requires:
+            - build_linux
+            - build_js
+          filters:
+            branches:
+              only:
+                - main
+                # Include this branch while we test the new website deployment workflow
+                - new_website_deploy
 
   build_and_deploy:
     jobs:
