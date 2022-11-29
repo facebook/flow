@@ -35,3 +35,19 @@ function x7(a: false & false): true {
 function x8(a: false & false): false {
   return !a; // error, true ~> false
 };
+
+function x9(): number {
+  return -10; // ok
+}
+
+function x10(y: number): number {
+  return -y; // ok
+}
+
+function x11(y: number): number {
+  return +y; // ok
+}
+
+function x12(y: number): number {
+  return ~y; // ok
+}
