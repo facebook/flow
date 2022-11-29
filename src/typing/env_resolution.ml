@@ -31,25 +31,29 @@ let expression cx ?cond exp =
   if not (Context.in_synthesis_mode cx) then Node_cache.set_expression cache exp;
   t
 
+let resolve_annotation cx tparams_map anno =
+  let cache = Context.node_cache cx in
+  let tparams_map = mk_tparams_map cx tparams_map in
+  let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
+  Node_cache.set_annotation cache anno;
+  t
+
 let rec synthesizable_expression cx ?cond exp =
   let open Ast.Expression in
   match exp with
-  | (loc, Identifier (id_loc, name)) ->
-    let t = Statement.identifier cx name loc in
-    ((loc, t), Identifier ((id_loc, t), name))
-  | (loc, Ast.Expression.Literal lit) ->
-    ((loc, Statement.literal cx loc lit), Ast.Expression.Literal lit)
+  | (loc, Identifier (_, name)) -> Statement.identifier cx name loc
+  | (loc, Ast.Expression.Literal lit) -> Statement.literal cx loc lit
+  | (_, Ast.Expression.TypeCast { TypeCast.annot; _ }) -> resolve_annotation cx ALocMap.empty annot
   | ( loc,
       Ast.Expression.Member
         {
           Ast.Expression.Member._object;
           property =
-            Ast.Expression.Member.PropertyIdentifier
-              (ploc, ({ Ast.Identifier.name; comments = _ } as id));
-          comments;
+            Ast.Expression.Member.PropertyIdentifier (ploc, { Ast.Identifier.name; comments = _ });
+          comments = _;
         }
     ) ->
-    let (((_, t), _) as _object) = synthesizable_expression cx ?cond _object in
+    let t = synthesizable_expression cx ?cond _object in
     let tout =
       match Refinement.get ~allow_optional:false cx exp loc with
       | Some t -> t
@@ -59,15 +63,8 @@ let rec synthesizable_expression cx ?cond exp =
         let use_op = Op (GetProperty expr_reason) in
         Statement.get_prop ~use_op ~cond:None cx expr_reason t (prop_reason, name)
     in
-    ( (loc, tout),
-      Ast.Expression.Member
-        {
-          Ast.Expression.Member._object;
-          property = Ast.Expression.Member.PropertyIdentifier ((ploc, tout), id);
-          comments;
-        }
-    )
-  | _ -> Statement.expression cx ?cond exp
+    tout
+  | _ -> expression cx ?cond exp
 
 let mk_selector_reason_has_default cx loc = function
   | Name_def.Elem { index = n; has_default } ->
@@ -88,13 +85,6 @@ let mk_selector_reason_has_default cx loc = function
     let t = expression cx exp in
     (Type.Elem t, mk_reason (RProperty None) loc, has_default)
   | Name_def.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
-
-let resolve_annotation cx tparams_map anno =
-  let cache = Context.node_cache cx in
-  let tparams_map = mk_tparams_map cx tparams_map in
-  let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
-  Node_cache.set_annotation cache anno;
-  t
 
 let synth_arg_list cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ }) =
   Base.List.map arguments ~f:(fun e ->
@@ -314,6 +304,58 @@ let resolve_binding_partial cx reason loc b =
     in
 
     let rec mk_obj obj_loc { properties; _ } =
+      let rec mk_expression (loc, expr) =
+        match expr with
+        | Ast.Expression.Literal _
+        | Ast.Expression.Identifier _
+        | Ast.Expression.TypeCast _ ->
+          synthesizable_expression cx (loc, expr)
+        | Ast.Expression.Function fn
+        | Ast.Expression.ArrowFunction fn ->
+          let { Ast.Function.sig_loc; _ } = fn in
+          let bind_this =
+            match expr with
+            | Ast.Expression.Function _ -> true
+            | _ -> false
+          in
+          resolve_prop ~bind_this ~prop_loc:sig_loc ~fn_loc:loc fn
+        | Ast.Expression.Object obj -> mk_obj loc obj
+        | Ast.Expression.Array { Ast.Expression.Array.elements = []; _ } ->
+          let (_, t) = Statement.empty_array cx loc in
+          DefT (reason, bogus_trust (), ArrT (ArrayAT (t, Some [])))
+        | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
+          (* TODO merge code with statement.ml implementation *)
+          let array_elements cx undef_loc =
+            let open Ast.Expression.Array in
+            Base.List.map ~f:(fun e ->
+                match e with
+                | Expression e ->
+                  let t = mk_expression e in
+                  UnresolvedArg (t, None)
+                | Hole _ -> UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust, None)
+                | Spread (_, { Ast.Expression.SpreadElement.argument; comments = _ }) ->
+                  let t = synthesizable_expression cx argument in
+                  UnresolvedSpreadArg t
+            )
+          in
+          let reason = mk_reason RArrayLit loc in
+          let elem_spread_list = array_elements cx loc elements in
+          Tvar.mk_where cx reason (fun tout ->
+              let reason_op = reason in
+              let element_reason =
+                replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
+              in
+              let elem_t = Tvar.mk cx element_reason in
+              let resolve_to = ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout) in
+              Flow_js.resolve_spread_list
+                cx
+                ~use_op:unknown_use
+                ~reason_op
+                elem_spread_list
+                resolve_to
+          )
+        | _ -> failwith "Object not synthesizable"
+      in
       let reason = mk_reason RObjectLit obj_loc in
       let obj_proto = ObjProtoT reason in
       let acc =
@@ -321,7 +363,7 @@ let resolve_binding_partial cx reason loc b =
             match prop with
             | SpreadProperty
                 (_, { SpreadProperty.argument = (_, Ast.Expression.Identifier _) as exp; _ }) ->
-              let ((_, spread), _) = synthesizable_expression cx exp in
+              let spread = synthesizable_expression cx exp in
               Statement.ObjectExpressionAcc.add_spread spread acc
             | Property
                 ( prop_loc,
@@ -346,52 +388,11 @@ let resolve_binding_partial cx reason loc b =
                         ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
                         | Property.Literal
                             (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-                      value =
-                        ( fn_loc,
-                          ((Ast.Expression.Function fn | Ast.Expression.ArrowFunction fn) as fn_exp)
-                        );
+                      value;
                       _;
                     }
                 ) ->
-              let { Ast.Function.sig_loc; _ } = fn in
-              let bind_this =
-                match fn_exp with
-                | Ast.Expression.Function _ -> true
-                | _ -> false
-              in
-              let t = resolve_prop ~bind_this ~prop_loc:sig_loc ~fn_loc fn in
-              Statement.ObjectExpressionAcc.add_prop
-                (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
-                acc
-            | Property
-                ( _,
-                  Property.Init
-                    {
-                      key =
-                        ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
-                        | Property.Literal
-                            (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-                      value = (_, (Ast.Expression.Literal _ | Ast.Expression.Identifier _)) as exp;
-                      _;
-                    }
-                ) ->
-              let ((_, t), _) = synthesizable_expression cx exp in
-              Statement.ObjectExpressionAcc.add_prop
-                (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
-                acc
-            | Property
-                ( _,
-                  Property.Init
-                    {
-                      key =
-                        ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
-                        | Property.Literal
-                            (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
-                      value = (obj_loc, Ast.Expression.Object obj);
-                      _;
-                    }
-                ) ->
-              let t = mk_obj obj_loc obj in
+              let t = mk_expression value in
               Statement.ObjectExpressionAcc.add_prop
                 (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
                 acc
@@ -880,14 +881,12 @@ let resolve_chain_expression cx ~cond exp =
   (t, unknown_use)
 
 let resolve_write_expression cx ~cond exp =
-  let cache = Context.node_cache cx in
   let cond =
     match cond with
     | NonConditionalContext -> None
     | OtherConditionalTest -> Some OtherTest
   in
-  let (((_, t), _) as exp) = synthesizable_expression cx ?cond exp in
-  Node_cache.set_expression cache exp;
+  let t = synthesizable_expression cx ?cond exp in
   (t, unknown_use)
 
 let resolve_generator_next cx reason gen =

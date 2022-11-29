@@ -168,10 +168,48 @@ References:
                                   [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ a.js:146:25
 
-Found 8 errors
+Cannot return `Utils.foo` because array literal [1] is incompatible with empty [2]. [incompatible-return]
+
+   a.js:146:25
+   146|     h(): empty { return Utils.foo } //err
+                                ^^^^^^^^^
+
+References:
+   a.js:143:10
+   143|     foo: [{x: function(): number { return 42 }}, 42],
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   a.js:146:10
+   146|     h(): empty { return Utils.foo } //err
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:153:9
+
+Cannot compute a type for `Utils` because its definition includes references to itself [1]. Please add an annotation to
+these positions [2] [3] [recursive-definition]
+
+   a.js:153:9
+   153|   const Utils = {
+                ^^^^^
+
+References:
+   a.js:155:18
+   155|     f() { return Utils.foo }
+                         ^^^^^ [1]
+   a.js:155:8
+   155|     f() { return Utils.foo }
+                [2]
+   a.js:154:25
+   154|     foo: [{x: function() { return 42 }}, 42],
+                                 [3]
+
+
+
+Found 10 errors
 Annotating cycles...
->>> a.js (#changes: 13)
+>>> a.js (#changes: 15)
 //@flow
 
 
@@ -312,13 +350,31 @@ import * as React from 'react';
   <F attr={function () { return f() }} />
 }
 
+{
+  const Utils = {
+    foo: [{x: function(): number { return 42 }}, 42],
+    f(): Array<number | { x: () => number }> { return Utils.foo }, //ok
+    g(): [{ x: () => number }, number] { return Utils.foo }, //ok
+    h(): empty { return Utils.foo } //err
+  };
+
+  (Utils.foo: Array<number | { x:() => number }>);
+}
+
+{
+  const Utils = {
+    foo: [{x: function(): number { return 42 }}, 42],
+    f(): Array<number | {| x: () => number |}> { return Utils.foo }
+  };
+}
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:             11
-  Total size of annotations:               11
-  Number of cycles:                        11
+  Number of annotations added:             13
+  Total size of annotations:               19
+  Number of cycles:                        13
   Number of annotations skipped:            0
   Number of unannotatable cycles:           0
 
