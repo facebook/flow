@@ -616,7 +616,7 @@ let resolve_binding_partial cx reason loc b =
       | Of { await } -> Statement.for_of_elemt cx right_t reason await
     in
     (t, mk_use_op t)
-  | Select { selector; default = _; parent = (parent_loc, binding) } ->
+  | Select { selector; parent = (parent_loc, binding) } ->
     let refined_type =
       match selector with
       | Name_def.Prop { prop; prop_loc; _ } ->

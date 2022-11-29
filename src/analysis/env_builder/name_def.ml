@@ -13,14 +13,6 @@ module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
 include Name_def_types
 
-let default_of_binding = function
-  | Root (Annotation { has_default_expression = true; annot; tparams_map; _ }) ->
-    Some (DefaultAnnot (annot, tparams_map))
-  | Root (Contextual { default_expression; _ }) ->
-    Base.Option.map default_expression ~f:(fun e -> DefaultExpr e)
-  | Select { default; _ } -> default
-  | Root _ -> None
-
 module Destructure : sig
   val type_of_pattern :
     (ALoc.t, ALoc.t) Ast.Pattern.t -> (ALoc.t, ALoc.t) Ast.Type.annotation option
@@ -52,71 +44,26 @@ end = struct
       Some t
     | _ -> None
 
-  let pattern_default direct_default default =
-    match direct_default with
-    | None -> default
-    | Some e ->
-      let default =
-        match default with
-        | Some default -> DefaultCons (e, default)
-        | None -> DefaultExpr e
-      in
-      Some default
-
   let array_element (parent_loc, acc) index direct_default =
     let selector = Elem { index; has_default = direct_default <> None } in
-    let default =
-      acc
-      |> default_of_binding
-      |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
-      |> pattern_default direct_default
-    in
-    Select { selector; default; parent = (parent_loc, acc) }
+    Select { selector; parent = (parent_loc, acc) }
 
   let array_rest_element (parent_loc, acc) i =
     let selector = ArrRest i in
-    let default =
-      acc
-      |> default_of_binding
-      |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
-    in
-    Select { selector; default; parent = (parent_loc, acc) }
+    Select { selector; parent = (parent_loc, acc) }
 
   let object_named_property (parent_loc, acc) prop_loc x direct_default =
     let has_default = direct_default <> None in
     let selector = Prop { prop = x; prop_loc; has_default } in
-    let default =
-      acc
-      |> default_of_binding
-      |> Base.Option.map ~f:(fun default ->
-             let d = DefaultSelector (default, selector) in
-             if has_default then
-               DefaultSelector (d, Default)
-             else
-               d
-         )
-      |> pattern_default direct_default
-    in
-    Select { selector; default; parent = (parent_loc, acc) }
+    Select { selector; parent = (parent_loc, acc) }
 
   let object_computed_property (parent_loc, acc) e direct_default =
     let selector = Computed { expression = e; has_default = direct_default <> None } in
-    let default =
-      acc
-      |> default_of_binding
-      |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
-      |> pattern_default direct_default
-    in
-    Select { selector; default; parent = (parent_loc, acc) }
+    Select { selector; parent = (parent_loc, acc) }
 
   let object_rest_property (parent_loc, acc) xs has_computed =
     let selector = ObjRest { used_props = xs; after_computed = has_computed } in
-    let default =
-      acc
-      |> default_of_binding
-      |> Base.Option.map ~f:(fun default -> DefaultSelector (default, selector))
-    in
-    Select { selector; default; parent = (parent_loc, acc) }
+    Select { selector; parent = (parent_loc, acc) }
 
   let object_property (parent_loc, acc) xs key direct_default =
     let open Ast.Pattern.Object in
