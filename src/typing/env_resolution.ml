@@ -88,20 +88,27 @@ let mk_selector_reason_has_default cx loc = function
 
 let synth_arg_list cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ }) =
   Base.List.map arguments ~f:(fun e ->
+      let original_errors = Context.errors cx in
+      Context.reset_errors cx Flow_error.ErrorSet.empty;
       let (produced_placeholders, e) =
         Context.run_in_synthesis_mode cx (fun () ->
             let ((_t, _) as e') = Statement.expression_or_spread cx e in
             e'
         )
       in
+      let can_cache =
+        (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
+           we can cache the result *)
+        (not produced_placeholders) && Flow_error.ErrorSet.is_empty (Context.errors cx)
+      in
+      Context.reset_errors cx original_errors;
       let cached_exp =
         let open Ast.Expression in
         match e with
         | (_, Expression e) -> e
         | (_, Spread (_, { SpreadElement.argument = e; comments = _ })) -> e
       in
-      (* If we didn't introduce new placeholders, cache the result *)
-      if not produced_placeholders then Node_cache.set_expression (Context.node_cache cx) cached_exp;
+      if can_cache then Node_cache.set_expression (Context.node_cache cx) cached_exp;
       let (t, _) = e in
       let ((loc, _), _) = cached_exp in
       (loc, t)
@@ -171,11 +178,14 @@ let resolve_hint cx loc hint =
       match Hashtbl.find_opt cache key with
       | Some result -> result
       | None ->
+        let original_errors = Context.errors cx in
+        Context.reset_errors cx Flow_error.ErrorSet.empty;
         let (_, (props, _, unresolved_params, _)) =
           Context.run_in_synthesis_mode cx (fun () ->
               Statement.jsx_mk_props cx reason name props children
           )
         in
+        Context.reset_errors cx original_errors;
         let children =
           Base.List.map
             ~f:(function
