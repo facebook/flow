@@ -344,7 +344,14 @@ let rec obj_properties_synthesizable
     match expr with
     | Ast.Expression.Literal _
     | Ast.Expression.Identifier _
-    | Ast.Expression.TypeCast _ ->
+    | Ast.Expression.TypeCast _
+    | Ast.Expression.Member
+        {
+          Ast.Expression.Member._object =
+            (_, (Ast.Expression.Identifier _ | Ast.Expression.TypeCast _));
+          property = Ast.Expression.Member.PropertyIdentifier _;
+          _;
+        } ->
       Ok (acc, this_write_locs)
     | Ast.Expression.ArrowFunction fn
     | Ast.Expression.Function fn ->
