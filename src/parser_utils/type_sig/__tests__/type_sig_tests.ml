@@ -273,6 +273,22 @@ let%expect_test "export_number_literal" =
         stars = []; strict = true}}
   |}]
 
+let%expect_test "export_bigint_literal" =
+  print_sig {|
+    export default 0n;
+  |};
+  [%expect {|
+    ESModule {type_exports = [||];
+      exports =
+      [|ExportDefault {default_loc = [1:7-14];
+          def = (Value (BigIntLit ([1:15-17], (Some 0L), "0n")))}
+        |];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"default"|];
+        stars = []; strict = true}}
+  |}]
+
 let%expect_test "export_function_literal" =
   print_sig {|
     export default function(x: number): number { return x };

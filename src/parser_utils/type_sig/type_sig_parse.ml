@@ -1220,7 +1220,8 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.StringLiteral { Ast.StringLiteral.value; _ } -> Annot (SingletonString (loc, value))
     | T.NumberLiteral { Ast.NumberLiteral.value; raw; _ } ->
       Annot (SingletonNumber (loc, value, raw))
-    | T.BigIntLiteral { Ast.BigIntLiteral.raw; _ } -> Annot (SingletonBigInt (loc, raw))
+    | T.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ } ->
+      Annot (SingletonBigInt (loc, value, raw))
     | T.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Annot (SingletonBoolean (loc, value))
     | T.Nullable { T.Nullable.argument; _ } -> Annot (Maybe (loc, annot opts scope tbls xs argument))
     | T.Array { T.Array.argument; _ } -> Annot (Array (loc, annot opts scope tbls xs argument))
@@ -2366,10 +2367,7 @@ let literal opts tbls loc value raw =
   match value with
   | L.String s -> string_literal opts tbls loc s
   | L.Number n -> Value (NumberLit (loc, n, raw))
-  | L.BigInt _ ->
-    (* There's no reason we can't support these in signatures, but they are also
-     * not supported in type checker. *)
-    Err (loc, CheckError)
+  | L.BigInt n -> Value (BigIntLit (loc, n, raw))
   | L.Boolean b -> Value (BooleanLit (loc, b))
   | L.Null -> Value (NullLit loc)
   | L.RegExp _ ->
@@ -2964,6 +2962,7 @@ and predicate opts scope tbls pnames =
     | "boolean" -> Some `Boolean
     | "function" -> Some `Function
     | "number" -> Some `Number
+    | "bigint" -> Some `BigInt
     | "object" -> Some `Object
     | "string" -> Some `String
     | "symbol" -> Some `Symbol
@@ -2984,12 +2983,14 @@ and predicate opts scope tbls pnames =
         | `Typeof `Boolean -> BoolP (key, eq_loc)
         | `Typeof `Function -> FunP key
         | `Typeof `Number -> NumP (key, eq_loc)
+        | `Typeof `BigInt -> BigIntP (key, eq_loc)
         | `Typeof `Object -> ObjP key
         | `Typeof `String -> StrP (key, eq_loc)
         | `Typeof `Symbol -> SymbolP (key, eq_loc)
         | `Typeof `Undefined -> VoidP key
         | `String (loc, x) -> SingletonStrP (key, loc, sense, x)
         | `Number (loc, x, raw) -> SingletonNumP (key, loc, sense, x, raw)
+        | `BigInt (loc, x, raw) -> SingletonBigIntP (key, loc, sense, x, raw)
         | `Bool (loc, x) -> SingletonBoolP (key, loc, x)
         | `Null _ -> NullP key
         | `Void _ -> VoidP key
@@ -3013,6 +3014,7 @@ and predicate opts scope tbls pnames =
         | `Typeof _ -> None
         | `String (loc, x) -> Some (SentinelStrP (key, prop, loc, x))
         | `Number (loc, x, raw) -> Some (SentinelNumP (key, prop, loc, x, raw))
+        | `BigInt (loc, x, raw) -> Some (SentinelBigIntP (key, prop, loc, x, raw))
         | `Bool (loc, x) -> Some (SentinelBoolP (key, prop, loc, x))
         | `Null loc -> Some (SentinelNullP (key, prop, loc))
         | `Void loc -> Some (SentinelVoidP (key, prop, loc))
@@ -3057,7 +3059,11 @@ and predicate opts scope tbls pnames =
         Some (`Number (loc, x, raw))
       else
         None
-    | L.BigInt _ -> None
+    | L.BigInt x ->
+      if strict then
+        Some (`BigInt (loc, x, raw))
+      else
+        None
     | L.RegExp _ -> None
   in
   let eq_test ~strict ~sense eq_loc left right =

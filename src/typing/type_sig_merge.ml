@@ -446,9 +446,7 @@ and merge_annot tps file = function
   | Null loc -> Type.NullT.at loc trust
   | Symbol loc -> Type.SymbolT.at loc trust
   | Number loc -> Type.NumT.at loc trust
-  | BigInt loc ->
-    let reason = Reason.(mk_annot_reason RBigInt loc) in
-    Type.(AnyT.error reason)
+  | BigInt loc -> Type.BigIntT.at loc trust
   | String loc -> Type.StrT.at loc trust
   | Boolean loc -> Type.BoolT.at loc trust
   | Exists loc -> Type.AnyT.at Type.AnnotatedAny loc
@@ -500,9 +498,9 @@ and merge_annot tps file = function
   | SingletonNumber (loc, num, raw) ->
     let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
     Type.(DefT (reason, trust, SingletonNumT (num, raw)))
-  | SingletonBigInt (loc, raw) ->
+  | SingletonBigInt (loc, bigint, raw) ->
     let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
-    Type.(AnyT.error reason)
+    Type.(DefT (reason, trust, SingletonBigIntT (bigint, raw)))
   | SingletonBoolean (loc, b) ->
     let reason = Reason.(mk_annot_reason (RBooleanLit b) loc) in
     Type.(DefT (reason, trust, SingletonBoolT b))
@@ -977,6 +975,12 @@ and merge_value tps file = function
   | NumberLit (loc, num, raw) ->
     let reason = Reason.(mk_reason RNumber loc) in
     Type.(DefT (reason, trust, NumT (Literal (None, (num, raw)))))
+  | BigIntVal loc ->
+    let reason = Reason.(mk_reason RBigInt loc) in
+    Type.(DefT (reason, trust, BigIntT AnyLiteral))
+  | BigIntLit (loc, bigint, raw) ->
+    let reason = Reason.(mk_reason RBigInt loc) in
+    Type.(DefT (reason, trust, BigIntT (Literal (None, (bigint, raw)))))
   | BooleanVal loc ->
     let reason = Reason.(mk_reason RBoolean loc) in
     Type.(DefT (reason, trust, BoolT None))
@@ -1402,10 +1406,13 @@ and merge_predicate tps file base_t loc p =
     | SingletonStrP (key, loc, sense, x) -> singleton key (Type.SingletonStrP (loc, sense, x))
     | SingletonNumP (key, loc, sense, x, raw) ->
       singleton key (Type.SingletonNumP (loc, sense, (x, raw)))
+    | SingletonBigIntP (key, loc, sense, x, raw) ->
+      singleton key (Type.SingletonBigIntP (loc, sense, (x, raw)))
     | SingletonBoolP (key, loc, x) -> singleton key (Type.SingletonBoolP (loc, x))
     | BoolP (key, loc) -> singleton key (Type.BoolP loc)
     | FunP key -> singleton key Type.FunP
     | NumP (key, loc) -> singleton key (Type.NumP loc)
+    | BigIntP (key, loc) -> singleton key (Type.BigIntP loc)
     | ObjP key -> singleton key Type.ObjP
     | StrP (key, loc) -> singleton key (Type.StrP loc)
     | SymbolP (key, loc) -> singleton key (Type.SymbolP loc)
@@ -1417,6 +1424,10 @@ and merge_predicate tps file base_t loc p =
     | SentinelNumP (key, prop, loc, x, raw) ->
       let reason = Reason.(mk_reason RNumber loc) in
       let t = Type.(DefT (reason, trust, NumT (Literal (None, (x, raw))))) in
+      singleton key Type.(LeftP (SentinelProp prop, t))
+    | SentinelBigIntP (key, prop, loc, x, raw) ->
+      let reason = Reason.(mk_reason RBigInt loc) in
+      let t = Type.(DefT (reason, trust, BigIntT (Literal (None, (x, raw))))) in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelBoolP (key, prop, loc, x) ->
       let reason = Reason.(mk_reason RBoolean loc) in

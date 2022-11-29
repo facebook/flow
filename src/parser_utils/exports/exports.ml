@@ -184,7 +184,8 @@ module Eval = struct
       Nothing
     | Value
         ( ClassExpr _ | FunExpr _ | StringVal _ | StringLit _ | LongStringLit _ | NumberVal _
-        | NumberLit _ | BooleanVal _ | BooleanLit _ | NullLit _ | ArrayLit _ ) ->
+        | NumberLit _ | BooleanVal _ | BooleanLit _ | NullLit _ | ArrayLit _ | BigIntVal _
+        | BigIntLit _ ) ->
       Nothing
     | ClassDecl -> Nothing
     | EnumDecl -> Nothing
@@ -286,7 +287,9 @@ module CJS = struct
     | NumberVal _
     | ObjSpreadLit _
     | StringLit _
-    | StringVal _ ->
+    | StringVal _
+    | BigIntVal _
+    | BigIntLit _ ->
       acc
 
   let exports_of_annot acc = function
