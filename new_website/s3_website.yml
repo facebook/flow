@@ -6,7 +6,7 @@ exclude_from_upload:
   - .git
   - .hg
 
-cloudfront_distribution_id: <%= ENV['CLOUDFRONT_ID'] %>
+cloudfront_distribution_id: <%= ENV['CLOUDFRONT_ID_NEW_WEBSITE'] %>
 cloudfront_invalidate_root: true
 cloudfront_wildcard_invalidation: true
 
