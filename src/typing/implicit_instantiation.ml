@@ -223,12 +223,92 @@ struct
       | DefT (r, _, ArrT (ArrayAT (_, Some _) | TupleAT _)) when i = 0 ->
         identity_reverse_upper_bound cx tvar r tout
       | _ -> UpperEmpty)
-    | CallT _ -> UpperEmpty
-    | ChoiceKitUseT _ -> UpperEmpty
-    | GetElemT _ -> UpperEmpty
-    | GetPropT _ -> UpperEmpty
-    | GetValuesT _ -> UpperEmpty
-    | MapTypeT _ -> UpperEmpty
+    (* Call related upper bounds are ignored because there is not enough info to reverse. *)
+    | BindT _
+    | CallT _
+    | MethodT _
+    | PrivateMethodT _
+    | ConstructorT _
+    | ToStringT _
+    | CallLatentPredT _
+    | CallOpenPredT _
+    | MapTypeT _
+    (* Get/set-prop related upper bounds are ignored because there is not enough info to reverse. *)
+    | SetPropT _
+    | SetPrivatePropT _
+    | GetElemT _
+    | SetElemT _
+    | CallElemT _
+    | GetPropT _
+    | GetPrivatePropT _
+    | MatchPropT _
+    | TestPropT _
+    | GetStaticsT _
+    | GetProtoT _
+    | SetProtoT _
+    | ObjTestProtoT _
+    | HasOwnPropT _
+    | LookupT _
+    | DestructuringT _
+    | OptionalChainT _
+    | OptionalIndexedAccessT _
+    | GetKeysT _
+    | GetValuesT _
+    (* Import-export related upper bounds won't appear during implicit instantiation. *)
+    | CJSRequireT _
+    | ImportModuleNsT _
+    | ImportDefaultT _
+    | ImportNamedT _
+    | ImportTypeT _
+    | ImportTypeofT _
+    | AssertImportIsValueT _
+    | CJSExtractNamedExportsT _
+    | CopyNamedExportsT _
+    | CopyTypeExportsT _
+    | CheckUntypedImportT _
+    | ExportNamedT _
+    | ExportTypeT _
+    | AssertExportIsTypeT _
+    (* Class/interface related upper bounds won't occur during implicit instantiation *)
+    | SuperT _
+    | ImplementsT _
+    | MixinT _
+    | ExtendsUseT _
+    (* The following upper bounds won't occur during implicit instantiation,
+       because they are operations on values. *)
+    | ArithT _
+    | ComparatorT _
+    | UnaryArithT _
+    | StrictEqT _
+    | EqT _
+    | AndT _
+    | OrT _
+    | NullishCoalesceT _
+    | NotT _
+    | AssertArithmeticOperandT _
+    | AssertBinaryInLHST _
+    | AssertBinaryInRHST _
+    | ObjAssignToT _
+    | ObjAssignFromT _
+    | ObjTestT _
+    | CreateObjWithComputedPropT _
+    | TypeCastT _
+    | EnumCastT _
+    | EnumExhaustiveCheckT _
+    | DebugPrintT _
+    | DebugSleepT _
+    | InvariantT _
+    | PredicateT _
+    | GuardT _
+    | SubstOnPredT _
+    | RefineT _
+    | CondT _
+    | SentinelPropTestT _
+    | FunImplicitVoidReturnT _
+    | CheckUnusedPromiseT _
+    (* When we have ChoiceKitUseT, we are already stuck. *)
+    | ChoiceKitUseT _ ->
+      UpperEmpty
     | MakeExactT (_, Lower (_, t)) -> UpperT t
     | MakeExactT (_, Upper use_t) -> t_of_use_t cx tvar use_t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
