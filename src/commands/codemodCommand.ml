@@ -200,6 +200,10 @@ module Annotate_lti_command = struct
                truthy
                ~doc:
                  "Skips adding type annotations to class properties without initializers even if necessary"
+          |> flag
+               "--errors-json-file"
+               string
+               ~doc:"File containing flow-check json. If -, json is read from the standard input."
         );
     }
 
@@ -211,6 +215,7 @@ module Annotate_lti_command = struct
       skip_normal_params
       skip_this_params
       skip_class_properties
+      errors_json_file
       () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_lti.Acc
@@ -225,6 +230,16 @@ module Annotate_lti_command = struct
         { o with opt_any_propagation = false; opt_inference_mode = ConstrainWrites }
 
       let visit =
+        let provided_error_locs =
+          CommandUtils.get_error_locs_from_input errors_json_file
+          |> Base.Option.value ~default:[]
+          |> List.concat_map (fun (error_codes, error_locs) ->
+                 if List.mem "missing-local-annot" error_codes then
+                   error_locs
+                 else
+                   []
+             )
+        in
         let mapper =
           Annotate_lti.mapper
             ~preserve_literals
@@ -233,6 +248,7 @@ module Annotate_lti_command = struct
             ~skip_normal_params
             ~skip_this_params
             ~skip_class_properties
+            ~provided_error_locs
         in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in

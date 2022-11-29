@@ -1,0 +1,33 @@
+>>> file.js (#changes: 1)
+// @flow
+
+declare function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(cb: T): T;
+
+const f = useCallback((foo: number) => {}); // ANNOT
+f(3);
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              1
+  Total size of annotations:                1
+  Number of LTI errors:                     1
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
