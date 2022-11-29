@@ -424,7 +424,7 @@ and 'loc t' =
   | EImportInternalReactServerModule of 'loc
   | EImplicitInstantiationUnderconstrainedError of {
       reason_call: 'loc virtual_reason;
-      reason_l: 'loc virtual_reason;
+      reason_tparam: 'loc virtual_reason;
       bound: string;
       use_op: 'loc virtual_use_op;
     }
@@ -1040,11 +1040,11 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EImplicitInstantiationTemporaryError (loc, msg) ->
     EImplicitInstantiationTemporaryError (f loc, msg)
   | EImportInternalReactServerModule loc -> EImportInternalReactServerModule (f loc)
-  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound; use_op } ->
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op } ->
     EImplicitInstantiationUnderconstrainedError
       {
         reason_call = map_reason reason_call;
-        reason_l = map_reason reason_l;
+        reason_tparam = map_reason reason_tparam;
         bound;
         use_op = map_use_op use_op;
       }
@@ -1193,9 +1193,9 @@ let util_use_op_of_msg nope util = function
         EEscapedGeneric
           { reason; blame_reason; annot_reason; use_op; bound_loc; bound_name; is_this }
     )
-  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound; use_op } ->
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op } ->
     util use_op (fun use_op ->
-        EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound; use_op }
+        EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op }
     )
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
@@ -3858,18 +3858,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " normally.";
           ];
       }
-  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound; use_op } ->
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; use_op; bound = _ } ->
     UseOp
       {
         use_op;
-        features =
-          [
-            code bound;
-            text " is underconstrained by ";
-            ref reason_call;
-            text " and is defined in ";
-            ref reason_l;
-          ];
+        features = [ref reason_tparam; text " is underconstrained by "; ref reason_call];
         loc = loc_of_reason reason_call;
       }
   | EImplicitInstantiationWidenedError { reason_call; bound } ->

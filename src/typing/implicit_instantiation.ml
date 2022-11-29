@@ -923,7 +923,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
              {
                bound = Subst_name.string_of_subst_name name;
                reason_call = instantiation_reason;
-               reason_l = tparam_binder_reason;
+               reason_tparam = tparam_binder_reason;
                use_op;
              }
           );
@@ -958,7 +958,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
              {
                bound = Subst_name.string_of_subst_name name;
                reason_call = instantiation_reason;
-               reason_l = tparam_binder_reason;
+               reason_tparam = tparam_binder_reason;
                use_op;
              }
           );
