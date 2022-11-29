@@ -1,0 +1,132 @@
+Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   6|     constructor():number { }
+                        ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
+
+Cannot return number because number [1] is incompatible with constructor void return [2]. [incompatible-return]
+
+   constructor.js:6:19
+   6|     constructor():number { }
+                        ^^^^^^ [1]
+
+References:
+   constructor.js:6:18
+   6|     constructor():number { }
+                       ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:15:6
+
+Cannot call `Foo` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   constructor.js:15:6
+   15| (new Foo(123): Bar<string>); // error, number !~> string
+            ^^^
+
+References:
+   constructor.js:15:20
+   15| (new Foo(123): Bar<string>); // error, number !~> string
+                          ^^^^^^ [1]
+   constructor.js:15:10
+   15| (new Foo(123): Bar<string>); // error, number !~> string
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- constructor.js:15:10
+
+Cannot cast `new Foo(...)` to `Bar` because number [1] is incompatible with string [2] in type argument `T` [3].
+[incompatible-cast]
+
+   constructor.js:15:10
+   15| (new Foo(123): Bar<string>); // error, number !~> string
+                ^^^ [1]
+
+References:
+   constructor.js:15:20
+   15| (new Foo(123): Bar<string>); // error, number !~> string
+                          ^^^^^^ [2]
+   constructor.js:10:19
+   10| declare class Bar<T> {}
+                         ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:22:6
+
+Cannot call `Baz` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   constructor.js:22:6
+   22| (new Baz(123): Baz<string>); // error, number !~> string
+            ^^^
+
+References:
+   constructor.js:22:20
+   22| (new Baz(123): Baz<string>); // error, number !~> string
+                          ^^^^^^ [1]
+   constructor.js:22:10
+   22| (new Baz(123): Baz<string>); // error, number !~> string
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- constructor.js:22:10
+
+Cannot cast `new Baz(...)` to `Baz` because number [1] is incompatible with string [2] in type argument `T` [3].
+[incompatible-cast]
+
+   constructor.js:22:10
+   22| (new Baz(123): Baz<string>); // error, number !~> string
+                ^^^ [1]
+
+References:
+   constructor.js:22:20
+   22| (new Baz(123): Baz<string>); // error, number !~> string
+                          ^^^^^^ [2]
+   constructor.js:18:19
+   18| declare class Baz<T> {
+                         ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- constructor.js:25:22
+
+Class constructor may not be async. [invalid-constructor-definition]
+
+   25|   async constructor() { }
+                            
+
+
+Error ---------------------------------------------------------------------- exported_nonvoid_return_constructor.js:4:18
+
+Cannot return object type because object type [1] is incompatible with constructor void return [2].
+[incompatible-return]
+
+   exported_nonvoid_return_constructor.js:4:18
+   4|   constructor(): {foo: number} { // Error: must return void
+                       ^^^^^^^^^^^^^ [1]
+
+References:
+   exported_nonvoid_return_constructor.js:4:16
+   4|   constructor(): {foo: number} { // Error: must return void
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:5:15
+
+Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
+
+   invalid.js:5:15
+   5| const c = new C(1); // ERROR
+                    ^
+
+References:
+   invalid.js:1:1
+   1| function C(this: {a: number}, a: number) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 9 errors

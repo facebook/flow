@@ -1,0 +1,281 @@
+Error -------------------------------------------------------------------------------------------------- classes.js:17:2
+
+Cannot cast `b_number.p` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:17:2
+   17| (b_number.p: boolean); // Error number ~> boolean
+        ^^^^^^^^^^
+
+References:
+   classes.js:13:17
+   13| var b_number: B<number> = new B(123);
+                       ^^^^^^ [1]
+   classes.js:17:14
+   17| (b_number.p: boolean); // Error number ~> boolean
+                    ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:18:2
+
+Cannot cast `b_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:18:2
+   18| (b_void.p: boolean); // Error void ~> boolean
+        ^^^^^^^^
+
+References:
+   classes.js:14:15
+   14| var b_void: B<void> = new B();
+                     ^^^^ [1]
+   classes.js:18:12
+   18| (b_void.p: boolean); // Error void ~> boolean
+                  ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:19:2
+
+Cannot cast `b_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:19:2
+   19| (b_default.p: boolean); // Error string ~> boolean
+        ^^^^^^^^^^^
+
+References:
+   classes.js:11:13
+   11| class B<T = string> extends A<T> {}
+                   ^^^^^^ [1]
+   classes.js:19:15
+   19| (b_default.p: boolean); // Error string ~> boolean
+                     ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:23:17
+
+Cannot instantiate `C` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-type-arg]
+
+   classes.js:23:17
+   23| var c_number: C<number> = new C(123); // Error number ~> ?string
+                       ^^^^^^ [1]
+
+References:
+   classes.js:21:13
+   21| class C<T: ?string = string> extends A<T> {}
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:23:31
+
+Cannot call `C` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-call]
+
+   classes.js:23:31
+   23| var c_number: C<number> = new C(123); // Error number ~> ?string
+                                     ^
+
+References:
+   classes.js:23:17
+   23| var c_number: C<number> = new C(123); // Error number ~> ?string
+                       ^^^^^^ [1]
+   classes.js:21:13
+   21| class C<T: ?string = string> extends A<T> {}
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:27:2
+
+Cannot cast `c_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:27:2
+   27| (c_void.p: boolean); // Error void ~> boolean
+        ^^^^^^^^
+
+References:
+   classes.js:24:15
+   24| var c_void: C<void> = new C();
+                     ^^^^ [1]
+   classes.js:27:12
+   27| (c_void.p: boolean); // Error void ~> boolean
+                  ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:28:2
+
+Cannot cast `c_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:28:2
+   28| (c_default.p: boolean); // Error string ~> boolean
+        ^^^^^^^^^^^
+
+References:
+   classes.js:21:22
+   21| class C<T: ?string = string> extends A<T> {}
+                            ^^^^^^ [1]
+   classes.js:28:15
+   28| (c_default.p: boolean); // Error string ~> boolean
+                     ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:34:21
+
+Cannot use `D` [1] with fewer than 1 type argument. [missing-type-arg]
+
+   classes.js:34:21
+   34| var d_too_few_args: D<> = new D('hello'); // Error too few tparams
+                           ^^^
+
+References:
+   classes.js:30:8
+   30| class D<S, T = string> extends A<T> {}
+              ^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:35:17
+
+Cannot use `D` [1] with more than 2 type arguments. [extra-type-arg]
+
+   classes.js:35:17
+   35| var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js:30:8
+   30| class D<S, T = string> extends A<T> {}
+              ^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:37:2
+
+Cannot cast `d_number.p` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:37:2
+   37| (d_number.p: boolean); // Error number ~> boolean
+        ^^^^^^^^^^
+
+References:
+   classes.js:31:24
+   31| var d_number: D<mixed, number> = new D(123);
+                              ^^^^^^ [1]
+   classes.js:37:14
+   37| (d_number.p: boolean); // Error number ~> boolean
+                    ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:38:2
+
+Cannot cast `d_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:38:2
+   38| (d_void.p: boolean); // Error void ~> boolean
+        ^^^^^^^^
+
+References:
+   classes.js:32:22
+   32| var d_void: D<mixed, void> = new D();
+                            ^^^^ [1]
+   classes.js:38:12
+   38| (d_void.p: boolean); // Error void ~> boolean
+                  ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:39:2
+
+Cannot cast `d_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:39:2
+   39| (d_default.p: boolean); // Error string ~> boolean
+        ^^^^^^^^^^^
+
+References:
+   classes.js:30:16
+   30| class D<S, T = string> extends A<T> {}
+                      ^^^^^^ [1]
+   classes.js:39:15
+   39| (d_default.p: boolean); // Error string ~> boolean
+                     ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:41:32
+
+string [1] is incompatible with number [2]. [incompatible-type]
+
+   classes.js:41:32
+   41| class E<S: string, T: number = S> {} // Error: string ~> number
+                                      ^ [1]
+
+References:
+   classes.js:41:23
+   41| class E<S: string, T: number = S> {} // Error: string ~> number
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:42:27
+
+number [1] is incompatible with `S` [2]. [incompatible-type]
+
+   classes.js:42:27
+   42| class F<S: string, T: S = number> {} // Error: number ~> string
+                                 ^^^^^^ [1]
+
+References:
+   classes.js:42:23
+   42| class F<S: string, T: S = number> {} // Error: number ~> string
+                             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:48:2
+
+Cannot cast `g_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   classes.js:48:2
+   48| (g_default.p: boolean); // Error string ~> boolean
+        ^^^^^^^^^^^
+
+References:
+   classes.js:46:18
+   46| var g_default: G<string> = new G('hello');
+                        ^^^^^^ [1]
+   classes.js:48:15
+   48| (g_default.p: boolean); // Error string ~> boolean
+                     ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:50:13
+
+Cannot resolve name `T`. [cannot-resolve-name]
+
+   50| class H<S = T, T = string> {} // Error - can't refer to T before it's defined
+                   ^
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:54:17
+
+Cannot instantiate `I` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-type-arg]
+
+   classes.js:54:17
+   54| var i_number: I<number> = new I(123); // Error number ~> ?string
+                       ^^^^^^ [1]
+
+References:
+   classes.js:52:13
+   52| class I<T: ?string = *> extends A<T> {}
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:54:31
+
+Cannot call `I` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-call]
+
+   classes.js:54:31
+   54| var i_number: I<number> = new I(123); // Error number ~> ?string
+                                     ^
+
+References:
+   classes.js:54:17
+   54| var i_number: I<number> = new I(123); // Error number ~> ?string
+                       ^^^^^^ [1]
+   classes.js:52:13
+   52| class I<T: ?string = *> extends A<T> {}
+                   ^^^^^^ [2]
+
+
+
+Found 18 errors
