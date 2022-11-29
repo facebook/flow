@@ -4958,6 +4958,39 @@ module Make
   and op_assignment cx loc lhs op rhs =
     let open Ast.Expression in
     let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) loc in
+    let rhs_reason = mk_expression_reason rhs in
+    let update_env result_t =
+      match lhs with
+      | ( _,
+          Ast.Pattern.Identifier
+            { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
+        ) ->
+        let use_op =
+          Op
+            (AssignVar
+               {
+                 var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc);
+                 init = rhs_reason;
+               }
+            )
+        in
+        Env.set_var cx ~use_op name result_t id_loc
+      | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
+        let lhs_prop_reason = mk_pattern_reason lhs in
+        let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
+        let reconstruct_ast mem _ = Ast.Expression.Member mem in
+        ignore
+        @@ assign_member
+             cx
+             ~make_op
+             ~t:result_t
+             ~lhs_loc
+             ~lhs_prop_reason
+             ~reconstruct_ast
+             ~mode:Assign
+             mem
+      | _ -> ()
+    in
     match op with
     | Assignment.PlusAssign
     | Assignment.MinusAssign
@@ -4979,39 +5012,13 @@ module Make
           cx
           ~reason
           ~lhs_reason:(mk_pattern_reason lhs)
-          ~rhs_reason:(mk_expression_reason rhs)
+          ~rhs_reason
           lhs_t
           rhs_t
           (ArithKind.arith_kind_of_assignment_operator op)
       in
       (* enforce state-based guards for binding update, e.g., const *)
-      (match lhs with
-      | ( _,
-          Ast.Pattern.Identifier
-            { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
-        ) ->
-        let use_op =
-          Op
-            (AssignVar
-               { var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc); init = reason }
-            )
-        in
-        Env.set_var cx ~use_op name result_t id_loc
-      | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
-        let lhs_prop_reason = mk_pattern_reason lhs in
-        let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
-        let reconstruct_ast mem _ = Ast.Expression.Member mem in
-        ignore
-        @@ assign_member
-             cx
-             ~make_op
-             ~t:result_t
-             ~lhs_loc
-             ~lhs_prop_reason
-             ~reconstruct_ast
-             ~mode:Assign
-             mem
-      | _ -> ());
+      let () = update_env result_t in
       (lhs_t, lhs_ast, rhs_ast)
     | Assignment.NullishAssign
     | Assignment.AndAssign
@@ -5024,38 +5031,6 @@ module Make
         | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
           Some (lhs_loc, Ast.Expression.Member mem)
         | _ -> None
-      in
-      let update_env result_t =
-        match lhs with
-        | ( _,
-            Ast.Pattern.Identifier
-              { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
-          ) ->
-          let use_op =
-            Op
-              (AssignVar
-                 {
-                   var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc);
-                   init = reason_of_t result_t;
-                 }
-              )
-          in
-          Env.set_var cx ~use_op name result_t id_loc
-        | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
-          let lhs_prop_reason = mk_pattern_reason lhs in
-          let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
-          let reconstruct_ast mem _ = Ast.Expression.Member mem in
-          ignore
-          @@ assign_member
-               cx
-               ~make_op
-               ~t:result_t
-               ~lhs_loc
-               ~lhs_prop_reason
-               ~reconstruct_ast
-               ~mode:Assign
-               mem
-        | _ -> ()
       in
       (match left_expr with
       | None ->

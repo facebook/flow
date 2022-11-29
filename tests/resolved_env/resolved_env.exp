@@ -1135,7 +1135,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- updates.js:18:9
 
-Cannot assign &&= to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    updates.js:18:9
    18|   x &&= 3; // Error: number not assignable to boolean
@@ -1149,7 +1149,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- updates.js:19:9
 
-Cannot assign ||= to `y` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `y` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    updates.js:19:9
    19|   y ||= 3; // Error: number not assignable to boolean
@@ -1163,7 +1163,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- updates.js:20:9
 
-Cannot assign ??= to `z` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `z` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    updates.js:20:9
    20|   z ??= 3; // Error: number not assignable to boolean
