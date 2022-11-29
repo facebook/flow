@@ -56,7 +56,6 @@ and reason_of_use_t = function
   | ArithT { reason; _ } -> reason
   | AndT (reason, _, _) -> reason
   | ArrRestT (_, reason, _, _) -> reason
-  | AssertArithmeticOperandT reason -> reason
   | AssertBinaryInLHST reason -> reason
   | AssertBinaryInRHST reason -> reason
   | AssertForInRHST reason -> reason
@@ -223,7 +222,6 @@ and mod_reason_of_use_t f = function
     ArithT { use_op; reason = f reason; flip; rhs_t; result_t; kind }
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | ArrRestT (use_op, reason, i, t) -> ArrRestT (use_op, f reason, i, t)
-  | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
   | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
   | AssertForInRHST reason -> AssertForInRHST (f reason)
@@ -439,7 +437,6 @@ let rec util_use_op_of_use_t :
   | MixinT (_, _)
   | ComparatorT _
   | UnaryArithT _
-  | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
   | AssertForInRHST _

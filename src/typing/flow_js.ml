@@ -4563,12 +4563,6 @@ struct
         (***********************************************************)
         | (l, ArithT { use_op; reason; flip; rhs_t; result_t; kind }) ->
           flow_arith cx trace use_op reason flip l rhs_t result_t kind
-        (*********************************************************)
-        (* assert operand of update operation is numberesque     *)
-        (*********************************************************)
-        | (_, AssertArithmeticOperandT _) when numberesque l -> ()
-        | (_, AssertArithmeticOperandT _) ->
-          add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t l))
         (**************************)
         (* relational comparisons *)
         (**************************)
@@ -5799,7 +5793,6 @@ struct
       | StrictEqT _
       | ComparatorT _
       | UnaryArithT _
-      | AssertArithmeticOperandT _
       | AssertForInRHST _
       | AssertInstanceofRHST _
       | AssertBinaryInLHST _
@@ -6249,7 +6242,6 @@ struct
       true
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
-    | AssertArithmeticOperandT _
     | AssertBinaryInLHST _
     | AssertBinaryInRHST _
     | AssertForInRHST _

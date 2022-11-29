@@ -288,7 +288,6 @@ struct
     | OrT _
     | NullishCoalesceT _
     | NotT _
-    | AssertArithmeticOperandT _
     | AssertBinaryInLHST _
     | AssertBinaryInRHST _
     | AssertForInRHST _
