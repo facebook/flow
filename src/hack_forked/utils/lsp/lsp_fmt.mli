@@ -21,8 +21,6 @@ val print_range : Lsp.range -> Hh_json.json
 
 val print_location : Lsp.Location.t -> Hh_json.json
 
-val print_definition_location : Lsp.DefinitionLocation.t -> Hh_json.json
-
 val parse_range_exn : Hh_json.json option -> Lsp.range
 
 val parse_range_opt : Hh_json.json option -> Lsp.range option

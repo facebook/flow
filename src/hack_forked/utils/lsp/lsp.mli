@@ -45,13 +45,6 @@ module Location : sig
   }
 end
 
-module DefinitionLocation : sig
-  type t = {
-    location: Location.t;
-    title: string option;
-  }
-end
-
 module MarkupKind : sig
   type t =
     | Markdown
@@ -589,13 +582,13 @@ end
 module Definition : sig
   type params = TextDocumentPositionParams.t
 
-  and result = DefinitionLocation.t list
+  and result = Location.t list
 end
 
 module TypeDefinition : sig
   type params = TextDocumentPositionParams.t
 
-  and result = DefinitionLocation.t list
+  and result = Location.t list
 end
 
 module ApplyWorkspaceEdit : sig

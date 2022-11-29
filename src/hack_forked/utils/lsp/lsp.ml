@@ -75,15 +75,6 @@ module Location = struct
   }
 end
 
-(** Represents a location inside a resource which also wants to display a
-    friendly name to the user. *)
-module DefinitionLocation = struct
-  type t = {
-    location: Location.t;
-    title: string option;
-  }
-end
-
 module MarkupKind = struct
   type t =
     | Markdown
@@ -739,20 +730,18 @@ module DidChangeWatchedFiles = struct
   }
 end
 
-(** Goto Definition request, method="textDocument/definition" *)
+(** Go to Definition request, method="textDocument/definition" *)
 module Definition = struct
   type params = TextDocumentPositionParams.t
 
-  and result = DefinitionLocation.t list
-
-  (* wire: either a single one or an array *)
+  and result = Location.t list
 end
 
-(** Goto TypeDefinition request, method="textDocument/typeDefinition" *)
+(** Go to Type Definition request, method="textDocument/typeDefinition" *)
 module TypeDefinition = struct
   type params = TextDocumentPositionParams.t
 
-  and result = DefinitionLocation.t list
+  and result = Location.t list
 end
 
 (** The workspace/applyEdit request is sent from the server to the client to modify

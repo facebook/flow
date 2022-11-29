@@ -65,17 +65,6 @@ let print_location (location : Location.t) : json =
       ]
   )
 
-let print_definition_location (definition_location : DefinitionLocation.t) : json =
-  DefinitionLocation.(
-    let location = definition_location.location in
-    Jprint.object_opt
-      [
-        ("uri", Some (JSON_String (DocumentUri.to_string location.Location.uri)));
-        ("range", Some (print_range location.Location.range));
-        ("title", Base.Option.map definition_location.title ~f:string_);
-      ]
-  )
-
 let parse_range_exn (json : json option) : range =
   {
     start = Jget.obj_exn json "start" |> parse_position;
@@ -769,7 +758,7 @@ module DefinitionFmt = struct
 
   let params_of_json (params : json option) : params = parse_textDocumentPositionParams params
 
-  let json_of_result (r : result) : json = JSON_Array (Base.List.map r ~f:print_definition_location)
+  let json_of_result (r : result) : json = JSON_Array (Base.List.map r ~f:print_location)
 end
 
 (** completionItem/resolve request *)
