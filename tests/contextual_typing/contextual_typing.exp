@@ -1,3 +1,18 @@
+Error ----------------------------------------------------------------------------------- error_during_synthesis.js:6:32
+
+Cannot call `expectString` with `3` bound to the first parameter because number [1] is incompatible with string [2].
+[incompatible-call]
+
+   error_during_synthesis.js:6:32
+   6|   poly((v) => {}, expectString(3)); // Error: incompatible-call, but v can still be contextually typed
+                                     ^ [1]
+
+References:
+   error_during_synthesis.js:5:33
+   5|   declare function expectString(string): string;
+                                      ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------- immediate_call_expression.js:6:10
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -254,4 +269,4 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 
 
-Found 18 errors
+Found 19 errors
