@@ -11,6 +11,8 @@
  (name flow_parser_dot_js)
  (modes js)
  (modules flow_parser_js flow_parser_dot_js)
+ (js_of_ocaml
+  (flags :standard --no-extern-fs))
  (libraries flow_parser js_of_ocaml))
 
 (dirs
