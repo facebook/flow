@@ -70,7 +70,7 @@ function foo(x: ?number): string {
 }
 ```
 
-Notice the types added to the parameter of the function along with a return type at the end of the function. You might be able to tell from looking at this code that there is an error in the return type since the function can also return an `int`. However, you do not need to visually inspect the code since the Flow background process will be able to catch this error for you when you [check your code](#toc-check-your-code).
+Notice the types added to the parameter of the function along with a return type at the end of the function. You might be able to tell from looking at this code that there is an error in the return type since the function can also return a `number`. However, you do not need to visually inspect the code since the Flow background process will be able to catch this error for you when you [check your code](#toc-check-your-code).
 
 ### Check Your Code {#toc-check-your-code}
 

@@ -10,11 +10,11 @@ exact properties and methods.
 ```js flow-check
 // @flow
 class Foo {
-  serialize() { return '[Foo]'; }
+  serialize(): string { return '[Foo]'; }
 }
 
 class Bar {
-  serialize() { return '[Bar]'; }
+  serialize(): string { return '[Bar]'; }
 }
 
 // $ExpectError
@@ -31,11 +31,11 @@ interface Serializable {
 }
 
 class Foo {
-  serialize() { return '[Foo]'; }
+  serialize(): string { return '[Foo]'; }
 }
 
 class Bar {
-  serialize() { return '[Bar]'; }
+  serialize(): string { return '[Bar]'; }
 }
 
 const foo: Serializable = new Foo(); // Works!
@@ -47,7 +47,7 @@ You can also declare an anonymous interface:
 ```js flow-check
 // @flow
 class Foo {
-  a : number
+  a: number;
 }
 
 (new Foo() : interface { a : number });
@@ -64,18 +64,18 @@ interface Serializable {
 }
 
 class Foo implements Serializable {
-  serialize() { return '[Foo]'; } // Works!
+  serialize(): string { return '[Foo]'; } // Works!
 }
 
 class Bar implements Serializable {
   // $ExpectError
-  serialize() { return 42; } // Error!
+  serialize(): string { return 42; } // Error!
 }
 ```
 
 You can also use `implements` with multiple interfaces.
 
-```js flow-check
+```js
 class Foo implements Bar, Baz {
   // ...
 }
