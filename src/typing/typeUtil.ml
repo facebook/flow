@@ -142,7 +142,7 @@ and reason_of_use_t = function
   | TestPropT (_, reason, _, _, _) -> reason
   | ThisSpecializeT (reason, _, _) -> reason
   | ToStringT (reason, _) -> reason
-  | UnaryMinusT (reason, _) -> reason
+  | UnaryArithT { reason; _ } -> reason
   | VarianceCheckT (reason, _, _, _) -> reason
   | TypeAppVarianceCheckT (_, reason, _, _) -> reason
   | TypeCastT (_, t) -> reason_of_t t
@@ -334,7 +334,7 @@ and mod_reason_of_use_t f = function
   | TestPropT (op, reason, id, n, t) -> TestPropT (op, f reason, id, n, t)
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
   | ToStringT (reason, t) -> ToStringT (f reason, t)
-  | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
+  | UnaryArithT { reason; result_t; kind } -> UnaryArithT { reason = f reason; result_t; kind }
   | VarianceCheckT (reason, tparams, targs, polarity) ->
     VarianceCheckT (f reason, tparams, targs, polarity)
   | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
@@ -438,7 +438,7 @@ let rec util_use_op_of_use_t :
   | SetProtoT (_, _)
   | MixinT (_, _)
   | ComparatorT _
-  | UnaryMinusT (_, _)
+  | UnaryArithT _
   | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
