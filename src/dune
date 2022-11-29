@@ -17,3 +17,16 @@
   flow_parser
   lz4 ; see dune-workspace
   ))
+
+(executable
+  (name flow_dot_js)
+  (modes js)
+  (modules flow_dot_js)
+  (libraries
+    flow_file_sig
+    flow_parser_js
+    flow_parser_utils_aloc
+    flow_typing
+    flow_typing_errors
+    js_of_ocaml)
+  (js_of_ocaml (javascript_files ./js/unix.js)))
