@@ -279,16 +279,6 @@ COPIED_FLOWLIB=\
 COPIED_PRELUDE=\
 	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
-FINDLIB_JS_STUBS=$(shell ocamlfind query $(FINDLIB_PACKAGES) -predicates javascript -o-format -r)
-JS_STUBS=\
-	src/common/xx/xx_stubs.js\
-	src/hack_forked/utils/core/fast_compare.js\
-	src/hack_forked/utils/core/get_build_id.js\
-	src/hack_forked/utils/sys/nproc.js\
-	src/hack_forked/utils/sys/sysinfo.js\
-	src/heap/hh_shared.js\
-	src/js/unix.js
-
 OUNIT_TESTS=\
 	src/common/lwt/__tests__/lwt_tests.native\
 	src/common/ty/__tests__/ty_tests.native\
@@ -334,7 +324,6 @@ endif
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
-JS_FINDLIB_OPTS=$(foreach lib,$(FINDLIB_PACKAGES),-pkg $(lib))
 NATIVE_FINDLIB_OPTS=$(foreach lib,$(NATIVE_FINDLIB_PACKAGES),-pkg $(lib))
 NATIVE_LIB_OPTS=$(foreach lib, $(NATIVE_LIBRARIES),-cclib -l -cclib $(lib))
 ALL_INCLUDE_PATHS=$(sort $(realpath $(BUILT_C_DIRS))) $(EXTRA_INCLUDE_PATHS)
@@ -342,8 +331,7 @@ EXTRA_INCLUDE_OPTS=$(foreach dir, $(ALL_INCLUDE_PATHS),-ccopt -I -ccopt $(dir))
 EXTRA_LIB_OPTS=$(foreach dir, $(EXTRA_LIB_PATHS),-cclib -L -cclib $(dir))
 FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(framework))
 
-BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(FUZZY_PATH_LINKER_FLAGS) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
-LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
+LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(FUZZY_PATH_LINKER_FLAGS) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
 
 # For fuzzy-path
 CXXFLAGS=-s -std=c++11 -Wall -O3 -static-libstdc++
@@ -497,12 +485,14 @@ ounit-tests-ci: build-ounit-tests
 		"_build/$$cmd" -output-junit-file "test-results/ounit/$${cmd//\//zS}.xml"; \
 	done
 
+do-test-js: bin/flow.js
+	node src/__tests__/flow_dot_js_smoke_test.js $(realpath bin/flow.js)
+
 do-test:
 	./runtests.sh bin/flow$(EXE)
 	bin/flow$(EXE) check packages/flow-dev-tools
 	${MAKE} do-test-tool
 	./tool test
-	node src/__tests__/flow_dot_js_smoke_test.js $(realpath bin/flow.js)
 
 do-test-tool:
 	FLOW_BIN=../../bin/flow$(EXE) ${YARN} --cwd packages/flow-dev-tools test
@@ -510,27 +500,16 @@ do-test-tool:
 test-tool: bin/flow$(EXE)
 	${MAKE} do-test-tool
 
-test: bin/flow$(EXE) bin/flow.js
-	${MAKE} do-test
+test-js: bin/flow.js do-test-js
 
-bin/flow.js: _build/scripts/ppx_gen_flowlibs.exe $(JS_STUBS) $(LIBFUZZY_PATH_DEP) $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
-	mkdir -p bin
-	$(OCB) \
-		-pkg js_of_ocaml \
-		-build-dir _build \
-		-lflags -custom \
-		$(INCLUDE_OPTS) $(JS_FINDLIB_OPTS) \
-		-lflags "$(BYTECODE_LINKER_FLAGS)" \
-		src/flow_dot_js.byte
-	js_of_ocaml \
-			--Werror \
-			--opt 3 \
-			--disable genprim \
-			--extern-fs \
-			-o bin/flow.js \
-			$(FINDLIB_JS_STUBS) \
-			$(JS_STUBS) \
-			_build/src/flow_dot_js.byte
+test: bin/flow$(EXE) bin/flow.js
+	${MAKE} do-test do-test-js
+
+.PHONY: bin/flow.js
+bin/flow.js:
+	@mkdir -p $(@D)
+	dune build --profile opt src/flow_dot_js.bc.js
+	install -C _build/default/src/flow_dot_js.bc.js "$@"
 
 js: bin/flow.js
 
