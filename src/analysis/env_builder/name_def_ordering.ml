@@ -601,6 +601,8 @@ struct
                 state)
             state
             providers
+        | WriteLocHint (kind, loc) ->
+          depends_of_node (fun visitor -> visitor#add ~why:loc (kind, loc)) state
         | StringLiteralType _ -> state
         | BuiltinType _ -> state
       in
@@ -788,6 +790,18 @@ struct
             ())
           EnvMap.empty
       in
+      let depends_of_hinted_expression ~for_expression_writes hint expr state =
+        let open Ast.Expression in
+        let state = depends_of_expression ~for_expression_writes expr state in
+        match expr with
+        | ( _,
+            ( Array { Array.elements = []; _ }
+            | Call _ | New _
+            | Object { Object.properties = []; _ } )
+          ) ->
+          depends_of_hint state hint
+        | _ -> state
+      in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
         | Value { hint; expr } ->
@@ -951,21 +965,10 @@ struct
         in
         depends_of_expression rhs state
       in
-      let depends_of_hinted_expression hint expr =
-        let open Ast.Expression in
-        let state = depends_of_expression ~for_expression_writes:true expr EnvMap.empty in
-        match expr with
-        | ( _,
-            ( Array { Array.elements = []; _ }
-            | Call _ | New _
-            | Object { Object.properties = []; _ } )
-          ) ->
-          depends_of_hint state hint
-        | _ -> state
-      in
       function
       | Binding binding -> depends_of_binding binding
-      | ExpressionDef { expr; hint; _ } -> depends_of_hinted_expression hint expr
+      | ExpressionDef { expr; hint; _ } ->
+        depends_of_hinted_expression ~for_expression_writes:true hint expr EnvMap.empty
       | Update _ -> depends_of_update None
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs

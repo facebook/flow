@@ -20,6 +20,7 @@ module Destructure : sig
   val fold_pattern :
     record_identifier:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> 'a) ->
     record_destructuring_intermediate:(ALoc.t -> binding -> unit) ->
+    visit_default_expression:(hint:ast_hint -> (ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
     join:('a -> 'a -> 'a) ->
     default:'a ->
     binding ->
@@ -29,6 +30,7 @@ module Destructure : sig
   val pattern :
     record_identifier:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> unit) ->
     record_destructuring_intermediate:(ALoc.t -> binding -> unit) ->
+    visit_default_expression:(hint:ast_hint -> (ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
     binding ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
     unit
@@ -83,13 +85,20 @@ end = struct
     record_identifier name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) acc
 
   let rec fold_pattern
-      ~record_identifier ~record_destructuring_intermediate ~join ~default acc (ploc, p) =
+      ~record_identifier
+      ~record_destructuring_intermediate
+      ~visit_default_expression
+      ~join
+      ~default
+      acc
+      (ploc, p) =
     match p with
     | Array { Array.elements; annot = _; comments = _ } ->
       record_destructuring_intermediate ploc acc;
       array_elements
         ~record_identifier
         ~record_destructuring_intermediate
+        ~visit_default_expression
         ~join
         ~default
         (ploc, acc)
@@ -99,6 +108,7 @@ end = struct
       object_properties
         ~record_identifier
         ~record_destructuring_intermediate
+        ~visit_default_expression
         ~join
         ~default
         (ploc, acc)
@@ -107,8 +117,18 @@ end = struct
       identifier ~record_identifier acc id
     | Expression _ -> default
 
+  and pattern_hint = function
+    | (loc, Ast.Pattern.Identifier _) -> Hint_t (WriteLocHint (Env_api.OrdinaryNameLoc, loc))
+    | (loc, _) -> Hint_t (WriteLocHint (Env_api.PatternLoc, loc))
+
   and array_elements
-      ~record_identifier ~record_destructuring_intermediate ~join ~default (parent_loc, acc) elts =
+      ~record_identifier
+      ~record_destructuring_intermediate
+      ~visit_default_expression
+      ~join
+      ~default
+      (parent_loc, acc)
+      elts =
     let open Ast.Pattern.Array in
     Base.List.fold
       ~init:(0, default)
@@ -117,11 +137,27 @@ end = struct
           match elt with
           | Hole _ -> default
           | Element (_, { Element.argument = p; default = d }) ->
+            let hint = pattern_hint p in
+            Base.Option.iter d ~f:(visit_default_expression ~hint);
             let acc = array_element (parent_loc, acc) i d in
-            fold_pattern ~record_identifier ~record_destructuring_intermediate ~join ~default acc p
+            fold_pattern
+              ~record_identifier
+              ~record_destructuring_intermediate
+              ~visit_default_expression
+              ~join
+              ~default
+              acc
+              p
           | RestElement (_, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
             let acc = array_rest_element (parent_loc, acc) i in
-            fold_pattern ~record_identifier ~record_destructuring_intermediate ~join ~default acc p
+            fold_pattern
+              ~record_identifier
+              ~record_destructuring_intermediate
+              ~visit_default_expression
+              ~join
+              ~default
+              acc
+              p
         in
         (i + 1, join prev res))
       elts
@@ -132,6 +168,7 @@ end = struct
     let prop
         ~record_identifier
         ~record_destructuring_intermediate
+        ~visit_default_expression
         ~join
         ~default
         (parent_loc, acc)
@@ -140,14 +177,30 @@ end = struct
         p =
       match p with
       | Property (_, { Property.key; pattern = p; default = d; shorthand = _ }) ->
+        let hint = pattern_hint p in
+        Base.Option.iter d ~f:(visit_default_expression ~hint);
         let (acc, xs, has_computed') = object_property (parent_loc, acc) xs key d in
-        ( fold_pattern ~record_identifier ~record_destructuring_intermediate ~join ~default acc p,
+        ( fold_pattern
+            ~record_identifier
+            ~record_destructuring_intermediate
+            ~visit_default_expression
+            ~join
+            ~default
+            acc
+            p,
           xs,
           has_computed || has_computed'
         )
       | RestElement (_, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
         let acc = object_rest_property (parent_loc, acc) xs has_computed in
-        ( fold_pattern ~record_identifier ~record_destructuring_intermediate ~join ~default acc p,
+        ( fold_pattern
+            ~record_identifier
+            ~record_destructuring_intermediate
+            ~visit_default_expression
+            ~join
+            ~default
+            acc
+            p,
           xs,
           false
         )
@@ -155,6 +208,7 @@ end = struct
     let rec loop
         ~record_identifier
         ~record_destructuring_intermediate
+        ~visit_default_expression
         ~join
         ~default
         res_acc
@@ -167,6 +221,7 @@ end = struct
           prop
             ~record_identifier
             ~record_destructuring_intermediate
+            ~visit_default_expression
             ~join
             ~default
             acc
@@ -177,6 +232,7 @@ end = struct
         loop
           ~record_identifier
           ~record_destructuring_intermediate
+          ~visit_default_expression
           ~join
           ~default
           (join res_acc res)
@@ -185,10 +241,17 @@ end = struct
           has_computed
           ps
     in
-    fun ~record_identifier ~record_destructuring_intermediate ~join ~default acc ps ->
+    fun ~record_identifier
+        ~record_destructuring_intermediate
+        ~visit_default_expression
+        ~join
+        ~default
+        acc
+        ps ->
       loop
         ~record_identifier
         ~record_destructuring_intermediate
+        ~visit_default_expression
         ~join
         ~default
         default
@@ -505,6 +568,7 @@ class def_finder env_entries providers toplevel_scope =
       Destructure.pattern
         ~record_identifier
         ~record_destructuring_intermediate:this#add_destructure_binding
+        ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
         (Root root)
         pattern
 
@@ -843,6 +907,18 @@ class def_finder env_entries providers toplevel_scope =
         );
       super#declare_variable loc decl
 
+    method! pattern_array_element ?kind elem =
+      let open Ast.Pattern.Array.Element in
+      let (loc, { argument; default = _ }) = elem in
+      (* Default should already be visited during destructuring visit. *)
+      super#pattern_array_element ?kind (loc, { argument; default = None })
+
+    method! pattern_object_property ?kind prop =
+      let open Ast.Pattern.Object.Property in
+      let (loc, { key; pattern; default = _; shorthand }) = prop in
+      (* Default should already be visited during destructuring visit. *)
+      super#pattern_object_property ?kind (loc, { key; pattern; default = None; shorthand })
+
     method! function_param (loc, _) = fail loc "Should be visited by visit_function_param"
 
     method private visit_function_param ~hint (param : ('loc, 'loc) Ast.Function.Param.t) =
@@ -898,6 +974,7 @@ class def_finder env_entries providers toplevel_scope =
            (Destructure.fold_pattern
               ~record_identifier
               ~record_destructuring_intermediate:this#add_destructure_binding
+              ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
               ~default:false
               ~join:( || )
               (Root source)
