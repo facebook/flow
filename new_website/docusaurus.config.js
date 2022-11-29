@@ -52,6 +52,11 @@ module.exports = {
     prism: {
       theme: require('prism-react-renderer/themes/github'),
     },
+    colorMode: {
+      defaultMode: 'light',
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
+    },
     navbar: {
       logo: {
         alt: 'My Facebook Project Logo',
