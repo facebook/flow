@@ -186,7 +186,7 @@ Error --------------------------------------------------------------------------
 
 Redundant argument. The values set by this argument are overwritten later in this comment. [lint-setting]
 
-   60| //flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+   60| //flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off, sketchy-null-bigint:off
                   ^^^^^^^^^^^^^^^^^^
 
 
@@ -194,7 +194,7 @@ Error --------------------------------------------------------------------------
 
 Redundant argument. The values set by this argument are overwritten later in this comment. [lint-setting]
 
-   61| //flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+   61| //flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off, sketchy-null-bigint:off
                        ^^^^^^^^^^^^^^^^^^
 
 

@@ -9,10 +9,12 @@ type sketchy_null_kind =
   | SketchyNullBool
   | SketchyNullString
   | SketchyNullNumber
+  | SketchyNullBigInt
   | SketchyNullMixed
   | SketchyNullEnumBool
   | SketchyNullEnumString
   | SketchyNullEnumNumber
+  | SketchyNullEnumBigInt
 
 type sketchy_number_kind = SketchyNumberAnd
 
@@ -57,6 +59,9 @@ let string_of_sketchy_null_kind = function
   | SketchyNullNumber
   | SketchyNullEnumNumber ->
     "sketchy-null-number"
+  | SketchyNullBigInt
+  | SketchyNullEnumBigInt ->
+    "sketchy-null-bigint"
   | SketchyNullMixed -> "sketchy-null-mixed"
 
 let string_of_sketchy_number_kind = function
@@ -93,14 +98,17 @@ let kinds_of_string = function
         SketchyNull SketchyNullBool;
         SketchyNull SketchyNullString;
         SketchyNull SketchyNullNumber;
+        SketchyNull SketchyNullBigInt;
         SketchyNull SketchyNullMixed;
         SketchyNull SketchyNullEnumBool;
         SketchyNull SketchyNullEnumString;
         SketchyNull SketchyNullEnumNumber;
+        SketchyNull SketchyNullEnumBigInt;
       ]
   | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool; SketchyNull SketchyNullEnumBool]
   | "sketchy-null-string" -> Some [SketchyNull SketchyNullString; SketchyNull SketchyNullEnumString]
   | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber; SketchyNull SketchyNullEnumNumber]
+  | "sketchy-null-bigint" -> Some [SketchyNull SketchyNullBigInt; SketchyNull SketchyNullEnumBigInt]
   | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
   | "sketchy-number" -> Some [SketchyNumber SketchyNumberAnd]
   | "sketchy-number-and" -> Some [SketchyNumber SketchyNumberAnd]

@@ -137,6 +137,7 @@ type error_code =
   | SketchyNullMixed
   | SketchyNullNumber
   | SketchyNullString
+  | SketchyNullBigInt
   | SketchyNumberAnd
   | Speculation
   | SpeculationAmbiguous
@@ -180,6 +181,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.SketchyNull (Lints.SketchyNullBool | Lints.SketchyNullEnumBool) -> SketchyNullBool
   | Lints.SketchyNull (Lints.SketchyNullString | Lints.SketchyNullEnumString) -> SketchyNullString
   | Lints.SketchyNull (Lints.SketchyNullNumber | Lints.SketchyNullEnumNumber) -> SketchyNullNumber
+  | Lints.SketchyNull (Lints.SketchyNullBigInt | Lints.SketchyNullEnumBigInt) -> SketchyNullBigInt
   | Lints.SketchyNull Lints.SketchyNullMixed -> SketchyNullMixed
   | Lints.DefaultImportAccess -> DefaultImportAccess
   | Lints.InvalidImportStarUse -> InvalidImportStarUse
@@ -319,6 +321,7 @@ let string_of_code : error_code -> string = function
   | SketchyNullBool -> "sketchy-null-bool"
   | SketchyNullMixed -> "sketchy-null-mixed"
   | SketchyNullNumber -> "sketchy-null-number"
+  | SketchyNullBigInt -> "sketchy-null-bigint"
   | SketchyNullString -> "sketchy-null-string"
   | SketchyNumberAnd -> "sketchy-number-and"
   | Speculation -> "speculation"

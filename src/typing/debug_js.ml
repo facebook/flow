@@ -1609,10 +1609,12 @@ let dump_error_message =
           | SketchyNullBool -> "SketchyNullBool"
           | SketchyNullString -> "SketchyNullString"
           | SketchyNullNumber -> "SketchyNullNumber"
+          | SketchyNullBigInt -> "SketchyNullBigInt"
           | SketchyNullMixed -> "SketchyNullMixed"
           | SketchyNullEnumBool -> "SketchyNullEnumBool"
           | SketchyNullEnumString -> "SketchyNullEnumString"
           | SketchyNullEnumNumber -> "SketchyNullEnumNumber"
+          | SketchyNullEnumBigInt -> "SketchyNullEnumBigInt"
         in
         spf
           "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
