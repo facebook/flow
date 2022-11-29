@@ -2,10 +2,10 @@
 
 let tests = [
   function(y: number) {
-    y++;
-    y--;
-    ++y;
-    --y;
+    (y++: number);
+    (y--: number);
+    (++y: number);
+    (--y: number);
   },
 
   function(y: string) {
@@ -55,5 +55,12 @@ let tests = [
 
   function(y: empty) {
     (y++: empty); // ok
+  },
+
+  function(y: bigint) {
+    (y++: bigint);
+    (y--: bigint);
+    (++y: bigint);
+    (--y: bigint);
   },
 ];
