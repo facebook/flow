@@ -1198,6 +1198,10 @@ Flags: --pretty
       "name":"?.findIndex",
       "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => number)"
     },
+    {
+      "name":"?.findLast",
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => (T | void))"
+    },
     {"name":"?.flat","type":"void | ((depth: number) => Array<mixed>)"},
     {
       "name":"?.flatMap",
@@ -1293,6 +1297,10 @@ Flags: --pretty
     {
       "name":"findIndex",
       "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => number"
+    },
+    {
+      "name":"findLast",
+      "type":"<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => (T | void)"
     },
     {"name":"flat","type":"(depth: number) => Array<mixed>"},
     {

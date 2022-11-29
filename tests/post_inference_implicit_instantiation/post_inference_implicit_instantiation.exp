@@ -319,8 +319,8 @@ Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-miss
              ^^^
 
 References:
-   <BUILTINS>/core.js:879:15
-   879| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:889:15
+   889| declare class Array<T> extends $ReadOnlyArray<T> {
                       ^^^^^ [1]
 
 
@@ -367,8 +367,8 @@ Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-miss
              ^^^
 
 References:
-   <BUILTINS>/core.js:879:15
-   879| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:889:15
+   889| declare class Array<T> extends $ReadOnlyArray<T> {
                       ^^^^^ [1]
 
 
