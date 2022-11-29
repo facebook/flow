@@ -291,6 +291,9 @@ struct
     | AssertArithmeticOperandT _
     | AssertBinaryInLHST _
     | AssertBinaryInRHST _
+    | AssertForInRHST _
+    | AssertInstanceofRHST _
+    | AssertIterableT _
     | ObjAssignToT _
     | ObjAssignFromT _
     | ObjTestT _
@@ -312,9 +315,6 @@ struct
     (* When we have ChoiceKitUseT, we are already stuck. *)
     | ChoiceKitUseT _ ->
       UpperEmpty (* Remaining unhandled upper bounds *)
-    | AssertForInRHST _
-    | AssertInstanceofRHST _
-    | AssertIterableT _
     | SpecializeT _
     | ThisSpecializeT _
     | VarianceCheckT _
