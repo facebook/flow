@@ -279,22 +279,6 @@ COPIED_FLOWLIB=\
 COPIED_PRELUDE=\
 	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
-OUNIT_TESTS=\
-	src/common/lwt/__tests__/lwt_tests.native\
-	src/common/ty/__tests__/ty_tests.native\
-	src/common/utils/__tests__/common_utils_tests.native\
-	src/common/semver/__tests__/semver_tests.native\
-	src/hack_forked/utils/http_lite/__tests__/http_lite_test.native\
-	src/hack_forked/utils/lsp/__tests__/lsp_fmt_test.native\
-	src/hack_forked/utils/sys/__tests__/sys_utils_tests.native\
-	src/parser/__tests__/parser_tests.native\
-	src/parser_utils/__tests__/parser_utils_tests.native\
-	src/parser_utils/output/__tests__/parser_utils_output_tests.native\
-	src/parser_utils/output/printers/__tests__/parser_utils_output_printers_tests.native\
-	src/services/references/__tests__/find_refs_tests.native\
-	src/third-party/fuzzy-path/test/test.native
-	# src/typing/__tests__/typing_tests.native
-
 ################################################################################
 #                                    Rules                                     #
 ################################################################################
@@ -308,7 +292,6 @@ LZ4_OBJECT_FILES=$(patsubst %.c,%.o,$(LZ4_C_FILES))
 BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
-BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 BUILT_LZ4_OBJECT_FILES=$(addprefix _build/,$(LZ4_OBJECT_FILES))
 
 FUZZY_PATH_DEPS=src/third-party/fuzzy-path/libfuzzy-path.a
@@ -456,34 +439,14 @@ bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
 	cp _build/src/flow.native $@
 
-# builds each ounit test individually
-$(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
-		-I $(patsubst _build/%,%,$(@D)) \
-		-lflags "$(LINKER_FLAGS)" \
-		$(patsubst _build/%,%,$@)
-
-# builds all ounit tests at once
-.PHONY: build-ounit-tests
-build-ounit-tests: $(BUILT_OBJECT_FILES) FORCE
-	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) -tag thread $(NATIVE_FINDLIB_OPTS) \
-		$(foreach dir,$(dir $(OUNIT_TESTS)),-I $(dir)) \
-		-lflags "$(LINKER_FLAGS)" \
-		$(OUNIT_TESTS)
-
 .PHONY: ounit-tests
-ounit-tests: build-ounit-tests
-	@for cmd in $(BUILT_OUNIT_TESTS); do \
-		echo "Running $$cmd:"; \
-		"$$cmd"; \
-	done
+ounit-tests:
+	dune runtest
 
 .PHONY: ounit-tests-ci
-ounit-tests-ci: build-ounit-tests
+ounit-tests-ci:
 	mkdir -p test-results/ounit
-	for cmd in $(OUNIT_TESTS); do \
-		"_build/$$cmd" -output-junit-file "test-results/ounit/$${cmd//\//zS}.xml"; \
-	done
+	OUNIT_CI=true OUNIT_OUTPUT_JUNIT_FILE='$(shell pwd)/test-results/ounit/$$(suite_name).xml' dune runtest --force
 
 do-test-js: bin/flow.js
 	node src/__tests__/flow_dot_js_smoke_test.js $(realpath bin/flow.js)
