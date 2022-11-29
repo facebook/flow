@@ -156,3 +156,8 @@ function Diffs() {
   d4[0]; // error
   (d4: {|[string]: number, bar: number|});
 }
+
+type BaseProps<T> = {|v: T|};
+declare function ResolveUnion<T: React$Key>({|...BaseProps<T>, foo: string|}): T;
+const resolved_union_result = ResolveUnion({v: 3, foo: ''});
+(resolved_union_result: number);

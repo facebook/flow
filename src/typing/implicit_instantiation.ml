@@ -329,7 +329,6 @@ struct
     | IntersectionPreprocessKitT _
     | ReactPropsToOut _
     | ReactInToProps _
-    | ResolveUnionT _
     | FilterOptionalT _
     | FilterMaybeT _
     | SealGenericT _ ->
@@ -352,6 +351,8 @@ struct
       | ResolveSpreadsToCallT _ ->
         UpperNonT u)
     | ResolveSpreadT _ -> UpperNonT u
+    | ResolveUnionT { reason = _; unresolved = _; resolved = _; upper = u; id = _ } ->
+      t_of_use_t cx tvar u
     | ObjKitT (_, r, _, tool, tout) ->
       (match tool with
       | Object.(ReadOnly | Partial | ObjectRep | ObjectWiden _ | Object.ReactConfig _) ->
