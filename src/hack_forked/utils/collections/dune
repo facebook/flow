@@ -1,4 +1,5 @@
 (library
  (name collections)
+ (package flow_parser)
  (wrapped false)
  (libraries base))
