@@ -24,8 +24,8 @@ Cannot build a typed interface for this module. You should annotate the exports 
 determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
 expression. [signature-verification-failure]
 
-   4| export default test(); // missing annotation error since T appears contravariantly.
-                     ^^^^^^
+   4| export default test<mixed>();
+                     ^^^^^^^^^^^^^
 
 
 
