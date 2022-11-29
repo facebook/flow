@@ -17,6 +17,7 @@ z = x; // error, bigint </: 10n
 (BigInt.asIntN(3, y): bigint); // ok
 (BigInt.asUintN(3, y): bigint); // ok
 (x.valueOf(): bigint); // ok
+(BigInt(3n): bigint); // ok
 
 BigInt(null); // error
 
