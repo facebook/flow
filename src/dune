@@ -6,6 +6,8 @@
 
 (executable
  (name flow)
+ (public_name flow)
+ (package flowtype)
  (modes native byte_complete)
  (modules flow)
  (libraries
