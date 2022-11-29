@@ -2153,6 +2153,8 @@ end = struct
       | IMStatic
       | IMInstance
 
+    let no_members = return (Ty.mk_object ~obj_kind:Ty.ExactObj [])
+
     let rec set_proto_prop =
       let open Ty in
       function
@@ -2256,7 +2258,7 @@ end = struct
       match opaquetype with
       | { Type.underlying_t = Some t; _ } when same_file -> type__ ~env ~proto ~imode t
       | { Type.super_t = Some t; _ } -> type__ ~env ~proto ~imode t
-      | _ -> return (Ty.mk_object ~obj_kind:Ty.ExactObj [])
+      | _ -> no_members
 
     and this_class_t ~env ~proto ~imode t =
       match imode with
@@ -2276,6 +2278,7 @@ end = struct
       | DefT (r, _, (StrT _ | SingletonStrT _)) -> primitive ~env r "String"
       | DefT (r, _, (BoolT _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
       | DefT (r, _, SymbolT) -> primitive ~env r "Symbol"
+      | DefT (_, _, EnumT _) -> no_members
       | ObjProtoT r -> primitive ~env r "Object"
       | FunProtoT r -> primitive ~env r "Function"
       | DefT (r, _, ObjT o) ->
