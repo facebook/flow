@@ -33,3 +33,6 @@ if (bar.x === 0n) {
 } else {
     (bar.a : "bar");
 }
+
+(0n < 0n : boolean); // ok
+(0n > ""); // error

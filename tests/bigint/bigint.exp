@@ -63,5 +63,19 @@ References:
                   ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- bigint.js:38:2
 
-Found 3 errors
+Cannot compare bigint [1] to string [2]. [invalid-compare]
+
+   bigint.js:38:2
+   38| (0n > ""); // error
+        ^^ [1]
+
+References:
+   bigint.js:38:7
+   38| (0n > ""); // error
+             ^^ [2]
+
+
+
+Found 4 errors
