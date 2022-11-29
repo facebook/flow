@@ -53,11 +53,11 @@
         "operator":"-",
         "prefix":true,
         "argument":{
-          "type":"BigIntLiteral",
+          "type":"Literal",
           "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":13}},
           "range":[11,13],
           "value":null,
-          "bigint":"3n"
+          "bigint":"3"
         }
       },
       "directive":null
