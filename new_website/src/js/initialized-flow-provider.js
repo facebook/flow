@@ -27,6 +27,9 @@ async function checkContents(input /*: string */) {
 module.exports = async function getFlowErrors(
   code /*: string */,
 ) /*: Promise<string> */ {
+  if (process.env.NO_INLINE_FLOW_ERRORS) {
+    return '[]';
+  }
   return JSON.stringify(
     (await checkContents(code)).errors
       .flatMap(({message}) => message)
