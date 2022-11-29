@@ -460,6 +460,7 @@ and 'loc t' =
   | EEmptyArrayNoProvider of { loc: 'loc }
   | EUnusedPromise of { loc: 'loc }
   | EBigIntRShift3 of 'loc virtual_reason
+  | EBigIntNumCoerce of 'loc virtual_reason
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1091,6 +1092,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
   | EUnusedPromise { loc } -> EUnusedPromise { loc = f loc }
   | EBigIntRShift3 r -> EBigIntRShift3 (map_reason r)
+  | EBigIntNumCoerce r -> EBigIntNumCoerce (map_reason r)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1326,7 +1328,8 @@ let util_use_op_of_msg nope util = function
   | EDuplicateClassMember _
   | EEmptyArrayNoProvider _
   | EUnusedPromise _
-  | EBigIntRShift3 _ ->
+  | EBigIntRShift3 _
+  | EBigIntNumCoerce _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1390,7 +1393,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDefinitionCycle ((reason, _, _), _)
   | EInvalidConstructor reason
   | EInvalidDeclaration { declaration = reason; _ }
-  | EBigIntRShift3 reason ->
+  | EBigIntRShift3 reason
+  | EBigIntNumCoerce reason ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -4016,6 +4020,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text "is a bigint, and all bigints are signed.";
           ];
       }
+  | EBigIntNumCoerce reason ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot perform unary plus because a ";
+            ref reason;
+            text " ";
+            text "cannot be coerced to number.";
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -4288,6 +4303,7 @@ let error_code_of_message err : error_code option =
   | EDuplicateClassMember _ -> Some DuplicateClassMember
   | EEmptyArrayNoProvider _ -> Some EmptyArrayNoAnnot
   | EBigIntRShift3 _ -> Some BigIntRShift3
+  | EBigIntNumCoerce _ -> Some BigIntNumCoerce
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _

@@ -106,15 +106,19 @@ let hoist_function_declarations stmts =
   in
   func_decs @ other_stmts
 
-let negate_number_literal (value, raw) =
+let negate_raw_lit raw =
   let raw_len = String.length raw in
-  let raw =
-    if raw_len > 0 && raw.[0] = '-' then
-      String.sub raw 1 (raw_len - 1)
-    else
-      "-" ^ raw
-  in
-  (~-.value, raw)
+  if raw_len > 0 && raw.[0] = '-' then
+    String.sub raw 1 (raw_len - 1)
+  else
+    "-" ^ raw
+
+let negate_number_literal (value, raw) = (~-.value, negate_raw_lit raw)
+
+let negate_bigint_literal (value, raw) =
+  match value with
+  | None -> (None, raw)
+  | Some value -> (Some (Int64.neg value), negate_raw_lit raw)
 
 let is_call_to_invariant callee =
   match callee with
