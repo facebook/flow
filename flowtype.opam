@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "flowtype"
-version: "0.193.0"
+version: "0.194.0"
 maintainer: "flow@fb.com"
 authors: "Flow Team <flow@fb.com>"
 license: "MIT"
@@ -15,7 +15,7 @@ depends: [
   "core_kernel" {>= "v0.14.1" & < "v0.15.0"}
   "dtoa" {>= "0.3.2"}
   "fileutils" {>= "0.6.3"}
-  "flow_parser" {= "0.193.0"}
+  "flow_parser" {= "0.194.0"}
   "ounit2" {with-test}
   "sedlex" {>= "2.3"}
   "lwt" {>= "5.4.0"}

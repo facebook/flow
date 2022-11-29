@@ -1,3 +1,19 @@
+### 0.194.0
+
+Likely to cause new Flow errors:
+* Casting an enum to `empty` will now properly error, e.g. `(E.A: empty)`.
+
+New Features:
+* Added a quick fix for the `unused-promise-in-async-scope` lint which will insert `await`.
+* Added support for a number of additional bigint features. These include allowing comparison (`<`, `>`, `<=`, `>=`), update (`++`, `--`) and arithmetic operators (`+`, `-`, `~`, `*`) to be used with bigints.
+* Added `sketchy-null-bigint` lint to match the behavior of the other `sketchy-null-*` lints for bigints.
+* Added Flow Enums support for `declare enum` and `declare export enum`. Keep in mind that users need to have enabled Flow Enums if you wish to create library definitions that use them.
+
+Parser:
+* Switch to dune to build and install the `flow_parser` OPAM package. Some modules in `src/parser/` like `Comment_utils` are newly available.
+* Decrease the size of `flow_parser.js` by roughly 25%, to 768kb.
+* Fix a bug where `declare opaque type` was parsed as an `OpaqueType` when interned comments are disabled.
+
 ### 0.193.0
 
 New Features:
