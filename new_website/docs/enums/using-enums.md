@@ -556,7 +556,7 @@ If you wish to map from an enum value to another value, you should use a [functi
 #### Disjoint object unions {#toc-disjoint-object-unions}
 A defining feature of enums is that unlike unions, each enum member does not form its own separate type. Every member has the same type, the enum type.
 This allows enum usage to be analyzed by Flow in a consistently fast way, however it means that in certain situations which require separate types, we can’t use enums.
-Consider the following union, following the [disjoint object union](../../types/unions/#toc-disjoint-unions) pattern:
+Consider the following union, following the [disjoint object union](../../types/unions/#toc-disjoint-object-unions) pattern:
 
 ```js
 type Action =
