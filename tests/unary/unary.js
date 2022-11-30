@@ -67,3 +67,18 @@ function x15(y: bigint) {
 function x16(y: bigint): bigint {
   return ~y; // ok
 }
+
+function x17(y: any) {
+  (+y: number); // ok, + coerces to number
+  (+y: bigint); // error, bigint ~> number
+  (-y: number); // ok, any
+  (-y: bigint); // ok, any
+  (~y: number); // ok, any
+  (~y: bigint); // ok, any
+}
+
+function x18(y: empty) {
+  (+y: empty);
+  (-y: empty);
+  (~y: empty);
+}

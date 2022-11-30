@@ -10,8 +10,8 @@ let tests = [
 
   function(y: string) {
     y++; // error, we don't allow coercion here
-    (y: number); // ok, y is a number now
-    y++; // error, but you still can't write a number to a string
+    (y: number); // ok, y is now any
+    (y: bigint); // ok, y is now any
   },
 
   function(y: string) {

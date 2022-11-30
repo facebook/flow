@@ -4620,7 +4620,7 @@ struct
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, result_t)
         | (_, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update }) ->
-          rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t);
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.make (AnyError None) reason, result_t);
           add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t l))
         (************************)
         (* binary `in` operator *)
@@ -5596,6 +5596,8 @@ struct
       | ((RShift3 | Other), l, DefT (_, _, EmptyT)) when numberesque l ->
         rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
       (* any <> any *)
+      | ((RShift3 | Other), AnyT (_, src), AnyT _) ->
+        rec_flow_t cx trace ~use_op:unknown_use (AnyT.at src loc, u)
       (* any <> empty *)
       (* empty <> any *)
       (* empty <> empty *)

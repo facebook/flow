@@ -210,7 +210,7 @@ declare var anEmpty: empty;
 (anAny + anEmpty : empty); // ok
 
 // anAny * _
-(anAny * anAny : number); // ok
+(anAny * anAny : any); // ok
 (anAny * anEmpty : number); // ok
 
 // anEmpty + _
