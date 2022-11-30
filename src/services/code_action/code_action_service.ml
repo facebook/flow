@@ -389,21 +389,22 @@ let loc_opt_intersects ~loc ~error_loc =
   | None -> true
   | Some loc -> Loc.intersects error_loc loc
 
-let ast_transform_of_error ?loc = function
+let ast_transforms_of_error ?loc = function
   | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some fixed_prop_name; _ } ->
     let error_loc = Reason.loc_of_reason reason in
     if loc_opt_intersects ~error_loc ~loc then
       let original_prop_name = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
       let title = Printf.sprintf "Replace %s with `%s`" original_prop_name fixed_prop_name in
-      Some
+      [
         {
           title;
           diagnostic_title = "replace_enum_prop_typo_at_target";
           transform = Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name;
           target_loc = error_loc;
-        }
+        };
+      ]
     else
-      None
+      []
   | Error_message.EClassToObject (reason_class, reason_obj, _) ->
     let error_loc = Reason.loc_of_reason reason_class in
     if loc_opt_intersects ~error_loc ~loc then
@@ -411,15 +412,16 @@ let ast_transform_of_error ?loc = function
       let original = reason_obj |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc in
       let title = Utils_js.spf "Rewrite %s as an interface" original in
       let diagnostic_title = "replace_obj_with_interface" in
-      Some
+      [
         {
           title;
           diagnostic_title;
           transform = Autofix_interface.replace_object_at_target;
           target_loc = obj_loc;
-        }
+        };
+      ]
     else
-      None
+      []
   | Error_message.EMethodUnbinding { reason_op; reason_prop; _ } ->
     let error_loc = Reason.loc_of_reason reason_op in
     if loc_opt_intersects ~error_loc ~loc then
@@ -427,26 +429,28 @@ let ast_transform_of_error ?loc = function
       let original = reason_prop |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc in
       let title = Utils_js.spf "Rewrite %s as an arrow function" original in
       let diagnostic_title = "replace_method_with_arrow" in
-      Some
+      [
         {
           title;
           diagnostic_title;
           transform = Autofix_method.replace_method_at_target;
           target_loc = method_loc;
-        }
+        };
+      ]
     else
-      None
+      []
   | Error_message.EUnusedPromise { loc = error_loc } ->
     if loc_opt_intersects ~error_loc ~loc then
-      Some
+      [
         {
           title = "Insert `await`";
           diagnostic_title = "insert_await";
           transform = Autofix_unused_promise.insert_await;
           target_loc = error_loc;
-        }
+        };
+      ]
     else
-      None
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
@@ -454,15 +458,16 @@ let ast_transform_of_error ?loc = function
       if loc_opt_intersects ~error_loc ~loc then
         let title = Printf.sprintf "Replace `%s` with `%s`" prop_name suggestion in
         let diagnostic_title = "replace_prop_typo_at_target" in
-        Some
+        [
           {
             title;
             diagnostic_title;
             transform = Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name:suggestion;
             target_loc = error_loc;
-          }
+          };
+        ]
       else
-        None
+        []
     | Error_message.IncompatibleUse
         { loc = error_loc; upper_kind = Error_message.IncompatibleGetPropT _; reason_lower; _ } ->
       (match (loc_opt_intersects ~error_loc ~loc, Reason.desc_of_reason reason_lower) with
@@ -473,15 +478,16 @@ let ast_transform_of_error ?loc = function
             (Reason.string_of_desc r)
         in
         let diagnostic_title = "add_optional_chaining" in
-        Some
+        [
           {
             title;
             diagnostic_title;
             transform = Autofix_optional_chaining.add_optional_chaining;
             target_loc = error_loc;
-          }
-      | _ -> None)
-    | _ -> None)
+          };
+        ]
+      | _ -> [])
+    | _ -> [])
 
 let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only uri loc =
   let include_quick_fixes = include_quick_fixes only in
@@ -516,20 +522,22 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only
         | error_message ->
           let actions =
             if include_quick_fixes then
-              match ast_transform_of_error ~loc error_message with
-              | None -> actions
-              | Some { title; diagnostic_title; transform; target_loc } ->
-                autofix_in_upstream_file
-                  ~reader
-                  ~diagnostics
-                  ~ast
-                  ~options
-                  ~title
-                  ~diagnostic_title
-                  ~transform
-                  uri
-                  target_loc
-                :: actions
+              let quick_fixes =
+                ast_transforms_of_error ~loc error_message
+                |> Base.List.map ~f:(fun { title; diagnostic_title; transform; target_loc } ->
+                       autofix_in_upstream_file
+                         ~reader
+                         ~diagnostics
+                         ~ast
+                         ~options
+                         ~title
+                         ~diagnostic_title
+                         ~transform
+                         uri
+                         target_loc
+                   )
+              in
+              quick_fixes @ actions
             else
               actions
           in

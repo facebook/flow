@@ -32,7 +32,7 @@ type ast_transform_of_error = {
   target_loc: Loc.t;
 }
 
-val ast_transform_of_error : ?loc:Loc.t -> Loc.t Error_message.t' -> ast_transform_of_error option
+val ast_transforms_of_error : ?loc:Loc.t -> Loc.t Error_message.t' -> ast_transform_of_error list
 
 val code_actions_at_loc :
   options:Options.t ->

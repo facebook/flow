@@ -8,7 +8,7 @@
 open Utils_js
 
 (* transformable errors are a subset of all errors; specifically,
- * the errors for which Code_action_service.ast_transform_of_error = Some _ *)
+ * the errors for which Code_action_service.ast_transforms_of_error is non-empty *)
 type transformable_error = Loc.t Error_message.t'
 
 (* Codemod-specific shared mem heap *)
@@ -64,8 +64,9 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
           |> Flow_error.msg_of_error
           |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
         in
-        match Code_action_service.ast_transform_of_error error_message with
-        | Some Code_action_service.{ target_loc; _ } when should_include_error error_message ->
+        match Code_action_service.ast_transforms_of_error error_message with
+        (* TODO(T138883537): There should be a way to configure which fix to apply *)
+        | [Code_action_service.{ target_loc; _ }] when should_include_error error_message ->
           let file_key = Base.Option.value_exn (Loc.source target_loc) in
           let transformable_error_map = FilenameMap.singleton file_key [error_message] in
           union_transformable_errors_maps transformable_error_map acc
@@ -99,8 +100,8 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
                | Some transformable_errors ->
                  Base.List.fold transformable_errors ~init:ast ~f:(fun acc_ast error_message ->
                      let Code_action_service.{ transform; target_loc; _ } =
-                       Base.Option.value_exn
-                         (Code_action_service.ast_transform_of_error error_message)
+                       (* TODO(T138883537): There should be a way to configure which fix to apply *)
+                       Base.List.hd_exn (Code_action_service.ast_transforms_of_error error_message)
                      in
                      transform acc_ast target_loc
                  )
