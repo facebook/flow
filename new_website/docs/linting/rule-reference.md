@@ -3,42 +3,25 @@ title: Lint Rule Reference
 slug: /linting/rule-reference
 ---
 
-### Available Lint Rules {#toc-available-lint-rules}
-
-* [`all`](#toc-all)
-* [`ambiguous-object-type`](#toc-ambiguous-object-type)
-* [`deprecated-type`](#toc-deprecated-type)
-* [`deprecated-utility`](#toc-deprecated-utility)
-* [`implicit-inexact-object`](#toc-implicit-inexact-object)
-* [`nonstrict-import`](#toc-nonstrict-import)
-* [`sketchy-null`](#toc-sketchy-null)
-* [`sketchy-number`](#toc-sketchy-number)
-* [`unclear-type`](#toc-unclear-type)
-* [`unnecessary-invariant`](#toc-unnecessary-invariant)
-* [`unnecessary-optional-chain`](#toc-unnecessary-optional-chain)
-* [`unsafe-getters-setters`](#toc-unsafe-getters-setters)
-* [`untyped-import`](#toc-untyped-import)
-* [`untyped-type-import`](#toc-untyped-type-import)
-
-#### `all` {#toc-all}
+### `all` {#toc-all}
 While `all` isn't technically a lint rule, it's worth mentioning here. `all` sets the default
 level for lint rules that don't have a level set explicitly. `all` can only
 occur as the first entry in a `.flowconfig` or as the first rule in a `--lints`
 flag. It's not allowed in comments at all because it would have different
 semantics than would be expected.
 
-#### `ambiguous-object-type` {#toc-ambiguous-object-type}
+### `ambiguous-object-type` {#toc-ambiguous-object-type}
 Like [`implicit-inexact-object`](#toc-implicit-inexact-object), except triggers even when the `exact_by_default` option is set to `true`.
 
-#### `deprecated-type` {#toc-deprecated-type}
+### `deprecated-type` {#toc-deprecated-type}
 Triggers when you use the `*` (existential) type, as this type is unsafe and usually just equivalent to `any`.
 The effect of `*` can generally be achieved by simply not providing a type annotation.
 
-#### `deprecated-utility` {#toc-deprecated-utility}
+### `deprecated-utility` {#toc-deprecated-utility}
 Triggers when you use the `$Supertype` or `$Subtype` utility types, as these types are
 unsafe and equivalent to `any`.
 
-#### `implicit-inexact-object` {#toc-implicit-inexact-object}
+### `implicit-inexact-object` {#toc-implicit-inexact-object}
 Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
 
 This lint setting is ignored when `exact_by_default` is set to `true`.
@@ -49,10 +32,10 @@ type B = {x: number, ...} // Ok
 type C = {| x: number |} // Ok
 ```
 
-#### `nonstrict-import` {#toc-nonstrict-import}
+### `nonstrict-import` {#toc-nonstrict-import}
 Used in conjuction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 
-#### `sketchy-null` {#toc-sketchy-null}
+### `sketchy-null` {#toc-sketchy-null}
 Triggers when you do an existence check on a value that can be either null/undefined or falsey.
 
 For example:
@@ -99,7 +82,7 @@ if (x) {}
 ```
 would still have a sketchy-null-number warning on line 3.
 
-#### `sketchy-number` {#toc-sketchy-number}
+### `sketchy-number` {#toc-sketchy-number}
 Triggers when a `number` is used in a manner which may lead to unexpected results if the value is falsy.
 Currently, this lint triggers if a `number` appears in:
 * the left-hand side of an `&&` expression.
@@ -124,16 +107,16 @@ If `count` is, say, `5`, then this displays "[5 comments]". However, if `count` 
 {count ? <>[{count} comments]</> : null}
 ```
 
-#### `unclear-type` {#toc-unclear-type}
+### `unclear-type` {#toc-unclear-type}
 Triggers when you use `any`, `Object`, or `Function` as type annotations. These
 types are unsafe.
 
-#### `unnecessary-invariant` {#toc-unnecessary-invariant}
+### `unnecessary-invariant` {#toc-unnecessary-invariant}
 Triggers when you use `invariant` to check a condition which we know must be truthy based on the available type information. This is quite conservative: for example, if all we know about the condition is that it is a `boolean`, then the lint will not fire even if the condition must be `true` at runtime.
 
 Note that this lint does not trigger when we know a condition is always `false`. It is a common idiom to use `invariant()` or `invariant(false, ...)` to throw in code that should be unreachable.
 
-#### `unnecessary-optional-chain` {#toc-unnecessary-optional-chain}
+### `unnecessary-optional-chain` {#toc-unnecessary-optional-chain}
 
 Triggers when you use `?.` where it isn't needed. This comes in two main flavors. The first is when the left-hand-side cannot be nullish:
 
@@ -167,7 +150,7 @@ foo?.bar.baz;
 
 This makes it clear to the reader that `bar` is not a potentially nullish property.
 
-#### `unsafe-getters-setters` {#toc-unsafe-getters-setters}
+### `unsafe-getters-setters` {#toc-unsafe-getters-setters}
 Triggers when you use getters or setters. Getters and setters can have side
 effects and are unsafe.
 
@@ -181,11 +164,11 @@ const o = {
 };
 ```
 
-#### `untyped-import` {#toc-untyped-import}
+### `untyped-import` {#toc-untyped-import}
 Triggers when you import from an untyped file. Importing from an untyped file
 results in those imports being typed as `any`, which is unsafe.
 
-#### `untyped-type-import` {#toc-untyped-type-import}
+### `untyped-type-import` {#toc-untyped-type-import}
 Triggers when you import a type from an untyped file. Importing a type from an
 untyped file results in an `any` alias, which is typically not the intended behavior.
 Enabling this lint brings extra attention to this case and can help improve Flow
