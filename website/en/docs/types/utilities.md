@@ -22,6 +22,7 @@ Table of contents:
 - [`$TupleMap<T, F>`](#toc-tuplemap)
 - [`$Call<F, T...>`](#toc-call)
 - [`Class<T>`](#toc-class)
+- [`$Partial<T>`](#toc-partial)
 - [`$Shape<T>`](#toc-shape)
 - [`$Exports<T>`](#toc-exports)
 - [`$Supertype<T>`](#toc-supertype)
@@ -670,7 +671,31 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 ```
 
+## `$Partial<T>` <a class="toc" id="toc-partial" href="#toc-partial"></a>
+This utility converts all of an object or interface's named fields to be optional, while maintaining all the object's other properties (e.g. exactness). Use this utility instead of `$Shape`.
+
+```js
+// @flow
+type Person = {
+  age: number,
+  name: string,
+};
+type PersonDetails = $Partial<Person>;
+
+const person1: Person = {age: 28};  // Error: missing `name`
+const person2: Person = {name: 'a'};  // Error: missing `age`
+
+const personDetails1: PersonDetails = {age: 28};  // OK
+const personDetails2: PersonDetails = {name: 'a'};  // OK
+const personDetails3: PersonDetails = {age: 28, name: 'a'};  // OK
+const personDetails4: PersonDetails = {age: 'a'};  // Error: string is incompatible with number
+
+(personDetails1: Person); // Error: `PersonDetails` is not a `Person` (unlike with `$Shape`)
+```
+
 ## `$Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
+
+> NOTE: This utility is unsafe - please use [`$Partial`](#toc-partial) documented above to make all of an object's fields optional.
 
 A variable of type `$Shape<T>`, where `T` is some object type, can be assigned objects `o`
 that contain a subset of the properties included in `T`. For each property `p: S` of `T`,
@@ -701,7 +726,7 @@ const personShape: PersonDetails = {age: 28};
 (personShape: Person);
 ```
 Flow will unsoundly allow this last cast to succeed. If this behavior is not wanted,
-then this utility type should be avoided.
+then this utility type should be avoided - use [`$Partial`](#toc-partial) instead.
 
 ## `$Exports<T>` <a class="toc" id="toc-exports" href="#toc-exports"></a>
 

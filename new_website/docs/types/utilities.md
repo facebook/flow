@@ -62,7 +62,7 @@ const nope: Country = 'nope'; // 'nope' is not a Country
 
 In the example above, the type of `Country` is equivalent to `type Country = 'US' | 'IT' | 'FR'`, but Flow was able to extract it from the keys of `countries`.
 
-## `$Values<T>` {"#toc-values}
+## `$Values<T>` {#toc-values}
 
 `$Values<T>` represents the union type of all the value types (not the values, but their *types*!) of the enumerable properties in an [Object Type](../objects/) `T`.
 
@@ -647,7 +647,30 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 ```
 
+## `$Partial<T>` {#toc-partial}
+This utility converts all of an object or interface's named fields to be optional, while maintaining all the object's other properties (e.g. exactness). Use this utility instead of `$Shape`.
+
+```js flow-check
+type Person = {
+  age: number,
+  name: string,
+};
+type PersonDetails = $Partial<Person>;
+
+const person1: Person = {age: 28};  // Error: missing `name`
+const person2: Person = {name: 'a'};  // Error: missing `age`
+
+const personDetails1: PersonDetails = {age: 28};  // OK
+const personDetails2: PersonDetails = {name: 'a'};  // OK
+const personDetails3: PersonDetails = {age: 28, name: 'a'};  // OK
+const personDetails4: PersonDetails = {age: 'a'};  // Error: string is incompatible with number
+
+(personDetails1: Person); // Error: `PersonDetails` is not a `Person` (unlike with `$Shape`)
+```
+
 ## `$Shape<T>` {#toc-shape}
+
+> NOTE: This utility is unsafe - please use [`$Partial`](#toc-partial) documented above to make all of an object's fields optional.
 
 A variable of type `$Shape<T>`, where `T` is some object type, can be assigned objects `o`
 that contain a subset of the properties included in `T`. For each property `p: S` of `T`,
@@ -678,7 +701,7 @@ const personShape: PersonDetails = {age: 28};
 (personShape: Person);
 ```
 Flow will unsoundly allow this last cast to succeed. If this behavior is not wanted,
-then this utility type should be avoided.
+then this utility type should be avoided - use [`$Partial`](#toc-partial) instead.
 
 ## `$Exports<T>` {#toc-exports}
 
