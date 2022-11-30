@@ -42,43 +42,45 @@ function myFunc(foo: Param): string {
 }
 ```
 
-## I checked that my object is of type A, so why does Flow still believe it's A | B?
+## I checked that my value is of type A, so why does Flow still believe it's A | B?
 
-Refinement invalidation can also happen with [disjoint unions](../types/unions/#toc-disjoint-object-unions). Any function call will invalidate any refinement.
+Refinement invalidation can also occur variables are updated:
 
-[Example](https://flow.org/try/#0PTAEAEDMBsHsHcBQAXAngBwKagEqYM7qwB2+2AvKIqKAD6gDeoaWAXKAOT4CuAxrwXwcANKABuAQ2jdM7fMgBOAS2IBzUAF9qdRswyzOmBQtgKRoIyYXsAosdOaA3IkS8S80AAsJxACbRMPEJ3ClAACgUCIlIDIOiyAEpQcgA+Rm0lSHDI4JiAOhYKckouPgF8ISSGbRoyZAAVJQBbTFhuZDCwpNT0mj7QN1JYALy4VTCAAwASBhz4zDzJaUwNUABGCYSazVE1gAYDhOcaLQ1HIA):
+[Example](https://flow.org/try/#0C4TwDgpgBAKlC8UDOwBOBLAdgcygHykwFcBbAIwlQG4AoGgGwmCgA8AuWBKAcgAt1utGgDMimAMbB0Ae0xRhACgCUUAN40orLgEZaAXzrphUBaEjTjLBPETcUGHNxXrNipbU0L2yNFmzvNKBoDIA):
 
 ```js flow-check
-type Response =
-  | { type: 'success', value: string }
-  | { type: 'error', error: Error };
+type T = string | number;
 
-const handleResponse = (response: Response) => {
-  if (response.type === 'success') {
-    setTimeout(() => {
-      console.log(`${response.value} 1`)
-    }, 1000);
-  }
-};
+let x: T = 'hi';
+
+function f() {
+  x = 1;
+}
+
+if (typeof x === 'string') {
+  f();
+  (x: string);
+}
 ```
 
-Here, a work around would be to extract the part of the value you're interested in, or to move the if check inside the `setTimeout` call:
+A work around would be to make the variable `const` and refactor your code to avoid the reassignment.
 
-[Example](https://flow.org/try/#0PTAEAEDMBsHsHcBQAXAngBwKagEqYM7qwB2+2AvKIqKAD6gDeoaWAXKAOT4CuAxrwXwcANKABuAQ2jdM7fMgBOAS2IBzUAF9qdRswyzOmBQtgKRoIyYXsAosdOaA3IkS8S80AAsJxACbRMPEJ3ClAACgUCIlIDIOiyAEpQcgA+Rm0lSHDI4JiAOhYKckouPgF8ISSGbRo3UmRxKRlk0Bz4zDzJaUwa0DJkABUlAFtMWG5kMLCk1PSaedA6-FgAvLhVMIADABIGLpkNUABGTYTejVEjgAYbhOcaLQ1HIA):
+[Example](https://flow.org/try/#0C4TwDgpgBAKlC8UDOwBOBLAdgcygHykwFcBbAIwlQG4AoGgYwHtMUoAPALlgSgHIALdL1o0AZkUz1g6ZlFEAKTrACUXYuUpQA3jShQA9PqgATRskYkIwQTigB3dNfa6oqK0VSYoARloBfOnRRKHlQSEZgtgR4RF4UDBxeZW0XJhZgdgBVMGMAQ2AIYx4FNmVaPUVsvILjNVIKVDKXRS54rGwmvyA):
 
 ```js flow-check
-type Response =
-  | { type: 'success', value: string }
-  | { type: 'error', error: Error };
+type T = string | number;
 
-const handleResponse = (response: Response) => {
-  if (response.type === 'success') {
-    const value = response.value
-    setTimeout(() => {
-      console.log(`${value} 1`)
-    }, 1000);
-  }
-};
+const x: T = 'hi';
+
+function f(x: T): number {
+  return 1;
+}
+
+if (typeof x === 'string') {
+  const xUpdated = f(x);
+  (xUpdated: number);
+  (x: string);
+}
 ```
 
 ## I'm in a closure and Flow ignores the if check that asserts that `foo.bar` is defined. Why?
