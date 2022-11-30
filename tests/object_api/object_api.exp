@@ -39,8 +39,8 @@ type [2]. [incompatible-call]
                        ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:128:28
-   128|     static entries(object: interface {}): Array<[string, mixed]>;
+   <BUILTINS>/core.js:130:28
+   130|     static entries(object: interface {}): Array<[string, mixed]>;
                                    ^^^^^^^^^^^^ [2]
 
 
@@ -54,8 +54,8 @@ Cannot call method `entries` with `null` bound to `object` because null [1] is i
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:128:28
-   128|     static entries(object: interface {}): Array<[string, mixed]>;
+   <BUILTINS>/core.js:130:28
+   130|     static entries(object: interface {}): Array<[string, mixed]>;
                                    ^^^^^^^^^^^^ [2]
 
 
@@ -69,8 +69,8 @@ Cannot call method `entries` with `1` bound to `object` because number [1] is in
                        ^ [1]
 
 References:
-   <BUILTINS>/core.js:128:28
-   128|     static entries(object: interface {}): Array<[string, mixed]>;
+   <BUILTINS>/core.js:130:28
+   130|     static entries(object: interface {}): Array<[string, mixed]>;
                                    ^^^^^^^^^^^^ [2]
 
 
@@ -84,8 +84,8 @@ Cannot call method `entries` with `true` bound to `object` because boolean [1] i
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:128:28
-   128|     static entries(object: interface {}): Array<[string, mixed]>;
+   <BUILTINS>/core.js:130:28
+   130|     static entries(object: interface {}): Array<[string, mixed]>;
                                    ^^^^^^^^^^^^ [2]
 
 
@@ -264,8 +264,8 @@ Cannot call method `doesNotExist` because property `doesNotExist` is missing in 
                   ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:92:15
-   92| declare class Object {
+   <BUILTINS>/core.js:94:15
+   94| declare class Object {
                      ^^^^^^ [1]
 
 
@@ -279,8 +279,8 @@ defined in the `this` parameter. [method-unbinding]
                                        ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:238:5
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:5
+   240|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -307,8 +307,8 @@ Cannot assign `x.toString` to `xToString` because function type [1] is incompati
                                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:238:5
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:5
+   240|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:38:17
     38| var xToString : number = x.toString; // error
@@ -325,8 +325,8 @@ Cannot get `x.toString` because property `toString` [1] cannot be unbound from t
                                    ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:238:5
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:5
+   240|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -340,8 +340,8 @@ Cannot assign `x.toString` to `xToString2` because string [1] is incompatible wi
                                         ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:238:17
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:17
+   240|     toString(): string;
                         ^^^^^^ [1]
    object_prototype.js:39:24
     39| var xToString2 : () => number = x.toString; // error
@@ -358,8 +358,8 @@ Cannot get `x.toString` because property `toString` [1] cannot be unbound from t
                                           ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:238:5
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:5
+   240|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -372,8 +372,8 @@ Cannot assign `y.toString` to `yToString` because function type [1] is incompati
                                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:238:5
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:5
+   240|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:43:17
     43| var yToString : number = y.toString; // error
@@ -390,8 +390,8 @@ Cannot get `y.toString` because property `toString` [1] cannot be unbound from t
                                    ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:238:5
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:5
+   240|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -405,8 +405,8 @@ Cannot get `123.toString` because property `toString` [1] cannot be unbound from
               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:476:5
-   476|     toString(radix?: number): string;
+   <BUILTINS>/core.js:478:5
+   478|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -434,8 +434,8 @@ Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is i
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:476:22
-   476|     toString(radix?: number): string;
+   <BUILTINS>/core.js:478:22
+   478|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -449,8 +449,8 @@ Cannot call `123.toString` with `null` bound to `radix` because null [1] is inco
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:476:22
-   476|     toString(radix?: number): string;
+   <BUILTINS>/core.js:478:22
+   478|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -464,8 +464,8 @@ where it was defined in the `this` parameter. [method-unbinding]
                                                           ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:224:5
-   224|     hasOwnProperty(prop: mixed): boolean;
+   <BUILTINS>/core.js:226:5
+   226|     hasOwnProperty(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -494,8 +494,8 @@ Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:224:5
-   224|     hasOwnProperty(prop: mixed): boolean;
+   <BUILTINS>/core.js:226:5
+   226|     hasOwnProperty(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:71:23
     71| var xHasOwnProperty : number = x.hasOwnProperty; // error
@@ -512,8 +512,8 @@ defined. [method-unbinding]
                                          ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:224:5
-   224|     hasOwnProperty(prop: mixed): boolean;
+   <BUILTINS>/core.js:226:5
+   226|     hasOwnProperty(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -527,8 +527,8 @@ value. [incompatible-type]
                                                           ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:224:34
-   224|     hasOwnProperty(prop: mixed): boolean;
+   <BUILTINS>/core.js:226:34
+   226|     hasOwnProperty(prop: mixed): boolean;
                                          ^^^^^^^ [1]
    object_prototype.js:72:42
     72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
@@ -545,8 +545,8 @@ defined. [method-unbinding]
                                                             ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:224:5
-   224|     hasOwnProperty(prop: mixed): boolean;
+   <BUILTINS>/core.js:226:5
+   226|     hasOwnProperty(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -560,8 +560,8 @@ Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:224:5
-   224|     hasOwnProperty(prop: mixed): boolean;
+   <BUILTINS>/core.js:226:5
+   226|     hasOwnProperty(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:76:23
     76| var yHasOwnProperty : number = y.hasOwnProperty; // error
@@ -578,8 +578,8 @@ defined. [method-unbinding]
                                          ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:224:5
-   224|     hasOwnProperty(prop: mixed): boolean;
+   <BUILTINS>/core.js:226:5
+   226|     hasOwnProperty(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -593,8 +593,8 @@ context [1] where it was defined in the `this` parameter. [method-unbinding]
                                                                 ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:234:5
-   234|     propertyIsEnumerable(prop: mixed): boolean;
+   <BUILTINS>/core.js:236:5
+   236|     propertyIsEnumerable(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -623,8 +623,8 @@ number [2]. [incompatible-type]
                                              ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:234:5
-   234|     propertyIsEnumerable(prop: mixed): boolean;
+   <BUILTINS>/core.js:236:5
+   236|     propertyIsEnumerable(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:96:29
     96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
@@ -641,8 +641,8 @@ where it was defined. [method-unbinding]
                                                ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:234:5
-   234|     propertyIsEnumerable(prop: mixed): boolean;
+   <BUILTINS>/core.js:236:5
+   236|     propertyIsEnumerable(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -656,8 +656,8 @@ in the return value. [incompatible-type]
           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:234:40
-   234|     propertyIsEnumerable(prop: mixed): boolean;
+   <BUILTINS>/core.js:236:40
+   236|     propertyIsEnumerable(prop: mixed): boolean;
                                                ^^^^^^^ [1]
    object_prototype.js:97:48
     97| var xPropertyIsEnumerable2 : (prop: string) => number =
@@ -674,8 +674,8 @@ where it was defined. [method-unbinding]
             ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:234:5
-   234|     propertyIsEnumerable(prop: mixed): boolean;
+   <BUILTINS>/core.js:236:5
+   236|     propertyIsEnumerable(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -689,8 +689,8 @@ number [2]. [incompatible-type]
                                              ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:234:5
-   234|     propertyIsEnumerable(prop: mixed): boolean;
+   <BUILTINS>/core.js:236:5
+   236|     propertyIsEnumerable(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:102:29
    102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -707,8 +707,8 @@ where it was defined. [method-unbinding]
                                                ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:234:5
-   234|     propertyIsEnumerable(prop: mixed): boolean;
+   <BUILTINS>/core.js:236:5
+   236|     propertyIsEnumerable(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -735,8 +735,8 @@ Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatibl
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1526:5
-   1526|     valueOf(): number;
+   <BUILTINS>/core.js:1528:5
+   1528|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -753,8 +753,8 @@ Cannot get `x.valueOf` because property `valueOf` [1] cannot be unbound from the
                                    ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1526:5
-   1526|     valueOf(): number;
+   <BUILTINS>/core.js:1528:5
+   1528|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -767,8 +767,8 @@ Cannot assign `y.valueOf` to `yValueOf` because function type [1] is incompatibl
                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:240:5
-   240|     valueOf(): mixed;
+   <BUILTINS>/core.js:242:5
+   242|     valueOf(): mixed;
             ^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:126:16
    126| var yValueOf : number = y.valueOf; // error
@@ -785,8 +785,8 @@ Cannot get `y.valueOf` because property `valueOf` [1] cannot be unbound from the
                                   ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:240:5
-   240|     valueOf(): mixed;
+   <BUILTINS>/core.js:242:5
+   242|     valueOf(): mixed;
             ^^^^^^^^^^^^^^^^ [2]
 
 
@@ -800,8 +800,8 @@ where it was defined in the `this` parameter. [method-unbinding]
                                              ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:236:5
-   236|     toLocaleString(): string;
+   <BUILTINS>/core.js:238:5
+   238|     toLocaleString(): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -830,8 +830,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] 
                                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1514:5
-   1514|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1516:5
+   1516|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
@@ -848,8 +848,8 @@ defined. [method-unbinding]
                                           ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1514:5
-   1514|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1516:5
+   1516|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -863,8 +863,8 @@ value. [incompatible-type]
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1514:93
-   1514|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1516:93
+   1516|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                      ^^^^^^ [1]
    object_prototype.js:151:30
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error
@@ -881,8 +881,8 @@ defined. [method-unbinding]
                                                  ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1514:5
-   1514|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1516:5
+   1516|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -896,8 +896,8 @@ Cannot assign `y.toLocaleString` to `yToLocaleString` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:236:5
-   236|     toLocaleString(): string;
+   <BUILTINS>/core.js:238:5
+   238|     toLocaleString(): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:155:23
    155| var yToLocaleString : number = y.toLocaleString; // error
@@ -914,8 +914,8 @@ defined. [method-unbinding]
                                          ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:236:5
-   236|     toLocaleString(): string;
+   <BUILTINS>/core.js:238:5
+   238|     toLocaleString(): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -929,8 +929,8 @@ type [2]. [incompatible-call]
                       ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:219:27
-   219|     static values(object: interface {}): Array<mixed>;
+   <BUILTINS>/core.js:221:27
+   221|     static values(object: interface {}): Array<mixed>;
                                   ^^^^^^^^^^^^ [2]
 
 
@@ -944,8 +944,8 @@ Cannot call method `values` with `null` bound to `object` because null [1] is in
                       ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:219:27
-   219|     static values(object: interface {}): Array<mixed>;
+   <BUILTINS>/core.js:221:27
+   221|     static values(object: interface {}): Array<mixed>;
                                   ^^^^^^^^^^^^ [2]
 
 
@@ -959,8 +959,8 @@ Cannot call method `values` with `1` bound to `object` because number [1] is inc
                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:219:27
-   219|     static values(object: interface {}): Array<mixed>;
+   <BUILTINS>/core.js:221:27
+   221|     static values(object: interface {}): Array<mixed>;
                                   ^^^^^^^^^^^^ [2]
 
 
@@ -974,8 +974,8 @@ Cannot call method `values` with `true` bound to `object` because boolean [1] is
                       ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:219:27
-   219|     static values(object: interface {}): Array<mixed>;
+   <BUILTINS>/core.js:221:27
+   221|     static values(object: interface {}): Array<mixed>;
                                   ^^^^^^^^^^^^ [2]
 
 
@@ -988,8 +988,8 @@ Cannot cast `o1_proto.toString` to empty because function type [1] is incompatib
          ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:238:5
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:5
+   240|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [1]
    proto.js:3:21
      3| (o1_proto.toString: empty); // error: function ~> empty
@@ -1006,8 +1006,8 @@ defined. [method-unbinding]
                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:238:5
-   238|     toString(): string;
+   <BUILTINS>/core.js:240:5
+   240|     toString(): string;
             ^^^^^^^^^^^^^^^^^^ [2]
 
 

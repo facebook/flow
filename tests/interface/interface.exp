@@ -418,8 +418,8 @@ Cannot cast `s` to interface type because string [1] is incompatible with boolea
           ^
 
 References:
-   <BUILTINS>/core.js:1105:26
-   1105|     charAt(pos: number): string;
+   <BUILTINS>/core.js:1107:26
+   1107|     charAt(pos: number): string;
                                   ^^^^^^ [1]
    string.js:4:37
       4| (s: interface {charAt(pos: number): boolean}); // ERROR
@@ -509,8 +509,8 @@ Cannot cast `s` to interface type because string [1] is incompatible with boolea
          ^
 
 References:
-   <BUILTINS>/core.js:277:17
-   277|   +description: string | void;
+   <BUILTINS>/core.js:279:17
+   279|   +description: string | void;
                         ^^^^^^ [1]
    symbol.js:4:30
      4| (s: interface {+description: boolean}); // ERROR
@@ -527,8 +527,8 @@ Cannot cast `s` to interface type because undefined [1] is incompatible with boo
          ^
 
 References:
-   <BUILTINS>/core.js:277:26
-   277|   +description: string | void;
+   <BUILTINS>/core.js:279:26
+   279|   +description: string | void;
                                  ^^^^ [1]
    symbol.js:4:30
      4| (s: interface {+description: boolean}); // ERROR

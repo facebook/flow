@@ -256,8 +256,8 @@ Cannot cast `f15()` to empty because `Promise` [1] is incompatible with empty [2
           ^^^^^
 
 References:
-   <BUILTINS>/core.js:1830:15
-   1830| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1832:15
+   1832| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    main.js:58:9
      58| (f15(): empty);

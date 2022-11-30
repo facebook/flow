@@ -7,8 +7,8 @@ Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:476:31
-   476|     toString(radix?: number): string;
+   <BUILTINS>/core.js:478:31
+   478|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    basic.js:6:44
      6| (compose((n: number) => n.toString())(42): empty); // Error: string ~> empty
@@ -24,8 +24,8 @@ Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatib
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:476:31
-   476|     toString(radix?: number): string;
+   <BUILTINS>/core.js:478:31
+   478|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    basic.js:8:51
      8| (composeReverse((n: number) => n.toString())(42): empty); // Error: string ~> empty
@@ -63,8 +63,8 @@ Cannot call `compose` with compose intermediate value bound to `n` because strin
           ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:476:31
-   476|     toString(radix?: number): string;
+   <BUILTINS>/core.js:478:31
+   478|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    basic.js:11:7
     11|   (n: number) => n * 5, // Error: string cannot be multiplied.
@@ -84,8 +84,8 @@ Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatib
         ----^
 
 References:
-   <BUILTINS>/core.js:476:31
-   476|     toString(radix?: number): string;
+   <BUILTINS>/core.js:478:31
+   478|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    basic.js:18:8
     18| )(42): empty); // Error: string ~> empty
@@ -105,8 +105,8 @@ References:
    recompose.js:20:8
     20|     p: `${props.p * 3}`,
                ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:646:14
-   646|     round(x: number): number,
+   <BUILTINS>/core.js:648:14
+   648|     round(x: number): number,
                      ^^^^^^ [2]
 
 
