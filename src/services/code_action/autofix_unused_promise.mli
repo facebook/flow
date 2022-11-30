@@ -9,3 +9,8 @@ val insert_await :
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val insert_void :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t

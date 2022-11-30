@@ -2267,11 +2267,11 @@ module.exports = (suite(
       ),
     ]),
     test('provide quickfix for unused promise errors', [
-      addFile('insert-await.js.ignored', 'insert-await.js'),
+      addFile('fix-unused-promise.js.ignored', 'fix-unused-promise.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL>/insert-await.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js',
         },
         range: {
           start: {
@@ -2298,7 +2298,7 @@ module.exports = (suite(
                   "diagnostics": [],
                   "edit": {
                     "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/insert-await.js": [
+                      "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
                         {
                           "range": {
                             "start": {
@@ -2322,6 +2322,39 @@ module.exports = (suite(
                       "textDocument/codeAction",
                       "insert_await",
                       "Insert `await`"
+                    ]
+                  }
+                },
+                {
+                  "title": "Insert `void`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 5,
+                              "character": 4
+                            },
+                            "end": {
+                              "line": 5,
+                              "character": 9
+                            }
+                          },
+                          "newText": "void foo()"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "insert_void",
+                      "Insert `void`"
                     ]
                   }
                 }

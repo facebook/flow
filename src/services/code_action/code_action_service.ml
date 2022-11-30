@@ -448,6 +448,12 @@ let ast_transforms_of_error ?loc = function
           transform = Autofix_unused_promise.insert_await;
           target_loc = error_loc;
         };
+        {
+          title = "Insert `void`";
+          diagnostic_title = "insert_void";
+          transform = Autofix_unused_promise.insert_void;
+          target_loc = error_loc;
+        };
       ]
     else
       []

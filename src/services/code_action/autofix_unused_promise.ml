@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-class mapper target =
+class mapper target operator =
   object (this)
     inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
 
@@ -26,11 +26,7 @@ class mapper target =
               Statement.Expression.expression =
                 ( loc,
                   Expression.Unary
-                    {
-                      Expression.Unary.operator = Expression.Unary.Await;
-                      argument = expression;
-                      comments = None;
-                    }
+                    { Expression.Unary.operator; argument = expression; comments = None }
                 );
               directive;
               comments;
@@ -39,6 +35,10 @@ class mapper target =
       | _ -> super#statement stmt
   end
 
-let insert_await ast loc =
-  let mapper = new mapper loc in
+let insert operator ast loc =
+  let mapper = new mapper loc operator in
   mapper#program ast
+
+let insert_await = insert Flow_ast.Expression.Unary.Await
+
+let insert_void = insert Flow_ast.Expression.Unary.Void
