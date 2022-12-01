@@ -6,6 +6,7 @@
 
 export BUNDLE_GEMFILE="$CIRCLE_WORKING_DIRECTORY/new_website/Gemfile"
 
+ssh-keyscan github.com >> ~/.ssh/known_hosts
 GEN_DIR=$([[ "$CIRCLE_TAG" = "" ]] && echo "master" || echo "$CIRCLE_TAG")
 mkdir -p "new_website/static/flow/$GEN_DIR"
 cp "bin/flow.js" "new_website/static/flow/${GEN_DIR}/flow.js"

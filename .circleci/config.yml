@@ -46,7 +46,7 @@ executors:
     working_directory: ~/flow
   mac:
     macos:
-      xcode: "13.4"
+      xcode: '13.4'
     environment:
       <<: *opam_env
     working_directory: ~/flow
@@ -87,7 +87,7 @@ commands:
     steps:
       - restore_cache:
           keys:
-          - v1-opam-cache-{{ arch }}-{{ checksum ".circleci/opamcachebreaker" }}
+            - v1-opam-cache-{{ arch }}-{{ checksum ".circleci/opamcachebreaker" }}
 
   save-opam-cache:
     steps:
@@ -333,7 +333,7 @@ jobs:
             /usr/bin/cat .circleci/config.yml >> /cygdrive/c/tmp/flow/opamcachebreaker
       - restore_cache:
           keys:
-          - opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
+            - opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
       - run:
           name: Init opam
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
@@ -345,8 +345,8 @@ jobs:
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
-             cd /cygdrive/c/Users/circleci/project
-             make deps
+            cd /cygdrive/c/Users/circleci/project
+            make deps
       - save_cache:
           key: opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
           paths:
@@ -358,11 +358,11 @@ jobs:
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
-             cd /cygdrive/c/Users/circleci/project
-             eval $(opam env)
-             make bin/flow.exe dist/flow.zip
-             mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
-             cp dist/flow.zip dist/flow-win64.zip
+            cd /cygdrive/c/Users/circleci/project
+            eval $(opam env)
+            make bin/flow.exe dist/flow.zip
+            mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
+            cp dist/flow.zip dist/flow-win64.zip
       - run:
           name: Build parser test runner
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
@@ -572,157 +572,157 @@ jobs:
   npm_deploy:
     executor: linux-node
     steps:
-    - attach_workspace:
-        at: ~/flow
-    - run:
-        name: Deploy to npm
-        command: .circleci/deploy_npm.sh
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Deploy to npm
+          command: .circleci/deploy_npm.sh
 
   github_linux:
     executor: curl
     steps:
-    - attach_workspace:
-        at: /flow
-    - run:
-        name: Upload Linux binary
-        command: .circleci/github_upload.sh dist/flow-linux64.zip "flow-linux64-$CIRCLE_TAG.zip"
-    - run:
-        name: Upload Linux libflowparser
-        command: .circleci/github_upload.sh dist/libflowparser-linux64.zip "libflowparser-linux64-$CIRCLE_TAG.zip"
+      - attach_workspace:
+          at: /flow
+      - run:
+          name: Upload Linux binary
+          command: .circleci/github_upload.sh dist/flow-linux64.zip "flow-linux64-$CIRCLE_TAG.zip"
+      - run:
+          name: Upload Linux libflowparser
+          command: .circleci/github_upload.sh dist/libflowparser-linux64.zip "libflowparser-linux64-$CIRCLE_TAG.zip"
 
   github_linux_arm64:
     executor: curl
     steps:
-    - attach_workspace:
-        at: /flow
-    - run:
-        name: Upload Linux binary
-        command: .circleci/github_upload.sh dist/flow-linux-arm64.zip "flow-linux-arm64-$CIRCLE_TAG.zip"
-    - run:
-        name: Upload Linux libflowparser
-        command: .circleci/github_upload.sh dist/libflowparser-linux-arm64.zip "libflowparser-linux-arm64-$CIRCLE_TAG.zip"
+      - attach_workspace:
+          at: /flow
+      - run:
+          name: Upload Linux binary
+          command: .circleci/github_upload.sh dist/flow-linux-arm64.zip "flow-linux-arm64-$CIRCLE_TAG.zip"
+      - run:
+          name: Upload Linux libflowparser
+          command: .circleci/github_upload.sh dist/libflowparser-linux-arm64.zip "libflowparser-linux-arm64-$CIRCLE_TAG.zip"
 
   github_macos:
     executor: curl
     steps:
-    - attach_workspace:
-        at: /flow
-    - run:
-        name: Upload Mac binary
-        command: .circleci/github_upload.sh dist/flow-osx.zip "flow-osx-$CIRCLE_TAG.zip"
-    - run:
-        name: Upload Mac libflowparser
-        command: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-$CIRCLE_TAG.zip"
+      - attach_workspace:
+          at: /flow
+      - run:
+          name: Upload Mac binary
+          command: .circleci/github_upload.sh dist/flow-osx.zip "flow-osx-$CIRCLE_TAG.zip"
+      - run:
+          name: Upload Mac libflowparser
+          command: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-$CIRCLE_TAG.zip"
 
   github_win:
     executor: curl
     steps:
-    - attach_workspace:
-        at: /flow
-    - run:
-        name: Upload Windows binary
-        command: .circleci/github_upload.sh dist/flow-win64.zip "flow-win64-$CIRCLE_TAG.zip"
+      - attach_workspace:
+          at: /flow
+      - run:
+          name: Upload Windows binary
+          command: .circleci/github_upload.sh dist/flow-win64.zip "flow-win64-$CIRCLE_TAG.zip"
 
   flow_bin_deploy:
     executor: linux-node
     steps:
-    - attach_workspace:
-        at: ~/flow
-    - run:
-        name: Deploy flow-bin
-        command: .circleci/deploy_flow_bin.sh
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Deploy flow-bin
+          command: .circleci/deploy_flow_bin.sh
 
   website_deploy:
     executor: flow-website
     steps:
-    - attach_workspace:
-        at: ~/flow
-    - restore_cache:
-        keys:
-          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
-    - run:
-        name: Install yarn deps
-        command: cd website && yarn install
-    - save_cache:
-        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
-        paths:
-          - website/node_modules
-    - restore_cache:
-        keys:
-          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
-    - run:
-        name: Install gems
-        command: |
-          cd website
-          bundle config set path 'vendor/bundle'
-          bundle install
-          bundle exec s3_website install
-    - save_cache:
-        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
-        paths:
-          - website/vendor/bundle
-    - run:
-        name: Build website
-        command: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
-    - run:
-        name: Publish website
-        command: |
-          cd website
-          bundle exec s3_website push --site ~/flow/dist/flow.org
+      - attach_workspace:
+          at: ~/flow
+      - restore_cache:
+          keys:
+            - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
+      - run:
+          name: Install yarn deps
+          command: cd website && yarn install
+      - save_cache:
+          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
+          paths:
+            - website/node_modules
+      - restore_cache:
+          keys:
+            - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
+      - run:
+          name: Install gems
+          command: |
+            cd website
+            bundle config set path 'vendor/bundle'
+            bundle install
+            bundle exec s3_website install
+      - save_cache:
+          key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
+          paths:
+            - website/vendor/bundle
+      - run:
+          name: Build website
+          command: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
+      - run:
+          name: Publish website
+          command: |
+            cd website
+            bundle exec s3_website push --site ~/flow/dist/flow.org
 
   new_website_deploy:
     executor: flow-website
     steps:
-    - attach_workspace:
-        at: ~/flow
-    - restore_cache:
-        keys:
-          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
-    - run:
-        name: Install yarn deps
-        command: cd new_website && yarn install
-    - save_cache:
-        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
-        paths:
-          - new_website/node_modules
-    - run:
-        name: Build website
-        command: PATH=~/flow/bin/linux:$PATH .circleci/build_new_website.sh
-    - restore_cache:
-        keys:
-          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/Gemfile.lock" }}
-    - run:
-        name: Install gems
-        command: |
-          cd new_website
-          bundle config set path 'vendor/bundle'
-          bundle install
-    - save_cache:
-        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/Gemfile.lock" }}
-        paths:
-          - new_website/vendor/bundle
-    - run:
-        name: Publish website
-        command: cd new_website && bundle exec s3_website push --site build
+      - attach_workspace:
+          at: ~/flow
+      - restore_cache:
+          keys:
+            - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
+      - run:
+          name: Install yarn deps
+          command: cd new_website && yarn install
+      - save_cache:
+          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
+          paths:
+            - new_website/node_modules
+      - run:
+          name: Build website
+          command: PATH=~/flow/bin/linux:$PATH .circleci/build_new_website.sh
+      - restore_cache:
+          keys:
+            - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/Gemfile.lock" }}
+      - run:
+          name: Install gems
+          command: |
+            cd new_website
+            bundle config set path 'vendor/bundle'
+            bundle install
+      - save_cache:
+          key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/Gemfile.lock" }}
+          paths:
+            - new_website/vendor/bundle
+      - run:
+          name: Publish website
+          command: cd new_website && bundle exec s3_website push --site build
 
   # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
     executor: awscli
     steps:
-    - attach_workspace:
-        at: ~/flow
-    - run:
-        name: Assemble files
-        command: |
-          rm -rf ~/try_flow
-          mkdir ~/try_flow
-          cp bin/flow.js ~/try_flow/flow.js
-          cp -r lib ~/try_flow/flowlib
-    - run:
-        name: Upload to AWS
-        command: |
-          aws s3 cp ~/try_flow s3://${S3_BUCKET}/static/${CIRCLE_TAG}/ --recursive
-          aws s3 cp ~/try_flow s3://${S3_BUCKET_NEW_WEBSITE}/static/flow/${CIRCLE_TAG}/ --recursive
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Assemble files
+          command: |
+            rm -rf ~/try_flow
+            mkdir ~/try_flow
+            cp bin/flow.js ~/try_flow/flow.js
+            cp -r lib ~/try_flow/flowlib
+      - run:
+          name: Upload to AWS
+          command: |
+            aws s3 cp ~/try_flow s3://${S3_BUCKET}/static/${CIRCLE_TAG}/ --recursive
+            aws s3 cp ~/try_flow s3://${S3_BUCKET_NEW_WEBSITE}/static/flow/${CIRCLE_TAG}/ --recursive
 
 workflows:
   build_and_test:
@@ -800,6 +800,7 @@ workflows:
             branches:
               only:
                 - main
+                - fix-new-website-deploy
 
   build_and_deploy:
     jobs:
