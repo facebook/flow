@@ -174,7 +174,8 @@
         "loc":{"source":null,"start":{"line":11,"column":19},"end":{"line":11,"column":21}},
         "range":[220,222],
         "value":null,
-        "bigint":"1"
+        "bigint":"1",
+        "raw":"1n"
       },
       "directive":null
     }

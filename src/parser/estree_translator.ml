@@ -1311,8 +1311,8 @@ with type t = Impl.t = struct
     and number_literal (loc, { NumberLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", number value); ("raw", string raw)]
     and bigint_literal (loc, { BigIntLiteral.raw; comments; _ }) =
-      let raw = String.sub raw 0 (String.length raw - 1) in
-      node ?comments "Literal" loc [("value", null); ("bigint", string raw)]
+      let bigint = String.sub raw 0 (String.length raw - 1) in
+      node ?comments "Literal" loc [("value", null); ("bigint", string bigint); ("raw", string raw)]
     and string_literal (loc, { StringLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", string value); ("raw", string raw)]
     and boolean_literal (loc, { BooleanLiteral.value; comments }) =
