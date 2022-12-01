@@ -27,6 +27,7 @@ You can use primitive values for these types:
 - Booleans: like `true` or `false`
 - Numbers: like `42` or `3.14`
 - Strings: like `"foo"` or `"bar"`
+- BigInts: like `42n`
 
 Using these with [union types](../unions) is powerful:
 

@@ -12,6 +12,7 @@ JavaScript has a number of different primitive types
 - `null`
 - `undefined` (`void` in Flow types)
 - Symbols (new in ECMAScript 2015)
+- BigInts (new in ECMAScript 2020)
 
 The primitive types appear in the language as either literal values.
 
@@ -21,6 +22,7 @@ true;
 3.14;
 null;
 undefined;
+3n;
 ```
 
 Or as constructed wrapper objects.
@@ -29,28 +31,29 @@ Or as constructed wrapper objects.
 new Boolean(false);
 new String("world");
 new Number(42);
+new BigInt(3n);
 ```
 
 Types for literal values are lowercase.
 
 ```js flow-check
 // @flow
-function method(x: number, y: string, z: boolean) {
+function method(x: number, y: string, z: boolean, w: bigint) {
   // ...
 }
 
-method(3.14, "hello", true);
+method(3.14, "hello", true, 3n);
 ```
 
 Types for the wrapper objects are capitalized (the same as their constructor).
 
 ```js flow-check
 // @flow
-function method(x: Number, y: String, z: Boolean) {
+function method(x: Number, y: String, z: Boolean, w: BigInt) {
   // ...
 }
 
-method(new Number(42), new String("world"), new Boolean(false));
+method(new Number(42), new String("world"), new Boolean(false), new BigInt(3n));
 ```
 
 These wrapper objects are rarely used.
@@ -315,4 +318,21 @@ if (typeof x === "symbol") {
 } else {
   const z: number = x;
 }
+```
+
+## BigInts {#toc-bigints}
+
+BigInts can be used to represent integers of arbitrary precision. In other words, they can store integers which are too large to store as a `number`.
+
+A `bigint` literal is just a `number` literal along with an `n` suffix.
+
+Note that `bigint` and `number` are incompatible types. That is, a `bigint` cannot be used where a `number` is expected, and vice versa.
+
+```js flow-check
+function acceptsBigInt(value: bigint) {
+  // ...
+}
+
+acceptsBigInt(42n); // Works!
+acceptsBigInt(42); // Error!
 ```
