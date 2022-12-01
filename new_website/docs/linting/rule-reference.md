@@ -174,3 +174,18 @@ Triggers when you import a type from an untyped file. Importing a type from an
 untyped file results in an `any` alias, which is typically not the intended behavior.
 Enabling this lint brings extra attention to this case and can help improve Flow
 coverage of typed files by limiting the spread of implicit `any` types.
+
+### `unused-promise-in-async-scope` {#toc-unused-promise-in-async-scope}
+Triggers when a `Promise` is unused in an async scope (i.e., it is not `await`ed, stored in a variable, passed to a function, etc.). This can be dangerous, because errors are potentially unhandled, and the code may not execute in the desired order.
+
+For example:
+
+```js
+declare function foo(): Promise<void>;
+
+async function bar() {
+  foo(); // we forgot to await!
+}
+```
+
+You can explicitly ignore the promise with the `void` operator (e.g., `void foo();`).
