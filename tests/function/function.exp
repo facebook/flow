@@ -550,9 +550,9 @@ Cannot cast `x.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:360:13
-   360|     length: number;
-                    ^^^^^^ [1]
+   <BUILTINS>/core.js:360:14
+   360|     +length: number;
+                     ^^^^^^ [1]
    function.js:37:16
     37|     (x.length: void); // error, it's a number
                        ^^^^ [2]
@@ -567,102 +567,78 @@ Cannot cast `y.length` to undefined because number [1] is incompatible with unde
              ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:360:13
-   360|     length: number;
-                    ^^^^^^ [1]
+   <BUILTINS>/core.js:360:14
+   360|     +length: number;
+                     ^^^^^^ [1]
    function.js:38:16
     38|     (y.length: void); // error, it's a number
                        ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:41:6
+Error ------------------------------------------------------------------------------------------------- function.js:40:6
 
 Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   function.js:41:6
-    41|     (x.name: void); // error, it's a string
+   function.js:40:6
+    40|     (x.name: void); // error, it's a string
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:364:11
-   364|     name: string;
-                  ^^^^^^ [1]
-   function.js:41:14
-    41|     (x.name: void); // error, it's a string
+   <BUILTINS>/core.js:364:12
+   364|     +name: string;
+                   ^^^^^^ [1]
+   function.js:40:14
+    40|     (x.name: void); // error, it's a string
                      ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:42:6
+Error ------------------------------------------------------------------------------------------------- function.js:41:6
 
 Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   function.js:42:6
-    42|     (y.name: void); // error, it's a string
+   function.js:41:6
+    41|     (y.name: void); // error, it's a string
              ^^^^^^
 
 References:
-   <BUILTINS>/core.js:364:11
-   364|     name: string;
-                  ^^^^^^ [1]
-   function.js:42:14
-    42|     (y.name: void); // error, it's a string
+   <BUILTINS>/core.js:364:12
+   364|     +name: string;
+                   ^^^^^^ [1]
+   function.js:41:14
+    41|     (y.name: void); // error, it's a string
                      ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ function.js:48:16
+Error ------------------------------------------------------------------------------------------------- function.js:46:7
 
-Cannot assign `'foo'` to `x.length` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'foo'` to `x.length` because property `length` is not writable. [cannot-write]
 
-   function.js:48:16
-    48|     x.length = 'foo'; // error, it's a number
-                       ^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:360:13
-   360|     length: number;
-                    ^^^^^^ [2]
+   46|     x.length = 'foo'; // error, not writable
+             ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ function.js:49:16
+Error ------------------------------------------------------------------------------------------------- function.js:47:7
 
-Cannot assign `'foo'` to `y.length` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'foo'` to `y.length` because property `length` is not writable. [cannot-write]
 
-   function.js:49:16
-    49|     y.length = 'foo'; // error, it's a number
-                       ^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:360:13
-   360|     length: number;
-                    ^^^^^^ [2]
+   47|     y.length = 'foo'; // error, not writable
+             ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ function.js:52:14
+Error ------------------------------------------------------------------------------------------------- function.js:49:7
 
-Cannot assign `123` to `x.name` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `123` to `x.name` because property `name` is not writable. [cannot-write]
 
-   function.js:52:14
-    52|     x.name = 123; // error, it's a string
-                     ^^^ [1]
-
-References:
-   <BUILTINS>/core.js:364:11
-   364|     name: string;
-                  ^^^^^^ [2]
+   49|     x.name = 123; // error, not writable
+             ^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ function.js:53:14
+Error ------------------------------------------------------------------------------------------------- function.js:50:7
 
-Cannot assign `123` to `y.name` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `123` to `y.name` because property `name` is not writable. [cannot-write]
 
-   function.js:53:14
-    53|     y.name = 123; // error, it's a string
-                     ^^^ [1]
-
-References:
-   <BUILTINS>/core.js:364:11
-   364|     name: string;
-                  ^^^^^^ [2]
+   50|     y.name = 123; // error, not writable
+             ^^^^
 
 
 Error ------------------------------------------------------------------------------------------------ issue-7529.js:4:7

@@ -3,10 +3,10 @@
 function foo<T>(x: T): T {
   return x;
 }
-foo.name = 'foo';
+foo.bar = 'foo';
 type Foo = {
   <T>(T): T,
-  name: string,
+  bar: string,
 };
 
 (foo: Foo);

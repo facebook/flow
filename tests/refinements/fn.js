@@ -79,7 +79,5 @@ function fun10(x: mixed) {
     x.name;
     x.length;
     x.foo; // error
-    x.name = "bar"
-    x.length = 3;
   }
 }

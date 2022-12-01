@@ -5341,10 +5341,7 @@ Flags: --lsp
   "labelDetails":{"detail":": string"},
   "kind":6,
   "detail":"string",
-  "documentation":{
-    "kind":"markdown",
-    "value":"Returns the name of the function. Function names are read-only and can not be changed."
-  },
+  "documentation":{"kind":"markdown","value":"Returns the name of the function."},
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{

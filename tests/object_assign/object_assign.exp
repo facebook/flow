@@ -193,9 +193,9 @@ Cannot cast `Object.assign.length` to string because number [1] is incompatible 
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:360:13
-   360|     length: number;
-                    ^^^^^^ [1]
+   <BUILTINS>/core.js:360:14
+   360|     +length: number;
+                     ^^^^^^ [1]
    apply.js:12:25
     12| (Object.assign.length : string); // error
                                 ^^^^^^ [2]
@@ -210,9 +210,9 @@ Cannot cast `Object.assign.name` to number because string [1] is incompatible wi
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:364:11
-   364|     name: string;
-                  ^^^^^^ [1]
+   <BUILTINS>/core.js:364:12
+   364|     +name: string;
+                   ^^^^^^ [1]
    apply.js:14:23
     14| (Object.assign.name : number); // error
                               ^^^^^^ [2]
