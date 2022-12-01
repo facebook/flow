@@ -7,6 +7,8 @@
  * @format
  */
 
+const getFlowVersions = require('./src/js/flow-versions');
+
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
   title: 'Flow',
@@ -179,6 +181,10 @@ module.exports = {
   },
   customFields: {
     flowVersion: 'v0.194.0',
+    allFlowVersions: getFlowVersions(
+      Boolean(process.env.EXCLUDE_FLOW_RELEASES),
+      Boolean(process.env.EXCLUDE_FLOW_MASTER),
+    ),
   },
   presets: [
     [

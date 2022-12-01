@@ -15,13 +15,9 @@ import Navbar from '@theme/Navbar';
 
 const TryFlow = React.lazy(() => import('../try-flow/TryFlow'));
 
-// TODO: read from process.env as build time constants.
-const defaultFlowVersion = 'master';
-const flowVersions = ['master', 'v0.176.2'];
-
 export default function TryFlowPage(): React.MixedElement {
   const context = useDocusaurusContext();
-  const {siteConfig = {}} = context;
+  const {siteConfig = ({}: any)} = context;
   return (
     <Layout
       // $FlowFixMe[prop-missing]
@@ -33,8 +29,8 @@ export default function TryFlowPage(): React.MixedElement {
         {() => (
           <React.Suspense fallback={<div>Loading...</div>}>
             <TryFlow
-              defaultFlowVersion={defaultFlowVersion}
-              flowVersions={flowVersions}
+              defaultFlowVersion={siteConfig.customFields.flowVersion}
+              flowVersions={siteConfig.customFields.allFlowVersions}
             />
           </React.Suspense>
         )}
