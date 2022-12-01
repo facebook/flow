@@ -800,7 +800,6 @@ workflows:
             branches:
               only:
                 - main
-                - fix-new-website-deploy
 
   build_and_deploy:
     jobs:
