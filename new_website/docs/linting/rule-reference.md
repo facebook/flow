@@ -55,6 +55,7 @@ Setting `sketchy-null` sets the level for all sketchy null checks, but there are
 * `sketchy-null-number`
 * `sketchy-null-string`
 * `sketchy-null-mixed`
+* `sketchy-null-bigint`
 
 The type-specific variants are useful for specifying that some types of sketchy null checks are acceptable while others should be errors/warnings. For example, if you want to allow boolean sketchy null checks (for the pattern of treating undefined optional booleans as false) but forbid other types of sketchy null checks, you can do so with this `.flowconfig` `[lints]` section:
 ```
