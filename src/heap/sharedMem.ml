@@ -1470,19 +1470,16 @@ module NewAPI = struct
 
   let version_addr entity = addr_offset entity 3
 
-  let write_entity_data heap entity_addr slot data =
-    let data_addr = addr_offset entity_addr (header_size + slot) in
-    let data = Option.value data ~default:null_addr in
-    unsafe_write_addr_at heap data_addr data
-
   let write_entity chunk data =
-    let addr = write_header chunk Entity_tag entity_size in
-    unsafe_write_addr chunk null_addr;
-    unsafe_write_addr chunk null_addr;
+    (* The global version is always even. It starts at 0 and increments by 2.
+     * The new entity has the entity version and will be committed when the
+     * current transaction commits, so we can always write data to slot 0. *)
+    let data = Option.value data ~default:null_addr in
     let version = get_next_version () in
+    let addr = write_header chunk Entity_tag entity_size in
+    unsafe_write_addr chunk data (* write to slot 0 *);
+    unsafe_write_addr chunk null_addr;
     unsafe_write_int64 chunk (i64 version);
-    let slot = version land 1 in
-    write_entity_data chunk.heap addr slot data;
     addr
 
   let get_entity_version heap entity = Int64.to_int (buf_read_int64 heap (version_addr entity))
