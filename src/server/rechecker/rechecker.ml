@@ -119,48 +119,12 @@ let send_end_recheck ~profiling ~options recheck_reasons env =
 
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up
 
-(** Reinitialize the server. This should be just like starting up a new server,
-    except that the existing server stays running and can answer requests
-    using committed data until the re-init is complete. *)
-let reinit
-    genv env ?(files_to_force = CheckedSet.empty) ~recheck_reasons ~will_be_checked_files updates =
-  let options = genv.ServerEnv.options in
-  let workers = genv.ServerEnv.workers in
-  let%lwt (profiling, (log_recheck_event, recheck_stats, env)) =
-    let should_print_summary = Options.should_profile options in
-    Profiling_js.with_profiling_lwt ~label:"Reinit" ~should_print_summary (fun profiling ->
-        send_start_recheck env;
-        let%lwt (log_recheck_event, recheck_stats, env) =
-          Types_js.reinit
-            ~profiling
-            ~workers
-            ~options
-            ~updates
-            ~files_to_force
-            ~recheck_reasons
-            ~will_be_checked_files
-            env
-        in
-        send_end_recheck ~profiling ~options recheck_reasons env;
-        Lwt.return (log_recheck_event, recheck_stats, env)
-    )
-  in
-  let%lwt () = log_recheck_event ~profiling in
-
-  let event =
-    let duration = Profiling_js.get_profiling_duration profiling in
-    LspProt.Recheck_summary { duration; stats = recheck_stats }
-  in
-  MonitorRPC.send_telemetry event;
-
-  Lwt.return (profiling, env)
-
-(* on notification, execute client commands or recheck files *)
 let recheck
     genv
     env
     ?(files_to_force = CheckedSet.empty)
     ~changed_mergebase
+    ~missed_changes
     ~recheck_reasons
     ~will_be_checked_files
     updates =
@@ -179,6 +143,7 @@ let recheck
             env
             ~files_to_force
             ~changed_mergebase
+            ~missed_changes
             ~recheck_reasons
             ~will_be_checked_files
         in
@@ -343,17 +308,15 @@ let rec recheck_single ~recheck_count genv env =
       let recheck_reasons = List.rev recheck_reasons_rev in
       let%lwt (profiling, env) =
         try%lwt
-          if missed_changes && did_change_mergebase then
-            reinit genv env ~files_to_force ~recheck_reasons ~will_be_checked_files files_to_recheck
-          else
-            recheck
-              genv
-              env
-              ~files_to_force
-              ~changed_mergebase
-              ~recheck_reasons
-              ~will_be_checked_files
-              files_to_recheck
+          recheck
+            genv
+            env
+            ~files_to_force
+            ~changed_mergebase
+            ~missed_changes
+            ~recheck_reasons
+            ~will_be_checked_files
+            files_to_recheck
         with
         | exn ->
           let exn = Exception.wrap exn in
