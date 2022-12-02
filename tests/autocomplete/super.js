@@ -1,6 +1,6 @@
 //@flow
 
 class Foo {
-  bar =
-//     ^
+  bar: any =
+//          ^
 }

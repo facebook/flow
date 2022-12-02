@@ -1,8 +1,8 @@
 // @flow
 
 class Complementarity {}
-const Computerization = props => {};
-function Compressibility(props) {}
+const Computerization = (props: empty) => {};
+function Compressibility(props: empty) {}
 
 <C // request autocomplete on JSX name
 //^
