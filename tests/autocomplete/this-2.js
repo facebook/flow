@@ -10,10 +10,10 @@ function foo() {
 // ^
 }
 
-var y = z => t // should NOT suggest "this"
-//            ^
+var y = (z: empty) => t // should NOT suggest "this"
+//                     ^
 
 class Bar {
-  baz =  // should suggest "this"
-//      ^
+  baz: any =  // should suggest "this"
+//           ^
 }

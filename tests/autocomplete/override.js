@@ -5,7 +5,7 @@ class C {
 }
 
 class D extends C {
-  foo() { return this.override() }
+  foo(): string { return this.override() }
   override(): string { return ""; }
   bar() { this.
 //             ^
