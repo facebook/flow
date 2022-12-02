@@ -67,17 +67,7 @@ let set_server_options
 
 let status_response ~num_errors:_ = ()
 
-let init_done
-    ?estimated_time_to_recheck:_
-    ?estimated_time_to_restart:_
-    ?estimated_time_to_init:_
-    ?estimated_time_per_file:_
-    ?estimated_files_to_recheck:_
-    ?estimated_files_to_init:_
-    ?first_internal_error:_
-    ~saved_state_fetcher:_
-    _profiling =
-  ()
+let init_done ?first_internal_error:_ ~saved_state_fetcher:_ _profiling = ()
 
 let init_flow_command ~init_id:_ = ()
 
@@ -106,12 +96,6 @@ let recheck
     ~merge_skip_count:_
     ~check_skip_count:_
     ~profiling:_
-    ~estimated_time_to_recheck:_
-    ~estimated_time_to_restart:_
-    ~estimated_time_to_init:_
-    ~estimated_time_per_file:_
-    ~estimated_files_to_recheck:_
-    ~estimated_files_to_init:_
     ~first_internal_error:_
     ~slowest_file:_
     ~num_slow_files:_
