@@ -11,6 +11,9 @@ open Utils_js
 
 (****************** typecheck job helpers *********************)
 
+(** A recheck is estimated to be slower than reinitializing *)
+exception Recheck_too_slow
+
 let with_memory_timer_lwt ~options =
   let should_print = Options.should_profile options in
   Memory_utils.with_memory_timer_lwt ~should_print
@@ -877,7 +880,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mer
         time_to_restart;
       if time_to_restart < time_to_recheck then
         let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
-        Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
+        raise Recheck_too_slow
       else
         Lwt.return_unit
 
@@ -2492,16 +2495,31 @@ let recheck
       ~will_be_checked_files
       env
   else
-    recheck_impl
-      ~profiling
-      ~options
-      ~workers
-      ~updates
-      ~files_to_force
-      ~changed_mergebase
-      ~recheck_reasons
-      ~will_be_checked_files
-      env
+    try%lwt
+      recheck_impl
+        ~profiling
+        ~options
+        ~workers
+        ~updates
+        ~files_to_force
+        ~changed_mergebase
+        ~recheck_reasons
+        ~will_be_checked_files
+        env
+    with
+    | Recheck_too_slow ->
+      if Options.saved_state_allow_reinit options then
+        reinit
+          ~profiling
+          ~workers
+          ~options
+          ~updates
+          ~files_to_force
+          ~recheck_reasons
+          ~will_be_checked_files
+          env
+      else
+        Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
 
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in
