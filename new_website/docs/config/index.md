@@ -1,6 +1,7 @@
 ---
 title: .flowconfig
 slug: /config
+description: Flow tries to work out of the box as much as possible, but can be configured to work with any codebase.
 ---
 
 Every Flow project contains a `.flowconfig` file. You can configure Flow by

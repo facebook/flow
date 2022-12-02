@@ -1,5 +1,6 @@
 ---
 title: Type System
+description: "Learn how the type system in Flow works: Subtyping, Variance, Refinements, and more."
 slug: /lang
 ---
 

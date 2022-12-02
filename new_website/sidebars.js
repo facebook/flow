@@ -7,14 +7,24 @@
  * @format
  */
 
+/*
+ * We should explicitly list all the labels below, so that src/js/docs-categories.js that generates
+ * the /en/docs page will automatically work.
+ *
+ * For categories, the first item must be the index page.
+ */
 module.exports = {
-  someSidebar: [
+  docsSidebar: [
     {
       type: 'category',
       label: 'Introduction',
       items: ['getting-started', 'install', 'usage'],
     },
-    'faq',
+    {
+      type: 'doc',
+      id: 'faq',
+      label: 'FAQ',
+    },
     {
       type: 'category',
       label: 'Type Annotations',
@@ -88,7 +98,21 @@ module.exports = {
         'enums/migrating-legacy-patterns',
       ],
     },
-    'errors/index',
+    {
+      type: 'doc',
+      id: 'declarations/index',
+      label: 'Declarations',
+    },
+    {
+      type: 'category',
+      label: 'Library Definitions',
+      items: ['libdefs/index', 'libdefs/creation'],
+    },
+    {
+      type: 'doc',
+      id: 'errors/index',
+      label: 'Error Suppressions',
+    },
     {
       type: 'category',
       label: 'Linting',
@@ -99,11 +123,10 @@ module.exports = {
         'linting/rule-reference',
       ],
     },
-    'strict/index',
     {
-      type: 'category',
-      label: 'Library Definitions',
-      items: ['libdefs/index', 'libdefs/creation'],
+      type: 'doc',
+      id: 'strict/index',
+      label: 'Flow Strict',
     },
     {
       type: 'category',

@@ -1,6 +1,7 @@
 ---
 title: Getting Started
 slug: /getting-started
+description: Never used a type system before or just new to Flow? Let's get you up and running in a few minutes.
 ---
 
 Flow is a static type checker for your JavaScript code. It does a lot of work

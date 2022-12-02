@@ -57,6 +57,10 @@ declare module '@theme/BlogSidebar' {
   declare module.exports: any;
 }
 
+declare module '@theme/DocCardList' {
+  declare module.exports: any;
+}
+
 declare module '@theme/EditThisPage' {
   declare module.exports: any;
 }

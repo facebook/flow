@@ -1,5 +1,6 @@
 ---
 title: Flow Enums
+description: "Define a fixed set of constants which create their own type. Exhaustively checked in switch statements."
 slug: /enums
 ---
 

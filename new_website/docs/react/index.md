@@ -1,6 +1,7 @@
 ---
 title: Getting Started
 slug: /react
+description: Learn how to use Flow to effectively type common and advanced React patterns.
 ---
 
 Developers will often use Flow and React together, so it is important that Flow

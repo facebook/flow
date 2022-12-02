@@ -1,5 +1,6 @@
 ---
 title: FAQ
+description: Have a question about using Flow? Check here first!
 slug: /faq
 ---
 

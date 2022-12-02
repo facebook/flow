@@ -1,6 +1,7 @@
 ---
 title: Declaration Files
 slug: /declarations
+description: Learn how to write types in .flow files.
 ---
 
 ## What's a Declaration File? {#toc-what-s-a-declaration-file}

@@ -1,6 +1,7 @@
 ---
 title: Flow CLI
 slug: /cli
+description: How to use Flow from the command line. Including how to manage the Flow background process.
 ---
 
 The flow command line tool is made to be easy-to-use for simple cases.

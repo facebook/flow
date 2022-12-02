@@ -72,7 +72,7 @@ module.exports = {
           position: 'left',
         },
         {
-          to: 'en/docs/getting-started',
+          to: 'en/docs/',
           activeBasePath: 'en/docs',
           label: 'Docs',
           position: 'left',

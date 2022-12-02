@@ -1,5 +1,6 @@
 ---
 title: Editors
+description: "Detailed guides, tips, and resources on how to integrate Flow with different code editors."
 slug: /editors
 ---
 

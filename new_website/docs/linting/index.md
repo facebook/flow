@@ -1,6 +1,7 @@
 ---
 title: Linting Overview
 slug: /linting
+description: Learn how to configure Flow's linter to find potentially harmful code.
 ---
 
 Flow contains a linting framework that can tell you about more than just type errors. This framework is highly configurable in order to show you the information you want and hide the information you don't.

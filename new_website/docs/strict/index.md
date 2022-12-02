@@ -1,7 +1,9 @@
 ---
 title: Flow Strict
 slug: /strict
+description: Learn how to enable stricter type checking on a file-by-file basis.
 ---
+
 You can enable stronger safety guarantees in Flow (such as banning `any`/`Object`/`Function` types and requiring all dependencies to be typed) by adding **`@flow strict`** to your files.
 
 ### Overview {#toc-overview}

@@ -1,6 +1,7 @@
 ---
 title: Library Definitions
 slug: /libdefs
+description: Learn how to create and use library definitions for the third-party code your code depends on.
 ---
 
 ## What's a "Library Definition"? {#toc-what-s-a-library-definition}

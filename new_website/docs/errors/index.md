@@ -1,6 +1,7 @@
 ---
 title: Error Suppressions
 slug: /errors
+description: "Learn how to suppress Flow's type errors."
 ---
 
 Flow reports many different kinds of errors for many common programming mistakes, but not every JavaScript pattern can be understood by Flow.

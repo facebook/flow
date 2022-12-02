@@ -1,6 +1,7 @@
 ---
 title: Type Annotations
 slug: /types
+description: "Learn how to add Flow type annotations to your code: Primitives, Objects, Functions, Classes, and more."
 ---
 
 Adding type annotations is an important part of your interaction with Flow.
