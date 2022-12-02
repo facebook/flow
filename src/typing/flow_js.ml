@@ -3777,24 +3777,23 @@ struct
           let own_props = Context.find_props cx own_props in
           let proto_props = Context.find_props cx proto_props in
           let props = NameUtils.Map.union own_props proto_props in
-          let props_to_skip = [OrdinaryName "$key"; OrdinaryName "$value"] in
+          let props = remove_dict_from_props props in
           props
           |> NameUtils.Map.iter (fun x p ->
-                 if not (List.mem x props_to_skip) then
-                   match Property.read_t p with
-                   | Some t ->
-                     let propref = Named (reason_op, x) in
-                     rec_flow
-                       cx
-                       trace
-                       (to_obj, SetPropT (use_op, reason_op, propref, Assign, Normal, t, None))
-                   | None ->
-                     add_output
-                       cx
-                       ~trace
-                       (Error_message.EPropNotReadable
-                          { reason_prop = lreason; prop_name = Some x; use_op }
-                       )
+                 match Property.read_t p with
+                 | Some t ->
+                   let propref = Named (reason_op, x) in
+                   rec_flow
+                     cx
+                     trace
+                     (to_obj, SetPropT (use_op, reason_op, propref, Assign, Normal, t, None))
+                 | None ->
+                   add_output
+                     cx
+                     ~trace
+                     (Error_message.EPropNotReadable
+                        { reason_prop = lreason; prop_name = Some x; use_op }
+                     )
              );
           rec_flow_t cx ~use_op trace (to_obj, t)
         (* AnyT has every prop, each one typed as `any`, so spreading it into an
@@ -6426,11 +6425,7 @@ struct
             }
         ) ->
       let own_props = Context.find_props cx own_props_id in
-      let own_props_without_dict =
-        own_props
-        |> NameUtils.Map.remove (OrdinaryName "$key")
-        |> NameUtils.Map.remove (OrdinaryName "$value")
-      in
+      let own_props_without_dict = remove_dict_from_props own_props in
       let dict =
         (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
         if own_props == own_props_without_dict then
@@ -6492,11 +6487,7 @@ struct
     let lit = is_literal_object_reason lreason in
     let own_props = Context.find_props cx own_props_id in
     let proto_props = Context.find_props cx proto_props_id in
-    let own_props_without_dict =
-      own_props
-      |> NameUtils.Map.remove (OrdinaryName "$key")
-      |> NameUtils.Map.remove (OrdinaryName "$value")
-    in
+    let own_props_without_dict = remove_dict_from_props own_props in
     let dict =
       (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
       if own_props == own_props_without_dict then
@@ -6645,6 +6636,11 @@ struct
              in
              add_output cx ~trace error_message
        )
+
+  and remove_dict_from_props props =
+    props
+    |> NameUtils.Map.remove (OrdinaryName "$key")
+    |> NameUtils.Map.remove (OrdinaryName "$value")
 
   and check_super cx trace ~use_op lreason ureason t x p =
     let use_op =
