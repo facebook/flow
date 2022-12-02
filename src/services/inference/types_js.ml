@@ -811,6 +811,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mer
     Lwt.return_unit
   else if not (Options.lazy_mode options) then
     (* it's never faster to do a full init than a recheck *)
+    (* TODO: it may be faster to do a reinit from saved state, though *)
     Lwt.return_unit
   else
     match changed_mergebase with
@@ -1778,7 +1779,7 @@ let with_transaction name f =
   let reader = Mutator_state_reader.create transaction in
   f transaction reader
 
-let recheck
+let recheck_impl
     ~profiling
     ~options
     ~workers
@@ -2207,16 +2208,16 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, env)) =
         let should_print_summary = Options.should_profile options in
         Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
-            recheck
+            recheck_impl
               ~profiling
               ~options
               ~workers
               ~updates
-              env
               ~files_to_force
               ~changed_mergebase:None
               ~recheck_reasons
               ~will_be_checked_files:(ref files_to_force)
+              env
         )
       in
       Profiling_js.merge ~from:recheck_profiling ~into:profiling;
@@ -2454,7 +2455,7 @@ let reinit
   in
   (* TODO: what do we do if they're not? exit? *)
   ignore libs_ok;
-  recheck
+  recheck_impl
     ~profiling
     ~options
     ~workers
@@ -2464,6 +2465,43 @@ let reinit
     ~recheck_reasons
     ~will_be_checked_files
     env
+
+let recheck
+    ~profiling
+    ~options
+    ~workers
+    ~updates
+    ~files_to_force
+    ~changed_mergebase
+    ~missed_changes
+    ~recheck_reasons
+    ~will_be_checked_files
+    env =
+  let did_change_mergebase = Base.Option.value ~default:false changed_mergebase in
+  if missed_changes && did_change_mergebase then
+    (* Reinitialize the server. This should be just like starting up a new server,
+       except that the existing server stays running and can answer requests
+       using committed data until the re-init is complete. *)
+    reinit
+      ~profiling
+      ~workers
+      ~options
+      ~updates
+      ~files_to_force
+      ~recheck_reasons
+      ~will_be_checked_files
+      env
+  else
+    recheck_impl
+      ~profiling
+      ~options
+      ~workers
+      ~updates
+      ~files_to_force
+      ~changed_mergebase
+      ~recheck_reasons
+      ~will_be_checked_files
+      env
 
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in

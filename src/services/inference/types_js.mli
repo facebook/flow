@@ -13,17 +13,6 @@ val init :
   Options.t ->
   (bool (* libs_ok *) * ServerEnv.env) Lwt.t
 
-val reinit :
-  profiling:Profiling_js.running ->
-  workers:MultiWorkerLwt.worker list option ->
-  options:Options.t ->
-  updates:CheckedSet.t ->
-  files_to_force:CheckedSet.t ->
-  recheck_reasons:LspProt.recheck_reason list ->
-  will_be_checked_files:CheckedSet.t ref ->
-  ServerEnv.env ->
-  ((profiling:Profiling_js.finished -> unit Lwt.t) * LspProt.recheck_stats * ServerEnv.env) Lwt.t
-
 val calc_deps :
   options:Options.t ->
   profiling:Profiling_js.running ->
@@ -38,11 +27,12 @@ val recheck :
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   updates:CheckedSet.t ->
-  ServerEnv.env ->
   files_to_force:CheckedSet.t ->
   changed_mergebase:bool option ->
+  missed_changes:bool ->
   recheck_reasons:LspProt.recheck_reason list ->
   will_be_checked_files:CheckedSet.t ref ->
+  ServerEnv.env ->
   ((profiling:Profiling_js.finished -> unit Lwt.t) * LspProt.recheck_stats * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)
