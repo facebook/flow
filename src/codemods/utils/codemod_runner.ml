@@ -418,7 +418,7 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun profiling ->
         extract_flowlibs_or_exit options;
-        let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
+        let%lwt (_libs_ok, env) = Types_js.init ~profiling ~workers options in
         (* Create roots set based on file list *)
         let roots =
           get_target_filename_set
@@ -596,7 +596,7 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
           }
         in
         extract_flowlibs_or_exit options;
-        let%lwt (_libs_ok, env, _recheck_stats) = Types_js.init ~profiling ~workers options in
+        let%lwt (_libs_ok, env) = Types_js.init ~profiling ~workers options in
 
         let file_options = Options.file_options options in
         let all = Options.all options in

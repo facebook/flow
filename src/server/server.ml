@@ -67,7 +67,7 @@ let init ~profiling ?focus_targets genv =
 
   extract_flowlibs_or_exit options;
 
-  let%lwt (libs_ok, env, last_estimates) = Types_js.init ~profiling ~workers options in
+  let%lwt (libs_ok, env) = Types_js.init ~profiling ~workers options in
   (* If any libs errored, skip typechecking and just show lib errors. Note
    * that `init` above has done all parsing, not just lib parsing, resolved
    * and committed modules, etc.
@@ -87,7 +87,7 @@ let init ~profiling ?focus_targets genv =
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
      `errors` contains the current set of errors. *)
-  Lwt.return (env, last_estimates, first_internal_error)
+  Lwt.return (env, first_internal_error)
 
 (* A thread that samples memory stats every second and then logs an idle heartbeat event even
  * `idle_period_in_seconds` seconds. *)
@@ -253,7 +253,7 @@ let run ~monitor_channels ~init_id ~shared_mem_config options =
       Hh_logger.info "Initializing Server (This might take some time)";
 
       let should_print_summary = Options.should_profile options in
-      let%lwt (profiling, (env, last_estimates, first_internal_error)) =
+      let%lwt (profiling, (env, first_internal_error)) =
         Profiling_js.with_profiling_lwt program_init ~label:"Init" ~should_print_summary
       in
       MonitorRPC.send_telemetry
@@ -262,29 +262,7 @@ let run ~monitor_channels ~init_id ~shared_mem_config options =
 
       let saved_state_fetcher = string_of_saved_state_fetcher options in
 
-      begin
-        match last_estimates with
-        | None -> FlowEventLogger.init_done ?first_internal_error ~saved_state_fetcher profiling
-        | Some
-            {
-              Recheck_stats.estimated_time_to_recheck;
-              estimated_time_to_restart;
-              estimated_time_to_init;
-              estimated_time_per_file;
-              estimated_files_to_recheck;
-              estimated_files_to_init;
-            } ->
-          FlowEventLogger.init_done
-            ~estimated_time_to_recheck
-            ~estimated_time_to_restart
-            ~estimated_time_to_init
-            ~estimated_time_per_file
-            ~estimated_files_to_recheck
-            ~estimated_files_to_init
-            ?first_internal_error
-            ~saved_state_fetcher
-            profiling
-      end;
+      FlowEventLogger.init_done ?first_internal_error ~saved_state_fetcher profiling;
 
       Hh_logger.info "Server is READY";
 
@@ -343,7 +321,7 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
     let should_print_summary = Options.should_profile options in
     let%lwt (profiling, (print_errors, errors, warnings, first_internal_error)) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
-          let%lwt (env, _, first_internal_error) = program_init profiling in
+          let%lwt (env, first_internal_error) = program_init profiling in
           let reader = State_reader.create () in
           let (errors, warnings, suppressed_errors) =
             ErrorCollator.get ~profiling ~reader ~options env
