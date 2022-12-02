@@ -26,7 +26,7 @@ Triggers when you use object type syntax without explicitly specifying exactness
 
 This lint setting is ignored when `exact_by_default` is set to `true`.
 
-```
+```js flow-check
 type A = {x: number}; // Error
 type B = {x: number, ...} // Ok
 type C = {| x: number |} // Ok
@@ -39,7 +39,7 @@ Used in conjuction with [Flow Strict](../../strict/). Triggers when importing a 
 Triggers when you do an existence check on a value that can be either null/undefined or falsey.
 
 For example:
-```js
+```js flow-check
 const x: ?number = 5;
 if (x) {} // sketchy because x could be either null or 0.
 
@@ -76,7 +76,7 @@ function foo (bar: ?bool): void {
 doesn't report a warning.
 
 Suppressing one type of sketchy null check only suppresses that type, so, for example
-```js
+```js flow-check
 // flowlint sketchy-null:warn, sketchy-null-bool:off
 const x: ?(number | bool) = 0;
 if (x) {}
@@ -121,7 +121,7 @@ Note that this lint does not trigger when we know a condition is always `false`.
 
 Triggers when you use `?.` where it isn't needed. This comes in two main flavors. The first is when the left-hand-side cannot be nullish:
 
-```js
+```js flow-check
 type Foo = {
   bar: number
 }
@@ -132,7 +132,7 @@ foo?.bar; // Lint: unnecessary-optional-chain
 
 The second is when the left-hand-side could be nullish, but the short-circuiting behavior of `?.` is sufficient to handle it anyway:
 
-```js
+```js flow-check
 type Foo = {
   bar: {
     baz: number
@@ -157,10 +157,10 @@ effects and are unsafe.
 
 For example:
 
-```js
+```js flow-check
 const o = {
   get a() { return 4; }, // Error: unsafe-getters-setters
-  set b(x: number) { this.c = x; }, // Error: unsafe-getters-setters
+  set b(x: number) { o.c = x; }, // Error: unsafe-getters-setters
   c: 10,
 };
 ```
@@ -180,7 +180,7 @@ Triggers when a `Promise` is unused in an async scope (i.e., it is not `await`ed
 
 For example:
 
-```js
+```js flow-check
 declare function foo(): Promise<void>;
 
 async function bar() {
