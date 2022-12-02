@@ -41,6 +41,16 @@ let recurse_into_intersection =
     | [t] -> t
     | t0 :: t1 :: ts -> IntersectionT (r, InterRep.make t0 t1 ts)
 
+let map_poly ~f t =
+  match t with
+  | DefT (r, tr, PolyT ({ t_out; _ } as poly)) ->
+    begin
+      match f t_out with
+      | DefT (_, _, EmptyT) as empty -> empty
+      | t_out -> DefT (r, tr, PolyT { poly with t_out })
+    end
+  | _ -> t
+
 let rec exists = function
   (* falsy things get removed *)
   | DefT
@@ -71,6 +81,7 @@ let rec exists = function
 
 let rec not_exists t =
   match t with
+  | DefT (_, _, PolyT _) -> map_poly ~f:not_exists t
   (* falsy things pass through *)
   | DefT
       ( _,
@@ -396,8 +407,9 @@ let not_bigint t =
     DefT (reason_of_t t, trust, EmptyT)
   | _ -> t
 
-let object_ cx t =
+let rec object_ cx t =
   match t with
+  | DefT (_, _, PolyT _) -> map_poly ~f:(object_ cx) t
   | DefT (r, trust, MixedT flavor) ->
     let reason = replace_desc_new_reason RObject r in
     let dict =
@@ -428,22 +440,25 @@ let object_ cx t =
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
-let not_object t =
+let rec not_object t =
   match t with
+  | DefT (_, _, PolyT _) -> map_poly ~f:not_object t
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT)
   | DefT (_, trust, (ObjT _ | ArrT _ | NullT | InstanceT _ | EnumObjectT _)) ->
     DefT (reason_of_t t, trust, EmptyT)
   | _ -> t
 
-let function_ = function
+let rec function_ = function
+  | DefT (_, _, PolyT _) as t -> map_poly ~f:function_ t
   | DefT (r, trust, MixedT _) ->
     DefT (replace_desc_new_reason (RFunction RUnknown) r, trust, MixedT Mixed_function)
   | (DefT (_, _, (FunT _ | ClassT _)) | AnyT _) as t -> t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
   | t -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
-let not_function t =
+let rec not_function t =
   match t with
+  | DefT (_, _, PolyT _) -> map_poly ~f:not_function t
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT)
   | DefT (_, trust, (FunT _ | ClassT _)) -> DefT (reason_of_t t, trust, EmptyT)
   | _ -> t

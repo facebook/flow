@@ -2540,6 +2540,7 @@ struct
                   (tparams_loc, ids, t)
               in
               rec_flow cx trace (l, u)
+            | PredicateT (p, t) -> predicate cx trace t l p
             (* Special case for React.PropTypes.instanceOf arguments, which are an
                exception to type arg arity strictness, because it's not possible to
                provide args and we need to interpret the value as a type. *)

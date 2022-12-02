@@ -185,3 +185,13 @@ function non_assigning_member_assigns() {
   // $FlowExpectedError[unsupported-syntax]
   [tuple[0]] = [1]; // no additional internal error
 }
+
+{
+  type S = <W>(W) => W;
+
+  let s: ?S = null;
+  if (s != null) {
+      const h = s;
+      h(42);
+  }
+}
