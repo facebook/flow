@@ -1,7 +1,7 @@
 No errors!
 Error -------------------------------------------------------------------------------------------------------- a.js:8:17
 
-null or undefined [1] is not an object. [incompatible-use]
+null or undefined [1] is not an object. [not-an-object]
 
    a.js:8:17
    8| export type A = $Values<T>;

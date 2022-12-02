@@ -4187,7 +4187,8 @@ let error_code_of_upper_kind = function
     Some NotAnArray
   | IncompatibleObjAssignFromT
   | IncompatibleObjRestT
-  | IncompatibleGetKeysT ->
+  | IncompatibleGetKeysT
+  | IncompatibleGetValuesT ->
     Some NotAnObject
   | IncompatibleMixinT
   | IncompatibleThisSpecializeT ->

@@ -242,7 +242,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:3:8
 
-boolean [1] is not an object. [incompatible-use]
+boolean [1] is not an object. [not-an-object]
 
    non_object.js:3:8
    3| ('yo': $Values<boolean>); // Error: `boolean` is not an object and so has no
@@ -256,7 +256,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:5:7
 
-boolean [1] is not an object. [incompatible-use]
+boolean [1] is not an object. [not-an-object]
 
    non_object.js:5:7
    5| (123: $Values<boolean>); // Error: `boolean` is not an object and so has no
@@ -270,7 +270,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:7:8
 
-boolean [1] is not an object. [incompatible-use]
+boolean [1] is not an object. [not-an-object]
 
    non_object.js:7:8
    7| (true: $Values<boolean>); // Error: `boolean` is not an object and so has no
