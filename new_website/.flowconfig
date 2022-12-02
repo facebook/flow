@@ -16,4 +16,4 @@ exact_by_default=true
 exact_empty_objects=true
 
 [version]
-0.176.3
+0.194.0
