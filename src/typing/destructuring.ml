@@ -229,6 +229,10 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
         cx
         Env_api.OrdinaryNameLoc
         (mk_reason (RIdentifier (OrdinaryName name)) name_loc)
+    | Ast.Pattern.Expression _ ->
+      (* Expression in pattern destructuring is unsupported syntax,
+         so we shouldn't read the environment. *)
+      AnyT.untyped (mk_reason RDestructuring loc)
     | _ -> Env.find_write cx Env_api.PatternLoc (mk_reason RDestructuring loc)
 
   let rec pattern cx ~(f : callback) acc (loc, p) =

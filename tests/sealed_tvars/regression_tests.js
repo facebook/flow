@@ -179,3 +179,9 @@ function non_assigning_member_assigns() {
   declare var foo2: {bar: string};
   declare var foo3: () => string;
 }
+
+{
+  const tuple = [0];
+  // $FlowExpectedError[unsupported-syntax]
+  [tuple[0]] = [1]; // no additional internal error
+}
