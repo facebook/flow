@@ -807,18 +807,19 @@ let files_to_infer ~options ~profiling ~dependency_info ~focus_targets ~parsed =
   )
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase =
-  match Options.lazy_mode options with
-  | false ->
+  if not (Options.estimate_recheck_time options) then
+    Lwt.return_unit
+  else if not (Options.lazy_mode options) then
     (* it's never faster to do a full init than a recheck *)
-    Lwt.return_none
-  | true ->
-    (match changed_mergebase with
+    Lwt.return_unit
+  else
+    match changed_mergebase with
     | None ->
       (* Not tracking the mergebase, so we don't know one way or the other *)
-      Lwt.return_none
+      Lwt.return_unit
     | Some false ->
       Hh_logger.info "File watcher did not change mergebase";
-      Lwt.return_none
+      Lwt.return_unit
     | Some true ->
       Hh_logger.info "File watcher changed mergebase";
       (* TODO (glevi) - One of the numbers we need to estimate is "If we restart how many files
@@ -877,7 +878,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mer
         let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
         Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
       else
-        Lwt.return (Some estimates))
+        Lwt.return_unit
 
 type determine_what_to_recheck_result =
   | Determine_what_to_recheck_result of {
@@ -904,7 +905,6 @@ module Recheck : sig
     check_skip_count: int;
     slowest_file: string option;
     num_slow_files: int;
-    estimates: Recheck_stats.estimates option;
   }
 
   val full :
@@ -959,7 +959,6 @@ end = struct
     check_skip_count: int;
     slowest_file: string option;
     num_slow_files: int;
-    estimates: Recheck_stats.estimates option;
   }
 
   (* This is the first part of the recheck. It parses the files and updates the dependency graph. It
@@ -1596,11 +1595,8 @@ end = struct
      * include the dependencies and dependents that are being implicitly included in the recheck. *)
     will_be_checked_files := CheckedSet.union to_merge_or_check !will_be_checked_files;
 
-    let%lwt estimates =
-      if Options.estimate_recheck_time options then
-        restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase
-      else
-        Lwt.return_none
+    let%lwt () =
+      restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase
     in
     let%lwt () =
       ensure_parsed_or_trigger_recheck
@@ -1687,7 +1683,6 @@ end = struct
           check_skip_count;
           slowest_file;
           num_slow_files;
-          estimates;
         },
         record_recheck_time,
         check_internal_error
@@ -1823,38 +1818,8 @@ let recheck
     check_skip_count;
     slowest_file;
     num_slow_files;
-    estimates;
   } =
     stats
-  in
-  let ( estimated_time_to_recheck,
-        estimated_time_to_restart,
-        estimated_time_to_init,
-        estimated_time_per_file,
-        estimated_files_to_recheck,
-        estimated_files_to_init
-      ) =
-    Base.Option.value_map
-      estimates
-      ~default:(None, None, None, None, None, None)
-      ~f:(fun
-           {
-             Recheck_stats.estimated_time_to_recheck;
-             estimated_time_to_restart;
-             estimated_time_to_init;
-             estimated_time_per_file;
-             estimated_files_to_recheck;
-             estimated_files_to_init;
-           }
-         ->
-        ( Some estimated_time_to_recheck,
-          Some estimated_time_to_restart,
-          Some estimated_time_to_init,
-          Some estimated_time_per_file,
-          Some estimated_files_to_recheck,
-          Some estimated_files_to_init
-        )
-    )
   in
   (* TODO: update log to reflect current terminology **)
   let log_recheck_event : profiling:Profiling_js.finished -> unit Lwt.t =
@@ -1869,12 +1834,6 @@ let recheck
       ~all_dependent_files
       ~merge_skip_count
       ~check_skip_count
-      ~estimated_time_to_recheck
-      ~estimated_time_to_restart
-      ~estimated_time_to_init
-      ~estimated_time_per_file
-      ~estimated_files_to_recheck
-      ~estimated_files_to_init
       ~slowest_file
       ~num_slow_files
       ~first_internal_error
@@ -2458,10 +2417,10 @@ let init ~profiling ~workers options =
       init_from_saved_state ~profiling ~workers ~saved_state ~updates options
   in
   let init_time = Unix.gettimeofday () -. start_time in
-  let%lwt last_estimates =
+  let%lwt () =
     Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal env.ServerEnv.files)
   in
-  Lwt.return (libs_ok, env, last_estimates)
+  Lwt.return (libs_ok, env)
 
 let reinit
     ~profiling

@@ -14,7 +14,7 @@ type estimates = {
   estimated_files_to_init: int;
 }
 
-val init : options:Options.t -> init_time:float -> parsed_count:int -> estimates option Lwt.t
+val init : options:Options.t -> init_time:float -> parsed_count:int -> unit Lwt.t
 
 val record_recheck_time : options:Options.t -> total_time:float -> rechecked_files:int -> unit Lwt.t
 
