@@ -19,7 +19,9 @@ export default function Home(): React.MixedElement {
   const context = useDocusaurusContext();
   const {siteConfig} = context;
   return (
-    <Layout title={siteConfig.title} description={siteConfig.description}>
+    <Layout
+      title="Flow: A Static Type Checker for JavaScript"
+      description={siteConfig.description}>
       <header className={clsx(styles.feature, styles.featureHero)}>
         <div className="container">
           <p className={styles.featureHeading}>
