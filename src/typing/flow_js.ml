@@ -6161,6 +6161,8 @@ struct
     | GetStaticsT _
     | GetValuesT _
     | GuardT _
+    | FilterOptionalT _
+    | FilterMaybeT _
     | IdxUnMaybeifyT _
     | IdxUnwrap _
     | ImportDefaultT _
@@ -6263,8 +6265,6 @@ struct
     | TypeAppVarianceCheckT _
     | TypeCastT _
     | EnumCastT _
-    | FilterOptionalT _
-    | FilterMaybeT _
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | ExtendsUseT _
