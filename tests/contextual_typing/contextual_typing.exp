@@ -1,3 +1,17 @@
+Error --------------------------------------------------------------------------------------------------- async.js:17:16
+
+Cannot call `commit` because property `variables` is missing in `Promise` [1]. [prop-missing]
+
+   async.js:17:16
+   17|   return await commit({});  // error: property 'variables' is missing (reference
+                      ^^^^^^
+
+References:
+   async.js:16:21
+   16| async function g(): Promise<{ variables: any }> {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------- error_during_synthesis.js:6:32
 
 Cannot call `expectString` with `3` bound to the first parameter because number [1] is incompatible with string [2].
@@ -268,5 +282,39 @@ An annotation on `v` is required because Flow cannot infer its type from local c
                                               ^
 
 
+Error -------------------------------------------------------------------------------------------------- unions.js:21:24
 
-Found 19 errors
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   unions.js:21:24
+   21|     fn({ cb: (x) => { (x: string); } }); // error number ~> string
+                              ^
+
+References:
+   unions.js:17:19
+   17|     type NumCb = (number) => void;
+                         ^^^^^^ [1]
+   unions.js:21:27
+   21|     fn({ cb: (x) => { (x: string); } }); // error number ~> string
+                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- unions.js:32:34
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   unions.js:32:34
+   32|   const x: B<string> = (x) => { (x: string); }; // error number ~> string
+                                        ^
+
+References:
+   unions.js:31:24
+   31|   type B<T> = A<T> | A<number>;
+                              ^^^^^^ [1]
+   unions.js:32:37
+   32|   const x: B<string> = (x) => { (x: string); }; // error number ~> string
+                                           ^^^^^^ [2]
+
+
+
+Found 22 errors

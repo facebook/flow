@@ -1444,6 +1444,10 @@ struct
           sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
         | (_, PreprocessKitT (_, PropExistsTest (sense, key, reason, inter, tvar, preds))) ->
           prop_exists_test_generic key reason cx trace tvar inter sense preds l
+        (* Concretize types for hint purposes up to this point. The rest are
+           recorded as lower bound to the target tvar. *)
+        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeHintT tvar))) ->
+          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
         (*****************************************************)
