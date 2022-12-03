@@ -728,7 +728,7 @@ struct
           rec_flow cx trace (reposition ~trace cx loc ?annot_loc:(annot_aloc_of_reason r) ?desc t, u)
         | ( t,
             IntersectionPreprocessKitT
-              (reason, ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u))
+              (reason, ConcretizeTypes (ConcretizeIntersectionT (unresolved, resolved, r, rep, u)))
           ) ->
           SpeculationKit.prep_try_intersection cx trace reason unresolved (t :: resolved) u r rep
         (*****************************)
