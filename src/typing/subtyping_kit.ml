@@ -40,15 +40,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
   open Flow
   module SpeculationKit = Speculation_kit.Make (Flow)
 
-  let flow_all_in_union cx trace reason rep u =
-    if Context.in_hint_decomp cx then begin
-      let f cx trace (l, u) =
-        SpeculationKit.try_singleton_no_throws cx trace reason ~upper_unresolved:true l u
-      in
-      if not (iter_union ~f ~init:false ~join:( || ) cx trace rep u) then
-        raise SpeculationSingletonError
-    end else
-      iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
+  let flow_all_in_union cx trace rep u =
+    iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
 
   let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref = function
     (* unification cases *)
@@ -582,25 +575,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let t = push_type_alias_reason reason t in
       let null = NullT.make reason |> with_trust Trust.bogus_trust in
       let void = VoidT.make reason |> with_trust Trust.bogus_trust in
-      if Context.in_hint_decomp cx then begin
-        let f t =
-          SpeculationKit.try_singleton_no_throws
-            cx
-            trace
-            reason
-            ~upper_unresolved:true
-            t
-            (UseT (use_op, u))
-        in
-        let null = f null in
-        let void = f void in
-        let t = f t in
-        if not (t || void || null) then raise SpeculationSingletonError
-      end else begin
-        rec_flow_t cx trace ~use_op (null, u);
-        rec_flow_t cx trace ~use_op (void, u);
-        rec_flow_t cx trace ~use_op (t, u)
-      end
+      rec_flow_t cx trace ~use_op (null, u);
+      rec_flow_t cx trace ~use_op (void, u);
+      rec_flow_t cx trace ~use_op (t, u)
     | (DefT (r, trust, VoidT), OptionalT { reason = _; type_ = tout; use_desc = _ }) ->
       rec_flow_t cx trace ~use_op (EmptyT.why r trust, tout)
     | (OptionalT { reason = _; type_ = t; use_desc = _ }, OptionalT _)
@@ -608,23 +585,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (t, u)
     | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
       let void = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
-      if Context.in_hint_decomp cx then begin
-        let f t =
-          SpeculationKit.try_singleton_no_throws
-            cx
-            trace
-            r
-            ~upper_unresolved:true
-            t
-            (UseT (use_op, u))
-        in
-        let void = f void in
-        let t = f t in
-        if not (t || void) then raise SpeculationSingletonError
-      end else begin
-        rec_flow_t cx trace ~use_op (void, u);
-        rec_flow_t cx trace ~use_op (t, u)
-      end
+      rec_flow_t cx trace ~use_op (void, u);
+      rec_flow_t cx trace ~use_op (t, u)
     | (ThisTypeAppT (reason_tapp, c, this, ts), _) ->
       let reason_op = reason_of_t u in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
@@ -838,7 +800,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             trace
             (remove_predicate_from_union reason cx filter_null_and_void rep, maybe)
-        | _ -> flow_all_in_union cx trace reason rep (UseT (use_op, u))
+        | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
     | (UnionT (reason, rep), OptionalT { reason = r; type_ = opt; use_desc }) ->
       let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
@@ -850,9 +812,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | UnionRep.No -> rec_flow_t ~use_op cx trace (l, opt)
         | UnionRep.Yes ->
           rec_flow_t ~use_op cx trace (remove_predicate_from_union reason cx filter_void rep, opt)
-        | _ -> flow_all_in_union cx trace reason rep (UseT (use_op, u))
+        | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
-    | (UnionT (r, rep), _) ->
+    | (UnionT (_, rep), _) ->
       ( if Context.is_verbose cx then
         match u with
         | UnionT _ -> prerr_endline "UnionT ~> UnionT slow case"
@@ -860,7 +822,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ -> ()
       );
 
-      flow_all_in_union cx trace r rep (UseT (use_op, u))
+      flow_all_in_union cx trace rep (UseT (use_op, u))
     | (_, IntersectionT (_, rep)) ->
       ( if Context.is_verbose cx then
         match l with
@@ -913,30 +875,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
            List.exists (TypeUtil.quick_subtype (Context.trust_errors cx) l) ts ->
       ()
     | (_, UnionT (r, rep)) ->
-      if Context.in_hint_decomp cx then begin
-        if
-          not
-            (UnionRep.members rep
-            |> Base.List.fold ~init:false ~f:(fun acc u ->
-                   let r =
-                     SpeculationKit.try_singleton_no_throws
-                       cx
-                       trace
-                       r
-                       ~upper_unresolved:false
-                       l
-                       (UseT (use_op, u))
-                   in
-                   acc || r
-               )
-            )
-        then
-          raise SpeculationSingletonError
-      end else
-        (* Try the branches of the union in turn, with the goal of selecting the
-         * correct branch. This process is reused for intersections as well. See
-         * comments on try_union and try_intersection. *)
-        SpeculationKit.try_union cx trace use_op l r rep
+      (* Try the branches of the union in turn, with the goal of selecting the
+       * correct branch. This process is reused for intersections as well. See
+       * comments on try_union and try_intersection. *)
+      SpeculationKit.try_union cx trace use_op l r rep
     (* maybe and optional types are just special union types *)
     | (t1, MaybeT (r2, t2)) ->
       let t2 = push_type_alias_reason r2 t2 in
