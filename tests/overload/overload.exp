@@ -9,9 +9,9 @@ Cannot call `f` because: [incompatible-call]
       ^
 
 References:
-   annot.js:4:10
-   4| type T = null;
-               ^^^^ [1]
+   annot.js:5:16
+   5| declare var x: T;
+                     ^ [1]
    annot.js:1:23
    1| declare function f(x: string): void;
                             ^^^^^^ [2]
