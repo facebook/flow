@@ -326,7 +326,7 @@ struct
     | BecomeT _
     | ElemT _
     | ReactKitT _
-    | IntersectionPreprocessKitT _
+    | PreprocessKitT _
     | ReactPropsToOut _
     | ReactInToProps _
     | FilterOptionalT _

@@ -169,7 +169,7 @@ let rec default_resolve_touts ~flow cx loc u =
     resolve t
   | ReactKitT (_, _, tool) -> resolve_react_tool tool
   | ChoiceKitUseT _ -> _TODO
-  | IntersectionPreprocessKitT _ -> _TODO
+  | PreprocessKitT _ -> _TODO
   | DebugPrintT _
   | DebugSleepT _ ->
     ()

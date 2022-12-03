@@ -708,8 +708,8 @@ module rec TypeTerm : sig
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
     | ReactKitT of use_op * reason * React.tool
     | ChoiceKitUseT of reason * choice_use_tool
-    (* tools for preprocessing intersections *)
-    | IntersectionPreprocessKitT of reason * intersection_preprocess_tool
+    (* tools for preprocessing types *)
+    | PreprocessKitT of reason * intersection_preprocess_tool
     | DebugPrintT of reason
     | DebugSleepT of reason
     | SentinelPropTestT of reason * t * string * sense * UnionEnum.star * tvar
@@ -1102,7 +1102,7 @@ module rec TypeTerm : sig
    * remains the same.
    * (ii) The successful speculation id has not been recorded in "set". This choice
    * is a sibling of the currently "set" choice. This is possible thanks to the
-   * special behavior of IntersectionPreprocessKitT with union-like types. Two
+   * special behavior of PreprocessKitT with union-like types. Two
    * overloads from sibling branches are unlikely to lead to a helpful hint --
    * this case is deemed "invalid".
    *)
@@ -3696,9 +3696,9 @@ let string_of_use_ctor = function
   | ImportNamedT _ -> "ImportNamedT"
   | ImportTypeofT _ -> "ImportTypeofT"
   | ImportTypeT _ -> "ImportTypeT"
-  | IntersectionPreprocessKitT (_, tool) ->
+  | PreprocessKitT (_, tool) ->
     spf
-      "IntersectionPreprocessKitT %s"
+      "PreprocessKitT %s"
       begin
         match tool with
         | ConcretizeTypes _ -> "ConcretizeTypes"

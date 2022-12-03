@@ -704,19 +704,17 @@ struct
            it. Also, unlike full type resolution, the tvars that are concretized
            don't necessarily have the 0->1 property: they could be concretized at
            different types, as more and more lower bounds appear. *)
-        | (UnionT (r, urep), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
+        | (UnionT (r, urep), PreprocessKitT (_, ConcretizeTypes _)) ->
           flow_all_in_union cx trace r urep u
-        | (MaybeT (lreason, t), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
+        | (MaybeT (lreason, t), PreprocessKitT (_, ConcretizeTypes _)) ->
           let lreason = replace_desc_reason RNullOrVoid lreason in
           rec_flow cx trace (NullT.make lreason |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (VoidT.make lreason |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
-        | ( OptionalT { reason = r; type_ = t; use_desc },
-            IntersectionPreprocessKitT (_, ConcretizeTypes _)
-          ) ->
+        | (OptionalT { reason = r; type_ = t; use_desc }, PreprocessKitT (_, ConcretizeTypes _)) ->
           rec_flow cx trace (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
-        | (AnnotT (r, t, use_desc), IntersectionPreprocessKitT (_, ConcretizeTypes _)) ->
+        | (AnnotT (r, t, use_desc), PreprocessKitT (_, ConcretizeTypes _)) ->
           (* TODO: directly derive loc and desc from the reason of tvar *)
           let loc = aloc_of_reason r in
           let desc =
@@ -727,7 +725,7 @@ struct
           in
           rec_flow cx trace (reposition ~trace cx loc ?annot_loc:(annot_aloc_of_reason r) ?desc t, u)
         | ( t,
-            IntersectionPreprocessKitT
+            PreprocessKitT
               (reason, ConcretizeTypes (ConcretizeIntersectionT (unresolved, resolved, r, rep, u)))
           ) ->
           SpeculationKit.prep_try_intersection cx trace reason unresolved (t :: resolved) u r rep
@@ -1442,11 +1440,9 @@ struct
            object type with all the properties of those object types. The added
            complication arises as an implementation detail, because we do not
            concatenate those object types explicitly. *)
-        | (_, IntersectionPreprocessKitT (_, SentinelPropTest (sense, key, t, inter, tvar))) ->
+        | (_, PreprocessKitT (_, SentinelPropTest (sense, key, t, inter, tvar))) ->
           sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
-        | ( _,
-            IntersectionPreprocessKitT (_, PropExistsTest (sense, key, reason, inter, tvar, preds))
-          ) ->
+        | (_, PreprocessKitT (_, PropExistsTest (sense, key, reason, inter, tvar, preds))) ->
           prop_exists_test_generic key reason cx trace tvar inter sense preds l
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
@@ -6170,7 +6166,7 @@ struct
     | ImportNamedT _
     | ImportTypeT _
     | ImportTypeofT _
-    | IntersectionPreprocessKitT _
+    | PreprocessKitT _
     | ResolveUnionT _
     | LookupT _
     | MatchPropT _

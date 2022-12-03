@@ -449,7 +449,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   and choice_kit_use reason k = ChoiceKitUseT (reason, k)
 
-  and intersection_preprocess_kit reason k = IntersectionPreprocessKitT (reason, k)
+  and intersection_preprocess_kit reason k = PreprocessKitT (reason, k)
 
   (** utils for emitting toolkit constraints **)
 
