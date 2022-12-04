@@ -15,7 +15,7 @@ function test() {
 }
 
 function arr() {
-  let arr = [];
+  let arr: Array<empty> = [];
   arr = [1,2,3]; // error
 }
 

@@ -31,6 +31,6 @@ type Q<X> = $Exact<P<X>>;
 type R = $Exact<{ +f: number }>;
 declare var r: {| response: R |};
 const d = r.response;
-function bar({d}) {}
+function bar({d}:{d: R}) {}
 //            ^
 bar({d});

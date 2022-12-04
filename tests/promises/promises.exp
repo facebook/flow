@@ -105,7 +105,7 @@ Error --------------------------------------------------------------------------
 Cannot call `Promise.all` because function [1] requires another argument. [incompatible-call]
 
    all.js:24:9
-     24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
+     24| Promise.all<Array<mixed>>(); // Error: expected array instead of undefined (too few arguments)
                  ^^^
 
 References:
@@ -114,19 +114,19 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- all.js:27:13
+Error ----------------------------------------------------------------------------------------------------- all.js:27:27
 
-Cannot call `Promise.all` with `0` bound to `promises` because number [1] is incompatible with `$Iterable` [2].
+Cannot call `Promise.all` with `0` bound to `promises` because number [1] is incompatible with array type [2].
 [incompatible-call]
 
-   all.js:27:13
-     27| Promise.all(0); // Error: expected array instead of number
-                     ^ [1]
+   all.js:27:27
+   27| Promise.all<Array<mixed>>(0); // Error: expected array instead of number
+                                 ^ [1]
 
 References:
-   <BUILTINS>/core.js:1907:19
-   1907|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                           ^^^^^^^^^^^^^^^ [2]
+   all.js:27:13
+   27| Promise.all<Array<mixed>>(0); // Error: expected array instead of number
+                   ^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ allSettled.js:4:9
@@ -134,7 +134,7 @@ Error --------------------------------------------------------------------------
 Cannot call `Promise.allSettled` because function [1] requires another argument. [incompatible-call]
 
    allSettled.js:4:9
-      4| Promise.allSettled(); // Error: expected $Iterable instead of undefined (too few arguments)
+      4| Promise.allSettled<Array<mixed>>(); // Error: expected $Iterable instead of undefined (too few arguments)
                  ^^^^^^^^^^
 
 References:
@@ -143,19 +143,19 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- allSettled.js:7:20
+Error ----------------------------------------------------------------------------------------------- allSettled.js:7:34
 
-Cannot call `Promise.allSettled` with `0` bound to `promises` because number [1] is incompatible with `$Iterable` [2].
+Cannot call `Promise.allSettled` with `0` bound to `promises` because number [1] is incompatible with array type [2].
 [incompatible-call]
 
-   allSettled.js:7:20
-      7| Promise.allSettled(0); // Error: expected $Iterable instead of number
-                            ^ [1]
+   allSettled.js:7:34
+   7| Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
+                                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:1914:26
-   1914|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
-                                  ^^^^^^^^^^^^^^^ [2]
+   allSettled.js:7:20
+   7| Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
+                         ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:36:8
@@ -340,6 +340,23 @@ References:
                  ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ promise.js:149:19
+
+Cannot assign `num` to `b` because `Promise` [1] is incompatible with number [2]. [incompatible-type]
+
+   promise.js:149:19
+   149|   var b: number = num; // Error: Promise<number> ~> number
+                          ^^^
+
+References:
+   promise.js:145:16
+   145| Promise.reject<Promise<number>>(Promise.resolve(0)).then(function(num) {
+                       ^^^^^^^^^^^^^^^ [1]
+   promise.js:149:10
+   149|   var b: number = num; // Error: Promise<number> ~> number
+                 ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ promise.js:161:21
 
 Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -400,9 +417,26 @@ Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [
                             ^^^
 
 References:
-   promise.js:198:33
-   198|   .catch(function(num) { return 'asdf'; })
-                                        ^^^^^^ [1]
+   promise.js:197:16
+   197| Promise.reject<string>(0)
+                       ^^^^^^ [1]
+   promise.js:201:12
+   201|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:201:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   promise.js:201:21
+   201|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:198:10
+   198|   .catch<string>(function(num) { return 'asdf'; })
+                 ^^^^^^ [1]
    promise.js:201:12
    201|     var b: number = str; // Error: string ~> number
                    ^^^^^^ [2]
@@ -417,9 +451,26 @@ Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [
                             ^^^
 
 References:
-   promise.js:206:49
-   206|   .catch(function(num) { return Promise.resolve('asdf'); })
-                                                        ^^^^^^ [1]
+   promise.js:205:16
+   205| Promise.reject<string>(0)
+                       ^^^^^^ [1]
+   promise.js:209:12
+   209|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:209:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   promise.js:209:21
+   209|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:206:10
+   206|   .catch<string>(function(num) { return Promise.resolve('asdf'); })
+                 ^^^^^^ [1]
    promise.js:209:12
    209|     var b: number = str; // Error: string ~> number
                    ^^^^^^ [2]
@@ -434,9 +485,26 @@ Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [
                             ^^^
 
 References:
-   promise.js:214:65
-   214|   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
-                                                                        ^^^^^^ [1]
+   promise.js:213:16
+   213| Promise.reject<string>(0)
+                       ^^^^^^ [1]
+   promise.js:217:12
+   217|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:217:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   promise.js:217:21
+   217|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:214:10
+   214|   .catch<string>(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
+                 ^^^^^^ [1]
    promise.js:217:12
    217|     var b: number = str; // Error: string ~> number
                    ^^^^^^ [2]
@@ -541,4 +609,4 @@ References:
 
 
 
-Found 33 errors
+Found 37 errors

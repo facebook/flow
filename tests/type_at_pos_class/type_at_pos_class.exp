@@ -134,7 +134,7 @@ class-1.js:8:3 = {
   "end":3
 }
 class-2.js:4:3 = {
-  "type":"() => this",
+  "type":"() => A",
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -154,8 +154,8 @@ class-2.js:9:9 = {
   "loc":{
     "source":"class-2.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":9,"offset":77},
-    "end":{"line":9,"column":9,"offset":78}
+    "start":{"line":9,"column":9,"offset":80},
+    "end":{"line":9,"column":9,"offset":81}
   },
   "path":"class-2.js",
   "line":9,
@@ -169,8 +169,8 @@ class-2.js:10:9 = {
   "loc":{
     "source":"class-2.js",
     "type":"SourceFile",
-    "start":{"line":10,"column":9,"offset":88},
-    "end":{"line":10,"column":9,"offset":89}
+    "start":{"line":10,"column":9,"offset":91},
+    "end":{"line":10,"column":9,"offset":92}
   },
   "path":"class-2.js",
   "line":10,
@@ -184,8 +184,8 @@ class-2.js:12:7 = {
   "loc":{
     "source":"class-2.js",
     "type":"SourceFile",
-    "start":{"line":12,"column":7,"offset":98},
-    "end":{"line":12,"column":7,"offset":99}
+    "start":{"line":12,"column":7,"offset":101},
+    "end":{"line":12,"column":7,"offset":102}
   },
   "path":"class-2.js",
   "line":12,
@@ -199,8 +199,8 @@ class-2.js:13:7 = {
   "loc":{
     "source":"class-2.js",
     "type":"SourceFile",
-    "start":{"line":13,"column":7,"offset":121},
-    "end":{"line":13,"column":7,"offset":122}
+    "start":{"line":13,"column":7,"offset":124},
+    "end":{"line":13,"column":7,"offset":125}
   },
   "path":"class-2.js",
   "line":13,
@@ -419,13 +419,13 @@ class-poly-0.js:17:7 = {
   "end":9
 }
 class-poly-1.js:9:5 = {
-  "type":"mixed",
+  "type":"number",
   "reasons":[],
   "loc":{
     "source":"class-poly-1.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":5,"offset":96},
-    "end":{"line":9,"column":5,"offset":97}
+    "start":{"line":9,"column":5,"offset":99},
+    "end":{"line":9,"column":5,"offset":100}
   },
   "path":"class-poly-1.js",
   "line":9,
@@ -434,13 +434,13 @@ class-poly-1.js:9:5 = {
   "end":5
 }
 class-poly-1.js:9:11 = {
-  "type":"() => mixed",
+  "type":"() => number",
   "reasons":[],
   "loc":{
     "source":"class-poly-1.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":11,"offset":102},
-    "end":{"line":9,"column":11,"offset":103}
+    "start":{"line":9,"column":11,"offset":105},
+    "end":{"line":9,"column":11,"offset":106}
   },
   "path":"class-poly-1.js",
   "line":9,
@@ -484,8 +484,8 @@ class-statics.js:9:7 = {
   "loc":{
     "source":"class-statics.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":6,"offset":79},
-    "end":{"line":9,"column":9,"offset":83}
+    "start":{"line":9,"column":6,"offset":92},
+    "end":{"line":9,"column":9,"offset":96}
   },
   "path":"class-statics.js",
   "line":9,
@@ -499,8 +499,8 @@ class-statics.js:11:8 = {
   "loc":{
     "source":"class-statics.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":5,"offset":122},
-    "end":{"line":11,"column":9,"offset":127}
+    "start":{"line":11,"column":5,"offset":135},
+    "end":{"line":11,"column":9,"offset":140}
   },
   "path":"class-statics.js",
   "line":11,
@@ -514,8 +514,8 @@ class-statics.js:16:5 = {
   "loc":{
     "source":"class-statics.js",
     "type":"SourceFile",
-    "start":{"line":16,"column":5,"offset":161},
-    "end":{"line":16,"column":9,"offset":166}
+    "start":{"line":16,"column":5,"offset":174},
+    "end":{"line":16,"column":9,"offset":179}
   },
   "path":"class-statics.js",
   "line":16,
@@ -529,8 +529,8 @@ class-statics.js:17:5 = {
   "loc":{
     "source":"class-statics.js",
     "type":"SourceFile",
-    "start":{"line":17,"column":5,"offset":180},
-    "end":{"line":17,"column":5,"offset":181}
+    "start":{"line":17,"column":5,"offset":193},
+    "end":{"line":17,"column":5,"offset":194}
   },
   "path":"class-statics.js",
   "line":17,
@@ -544,8 +544,8 @@ class-statics.js:20:11 = {
   "loc":{
     "source":"class-statics.js",
     "type":"SourceFile",
-    "start":{"line":20,"column":11,"offset":216},
-    "end":{"line":20,"column":11,"offset":217}
+    "start":{"line":20,"column":11,"offset":229},
+    "end":{"line":20,"column":11,"offset":230}
   },
   "path":"class-statics.js",
   "line":20,
@@ -682,13 +682,13 @@ implements.js:7:8 = {
   "end":24
 }
 multi-inheritance.js:6:7 = {
-  "type":"A | B",
+  "type":"Class<A> | Class<B>",
   "reasons":[],
   "loc":{
     "source":"multi-inheritance.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":7,"offset":90},
-    "end":{"line":6,"column":11,"offset":95}
+    "start":{"line":6,"column":7,"offset":111},
+    "end":{"line":6,"column":11,"offset":116}
   },
   "path":"multi-inheritance.js",
   "line":6,

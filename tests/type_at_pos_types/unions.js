@@ -2,15 +2,15 @@
 
 declare function random(): boolean;
 
-let foo = () => "";
+let foo = (): number | string => "";
 if (random()) {
-  foo = () => 0;
+  foo = (): number | string => 0;
 }
 foo;
 
 let bar = (x: string) => {};
 if (random()) {
-  bar = (x: number) => {};
+  bar = (x: string) => {};
 }
 bar;
 

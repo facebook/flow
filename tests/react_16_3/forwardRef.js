@@ -2,7 +2,7 @@
 const React = require('react');
 
 type Props = {| foo: number |};
-const FancyButton = React.forwardRef<Props, _>((props, ref) => (
+const FancyButton = React.forwardRef<Props, HTMLButtonElement>((props, ref) => (
   <button ref={ref} className="FancyButton">
   </button>
 ));

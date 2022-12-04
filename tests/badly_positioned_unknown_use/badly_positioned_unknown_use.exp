@@ -1,15 +1,15 @@
-Error --------------------------------------------------------------------------------------------------- test1.js:22:13
+Error --------------------------------------------------------------------------------------------------- test1.js:22:41
 
 Cannot call `foo` because inexact object type [1] is incompatible with exact object type [2]. [incompatible-exact]
 
-   test1.js:22:13
-   22| var x = f()(foo(Comp));
-                   ^^^
+   test1.js:22:41
+   22| var x = f<React.ComponentType<{}>, _>()(foo(Comp));
+                                               ^^^
 
 References:
-   test1.js:12:29
-   12|   Comp: React.ComponentType<{}>,
-                                   ^^ [1]
+   test1.js:22:31
+   22| var x = f<React.ComponentType<{}>, _>()(foo(Comp));
+                                     ^^ [1]
    test1.js:6:34
     6|   Component: React$ComponentType<{|...P|}>,
                                         ^^^^^^^^ [2]

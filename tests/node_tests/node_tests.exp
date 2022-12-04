@@ -280,7 +280,7 @@ Error --------------------------------------------------------------------------
 Cannot call `dns.lookup` because no more than 2 arguments are expected by function type [1]. [incompatible-call]
 
    dns/dns.js:31:5
-    31| dns.lookup("test.com", null, (err, address, family) => {}); // error
+    31| dns.lookup("test.com", null, (err: mixed, address: mixed, family: mixed) => {}); // error
             ^^^^^^
 
 References:
@@ -300,13 +300,13 @@ Cannot call `dns.lookup` because: [incompatible-call]
  - Or function [1] is incompatible with string [3].
 
    dns/dns.js:33:5
-    33| dns.lookup((err, address, family) => {}); // error
+    33| dns.lookup((err: mixed, address: mixed, family: mixed) => {}); // error
             ^^^^^^
 
 References:
    dns/dns.js:33:12
-    33| dns.lookup((err, address, family) => {}); // error
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    33| dns.lookup((err: mixed, address: mixed, family: mixed) => {}); // error
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/node.js:793:13
    793|     domain: string,
                     ^^^^^^ [2]

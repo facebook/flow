@@ -10,6 +10,6 @@ function bar(obj: { x?: string }) {
   return obj.x;
 }
 
-function qux(x?) {
+function qux(x?: empty) {
   return x;
 }

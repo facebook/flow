@@ -2134,21 +2134,21 @@ References:
                                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:63:2
+Error ----------------------------------------------------------------------------------------------------- test.js:64:2
 
 Cannot cast `baz2.bind(...)(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test.js:63:2
-   63| (baz2.bind(3)("") : string); // error : number incompatible with string
-        ^^^^^^^^^^^^^^^^
+   test.js:64:2
+   64| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:63:12
-   63| (baz2.bind(3)("") : string); // error : number incompatible with string
-                  ^ [1]
-   test.js:63:21
-   63| (baz2.bind(3)("") : string); // error : number incompatible with string
-                           ^^^^^^ [2]
+   test.js:64:43
+   64| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
+                                                 ^^^^^^^^ [1]
+   test.js:64:67
+   64| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
+                                                                         ^^^^^^ [2]
 
 
 

@@ -21,7 +21,7 @@ function MyFunctionComponent(props: {
 }) { return null }
 
 const MyEnhancedComponent = connect(MyComponent);
-const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
 
 <MyEnhancedComponent />; // Error: Needs `a` and `b`.
 <MyEnhancedComponent a={1} b={2} />; // OK
