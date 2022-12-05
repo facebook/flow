@@ -98,6 +98,48 @@ References:
                    ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ interface.js:21:2
+
+Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with literal union [2]. [incompatible-cast]
+
+   interface.js:21:2
+   21| ('xxx': $Keys<WithDict>); // ERROR
+        ^^^^^ [1]
+
+References:
+   interface.js:4:4
+    4|   ['x' | 'y']: number;
+          ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:24:2
+
+Cannot cast `'xxx'` to key set because property `xxx` is missing in `WithProps` [1]. [prop-missing]
+
+   interface.js:24:2
+   24| ('xxx': $Keys<WithProps>); // ERROR
+        ^^^^^
+
+References:
+   interface.js:24:15
+   24| ('xxx': $Keys<WithProps>); // ERROR
+                     ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:28:2
+
+Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with literal union [2]. [incompatible-cast]
+
+   interface.js:28:2
+   28| ('xxx': $Keys<WithBoth>); // ERROR
+        ^^^^^ [1]
+
+References:
+   interface.js:13:4
+   13|   ['x' | 'y']: number;
+          ^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- keys.js:10:4
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
@@ -230,4 +272,4 @@ References:
 
 
 
-Found 16 errors
+Found 19 errors

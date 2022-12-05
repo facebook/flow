@@ -40,6 +40,16 @@ var tests = [
   },
 ];
 
+// Interfaces
+declare var iface: interface {a: number, b: string};
+declare var ifaceDict: interface {['x' | 'y']: boolean};
+declare var ifaceBoth: interface {['x' | 'y']: boolean, z: number};
+
+(Object.keys(iface): Array<'a' | 'b'>); // OK
+(Object.keys(ifaceDict): Array<'x' | 'y'>); // OK
+(Object.keys(ifaceBoth): Array<'x' | 'y' | 'z'>); // OK
+(Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
+
 // Invalid values
 Object.keys(undefined); // ERROR
 Object.keys(null); // ERROR

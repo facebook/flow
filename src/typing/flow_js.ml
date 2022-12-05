@@ -1474,12 +1474,14 @@ struct
             HasOwnPropT
               ( use_op,
                 reason_op,
-                ( DefT (_, _, StrT (Literal (_, x)))
-                | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); _ } )
+                ( ( DefT (_, _, StrT (Literal (_, x)))
+                  | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); _ } ) as key
+                )
               )
           ) ->
           let own_props = Context.find_props cx instance.own_props in
-          (match NameUtils.Map.find_opt x own_props with
+          let own_props_without_dict = remove_dict_from_props own_props in
+          (match NameUtils.Map.find_opt x own_props_without_dict with
           | Some _ -> ()
           | None ->
             let err =
@@ -1493,7 +1495,15 @@ struct
                     prop_typo_suggestion cx [instance.own_props] (display_string_of_name x);
                 }
             in
-            add_output cx ~trace err)
+            (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
+            if own_props == own_props_without_dict then
+              add_output cx ~trace err
+            else (
+              match NameUtils.Map.find (OrdinaryName "$key") own_props with
+              | Field (_, dict_key, _) ->
+                rec_flow_t ~use_op cx trace (mod_reason_of_t (Fun.const reason_op) key, dict_key)
+              | _ -> add_output cx ~trace err
+            ))
         | (DefT (reason_o, _, InstanceT (_, _, _, _)), HasOwnPropT (use_op, reason_op, _)) ->
           let err =
             Error_message.EPropNotFound
@@ -1521,8 +1531,17 @@ struct
         | (DefT (_, _, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys)) ->
           (* methods are not enumerable, so only walk fields *)
           let own_props = Context.find_props cx instance.own_props in
-          let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
-          rec_flow cx trace (union_of_ts reason_op keylist, keys)
+          let own_props_without_dict = remove_dict_from_props own_props in
+          let keylist = Flow_js_utils.keylist_of_props own_props_without_dict reason_op in
+          rec_flow cx trace (union_of_ts reason_op keylist, keys);
+          (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
+          if own_props == own_props_without_dict then
+            ()
+          else (
+            match NameUtils.Map.find (OrdinaryName "$key") own_props with
+            | Field (_, dict_key, _) -> rec_flow cx trace (dict_key, ToStringT (reason_op, keys))
+            | _ -> ()
+          )
         | (AnyT _, GetKeysT (reason_op, keys)) ->
           rec_flow cx trace (StrT.why reason_op |> with_trust literal_trust, keys)
         (* In general, typechecking is monotonic in the sense that more constraints
