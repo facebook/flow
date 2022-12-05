@@ -1,0 +1,157 @@
+Error ---------------------------------------------------------------------------------------------- declare_pred.js:4:3
+
+Cannot call `f` with `"a"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   declare_pred.js:4:3
+   4| f("a"); //error
+        ^^^ [1]
+
+References:
+   declare_pred.js:1:23
+   1| declare function f(x: number): bool %checks (x === 0);
+                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declare_pred.js:16:4
+
+Cannot cast `x` to number literal `1` because number literal `0` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   declare_pred.js:16:4
+   16|   (x: 1); // error
+          ^
+
+References:
+   declare_pred.js:5:16
+    5| declare var x: number;
+                      ^^^^^^ [1]
+   declare_pred.js:16:7
+   16|   (x: 1); // error
+             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:21:18
+
+Cannot declare `h` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:21:18
+   21| declare function h(x: number): bool %checks (x === 0);
+                        ^
+
+References:
+   declare_pred.js:20:10
+   20| function h(x: number): bool %checks { return x === 1 }
+                ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:26:18
+
+Cannot declare `i` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:26:18
+   26| declare function i(x: string): bool %checks (x === "A");
+                        ^
+
+References:
+   declare_pred.js:25:18
+   25| declare function i(x: number): bool %checks (x === 0);
+                        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:31:18
+
+Cannot declare `j` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:31:18
+   31| declare function j(x: string): bool %checks (x === "A");
+                        ^
+
+References:
+   declare_pred.js:30:18
+   30| declare function j(x: number): bool;
+                        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:34:18
+
+Cannot declare `k` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:34:18
+   34| declare function k(x: number): bool;
+                        ^
+
+References:
+   declare_pred.js:33:18
+   33| declare function k(x: string): bool %checks (x === "A");
+                        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:37:18
+
+Cannot declare `l` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:37:18
+   37| declare function l(x: string): bool %checks (x === "A");
+                        ^
+
+References:
+   declare_pred.js:36:18
+   36| declare function l(x: boolean): bool;
+                        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ err.js:4:18
+
+Cannot declare `f` [1] because the name is already bound. [name-already-bound]
+
+   err.js:4:18
+   4| declare function f(number): string // error
+                       ^
+
+References:
+   err.js:3:10
+   3| function f(x: number): number { return 42}
+               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- scope.js:3:5
+
+Cannot call `bar` with `0` bound to `y` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   scope.js:3:5
+   3| bar(0);
+          ^ [1]
+
+References:
+   scope.js:1:25
+   1| declare function bar(y: T): string;
+                              ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:2
+
+Cannot call `foo` because: [incompatible-call]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   test.js:7:2
+   7| (foo(false): void); // error, boolean ~/~ undefined
+       ^^^
+
+References:
+   test.js:7:6
+   7| (foo(false): void); // error, boolean ~/~ undefined
+           ^^^^^ [1]
+   test.js:1:25
+   1| declare function foo(x: number): string;
+                              ^^^^^^ [2]
+   test.js:2:25
+   2| declare function foo(x: string): number;
+                              ^^^^^^ [3]
+
+
+
+Found 10 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
