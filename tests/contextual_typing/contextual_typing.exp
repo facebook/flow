@@ -258,6 +258,21 @@ References:
                                                ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- type_filter_union.js:10:50
+
+Cannot get `(thumbnails ?? []).filter` because property `filter` [1] cannot be unbound from the context [2] where it was
+defined. [method-unbinding]
+
+   type_filter_union.js:10:50
+    10| const loadedThumbnailsCount = (thumbnails ?? []).filter
+                                                         ^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:924:5
+   924|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- unions.js:4:62
 
 An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
@@ -317,4 +332,4 @@ References:
 
 
 
-Found 22 errors
+Found 23 errors

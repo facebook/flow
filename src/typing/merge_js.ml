@@ -194,12 +194,12 @@ let detect_sketchy_null_checks cx master_cx =
             ALocMap.find_opt loc cur_checks |> Base.Option.value ~default:ExistsCheck.empty
           in
           let exists_check =
-            match Type_filter.maybe t with
+            match Type_filter.maybe cx t with
             | DefT (_, _, EmptyT) -> exists_check
             | _ -> { exists_check with null_loc = t_loc }
           in
           let exists_check =
-            match t |> Type_filter.not_exists |> Type_filter.not_maybe with
+            match t |> Type_filter.not_exists cx |> Type_filter.not_maybe cx with
             | DefT (_, _, BoolT _) -> { exists_check with bool_loc = t_loc }
             | DefT (_, _, StrT _) -> { exists_check with string_loc = t_loc }
             | DefT (_, _, NumT _) -> { exists_check with number_loc = t_loc }

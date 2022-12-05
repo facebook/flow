@@ -1088,7 +1088,7 @@ struct
             (aloc_of_reason r')
             (reason_of_t l)
             ~useful:
-              (match Type_filter.not_exists l with
+              (match Type_filter.not_exists cx l with
               | DefT (_, _, EmptyT) -> false
               | _ -> true)
         (***************)
@@ -1212,12 +1212,12 @@ struct
           (* a falsy && b ~> a
              a truthy && b ~> b
              a && b ~> a falsy | b *)
-          (match Type_filter.exists left with
+          (match Type_filter.exists cx left with
           | DefT (_, _, EmptyT) ->
             (* falsy *)
             rec_flow cx trace (left, PredicateT (NotP ExistsP, u))
           | _ ->
-            (match Type_filter.not_exists left with
+            (match Type_filter.not_exists cx left with
             | DefT (_, _, EmptyT) ->
               (* truthy *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
@@ -1228,12 +1228,12 @@ struct
           (* a truthy || b ~> a
              a falsy || b ~> b
              a || b ~> a truthy | b *)
-          (match Type_filter.not_exists left with
+          (match Type_filter.not_exists cx left with
           | DefT (_, _, EmptyT) ->
             (* truthy *)
             rec_flow cx trace (left, PredicateT (ExistsP, u))
           | _ ->
-            (match Type_filter.exists left with
+            (match Type_filter.exists cx left with
             | DefT (_, _, EmptyT) ->
               (* falsy *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
@@ -1244,14 +1244,14 @@ struct
            a nullish ?? b ~> b
            a ?? b ~> a not-nullish | b *)
         | (left, NullishCoalesceT (_, right, u)) ->
-          (match Type_filter.maybe left with
+          (match Type_filter.maybe cx left with
           | DefT (_, _, EmptyT)
           (* This `AnyT` case is required to have similar behavior to the other logical operators. *)
           | AnyT _ ->
             (* not-nullish *)
             rec_flow cx trace (left, PredicateT (NotP MaybeP, u))
           | _ ->
-            (match Type_filter.not_maybe left with
+            (match Type_filter.not_maybe cx left with
             | DefT (_, _, EmptyT) ->
               (* nullish *)
               rec_flow cx trace (right, UseT (unknown_use, OpenT u))
@@ -7402,25 +7402,25 @@ struct
     match pred with
     | ExistsP ->
       begin
-        match Type_filter.exists source with
+        match Type_filter.exists cx source with
         | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | NotP ExistsP ->
       begin
-        match Type_filter.not_exists source with
+        match Type_filter.not_exists cx source with
         | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | MaybeP ->
       begin
-        match Type_filter.maybe source with
+        match Type_filter.maybe cx source with
         | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
     | NotP MaybeP ->
       begin
-        match Type_filter.not_maybe source with
+        match Type_filter.not_maybe cx source with
         | DefT (_, _, EmptyT) -> ()
         | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
       end
@@ -7544,7 +7544,7 @@ struct
       let filtered = Type_filter.undefined l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     | NotP VoidP ->
-      let filtered = Type_filter.not_undefined l in
+      let filtered = Type_filter.not_undefined cx l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     (********)
     (* null *)
@@ -7553,16 +7553,16 @@ struct
       let filtered = Type_filter.null l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     | NotP NullP ->
-      let filtered = Type_filter.not_null l in
+      let filtered = Type_filter.not_null cx l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     (*********)
     (* maybe *)
     (*********)
     | MaybeP ->
-      let filtered = Type_filter.maybe l in
+      let filtered = Type_filter.maybe cx l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     | NotP MaybeP ->
-      let filtered = Type_filter.not_maybe l in
+      let filtered = Type_filter.not_maybe cx l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     (********)
     (* true *)
@@ -7586,10 +7586,10 @@ struct
     (* truthyness *)
     (************************)
     | ExistsP ->
-      let filtered = Type_filter.exists l in
+      let filtered = Type_filter.exists cx l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     | NotP ExistsP ->
-      let filtered = Type_filter.not_exists l in
+      let filtered = Type_filter.not_exists cx l in
       rec_flow_t cx trace ~use_op:unknown_use (filtered, OpenT t)
     | PropExistsP (key, r) -> prop_exists_test cx trace key r true l t
     | NotP (PropExistsP (key, r)) -> prop_exists_test cx trace key r false l t
