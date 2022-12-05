@@ -1472,7 +1472,7 @@ module NewAPI = struct
 
   let write_entity chunk data =
     (* The global version is always even. It starts at 0 and increments by 2.
-     * The new entity has the entity version and will be committed when the
+     * The new entity has the global version and will be committed when the
      * current transaction commits, so we can always write data to slot 0. *)
     let data = Option.value data ~default:null_addr in
     let version = get_next_version () in
