@@ -173,6 +173,7 @@ let object_like_op = function
   | GetKeysT _
   | HasOwnPropT _
   | GetValuesT _
+  | GetDictValuesT _
   | ObjAssignToT _
   | ObjAssignFromT _
   | ObjRestT _
@@ -411,6 +412,7 @@ let error_message_kind_of_upper = function
     Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
+  | GetDictValuesT _ -> Error_message.IncompatibleGetValuesT
   | UnaryArithT _ -> Error_message.IncompatibleUnaryArithT
   | MapTypeT (_, _, (ObjectMap _ | ObjectMapi _ | ObjectMapConst _ | ObjectKeyMirror), _) ->
     Error_message.IncompatibleMapTypeTObject

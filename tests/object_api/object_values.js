@@ -1,13 +1,36 @@
-Object.entries({a: 1}); // OK
+declare var dict: {[string]: number};
 
-class A {
+declare var dictWithProps: {[string]: number, a: boolean};
+
+declare var writeOnlyDict: {-[string]: number};
+
+declare var dictUnion: {[string]: number} | {[string]: boolean};
+
+declare var obj: {a: 1, b: 2};
+
+declare class C {
   a: number;
-  constructor(a: number) {
-    this.a = a;
-  }
+  b: string;
 }
-const a = new A(1);
-Object.entries(a); // OK
+declare var instance: C;
+
+declare var iface: interface {[string]: number};
+
+(Object.values(dict): Array<number>); // OK
+(Object.values(iface): Array<mixed>); // OK
+(Object.values(dictWithProps): Array<mixed>); // OK
+(Object.values(dictUnion): Array<number | boolean>); // OK
+(Object.values(writeOnlyDict): Array<mixed>); // OK
+(Object.values(obj): Array<mixed>); // OK
+(Object.values(instance): Array<mixed>); // OK
+
+(Object.values(dict): Array<empty>); // ERROR
+(Object.values(iface): Array<empty>); // ERROR
+(Object.values(dictWithProps): Array<empty>); // ERROR
+(Object.values(dictUnion): Array<empty>); // ERROR
+(Object.values(writeOnlyDict): Array<empty>); // ERROR
+(Object.values(obj): Array<empty>); // ERROR
+(Object.values(instance): Array<empty>); // ERROR
 
 // Invalid inputs
 Object.values(undefined); // ERROR

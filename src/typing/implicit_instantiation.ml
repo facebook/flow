@@ -257,6 +257,7 @@ struct
     | OptionalIndexedAccessT _
     | GetKeysT _
     | GetValuesT _
+    | GetDictValuesT _
     (* Import-export related upper bounds won't appear during implicit instantiation. *)
     | CJSRequireT _
     | ImportModuleNsT _

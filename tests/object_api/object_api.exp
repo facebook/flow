@@ -29,64 +29,204 @@ References:
            ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ object_entries.js:13:16
+Error ------------------------------------------------------------------------------------------- object_entries.js:27:2
 
-Cannot call method `entries` with `undefined` bound to `object` because undefined [1] is incompatible with interface
-type [2]. [incompatible-call]
+Cannot cast `Object.entries(...)` to array type because number [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
 
-   object_entries.js:13:16
-    13| Object.entries(undefined); // ERROR
-                       ^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:130:28
-   130|     static entries(object: interface {}): Array<[string, mixed]>;
-                                   ^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ object_entries.js:14:16
-
-Cannot call method `entries` with `null` bound to `object` because null [1] is incompatible with interface type [2].
-[incompatible-call]
-
-   object_entries.js:14:16
-    14| Object.entries(null); // ERROR
-                       ^^^^ [1]
+   object_entries.js:27:2
+   27| (Object.entries(dict): Array<[string, empty]>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:130:28
-   130|     static entries(object: interface {}): Array<[string, mixed]>;
-                                   ^^^^^^^^^^^^ [2]
+   object_entries.js:1:30
+    1| declare var dict: {[string]: number};
+                                    ^^^^^^ [1]
+   object_entries.js:27:39
+   27| (Object.entries(dict): Array<[string, empty]>); // ERROR
+                                             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ object_entries.js:15:16
+Error ------------------------------------------------------------------------------------------- object_entries.js:28:2
 
-Cannot call method `entries` with `1` bound to `object` because number [1] is incompatible with interface type [2].
-[incompatible-call]
+Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
 
-   object_entries.js:15:16
-    15| Object.entries(1); // ERROR
-                       ^ [1]
-
-References:
-   <BUILTINS>/core.js:130:28
-   130|     static entries(object: interface {}): Array<[string, mixed]>;
-                                   ^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ object_entries.js:16:16
-
-Cannot call method `entries` with `true` bound to `object` because boolean [1] is incompatible with interface type [2].
-[incompatible-call]
-
-   object_entries.js:16:16
-    16| Object.entries(true); // ERROR
-                       ^^^^ [1]
+   object_entries.js:28:2
+   28| (Object.entries(iface): Array<[string, empty]>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:130:28
-   130|     static entries(object: interface {}): Array<[string, mixed]>;
-                                   ^^^^^^^^^^^^ [2]
+   object_entries.js:28:40
+   28| (Object.entries(iface): Array<[string, empty]>); // ERROR
+                                              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:29:2
+
+Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_entries.js:29:2
+   29| (Object.entries(dictWithProps): Array<[string, empty]>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_entries.js:29:48
+   29| (Object.entries(dictWithProps): Array<[string, empty]>); // ERROR
+                                                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:30:2
+
+Cannot cast `Object.entries(...)` to array type because number [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_entries.js:30:2
+   30| (Object.entries(dictUnion): Array<[string, empty]>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_entries.js:7:35
+    7| declare var dictUnion: {[string]: number} | {[string]: boolean};
+                                         ^^^^^^ [1]
+   object_entries.js:30:44
+   30| (Object.entries(dictUnion): Array<[string, empty]>); // ERROR
+                                                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:30:2
+
+Cannot cast `Object.entries(...)` to array type because boolean [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_entries.js:30:2
+   30| (Object.entries(dictUnion): Array<[string, empty]>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_entries.js:7:56
+    7| declare var dictUnion: {[string]: number} | {[string]: boolean};
+                                                              ^^^^^^^ [1]
+   object_entries.js:30:44
+   30| (Object.entries(dictUnion): Array<[string, empty]>); // ERROR
+                                                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:31:2
+
+Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_entries.js:31:2
+   31| (Object.entries(writeOnlyDict): Array<[string, empty]>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_entries.js:31:48
+   31| (Object.entries(writeOnlyDict): Array<[string, empty]>); // ERROR
+                                                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:32:2
+
+Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_entries.js:32:2
+   32| (Object.entries(obj): Array<['a' | 'b', empty]>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_entries.js:32:41
+   32| (Object.entries(obj): Array<['a' | 'b', empty]>); // ERROR
+                                               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:33:2
+
+Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_entries.js:33:2
+   33| (Object.entries(instance): Array<['a' | 'b', empty]>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_entries.js:33:46
+   33| (Object.entries(instance): Array<['a' | 'b', empty]>); // ERROR
+                                                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:34:2
+
+Cannot cast `Object.entries(...)` to array type because tuple type [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_entries.js:34:2
+   34| (Object.entries(dict): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_entries.js:34:30
+   34| (Object.entries(dict): Array<empty>); // ERROR
+                                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:37:8
+
+Cannot call method `entries` because undefined [1] is not an object. [not-an-object]
+
+   object_entries.js:37:8
+   37| Object.entries(undefined); // ERROR
+              ^^^^^^^
+
+References:
+   object_entries.js:37:16
+   37| Object.entries(undefined); // ERROR
+                      ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:38:8
+
+Cannot call method `entries` because null [1] is not an object. [not-an-object]
+
+   object_entries.js:38:8
+   38| Object.entries(null); // ERROR
+              ^^^^^^^
+
+References:
+   object_entries.js:38:16
+   38| Object.entries(null); // ERROR
+                      ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:39:8
+
+Cannot call method `entries` because number [1] is not an object. [not-an-object]
+
+   object_entries.js:39:8
+   39| Object.entries(1); // ERROR
+              ^^^^^^^
+
+References:
+   object_entries.js:39:16
+   39| Object.entries(1); // ERROR
+                      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- object_entries.js:40:8
+
+Cannot call method `entries` because boolean [1] is not an object. [not-an-object]
+
+   object_entries.js:40:8
+   40| Object.entries(true); // ERROR
+              ^^^^^^^
+
+References:
+   object_entries.js:40:16
+   40| Object.entries(true); // ERROR
+                      ^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- object_keys.js:5:2
@@ -955,64 +1095,189 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- object_values.js:13:15
+Error -------------------------------------------------------------------------------------------- object_values.js:27:2
 
-Cannot call method `values` with `undefined` bound to `object` because undefined [1] is incompatible with interface
-type [2]. [incompatible-call]
+Cannot cast `Object.values(...)` to array type because number [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
 
-   object_values.js:13:15
-    13| Object.values(undefined); // ERROR
-                      ^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:221:27
-   221|     static values(object: interface {}): Array<mixed>;
-                                  ^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- object_values.js:14:15
-
-Cannot call method `values` with `null` bound to `object` because null [1] is incompatible with interface type [2].
-[incompatible-call]
-
-   object_values.js:14:15
-    14| Object.values(null); // ERROR
-                      ^^^^ [1]
+   object_values.js:27:2
+   27| (Object.values(dict): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:221:27
-   221|     static values(object: interface {}): Array<mixed>;
-                                  ^^^^^^^^^^^^ [2]
+   object_values.js:1:30
+    1| declare var dict: {[string]: number};
+                                    ^^^^^^ [1]
+   object_values.js:27:29
+   27| (Object.values(dict): Array<empty>); // ERROR
+                                   ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- object_values.js:15:15
+Error -------------------------------------------------------------------------------------------- object_values.js:28:2
 
-Cannot call method `values` with `1` bound to `object` because number [1] is incompatible with interface type [2].
-[incompatible-call]
+Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
 
-   object_values.js:15:15
-    15| Object.values(1); // ERROR
-                      ^ [1]
-
-References:
-   <BUILTINS>/core.js:221:27
-   221|     static values(object: interface {}): Array<mixed>;
-                                  ^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- object_values.js:16:15
-
-Cannot call method `values` with `true` bound to `object` because boolean [1] is incompatible with interface type [2].
-[incompatible-call]
-
-   object_values.js:16:15
-    16| Object.values(true); // ERROR
-                      ^^^^ [1]
+   object_values.js:28:2
+   28| (Object.values(iface): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:221:27
-   221|     static values(object: interface {}): Array<mixed>;
-                                  ^^^^^^^^^^^^ [2]
+   object_values.js:28:30
+   28| (Object.values(iface): Array<empty>); // ERROR
+                                    ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:29:2
+
+Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_values.js:29:2
+   29| (Object.values(dictWithProps): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_values.js:29:38
+   29| (Object.values(dictWithProps): Array<empty>); // ERROR
+                                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:30:2
+
+Cannot cast `Object.values(...)` to array type because number [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_values.js:30:2
+   30| (Object.values(dictUnion): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_values.js:7:35
+    7| declare var dictUnion: {[string]: number} | {[string]: boolean};
+                                         ^^^^^^ [1]
+   object_values.js:30:34
+   30| (Object.values(dictUnion): Array<empty>); // ERROR
+                                        ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:30:2
+
+Cannot cast `Object.values(...)` to array type because boolean [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_values.js:30:2
+   30| (Object.values(dictUnion): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_values.js:7:56
+    7| declare var dictUnion: {[string]: number} | {[string]: boolean};
+                                                              ^^^^^^^ [1]
+   object_values.js:30:34
+   30| (Object.values(dictUnion): Array<empty>); // ERROR
+                                        ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:31:2
+
+Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_values.js:31:2
+   31| (Object.values(writeOnlyDict): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_values.js:31:38
+   31| (Object.values(writeOnlyDict): Array<empty>); // ERROR
+                                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:32:2
+
+Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_values.js:32:2
+   32| (Object.values(obj): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_values.js:32:28
+   32| (Object.values(obj): Array<empty>); // ERROR
+                                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:33:2
+
+Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   object_values.js:33:2
+   33| (Object.values(instance): Array<empty>); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_values.js:33:33
+   33| (Object.values(instance): Array<empty>); // ERROR
+                                       ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:36:8
+
+Cannot call method `values` because undefined [1] is not an object. [not-an-object]
+
+   object_values.js:36:8
+   36| Object.values(undefined); // ERROR
+              ^^^^^^
+
+References:
+   object_values.js:36:15
+   36| Object.values(undefined); // ERROR
+                     ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:37:8
+
+Cannot call method `values` because null [1] is not an object. [not-an-object]
+
+   object_values.js:37:8
+   37| Object.values(null); // ERROR
+              ^^^^^^
+
+References:
+   object_values.js:37:15
+   37| Object.values(null); // ERROR
+                     ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:38:8
+
+Cannot call method `values` because number [1] is not an object. [not-an-object]
+
+   object_values.js:38:8
+   38| Object.values(1); // ERROR
+              ^^^^^^
+
+References:
+   object_values.js:38:15
+   38| Object.values(1); // ERROR
+                     ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:39:8
+
+Cannot call method `values` because boolean [1] is not an object. [not-an-object]
+
+   object_values.js:39:8
+   39| Object.values(true); // ERROR
+              ^^^^^^
+
+References:
+   object_values.js:39:15
+   39| Object.values(true); // ERROR
+                     ^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:3:2
@@ -1093,4 +1358,4 @@ References:
 
 
 
-Found 70 errors
+Found 87 errors

@@ -775,6 +775,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(spf "%s, (%s, %s)" (kid ix) (string_of_reason preason) (tvar ptvar)) t
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t
+    | GetDictValuesT _ -> p t
     | MatchPropT (use_op, _, prop, (preason, ptvar))
     | GetPropT (use_op, _, _, prop, (preason, ptvar)) ->
       p

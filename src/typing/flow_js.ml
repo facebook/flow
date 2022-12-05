@@ -1565,6 +1565,28 @@ struct
         (* Any will always be ok *)
         | (AnyT (_, src), GetValuesT (reason, values)) ->
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, values)
+        (***********************************************)
+        (* Values of a dictionary - `mixed` otherwise. *)
+        (***********************************************)
+        | ( DefT
+              ( _,
+                _,
+                ObjT
+                  { flags = { obj_kind = Indexed { value; dict_polarity; _ }; _ }; props_tmap; _ }
+              ),
+            GetDictValuesT (_, result)
+          )
+          when Context.find_props cx props_tmap |> NameUtils.Map.is_empty
+               && Polarity.compat (dict_polarity, Polarity.Positive) ->
+          rec_flow cx trace (value, result)
+        (* Temporarily allow Arrays, to split up error diff. *)
+        | (DefT (_, _, ArrT _), GetDictValuesT (reason, result))
+        | (DefT (_, _, ObjT _), GetDictValuesT (reason, result))
+        | (DefT (_, _, InstanceT _), GetDictValuesT (reason, result)) ->
+          rec_flow cx trace (MixedT.why reason (bogus_trust ()), result)
+        (* Any will always be ok *)
+        | (AnyT (_, src), GetDictValuesT (reason, result)) ->
+          rec_flow cx trace (AnyT.why src reason, result)
         (*******************************************)
         (* Refinement based on function predicates *)
         (*******************************************)
@@ -6164,6 +6186,7 @@ struct
     | GetProtoT _
     | GetStaticsT _
     | GetValuesT _
+    | GetDictValuesT _
     | GuardT _
     | FilterOptionalT _
     | FilterMaybeT _

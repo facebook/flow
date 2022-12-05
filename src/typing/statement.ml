@@ -5785,6 +5785,26 @@ module Make
            }
         )
     in
+    let get_keys ~arr_reason obj_t =
+      Tvar.mk_where cx arr_reason (fun tvar ->
+          let keys_reason =
+            update_desc_reason
+              (fun desc -> RCustom (spf "element of %s" (string_of_desc desc)))
+              reason
+          in
+          Flow.flow cx (obj_t, GetKeysT (keys_reason, UseT (use_op, tvar)))
+      )
+    in
+    let get_values ~arr_reason obj_t =
+      Tvar.mk_where cx arr_reason (fun tvar ->
+          let values_reason =
+            update_desc_reason
+              (fun desc -> RCustom (spf "element of %s" (string_of_desc desc)))
+              reason
+          in
+          Flow.flow cx (obj_t, GetDictValuesT (values_reason, UseT (use_op, tvar)))
+      )
+    in
     match (m, targs, args) with
     | ("create", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
       let (((_, e_t), _) as e_ast) = expression cx e in
@@ -5871,23 +5891,28 @@ module Make
       ) ->
       let arr_reason = mk_reason RArrayType loc in
       let (((_, o), _) as e_ast) = expression cx e in
-      ( DefT
-          ( arr_reason,
-            bogus_trust (),
-            ArrT
-              (ArrayAT
-                 ( Tvar.mk_where cx arr_reason (fun tvar ->
-                       let keys_reason =
-                         update_desc_reason
-                           (fun desc -> RCustom (spf "element of %s" (string_of_desc desc)))
-                           reason
-                       in
-                       Flow.flow cx (o, GetKeysT (keys_reason, UseT (use_op, tvar)))
-                   ),
-                   None
-                 )
-              )
-          ),
+      let keys_t = get_keys ~arr_reason o in
+      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT (keys_t, None))),
+        None,
+        (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
+      )
+    | ("values", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
+      let arr_reason = mk_reason RArrayType loc in
+      let (((_, o), _) as e_ast) = expression cx e in
+      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT (get_values ~arr_reason o, None))),
+        None,
+        (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
+      )
+    | ("entries", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
+      let arr_reason = mk_reason RArrayType loc in
+      let (((_, o), _) as e_ast) = expression cx e in
+      let keys_t = get_keys ~arr_reason o in
+      let values_t = get_values ~arr_reason o in
+      let elem_t = UnionT (mk_reason RTupleElement loc, UnionRep.make keys_t values_t []) in
+      let entry_t =
+        DefT (mk_reason RTupleType loc, bogus_trust (), ArrT (TupleAT (elem_t, [keys_t; values_t])))
+      in
+      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT (entry_t, None))),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )

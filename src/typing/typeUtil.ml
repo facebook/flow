@@ -90,6 +90,7 @@ and reason_of_use_t = function
   | GetElemT (_, reason, _, _, _) -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
+  | GetDictValuesT (reason, _) -> reason
   | GetPropT (_, reason, _, _, _) -> reason
   | GetPrivatePropT (_, reason, _, _, _, _) -> reason
   | GetProtoT (reason, _) -> reason
@@ -266,6 +267,7 @@ and mod_reason_of_use_t f = function
   | GetElemT (use_op, reason, annot, it, et) -> GetElemT (use_op, f reason, annot, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
+  | GetDictValuesT (reason, t) -> GetDictValuesT (f reason, t)
   | GetPropT (use_op, reason, id, n, t) -> GetPropT (use_op, f reason, id, n, t)
   | GetPrivatePropT (use_op, reason, name, bindings, static, t) ->
     GetPrivatePropT (use_op, f reason, name, bindings, static, t)
@@ -418,6 +420,7 @@ let rec util_use_op_of_use_t :
   | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
   | HasOwnPropT (op, r, t) -> util op (fun op -> HasOwnPropT (op, r, t))
   | GetKeysT (r, u2) -> nested_util u2 (fun u2 -> GetKeysT (r, u2))
+  | GetDictValuesT (r, u2) -> nested_util u2 (fun u2 -> GetDictValuesT (r, u2))
   | ElemT (op, r, t, a) -> util op (fun op -> ElemT (op, r, t, a))
   | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
   | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))

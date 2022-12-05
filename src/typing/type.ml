@@ -665,6 +665,8 @@ module rec TypeTerm : sig
     | HasOwnPropT of use_op * reason * t (* The incoming string that we want to check against *)
     (* Values *)
     | GetValuesT of reason * t
+    (* Values of a dictionary, `mixed` otherwise. *)
+    | GetDictValuesT of reason * use_t
     (* Element access *)
     | ElemT of use_op * reason * t * elem_action
     (* exact ops *)
@@ -3686,6 +3688,7 @@ let string_of_use_ctor = function
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"
+  | GetDictValuesT _ -> "GetDictValuesT"
   | GetPropT _ -> "GetPropT"
   | GetPrivatePropT _ -> "GetPrivatePropT"
   | GetProtoT _ -> "GetProtoT"
