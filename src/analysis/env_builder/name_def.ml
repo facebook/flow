@@ -2121,7 +2121,7 @@ class def_finder env_entries providers toplevel_scope =
             in
             Base.Option.iter value ~f:(fun value ->
                 match value with
-                | Attribute.Literal _ -> ()
+                | Attribute.Literal (loc, _) -> this#record_hint loc hint
                 | Attribute.ExpressionContainer (_, expr) -> this#visit_jsx_expression ~hint expr
             )
           | Opening.SpreadAttribute (_, { SpreadAttribute.argument; comments = _ }) ->
