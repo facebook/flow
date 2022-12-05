@@ -1,0 +1,98 @@
+Error -------------------------------------------------------------------------------------------------- add1arg.js:4:10
+
+Cannot return `"A" + x` because string [1] is incompatible with `S` [2]. [incompatible-return]
+
+   add1arg.js:4:10
+   4|   return "A" + x;
+               ^^^^^^^ [1]
+
+References:
+   add1arg.js:3:36
+   3| function corrupt<S: string>(x: S): S {
+                                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- logic.js:3:15
+
+Cannot return `a && b` because string [1] is incompatible with `A` [2]. [incompatible-return]
+
+   logic.js:3:15
+   3|   return a && b
+                    ^
+
+References:
+   logic.js:2:41
+   2| function f<A:string, B:string>(a: A, b: B): A {
+                                              ^ [1]
+   logic.js:2:45
+   2| function f<A:string, B:string>(a: A, b: B): A {
+                                                  ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- logic2.js:3:15
+
+Cannot return `a && b` because `B` [1] is incompatible with `A` [2]. [incompatible-return]
+
+   logic2.js:3:15
+   3|   return a && b
+                    ^
+
+References:
+   logic2.js:2:27
+   2| function f<A, B>(a: A, b: B): A {
+                                ^ [1]
+   logic2.js:2:31
+   2| function f<A, B>(a: A, b: B): A {
+                                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ num.js:3:10
+
+Cannot return `a + b` because number [1] is incompatible with `A` [2]. [incompatible-return]
+
+   num.js:3:10
+   3|   return a + b
+               ^^^^^ [1]
+
+References:
+   num.js:2:45
+   2| function f<A:number, B:number>(a: A, b: B): A {
+                                                  ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- reduce.js:7:15
+
+Cannot call `nums.reduce` because number [1] is incompatible with `T` [2] in the return value. [incompatible-call]
+
+   reduce.js:7:15
+   7|   return nums.reduce<T>(
+                    ^^^^^^
+
+References:
+   reduce.js:8:27
+   8|     ((prevnum, curnum) => curnum + prevnum),
+                                ^^^^^^^^^^^^^^^^ [1]
+   reduce.js:7:22
+   7|   return nums.reduce<T>(
+                           ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- wc.js:7:12
+
+Cannot return `"BAD_" + s` because string [1] is incompatible with `S` [2]. [incompatible-return]
+
+   wc.js:7:12
+   7|     return "BAD_" + s;
+                 ^^^^^^^^^^ [1]
+
+References:
+   wc.js:6:38
+   6|   function corrupt<S: string>(s: S): S {
+                                           ^ [2]
+
+
+
+Found 6 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
