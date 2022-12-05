@@ -1,0 +1,329 @@
+Error --------------------------------------------------------------------------------------------- issue-1462-i.js:21:9
+
+Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
+[incompatible-call]
+
+   issue-1462-i.js:21:9
+   21|   print(val.foo);  // <--- foo could be an array
+               ^^^^^^^
+
+References:
+   issue-1462-i.js:11:8
+   11|   foo: Array<number>
+              ^^^^^^^^^^^^^ [1]
+   issue-1462-i.js:16:19
+   16| function print(x: number) {
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-824.js:21:21
+
+Cannot call `this.foo` with `p` bound to `p` because: [incompatible-call]
+ - Either `I` [1] is incompatible with `B` [2].
+ - Or `C` [3] is incompatible with `B` [2].
+ - Or `I` [1] is incompatible with `C` [4].
+ - Or `B` [3] is incompatible with `C` [4].
+
+   issue-824.js:21:21
+   21|     return this.foo(p);
+                           ^
+
+References:
+   issue-824.js:13:17
+   13|   static bar(p: I & K): bool {
+                       ^ [1]
+   issue-824.js:3:10
+    3| type K = B | C;
+                ^ [2]
+   issue-824.js:13:21
+   13|   static bar(p: I & K): bool {
+                           ^ [3]
+   issue-824.js:3:14
+    3| type K = B | C;
+                    ^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- test10.js:38:11
+
+Cannot call `check_fun` with function bound to `_` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in the return value.
+ - Or number [3] is incompatible with string [4] in the return value.
+
+   test10.js:38:11
+   38| check_fun((x) => x);
+                 ^^^^^^^^
+
+References:
+   test10.js:35:54
+   35| function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
+                                                            ^^^^^^ [1]
+   test10.js:35:39
+   35| function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
+                                             ^^^^^^ [2]
+   test10.js:35:28
+   35| function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
+                                  ^^^^^^ [3]
+   test10.js:35:65
+   35| function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
+                                                                       ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- test11.js:12:8
+
+Cannot call `length` with object literal bound to `list` because property `next` is missing in object literal [1] but
+exists in `Cons` [2]. [prop-missing]
+
+   test11.js:12:8
+   12| length({ kind: "cons" }); // missing `next`
+              ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test11.js:18:13
+   18| type Cons = { kind: "cons", next: List };
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test11.js:14:8
+
+Cannot call `length` with object literal bound to `list` because object literal [1] is incompatible with `List` [2].
+[incompatible-call]
+
+   test11.js:14:8
+   14| length({ kind: "empty" }); // `kind` not found
+              ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test11.js:5:23
+    5| function length(list: List): number {
+                             ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test16.js:11:5
+
+Cannot call `foo` with function bound to `x` because: [incompatible-call]
+ - Either boolean [1] is incompatible with string [2] in the return value.
+ - Or string [3] is incompatible with boolean [4] in the return value.
+
+   test16.js:11:5
+   11| foo(() => qux());
+           ^^^^^^^^^^^
+
+References:
+   test16.js:16:8
+   16| var x: boolean | string = false;
+              ^^^^^^^ [1]
+   test16.js:5:26
+    5| type T = number | (() => string);
+                                ^^^^^^ [2]
+   test16.js:16:18
+   16| var x: boolean | string = false;
+                        ^^^^^^ [3]
+   test16.js:6:23
+    6| type Foo = T | (() => bool);
+                             ^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- test16.js:14:5
+
+Cannot call `bar` with function bound to `x` because: [incompatible-call]
+ - Either boolean [1] is incompatible with string [2] in the return value.
+ - Or string [3] is incompatible with boolean [4] in the return value.
+
+   test16.js:14:5
+   14| bar(() => qux());
+           ^^^^^^^^^^^
+
+References:
+   test16.js:16:8
+   16| var x: boolean | string = false;
+              ^^^^^^^ [1]
+   test16.js:8:28
+    8| type Bar = number | (() => string) | (() => bool);
+                                  ^^^^^^ [2]
+   test16.js:16:18
+   16| var x: boolean | string = false;
+                        ^^^^^^ [3]
+   test16.js:8:45
+    8| type Bar = number | (() => string) | (() => bool);
+                                                   ^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
+
+Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test17.js:7:2
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test17.js:7:29
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+                                  ^ [1]
+   test17.js:7:39
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+                                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
+
+Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test17.js:7:2
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test17.js:7:31
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+                                    ^ [1]
+   test17.js:7:39
+   7| (([]: Array<empty>).concat([0,1])[1]: string)
+                                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test20.js:14:6
+
+Cannot call `[...].reduce` because string [1] is incompatible with number [2] in the first parameter.
+[incompatible-call]
+
+   test20.js:14:6
+   14| [""].reduce((acc,str) => acc * str.length);
+            ^^^^^^
+
+References:
+   test20.js:14:2
+   14| [""].reduce((acc,str) => acc * str.length);
+        ^^ [1]
+   test20.js:14:26
+   14| [""].reduce((acc,str) => acc * str.length);
+                                ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- test20.js:14:26
+
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+
+   test20.js:14:26
+   14| [""].reduce((acc,str) => acc * str.length);
+                                ^^^
+
+References:
+   test20.js:14:2
+   14| [""].reduce((acc,str) => acc * str.length);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- test22.js:20:15
+
+Cannot get `x.result` because: [incompatible-use]
+ - Either property `result` is missing in object type [1].
+ - Or property `result` is missing in `Empty` [2].
+
+   test22.js:20:15
+   20|   else return x.result;
+                     ^^^^^^^^
+
+References:
+   test22.js:12:14
+                    v
+   12| type Error = {
+   13|   type: 'ERROR';
+   14| } & Empty;
+       ^ [1]
+   test22.js:14:5
+   14| } & Empty;
+           ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- test26.js:20:14
+
+Cannot call `(new Record()).set` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   test26.js:20:14
+   20| new Record().set('foo', "42");
+                    ^^^
+
+References:
+   test26.js:20:25
+   20| new Record().set('foo', "42");
+                               ^^^^ [1]
+   test26.js:16:20
+   16|   set(x: 'foo', y: number): void;
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test33.js:8:2
+
+Cannot cast `bar()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test33.js:8:2
+   8| (bar(): string); // error: number ~> string
+       ^^^^^
+
+References:
+   test33.js:6:25
+   6| function bar() { return 0 }
+                              ^ [1]
+   test33.js:8:9
+   8| (bar(): string); // error: number ~> string
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test34.js:10:6
+
+Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test34.js:10:6
+   10|     (x.foo: empty); // error: string ~> empty
+            ^^^^^
+
+References:
+   test34.js:16:18
+   16| type A = {| foo: string |};
+                        ^^^^^^ [1]
+   test34.js:10:13
+   10|     (x.foo: empty); // error: string ~> empty
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test35.js:8:2
+
+Cannot cast `ret` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test35.js:8:2
+   8| (ret: empty); // err, string ~> empty (matched case 2)
+       ^^^
+
+References:
+   test35.js:4:31
+   4| declare function f(x: mixed): string;
+                                    ^^^^^^ [1]
+   test35.js:8:7
+   8| (ret: empty); // err, string ~> empty (matched case 2)
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test9.js:16:27
+
+Cannot call `square` with `x` bound to `x` because null or undefined [1] is incompatible with number [2].
+[incompatible-call]
+
+   test9.js:16:27
+   16| foo((x): number => square(x))
+                                 ^
+
+References:
+   test9.js:15:22
+   15| function foo(f: ((_: ?number) => ?number) | (() => void)) { }
+                            ^^^^^^^ [1]
+   test9.js:11:21
+   11| function square(x?: number = 0) {
+                           ^^^^^^ [2]
+
+
+
+Found 17 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
