@@ -2016,21 +2016,32 @@ let get_values_type_of_obj_t cx o reason =
   (* Create a union type from all our selected types. *)
   Type_mapper.union_flatten cx ts |> union_of_ts reason
 
+let remove_dict_from_props props =
+  props |> NameUtils.Map.remove (OrdinaryName "$key") |> NameUtils.Map.remove (OrdinaryName "$value")
+
 let get_values_type_of_instance_t cx own_props reason =
   (* Find all of the props. *)
   let props = Context.find_props cx own_props in
+  let props_without_dict = remove_dict_from_props props in
   (* Get the read type for all readable properties and discard the rest. *)
   let ts =
     NameUtils.Map.fold
-      (fun key prop ts ->
+      (fun _ prop ts ->
         match Property.read_t prop with
-        (* We don't want to include the property type if its name is the
-           internal value "$key" because that will be the type for the instance
-           index and not the value. *)
-        | Some t when key != OrdinaryName "$key" -> t :: ts
+        | Some t -> t :: ts
         | _ -> ts)
-      props
+      props_without_dict
       []
+  in
+  let ts =
+    (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
+    if props == props_without_dict then
+      ts
+    else
+      match NameUtils.Map.find (OrdinaryName "$value") props with
+      | Field (_, dict_value, polarity) when Polarity.compat (polarity, Polarity.Positive) ->
+        dict_value :: ts
+      | _ -> ts
   in
   (* Create a union type from all our selected types. *)
   Type_mapper.union_flatten cx ts |> union_of_ts reason

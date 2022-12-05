@@ -6663,11 +6663,6 @@ struct
              add_output cx ~trace error_message
        )
 
-  and remove_dict_from_props props =
-    props
-    |> NameUtils.Map.remove (OrdinaryName "$key")
-    |> NameUtils.Map.remove (OrdinaryName "$value")
-
   and check_super cx trace ~use_op lreason ureason t x p =
     let use_op =
       Frame (PropertyCompatibility { prop = Some x; lower = lreason; upper = ureason }, use_op)

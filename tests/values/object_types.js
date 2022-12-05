@@ -105,3 +105,23 @@ type NumbersEnum = $Values<typeof Numbers>
 (-1: NumbersEnum); // ok
 (2: NumbersEnum); // ok
 (1: NumbersEnum); // error, NumbersEnum = -1 | 2
+
+interface IfaceWithDict {
+  [string]: 1;
+}
+interface IfaceWithWriteOnlyDict {
+  -[string]: 1;
+}
+interface IfaceWithDictAndProps {
+  [string]: 1;
+  z: 2;
+  method(): void;
+}
+
+(1: $Values<IfaceWithDict>); // OK
+('s': $Values<IfaceWithDict>); // ERROR
+(1: $Values<IfaceWithWriteOnlyDict>); // ERROR
+(1: $Values<IfaceWithDictAndProps>); // OK
+(2: $Values<IfaceWithDictAndProps>); // OK
+('s': $Values<IfaceWithDictAndProps>); // ERROR
+(() => {}: $Values<IfaceWithDictAndProps>); // ERROR

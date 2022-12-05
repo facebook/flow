@@ -616,5 +616,61 @@ References:
             ^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- object_types.js:122:2
 
-Found 40 errors
+Cannot cast `'s'` to `$Values` because string [1] is incompatible with number literal `1` [2]. [incompatible-cast]
+
+   object_types.js:122:2
+   122| ('s': $Values<IfaceWithDict>); // ERROR
+         ^^^ [1]
+
+References:
+   object_types.js:110:13
+   110|   [string]: 1;
+                    ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_types.js:123:2
+
+Cannot cast `1` to `$Values` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
+
+   object_types.js:123:2
+   123| (1: $Values<IfaceWithWriteOnlyDict>); // ERROR
+         ^ [1]
+
+References:
+   object_types.js:123:5
+   123| (1: $Values<IfaceWithWriteOnlyDict>); // ERROR
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_types.js:126:2
+
+Cannot cast `'s'` to `$Values` because string [1] is incompatible with literal union [2]. [incompatible-cast]
+
+   object_types.js:126:2
+   126| ('s': $Values<IfaceWithDictAndProps>); // ERROR
+         ^^^ [1]
+
+References:
+   object_types.js:126:7
+   126| ('s': $Values<IfaceWithDictAndProps>); // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_types.js:127:2
+
+Cannot cast function to `$Values` because function [1] is incompatible with literal union [2]. [incompatible-cast]
+
+   object_types.js:127:2
+   127| (() => {}: $Values<IfaceWithDictAndProps>); // ERROR
+         ^^^^^^^^ [1]
+
+References:
+   object_types.js:127:12
+   127| (() => {}: $Values<IfaceWithDictAndProps>); // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 44 errors
