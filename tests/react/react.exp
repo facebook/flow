@@ -22,9 +22,9 @@ property `children`. [incompatible-type]
                               ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   createContext.js:22:27
-   22|           <Provider value='spam'> {/* Error: enum is incompatible with string */}
-                                 ^^^^^^ [2]
+   createContext.js:6:39
+    6|   const Context = React.createContext<string>('div');
+                                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- createContext.js:24:22
@@ -37,9 +37,9 @@ property `children`. [incompatible-type]
                             ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   createContext.js:22:27
-   22|           <Provider value='spam'> {/* Error: enum is incompatible with string */}
-                                 ^^^^^^ [2]
+   createContext.js:6:39
+    6|   const Context = React.createContext<string>('div');
+                                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- createContext.js:33:44
@@ -678,17 +678,12 @@ type [2]. [prop-missing]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc3.js:6:34
-    6|   Component: React.ComponentType<{prop: number} & TProps>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc3.js:17:37
-                                           v
-   17| function MyFunctionComponent(props: {
-   18|   a: number,
-   19|   b: number,
-   20|   prop: number,
-   21| }) { return null }
-       ^ [2]
+   hoc3.js:30:1
+   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   hoc3.js:24:45
+   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:30:2
@@ -701,35 +696,27 @@ type [2]. [prop-missing]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc3.js:6:34
-    6|   Component: React.ComponentType<{prop: number} & TProps>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc3.js:17:37
-                                           v
-   17| function MyFunctionComponent(props: {
-   18|   a: number,
-   19|   b: number,
-   20|   prop: number,
-   21| }) { return null }
-       ^ [2]
+   hoc3.js:30:1
+   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   hoc3.js:24:45
+   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc3.js:32:2
+Error ---------------------------------------------------------------------------------------------------- hoc3.js:32:32
 
 Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
 [incompatible-type]
 
-   hoc3.js:32:2
-   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
    hoc3.js:32:32
    32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
                                       ^^^^^ [1]
-   hoc3.js:18:6
-   18|   a: number,
-            ^^^^^^ [2]
+
+References:
+   hoc3.js:24:49
+   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
+                                                       ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:26:2
@@ -791,6 +778,57 @@ References:
    hoc4.js:12:6
    12|   a: number,
             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- hoc4.js:30:2
+
+Cannot create `MyEnhancedFunctionComponent` element because property `a` is missing in props [1] but exists in object
+type [2]. [prop-missing]
+
+   hoc4.js:30:2
+   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hoc4.js:30:1
+   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   hoc4.js:24:45
+   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- hoc4.js:30:2
+
+Cannot create `MyEnhancedFunctionComponent` element because property `b` is missing in props [1] but exists in object
+type [2]. [prop-missing]
+
+   hoc4.js:30:2
+   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hoc4.js:30:1
+   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   hoc4.js:24:45
+   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- hoc4.js:32:32
+
+Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
+[incompatible-type]
+
+   hoc4.js:32:32
+   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+                                      ^^^^^ [1]
+
+References:
+   hoc4.js:24:49
+   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
+                                                       ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:26:2
@@ -2357,7 +2395,7 @@ References:
 
 
 
-Found 121 errors
+Found 124 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

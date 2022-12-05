@@ -1,3 +1,4 @@
 [options]
 inference_mode=constrain_writes
+experimental.cycle_errors=true
 no_flowlib=false

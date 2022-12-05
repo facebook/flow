@@ -48,6 +48,51 @@ References:
              ^^ [4]
 
 
+Error --------------------------------------------------------------------------------------------------- empty.js:19:10
+
+Cannot assign array literal to `arr` because number [1] is incompatible with empty [2] in array element.
+[incompatible-type]
+
+   empty.js:19:10
+   19|   arr = [1,2,3]; // error
+                ^ [1]
+
+References:
+   empty.js:18:18
+   18|   let arr: Array<empty> = [];
+                        ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:19:12
+
+Cannot assign array literal to `arr` because number [1] is incompatible with empty [2] in array element.
+[incompatible-type]
+
+   empty.js:19:12
+   19|   arr = [1,2,3]; // error
+                  ^ [1]
+
+References:
+   empty.js:18:18
+   18|   let arr: Array<empty> = [];
+                        ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:19:14
+
+Cannot assign array literal to `arr` because number [1] is incompatible with empty [2] in array element.
+[incompatible-type]
+
+   empty.js:19:14
+   19|   arr = [1,2,3]; // error
+                    ^ [1]
+
+References:
+   empty.js:18:18
+   18|   let arr: Array<empty> = [];
+                        ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- empty.js:32:11
 
 Cannot assign function to `fn` because parameter `y` of unknown type [1] is incompatible with number [2] (consider
@@ -177,6 +222,23 @@ Cannot resolve name `f`. [cannot-resolve-name]
 
    8| f = function() {
       ^
+
+
+Error --------------------------------------------------------------------------------------- provider_edge_cases.js:8:1
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `f` [1] depends on other definition [2]
+ - `f` [2] depends on other definition [1]
+Please add type annotations to these definitions [definition-cycle]
+
+   provider_edge_cases.js:8:1
+   8| f = function() {
+      ^ [1]
+
+References:
+   provider_edge_cases.js:9:3
+   9|   f = 42;
+        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:16:6
@@ -605,7 +667,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 22 errors
+Found 26 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

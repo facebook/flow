@@ -17,7 +17,7 @@
 // Example 1
 
 declare function useState<S>(state: (() => S) | S): [S, ((S => S) | S) => void];
-const [value, setter] = useState(null);
+const [value, setter] = useState<string | null>(null);
 declare var Enum: {A: 'A', B: 'B'};
 
 // The conditional below may be seen as a refinement on `Enum`. In that case, we

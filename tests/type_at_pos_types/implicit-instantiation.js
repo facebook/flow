@@ -7,6 +7,6 @@ identity<_>('string');
 
 declare function createObj<T>(): {x: T};
 
-const x = createObj<_>();
+const x: {x: number|string} = createObj<_>();
 x.x = 3;
 x.x = "string";

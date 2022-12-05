@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 {
-  const Context = React.createContext('div');
+  const Context = React.createContext<string>('div');
   const {Consumer, Provider} = Context;
 
   class Foo extends React.Component<{}> {

@@ -194,7 +194,7 @@ function-poly-1.js:4:7 = {
   "end":7
 }
 function-poly-2.js:3:10 = {
-  "type":"<T>(y: T) => void",
+  "type":"<TOuter>(y: TOuter) => void",
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
@@ -209,13 +209,13 @@ function-poly-2.js:3:10 = {
   "end":14
 }
 function-poly-2.js:4:12 = {
-  "type":"<T>(x: T, z: (T | T)) => T",
+  "type":"<T>(x: T, z: (TOuter | T)) => T",
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
     "type":"SourceFile",
-    "start":{"line":4,"column":12,"offset":47},
-    "end":{"line":4,"column":16,"offset":52}
+    "start":{"line":4,"column":12,"offset":57},
+    "end":{"line":4,"column":16,"offset":62}
   },
   "path":"function-poly-2.js",
   "line":4,
@@ -224,13 +224,13 @@ function-poly-2.js:4:12 = {
   "end":16
 }
 function-poly-2.js:5:5 = {
-  "type":"T",
+  "type":"TOuter",
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":5,"offset":71},
-    "end":{"line":5,"column":5,"offset":72}
+    "start":{"line":5,"column":5,"offset":96},
+    "end":{"line":5,"column":5,"offset":97}
   },
   "path":"function-poly-2.js",
   "line":5,
@@ -239,13 +239,13 @@ function-poly-2.js:5:5 = {
   "end":5
 }
 function-poly-2.js:6:5 = {
-  "type":"<T>(x: T, z: (T | T)) => T",
+  "type":"<T>(x: T, z: (TOuter | T)) => T",
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":5,"offset":78},
-    "end":{"line":6,"column":9,"offset":83}
+    "start":{"line":6,"column":5,"offset":103},
+    "end":{"line":6,"column":9,"offset":108}
   },
   "path":"function-poly-2.js",
   "line":6,
@@ -259,8 +259,8 @@ function-poly-2.js:7:12 = {
   "loc":{
     "source":"function-poly-2.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":12,"offset":102},
-    "end":{"line":7,"column":12,"offset":103}
+    "start":{"line":7,"column":12,"offset":127},
+    "end":{"line":7,"column":12,"offset":128}
   },
   "path":"function-poly-2.js",
   "line":7,
@@ -269,13 +269,13 @@ function-poly-2.js:7:12 = {
   "end":12
 }
 function-poly-2.js:9:13 = {
-  "type":"<T>(x: T, z: (T | T)) => T",
+  "type":"<T>(x: T, z: (TOuter | T)) => T",
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":13,"offset":121},
-    "end":{"line":9,"column":17,"offset":126}
+    "start":{"line":9,"column":13,"offset":146},
+    "end":{"line":9,"column":17,"offset":151}
   },
   "path":"function-poly-2.js",
   "line":9,
@@ -289,8 +289,8 @@ function-poly-2.js:11:12 = {
   "loc":{
     "source":"function-poly-2.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":12,"offset":146},
-    "end":{"line":11,"column":17,"offset":152}
+    "start":{"line":11,"column":12,"offset":171},
+    "end":{"line":11,"column":17,"offset":177}
   },
   "path":"function-poly-2.js",
   "line":11,

@@ -1,6 +1,6 @@
 // @flow
 
-function create(Base) {
+function create(Base: Class<A> | Class<B>) {
   return class extends Base {
     constructor() {
       super();

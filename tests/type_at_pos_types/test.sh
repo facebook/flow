@@ -76,7 +76,7 @@ assert_ok "$FLOW" type-at-pos implicit-instantiation.js 5 10 --strip-root --pret
 printf "implicit-instantiation.js:6:10"
 assert_ok "$FLOW" type-at-pos implicit-instantiation.js 6 10 --strip-root --pretty --expand-json-output
 printf "implicit-instantiation.js:10:21"
-assert_ok "$FLOW" type-at-pos implicit-instantiation.js 10 21 --strip-root --pretty --expand-json-output
+assert_ok "$FLOW" type-at-pos implicit-instantiation.js 10 41 --strip-root --pretty --expand-json-output
 
 # interface.js
 printf "interface.js:6:7 = "
@@ -172,17 +172,17 @@ assert_ok "$FLOW" type-at-pos optional.js 14 10 --strip-root --pretty
 printf "recursive.js:3:25 = "
 assert_ok "$FLOW" type-at-pos recursive.js 3 25 --strip-root --pretty
 printf "recursive.js:6:11 = "
-assert_ok "$FLOW" type-at-pos recursive.js 6 11 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos recursive.js 7 11 --strip-root --pretty
 printf "recursive.js:13:12 = "
-assert_ok "$FLOW" type-at-pos recursive.js 13 12 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos recursive.js 15 12 --strip-root --pretty
 printf "recursive.js:23:12 = "
-assert_ok "$FLOW" type-at-pos recursive.js 23 12 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos recursive.js 26 12 --strip-root --pretty
 printf "recursive.js:49:1 = "
-assert_ok "$FLOW" type-at-pos recursive.js 49 1 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos recursive.js 52 1 --strip-root --pretty
 printf "recursive.js:51:6 = "
-assert_ok "$FLOW" type-at-pos recursive.js 51 6 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos recursive.js 54 6 --strip-root --pretty
 printf "recursive.js:51:31 = "
-assert_ok "$FLOW" type-at-pos recursive.js 51 31 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos recursive.js 54 31 --strip-root --pretty
 
 # subst.js
 printf "subst.js:13:7 = "

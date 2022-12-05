@@ -3,7 +3,7 @@
 const React = require('react');
 const {useImperativeHandle} = React;
 
-function Demo(props, ref) {
+function Demo(props: empty, ref: {current: {|moo(x: string): void|} | null} | ({|moo(x: string): void|} | null) => mixed) {
   useImperativeHandle(ref, () => ({
     moo(x: string) {},
   }));

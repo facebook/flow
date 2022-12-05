@@ -3,14 +3,16 @@
 var o = { m() { return this; } };
 o.m();
 
-function alist(n: number) {
+type AList = ?{data: number, next: AList};
+function alist(n: number): AList {
   if (n <= 0) return null;
   else return { data: n, next: alist(n - 1) };
 }
 
 const a = alist(10);
 
-function blist(n: number) {
+type BList = {data: number, a_next: AList, next: BList} | null | '';
+function blist(n: number): BList {
   if (n <= 0) return null;
   if (n > 1)  return "";
   return {
@@ -20,7 +22,8 @@ function blist(n: number) {
   };
 }
 
-function clist(n: number) {
+type CList = {data: number, a_next: AList, next: BList, next: CList} | null | '';
+function clist(n: number): CList {
   if (n <= 0) return null;
   if (n > 1) return "";
   return {

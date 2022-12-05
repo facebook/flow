@@ -1,7 +1,7 @@
 // @flow
 
 class A {
-  m() { return this; }
+  m(): A { return this; }
 }
 
 class B extends A { }

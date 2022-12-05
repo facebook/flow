@@ -3,8 +3,8 @@
 import * as React from 'react';
 
 class MyComponent extends React.Component<{foo: number}> {
-  static defaultProps = {foo: 42};
-  render() {
+  static defaultProps: {foo: number} = {foo: 42};
+  render(): React.Node {
     return this.props.foo;
   }
 }

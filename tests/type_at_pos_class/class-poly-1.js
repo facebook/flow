@@ -2,7 +2,7 @@
 
 export class A<T> {
   x: T;
-  m() { return this.x; }
+  m(): T { return this.x; }
 }
 
 declare var a: A<number>;

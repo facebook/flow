@@ -60,5 +60,6 @@ function baz<T> (this : { f : T ,... }) : T {
 declare function baz2<T>(this : T, x : ?T) : T;
 
 (baz2.bind(3)(3) : number);
-(baz2.bind(3)("") : string); // error : number incompatible with string
-(baz2.bind(3)("") : number | string);
+type NumOrStr = number | string;
+((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
+((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : NumOrStr);

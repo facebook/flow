@@ -464,7 +464,7 @@ literals.js:22:7 = {
   "end":8
 }
 literals.js:24:7 = {
-  "type":"(x: string) => string",
+  "type":"(x: (\"A\" | \"B\")) => (\"A\" | \"B\")",
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -484,8 +484,8 @@ literals.js:28:7 = {
   "loc":{
     "source":"literals.js",
     "type":"SourceFile",
-    "start":{"line":28,"column":7,"offset":401},
-    "end":{"line":28,"column":17,"offset":412}
+    "start":{"line":28,"column":7,"offset":414},
+    "end":{"line":28,"column":17,"offset":425}
   },
   "path":"literals.js",
   "line":28,
@@ -499,8 +499,8 @@ literals.js:31:7 = {
   "loc":{
     "source":"literals.js",
     "type":"SourceFile",
-    "start":{"line":31,"column":7,"offset":453},
-    "end":{"line":31,"column":9,"offset":456}
+    "start":{"line":31,"column":7,"offset":466},
+    "end":{"line":31,"column":9,"offset":469}
   },
   "path":"literals.js",
   "line":31,
@@ -514,8 +514,8 @@ literals.js:32:7 = {
   "loc":{
     "source":"literals.js",
     "type":"SourceFile",
-    "start":{"line":32,"column":7,"offset":482},
-    "end":{"line":32,"column":9,"offset":485}
+    "start":{"line":32,"column":7,"offset":495},
+    "end":{"line":32,"column":9,"offset":498}
   },
   "path":"literals.js",
   "line":32,

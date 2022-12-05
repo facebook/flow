@@ -23,7 +23,7 @@ function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
   return [o, p];
 }
 
-const [ox, px] = removex({x: 'foo', p: 42});
+const [ox, px] = removex<_, number>({x: 'foo', p: 42});
 (ox: {|x: string|});
 (px: number);
 

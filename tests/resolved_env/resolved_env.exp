@@ -1023,9 +1023,9 @@ References:
    tparams.js:27:6
    27| (ox: {|x: string|});
             ^^^^^^^^^^^^^ [1]
-   tparams.js:26:26
-   26| const [ox, px] = removex({x: 'foo', p: 42});
-                                ^^^^^^^^^^^^^^^^^ [2]
+   tparams.js:26:37
+   26| const [ox, px] = removex<_, number>({x: 'foo', p: 42});
+                                           ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- tparams.js:27:2
@@ -1038,9 +1038,9 @@ Cannot cast `ox` to object type because undefined [1] is incompatible with strin
         ^^
 
 References:
-   tparams.js:26:30
-   26| const [ox, px] = removex({x: 'foo', p: 42});
-                                    ^^^^^ [1]
+   tparams.js:26:41
+   26| const [ox, px] = removex<_, number>({x: 'foo', p: 42});
+                                               ^^^^^ [1]
    tparams.js:27:11
    27| (ox: {|x: string|});
                  ^^^^^^ [2]

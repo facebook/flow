@@ -40,7 +40,7 @@ Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with
         v-------
    10| (compose(
    11|   (n: number) => n * 5, // Error: string cannot be multiplied.
-   12|   n => n.toString(),
+   12|   (n: number) => n.toString(),
    13| )(42): empty); // Error: number ~> empty
        ----^
 
@@ -79,7 +79,7 @@ Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatib
          v--------------
     15| (composeReverse(
     16|   (n: number) => n * 5, // OK
-    17|   n => n.toString(),
+    17|   (n: number) => n.toString(),
     18| )(42): empty); // Error: string ~> empty
         ----^
 
@@ -102,9 +102,9 @@ Cannot call `Math.round` with `props.p` bound to `x` because string [1] is incom
                           ^^^^^^^
 
 References:
-   recompose.js:20:8
-    20|     p: `${props.p * 3}`,
-               ^^^^^^^^^^^^^^^^ [1]
+   recompose.js:22:27
+    22|   myEnhancer((props: {|p: string|}) => ({
+                                  ^^^^^^ [1]
    <BUILTINS>/core.js:648:14
    648|     round(x: number): number,
                      ^^^^^^ [2]

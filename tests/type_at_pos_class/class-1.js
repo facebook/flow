@@ -5,7 +5,7 @@ class A {
 }
 
 class B extends A {
-  m() { return 1; }
+  m(): number { return 1; }
   constructor() {
     super();
   }

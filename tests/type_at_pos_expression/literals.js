@@ -21,7 +21,7 @@ const f1 = (x: "A" | "B") => x;
 const o1 = { f: "f" };
 const o2 = { f: ("f": "f") };
 
-const f2 = x => x;
+const f2 = (x: "A" | "B") => x;
 f2("A");
 f2("B");
 

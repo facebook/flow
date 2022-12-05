@@ -11,10 +11,10 @@ type State = {|
 |}
 
 class Welcome extends React.Component<Props, State> {
-  state = {
+  state: State = {
     enabled: false
   }
-  render() {
+  render(): React.Node {
     if (this.state.enabled) {
       return <h1>Hello, {this.props.name}</h1>;
     } else {

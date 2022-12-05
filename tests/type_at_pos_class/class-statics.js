@@ -5,7 +5,7 @@ class A {
 }
 
 class B extends A {
-  static m() {
+  static m(): Class<this> {
     (this: Class<A>);
     (this: Class<B>);
     super.m();

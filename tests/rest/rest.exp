@@ -1408,9 +1408,9 @@ References:
    type_generic.js:7:5
    7| (o: {|x: string|});
           ^^^^^^^^^^^^^ [1]
-   type_generic.js:6:23
-   6| const [o, p] = remove({x: 'foo', p: 42});
-                            ^^^^^^^^^^^^^^^^^ [2]
+   type_generic.js:6:34
+   6| const [o, p] = remove<_, number>({x: 'foo', p: 42});
+                                       ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- type_generic.js:7:2
@@ -1423,9 +1423,9 @@ Cannot cast `o` to object type because undefined [1] is incompatible with string
        ^
 
 References:
-   type_generic.js:6:27
-   6| const [o, p] = remove({x: 'foo', p: 42});
-                                ^^^^^ [1]
+   type_generic.js:6:38
+   6| const [o, p] = remove<_, number>({x: 'foo', p: 42});
+                                           ^^^^^ [1]
    type_generic.js:7:10
    7| (o: {|x: string|});
                ^^^^^^ [2]

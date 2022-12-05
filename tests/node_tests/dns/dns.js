@@ -28,6 +28,6 @@ dns.lookup("test.com", 4); // error
 
 dns.lookup("test.com", { family: 6 }); // error
 
-dns.lookup("test.com", null, (err, address, family) => {}); // error
+dns.lookup("test.com", null, (err: mixed, address: mixed, family: mixed) => {}); // error
 
-dns.lookup((err, address, family) => {}); // error
+dns.lookup((err: mixed, address: mixed, family: mixed) => {}); // error
