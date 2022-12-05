@@ -1579,8 +1579,6 @@ struct
           when Context.find_props cx props_tmap |> NameUtils.Map.is_empty
                && Polarity.compat (dict_polarity, Polarity.Positive) ->
           rec_flow cx trace (value, result)
-        (* Temporarily allow Arrays, to split up error diff. *)
-        | (DefT (_, _, ArrT _), GetDictValuesT (reason, result))
         | (DefT (_, _, ObjT _), GetDictValuesT (reason, result))
         | (DefT (_, _, InstanceT _), GetDictValuesT (reason, result)) ->
           rec_flow cx trace (MixedT.why reason (bogus_trust ()), result)

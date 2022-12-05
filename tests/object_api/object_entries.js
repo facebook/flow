@@ -38,3 +38,4 @@ Object.entries(undefined); // ERROR
 Object.entries(null); // ERROR
 Object.entries(1); // ERROR
 Object.entries(true); // ERROR
+Object.entries([1, 2]); // ERROR

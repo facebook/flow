@@ -37,3 +37,4 @@ Object.values(undefined); // ERROR
 Object.values(null); // ERROR
 Object.values(1); // ERROR
 Object.values(true); // ERROR
+Object.values([1, 2]); // ERROR

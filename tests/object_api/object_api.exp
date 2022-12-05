@@ -229,6 +229,20 @@ References:
                       ^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- object_entries.js:41:8
+
+Cannot call method `entries` because array literal [1] is not an object. [not-an-object]
+
+   object_entries.js:41:8
+   41| Object.entries([1, 2]); // ERROR
+              ^^^^^^^
+
+References:
+   object_entries.js:41:16
+   41| Object.entries([1, 2]); // ERROR
+                      ^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- object_keys.js:5:2
 
 Cannot cast `Object.keys(...)` to undefined because array type [1] is incompatible with undefined [2].
@@ -1280,6 +1294,20 @@ References:
                      ^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- object_values.js:40:8
+
+Cannot call method `values` because array literal [1] is not an object. [not-an-object]
+
+   object_values.js:40:8
+   40| Object.values([1, 2]); // ERROR
+              ^^^^^^
+
+References:
+   object_values.js:40:15
+   40| Object.values([1, 2]); // ERROR
+                     ^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- proto.js:3:2
 
 Cannot cast `o1_proto.toString` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1358,4 +1386,4 @@ References:
 
 
 
-Found 87 errors
+Found 89 errors
