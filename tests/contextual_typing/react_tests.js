@@ -14,3 +14,10 @@ function cannot_resolve_name_regression_tests() {
   <fbs>{new Array(1)}</fbs>; // ok
   <fbt>{new Array(1)}</fbt>; // ok
 }
+
+function react_abstract_component_subtyping() {
+  const _: React.AbstractComponent<{foo: string}> = (props) => {
+    (props.foo: string); // ok
+    (props: empty); // error
+  };
+}

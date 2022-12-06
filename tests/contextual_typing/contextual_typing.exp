@@ -224,6 +224,23 @@ An annotation on destructuring is required because Flow cannot infer its type fr
                                      ^^^
 
 
+Error ---------------------------------------------------------------------------------------------- react_tests.js:21:6
+
+Cannot cast `props` to empty because props [1] is incompatible with empty [2]. [incompatible-cast]
+
+   react_tests.js:21:6
+   21|     (props: empty); // error
+            ^^^^^
+
+References:
+   react_tests.js:19:36
+   19|   const _: React.AbstractComponent<{foo: string}> = (props) => {
+                                          ^^^^^^^^^^^^^ [1]
+   react_tests.js:21:13
+   21|     (props: empty); // error
+                   ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:43
 
 Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -332,4 +349,4 @@ References:
 
 
 
-Found 23 errors
+Found 24 errors
