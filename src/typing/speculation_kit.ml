@@ -33,15 +33,6 @@ module type OUTPUT = sig
     Type.use_t ->
     unit
 
-  val try_singleton_no_throws :
-    Context.t ->
-    Type.trace ->
-    Reason.reason ->
-    upper_unresolved:bool ->
-    Type.t ->
-    Type.use_t ->
-    bool
-
   val prep_try_intersection :
     Context.t ->
     Type.trace ->
@@ -261,13 +252,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap)
     @@ (* ...and then begin the choice-making process *)
     try_flow_continuation cx trace reason speculation_id (SingletonCase (t, u))
-
-  and try_singleton_no_throws cx trace reason ~upper_unresolved t u =
-    try
-      try_singleton_throw_on_failure cx trace reason ~upper_unresolved t u;
-      true
-    with
-    | SpeculationSingletonError -> false
 
   (** Preprocessing for intersection types.
 
