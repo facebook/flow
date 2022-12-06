@@ -16,3 +16,11 @@ function foo2(x: ?Class<Foo>): string {
 
 declare var TDR: {-current: {offsetWidth: number}};
 if (TDR.current) { }
+
+function testNotExistsClass() {
+  declare class C {}
+  declare class P<X> {}
+
+  if (!C) (C: empty); // okay
+  if (!P) (P: empty); // okay
+}
