@@ -119,7 +119,16 @@ module Make
           Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen ~props:slice_pmap proto
         in
         if obj_key_autocomplete acc then
-          Tvar.mk_where cx reason (fun tvar -> Flow_js.flow_t cx (obj_t, tvar))
+          let get_autocomplete_t () =
+            Tvar.mk_where cx reason (fun tvar -> Flow_js.flow_t cx (obj_t, tvar))
+          in
+          if Context.lti cx then
+            let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
+            match lazy_hint reason with
+            | Some t -> t
+            | None -> get_autocomplete_t ()
+          else
+            get_autocomplete_t ()
         else
           obj_t
       | os ->
@@ -185,7 +194,13 @@ module Make
         let use_op = Op (ObjectSpread { op = reason }) in
         let l = Flow.widen_obj_type cx ~use_op reason t in
         Flow.flow cx (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
-        tout
+        if Context.lti cx && obj_key_autocomplete acc then
+          let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
+          match lazy_hint reason with
+          | Some t -> t
+          | None -> tout
+        else
+          tout
   end
 
   let mk_ident ~comments name = { Ast.Identifier.name; comments }
@@ -4314,9 +4329,7 @@ module Make
 
   and identifier_ cx name loc =
     let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-      Tvar.mk cx reason
-    else
+    let get_checking_mode_type () =
       let t = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
       (* We want to make sure that the reason description for the type we return
        * is always `RIdentifier name`. *)
@@ -4331,6 +4344,13 @@ module Make
       | _ ->
         let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
         Tvar.mk_where cx reason (Flow.unify cx t)
+    in
+    match (Context.lti cx, Type_inference_hooks_js.dispatch_id_hook cx name loc) with
+    | (true, true) ->
+      let (_, lazy_hint) = Env.get_hint cx loc in
+      Base.Option.value ~default:(EmptyT.at loc |> with_trust bogus_trust) (lazy_hint reason)
+    | (false, true) -> Tvar.mk cx reason
+    | (_, false) -> get_checking_mode_type ()
 
   and identifier cx { Ast.Identifier.name; comments = _ } loc =
     let t = identifier_ cx name loc in
@@ -4338,9 +4358,7 @@ module Make
 
   (* traverse a literal expression, return result type *)
   and literal cx loc lit =
-    if Type_inference_hooks_js.dispatch_literal_hook cx loc then
-      Tvar.mk cx (mk_reason (RCustom "literal") loc)
-    else
+    let get_checking_mode_type () =
       let make_trust = Context.trust_constructor cx in
       let open Ast.Literal in
       match lit.Ast.Literal.value with
@@ -4370,6 +4388,15 @@ module Make
       | BigInt n ->
         DefT (mk_annot_reason RBigInt loc, make_trust (), BigIntT (Literal (None, (n, lit.raw))))
       | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
+    in
+    match (Context.lti cx, Type_inference_hooks_js.dispatch_literal_hook cx loc) with
+    | (true, true) ->
+      let (_, lazy_hint) = Env.get_hint cx loc in
+      Base.Option.value
+        ~default:(EmptyT.at loc |> with_trust bogus_trust)
+        (lazy_hint (mk_reason (RCustom "literal") loc))
+    | (false, true) -> Tvar.mk cx (mk_reason (RCustom "literal") loc)
+    | (_, false) -> get_checking_mode_type ()
 
   (* traverse a unary expression, return result type *)
   and unary cx ~cond loc =
