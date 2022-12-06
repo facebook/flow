@@ -14,15 +14,6 @@ module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 module SpeculationFlow = struct
   module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
 
-  let flow cx reason (l, u) =
-    SpeculationKit.try_singleton_throw_on_failure
-      cx
-      Trace.dummy_trace
-      ~upper_unresolved:true
-      reason
-      l
-      u
-
   let flow_t cx reason ~upper_unresolved (l, u) =
     SpeculationKit.try_singleton_throw_on_failure
       cx
@@ -127,7 +118,7 @@ let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
       }
   in
   let use = CallT { use_op; reason = call_reason; call_action; return_hint = hint_unavailable } in
-  SpeculationFlow.flow cx call_reason (intersection, use);
+  Flow_js.flow cx (intersection, use);
   match !call_speculation_hint_state with
   | Speculation_hint_unset -> intersection
   | Speculation_hint_invalid -> intersection
@@ -136,10 +127,7 @@ let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
 let simplify_callee cx reason use_op func_t =
   Tvar.mk_no_wrap_where cx reason (fun t ->
       let call_action = ConcretizeCallee t in
-      SpeculationFlow.flow
-        cx
-        reason
-        (func_t, CallT { use_op; reason; call_action; return_hint = hint_unavailable })
+      Flow_js.flow cx (func_t, CallT { use_op; reason; call_action; return_hint = hint_unavailable })
   )
 
 let rec get_t cx ~depth = function
@@ -357,7 +345,7 @@ and type_of_hint_decomposition cx op reason t =
       | Decomp_ArrSpread i ->
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t = ArrRestT (unknown_use, reason, i, OpenT tout) in
-            SpeculationFlow.flow cx reason (t, use_t)
+            Flow_js.flow cx (t, use_t)
         )
       | Decomp_Await ->
         Tvar.mk_where cx reason (fun tout ->
@@ -372,11 +360,7 @@ and type_of_hint_decomposition cx op reason t =
            method). *)
         let get_this_t t =
           Tvar.mk_where cx reason (fun t' ->
-              SpeculationFlow.flow_t
-                cx
-                reason
-                ~upper_unresolved:true
-                (t, DefT (reason, bogus_trust (), ClassT t'))
+              Flow_js.flow_t cx (t, DefT (reason, bogus_trust (), ClassT t'))
           )
           |> get_t cx
         in
@@ -431,10 +415,7 @@ and type_of_hint_decomposition cx op reason t =
       | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t
       | Decomp_JsxProps ->
         Tvar.mk_no_wrap_where cx reason (fun props_t ->
-            SpeculationFlow.flow
-              cx
-              reason
-              (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
+            Flow_js.flow cx (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
         )
       | Decomp_JsxRef -> Flow_js.get_builtin_typeapp cx reason (OrdinaryName "React$Ref") [t]
       | Decomp_MethodElem ->
@@ -446,9 +427,8 @@ and type_of_hint_decomposition cx op reason t =
         let class_entries = Env.get_class_entries cx in
         let t =
           Tvar.mk_where cx reason (fun prop_t ->
-              SpeculationFlow.flow
+              Flow_js.flow
                 cx
-                reason
                 ( t,
                   PrivateMethodT
                     (unknown_use, reason, reason, name, class_entries, false, NoMethodAction, prop_t)
@@ -508,7 +488,7 @@ and type_of_hint_decomposition cx op reason t =
             )
           in
           Tvar.mk_no_wrap_where cx reason (fun tvar ->
-              SpeculationFlow.flow cx reason (t, PredicateT (predicate, tvar))
+              Flow_js.flow cx (t, PredicateT (predicate, tvar))
           ))
       | Instantiate_Callee instantiation_hint -> instantiate_callee cx t instantiation_hint
       | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint
