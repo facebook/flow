@@ -187,6 +187,16 @@ function non_assigning_member_assigns() {
 }
 
 {
+  type S = <W>(W) => W;
+
+  let s: ?S = null;
+  if (s != null) {
+      const h = s;
+      h(42);
+  }
+}
+
+{
   declare var array_non_maybe_any: Array<$NonMaybeType<any>>;
   const non_maybe_any = array_non_maybe_any[0];
   type Non_maybe_any = typeof non_maybe_any;
