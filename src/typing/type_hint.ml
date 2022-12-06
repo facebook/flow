@@ -254,7 +254,7 @@ and type_of_hint_decomposition cx op reason t =
       ( reason,
         bogus_trust (),
         FunT
-          ( Unsoundness.dummy_static_any reason,
+          ( Obj_type.mk_with_proto cx reason ~obj_kind:Exact (ObjProtoT reason),
             {
               this_t = (Unsoundness.unresolved_any reason, This_Function);
               params;
