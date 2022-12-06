@@ -129,6 +129,7 @@ let rec not_exists cx t =
       ) ->
     DefT (r, trust, EmptyT)
   | DefT (reason, trust, ClassT _) -> DefT (reason, trust, EmptyT)
+  | ThisClassT (reason, _, _, _) -> DefT (reason, Trust.bogus_trust (), EmptyT)
   (* unknown boolies become falsy *)
   | MaybeT (r, t) ->
     UnionT
@@ -466,7 +467,7 @@ let rec function_ = function
   | DefT (_, _, PolyT _) as t -> map_poly ~f:function_ t
   | DefT (r, trust, MixedT _) ->
     DefT (replace_desc_new_reason (RFunction RUnknown) r, trust, MixedT Mixed_function)
-  | (DefT (_, _, (FunT _ | ClassT _)) | AnyT _) as t -> t
+  | (ThisClassT _ | DefT (_, _, (FunT _ | ClassT _)) | AnyT _) as t -> t
   | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
   | t -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
@@ -474,6 +475,7 @@ let rec not_function t =
   match t with
   | DefT (_, _, PolyT _) -> map_poly ~f:not_function t
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT)
+  | ThisClassT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT)
   | DefT (_, trust, (FunT _ | ClassT _)) -> DefT (reason_of_t t, trust, EmptyT)
   | _ -> t
 

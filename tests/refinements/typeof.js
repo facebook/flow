@@ -126,3 +126,10 @@ function testAnyWithSymbol(x: any) {
     (x: empty); // error symbol ~> empty
   }
 }
+
+function testPolyClassCtorWithFunction() {
+  declare class C<X> {}
+  if (typeof C === 'function') {
+    (C: empty); // error class C ~> empty
+  }
+}
