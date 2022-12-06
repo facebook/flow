@@ -723,7 +723,7 @@ struct
             else
               None
           in
-          rec_flow cx trace (reposition ~trace cx loc ?desc t, u)
+          rec_flow cx trace (reposition ~trace cx loc ?annot_loc:(annot_aloc_of_reason r) ?desc t, u)
         | ( t,
             PreprocessKitT
               (reason, ConcretizeTypes (ConcretizeIntersectionT (unresolved, resolved, r, rep, u)))
