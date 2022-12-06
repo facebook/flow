@@ -11,11 +11,7 @@ open Hint_api
 open Utils_js
 module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 
-module SpeculationFlow : sig
-  val flow : Context.t -> Reason.reason -> Type.t * Type.use_t -> unit
-
-  val flow_t : Context.t -> Reason.reason -> upper_unresolved:bool -> Type.t * Type.t -> unit
-end = struct
+module SpeculationFlow = struct
   module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
 
   let flow cx reason (l, u) =
@@ -35,6 +31,59 @@ end = struct
       reason
       l
       (UseT (unknown_use, u))
+
+  (* Returns a list of concrete types after breaking up unions, maybe types, etc *)
+  let possible_concrete_types cx reason t =
+    let id = Tvar.mk_no_wrap cx reason in
+    Flow_js.flow cx (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeHintT id)));
+    Flow_js_utils.possible_types cx id
+
+  let try_singleton_no_throws cx reason ~upper_unresolved t u =
+    try
+      SpeculationKit.try_singleton_throw_on_failure
+        cx
+        Trace.dummy_trace
+        reason
+        ~upper_unresolved
+        t
+        u;
+      true
+    with
+    | Flow_js_utils.SpeculationSingletonError -> false
+
+  let resolved_lower_flow cx r (l, u) =
+    match possible_concrete_types cx r l with
+    | [] -> ()
+    | [l] -> Flow_js.flow cx (l, u)
+    | ls ->
+      if
+        not
+          (Base.List.fold ls ~init:false ~f:(fun acc l ->
+               let r = try_singleton_no_throws cx r ~upper_unresolved:true l u in
+               acc || r
+           )
+          )
+      then
+        raise Flow_js_utils.SpeculationSingletonError
+
+  let resolved_lower_flow_t cx r (l, u) = resolved_lower_flow cx r (l, UseT (unknown_use, u))
+
+  let resolved_upper_flow_t cx r (l, u) =
+    match possible_concrete_types cx r u with
+    | [] -> ()
+    | [u] -> Flow_js.flow_t cx (l, u)
+    | us ->
+      if
+        not
+          (Base.List.fold us ~init:false ~f:(fun acc u ->
+               let r =
+                 try_singleton_no_throws cx r ~upper_unresolved:false l (UseT (unknown_use, u))
+               in
+               acc || r
+           )
+          )
+      then
+        raise Flow_js_utils.SpeculationSingletonError
 end
 
 let in_sandbox_cx cx t ~f =
@@ -227,7 +276,7 @@ and type_of_hint_decomposition cx op reason t =
   let get_method_type t propref =
     Tvar.mk_where cx reason (fun prop_t ->
         let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction, prop_t) in
-        Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
+        SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
     )
   in
 
@@ -297,7 +346,7 @@ and type_of_hint_decomposition cx op reason t =
                   element_t
                 )
             in
-            Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
+            SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
         )
       | Decomp_ArrSpread i ->
         Tvar.mk_no_wrap_where cx reason (fun tout ->
@@ -348,9 +397,7 @@ and type_of_hint_decomposition cx op reason t =
             let fun_t =
               fun_t ~params ~rest_param:None ~return_t:(Unsoundness.unresolved_any reason)
             in
-            Context.run_in_hint_decomp cx (fun () ->
-                SpeculationFlow.flow_t cx reason ~upper_unresolved:false (fun_t, t)
-            )
+            SpeculationFlow.resolved_upper_flow_t cx reason (fun_t, t)
         )
       | Decomp_FuncRest n ->
         Tvar.mk_where cx reason (fun rest_t ->
@@ -363,9 +410,7 @@ and type_of_hint_decomposition cx op reason t =
                 ~rest_param:(Some (None, ALoc.none, rest_t))
                 ~return_t:(Unsoundness.unresolved_any reason)
             in
-            Context.run_in_hint_decomp cx (fun () ->
-                SpeculationFlow.flow_t cx reason ~upper_unresolved:false (fun_t, t)
-            )
+            SpeculationFlow.resolved_upper_flow_t cx reason (fun_t, t)
         )
       | Decomp_FuncReturn ->
         Tvar.mk_where cx reason (fun return_t ->
@@ -375,9 +420,7 @@ and type_of_hint_decomposition cx op reason t =
                 ~rest_param:(Some (None, ALoc.none, Unsoundness.unresolved_any reason))
                 ~return_t
             in
-            Context.run_in_hint_decomp cx (fun () ->
-                SpeculationFlow.flow_t cx reason ~upper_unresolved:true (t, fun_t)
-            )
+            SpeculationFlow.resolved_lower_flow_t cx reason (t, fun_t)
         )
       | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t
       | Decomp_JsxProps ->
@@ -419,13 +462,13 @@ and type_of_hint_decomposition cx op reason t =
                   tout
                 )
             in
-            Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
+            SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
         )
       | Decomp_ObjComputed reason ->
         let key_t = Env.find_write cx Env_api.ExpressionLoc reason in
         Tvar.mk_no_wrap_where cx reason (fun element_t ->
             let use_t = GetElemT (unknown_use, reason, true, key_t, element_t) in
-            Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
+            SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
         )
       | Decomp_ObjSpread ->
         Tvar.mk_no_wrap_where cx reason (fun tout ->
@@ -433,7 +476,7 @@ and type_of_hint_decomposition cx op reason t =
               (* We assume the object spread is at the start of the object. *)
               ObjRestT (reason, [], OpenT tout, Reason.mk_id ())
             in
-            Context.run_in_hint_decomp cx (fun () -> SpeculationFlow.flow cx reason (t, use_t))
+            SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
         )
       | Decomp_SentinelRefinement checks ->
         (match SMap.elements checks with
@@ -465,14 +508,11 @@ and type_of_hint_decomposition cx op reason t =
       | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint
       | Decomp_Promise ->
         Tvar.mk_where cx reason (fun inner_t ->
-            Context.run_in_hint_decomp cx (fun () ->
-                SpeculationFlow.flow_t
-                  cx
-                  reason
-                  ~upper_unresolved:true
-                  (t, Flow_js.get_builtin_typeapp cx reason (OrdinaryName "Promise") [inner_t]);
-                SpeculationFlow.flow_t cx reason ~upper_unresolved:true (t, inner_t)
-            )
+            SpeculationFlow.resolved_lower_flow_t
+              cx
+              reason
+              (t, Flow_js.get_builtin_typeapp cx reason (OrdinaryName "Promise") [inner_t]);
+            SpeculationFlow.resolved_lower_flow_t cx reason (t, inner_t)
         )
   )
 
