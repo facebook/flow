@@ -33,6 +33,12 @@ module type S = sig
     | DeclareModuleExportsLoc
   [@@deriving show]
 
+  type autocomplete_hooks = {
+    id_hook: string -> L.t -> bool;
+    literal_hook: L.t -> bool;
+    obj_prop_decl_hook: string -> L.t -> bool;
+  }
+
   module EnvKey : sig
     include Flow_map.OrderedType with type t = def_loc_type * L.t
 
@@ -303,6 +309,12 @@ module Make
     | GlobalExportsLoc
     | DeclareModuleExportsLoc
   [@@deriving show]
+
+  type autocomplete_hooks = {
+    id_hook: string -> L.t -> bool;
+    literal_hook: L.t -> bool;
+    obj_prop_decl_hook: string -> L.t -> bool;
+  }
 
   module EnvKey = struct
     type t = def_loc_type * L.t

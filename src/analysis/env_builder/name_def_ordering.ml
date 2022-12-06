@@ -101,6 +101,7 @@ module type S = sig
 
   val build_ordering :
     cx ->
+    autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
     Env_api.env_info ->
     (Name_def.def * 'a * ALoc.t list * ALoc.t Reason.virtual_reason) EnvMap.t ->
     result Base.List.t
@@ -113,6 +114,7 @@ struct
   module FindDependencies : sig
     val depends :
       Context.t ->
+      autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
       EnvMap.key EnvMap.t ->
       Env_api.env_info ->
       Env_api.def_loc_type ->
@@ -563,6 +565,7 @@ struct
        to find what variables have to be resolved before this def itself can be resolved *)
     let depends
         cx
+        ~autocomplete_hooks
         this_super_dep_loc_map
         ({ Env_api.providers; env_entries; predicate_refinement_maps; _ } as env)
         kind
@@ -623,7 +626,7 @@ struct
             let collector = new toplevel_expression_collector in
             collect collector;
             Base.List.fold collector#acc ~init:acc ~f:(fun acc e ->
-                if Name_def.expression_is_definitely_synthesizable e then
+                if Name_def.expression_is_definitely_synthesizable ~autocomplete_hooks e then
                   depends_of_expression e acc
                 else
                   depends_of_expression ~named_only_for_synthesis:true e acc
@@ -1185,8 +1188,11 @@ struct
     | OpAssign _ ->
       []
 
-  let dependencies cx this_super_dep_loc_map env (kind, loc) (def, _, _, _) acc =
-    let depends = FindDependencies.depends cx this_super_dep_loc_map env kind loc def in
+  let dependencies cx ~autocomplete_hooks this_super_dep_loc_map env (kind, loc) (def, _, _, _) acc
+      =
+    let depends =
+      FindDependencies.depends cx ~autocomplete_hooks this_super_dep_loc_map env kind loc def
+    in
     EnvMap.update
       (kind, loc)
       (function
@@ -1198,7 +1204,7 @@ struct
             ))
       acc
 
-  let build_graph cx env map =
+  let build_graph cx ~autocomplete_hooks env map =
     (* This is a forwarding map from the def loc of this and super to the def loc of the functions
        and classes that define this and super. We need this forwarding mechanism, because this and
        super are not write entries that will be resolved by env_resolution. Instead, they are
@@ -1228,15 +1234,15 @@ struct
         map
         EnvMap.empty
     in
-    EnvMap.fold (dependencies cx this_super_dep_loc_map env) map EnvMap.empty
+    EnvMap.fold (dependencies cx ~autocomplete_hooks this_super_dep_loc_map env) map EnvMap.empty
 
-  let build_ordering cx ({ Env_api.scopes; providers; _ } as env) map =
+  let build_ordering cx ~autocomplete_hooks ({ Env_api.scopes; providers; _ } as env) map =
     let env_map_find k map =
       match EnvMap.find_opt k map with
       | Some t -> t
       | None -> raise Env_api.(Env_invariant (None, NameDefGraphMismatch))
     in
-    let graph = build_graph cx env map in
+    let graph = build_graph cx ~autocomplete_hooks env map in
     let order_graph = EnvMap.map (fun deps -> EnvMap.keys deps |> EnvSet.of_list) graph in
     let roots = EnvMap.keys order_graph |> EnvSet.of_list in
     let sort =

@@ -427,8 +427,8 @@ let function_params_all_annotated
      || not (Signature_utils.This_finder.found_this_in_body_or_params body params)
      )
 
-let expression_is_definitely_synthesizable =
-  let rec synthesizable (_, expr) =
+let expression_is_definitely_synthesizable ~autocomplete_hooks =
+  let rec synthesizable (loc, expr) =
     let func_is_synthesizable fn =
       let { Ast.Function.params; body; return; _ } = fn in
       if function_params_all_annotated params body then (
@@ -462,7 +462,15 @@ let expression_is_definitely_synthesizable =
           | Property p ->
             let open Ast.Expression.Object.Property in
             (match p with
-            | (_, Init { key = _; value; shorthand = _ }) -> synthesizable value
+            | (_, Init { key; value; shorthand = _ }) ->
+              (match key with
+              | Property.Identifier (loc, { Ast.Identifier.name; _ })
+              | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
+                when autocomplete_hooks.Env_api.With_ALoc.obj_prop_decl_hook name loc ->
+                (* Autocompletion in LTI will use hints to find the expected type of the object
+                   we are completing. There are similar case for identifiers and literals below. *)
+                false
+              | _ -> synthesizable value)
             | (_, Get { key = _; value = (_, fn); comments = _ })
             | (_, Set { key = _; value = (_, fn); comments = _ })
             | (_, Method { key = _; value = (_, fn) }) ->
@@ -489,15 +497,16 @@ let expression_is_definitely_synthesizable =
     | Ast.Expression.JSXElement _ ->
       (* Implicit instantiation might happen in these nodes, and we might have underconstrained targs. *)
       false
+    | Ast.Expression.Identifier (name_loc, { Ast.Identifier.name; _ }) ->
+      not (autocomplete_hooks.Env_api.With_ALoc.id_hook name name_loc)
+    | Ast.Expression.Literal _ -> not (autocomplete_hooks.Env_api.With_ALoc.literal_hook loc)
     | Ast.Expression.Assignment _
     | Ast.Expression.Binary _
     | Ast.Expression.Class _
     | Ast.Expression.Comprehension _
     | Ast.Expression.Generator _
-    | Ast.Expression.Identifier _
     | Ast.Expression.Import _
     | Ast.Expression.JSXFragment _
-    | Ast.Expression.Literal _
     | Ast.Expression.Member _
     | Ast.Expression.MetaProperty _
     | Ast.Expression.OptionalMember _
@@ -554,7 +563,7 @@ let func_own_props = SSet.of_list ["toString"; "arguments"; "caller"; "length"; 
 
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
-class def_finder env_entries providers toplevel_scope =
+class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
   let fail loc str = raise Env_api.(Env_invariant (Some loc, ASTStructureOverride str)) in
 
   object (this)
@@ -2221,7 +2230,7 @@ class def_finder env_entries providers toplevel_scope =
         | _ -> hint
       in
       let hint =
-        if expression_is_definitely_synthesizable exp then
+        if expression_is_definitely_synthesizable ~autocomplete_hooks exp then
           Hint_None
         else
           hint
@@ -2470,6 +2479,6 @@ class def_finder env_entries providers toplevel_scope =
       )
   end
 
-let find_defs env_entries providers ast =
-  let finder = new def_finder env_entries providers Module in
+let find_defs ~autocomplete_hooks env_entries providers ast =
+  let finder = new def_finder ~autocomplete_hooks env_entries providers Module in
   finder#eval finder#program ast

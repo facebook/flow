@@ -10,9 +10,13 @@ include module type of Name_def_types
 val function_params_all_annotated :
   (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> (ALoc.t, ALoc.t) Flow_ast.Function.body -> bool
 
-val expression_is_definitely_synthesizable : (ALoc.t, ALoc.t) Flow_ast.Expression.t -> bool
+val expression_is_definitely_synthesizable :
+  autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
+  (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+  bool
 
 val find_defs :
+  autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
   Env_api.env_entry Env_api.EnvMap.t ->
   Provider_api.info ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
