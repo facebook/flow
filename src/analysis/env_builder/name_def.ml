@@ -513,6 +513,12 @@ let expression_is_definitely_synthesizable =
   in
   (fun e -> synthesizable e)
 
+let expression_has_autocomplete ~autocomplete_hooks = function
+  | (_, Ast.Expression.Identifier (loc, { Ast.Identifier.name; _ })) ->
+    autocomplete_hooks.Env_api.With_ALoc.id_hook name loc
+  | (loc, Ast.Expression.Literal _) -> autocomplete_hooks.Env_api.With_ALoc.literal_hook loc
+  | _ -> false
+
 let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics ~arrow function_ =
   Function
     {
@@ -2105,8 +2111,32 @@ class def_finder env_entries providers toplevel_scope =
       let ref_hint = decompose_hint Decomp_JsxRef hint in
       let hint = decompose_hint Decomp_JsxProps hint in
       let hint =
-        let checks = Eq_test.jsx_attributes_possible_sentinel_refinements opening_attributes in
-        decompose_hint (Decomp_SentinelRefinement checks) hint
+        let has_autocomplete =
+          Base.List.exists opening_attributes ~f:(function
+              | Opening.Attribute (_, { Attribute.name = _; value }) ->
+                Base.Option.value_map value ~default:false ~f:(fun value ->
+                    match value with
+                    | Attribute.Literal (loc, _) ->
+                      autocomplete_hooks.Env_api.With_ALoc.literal_hook loc
+                    | Attribute.ExpressionContainer
+                        (_, { Ast.JSX.ExpressionContainer.expression; comments = _ }) ->
+                      (match expression with
+                      | Ast.JSX.ExpressionContainer.EmptyExpression -> false
+                      | Ast.JSX.ExpressionContainer.Expression e ->
+                        expression_has_autocomplete ~autocomplete_hooks e)
+                )
+              | Opening.SpreadAttribute (_, { SpreadAttribute.argument; comments = _ }) ->
+                expression_has_autocomplete ~autocomplete_hooks argument
+              )
+        in
+        if has_autocomplete then
+          (* During autocomplete, we are working with ASTs with placeholder values,
+             which can make sentinel refinements refine to empty. In these cases, it's better to
+             have a coarser set of results instead of nothing. *)
+          hint
+        else
+          let checks = Eq_test.jsx_attributes_possible_sentinel_refinements opening_attributes in
+          decompose_hint (Decomp_SentinelRefinement checks) hint
       in
       Base.List.iter opening_attributes ~f:(function
           | Opening.Attribute (_, { Attribute.name; value }) ->
@@ -2362,8 +2392,36 @@ class def_finder env_entries providers toplevel_scope =
       let open Ast.Expression.Object in
       let { properties; comments = _ } = expr in
       let object_hint =
-        let checks = Eq_test.object_properties_possible_sentinel_refinements properties in
-        decompose_hint (Decomp_SentinelRefinement checks) object_hint
+        let has_autocomplete =
+          Base.List.exists properties ~f:(function
+              | Property p ->
+                let open Ast.Expression.Object.Property in
+                (match p with
+                | ( _,
+                    Init
+                      {
+                        key =
+                          ( Property.Identifier (loc, { Ast.Identifier.name; _ })
+                          | Property.Literal
+                              (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                        _;
+                      }
+                  )
+                  when autocomplete_hooks.Env_api.With_ALoc.obj_prop_decl_hook name loc ->
+                  true
+                | (_, Init { value; _ }) -> expression_has_autocomplete ~autocomplete_hooks value
+                | _ -> false)
+              | SpreadProperty _ -> false
+              )
+        in
+        if has_autocomplete then
+          (* During autocomplete, we are working with ASTs with placeholder values,
+             which can make sentinel refinements refine to empty. In these cases, it's better to
+             have a coarser set of results instead of nothing. *)
+          object_hint
+        else
+          let checks = Eq_test.object_properties_possible_sentinel_refinements properties in
+          decompose_hint (Decomp_SentinelRefinement checks) object_hint
       in
       let visit_object_key_and_compute_hint = function
         | Ast.Expression.Object.Property.Literal
