@@ -42,6 +42,13 @@ end
 module Name_resolver = Name_resolver.Make_Test_With_Cx (Context)
 module Name_def_ordering = Name_def_ordering.Make_Test_With_Cx (Context)
 
+let autocomplete_hooks =
+  {
+    Env_api.With_ALoc.id_hook = (fun _ _ -> false);
+    literal_hook = (fun _ -> false);
+    obj_prop_decl_hook = (fun _ _ -> false);
+  }
+
 let print_values values =
   let kvlist = EnvMap.bindings values in
   let strlist =
@@ -112,7 +119,7 @@ let print_init_test contents =
   let (_, { Name_resolver.Env_api.env_entries; providers; _ }) =
     Name_resolver.program_with_scope () ast
   in
-  let (inits, _) = Name_def.find_defs env_entries providers ast in
+  let (inits, _) = Name_def.find_defs ~autocomplete_hooks env_entries providers ast in
   print_values inits
 
 let print_order_test ?(custom_jsx = None) ?(react_runtime_automatic = false) contents =
@@ -127,8 +134,8 @@ let print_order_test ?(custom_jsx = None) ?(react_runtime_automatic = false) con
   let (_, ({ Name_resolver.Env_api.env_entries; providers; _ } as env)) =
     Name_resolver.program_with_scope () ast
   in
-  let (inits, _) = Name_def.find_defs env_entries providers ast in
-  let order = Name_def_ordering.build_ordering () env inits in
+  let (inits, _) = Name_def.find_defs ~autocomplete_hooks env_entries providers ast in
+  let order = Name_def_ordering.build_ordering ~autocomplete_hooks () env inits in
   print_order order;
   react_runtime := Options.ReactRuntimeClassic;
   jsx_mode := Options.Jsx_react
