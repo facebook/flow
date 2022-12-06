@@ -305,14 +305,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     match unresolved with
     | [] -> try_intersection cx trace (replace_parts cx resolved u) r rep
     | tvar :: unresolved ->
-      rec_flow
-        cx
-        trace
-        ( tvar,
-          intersection_preprocess_kit
-            reason
-            (ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u))
-        )
+      let tgt = ConcretizeIntersectionT (unresolved, resolved, r, rep, u) in
+      rec_flow cx trace (tvar, intersection_preprocess_kit reason (ConcretizeTypes tgt))
 
   (************************)
   (* Full type resolution *)

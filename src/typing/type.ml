@@ -1447,8 +1447,11 @@ module rec TypeTerm : sig
     | FullyResolveType of ident
     | TryFlow of int * spec
 
+  and concretization_target =
+    | ConcretizeIntersectionT of t list * t list * reason * InterRep.t * use_t
+
   and intersection_preprocess_tool =
-    | ConcretizeTypes of t list * t list * t * use_t
+    | ConcretizeTypes of concretization_target
     | SentinelPropTest of bool * string * t * t * tvar
     | PropExistsTest of bool * string * reason * t * tvar * (predicate * predicate)
 
