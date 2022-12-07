@@ -56,13 +56,3 @@ let calc_all_dependents ~sig_dependency_graph ~implementation_dependency_graph f
   let all_sig_dependents = rdep_closure sig_dependency_graph files in
   let all_dependents = calc_direct_dependents implementation_dependency_graph all_sig_dependents in
   (all_sig_dependents, all_dependents)
-
-(** Returns a copy of the dependency graph with only those file -> dependency edges where file and
-  dependency are in files *)
-let filter_dependency_graph dependency_graph files =
-  FilenameSet.fold
-    (fun f ->
-      let fs = FilenameGraph.find f dependency_graph |> FilenameSet.inter files in
-      FilenameMap.add f fs)
-    files
-    FilenameMap.empty
