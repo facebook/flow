@@ -96,70 +96,53 @@ let create ~num_workers ~sig_dependency_graph ~components ~recheck_set =
   let ready = Queue.create () in
   (* create node for each component *)
   let (leaders, graph) =
-    List.fold_left
-      (fun (leaders, graph) ((leader, _) as component) ->
-        let (size, recheck, leaders) =
-          Nel.fold_left
-            (fun (size, recheck, leaders) f ->
-              let recheck = recheck || FilenameSet.mem f recheck_set in
-              let leaders = FilenameMap.add f leader leaders in
-              (size + 1, recheck, leaders))
-            (0, false, leaders)
-            component
-        in
-        let node =
-          {
-            component;
-            (* computed later *)
-            dependents = FilenameMap.empty;
-            (* computed later *)
-            blocking = 0;
-            recheck;
-            size;
-          }
-        in
-        (leaders, FilenameMap.add leader node graph))
-      (FilenameMap.empty, FilenameMap.empty)
-      components
+    let fold_component (leaders, graph) ((leader, _) as component) =
+      let fold_file (size, recheck, leaders) f =
+        let recheck = recheck || FilenameSet.mem f recheck_set in
+        let leaders = FilenameMap.add f leader leaders in
+        (size + 1, recheck, leaders)
+      in
+      let (size, recheck, leaders) = Nel.fold_left fold_file (0, false, leaders) component in
+      let dependents = FilenameMap.empty (* computed later *) in
+      let blocking = 0 (* computed later *) in
+      let node = { component; dependents; blocking; recheck; size } in
+      (leaders, FilenameMap.add leader node graph)
+    in
+    List.fold_left fold_component (FilenameMap.empty, FilenameMap.empty) components
   in
   (* calculate dependents, blocking for each node *)
   let (ready_components, ready_files, blocked_components, blocked_files) =
-    FilenameMap.fold
-      (fun leader node (readyc, readyf, blockedc, blockedf) ->
-        let blocking =
-          Nel.fold_left
-            (fun blocking f ->
-              let dep_fs = FilenameGraph.find f sig_dependency_graph in
-              FilenameSet.fold
-                (fun dep_f blocking ->
-                  match FilenameMap.find_opt dep_f leaders with
-                  | None -> blocking
-                  | Some dep_leader ->
-                    let dep_node = FilenameMap.find dep_leader graph in
-                    if dep_node == node then
-                      blocking
-                    else
-                      let dependents = FilenameMap.add leader node dep_node.dependents in
-                      if dependents == dep_node.dependents then
-                        blocking
-                      else (
-                        dep_node.dependents <- dependents;
-                        blocking + 1
-                      ))
-                dep_fs
-                blocking)
-            0
-            node.component
-        in
-        if blocking = 0 then (
-          Queue.add node ready;
-          (readyc + 1, readyf + node.size, blockedc, blockedf)
-        ) else (
-          node.blocking <- blocking;
-          (readyc, readyf, blockedc + 1, blockedf + node.size)
-        ))
-      graph
-      (0, 0, 0, 0)
+    let fold_node leader node (readyc, readyf, blockedc, blockedf) =
+      let fold_dep_file dep_f blocking =
+        match FilenameMap.find_opt dep_f leaders with
+        | None -> blocking
+        | Some dep_leader ->
+          let dep_node = FilenameMap.find dep_leader graph in
+          if dep_node == node then
+            blocking
+          else
+            let dependents = FilenameMap.add leader node dep_node.dependents in
+            if dependents == dep_node.dependents then
+              blocking
+            else (
+              dep_node.dependents <- dependents;
+              blocking + 1
+            )
+      in
+      let fold_file blocking f =
+        let dep_fs = FilenameGraph.find f sig_dependency_graph in
+        FilenameSet.fold fold_dep_file dep_fs blocking
+      in
+      let blocking = Nel.fold_left fold_file 0 node.component in
+      if blocking = 0 then (
+        Queue.add node ready;
+        (readyc + 1, readyf + node.size, blockedc, blockedf)
+      ) else (
+        node.blocking <- blocking;
+        (readyc, readyf, blockedc + 1, blockedf + node.size)
+      )
+    in
+    FilenameMap.fold fold_node graph (0, 0, 0, 0)
   in
   {
     graph;
