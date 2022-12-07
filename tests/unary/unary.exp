@@ -12,21 +12,18 @@ References:
                      ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- unary.js:12:11
+Error --------------------------------------------------------------------------------------------------- unary.js:12:10
 
-string [1] is incompatible with number [2]. [incompatible-type]
+string [1] is not a number. [incompatible-use]
 
-   unary.js:12:11
+   unary.js:12:10
    12|   return ~y;  // error, we don't allow coercion here
-                 ^
+                ^^
 
 References:
    unary.js:11:16
    11| function x3(y: string) {
                       ^^^^^^ [1]
-   unary.js:12:10
-   12|   return ~y;  // error, we don't allow coercion here
-                ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- unary.js:19:2

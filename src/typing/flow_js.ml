@@ -4633,8 +4633,9 @@ struct
         | (DefT (_, _, BigIntT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot })
           ->
           rec_flow_t cx trace ~use_op:unknown_use (BigIntT.why reason (bogus_trust ()), result_t)
-        | (_, UnaryArithT { reason; result_t = _; kind = UnaryArithKind.BitNot }) ->
-          rec_flow_t cx trace ~use_op:unknown_use (l, NumT.why reason (bogus_trust ()))
+        | (AnyT (_, src), UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot }) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, result_t)
         | (DefT (_, _, NumT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.Update }) ->
           rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t)
         | (DefT (_, _, BigIntT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
