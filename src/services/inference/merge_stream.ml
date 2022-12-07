@@ -130,19 +130,21 @@ let create ~num_workers ~sig_dependency_graph ~components ~recheck_set =
       (fun leader node ->
         Nel.iter
           (fun f ->
-            let dep_fs = FilenameMap.find f sig_dependency_graph in
+            let dep_fs = FilenameGraph.find f sig_dependency_graph in
             FilenameSet.iter
               (fun dep_f ->
-                let dep_leader = FilenameMap.find dep_f leaders in
-                let dep_node = FilenameMap.find dep_leader graph in
-                if dep_node == node then
-                  ()
-                else
-                  let dependents = FilenameMap.add leader node dep_node.dependents in
-                  if dependents != dep_node.dependents then (
-                    dep_node.dependents <- dependents;
-                    node.blocking <- node.blocking + 1
-                  ))
+                match FilenameMap.find_opt dep_f leaders with
+                | None -> ()
+                | Some dep_leader ->
+                  let dep_node = FilenameMap.find dep_leader graph in
+                  if dep_node == node then
+                    ()
+                  else
+                    let dependents = FilenameMap.add leader node dep_node.dependents in
+                    if dependents != dep_node.dependents then (
+                      dep_node.dependents <- dependents;
+                      node.blocking <- node.blocking + 1
+                    ))
               dep_fs)
           node.component)
       graph

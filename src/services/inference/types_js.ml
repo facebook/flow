@@ -156,14 +156,11 @@ let error_set_of_internal_error file (loc, internal_error) =
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
   |> Flow_error.ErrorSet.singleton
 
-let calc_deps ~options ~profiling ~sig_dependency_graph ~components to_merge =
+let calc_deps ~options ~profiling ~components to_merge =
   with_memory_timer_lwt ~options "CalcDeps" profiling (fun () ->
-      let sig_dependency_graph =
-        Pure_dep_graph_operations.filter_dependency_graph sig_dependency_graph to_merge
-      in
       let components = List.filter (Nel.exists (fun f -> FilenameSet.mem f to_merge)) components in
       if Options.should_profile options then Sort_js.log components;
-      Lwt.return (sig_dependency_graph, components)
+      Lwt.return components
   )
 
 (* The input passed in basically tells us what the caller wants to typecheck.
@@ -462,9 +459,7 @@ let merge
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
   let files_to_merge = CheckedSet.all to_merge in
-  let%lwt (sig_dependency_graph, components) =
-    calc_deps ~options ~profiling ~sig_dependency_graph ~components files_to_merge
-  in
+  let%lwt components = calc_deps ~options ~profiling ~components files_to_merge in
   Hh_logger.info "Merging";
   let%lwt ((suppressions, skipped_count, sig_new_or_changed), time_to_merge) =
     let mutator =

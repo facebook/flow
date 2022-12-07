@@ -16,10 +16,9 @@ val init :
 val calc_deps :
   options:Options.t ->
   profiling:Profiling_js.running ->
-  sig_dependency_graph:FilenameGraph.t ->
   components:File_key.t Nel.t list ->
   FilenameSet.t ->
-  (FilenameSet.t FilenameMap.t * File_key.t Nel.t list) Lwt.t
+  File_key.t Nel.t list Lwt.t
 
 (* incremental typecheck entry point *)
 val recheck :

@@ -176,9 +176,7 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   in
   let roots = CheckedSet.all to_merge in
   let components = Sort_js.topsort ~roots (Utils_js.FilenameGraph.to_map sig_dependency_graph) in
-  let%lwt (sig_dependency_graph, components) =
-    Types_js.calc_deps ~options ~profiling ~sig_dependency_graph ~components roots
-  in
+  let%lwt components = Types_js.calc_deps ~options ~profiling ~components roots in
   Lwt.return (sig_dependency_graph, components, roots, to_check)
 
 let merge_job ~mutator ~options ~reader component =
