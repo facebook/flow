@@ -638,26 +638,20 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
 let commit_modules ~workers ~options dirty_modules =
   let module Heap = SharedMem.NewAPI in
   let debug = Options.is_debug_mode options in
-  let f (unchanged, errmap) mname =
-    let mname_str = Modulename.to_string mname in
-    let (provider_ent, all_providers) =
-      match mname with
-      | Modulename.String name ->
-        let m = Parsing_heaps.get_haste_module_unsafe name in
-        (Heap.get_haste_provider m, Heap.get_haste_all_providers_exclusive m)
-      | Modulename.Filename key ->
-        let m = Parsing_heaps.get_file_module_unsafe key in
-        (Heap.get_file_provider m, Heap.get_file_all_providers_exclusive m)
-    in
+  let f (unchanged, errmap) mname name =
+    let m = Parsing_heaps.get_haste_module_unsafe name in
+    let provider_ent = Heap.get_haste_provider m in
     let all_providers =
       let f acc f =
         let key = Parsing_heaps.read_file_key f in
         FilenameMap.add key f acc
       in
-      List.fold_left f FilenameMap.empty all_providers |> FilenameMap.bindings
+      Heap.get_haste_all_providers_exclusive m
+      |> List.fold_left f FilenameMap.empty
+      |> FilenameMap.bindings
     in
     let old_provider = Heap.entity_read_latest provider_ent in
-    let (new_provider, errmap) = choose_provider ~options mname_str all_providers errmap in
+    let (new_provider, errmap) = choose_provider ~options name all_providers errmap in
     match (old_provider, new_provider) with
     | (_, None) ->
       (* TODO: Clean up modules which have no providers and no dependents. At
@@ -667,15 +661,14 @@ let commit_modules ~workers ~options dirty_modules =
        *
        * X-ref update revdeps in parsing heaps, where a module can lose its last
        * dependent. *)
-      if debug then prerr_endlinef "no remaining providers: %s" mname_str;
+      if debug then prerr_endlinef "no remaining providers: %s" name;
       Heap.entity_advance provider_ent None;
       (unchanged, errmap)
     | (None, Some p) ->
       (* When can this happen? Either m pointed to a file that used to
          provide m and changed or got deleted (causing m to be in
          old_modules), or m didn't have a provider before. *)
-      if debug then
-        prerr_endlinef "initial provider %s -> %s" mname_str (Parsing_heaps.read_file_name p);
+      if debug then prerr_endlinef "initial provider %s -> %s" name (Parsing_heaps.read_file_name p);
       Heap.entity_advance provider_ent (Some p);
       (unchanged, errmap)
     | (Some old_p, Some new_p) ->
@@ -684,10 +677,7 @@ let commit_modules ~workers ~options dirty_modules =
            f' that provides m changed (so m is not in old_modules), but f
            continues to be the chosen provider = p (winning over f'). *)
         if debug then
-          prerr_endlinef
-            "unchanged provider: %s -> %s"
-            mname_str
-            (Parsing_heaps.read_file_name new_p);
+          prerr_endlinef "unchanged provider: %s -> %s" name (Parsing_heaps.read_file_name new_p);
         let unchanged =
           if Heap.file_changed old_p then
             unchanged
@@ -702,12 +692,17 @@ let commit_modules ~workers ~options dirty_modules =
         if debug then
           prerr_endlinef
             "new provider: %s -> %s replaces %s"
-            mname_str
+            name
             (Parsing_heaps.read_file_name new_p)
             (Parsing_heaps.read_file_name old_p);
         Heap.entity_advance provider_ent (Some new_p);
         (unchanged, errmap)
       )
+  in
+  let f acc mname =
+    match mname with
+    | Modulename.String name -> f acc mname name
+    | Modulename.Filename _ -> acc
   in
   let%lwt (unchanged, duplicate_providers) =
     MultiWorkerLwt.call

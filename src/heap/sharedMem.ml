@@ -1873,7 +1873,7 @@ module NewAPI = struct
     | Resource_file -> Resource_file_tag
     | Lib_file -> Lib_file_tag
 
-  let file_size = 5 * addr_size
+  let file_size = 4 * addr_size
 
   let write_file chunk kind file_name parse haste_info file_module =
     let file_module = Option.value file_module ~default:opt_none in
@@ -1882,7 +1882,6 @@ module NewAPI = struct
     unsafe_write_addr chunk parse;
     unsafe_write_addr chunk haste_info;
     unsafe_write_addr chunk file_module;
-    unsafe_write_addr chunk null_addr (* next file provider *);
     addr
 
   let file_name_addr file = addr_offset file 1
@@ -1892,8 +1891,6 @@ module NewAPI = struct
   let haste_info_addr file = addr_offset file 3
 
   let file_module_addr file = addr_offset file 4
-
-  let next_file_provider_addr file = addr_offset file 5
 
   let get_file_kind file =
     let hd = read_header (get_heap ()) file in
@@ -2044,75 +2041,16 @@ module NewAPI = struct
 
   (** File modules *)
 
-  let file_module_size = 3 * addr_size
+  let file_module_size = 1 * addr_size
 
-  let write_file_module chunk provider dependents =
+  let write_file_module chunk dependents =
     let addr = write_header chunk File_module_tag file_module_size in
-    unsafe_write_addr chunk provider;
-    unsafe_write_addr chunk null_addr (* all providers *);
     unsafe_write_addr chunk dependents;
     addr
 
-  let file_provider_addr m = addr_offset m 1
-
-  let file_all_providers_addr m = addr_offset m 2
-
-  let file_dependents_addr m = addr_offset m 3
-
-  let get_file_provider = get_generic file_provider_addr
+  let file_dependents_addr m = addr_offset m 1
 
   let get_file_dependents = get_generic file_dependents_addr
-
-  let add_file_provider m file =
-    let head_addr = file_all_providers_addr m in
-    let next_addr = next_file_provider_addr file in
-    add_provider head_addr next_addr file
-
-  (* Iterate through linked list of providers, accumulating a list. While
-   * traversing, we also remove any files which are no longer providers.
-   *
-   * See `get_haste_all_providers_exclusive` for more details about deferred
-   * deletion. *)
-  let get_file_all_providers_exclusive m =
-    let heap = get_heap () in
-    let rec loop acc node_addr node =
-      if is_none node then
-        acc
-      else
-        let next_addr = next_file_provider_addr node in
-        let next = read_addr heap next_addr in
-        match entity_read_latest (get_parse node) with
-        | Some _ ->
-          (* As long as `node` has some parse information, then the file exists
-           * and provides `m`. *)
-          loop (node :: acc) next_addr next
-        | None ->
-          (* `node` has no parse information, and thus does not exist and does
-           * not provide `m`. *)
-          unsafe_write_addr_at heap node_addr next;
-          loop acc node_addr next
-    in
-    let head_addr = file_all_providers_addr m in
-    let head = read_addr heap head_addr in
-    loop [] head_addr head
-
-  (* See `remove_haste_provider_exclusive` *)
-  let remove_file_provider_exclusive m file =
-    let heap = get_heap () in
-    let rec loop node_addr node =
-      if is_none node then
-        ()
-      else
-        let next_addr = next_file_provider_addr node in
-        let next = read_addr heap next_addr in
-        if node == file then
-          unsafe_write_addr_at heap node_addr next
-        else
-          loop next_addr next
-    in
-    let head_addr = file_all_providers_addr m in
-    let head = read_addr heap head_addr in
-    loop head_addr head
 
   (** File set *)
 

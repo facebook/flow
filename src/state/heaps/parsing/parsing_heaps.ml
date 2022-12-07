@@ -311,11 +311,10 @@ let haste_modulename m = Modulename.String (Heap.read_string (Heap.get_haste_nam
 
 let prepare_add_file_module key =
   let open Heap in
-  let size = (3 * header_size) + file_module_size + entity_size + sklist_size in
+  let size = (2 * header_size) + file_module_size + sklist_size in
   let write chunk =
-    let provider = write_entity chunk None in
     let dependents = write_sklist chunk in
-    let m = write_file_module chunk provider dependents in
+    let m = write_file_module chunk dependents in
     FileModuleHeap.add key m
   in
   (size, write)
@@ -431,13 +430,13 @@ let prepare_write_type_sig type_sig =
 
 (* Calculate the set of dirty modules and prepare those modules to be committed.
  *
- * If this file became a provider to a haste/file module, we add this file to
- * the module's "all providers" list and mark the module as dirty.
+ * If this file became a provider to a haste module, we add this file to the
+ * module's "all providers" list and mark the module as dirty.
  *
- * If this file no longer providers a haste/file module, we do not remove the
- * file now, to avoid complexity around concurrent deletion. Instead, old
- * providers are "logically" deleted, the module is marked as dirty, and we
- * perform deferred deletions during commit_modules.
+ * If this file no longer providers a haste module, we do not remove the file
+ * now, to avoid complexity around concurrent deletion. Instead, old providers
+ * are "logically" deleted, the module is marked as dirty, and we perform
+ * deferred deletions during commit_modules.
  *
  * We also mark modules as dirty even if the module itself does not need to be
  * committed -- that is, we do not need to pick a new provider. A module is also
@@ -447,7 +446,7 @@ let prepare_write_type_sig type_sig =
  * dirtiness! We can skip re-picking a provider for modules which keep the same
  * provider, but we still need to re-check its dependents.
  *)
-let calc_dirty_modules file_key file haste_ent new_file_module =
+let calc_dirty_modules file_key file haste_ent =
   let open Heap in
   let (old_haste_info, new_haste_info, changed_haste_info) =
     let new_info = entity_read_latest haste_ent in
@@ -489,7 +488,6 @@ let calc_dirty_modules file_key file haste_ent new_file_module =
       let m = get_haste_module info in
       MSet.add (haste_modulename m) dirty_modules
   in
-  Option.iter (fun m -> add_file_provider m file) new_file_module;
   (* Changing `file` does not cause the eponymous module's provider to be
    * re-picked, but it is still dirty because `file` changed. (see TODO) *)
   MSet.add (Files.eponymous_module file_key) dirty_modules
@@ -662,7 +660,7 @@ let prepare_create_file size file_key module_name resolved_requires_opt =
     let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
     if file = FileHeap.add file_key file then
       let _did_change : bool = update_resolved_requires chunk file parse in
-      calc_dirty_modules file_key file haste_ent file_module
+      calc_dirty_modules file_key file haste_ent
     else
       (* Two threads raced to add this file and the other thread won. We don't
        * need to mark any files as dirty; the other thread will have done that
@@ -684,14 +682,6 @@ let prepare_update_file size file_key file parse_ent module_name resolved_requir
   let (size, write_new_haste_info_maybe) =
     prepare_write_new_haste_info_maybe size old_haste_info module_name
   in
-  let new_file_module =
-    (* If we are re-parsing an unparsed file, we need to re-add ourselves to the
-     * file module's provider list. If the file is already parsed, then we are
-     * certainly already a provider, so we don't need to re-add. *)
-    match entity_read_latest parse_ent with
-    | None -> get_file_module file
-    | Some _ -> None
-  in
   let (dep_size, update_resolved_requires_maybe) =
     match resolved_requires_opt_opt with
     | None -> (0, (fun _ _ _ -> false))
@@ -710,7 +700,7 @@ let prepare_update_file size file_key file parse_ent module_name resolved_requir
       | _ -> entity_advance haste_ent new_haste_info
     in
     let _did_change : bool = update_resolved_requires_maybe chunk file parse in
-    calc_dirty_modules file_key file haste_ent new_file_module
+    calc_dirty_modules file_key file haste_ent
   in
   (size, write)
 
@@ -959,20 +949,6 @@ let rollback_resolved_requires file ent =
  * changing the file object itself and marking a module dirty. Later we perform
  * the deletions when re-picking a new provider for each dirty module.
  *
- * For a file module (M), a provider file (F) is logically deleted if its parse
- * entity's (E) latest data is null, meaning the file is deleted:
- *
- *  +---+---+---+   +---+---+---+
- *  | M | * |...|   | E | 0 |...|
- *  +---+---+---+   +---+---+---+
- *        |         ^     ^
- *    providers     |     |
- *        |       parse   +- latest data (null)
- *        v         |
- *        +---+---+---+---+
- *        | F |   | * |...|
- *        +---+---+---+---+
- *
  * For a haste module (M), a provider (F) is logically deleted if its haste info
  * entity's (E) latest data (H) no longer points back to the haste module. In
  * this case, the list continues from the committed haste info (H'):
@@ -988,17 +964,17 @@ let rollback_resolved_requires file ent =
  *        | F |   | * |...|   | H | * |
  *        +---+---+---+---+   +---+---+
  *
- * Both of the above rules depend on the latest/committed state of the parse and
- * haste entities, which also needs to be rolled back. We need to be careful
- * about when the parse and haste entities are rolled back.
+ * The above depends on the latest/committed state of the haste entities, which
+ * also needs to be rolled back. We need to be careful about when the haste
+ * entities are rolled back.
  *
  * To deal with rolling back deferred deletions, we first ensure that any
  * deferred deletions are fully performed, which must happen before we roll back
- * parse/haste entities.
+ * haste entities.
  *
  * We then can re-add the file to the all providers list, but this must happen
- * *after* we roll back the parse/haste data. Otherwise, the file will still
- * appear to be logically deleted.
+ * *after* we roll back the haste data. Otherwise, the file will still appear to
+ * be logically deleted.
  *
  * In addition to rolling back changes to the file and to dirty modules' all
  * providers list, we also roll back each dirty module's provider entity which
@@ -1010,14 +986,8 @@ let rollback_file =
   let get_haste_module_info info = (get_haste_module info, info) in
   let rollback_file file =
     let parse_ent = get_parse file in
-    let (old_file_module, new_file_module, old_typed_parse, new_typed_parse) =
-      match (entity_read_committed parse_ent, entity_read_latest parse_ent) with
-      | (None, None) -> (None, None, None, None)
-      | (Some old_parse, Some new_parse) ->
-        (None, None, coerce_typed old_parse, coerce_typed new_parse)
-      | (None, Some new_parse) -> (None, get_file_module file, None, coerce_typed new_parse)
-      | (Some old_parse, None) -> (get_file_module file, None, coerce_typed old_parse, None)
-    in
+    let old_typed_parse = Option.bind (entity_read_committed parse_ent) coerce_typed in
+    let new_typed_parse = Option.bind (entity_read_latest parse_ent) coerce_typed in
     let haste_ent = get_haste_info file in
     let (old_haste_module, new_haste_module) =
       if entity_changed haste_ent then
@@ -1064,16 +1034,6 @@ let rollback_file =
     in
     (* Remove new providers and process deferred deletions for old providers
      * before rolling back this file's parse and haste entities. *)
-    old_file_module
-    |> Option.iter (fun m ->
-           entity_rollback (get_file_provider m);
-           ignore (get_file_all_providers_exclusive m)
-       );
-    new_file_module
-    |> Option.iter (fun m ->
-           entity_rollback (get_file_provider m);
-           remove_file_provider_exclusive m file
-       );
     old_haste_module
     |> Option.iter (fun (m, _) ->
            entity_rollback (get_haste_provider m);
@@ -1088,7 +1048,6 @@ let rollback_file =
      * haste entities. *)
     entity_rollback parse_ent;
     entity_rollback haste_ent;
-    old_file_module |> Option.iter (fun m -> add_file_provider m file);
     old_haste_module |> Option.iter (fun (m, info) -> add_haste_provider m file info)
   in
   fun file_key ->

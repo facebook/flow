@@ -521,17 +521,9 @@ module NewAPI : sig
 
   val file_module_size : size
 
-  val write_file_module : chunk -> file entity addr -> file sklist addr -> file_module addr
-
-  val get_file_provider : file_module addr -> file entity addr
+  val write_file_module : chunk -> file sklist addr -> file_module addr
 
   val get_file_dependents : file_module addr -> file sklist addr
-
-  val add_file_provider : file_module addr -> file addr -> unit
-
-  val get_file_all_providers_exclusive : file_module addr -> file addr list
-
-  val remove_file_provider_exclusive : file_module addr -> file addr -> unit
 
   (* file sets *)
 
