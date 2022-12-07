@@ -210,13 +210,6 @@ let inherited_method = function
   | OrdinaryName "constructor" -> false
   | _ -> true
 
-let valid_arith_operand t =
-  match t with
-  | AnyT _
-  | DefT (_, _, EmptyT) ->
-    true
-  | _ -> numberesque t
-
 (********************** start of slab **********************************)
 module M__flow
     (FlowJs : Flow_common.S)
@@ -5493,99 +5486,10 @@ struct
         else
           (l, r)
       in
-      let loc = aloc_of_reason reason in
-      let open ArithKind in
-      match (kind, l, r) with
-      (* num + num *)
-      (* num + bool *)
-      (* bool + num *)
-      (* bool + bool *)
-      | (Plus, DefT (_, _, (NumT _ | BoolT _)), DefT (_, _, (NumT _ | BoolT _))) ->
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      (* str + str *)
-      (* num + str *)
-      (* str + num *)
-      | (Plus, DefT (_, _, (NumT _ | StrT _)), DefT (_, _, (NumT _ | StrT _))) ->
-        rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
-      (* empty + _ *)
-      (* _ + empty *)
-      | (Plus, DefT (_, _, EmptyT), _)
-      | (Plus, _, DefT (_, _, EmptyT)) ->
-        rec_flow_t cx trace ~use_op:unknown_use (EmptyT.at loc |> with_trust bogus_trust, u)
-      (* mixed + _ *)
-      (* _ + mixed *)
-      | (Plus, DefT (reason, _, MixedT _), _)
-      | (Plus, _, DefT (reason, _, MixedT _)) ->
-        add_output cx ~trace (Error_message.EAdditionMixed (reason, use_op))
-      (* str + _ *)
-      (* _ + str *)
-      | (Plus, DefT (_, _, StrT _), _) ->
-        rec_flow cx trace (r, UseT (use_op, l));
-        rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
-      | (Plus, _, DefT (_, _, StrT _)) ->
-        rec_flow cx trace (l, UseT (use_op, r));
-        rec_flow_t cx trace ~use_op:unknown_use (StrT.at loc |> with_trust bogus_trust, u)
-      (* null + _ *)
-      (* _ + null *)
-      | (Plus, DefT (reason, _, (VoidT | NullT)), _)
-      | (Plus, _, DefT (reason, _, (VoidT | NullT))) ->
-        add_output cx ~trace (Error_message.EArithmeticOperand reason)
-      (* any + _ *)
-      (* _ + any *)
-      | (Plus, AnyT (_, src), _)
-      | (Plus, _, AnyT (_, src)) ->
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.at src loc, u)
-      (* bigint <> bigint *)
-      | (_, DefT (_, _, BigIntT _), DefT (_, _, BigIntT _)) ->
-        if kind = RShift3 then
-          add_output cx ~trace (Error_message.EBigIntRShift3 reason)
-        else
-          rec_flow_t cx trace ~use_op:unknown_use (BigIntT.at loc |> with_trust bogus_trust, u)
-      (* + error cases *)
-      | (Plus, DefT (_, _, NumT _), _) ->
-        rec_flow cx trace (r, UseT (use_op, l));
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | (Plus, _, DefT (_, _, NumT _)) ->
-        rec_flow cx trace (l, UseT (use_op, r));
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | (Plus, _, _) ->
-        let fake_str = StrT.why reason |> with_trust bogus_trust in
-        rec_flow cx trace (l, UseT (use_op, fake_str));
-        rec_flow cx trace (r, UseT (use_op, fake_str));
-        rec_flow cx trace (fake_str, UseT (use_op, u))
-      (* numberesque <> any *)
-      (* any <> numberesque *)
-      (* for <> except + *)
-      | ((RShift3 | Other), AnyT _, r) when numberesque r ->
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | ((RShift3 | Other), l, AnyT _) when numberesque l ->
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      (* numberesque <> empty *)
-      (* empty <> numberesque *)
-      (* for <> except + *)
-      | ((RShift3 | Other), DefT (_, _, EmptyT), r) when numberesque r ->
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | ((RShift3 | Other), l, DefT (_, _, EmptyT)) when numberesque l ->
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      (* any <> any *)
-      | ((RShift3 | Other), AnyT (_, src), AnyT _) ->
-        rec_flow_t cx trace ~use_op:unknown_use (AnyT.at src loc, u)
-      (* any <> empty *)
-      (* empty <> any *)
-      (* empty <> empty *)
-      (* for <> except + *)
-      | ((RShift3 | Other), (DefT (_, _, EmptyT) | AnyT _), (DefT (_, _, EmptyT) | AnyT _)) ->
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      (* numberesque <> numberesque *)
-      (* for <> except + *)
-      | ((RShift3 | Other), l, r) when numberesque l && numberesque r ->
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
-      | (_, l, r) ->
-        if not (valid_arith_operand l) then
-          add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t l));
-        if not (valid_arith_operand r) then
-          add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t r));
-        rec_flow_t cx trace ~use_op:unknown_use (NumT.at loc |> with_trust bogus_trust, u)
+      let t =
+        Flow_js_utils.flow_arith use_op reason l r kind (add_output cx ~trace) (rec_flow cx trace)
+      in
+      rec_flow_t cx trace ~use_op:unknown_use (t, u)
 
   (**
    * relational comparisons like <, >, <=, >=
