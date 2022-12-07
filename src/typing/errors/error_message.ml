@@ -3880,7 +3880,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     UseOp
       {
         use_op;
-        features = [ref reason_tparam; text " is underconstrained by "; ref reason_call];
+        features =
+          [
+            ref reason_tparam;
+            text " is underconstrained by ";
+            ref reason_call;
+            text ". Either add explicit type arguments or cast the expression to your expected type";
+          ];
         loc = loc_of_reason reason_call;
       }
   | EImplicitInstantiationWidenedError { reason_call; bound } ->
