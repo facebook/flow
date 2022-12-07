@@ -17,8 +17,6 @@ type haste_info_addr = SharedMem.NewAPI.haste_info SharedMem.addr
 
 type haste_module_addr = SharedMem.NewAPI.haste_module SharedMem.addr
 
-type file_module_addr = SharedMem.NewAPI.file_module SharedMem.addr
-
 type provider_addr = SharedMem.NewAPI.file SharedMem.NewAPI.entity SharedMem.addr
 
 type resolved_module = (Modulename.t, string) Result.t
@@ -43,8 +41,6 @@ val get_file_addr_unsafe : File_key.t -> file_addr
 val get_haste_module : string -> haste_module_addr option
 
 val get_haste_module_unsafe : string -> haste_module_addr
-
-val get_file_module_unsafe : File_key.t -> file_module_addr
 
 val iter_dependents : (file_addr -> unit) -> Modulename.t -> unit
 

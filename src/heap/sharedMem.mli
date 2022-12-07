@@ -236,8 +236,6 @@ module NewAPI : sig
 
   type haste_module
 
-  type file_module
-
   (* Before writing to the heap, we first calculate the required size (in words)
    * for all the heap objects we would like to write. We will pass this size
    * into the `alloc` function below, to get a chunk which we use to perform
@@ -479,14 +477,14 @@ module NewAPI : sig
     heap_string addr ->
     [ `typed | `untyped | `package ] parse entity addr ->
     haste_info entity addr ->
-    file_module addr option ->
+    file sklist addr option ->
     file addr
 
   val get_file_kind : file addr -> file_kind
 
   val get_file_name : file addr -> heap_string addr
 
-  val get_file_module : file addr -> file_module addr option
+  val get_file_dependents : file addr -> file sklist addr option
 
   val get_haste_info : file addr -> haste_info entity addr
 
@@ -516,14 +514,6 @@ module NewAPI : sig
   val get_haste_all_providers_exclusive : haste_module addr -> file addr list
 
   val remove_haste_provider_exclusive : haste_module addr -> file addr -> unit
-
-  (* file module *)
-
-  val file_module_size : size
-
-  val write_file_module : chunk -> file sklist addr -> file_module addr
-
-  val get_file_dependents : file_module addr -> file sklist addr
 
   (* file sets *)
 

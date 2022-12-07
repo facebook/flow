@@ -536,7 +536,8 @@ let reducer
     exported_module
     acc
     file_key : results =
-  match Parsing_heaps.get_file_addr file_key with
+  let file_opt = Parsing_heaps.get_file_addr file_key in
+  match Option.bind file_opt (Parsing_heaps.Mutator_reader.get_parse ~reader) with
   | Some _ when SharedMem.is_init_transaction () ->
     (* If we can find an existing entry during the initial transaction, we must
      * have been asked to parse the same file twice. This can happen if we init
@@ -545,7 +546,7 @@ let reducer
      * Since we must have already parsed the file during this transaction, we
      * can skip this entirely. *)
     acc
-  | file_opt ->
+  | _ ->
     let filename_string = File_key.to_string file_key in
     (match cat filename_string with
     | exception _ ->

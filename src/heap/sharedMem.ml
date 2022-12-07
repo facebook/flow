@@ -42,17 +42,16 @@ type tag =
   | Resource_file_tag
   | Lib_file_tag
   | Haste_module_tag
-  | File_module_tag
   | Sklist_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 13 -- see Heap_string_tag in hh_shared.c *)
+  | String_tag (* 12 -- see Heap_string_tag in hh_shared.c *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Type_sig_tag
   | Cas_digest_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 19 -- see Serialized_tag in hh_shared.c *)
+  | Serialized_tag (* 18 -- see Serialized_tag in hh_shared.c *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
@@ -68,8 +67,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 13);
-  assert (tag_val Serialized_tag = 19)
+  assert (tag_val String_tag = 12);
+  assert (tag_val Serialized_tag = 18)
 
 (* Addresses are relative to the hashtbl pointer, so the null address actually
  * points to the hash field of the first hashtbl entry, which is never a
@@ -842,8 +841,6 @@ module NewAPI = struct
   type file
 
   type haste_module
-
-  type file_module
 
   type size = int
 
@@ -1875,13 +1872,13 @@ module NewAPI = struct
 
   let file_size = 4 * addr_size
 
-  let write_file chunk kind file_name parse haste_info file_module =
-    let file_module = Option.value file_module ~default:opt_none in
+  let write_file chunk kind file_name parse haste_info dependents =
+    let dependents = Option.value dependents ~default:opt_none in
     let addr = write_header chunk (file_tag kind) file_size in
     unsafe_write_addr chunk file_name;
     unsafe_write_addr chunk parse;
     unsafe_write_addr chunk haste_info;
-    unsafe_write_addr chunk file_module;
+    unsafe_write_addr chunk dependents;
     addr
 
   let file_name_addr file = addr_offset file 1
@@ -1890,7 +1887,7 @@ module NewAPI = struct
 
   let haste_info_addr file = addr_offset file 3
 
-  let file_module_addr file = addr_offset file 4
+  let file_dependents_addr file = addr_offset file 4
 
   let get_file_kind file =
     let hd = read_header (get_heap ()) file in
@@ -1908,7 +1905,7 @@ module NewAPI = struct
 
   let get_file_name = get_generic file_name_addr
 
-  let get_file_module = get_generic_opt file_module_addr
+  let get_file_dependents = get_generic_opt file_dependents_addr
 
   let get_haste_info = get_generic haste_info_addr
 
@@ -2038,19 +2035,6 @@ module NewAPI = struct
     let head_addr = haste_all_providers_addr m in
     let head = read_addr heap head_addr in
     loop head_addr head
-
-  (** File modules *)
-
-  let file_module_size = 1 * addr_size
-
-  let write_file_module chunk dependents =
-    let addr = write_header chunk File_module_tag file_module_size in
-    unsafe_write_addr chunk dependents;
-    addr
-
-  let file_dependents_addr m = addr_offset m 1
-
-  let get_file_dependents = get_generic file_dependents_addr
 
   (** File set *)
 

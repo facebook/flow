@@ -16,13 +16,6 @@ module FileHeap =
       type t = Heap.file
     end)
 
-module FileModuleHeap =
-  SharedMem.NoCacheAddr
-    (File_key)
-    (struct
-      type t = Heap.file_module
-    end)
-
 module HasteModuleHeap =
   SharedMem.NoCacheAddr
     (StringKey)
@@ -50,8 +43,6 @@ exception Requires_not_found of string
 exception Type_sig_not_found of string
 
 exception Haste_module_not_found of string
-
-exception File_module_not_found of string
 
 exception Resolved_requires_not_found of string
 
@@ -84,8 +75,6 @@ type +'a parse_addr = 'a Heap.parse SharedMem.addr
 type haste_info_addr = Heap.haste_info SharedMem.addr
 
 type haste_module_addr = Heap.haste_module SharedMem.addr
-
-type file_module_addr = Heap.file_module SharedMem.addr
 
 type provider_addr = Heap.file Heap.entity SharedMem.addr
 
@@ -168,17 +157,10 @@ let get_parsed_file_addr reader key =
 
 let get_haste_module = HasteModuleHeap.get
 
-let get_file_module = FileModuleHeap.get
-
 let get_haste_module_unsafe name =
   match get_haste_module name with
   | Some addr -> addr
   | None -> raise (Haste_module_not_found name)
-
-let get_file_module_unsafe key =
-  match get_file_module key with
-  | Some addr -> addr
-  | None -> raise (File_module_not_found (File_key.to_string key))
 
 let read_provider reader m =
   match m with
@@ -198,8 +180,8 @@ let iter_dependents f mname =
       let* haste_module = get_haste_module name in
       Some (Heap.get_haste_dependents haste_module)
     | Modulename.Filename file_key ->
-      let* file_module = get_file_module file_key in
-      Some (Heap.get_file_dependents file_module)
+      let* file_addr = get_file_addr file_key in
+      Heap.get_file_dependents file_addr
   in
   match dependents with
   | None -> ()
@@ -309,13 +291,19 @@ let read_resolved_requires addr : resolved_requires =
 
 let haste_modulename m = Modulename.String (Heap.read_string (Heap.get_haste_name m))
 
-let prepare_add_file_module key =
+let prepare_add_phantom_file file_key =
   let open Heap in
-  let size = (2 * header_size) + file_module_size + sklist_size in
+  let (file_kind, file_name) = file_kind_and_name file_key in
+  let size =
+    (5 * header_size) + (2 * entity_size) + string_size file_name + sklist_size + file_size
+  in
   let write chunk =
-    let dependents = write_sklist chunk in
-    let m = write_file_module chunk dependents in
-    FileModuleHeap.add key m
+    let file_name = write_string chunk file_name in
+    let parse_ent = write_entity chunk None in
+    let haste_ent = write_entity chunk None in
+    let dependents = Some (write_sklist chunk) in
+    let file = write_file chunk file_kind file_name parse_ent haste_ent dependents in
+    FileHeap.add file_key file
   in
   (size, write)
 
@@ -330,17 +318,6 @@ let prepare_add_haste_module name =
     HasteModuleHeap.add name m
   in
   (size, write)
-
-let prepare_add_file_module_maybe size file_key =
-  match file_key with
-  | File_key.LibFile _ -> (size, Fun.const None)
-  | _ ->
-    let file_module_key = Files.chop_flow_ext file_key in
-    (match FileModuleHeap.get file_module_key with
-    | Some _ as addr -> (size, Fun.const addr)
-    | None ->
-      let (module_size, write) = prepare_add_file_module file_module_key in
-      (size + module_size, (fun chunk -> Some (write chunk))))
 
 let prepare_add_haste_module_maybe size name =
   match HasteModuleHeap.get name with
@@ -539,7 +516,7 @@ let prepare_update_revdeps =
     let dependents =
       match mname with
       | Modulename.String name -> Heap.get_haste_dependents (get_haste_module_unsafe name)
-      | Modulename.Filename key -> Heap.get_file_dependents (get_file_module_unsafe key)
+      | Modulename.Filename key -> Option.get (Heap.get_file_dependents (get_file_addr_unsafe key))
     in
     let write chunk file =
       write_acc chunk file;
@@ -559,19 +536,19 @@ let prepare_update_revdeps =
     let (module_size, get_dependents) =
       match mname with
       | Modulename.String name ->
-        let (size, m) =
+        let (size, write) =
           match get_haste_module name with
           | Some m -> (0, Fun.const m)
           | None -> prepare_add_haste_module name
         in
-        (size, (fun chunk -> Heap.get_haste_dependents (m chunk)))
+        (size, (fun chunk -> Heap.get_haste_dependents (write chunk)))
       | Modulename.Filename key ->
-        let (size, m) =
-          match get_file_module key with
-          | Some m -> (0, Fun.const m)
-          | None -> prepare_add_file_module key
+        let (size, write) =
+          match get_file_addr key with
+          | Some f -> (0, Fun.const f)
+          | None -> prepare_add_phantom_file key
         in
-        (size, (fun chunk -> Heap.get_file_dependents (m chunk)))
+        (size, (fun chunk -> Option.get (Heap.get_file_dependents (write chunk))))
     in
     let (sknode_size, write_sknode) = Heap.prepare_write_sknode () in
     let write chunk file =
@@ -650,22 +627,47 @@ let prepare_create_file size file_key module_name resolved_requires_opt =
   let (size, write_new_haste_info_maybe) =
     prepare_write_new_haste_info_maybe size None module_name
   in
-  let (size, add_file_module_maybe) = prepare_add_file_module_maybe size file_key in
+  let (size, write_dependents) =
+    if Files.has_flow_ext file_key then
+      let impl_key = Files.chop_flow_ext file_key in
+      match get_file_addr impl_key with
+      | Some _ -> (size, Fun.const None)
+      | None ->
+        let (file_size, write) = prepare_add_phantom_file impl_key in
+        let write chunk =
+          let (_ : file_addr) = write chunk in
+          None
+        in
+        (size + file_size, write)
+    else
+      (size + header_size + sklist_size, (fun chunk -> Some (write_sklist chunk)))
+  in
   let write chunk parse =
     let file_name = write_string chunk file_name in
     let parse_ent = write_entity chunk (Some parse) in
     let haste_info = write_new_haste_info_maybe chunk in
     let haste_ent = write_entity chunk haste_info in
-    let file_module = add_file_module_maybe chunk in
-    let file = write_file chunk file_kind file_name parse_ent haste_ent file_module in
-    if file = FileHeap.add file_key file then
+    let dependents = write_dependents chunk in
+    let file = write_file chunk file_kind file_name parse_ent haste_ent dependents in
+    let file' = FileHeap.add file_key file in
+    if file = file' then
       let _did_change : bool = update_resolved_requires chunk file parse in
       calc_dirty_modules file_key file haste_ent
     else
-      (* Two threads raced to add this file and the other thread won. We don't
-       * need to mark any files as dirty; the other thread will have done that
-       * for us. *)
-      MSet.empty
+      let parse_ent' = get_parse file' in
+      match entity_read_latest parse_ent' with
+      | None ->
+        (* Raced with phantom file *)
+        let haste_ent' = get_haste_info file' in
+        entity_advance parse_ent' (Some parse);
+        entity_advance haste_ent' haste_info;
+        let _did_change : bool = update_resolved_requires chunk file parse in
+        calc_dirty_modules file_key file' haste_ent'
+      | Some _ ->
+        (* Two threads raced to add this file and the other thread won. We don't
+         * need to mark any files as dirty; the other thread will have done that
+         * for us. *)
+        MSet.empty
   in
   (size, write)
 
@@ -908,11 +910,7 @@ let clear_file file_key =
         alloc size (fun chunk -> update chunk file)
       in
       entity_advance parse_ent None;
-      let dirty_modules =
-        match get_file_module file with
-        | None -> MSet.empty
-        | Some _ -> MSet.singleton (Files.eponymous_module file_key)
-      in
+      let dirty_modules = MSet.singleton (Files.eponymous_module file_key) in
       let haste_ent = get_haste_info file in
       (match entity_read_latest haste_ent with
       | None -> dirty_modules
@@ -1585,7 +1583,9 @@ module Reparse_mutator = struct
       Hh_logger.info "Committing reparse";
       Mutator_cache.clear ();
       Reader_cache.remove_batch !changed_files;
-      FileHeap.remove_batch !not_found_files;
+      (* TODO: remove only if no dependents
+         FileHeap.remove_batch !not_found_files;
+      *)
       reset_refs ()
     in
 
@@ -2131,7 +2131,9 @@ module Saved_state_mutator = struct
       Hh_logger.info "Committing saved state";
       Mutator_cache.clear ();
       Reader_cache.clear ();
-      FileHeap.remove_batch !not_found_files;
+      (* TODO: remove only if no dependents
+         FileHeap.remove_batch !not_found_files;
+      *)
       reset_refs ()
     in
     let rollback () =
