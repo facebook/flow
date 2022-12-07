@@ -2164,7 +2164,11 @@ let%expect_test "arith_expression1" =
     module.exports = 6*7;
   |};
   [%expect {|
-    CJSModule {type_exports = [||]; exports = (Some (Value (NumberVal [1:17-20])));
+    CJSModule {type_exports = [||];
+      exports =
+      (Some (Eval ([1:17-20], (Value (NumberLit ([1:17-18], 6., "6"))),
+               (Arith (Flow_ast.Expression.Binary.Mult, (Value (NumberLit ([1:19-20], 7., "7")))))
+               )));
       info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
   |}]
 
@@ -2173,13 +2177,12 @@ let%expect_test "arith_expression2" =
     module.exports = 6+7;
   |};
   [%expect {|
-    CJSModule {type_exports = [||]; exports = (Some (Err [1:17-20]));
+    CJSModule {type_exports = [||];
+      exports =
+      (Some (Eval ([1:17-20], (Value (NumberLit ([1:17-18], 6., "6"))),
+               (Arith (Flow_ast.Expression.Binary.Plus, (Value (NumberLit ([1:19-20], 7., "7")))))
+               )));
       info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
-
-    Errors:
-    ([1:17-20],
-     (SigError
-        (Signature_error.UnexpectedExpression ([1:17-20], Flow_ast_utils.ExpressionSort.Binary))))
   |}]
 
 let%expect_test "update_expression" =

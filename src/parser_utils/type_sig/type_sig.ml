@@ -557,6 +557,7 @@ type ('loc, 'a) annot =
  * operations over values and annotations, like unary operators and
  * destructuring. *)
 type 'a op =
+  | Arith of Flow_ast.Expression.Binary.operator * 'a
   | GetProp of string
   | GetElem of 'a
   | Unary of Flow_ast.Expression.Unary.operator

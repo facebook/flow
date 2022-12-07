@@ -2443,9 +2443,9 @@ let jsx_element opts tbls loc elem =
           (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.JSXElement))
       )
 
-let binary loc =
+let binary loc lhs_t rhs_t op =
   let open Ast.Expression.Binary in
-  function
+  match op with
   | Equal
   | NotEqual
   | StrictEqual
@@ -2467,13 +2467,9 @@ let binary loc =
   | Mod
   | BitOr
   | Xor
-  | BitAnd ->
-    Value (NumberVal loc)
+  | BitAnd
   | Plus ->
-    Err
-      ( loc,
-        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Binary))
-      )
+    Eval (loc, lhs_t, Arith (op, rhs_t))
 
 let rec expression opts scope tbls (loc, expr) =
   let module E = Ast.Expression in
@@ -2548,7 +2544,10 @@ let rec expression opts scope tbls (loc, expr) =
         let t = expression opts scope tbls argument in
         Eval (loc, t, Unary operator)
     end
-  | E.Binary { E.Binary.operator; left = _; right = _; comments = _ } -> binary loc operator
+  | E.Binary { E.Binary.operator; left; right; comments = _ } ->
+    let lhs_t = expression opts scope tbls left in
+    let rhs_t = expression opts scope tbls right in
+    binary loc lhs_t rhs_t operator
   | E.Update { E.Update.operator = _; argument; prefix = _; comments = _ } ->
     let t = expression opts scope tbls argument in
     Eval (loc, t, Update)

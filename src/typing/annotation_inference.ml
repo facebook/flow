@@ -33,6 +33,7 @@ let object_like_op = function
   | Annot_MixinT _
   | Annot_ObjKitT _
   | Annot_ObjTestProtoT _
+  | Annot_ArithT _
   | Annot_UnaryArithT _
   | Annot_NotT _
   | Annot_ObjKeyMirror _
@@ -132,6 +133,8 @@ module type S = sig
   val copy_named_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
 
   val copy_type_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
+
+  val arith : Context.t -> Reason.t -> Type.t -> Type.t -> Type.ArithKind.t -> Type.t
 
   val unary_arith : Context.t -> Reason.t -> Type.t -> Type.UnaryArithKind.t -> Type.t
 
@@ -1023,6 +1026,27 @@ module rec ConsGen : S = struct
     (* Opaque types (pt 2) *)
     (***********************)
     | (OpaqueT (_, { super_t = Some t; _ }), _) -> elab_t cx t op
+    (**************************)
+    (* Binary arith operators *)
+    (**************************)
+    | (lhs_t, Annot_ArithT { reason; flip; rhs_t; kind }) ->
+      if Flow_js_utils.needs_resolution rhs_t || Flow_js_utils.is_generic rhs_t then
+        elab_t cx rhs_t (Annot_ArithT { reason; flip = not flip; rhs_t = lhs_t; kind })
+      else
+        let (lhs_t, rhs_t) =
+          if flip then
+            (rhs_t, lhs_t)
+          else
+            (lhs_t, rhs_t)
+        in
+        Flow_js_utils.flow_arith
+          unknown_use
+          reason
+          lhs_t
+          rhs_t
+          kind
+          (Flow_js_utils.add_output cx)
+          ignore
     (*************************)
     (* Unary arith operators *)
     (*************************)
@@ -1238,6 +1262,9 @@ module rec ConsGen : S = struct
 
   and copy_type_exports cx ~from_ns reason ~module_t =
     elab_t cx from_ns (Annot_CopyTypeExportsT (reason, module_t))
+
+  and arith cx reason lhs_t rhs_t kind =
+    elab_t cx lhs_t (Annot_ArithT { reason; flip = false; rhs_t; kind })
 
   and unary_arith cx reason_op t kind = elab_t cx t (Annot_UnaryArithT (reason_op, kind))
 

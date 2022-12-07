@@ -101,6 +101,20 @@ let reposition_sig_tvar cx loc t =
   let reason = Reason.repos_reason loc (TypeUtil.reason_of_t t) in
   ConsGen.mk_sig_tvar cx reason (lazy t)
 
+let eval_arith file loc lhs_t rhs_t op =
+  let desc =
+    Reason.(
+      RBinaryOperator
+        ( Flow_ast_utils.string_of_binary_operator op,
+          desc_of_reason (TypeUtil.reason_of_t lhs_t),
+          desc_of_reason (TypeUtil.reason_of_t rhs_t)
+        )
+    )
+  in
+  let reason = Reason.mk_reason desc loc in
+  let kind = Type.ArithKind.arith_kind_of_binary_operator op in
+  ConsGen.arith file.cx reason lhs_t rhs_t kind
+
 let eval_unary file loc t =
   let module U = Flow_ast.Expression.Unary in
   function
@@ -128,6 +142,7 @@ let eval_update file loc t =
   ConsGen.unary_arith file.cx reason t Type.UnaryArithKind.Update
 
 let eval file loc t = function
+  | Arith (op, rhs_t) -> eval_arith file loc t rhs_t op
   | Unary op -> eval_unary file loc t op
   | Update -> eval_update file loc t
   | GetProp name ->
