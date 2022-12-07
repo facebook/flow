@@ -106,12 +106,16 @@ let eval_unary file loc t =
   function
   | U.Minus ->
     let reason = Reason.mk_reason (TypeUtil.desc_of_t t) loc in
-    ConsGen.unary_minus file.cx reason t
-  | U.Plus -> Type.NumT.at loc trust
+    ConsGen.unary_arith file.cx reason t Type.UnaryArithKind.Minus
+  | U.Plus ->
+    let reason = Reason.mk_reason (TypeUtil.desc_of_t t) loc in
+    ConsGen.unary_arith file.cx reason t Type.UnaryArithKind.Plus
+  | U.BitNot ->
+    let reason = Reason.mk_reason (TypeUtil.desc_of_t t) loc in
+    ConsGen.unary_arith file.cx reason t Type.UnaryArithKind.BitNot
   | U.Not ->
     let reason = Reason.(mk_reason (RUnaryOperator ("not", TypeUtil.desc_of_t t)) loc) in
     ConsGen.unary_not file.cx reason t
-  | U.BitNot -> Type.NumT.at loc trust
   | U.Typeof -> Type.StrT.at loc trust
   | U.Void -> Type.VoidT.at loc trust
   | U.Delete -> Type.BoolT.at loc trust
@@ -119,8 +123,13 @@ let eval_unary file loc t =
     (* This is a parse error *)
     Type.(AnyT.at (AnyError None) loc)
 
+let eval_update file loc t =
+  let reason = Reason.mk_reason (TypeUtil.desc_of_t t) loc in
+  ConsGen.unary_arith file.cx reason t Type.UnaryArithKind.Update
+
 let eval file loc t = function
   | Unary op -> eval_unary file loc t op
+  | Update -> eval_update file loc t
   | GetProp name ->
     let name = Reason.OrdinaryName name in
     let reason = Reason.(mk_reason (RProperty (Some name)) loc) in

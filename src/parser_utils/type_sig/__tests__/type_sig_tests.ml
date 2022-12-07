@@ -289,6 +289,24 @@ let%expect_test "export_bigint_literal" =
         stars = []; strict = true}}
   |}]
 
+let%expect_test "export_bigint_literal_neg" =
+  print_sig {|
+    export default -0n;
+  |};
+  [%expect {|
+    ESModule {type_exports = [||];
+      exports =
+      [|ExportDefault {default_loc = [1:7-14];
+          def =
+          (Eval ([1:15-18], (Value (BigIntLit ([1:16-18], (Some 0L), "0n"))),
+             (Unary Flow_ast.Expression.Unary.Minus)))}
+        |];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"default"|];
+        stars = []; strict = true}}
+  |}]
+
 let%expect_test "export_function_literal" =
   print_sig {|
     export default function(x: number): number { return x };
@@ -2180,11 +2198,25 @@ let%expect_test "update_expression" =
         type_stars = []; export_keys = [|"post_decr"; "post_incr"; "pre_decr"; "pre_incr"|];
         stars = []; strict = true}}
 
+    Module refs:
+    0. bar
+
     Local defs:
-    0. Variable {id_loc = [2:13-21]; name = "pre_incr"; def = (Value (NumberVal [2:24-29]))}
-    1. Variable {id_loc = [3:13-21]; name = "pre_decr"; def = (Value (NumberVal [3:24-29]))}
-    2. Variable {id_loc = [4:13-22]; name = "post_incr"; def = (Value (NumberVal [4:25-30]))}
-    3. Variable {id_loc = [5:13-22]; name = "post_decr"; def = (Value (NumberVal [5:25-30]))} |}]
+    0. Variable {id_loc = [2:13-21];
+         name = "pre_incr";
+         def = (Eval ([2:24-29], (Ref RemoteRef {ref_loc = [2:26-29]; index = 0}), Update))}
+    1. Variable {id_loc = [3:13-21];
+         name = "pre_decr";
+         def = (Eval ([3:24-29], (Ref RemoteRef {ref_loc = [3:26-29]; index = 0}), Update))}
+    2. Variable {id_loc = [4:13-22];
+         name = "post_incr";
+         def = (Eval ([4:25-30], (Ref RemoteRef {ref_loc = [4:25-28]; index = 0}), Update))}
+    3. Variable {id_loc = [5:13-22];
+         name = "post_decr";
+         def = (Eval ([5:25-30], (Ref RemoteRef {ref_loc = [5:25-28]; index = 0}), Update))}
+
+    Remote refs:
+    0. Import {id_loc = [1:8-11]; name = "foo"; index = 0; remote = "foo"} |}]
 
 let%expect_test "sequence_expression" =
   print_sig {|

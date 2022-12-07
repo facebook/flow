@@ -2475,13 +2475,6 @@ let binary loc =
         SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Binary))
       )
 
-let update loc =
-  let open Ast.Expression.Update in
-  function
-  | Increment
-  | Decrement ->
-    Value (NumberVal loc)
-
 let rec expression opts scope tbls (loc, expr) =
   let module E = Ast.Expression in
   let loc = push_loc tbls loc in
@@ -2556,7 +2549,9 @@ let rec expression opts scope tbls (loc, expr) =
         Eval (loc, t, Unary operator)
     end
   | E.Binary { E.Binary.operator; left = _; right = _; comments = _ } -> binary loc operator
-  | E.Update { E.Update.operator; argument = _; prefix = _; comments = _ } -> update loc operator
+  | E.Update { E.Update.operator = _; argument; prefix = _; comments = _ } ->
+    let t = expression opts scope tbls argument in
+    Eval (loc, t, Update)
   | E.Sequence { E.Sequence.expressions; comments = _ } ->
     sequence (expression opts scope tbls) expressions
   | E.Assignment { E.Assignment.operator; right; _ } ->

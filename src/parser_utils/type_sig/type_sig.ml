@@ -560,6 +560,7 @@ type 'a op =
   | GetProp of string
   | GetElem of 'a
   | Unary of Flow_ast.Expression.Unary.operator
+  | Update
 [@@deriving iter, map, show { with_path = false }]
 
 (* Parsing out a signature can fail. There are three interesting failure modes,

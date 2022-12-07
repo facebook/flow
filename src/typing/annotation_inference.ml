@@ -33,7 +33,7 @@ let object_like_op = function
   | Annot_MixinT _
   | Annot_ObjKitT _
   | Annot_ObjTestProtoT _
-  | Annot_UnaryMinusT _
+  | Annot_UnaryArithT _
   | Annot_NotT _
   | Annot_ObjKeyMirror _
   | Annot_ObjMapConst _
@@ -133,7 +133,7 @@ module type S = sig
 
   val copy_type_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
 
-  val unary_minus : Context.t -> Reason.t -> Type.t -> Type.t
+  val unary_arith : Context.t -> Reason.t -> Type.t -> Type.UnaryArithKind.t -> Type.t
 
   val unary_not : Context.t -> Reason.t -> Type.t -> Type.t
 
@@ -1023,21 +1023,11 @@ module rec ConsGen : S = struct
     (* Opaque types (pt 2) *)
     (***********************)
     | (OpaqueT (_, { super_t = Some t; _ }), _) -> elab_t cx t op
-    (************************)
-    (* Unary minus operator *)
-    (************************)
-    | (DefT (_, trust, NumT lit), Annot_UnaryMinusT reason_op) ->
-      let num =
-        match lit with
-        | Literal (_, (value, raw)) ->
-          let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
-          DefT (replace_desc_reason RNumber reason_op, trust, NumT (Literal (None, (value, raw))))
-        | AnyLiteral
-        | Truthy ->
-          t
-      in
-      num
-    | (AnyT _, Annot_UnaryMinusT reason_op) -> AnyT.untyped reason_op
+    (*************************)
+    (* Unary arith operators *)
+    (*************************)
+    | (l, Annot_UnaryArithT (reason, kind)) ->
+      Flow_js_utils.flow_unary_arith l reason kind (Flow_js_utils.add_output cx)
     (********************)
     (* Function Statics *)
     (********************)
@@ -1249,7 +1239,7 @@ module rec ConsGen : S = struct
   and copy_type_exports cx ~from_ns reason ~module_t =
     elab_t cx from_ns (Annot_CopyTypeExportsT (reason, module_t))
 
-  and unary_minus cx reason_op t = elab_t cx t (Annot_UnaryMinusT reason_op)
+  and unary_arith cx reason_op t kind = elab_t cx t (Annot_UnaryArithT (reason_op, kind))
 
   and unary_not cx reason_op t = elab_t cx t (Annot_NotT reason_op)
 

@@ -2843,7 +2843,7 @@ module AConstraint = struct
     | Annot_ObjKitT of Reason.t * TypeTerm.use_op * Object.resolve_tool * Object.tool
     | Annot_ObjTestProtoT of Reason.t
     | Annot_MixinT of Reason.t
-    | Annot_UnaryMinusT of Reason.t
+    | Annot_UnaryArithT of Reason.t * UnaryArithKind.t
     | Annot_NotT of Reason.t
     | Annot_ObjKeyMirror of Reason.t
     | Annot_ObjMapConst of Reason.t * TypeTerm.t
@@ -2934,7 +2934,7 @@ module AConstraint = struct
     | Annot_ObjKitT _ -> "Annot_ObjKitT"
     | Annot_ObjTestProtoT _ -> "Annot_ObjTestProtoT"
     | Annot_MixinT _ -> "Annot_MixinT"
-    | Annot_UnaryMinusT _ -> "Annot_UnaryMinusT"
+    | Annot_UnaryArithT _ -> "Annot_UnaryArithT"
     | Annot_NotT _ -> "Annot_NotT"
     | Annot_ObjKeyMirror _ -> "Annot_ObjKeyMirror"
     | Annot_ObjMapConst _ -> "Annot_ObjMapConst"
@@ -2968,7 +2968,7 @@ module AConstraint = struct
     | Annot_MakeExactT r
     | Annot_ObjKitT (r, _, _, _)
     | Annot_ObjTestProtoT r
-    | Annot_UnaryMinusT r
+    | Annot_UnaryArithT (r, _)
     | Annot_NotT r
     | Annot_MixinT r
     | Annot_ObjKeyMirror r
@@ -3005,7 +3005,7 @@ module AConstraint = struct
     | Annot_GetStaticsT _
     | Annot_MakeExactT _
     | Annot_ObjTestProtoT _
-    | Annot_UnaryMinusT _
+    | Annot_UnaryArithT _
     | Annot_NotT _
     | Annot_MixinT _
     | Annot_ObjKeyMirror _
@@ -3037,7 +3037,7 @@ module AConstraint = struct
     | Annot_MakeExactT r -> replace_desc_reason (RCustom "exact") r
     | Annot_GetStaticsT r -> replace_desc_reason (RCustom "statics") r
     | Annot_MixinT r -> replace_desc_reason (RCustom "mixins") r
-    | Annot_UnaryMinusT r -> replace_desc_reason (RCustom "unary minus") r
+    | Annot_UnaryArithT (r, _) -> replace_desc_reason (RCustom "unary minus") r
     | Annot_NotT r -> replace_desc_reason (RCustom "unary not") r
     | Annot_GetPropT (r, _, propref) -> replace_desc_reason (RProperty (name_of_propref propref)) r
     | Annot_ObjRestT (r, _) -> replace_desc_reason (RCustom "rest") r
