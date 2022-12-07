@@ -25,7 +25,7 @@ val update_server_status : 'a t -> unit
 
 val next : 'a t -> unit -> element list Bucket.bucket
 
-val merge : 'a t -> 'a merge_result -> 'a merge_result -> 'a merge_result
+val merge : 'a t -> 'a merge_result -> 'a list -> 'a list
 
 val total_files : 'a t -> int
 

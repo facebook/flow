@@ -226,13 +226,17 @@ let merge stream =
     push ~diff:false node
   in
   fun merged acc ->
-    List.iter
-      (fun (leader_f, diff, _) ->
-        let node = FilenameMap.find leader_f stream.graph in
-        push ~diff node)
-      merged;
+    let acc =
+      List.fold_left
+        (fun acc (leader_f, diff, result) ->
+          let node = FilenameMap.find leader_f stream.graph in
+          push ~diff node;
+          result :: acc)
+        acc
+        merged
+    in
     update_server_status stream;
-    List.rev_append merged acc
+    acc
 
 (* NOTE: call these functions only at the end of merge, not during. *)
 let total_files stream = stream.total_files

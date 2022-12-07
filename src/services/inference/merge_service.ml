@@ -34,7 +34,7 @@ type sig_opts_data = {
   sig_new_or_changed: FilenameSet.t;
 }
 
-type 'a merge_results = (File_key.t * bool * 'a) list * sig_opts_data
+type 'a merge_results = 'a list * sig_opts_data
 
 type 'a merge_job =
   mutator:Parsing_heaps.Merge_context_mutator.t ->
@@ -531,7 +531,9 @@ let merge_job ~mutator ~reader ~options ~job =
     let (diff, result) = job ~mutator ~options ~reader component in
     (leader, diff, result) :: acc
   in
-  List.fold_left f
+  fun acc ->
+    assert (acc = []);
+    List.fold_left f []
 
 let merge_runner
     ~job ~mutator ~reader ~options ~workers ~sig_dependency_graph ~component_map ~recheck_set =

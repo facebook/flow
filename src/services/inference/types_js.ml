@@ -327,12 +327,7 @@ let run_merge_service
           ~component_map
           ~recheck_set
       in
-      let suppressions =
-        List.fold_left
-          (fun acc (_file, _diff, result) -> update_merge_results acc result)
-          suppressions
-          results
-      in
+      let suppressions = List.fold_left update_merge_results suppressions results in
       Lwt.return (suppressions, skipped_count, sig_new_or_changed)
   )
 
