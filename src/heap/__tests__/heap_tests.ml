@@ -46,11 +46,11 @@ module Files =
       type t = file
     end)
 
-module FileModules =
+module HasteModules =
   NoCacheAddr
     (StringKey)
     (struct
-      type t = file_module
+      type t = haste_module
     end)
 
 let assert_heap_size wsize =
@@ -404,23 +404,25 @@ let add_provider_barrier_test _ =
    * to the provider list of foo_m. We add foo_m as a root, so foo_m is the only
    * thing keeping foo_f alive. *)
   let size =
-    (7 * header_size)
+    (8 * header_size)
     + (3 * entity_size)
     + string_size foo
     + sklist_size
-    + file_module_size
+    + haste_info_size
+    + haste_module_size
     + file_size
   in
   alloc size (fun chunk ->
       let foo = write_string chunk foo in
       let foo_provider = write_entity chunk None in
       let foo_dependents = write_sklist chunk in
-      let foo_m = write_file_module chunk foo_provider foo_dependents in
-      let parse = write_entity chunk None in
-      let haste_info = write_entity chunk None in
-      let foo_f = write_file chunk Source_file foo parse haste_info (Some foo_m) in
-      add_file_provider foo_m foo_f;
-      assert (FileModules.add key foo_m == foo_m)
+      let foo_m = write_haste_module chunk foo foo_provider foo_dependents in
+      let haste_info = write_haste_info chunk foo_m in
+      let parse_ent = write_entity chunk None in
+      let haste_ent = write_entity chunk (Some haste_info) in
+      let foo_f = write_file chunk Source_file foo parse_ent haste_ent None in
+      add_haste_provider foo_m foo_f haste_info;
+      assert (HasteModules.add key foo_m == foo_m)
   );
 
   (* Start a GC. With a work budget of 1, this mark slice will certainly not
@@ -439,14 +441,17 @@ let add_provider_barrier_test _ =
    * We "allocate black" meaning that `bar_f` will not be scanned for pointers.
    * We need a write barrier when we modify the list head pointer, otherwise we
    * would never visit and mark `foo_f`. *)
-  let size = (4 * header_size) + (2 * entity_size) + string_size bar + file_size in
+  let size =
+    (5 * header_size) + (2 * entity_size) + string_size bar + haste_info_size + file_size
+  in
   alloc size (fun chunk ->
-      let foo_m = Option.get (FileModules.get key) in
+      let foo_m = Option.get (HasteModules.get key) in
       let bar = write_string chunk bar in
-      let parse = write_entity chunk None in
-      let haste_info = write_entity chunk None in
-      let bar_f = write_file chunk Source_file bar parse haste_info (Some foo_m) in
-      add_file_provider foo_m bar_f
+      let haste_info = write_haste_info chunk foo_m in
+      let parse_ent = write_entity chunk None in
+      let haste_ent = write_entity chunk (Some haste_info) in
+      let bar_f = write_file chunk Source_file bar parse_ent haste_ent None in
+      add_haste_provider foo_m bar_f haste_info
   );
 
   (* Finish the current GC pass. *)
@@ -455,8 +460,8 @@ let add_provider_barrier_test _ =
   (* Iterate through all file providers. The files in this list should be kept
    * alive by the module. If we failed to mark the files, then the read_header
    * call in `get_file_kind` will assert. *)
-  let foo_m = Option.get (FileModules.get key) in
-  let foo_providers = get_file_all_providers_exclusive foo_m in
+  let foo_m = Option.get (HasteModules.get key) in
+  let foo_providers = get_haste_all_providers_exclusive foo_m in
   List.iter (fun f -> ignore (get_file_kind f)) foo_providers
 
 let entity_barrier_test _ =
