@@ -2045,3 +2045,7 @@ let get_values_type_of_instance_t cx own_props reason =
   in
   (* Create a union type from all our selected types. *)
   Type_mapper.union_flatten cx ts |> union_of_ts reason
+
+let any_mod_src_keep_placeholder new_src = function
+  | Placeholder -> Placeholder
+  | _ -> new_src

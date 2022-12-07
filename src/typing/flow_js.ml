@@ -321,12 +321,6 @@ struct
   module CJSExtractNamedExportsTKit = CJSExtractNamedExportsT_kit (Import_export_helper)
   include InstantiationKit
 
-  (* placeholders *)
-
-  let any_mod_src_keep_placeholder new_src = function
-    | Placeholder -> Placeholder
-    | _ -> new_src
-
   (* get prop *)
 
   let perform_lookup_action cx trace propref p target_kind lreason ureason =
