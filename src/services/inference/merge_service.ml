@@ -536,10 +536,10 @@ let merge_job ~mutator ~reader ~options ~job =
     List.fold_left f []
 
 let merge_runner
-    ~job ~mutator ~reader ~options ~workers ~sig_dependency_graph ~component_map ~recheck_set =
+    ~job ~mutator ~reader ~options ~workers ~sig_dependency_graph ~components ~recheck_set =
   let num_workers = Options.max_workers options in
   let start_time = Unix.gettimeofday () in
-  let stream = Merge_stream.create ~num_workers ~sig_dependency_graph ~component_map ~recheck_set in
+  let stream = Merge_stream.create ~num_workers ~sig_dependency_graph ~components ~recheck_set in
   Merge_stream.update_server_status stream;
 
   (* returns parallel lists of filenames, error sets, and suppression sets *)

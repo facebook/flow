@@ -92,11 +92,11 @@ let bucket_size stream =
 
 let is_done stream = stream.blocked_components = 0
 
-let create ~num_workers ~sig_dependency_graph ~component_map ~recheck_set =
+let create ~num_workers ~sig_dependency_graph ~components ~recheck_set =
   (* create node for each component *)
   let (leaders, graph) =
-    FilenameMap.fold
-      (fun leader component (leaders, graph) ->
+    List.fold_left
+      (fun (leaders, graph) ((leader, _) as component) ->
         let (size, recheck, leaders) =
           Nel.fold_left
             (fun (size, recheck, leaders) f ->
@@ -118,8 +118,8 @@ let create ~num_workers ~sig_dependency_graph ~component_map ~recheck_set =
           }
         in
         (leaders, FilenameMap.add leader node graph))
-      component_map
       (FilenameMap.empty, FilenameMap.empty)
+      components
   in
   let (total_components, total_files) =
     FilenameMap.fold (fun _ node (c, f) -> (c + 1, f + node.size)) graph (0, 0)

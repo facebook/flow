@@ -19,7 +19,7 @@ val calc_deps :
   sig_dependency_graph:FilenameGraph.t ->
   components:File_key.t Nel.t list ->
   FilenameSet.t ->
-  (FilenameSet.t FilenameMap.t * File_key.t Nel.t FilenameMap.t) Lwt.t
+  (FilenameSet.t FilenameMap.t * File_key.t Nel.t list) Lwt.t
 
 (* incremental typecheck entry point *)
 val recheck :

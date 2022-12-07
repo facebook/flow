@@ -176,10 +176,10 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   in
   let roots = CheckedSet.all to_merge in
   let components = Sort_js.topsort ~roots (Utils_js.FilenameGraph.to_map sig_dependency_graph) in
-  let%lwt (sig_dependency_graph, component_map) =
+  let%lwt (sig_dependency_graph, components) =
     Types_js.calc_deps ~options ~profiling ~sig_dependency_graph ~components roots
   in
-  Lwt.return (sig_dependency_graph, component_map, roots, to_check)
+  Lwt.return (sig_dependency_graph, components, roots, to_check)
 
 let merge_job ~mutator ~options ~reader component =
   let diff =
@@ -282,7 +282,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
         let reader = Mutator_state_reader.create transaction in
 
         (* Calculate dependencies that need to be merged *)
-        let%lwt (sig_dependency_graph, component_map, files_to_merge, _) =
+        let%lwt (sig_dependency_graph, components, files_to_merge, _) =
           let get_dependent_files _ _ _ = Lwt.return (FilenameSet.empty, FilenameSet.empty) in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
@@ -296,7 +296,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
             ~options
             ~workers
             ~sig_dependency_graph
-            ~component_map
+            ~components
             ~recheck_set:files_to_merge
         in
         Hh_logger.info "Merging done.";
@@ -346,7 +346,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         let reader = Mutator_state_reader.create transaction in
 
         (* Calculate dependencies that need to be merged *)
-        let%lwt (sig_dependency_graph, component_map, files_to_merge, files_to_check) =
+        let%lwt (sig_dependency_graph, components, files_to_merge, files_to_check) =
           let get_dependent_files sig_dependency_graph implementation_dependency_graph roots =
             let should_print = Options.should_profile options in
             Memory_utils.with_memory_timer_lwt
@@ -374,7 +374,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
             ~options
             ~workers
             ~sig_dependency_graph
-            ~component_map
+            ~components
             ~recheck_set:files_to_merge
         in
         Hh_logger.info "Merging done.";

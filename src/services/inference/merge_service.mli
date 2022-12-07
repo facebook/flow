@@ -63,7 +63,7 @@ val merge_runner :
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
-  component_map:File_key.t Nel.t FilenameMap.t ->
+  components:File_key.t Nel.t list ->
   recheck_set:FilenameSet.t ->
   'a merge_results Lwt.t
 
@@ -73,7 +73,7 @@ val merge :
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
-  component_map:File_key.t Nel.t FilenameMap.t ->
+  components:File_key.t Nel.t list ->
   recheck_set:FilenameSet.t ->
   merge_result option merge_results Lwt.t
 

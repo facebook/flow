@@ -163,15 +163,7 @@ let calc_deps ~options ~profiling ~sig_dependency_graph ~components to_merge =
       in
       let components = List.filter (Nel.exists (fun f -> FilenameSet.mem f to_merge)) components in
       if Options.should_profile options then Sort_js.log components;
-      let component_map =
-        List.fold_left
-          (fun component_map component ->
-            let file = Nel.hd component in
-            FilenameMap.add file component component_map)
-          FilenameMap.empty
-          components
-      in
-      Lwt.return (sig_dependency_graph, component_map)
+      Lwt.return (sig_dependency_graph, components)
   )
 
 (* The input passed in basically tells us what the caller wants to typecheck.
@@ -313,7 +305,7 @@ let run_merge_service
     ~profiling
     ~workers
     ~sig_dependency_graph
-    ~component_map
+    ~components
     ~recheck_set
     suppressions =
   with_memory_timer_lwt ~options "Merge" profiling (fun () ->
@@ -324,7 +316,7 @@ let run_merge_service
           ~options
           ~workers
           ~sig_dependency_graph
-          ~component_map
+          ~components
           ~recheck_set
       in
       let suppressions = List.fold_left update_merge_results suppressions results in
@@ -470,7 +462,7 @@ let merge
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
   let files_to_merge = CheckedSet.all to_merge in
-  let%lwt (sig_dependency_graph, component_map) =
+  let%lwt (sig_dependency_graph, components) =
     calc_deps ~options ~profiling ~sig_dependency_graph ~components files_to_merge
   in
   Hh_logger.info "Merging";
@@ -489,7 +481,7 @@ let merge
         ~profiling
         ~workers
         ~sig_dependency_graph
-        ~component_map
+        ~components
         ~recheck_set
         suppressions
     in
@@ -514,8 +506,8 @@ let merge
   in
   (* compute the largest cycle, for logging *)
   let top_cycle =
-    Utils_js.FilenameMap.fold
-      (fun leader members top ->
+    List.fold_left
+      (fun top ((leader, _) as members) ->
         let count = Nel.length members in
         if count = 1 then
           top
@@ -527,8 +519,8 @@ let merge
             else
               top
           | None -> Some (leader, count))
-      component_map
       None
+      components
   in
   Lwt.return (suppressions, skipped_count, sig_new_or_changed, top_cycle, time_to_merge)
 
