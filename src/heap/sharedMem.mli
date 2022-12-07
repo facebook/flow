@@ -186,6 +186,8 @@ module NewAPI : sig
    * "latest" value. *)
   type 'a entity
 
+  type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
+
   (* Phantom type tag for addr map objects, which are arrays of addresses to
    * another kind of object. For example, a `heap_string addr_tbl addr` is an
    * array of addresses to string objects. *)
@@ -309,6 +311,10 @@ module NewAPI : sig
   val entity_rollback : _ entity addr -> unit
 
   val entity_changed : _ entity addr -> bool
+
+  val entity_reader_committed : entity_reader
+
+  val entity_reader_latest : entity_reader
 
   (* ast *)
 

@@ -807,6 +807,8 @@ module NewAPI = struct
 
   type 'a entity
 
+  type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
+
   type 'a addr_tbl
 
   type 'a sklist
@@ -1547,6 +1549,10 @@ module NewAPI = struct
     let version = get_next_version () in
     let entity_version = get_entity_version (get_heap ()) entity in
     entity_version >= version
+
+  let entity_reader_committed = { read = entity_read_committed }
+
+  let entity_reader_latest = { read = entity_read_latest }
 
   (** Compressed OCaml values
 

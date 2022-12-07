@@ -161,6 +161,11 @@ let get_file_addr_unsafe file =
   | Some addr -> addr
   | None -> raise (File_not_found (File_key.to_string file))
 
+let get_parsed_file_addr reader key =
+  let* file = get_file_addr key in
+  let* _ = reader.Heap.read (Heap.get_parse file) in
+  Some file
+
 let get_haste_module = HasteModuleHeap.get
 
 let get_file_module = FileModuleHeap.get
@@ -175,13 +180,16 @@ let get_file_module_unsafe key =
   | Some addr -> addr
   | None -> raise (File_module_not_found (File_key.to_string key))
 
-let get_provider_ent = function
+let read_provider reader m =
+  match m with
   | Modulename.String name ->
     let* haste_module = get_haste_module name in
-    Some (Heap.get_haste_provider haste_module)
+    reader.Heap.read (Heap.get_haste_provider haste_module)
   | Modulename.Filename file_key ->
-    let* file_module = get_file_module file_key in
-    Some (Heap.get_file_provider file_module)
+    let decl_key = File_key.with_suffix file_key Files.flow_ext in
+    (match get_parsed_file_addr reader decl_key with
+    | Some _ as decl_provider -> decl_provider
+    | None -> get_parsed_file_addr reader file_key)
 
 let iter_dependents f mname =
   let dependents =
@@ -1299,13 +1307,9 @@ module Mutator_reader = struct
 
   let read_old ~reader:_ addr = Heap.entity_read_committed addr
 
-  let get_provider ~reader m =
-    let* provider = get_provider_ent m in
-    read ~reader provider
+  let get_provider ~reader:_ m = read_provider Heap.entity_reader_latest m
 
-  let get_old_provider ~reader m =
-    let* provider = get_provider_ent m in
-    read_old ~reader provider
+  let get_old_provider ~reader:_ m = read_provider Heap.entity_reader_committed m
 
   let is_typed_file ~reader file =
     match read ~reader (Heap.get_parse file) with
@@ -1741,9 +1745,7 @@ module Reader = struct
 
   let read ~reader:_ addr = Heap.entity_read_latest addr
 
-  let get_provider ~reader m =
-    let* provider = get_provider_ent m in
-    read ~reader provider
+  let get_provider ~reader:_ m = read_provider Heap.entity_reader_latest m
 
   let is_typed_file ~reader file =
     match read ~reader (Heap.get_parse file) with
