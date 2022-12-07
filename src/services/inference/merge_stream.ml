@@ -93,6 +93,7 @@ let bucket_size stream =
 let is_done stream = stream.blocked_components = 0
 
 let create ~num_workers ~sig_dependency_graph ~components ~recheck_set =
+  let ready = Queue.create () in
   (* create node for each component *)
   let (leaders, graph) =
     List.fold_left
@@ -121,13 +122,10 @@ let create ~num_workers ~sig_dependency_graph ~components ~recheck_set =
       (FilenameMap.empty, FilenameMap.empty)
       components
   in
-  let (total_components, total_files) =
-    FilenameMap.fold (fun _ node (c, f) -> (c + 1, f + node.size)) graph (0, 0)
-  in
   (* calculate dependents, blocking for each node *)
-  let () =
-    FilenameMap.iter
-      (fun leader node ->
+  let (ready_components, ready_files, blocked_components, blocked_files) =
+    FilenameMap.fold
+      (fun leader node (readyc, readyf, blockedc, blockedf) ->
         let blocking =
           Nel.fold_left
             (fun blocking f ->
@@ -153,39 +151,32 @@ let create ~num_workers ~sig_dependency_graph ~components ~recheck_set =
             0
             node.component
         in
-        node.blocking <- blocking)
+        if blocking = 0 then (
+          Queue.add node ready;
+          (readyc + 1, readyf + node.size, blockedc, blockedf)
+        ) else (
+          node.blocking <- blocking;
+          (readyc, readyf, blockedc + 1, blockedf + node.size)
+        ))
       graph
+      (0, 0, 0, 0)
   in
-  let stream =
-    {
-      graph;
-      ready = Queue.create ();
-      num_workers;
-      total_components;
-      total_files;
-      ready_components = 0;
-      ready_files = 0;
-      blocked_components = 0;
-      blocked_files = 0;
-      merged_components = 0;
-      merged_files = 0;
-      skipped_components = 0;
-      skipped_files = 0;
-      new_or_changed_files = FilenameSet.empty;
-    }
-  in
-  (* calculate the components ready to schedule and blocked counts *)
-  FilenameMap.iter
-    (fun _ node ->
-      if node.blocking = 0 then
-        add_ready node stream
-      else (
-        stream.blocked_components <- stream.blocked_components + 1;
-        stream.blocked_files <- stream.blocked_files + node.size
-      ))
+  {
     graph;
-
-  stream
+    ready;
+    num_workers;
+    total_components = ready_components + blocked_components;
+    total_files = ready_files + blocked_files;
+    ready_components;
+    ready_files;
+    blocked_components;
+    blocked_files;
+    merged_components = 0;
+    merged_files = 0;
+    skipped_components = 0;
+    skipped_files = 0;
+    new_or_changed_files = FilenameSet.empty;
+  }
 
 let update_server_status stream =
   let status =
