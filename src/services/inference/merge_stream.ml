@@ -126,25 +126,26 @@ let create ~num_workers ~sig_dependency_graph ~components ~recheck_set =
   in
   (* calculate dependents, blocking for each node *)
   let () =
-    let leader f = FilenameMap.find f leaders in
     FilenameMap.iter
-      (fun f dep_fs ->
-        let leader_f = leader f in
-        let node = FilenameMap.find leader_f graph in
-        FilenameSet.iter
-          (fun dep_f ->
-            let dep_leader_f = leader dep_f in
-            if dep_leader_f = leader_f then
-              ()
-            else
-              let dep_node = FilenameMap.find dep_leader_f graph in
-              let dependents = FilenameMap.add leader_f node dep_node.dependents in
-              if dependents != dep_node.dependents then (
-                dep_node.dependents <- dependents;
-                node.blocking <- node.blocking + 1
-              ))
-          dep_fs)
-      sig_dependency_graph
+      (fun leader node ->
+        Nel.iter
+          (fun f ->
+            let dep_fs = FilenameMap.find f sig_dependency_graph in
+            FilenameSet.iter
+              (fun dep_f ->
+                let dep_leader = FilenameMap.find dep_f leaders in
+                let dep_node = FilenameMap.find dep_leader graph in
+                if dep_node == node then
+                  ()
+                else
+                  let dependents = FilenameMap.add leader node dep_node.dependents in
+                  if dependents != dep_node.dependents then (
+                    dep_node.dependents <- dependents;
+                    node.blocking <- node.blocking + 1
+                  ))
+              dep_fs)
+          node.component)
+      graph
   in
   let stream =
     {
