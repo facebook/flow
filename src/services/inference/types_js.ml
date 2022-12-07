@@ -268,12 +268,10 @@ let add_internal_error errors file (loc, internal_error) =
   let new_errors = error_set_of_internal_error file (loc, internal_error) in
   update_errset errors file new_errors
 
-let update_merge_results acc component result =
+let update_merge_results acc result =
   match result with
   | None -> acc
-  | Some (suppressions, _duration) ->
-    let acc = Nel.fold_left (fun acc file -> Error_suppressions.remove file acc) acc component in
-    Error_suppressions.update_suppressions acc suppressions
+  | Some (suppressions, _duration) -> Error_suppressions.update_suppressions acc suppressions
 
 let update_slow_files acc file check_time =
   if check_time > 1. then
@@ -331,9 +329,7 @@ let run_merge_service
       in
       let suppressions =
         List.fold_left
-          (fun acc (file, _diff, result) ->
-            let component = FilenameMap.find file component_map in
-            update_merge_results acc component result)
+          (fun acc (_file, _diff, result) -> update_merge_results acc result)
           suppressions
           results
       in
