@@ -538,39 +538,8 @@ let merge_job ~mutator ~reader ~options ~job =
 let merge_runner
     ~job ~mutator ~reader ~options ~workers ~sig_dependency_graph ~component_map ~recheck_set =
   let num_workers = Options.max_workers options in
-  (* (1) make a map from files to their component leaders
-     (2) lift recheck set from files to their component leaders *)
-  let (leader_map, recheck_leader_set) =
-    FilenameMap.fold
-      (fun leader component (leader_map, recheck_leader_set) ->
-        let (leader_map, recheck_leader) =
-          Nel.fold_left
-            (fun (leader_map, recheck_leader) file ->
-              ( FilenameMap.add file leader leader_map,
-                recheck_leader || FilenameSet.mem file recheck_set
-              ))
-            (leader_map, false)
-            component
-        in
-        let recheck_leader_set =
-          if recheck_leader then
-            FilenameSet.add leader recheck_leader_set
-          else
-            recheck_leader_set
-        in
-        (leader_map, recheck_leader_set))
-      component_map
-      (FilenameMap.empty, FilenameSet.empty)
-  in
   let start_time = Unix.gettimeofday () in
-  let stream =
-    Merge_stream.create
-      ~num_workers
-      ~sig_dependency_graph
-      ~leader_map
-      ~component_map
-      ~recheck_leader_set
-  in
+  let stream = Merge_stream.create ~num_workers ~sig_dependency_graph ~component_map ~recheck_set in
   Merge_stream.update_server_status stream;
 
   (* returns parallel lists of filenames, error sets, and suppression sets *)

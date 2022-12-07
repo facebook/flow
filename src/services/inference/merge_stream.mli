@@ -16,9 +16,8 @@ type 'a t
 val create :
   num_workers:int ->
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
-  leader_map:File_key.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
-  recheck_leader_set:FilenameSet.t ->
+  recheck_set:FilenameSet.t ->
   'a t
 
 val update_server_status : 'a t -> unit
