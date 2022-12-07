@@ -75,13 +75,13 @@ References:
       ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:6:10
+Error --------------------------------------------------------------------------------------------------- number.js:6:11
 
-string [1] is not a number. [incompatible-use]
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
-   number.js:6:10
+   number.js:6:11
    6|   return -x;
-               ^^
+                ^
 
 References:
    number.js:5:19

@@ -4591,56 +4591,9 @@ struct
         (******************************)
         (* unary arithmetic operators *)
         (******************************)
-        | ( DefT (_, trust, NumT (Literal (_, (value, raw)))),
-            UnaryArithT { reason; result_t; kind = UnaryArithKind.Minus }
-          ) ->
-          let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
-          let num =
-            DefT (replace_desc_reason RNumber reason, trust, NumT (Literal (None, (value, raw))))
-          in
-          rec_flow_t cx trace ~use_op:unknown_use (num, result_t)
-        | ( DefT (_, _, NumT (AnyLiteral | Truthy)),
-            UnaryArithT { reason = _; result_t; kind = UnaryArithKind.Minus }
-          ) ->
-          rec_flow_t cx trace ~use_op:unknown_use (l, result_t)
-        | ( DefT (_, trust, BigIntT (Literal (_, (value, raw)))),
-            UnaryArithT { reason; result_t; kind = UnaryArithKind.Minus }
-          ) ->
-          let (value, raw) = Flow_ast_utils.negate_bigint_literal (value, raw) in
-          let bigint =
-            DefT (replace_desc_reason RBigInt reason, trust, BigIntT (Literal (None, (value, raw))))
-          in
-          rec_flow_t cx trace ~use_op:unknown_use (bigint, result_t)
-        | ( DefT (_, _, BigIntT (AnyLiteral | Truthy)),
-            UnaryArithT { reason = _; result_t; kind = UnaryArithKind.Minus }
-          ) ->
-          rec_flow_t cx trace ~use_op:unknown_use (l, result_t)
-        | (AnyT (_, src), UnaryArithT { reason; result_t; kind = UnaryArithKind.Minus }) ->
-          let src = any_mod_src_keep_placeholder Untyped src in
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, result_t)
-        | (DefT (reason_bigint, _, BigIntT _), UnaryArithT { kind = UnaryArithKind.Plus; _ }) ->
-          add_output cx ~trace (Error_message.EBigIntNumCoerce reason_bigint)
-        | (_, UnaryArithT { reason; result_t; kind = UnaryArithKind.Plus }) ->
-          rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t)
-        | (DefT (_, _, NumT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot }) ->
-          rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t)
-        | (DefT (_, _, BigIntT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot })
-          ->
-          rec_flow_t cx trace ~use_op:unknown_use (BigIntT.why reason (bogus_trust ()), result_t)
-        | (AnyT (_, src), UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot }) ->
-          let src = any_mod_src_keep_placeholder Untyped src in
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, result_t)
-        | (DefT (_, _, NumT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.Update }) ->
-          rec_flow_t cx trace ~use_op:unknown_use (NumT.why reason (bogus_trust ()), result_t)
-        | (DefT (_, _, BigIntT _), UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
-          ->
-          rec_flow_t cx trace ~use_op:unknown_use (BigIntT.why reason (bogus_trust ()), result_t)
-        | (AnyT (_, src), UnaryArithT { reason; result_t; kind = UnaryArithKind.Update }) ->
-          let src = any_mod_src_keep_placeholder Untyped src in
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, result_t)
-        | (_, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update }) ->
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.make (AnyError None) reason, result_t);
-          add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t l))
+        | (l, UnaryArithT { reason; result_t; kind }) ->
+          let t = flow_unary_arith l reason kind (add_output cx ~trace) in
+          rec_flow_t cx trace ~use_op:unknown_use (t, result_t)
         (************************)
         (* binary `in` operator *)
         (************************)

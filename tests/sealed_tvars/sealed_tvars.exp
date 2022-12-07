@@ -261,13 +261,13 @@ Cannot resolve name `ModScope2`. [cannot-resolve-name]
                                     ^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:65:23
+Error ---------------------------------------------------------------------------------------- regression_tests.js:65:24
 
-string [1] is not a number. [incompatible-use]
+Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
 
-   regression_tests.js:65:23
+   regression_tests.js:65:24
    65| const ResultOfError = -AString;
-                             ^^^^^^^^
+                              ^^^^^^^
 
 References:
    regression_tests.js:64:22
