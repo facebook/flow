@@ -219,8 +219,7 @@ Flags: --pretty
     {"name":"this.isPrototypeOf","type":"(o: mixed) => boolean"},
     {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"},
     {"name":"this.toLocaleString","type":"() => string"},
-    {"name":"this.toString","type":"() => string"},
-    {"name":"this.valueOf","type":"() => mixed"}
+    {"name":"this.toString","type":"() => string"}
   ]
 }
 
@@ -306,12 +305,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"bar","type":"string"},
-    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
-    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
-    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
-    {"name":"toLocaleString","type":"() => string"},
-    {"name":"toString","type":"() => string"},
-    {"name":"valueOf","type":"() => mixed"}
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"}
   ]
 }
 
@@ -1002,11 +996,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"foobar","type":"string"},
-    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
-    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
-    {"name":"toLocaleString","type":"() => string"},
-    {"name":"toString","type":"() => string"},
     {"name":"valueOf","type":"() => mixed"}
   ]
 }
@@ -1064,12 +1054,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"bar","type":"void | number"},
-    {"name":"hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
-    {"name":"isPrototypeOf","type":"void | ((o: mixed) => boolean)"},
-    {"name":"propertyIsEnumerable","type":"void | ((prop: mixed) => boolean)"},
-    {"name":"toLocaleString","type":"void | (() => string)"},
-    {"name":"toString","type":"void | (() => string)"},
-    {"name":"valueOf","type":"void | (() => mixed)"}
+    {"name":"propertyIsEnumerable","type":"void | ((prop: mixed) => boolean)"}
   ]
 }
 
@@ -4178,11 +4163,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"foobar","type":"string"},
-    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
-    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
-    {"name":"toLocaleString","type":"() => string"},
-    {"name":"toString","type":"() => string"},
     {"name":"valueOf","type":"() => mixed"}
   ]
 }

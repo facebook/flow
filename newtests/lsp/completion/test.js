@@ -810,46 +810,6 @@ b.
                     ],
                   },
                 },
-                {
-                  label: 'valueOf',
-                  kind: 3,
-                  detail: '() => mixed',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Returns the primitive value of the specified object.',
-                  },
-                  sortText: '00000000000000000006',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 2,
-                      },
-                      end: {
-                        line: 6,
-                        character: 3,
-                      },
-                    },
-                    newText: 'valueOf',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'tAUTO332',
-                        index: 6,
-                        session_requests: 2,
-                        typed_length: 1,
-                        completion: 'valueOf',
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -1554,56 +1514,6 @@ b.te
                     ],
                   },
                 },
-                {
-                  label: 'valueOf',
-                  kind: 3,
-                  detail: '() => mixed',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Returns the primitive value of the specified object.',
-                  },
-                  sortText: '00000000000000000006',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    newText: 'valueOf',
-                    insert: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 7,
-                        character: 3,
-                      },
-                    },
-                    replace: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 7,
-                        character: 4,
-                      },
-                    },
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'tAUTO332e',
-                        index: 6,
-                        session_requests: 2,
-                        typed_length: 1,
-                        completion: 'valueOf',
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -1660,46 +1570,6 @@ b.te
                   },
                 },
                 {
-                  label: 'hasOwnProperty',
-                  kind: 3,
-                  detail: '(prop: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Determines whether an object has a property with the specified name.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 7,
-                        character: 4,
-                      },
-                    },
-                    newText: 'hasOwnProperty',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'teAUTO332',
-                        index: 1,
-                        session_requests: 3,
-                        typed_length: 2,
-                        completion: 'hasOwnProperty',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'isPrototypeOf',
                   kind: 3,
                   detail: '(o: mixed) => boolean',
@@ -1708,7 +1578,7 @@ b.te
                     value:
                       "Determines whether an object exists in another object's prototype chain.",
                   },
-                  sortText: '00000000000000000002',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1731,7 +1601,7 @@ b.te
                       'member',
                       {
                         token: 'teAUTO332',
-                        index: 2,
+                        index: 1,
                         session_requests: 3,
                         typed_length: 2,
                         completion: 'isPrototypeOf',
@@ -1748,7 +1618,7 @@ b.te
                     value:
                       'Determines whether a specified property is enumerable.',
                   },
-                  sortText: '00000000000000000003',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1771,7 +1641,7 @@ b.te
                       'member',
                       {
                         token: 'teAUTO332',
-                        index: 3,
+                        index: 2,
                         session_requests: 3,
                         typed_length: 2,
                         completion: 'propertyIsEnumerable',
@@ -1788,7 +1658,7 @@ b.te
                     value:
                       'Returns a date converted to a string using the current locale.',
                   },
-                  sortText: '00000000000000000004',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1811,89 +1681,10 @@ b.te
                       'member',
                       {
                         token: 'teAUTO332',
-                        index: 4,
+                        index: 3,
                         session_requests: 3,
                         typed_length: 2,
                         completion: 'toLocaleString',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'toString',
-                  kind: 3,
-                  detail: '() => string',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Returns a string representation of an object.',
-                  },
-                  sortText: '00000000000000000005',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 7,
-                        character: 4,
-                      },
-                    },
-                    newText: 'toString',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'teAUTO332',
-                        index: 5,
-                        session_requests: 3,
-                        typed_length: 2,
-                        completion: 'toString',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'valueOf',
-                  kind: 3,
-                  detail: '() => mixed',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Returns the primitive value of the specified object.',
-                  },
-                  sortText: '00000000000000000006',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 7,
-                        character: 4,
-                      },
-                    },
-                    newText: 'valueOf',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'teAUTO332',
-                        index: 6,
-                        session_requests: 3,
-                        typed_length: 2,
-                        completion: 'valueOf',
                       },
                     ],
                   },
@@ -1956,46 +1747,6 @@ b.te
                   },
                 },
                 {
-                  label: 'hasOwnProperty',
-                  kind: 3,
-                  detail: '(prop: mixed) => boolean',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Determines whether an object has a property with the specified name.',
-                  },
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 7,
-                        character: 4,
-                      },
-                    },
-                    newText: 'hasOwnProperty',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'teAUTO332',
-                        index: 1,
-                        session_requests: 1,
-                        typed_length: 2,
-                        completion: 'hasOwnProperty',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'isPrototypeOf',
                   kind: 3,
                   detail: '(o: mixed) => boolean',
@@ -2004,7 +1755,7 @@ b.te
                     value:
                       "Determines whether an object exists in another object's prototype chain.",
                   },
-                  sortText: '00000000000000000002',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2027,7 +1778,7 @@ b.te
                       'member',
                       {
                         token: 'teAUTO332',
-                        index: 2,
+                        index: 1,
                         session_requests: 1,
                         typed_length: 2,
                         completion: 'isPrototypeOf',
@@ -2044,7 +1795,7 @@ b.te
                     value:
                       'Determines whether a specified property is enumerable.',
                   },
-                  sortText: '00000000000000000003',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2067,7 +1818,7 @@ b.te
                       'member',
                       {
                         token: 'teAUTO332',
-                        index: 3,
+                        index: 2,
                         session_requests: 1,
                         typed_length: 2,
                         completion: 'propertyIsEnumerable',
@@ -2084,7 +1835,7 @@ b.te
                     value:
                       'Returns a date converted to a string using the current locale.',
                   },
-                  sortText: '00000000000000000004',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2107,89 +1858,10 @@ b.te
                       'member',
                       {
                         token: 'teAUTO332',
-                        index: 4,
+                        index: 3,
                         session_requests: 1,
                         typed_length: 2,
                         completion: 'toLocaleString',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'toString',
-                  kind: 3,
-                  detail: '() => string',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Returns a string representation of an object.',
-                  },
-                  sortText: '00000000000000000005',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 7,
-                        character: 4,
-                      },
-                    },
-                    newText: 'toString',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'teAUTO332',
-                        index: 5,
-                        session_requests: 1,
-                        typed_length: 2,
-                        completion: 'toString',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'valueOf',
-                  kind: 3,
-                  detail: '() => mixed',
-                  documentation: {
-                    kind: 'markdown',
-                    value:
-                      'Returns the primitive value of the specified object.',
-                  },
-                  sortText: '00000000000000000006',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 7,
-                        character: 4,
-                      },
-                    },
-                    newText: 'valueOf',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'teAUTO332',
-                        index: 6,
-                        session_requests: 1,
-                        typed_length: 2,
-                        completion: 'valueOf',
                       },
                     ],
                   },

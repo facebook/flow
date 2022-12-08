@@ -1291,6 +1291,7 @@ let autocomplete_member
     in
     (match bracket_syntax with
     | None ->
+      let items = filter_by_token items token in
       let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
       AcResult { result; errors_to_log }
     | Some Autocomplete_js.{ include_this; include_super; type_; _ } ->
