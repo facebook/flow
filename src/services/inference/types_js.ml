@@ -787,80 +787,64 @@ let files_to_infer ~options ~profiling ~dependency_info ~focus_targets ~parsed =
         Lwt.return to_infer
   )
 
-let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase =
-  if not (Options.estimate_recheck_time options) then
-    Lwt.return_unit
-  else if not (Options.lazy_mode options) then
-    (* it's never faster to do a full init than a recheck *)
-    (* TODO: it may be faster to do a reinit from saved state, though *)
-    Lwt.return_unit
+let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check =
+  (* TODO (glevi) - One of the numbers we need to estimate is "If we restart how many files
+   * would we check". Currently we're looking at the number of already checked files. But a
+   * better way would be to
+   *
+   * 1. When watchman notices the mergebase changing, also record the files which have changed
+   *    since the mergebase
+   * 2. Send these files to the server
+   * 3. Calculate the fanout of these files (we should have an updated dependency graph by now)
+   * 4. That should actually be the right number, instead of just an estimate. But it costs
+   *    a little to compute the fanout
+   *
+   * This also treats dependencies, which are only merged, equally with focused/dependent
+   * files which are also checked. So, doing a priority update, which merges but doesn't
+   * check, throws off the estimate by making it seem like files get checked as quickly
+   * as they get merged. This makes us underestimate how long it will take to recheck. *)
+  let files_already_checked = CheckedSet.cardinal env.ServerEnv.checked_files in
+  let files_about_to_recheck = CheckedSet.cardinal to_merge_or_check in
+  Hh_logger.info
+    "We've already checked %d files. We're about to recheck %d files"
+    files_already_checked
+    files_about_to_recheck;
+
+  let init_time = Recheck_stats.get_init_time () in
+  let per_file_time = Recheck_stats.get_per_file_time () in
+  let time_to_restart = init_time +. (per_file_time *. float_of_int files_already_checked) in
+  let time_to_recheck = per_file_time *. float_of_int files_about_to_recheck in
+  let estimates =
+    {
+      Recheck_stats.estimated_time_to_recheck = time_to_recheck;
+      estimated_time_to_restart = time_to_restart;
+      estimated_time_to_init = init_time;
+      estimated_time_per_file = per_file_time;
+      estimated_files_to_recheck = files_about_to_recheck;
+      estimated_files_to_init = files_already_checked;
+    }
+  in
+  Hh_logger.debug
+    "Estimated restart time: %fs to init + (%fs * %d files) = %fs"
+    init_time
+    per_file_time
+    files_already_checked
+    time_to_restart;
+  Hh_logger.debug
+    "Estimated recheck time: %fs * %d files = %fs"
+    per_file_time
+    files_about_to_recheck
+    time_to_recheck;
+
+  Hh_logger.info
+    "Estimating a recheck would take %.2fs and a restart would take %.2fs"
+    time_to_recheck
+    time_to_restart;
+  if time_to_restart < time_to_recheck then
+    let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
+    raise Recheck_too_slow
   else
-    match changed_mergebase with
-    | None ->
-      (* Not tracking the mergebase, so we don't know one way or the other *)
-      Lwt.return_unit
-    | Some false ->
-      Hh_logger.info "File watcher did not change mergebase";
-      Lwt.return_unit
-    | Some true ->
-      Hh_logger.info "File watcher changed mergebase";
-      (* TODO (glevi) - One of the numbers we need to estimate is "If we restart how many files
-       * would we check". Currently we're looking at the number of already checked files. But a
-       * better way would be to
-       *
-       * 1. When watchman notices the mergebase changing, also record the files which have changed
-       *    since the mergebase
-       * 2. Send these files to the server
-       * 3. Calculate the fanout of these files (we should have an updated dependency graph by now)
-       * 4. That should actually be the right number, instead of just an estimate. But it costs
-       *    a little to compute the fanout
-       *
-       * This also treats dependencies, which are only merged, equally with focused/dependent
-       * files which are also checked. So, doing a priority update, which merges but doesn't
-       * check, throws off the estimate by making it seem like files get checked as quickly
-       * as they get merged. This makes us underestimate how long it will take to recheck. *)
-      let files_already_checked = CheckedSet.cardinal env.ServerEnv.checked_files in
-      let files_about_to_recheck = CheckedSet.cardinal to_merge_or_check in
-      Hh_logger.info
-        "We've already checked %d files. We're about to recheck %d files"
-        files_already_checked
-        files_about_to_recheck;
-
-      let init_time = Recheck_stats.get_init_time () in
-      let per_file_time = Recheck_stats.get_per_file_time () in
-      let time_to_restart = init_time +. (per_file_time *. float_of_int files_already_checked) in
-      let time_to_recheck = per_file_time *. float_of_int files_about_to_recheck in
-      let estimates =
-        {
-          Recheck_stats.estimated_time_to_recheck = time_to_recheck;
-          estimated_time_to_restart = time_to_restart;
-          estimated_time_to_init = init_time;
-          estimated_time_per_file = per_file_time;
-          estimated_files_to_recheck = files_about_to_recheck;
-          estimated_files_to_init = files_already_checked;
-        }
-      in
-      Hh_logger.debug
-        "Estimated restart time: %fs to init + (%fs * %d files) = %fs"
-        init_time
-        per_file_time
-        files_already_checked
-        time_to_restart;
-      Hh_logger.debug
-        "Estimated recheck time: %fs * %d files = %fs"
-        per_file_time
-        files_about_to_recheck
-        time_to_recheck;
-
-      Hh_logger.info
-        "Estimating a recheck would take %.2fs and a restart would take %.2fs"
-        time_to_recheck
-        time_to_restart;
-      if time_to_restart < time_to_recheck then
-        let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
-        raise Recheck_too_slow
-      else
-        Lwt.return_unit
+    Lwt.return_unit
 
 type determine_what_to_recheck_result =
   | Determine_what_to_recheck_result of {
@@ -1578,7 +1562,13 @@ end = struct
     will_be_checked_files := CheckedSet.union to_merge_or_check !will_be_checked_files;
 
     let%lwt () =
-      restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~changed_mergebase
+      match changed_mergebase with
+      | Some true when Options.lazy_mode options && Options.estimate_recheck_time options ->
+        restart_if_faster_than_recheck ~options ~env ~to_merge_or_check
+      | _ ->
+        (* We will do a full recheck, but it might still be faster to reinit
+         * from saved state even in non-lazy mode. TODO *)
+        Lwt.return_unit
     in
     let%lwt () =
       ensure_parsed_or_trigger_recheck
