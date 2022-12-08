@@ -572,7 +572,7 @@ let append_completion_items_of_autoimports
             ~ast
             ~edit_locs
             auto_import
-            (100 + rank)
+            (200 + rank (* after builtins *))
         in
         item :: acc)
     sorted_auto_imports
@@ -891,7 +891,7 @@ let make_builtin_type ~edit_locs name =
     detail = name;
     text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
-    sort_text = sort_text_of_rank 0;
+    sort_text = sort_text_of_rank 100 (* after local results *);
     preselect = false;
     documentation = None;
     tags = None;
@@ -923,7 +923,7 @@ let make_utility_type ~edit_locs name =
     detail = name;
     text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
-    sort_text = sort_text_of_rank 200 (* below globals *);
+    sort_text = sort_text_of_rank 300 (* after autoimports/globals *);
     preselect = false;
     documentation = None;
     tags = None;
