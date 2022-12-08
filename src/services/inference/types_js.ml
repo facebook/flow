@@ -1712,18 +1712,6 @@ end = struct
       ~recheck_reasons
       ~will_be_checked_files
       ~env =
-    Transaction.add
-      ~commit:(fun () ->
-        (* We have to clear this at the end of the recheck, because it could
-         * have been populated with now-out-of-date data in the middle of the
-         * recheck by parallelizable requests. *)
-        Persistent_connection.clear_type_parse_artifacts_caches ();
-        (* Similarly, check_contents_cache contains type information for
-         * dependencies which may have been invalidated by the recheck. *)
-        Check_cache.clear Merge_service.check_contents_cache)
-      ~rollback:(fun () -> ())
-      transaction;
-
     let%lwt (env, intermediate_values) =
       try%lwt
         recheck_parse_and_update_dependency_info
@@ -1777,8 +1765,18 @@ end = struct
     Lwt.return { env with ServerEnv.errors }
 end
 
+let clear_caches () =
+  (* We have to clear this at the end of the transaction, because it could
+     have been populated with now-out-of-date data in the middle of the
+     transaction by parallelizable requests. *)
+  Persistent_connection.clear_type_parse_artifacts_caches ();
+  (* Similarly, check_contents_cache contains type information for
+     dependencies which may have been invalidated on commit. *)
+  Check_cache.clear Merge_service.check_contents_cache
+
 let with_transaction name f =
   Transaction.with_transaction name @@ fun transaction ->
+  Transaction.add ~commit:clear_caches ~rollback:Fun.id transaction;
   let reader = Mutator_state_reader.create transaction in
   f transaction reader
 
