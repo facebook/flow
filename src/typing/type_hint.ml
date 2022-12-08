@@ -11,6 +11,8 @@ open Hint_api
 open Utils_js
 module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 
+exception UnconstrainedTvarException
+
 module SpeculationFlow = struct
   module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
 
@@ -80,9 +82,11 @@ end
 let in_sandbox_cx cx t ~f =
   Context.run_and_rolled_back_cache cx (fun () ->
       let original_errors = Context.errors cx in
+      let no_lowers _ = raise UnconstrainedTvarException in
       Context.reset_errors cx Flow_error.ErrorSet.empty;
-      match f (Tvar_resolver.resolved_t cx t) with
-      | exception Flow_js_utils.SpeculationSingletonError ->
+      match f (Tvar_resolver.resolved_t cx ~no_lowers t) with
+      | (exception Flow_js_utils.SpeculationSingletonError)
+      | (exception UnconstrainedTvarException) ->
         Context.reset_errors cx original_errors;
         None
       | t ->
@@ -509,7 +513,10 @@ and fully_resolve_final_result cx t =
       (lazy [spf "Encountered placeholder type: %s" (Debug_js.dump_t cx ~depth:3 t)]);
     None
   ) else
-    Some (Tvar_resolver.resolved_t cx t)
+    let no_lowers _ = raise UnconstrainedTvarException in
+    match Tvar_resolver.resolved_t cx ~no_lowers t with
+    | exception UnconstrainedTvarException -> None
+    | t -> Some t
 
 and evaluate_hint_ops cx reason t ops =
   let rec loop t = function

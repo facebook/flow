@@ -290,6 +290,22 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- under_constrained.js:5:5
+
+An annotation on `y` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   5|   x(y => {}); // error missing annot
+          ^
+
+
+Error ---------------------------------------------------------------------------------------- under_constrained.js:10:5
+
+An annotation on `y` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   10|   x(y => {}); // error missing annot
+           ^
+
+
 Error --------------------------------------------------------------------------------------------------- unions.js:4:62
 
 An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
@@ -349,4 +365,4 @@ References:
 
 
 
-Found 24 errors
+Found 26 errors
