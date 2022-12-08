@@ -180,7 +180,7 @@ module.exports = {
     },
   },
   customFields: {
-    flowVersion: 'v0.194.1',
+    flowVersion: 'v0.195.0',
     allFlowVersions: getFlowVersions(
       Boolean(process.env.EXCLUDE_FLOW_RELEASES),
       Boolean(process.env.EXCLUDE_FLOW_MASTER),

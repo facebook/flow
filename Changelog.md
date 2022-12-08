@@ -1,3 +1,9 @@
+### 0.195.0
+
+* Add a quick fix for the `unused-promise-in-async-scope` lint which will insert `void`.
+* Add `symbol` and `bigint` to `$NotNullOrVoid`
+* Add `findLast` to `Array` definition
+
 ### 0.194.0
 
 Likely to cause new Flow errors:
