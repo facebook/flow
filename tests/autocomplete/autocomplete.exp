@@ -8753,7 +8753,7 @@ Flags: --lsp
 bracket_syntax_2.js:5:14
 Flags: --lsp
 {
-  "label":"'bar'",
+  "label":"\"bar\"",
   "labelDetails":{"detail":": string | void"},
   "kind":13,
   "detail":"string | void",
@@ -8761,7 +8761,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'bar'"
+    "newText":"\"bar\""
   },
   "command":{
     "title":"",
@@ -8774,13 +8774,13 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"\"bar\""
       }
     ]
   }
 }
 {
-  "label":"'foo'",
+  "label":"\"foo\"",
   "labelDetails":{"detail":": number"},
   "kind":6,
   "detail":"number",
@@ -8788,7 +8788,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'foo'"
+    "newText":"\"foo\""
   },
   "command":{
     "title":"",
@@ -8801,13 +8801,13 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"\"foo\""
       }
     ]
   }
 }
 {
-  "label":"'hasOwnProperty'",
+  "label":"\"hasOwnProperty\"",
   "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -8819,7 +8819,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'hasOwnProperty'"
+    "newText":"\"hasOwnProperty\""
   },
   "command":{
     "title":"",
@@ -8832,13 +8832,13 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'hasOwnProperty'"
+        "completion":"\"hasOwnProperty\""
       }
     ]
   }
 }
 {
-  "label":"'isPrototypeOf'",
+  "label":"\"isPrototypeOf\"",
   "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
@@ -8850,7 +8850,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'isPrototypeOf'"
+    "newText":"\"isPrototypeOf\""
   },
   "command":{
     "title":"",
@@ -8863,13 +8863,13 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'isPrototypeOf'"
+        "completion":"\"isPrototypeOf\""
       }
     ]
   }
 }
 {
-  "label":"'propertyIsEnumerable'",
+  "label":"\"propertyIsEnumerable\"",
   "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -8881,7 +8881,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'propertyIsEnumerable'"
+    "newText":"\"propertyIsEnumerable\""
   },
   "command":{
     "title":"",
@@ -8894,13 +8894,13 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'propertyIsEnumerable'"
+        "completion":"\"propertyIsEnumerable\""
       }
     ]
   }
 }
 {
-  "label":"'toLocaleString'",
+  "label":"\"toLocaleString\"",
   "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -8912,7 +8912,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'toLocaleString'"
+    "newText":"\"toLocaleString\""
   },
   "command":{
     "title":"",
@@ -8925,13 +8925,13 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'toLocaleString'"
+        "completion":"\"toLocaleString\""
       }
     ]
   }
 }
 {
-  "label":"'toString'",
+  "label":"\"toString\"",
   "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -8940,7 +8940,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'toString'"
+    "newText":"\"toString\""
   },
   "command":{
     "title":"",
@@ -8953,13 +8953,13 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'toString'"
+        "completion":"\"toString\""
       }
     ]
   }
 }
 {
-  "label":"'valueOf'",
+  "label":"\"valueOf\"",
   "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
@@ -8971,7 +8971,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'valueOf'"
+    "newText":"\"valueOf\""
   },
   "command":{
     "title":"",
@@ -8984,7 +8984,7 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'valueOf'"
+        "completion":"\"valueOf\""
       }
     ]
   }
@@ -8993,7 +8993,7 @@ Flags: --lsp
 bracket_syntax_3.js:5:14
 Flags: --lsp
 {
-  "label":"'bar'",
+  "label":"\"bar\"",
   "labelDetails":{"detail":": number"},
   "kind":6,
   "detail":"number",
@@ -9001,7 +9001,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'bar'"
+    "newText":"\"bar\""
   },
   "command":{
     "title":"",
@@ -9014,13 +9014,13 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"\"bar\""
       }
     ]
   }
 }
 {
-  "label":"'foo'",
+  "label":"\"foo\"",
   "labelDetails":{"detail":": number"},
   "kind":6,
   "detail":"number",
@@ -9028,7 +9028,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'foo'"
+    "newText":"\"foo\""
   },
   "command":{
     "title":"",
@@ -9041,13 +9041,13 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"\"foo\""
       }
     ]
   }
 }
 {
-  "label":"'hasOwnProperty'",
+  "label":"\"hasOwnProperty\"",
   "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -9059,7 +9059,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'hasOwnProperty'"
+    "newText":"\"hasOwnProperty\""
   },
   "command":{
     "title":"",
@@ -9072,13 +9072,13 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'hasOwnProperty'"
+        "completion":"\"hasOwnProperty\""
       }
     ]
   }
 }
 {
-  "label":"'isPrototypeOf'",
+  "label":"\"isPrototypeOf\"",
   "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
@@ -9090,7 +9090,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'isPrototypeOf'"
+    "newText":"\"isPrototypeOf\""
   },
   "command":{
     "title":"",
@@ -9103,13 +9103,13 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'isPrototypeOf'"
+        "completion":"\"isPrototypeOf\""
       }
     ]
   }
 }
 {
-  "label":"'propertyIsEnumerable'",
+  "label":"\"propertyIsEnumerable\"",
   "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -9121,7 +9121,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'propertyIsEnumerable'"
+    "newText":"\"propertyIsEnumerable\""
   },
   "command":{
     "title":"",
@@ -9134,13 +9134,13 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'propertyIsEnumerable'"
+        "completion":"\"propertyIsEnumerable\""
       }
     ]
   }
 }
 {
-  "label":"'toLocaleString'",
+  "label":"\"toLocaleString\"",
   "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -9152,7 +9152,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'toLocaleString'"
+    "newText":"\"toLocaleString\""
   },
   "command":{
     "title":"",
@@ -9165,13 +9165,13 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'toLocaleString'"
+        "completion":"\"toLocaleString\""
       }
     ]
   }
 }
 {
-  "label":"'toString'",
+  "label":"\"toString\"",
   "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -9180,7 +9180,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'toString'"
+    "newText":"\"toString\""
   },
   "command":{
     "title":"",
@@ -9193,13 +9193,13 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'toString'"
+        "completion":"\"toString\""
       }
     ]
   }
 }
 {
-  "label":"'valueOf'",
+  "label":"\"valueOf\"",
   "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
@@ -9211,7 +9211,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"'valueOf'"
+    "newText":"\"valueOf\""
   },
   "command":{
     "title":"",
@@ -9224,7 +9224,7 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'valueOf'"
+        "completion":"\"valueOf\""
       }
     ]
   }
@@ -11152,14 +11152,14 @@ Flags: --pretty
   "result":[
     {"name":"bar","type":"string"},
     {"name":"foo","type":"number"},
-    {"name":"'foo.bar'","type":"boolean"}
+    {"name":"\"foo.bar\"","type":"boolean"}
   ]
 }
 
 upper_bounds_9.js:5:14
 Flags: --pretty
 {
-  "result":[{"name":"bar","type":"string"},{"name":"'foo.bar'","type":"boolean"}]
+  "result":[{"name":"bar","type":"string"},{"name":"\"foo.bar\"","type":"boolean"}]
 }
 
 upper_bounds_10.js:19:16
@@ -12181,7 +12181,7 @@ Flags: --lsp
 indexed-access-2.js:4:13
 Flags: --lsp
 {
-  "label":"'bar'",
+  "label":"\"bar\"",
   "labelDetails":{"detail":": string | void"},
   "kind":13,
   "detail":"string | void",
@@ -12189,7 +12189,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
-    "newText":"'bar'"
+    "newText":"\"bar\""
   },
   "command":{
     "title":"",
@@ -12202,13 +12202,13 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"\"bar\""
       }
     ]
   }
 }
 {
-  "label":"'foo'",
+  "label":"\"foo\"",
   "labelDetails":{"detail":": number"},
   "kind":6,
   "detail":"number",
@@ -12216,7 +12216,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
-    "newText":"'foo'"
+    "newText":"\"foo\""
   },
   "command":{
     "title":"",
@@ -12229,7 +12229,7 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"\"foo\""
       }
     ]
   }
@@ -13153,7 +13153,7 @@ Flags: --lsp
 indexed-access-optional-2.js:4:15
 Flags: --lsp
 {
-  "label":"'bar'",
+  "label":"\"bar\"",
   "labelDetails":{"detail":": void | string"},
   "kind":13,
   "detail":"void | string",
@@ -13161,7 +13161,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
-    "newText":"'bar'"
+    "newText":"\"bar\""
   },
   "command":{
     "title":"",
@@ -13174,13 +13174,13 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"\"bar\""
       }
     ]
   }
 }
 {
-  "label":"'foo'",
+  "label":"\"foo\"",
   "labelDetails":{"detail":": number"},
   "kind":6,
   "detail":"number",
@@ -13188,7 +13188,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
-    "newText":"'foo'"
+    "newText":"\"foo\""
   },
   "command":{
     "title":"",
@@ -13201,7 +13201,7 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"\"foo\""
       }
     ]
   }

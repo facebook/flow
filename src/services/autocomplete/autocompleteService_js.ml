@@ -1132,6 +1132,22 @@ let fix_locs_of_string_token token (insert_loc, replace_loc) =
   let replace_loc = fix_loc_of_string_token token replace_loc in
   (insert_loc, replace_loc)
 
+let layout_options options token =
+  let opts = Code_action_service.layout_options options in
+  if token = "" then
+    opts
+  else
+    match token.[0] with
+    | '\'' -> { opts with Js_layout_generator.single_quotes = true }
+    | '"' -> { opts with Js_layout_generator.single_quotes = false }
+    | _ -> opts
+
+let print_expression ~options ~token expression =
+  expression
+  |> Js_layout_generator.expression ~opts:(layout_options options token)
+  |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+  |> Source.contents
+
 let autocomplete_member
     ~env
     ~reader
@@ -1200,11 +1216,7 @@ let autocomplete_member
                         (Ast_builder.Expressions.identifier "Symbol")
                         symbol
                   in
-                  expression
-                  |> Js_layout_generator.expression
-                       ~opts:(Code_action_service.layout_options options)
-                  |> Pretty_printer.print ~source_maps:None ~skip_endline:true
-                  |> Source.contents
+                  print_expression ~options ~token expression
                  )
              in
              let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
@@ -1610,10 +1622,7 @@ let autocomplete_object_key
                        (Ast_builder.Expressions.identifier "Symbol")
                        symbol
                  in
-                 expression
-                 |> Js_layout_generator.expression ~opts:(Code_action_service.layout_options options)
-                 |> Pretty_printer.print ~source_maps:None ~skip_endline:true
-                 |> Source.contents
+                 print_expression ~options ~token expression
                in
                autocomplete_create_result
                  ~insert_text
