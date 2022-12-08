@@ -239,6 +239,8 @@ module rec ConsGen : S = struct
 
     let is_subtype _cx _trace ~use_op:_ (_t1, _t2) = ()
 
+    let unify _cx _trace ~use_op:_ (_t1, _t2) = ()
+
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
     let unresolved_id = Avar.unresolved

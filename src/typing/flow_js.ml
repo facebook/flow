@@ -244,6 +244,8 @@ struct
 
     let is_subtype = FlowJs.rec_flow_t
 
+    let unify cx trace ~use_op (t1, t2) = FlowJs.rec_unify cx trace ~use_op ~unify_any:true t1 t2
+
     let reposition = FlowJs.reposition
 
     let unresolved_id = Tvar.mk_no_wrap
@@ -2795,8 +2797,20 @@ struct
                 | Some use_op -> use_op
                 | None -> unknown_use
               in
+              let unify_bounds =
+                match u with
+                | MethodT (_, _, _, _, NoMethodAction, _) -> true
+                | _ -> false
+              in
               let t_ =
-                instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t)
+                instantiate_poly
+                  cx
+                  trace
+                  ~use_op
+                  ~reason_op
+                  ~reason_tapp
+                  ~unify_bounds
+                  (tparams_loc, ids, t)
               in
               rec_flow cx trace (t_, u)
           end
