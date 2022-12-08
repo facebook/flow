@@ -31,8 +31,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:11
 
-Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2].
-[underconstrained-implicit-instantiation]
+Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2]. Either add explicit
+type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
    test.js:10:11
    10| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
@@ -66,8 +66,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:6
 
-Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2].
-[underconstrained-implicit-instantiation]
+Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2]. Either add explicit
+type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
    test.js:22:6
    22|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
@@ -84,8 +84,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:6
 
-Cannot call `readOnly` because `T` [1] is underconstrained by call of `readOnly` [2].
-[underconstrained-implicit-instantiation]
+Cannot call `readOnly` because `T` [1] is underconstrained by call of `readOnly` [2]. Either add explicit type arguments
+or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
    test.js:23:6
    23|   y: readOnly<_>(), // Error in LTI
