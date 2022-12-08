@@ -1,0 +1,3 @@
+(test
+ (name cycle_hash_test)
+ (libraries cycle_hash ounit2))
