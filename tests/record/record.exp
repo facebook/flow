@@ -41,13 +41,44 @@ References:
                       ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:17:6
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Deprecated utility. Using `$Subtype` types is not recommended! [deprecated-utility]
+Cannot extend `C` [1] with `D` because property `qux` is missing in object type [2] in the indexer property's key of
+property `x`. [prop-missing]
 
-   17|   x: $Subtype<{[key: $Keys<X>]: any}>; // object with larger key set than X's
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:19:1
+       v----------------------------------------------
+   19| class D extends C<{foo: number, bar: string}> {
+   20|   x: { foo: number, qux: boolean }; // error: qux not found
+   21| }
+       ^
+
+References:
+   test.js:19:17
+   19| class D extends C<{foo: number, bar: string}> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:19:19
+   19| class D extends C<{foo: number, bar: string}> {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:6
+
+Cannot extend `C` [1] with `D` because an index signature declaring the expected key / value type is missing in object
+type [2] but exists in object type [3] in property `x`. [prop-missing]
+
+   test.js:20:6
+   20|   x: { foo: number, qux: boolean }; // error: qux not found
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   test.js:19:17
+   19| class D extends C<{foo: number, bar: string}> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:17:6
+   17|   x: {[key: $Keys<X>]: any}; // object with larger key set than X's
+            ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 
-Found 4 errors
+Found 5 errors

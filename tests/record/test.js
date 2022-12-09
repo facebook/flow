@@ -14,7 +14,7 @@ o2.bar; // OK to access bar
 o2.qux; // error: qux not found
 
 class C<X> {
-  x: $Subtype<{[key: $Keys<X>]: any}>; // object with larger key set than X's
+  x: {[key: $Keys<X>]: any}; // object with larger key set than X's
 }
 class D extends C<{foo: number, bar: string}> {
   x: { foo: number, qux: boolean }; // error: qux not found
