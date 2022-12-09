@@ -4198,6 +4198,34 @@ Flags: --lsp
   }
 }
 {
+  "label":"baz",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"the variable baz"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz"
+      }
+    ]
+  }
+}
+{
   "label":"BooleanEnum",
   "kind":13,
   "detail":"enum BooleanEnum",
@@ -4216,7 +4244,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":1,
+        "index":2,
         "session_requests":null,
         "typed_length":null,
         "completion":"BooleanEnum"
@@ -4243,10 +4271,38 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":2,
+        "index":3,
         "session_requests":null,
         "typed_length":null,
         "completion":"DefaultedStringEnum"
+      }
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"detail":"() => void"},
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"the function foo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
       }
     ]
   }
@@ -4270,7 +4326,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":3,
+        "index":5,
         "session_requests":null,
         "typed_length":null,
         "completion":"InitializedStringEnum"
@@ -4297,93 +4353,10 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":4,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"NumberEnum"
-      }
-    ]
-  }
-}
-{
-  "label":"SymbolEnum",
-  "kind":13,
-  "detail":"enum SymbolEnum",
-  "documentation":{"kind":"markdown","value":"a symbol enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
-    "newText":"SymbolEnum"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {
-        "token":null,
-        "index":5,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"SymbolEnum"
-      }
-    ]
-  }
-}
-{
-  "label":"baz",
-  "labelDetails":{"detail":": number"},
-  "kind":6,
-  "detail":"number",
-  "documentation":{"kind":"markdown","value":"the variable baz"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
-    "newText":"baz"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {
-        "token":null,
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"baz"
-      }
-    ]
-  }
-}
-{
-  "label":"foo",
-  "labelDetails":{"detail":"() => void"},
-  "kind":3,
-  "detail":"() => void",
-  "documentation":{"kind":"markdown","value":"the function foo"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
-    "newText":"foo"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "local value identifier",
-      {
-        "token":null,
-        "index":7,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"foo"
+        "completion":"NumberEnum"
       }
     ]
   }
@@ -4411,10 +4384,37 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":8,
+        "index":7,
         "session_requests":null,
         "typed_length":null,
         "completion":"qux"
+      }
+    ]
+  }
+}
+{
+  "label":"SymbolEnum",
+  "kind":13,
+  "detail":"enum SymbolEnum",
+  "documentation":{"kind":"markdown","value":"a symbol enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"SymbolEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"SymbolEnum"
       }
     ]
   }
@@ -9878,33 +9878,6 @@ Flags: --lsp
 iterator.js:4:5
 Flags: --lsp
 {
-  "label":"Symbol.iterator",
-  "labelDetails":{"detail":": Iterator<number>"},
-  "kind":6,
-  "detail":"Iterator<number>",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
-    "newText":"Symbol.iterator"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "bracket syntax member",
-      {
-        "token":null,
-        "index":0,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"Symbol.iterator"
-      }
-    ]
-  }
-}
-{
   "label":"bar",
   "labelDetails":{"detail":": {\"@@asyncIterator\": AsyncIterator<number>, ...}"},
   "kind":6,
@@ -9923,7 +9896,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":1,
+        "index":0,
         "session_requests":null,
         "typed_length":null,
         "completion":"bar"
@@ -9950,10 +9923,37 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":2,
+        "index":1,
         "session_requests":null,
         "typed_length":null,
         "completion":"foo"
+      }
+    ]
+  }
+}
+{
+  "label":"Symbol.iterator",
+  "labelDetails":{"detail":": Iterator<number>"},
+  "kind":6,
+  "detail":"Iterator<number>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"Symbol.iterator"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Symbol.iterator"
       }
     ]
   }
@@ -10145,33 +10145,6 @@ Flags: --lsp
 iterator.js:8:5
 Flags: --lsp
 {
-  "label":"Symbol.asyncIterator",
-  "labelDetails":{"detail":": AsyncIterator<number>"},
-  "kind":6,
-  "detail":"AsyncIterator<number>",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
-    "newText":"Symbol.asyncIterator"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "bracket syntax member",
-      {
-        "token":null,
-        "index":0,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"Symbol.asyncIterator"
-      }
-    ]
-  }
-}
-{
   "label":"bar",
   "labelDetails":{"detail":": {\"@@asyncIterator\": AsyncIterator<number>, ...}"},
   "kind":6,
@@ -10190,7 +10163,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":1,
+        "index":0,
         "session_requests":null,
         "typed_length":null,
         "completion":"bar"
@@ -10217,10 +10190,37 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":2,
+        "index":1,
         "session_requests":null,
         "typed_length":null,
         "completion":"foo"
+      }
+    ]
+  }
+}
+{
+  "label":"Symbol.asyncIterator",
+  "labelDetails":{"detail":": AsyncIterator<number>"},
+  "kind":6,
+  "detail":"AsyncIterator<number>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"Symbol.asyncIterator"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Symbol.asyncIterator"
       }
     ]
   }

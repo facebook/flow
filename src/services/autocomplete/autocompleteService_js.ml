@@ -587,7 +587,7 @@ let compare_completion_items a b =
     | (None, None) -> 0
   in
   if rankCompare = 0 then
-    String.compare a.name b.name
+    Base.String.Caseless.compare a.name b.name
   else
     rankCompare
 
