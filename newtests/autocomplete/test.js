@@ -14,11 +14,11 @@ module.exports = (suite(({addFile, flowCmd}) => [
       'foo_parse_fail.js',
     ).stdout(
        `
+         num number
+         str string
          hasOwnProperty (prop: mixed) => boolean
          isPrototypeOf (o: mixed) => boolean
-         num number
          propertyIsEnumerable (prop: mixed) => boolean
-         str string
          toLocaleString () => string
          toString () => string
          valueOf () => mixed
@@ -37,6 +37,14 @@ module.exports = (suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
+               "name": "num",
+               "type": "number"
+             },
+             {
+               "name": "str",
+               "type": "string"
+             },
+             {
                "name": "hasOwnProperty",
                "type": "(prop: mixed) => boolean"
              },
@@ -45,16 +53,8 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": "(o: mixed) => boolean"
              },
              {
-               "name": "num",
-               "type": "number"
-             },
-             {
                "name": "propertyIsEnumerable",
                "type": "(prop: mixed) => boolean"
-             },
-             {
-               "name": "str",
-               "type": "string"
              },
              {
                "name": "toLocaleString",
@@ -95,6 +95,10 @@ module.exports = (suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
+               "name": "x",
+               "type": "number"
+             },
+             {
                "name": "hasOwnProperty",
                "type": "(prop: mixed) => boolean"
              },
@@ -117,10 +121,6 @@ module.exports = (suite(({addFile, flowCmd}) => [
              {
                "name": "valueOf",
                "type": "() => mixed"
-             },
-             {
-               "name": "x",
-               "type": "number"
              }
            ]
          }
@@ -136,6 +136,10 @@ module.exports = (suite(({addFile, flowCmd}) => [
        `
          {
            "result": [
+             {
+               "name": "length",
+               "type": "number"
+             },
              {
                "name": "[Symbol.iterator]",
                "type": "() => Iterator<string>"
@@ -183,10 +187,6 @@ module.exports = (suite(({addFile, flowCmd}) => [
              {
                "name": "lastIndexOf",
                "type": "(searchString: string, position?: number) => number"
-             },
-             {
-               "name": "length",
-               "type": "number"
              },
              {
                "name": "link",
@@ -477,12 +477,24 @@ module.exports = (suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
-               "name": "apply",
-               "type": "(thisArg: any, argArray?: any) => any"
-             },
-             {
                "name": "arguments",
                "type": "any"
+             },
+             {
+               "name": "caller",
+               "type": "any | null"
+             },
+             {
+               "name": "length",
+               "type": "number"
+             },
+             {
+               "name": "name",
+               "type": "string"
+             },
+             {
+               "name": "apply",
+               "type": "(thisArg: any, argArray?: any) => any"
              },
              {
                "name": "bind",
@@ -493,24 +505,12 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": "(thisArg: any, ...argArray: Array<any>) => any"
              },
              {
-               "name": "caller",
-               "type": "any | null"
-             },
-             {
                "name": "hasOwnProperty",
                "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
                "type": "(o: mixed) => boolean"
-             },
-             {
-               "name": "length",
-               "type": "number"
-             },
-             {
-               "name": "name",
-               "type": "string"
              },
              {
                "name": "propertyIsEnumerable",
@@ -551,12 +551,12 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": "string"
              },
              {
-               "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean"
-             },
-             {
                "name": "hello",
                "type": "() => void"
+             },
+             {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
@@ -689,16 +689,20 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": "(x?: string) => void"
              },
              {
+               "name": "o",
+               "type": "{x?: string, ...}"
+             },
+             {
+               "name": "x",
+               "type": "string | void"
+             },
+             {
                "name": "hasOwnProperty",
                "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
                "type": "(o: mixed) => boolean"
-             },
-             {
-               "name": "o",
-               "type": "{x?: string, ...}"
              },
              {
                "name": "propertyIsEnumerable",
@@ -715,10 +719,6 @@ module.exports = (suite(({addFile, flowCmd}) => [
              {
                "name": "valueOf",
                "type": "() => mixed"
-             },
-             {
-               "name": "x",
-               "type": "string | void"
              }
            ]
          }
@@ -801,20 +801,20 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": "string"
              },
              {
-               "name": "hasOwnProperty",
-               "type": "(prop: mixed) => boolean"
-             },
-             {
-               "name": "isPrototypeOf",
-               "type": "(o: mixed) => boolean"
-             },
-             {
                "name": "method",
                "type": "() => void"
              },
              {
                "name": "prop",
                "type": "number"
+             },
+             {
+               "name": "hasOwnProperty",
+               "type": "(prop: mixed) => boolean"
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: mixed) => boolean"
              },
              {
                "name": "propertyIsEnumerable",
@@ -846,6 +846,14 @@ module.exports = (suite(({addFile, flowCmd}) => [
        {
          "result": [
            {
+             "name": "num",
+             "type": "number"
+           },
+           {
+             "name": "str",
+             "type": "string"
+           },
+           {
              "name": "hasOwnProperty",
              "type": "(prop: mixed) => boolean"
            },
@@ -854,16 +862,8 @@ module.exports = (suite(({addFile, flowCmd}) => [
              "type": "(o: mixed) => boolean"
            },
            {
-             "name": "num",
-             "type": "number"
-           },
-           {
              "name": "propertyIsEnumerable",
              "type": "(prop: mixed) => boolean"
-           },
-           {
-             "name": "str",
-             "type": "string"
            },
            {
              "name": "toLocaleString",

@@ -577,20 +577,43 @@ let append_completion_items_of_autoimports
         item :: acc)
     sorted_auto_imports
 
-(* env is all visible bound names at cursor *)
+let compare_completion_items a b =
+  let open ServerProt.Response.Completion in
+  let rankCompare =
+    match (a.sort_text, b.sort_text) with
+    | (Some a, Some b) -> String.compare a b
+    | (Some _, None) -> -1
+    | (None, Some _) -> 1
+    | (None, None) -> 0
+  in
+  if rankCompare = 0 then
+    String.compare a.name b.name
+  else
+    rankCompare
 
-let filter_by_token item_list token =
+let filter_by_token token item_list =
   let open ServerProt.Response.Completion in
   let open Fuzzy_path in
   let (before, _after) = Autocomplete_sigil.remove token in
-  let candidates = Base.List.map ~f:(fun item -> item.name) item_list in
-  let fuzzy_matcher = Fuzzy_path.init candidates in
-  let filtered_candidates = Fuzzy_path.search before fuzzy_matcher in
-  let filtered_candidates =
-    List.fold_left (fun acc item -> SSet.add item.value acc) SSet.empty filtered_candidates
-  in
-  let item_list = List.filter (fun item -> SSet.mem item.name filtered_candidates) item_list in
-  item_list
+  if before = "" then
+    item_list
+  else
+    let candidates = Base.List.map ~f:(fun item -> item.name) item_list in
+    let fuzzy_matcher = Fuzzy_path.init candidates in
+    let filtered_candidates = Fuzzy_path.search before fuzzy_matcher in
+    let filtered_candidates =
+      List.fold_left (fun acc item -> SSet.add item.value acc) SSet.empty filtered_candidates
+    in
+    let item_list = List.filter (fun item -> SSet.mem item.name filtered_candidates) item_list in
+    item_list
+
+let filter_by_token_and_sort token items =
+  items |> filter_by_token token |> Base.List.sort ~compare:compare_completion_items
+
+let filter_by_token_and_sort_rev token rev_items =
+  rev_items
+  |> filter_by_token token
+  |> Base.List.sort ~compare:(fun a b -> -1 * compare_completion_items a b)
 
 let autocomplete_id
     ~env
@@ -702,7 +725,7 @@ let autocomplete_id
     else
       items_rev
   in
-  let items_rev = filter_by_token items_rev token in
+  let items_rev = filter_by_token_and_sort_rev token items_rev in
   let (items_rev, is_incomplete) =
     if imports then
       let (before, _after) = Autocomplete_sigil.remove token in
@@ -994,7 +1017,6 @@ let autocomplete_unqualified_type
     ~typed_ast
     ~edit_locs
     ~token =
-  (* TODO: filter to results that match `token` *)
   let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
@@ -1087,7 +1109,7 @@ let autocomplete_unqualified_type
            | Ok _ -> (items_rev, errors_to_log))
          (items_rev, errors_to_log)
   in
-  let items_rev = filter_by_token items_rev token in
+  let items_rev = filter_by_token_and_sort_rev token items_rev in
   let (items_rev, is_incomplete) =
     if imports then
       let locals =
@@ -1303,7 +1325,7 @@ let autocomplete_member
     in
     (match bracket_syntax with
     | None ->
-      let items = filter_by_token items token in
+      let items = filter_by_token_and_sort token items in
       let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
       AcResult { result; errors_to_log }
     | Some Autocomplete_js.{ include_this; include_super; type_; _ } ->
@@ -1345,7 +1367,13 @@ let autocomplete_member
             ~token
             ~type_
       in
-      let result = { ServerProt.Response.Completion.items = items @ id_items; is_incomplete } in
+      let items =
+        Base.List.rev items
+        |> Base.List.rev_append id_items
+        |> filter_by_token_and_sort_rev token
+        |> Base.List.rev
+      in
+      let result = { ServerProt.Response.Completion.items; is_incomplete } in
       let errors_to_log = errors_to_log @ id_errors_to_log in
       AcResult { result; errors_to_log })
 
@@ -1795,7 +1823,7 @@ let autocomplete_get_results
                         text_edit = Some (text_edit ?insert_text:(Some name) name edit_locs);
                       })
                     result_member.result.items
-                |> fun l -> filter_by_token l token
+                |> filter_by_token_and_sort token
               in
               AcResult
                 {

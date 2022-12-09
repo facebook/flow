@@ -203,22 +203,6 @@ let flow_completions_to_lsp
   let { ServerProt.Response.Completion.items; is_incomplete } = completions in
   let open ServerProt.Response.Completion in
   let items =
-    Base.List.sort
-      ~compare:(fun a b ->
-        let rankCompare =
-          match (a.sort_text, b.sort_text) with
-          | (Some a, Some b) -> String.compare a b
-          | (Some _, None) -> -1
-          | (None, Some _) -> 1
-          | (None, None) -> 0
-        in
-        if rankCompare = 0 then
-          String.compare a.name b.name
-        else
-          rankCompare)
-      items
-  in
-  let items =
     Base.List.mapi
       ~f:(fun index item ->
         flow_completion_item_to_lsp
