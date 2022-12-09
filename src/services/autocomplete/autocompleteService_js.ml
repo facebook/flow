@@ -591,29 +591,42 @@ let compare_completion_items a b =
   else
     rankCompare
 
-let filter_by_token token item_list =
-  let open ServerProt.Response.Completion in
-  let open Fuzzy_path in
-  let (before, _after) = Autocomplete_sigil.remove token in
-  if before = "" then
-    item_list
-  else
-    let candidates = Base.List.map ~f:(fun item -> item.name) item_list in
-    let fuzzy_matcher = Fuzzy_path.init candidates in
-    let filtered_candidates = Fuzzy_path.search before fuzzy_matcher in
-    let filtered_candidates =
-      List.fold_left (fun acc item -> SSet.add item.value acc) SSet.empty filtered_candidates
-    in
-    let item_list = List.filter (fun item -> SSet.mem item.name filtered_candidates) item_list in
-    item_list
-
 let filter_by_token_and_sort token items =
-  items |> filter_by_token token |> Base.List.sort ~compare:compare_completion_items
+  let (before, _after) = Autocomplete_sigil.remove token in
+  if String.length before = 0 then
+    (* if there's nothing to fuzzy match by, just sort regularly *)
+    Base.List.sort items ~compare:compare_completion_items
+  else
+    Base.List.rev_filter_map items ~f:(fun item ->
+        let open ServerProt.Response.Completion in
+        match Fuzzy_score.fuzzy_score ~pattern:before item.name with
+        | 0 -> None
+        | score -> Some (score, item)
+    )
+    |> Base.List.stable_sort ~compare:(fun a b ->
+           (* since the list is reversed, we sort backwards *)
+           Base.Int.compare (fst a) (fst b)
+       )
+    |> Base.List.rev_map ~f:snd
 
-let filter_by_token_and_sort_rev token rev_items =
-  rev_items
-  |> filter_by_token token
-  |> Base.List.sort ~compare:(fun a b -> -1 * compare_completion_items a b)
+(** [filter_by_token_and_sort_rev token rev_items] fuzzy scores [rev_items]
+     based on [token], sorts them by score (highest to lowest), then
+     re-reverses the list. It is stable when two items have the same score. *)
+let filter_by_token_and_sort_rev token items =
+  let (before, _after) = Autocomplete_sigil.remove token in
+  if String.length before = 0 then
+    (* if there's nothing to fuzzy match by, just sort regularly. since the
+       list is reversed, we sort backwards. *)
+    Base.List.sort items ~compare:(fun a b -> -1 * compare_completion_items a b)
+  else
+    Base.List.rev_filter_map items ~f:(fun item ->
+        let open ServerProt.Response.Completion in
+        match Fuzzy_score.fuzzy_score ~pattern:before item.name with
+        | 0 -> None
+        | score -> Some (score, item)
+    )
+    |> Base.List.stable_sort ~compare:(fun a b -> Base.Int.compare (fst b) (fst a))
+    |> Base.List.rev_map ~f:snd
 
 let autocomplete_id
     ~env
@@ -632,7 +645,6 @@ let autocomplete_id
     ~edit_locs
     ~token
     ~type_ =
-  (* TODO: filter to results that match `token` *)
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
@@ -1812,24 +1824,25 @@ let autocomplete_get_results
             | AcEmpty _ -> AcResult result_id
             | AcResult result_member ->
               let open ServerProt.Response.Completion in
-              let items =
-                result_id.result.items
-                @ Base.List.map
-                    ~f:(fun item ->
-                      let name = "this." ^ item.name in
-                      {
-                        item with
-                        name;
-                        text_edit = Some (text_edit ?insert_text:(Some name) name edit_locs);
-                      })
-                    result_member.result.items
-                |> filter_by_token_and_sort token
+              let rev_items =
+                Base.List.fold
+                  ~init:(List.rev result_id.result.items)
+                  ~f:(fun acc item ->
+                    let name = "this." ^ item.name in
+                    {
+                      item with
+                      name;
+                      text_edit = Some (text_edit ?insert_text:(Some name) name edit_locs);
+                    }
+                    :: acc)
+                  result_member.result.items
+                |> filter_by_token_and_sort_rev token
               in
               AcResult
                 {
                   result =
                     {
-                      ServerProt.Response.Completion.items;
+                      ServerProt.Response.Completion.items = List.rev rev_items;
                       is_incomplete =
                         result_id.result.is_incomplete || result_member.result.is_incomplete;
                     };

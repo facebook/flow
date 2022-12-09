@@ -2,6 +2,7 @@
  (name flow_service_autocomplete)
  (wrapped false)
  (libraries
+  fuzzy_score
   flow_server_protocol
   flow_service_type_info
   flow_state_heaps_parsing

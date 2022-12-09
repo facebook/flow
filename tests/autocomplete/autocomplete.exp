@@ -215,9 +215,6 @@ Flags: --pretty
 {
   "result":[
     {"name":"this","type":"this"},
-    {"name":"this.hasOwnProperty","type":"(prop: mixed) => boolean"},
-    {"name":"this.isPrototypeOf","type":"(o: mixed) => boolean"},
-    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"},
     {"name":"this.toLocaleString","type":"() => string"},
     {"name":"this.toString","type":"() => string"}
   ]
@@ -302,12 +299,7 @@ Flags: --pretty
 
 jsx-attribute-member.js:6:23
 Flags: --pretty
-{
-  "result":[
-    {"name":"bar","type":"string"},
-    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"}
-  ]
-}
+{"result":[{"name":"bar","type":"string"}]}
 
 jsx-closing-tag.js:10:14
 Flags: --pretty
@@ -993,13 +985,7 @@ Flags: --lsp
 
 member_middle.js:5:4
 Flags: --pretty
-{
-  "result":[
-    {"name":"foobar","type":"string"},
-    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
-    {"name":"valueOf","type":"() => mixed"}
-  ]
-}
+{"result":[{"name":"foobar","type":"string"}]}
 
 opaque_types.js:13:4
 Flags: --pretty
@@ -1051,12 +1037,7 @@ Flags: --pretty
 
 optional_chaining_middle.js:9:16
 Flags: --pretty
-{
-  "result":[
-    {"name":"bar","type":"void | number"},
-    {"name":"propertyIsEnumerable","type":"void | ((prop: mixed) => boolean)"}
-  ]
-}
+{"result":[{"name":"bar","type":"void | number"}]}
 
 optional_chaining_new.js:9:15
 Flags: --pretty
@@ -4160,13 +4141,7 @@ Flags: --pretty
 
 pattern_object_key_middle.js:6:12
 Flags: --pretty
-{
-  "result":[
-    {"name":"foobar","type":"string"},
-    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
-    {"name":"valueOf","type":"() => mixed"}
-  ]
-}
+{"result":[{"name":"foobar","type":"string"}]}
 
 jsdoc.js:18:4
 Flags: --lsp
@@ -13465,8 +13440,7 @@ Flags: --pretty
   "result":[
     {"name":"bar","type":"number"},
     {"name":"this.been","type":"() => void"},
-    {"name":"this.bye","type":"string"},
-    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"}
+    {"name":"this.bye","type":"string"}
   ]
 }
 
@@ -13476,8 +13450,7 @@ Flags: --pretty
   "result":[
     {"name":"bar","type":"number"},
     {"name":"this.baz","type":"() => void"},
-    {"name":"this.boo","type":"string"},
-    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"}
+    {"name":"this.boo","type":"string"}
   ]
 }
 
@@ -13487,8 +13460,7 @@ Flags: --pretty
   "result":[
     {"name":"bar","type":"number"},
     {"name":"this.baz","type":"() => void"},
-    {"name":"this.boo","type":"string"},
-    {"name":"this.propertyIsEnumerable","type":"(prop: mixed) => boolean"}
+    {"name":"this.boo","type":"string"}
   ]
 }
 
