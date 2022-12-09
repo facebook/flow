@@ -295,14 +295,14 @@ class ['a] t =
         acc
 
     method private obj_type cx pole acc o =
-      let { props_tmap; proto_t; call_t; flags; reachable_targs } = o in
+      (* We intentionally do not visit reachable_targs. By definition, they are already reachable
+       * by traversing the other fields. Until substitution keeps track of polarity, visitng the
+       * other fields will be more accurate *)
+      let { props_tmap; proto_t; call_t; flags; reachable_targs = _ } = o in
       let acc = self#obj_flags cx pole acc flags in
       let acc = self#props cx pole acc props_tmap in
       let acc = self#type_ cx pole acc proto_t in
       let acc = self#opt (self#call_prop cx pole) acc call_t in
-      let acc =
-        self#list (fun acc (t, p) -> self#type_ cx (P.mult (pole, p)) acc t) acc reachable_targs
-      in
       acc
 
     method private arr_type cx pole acc =

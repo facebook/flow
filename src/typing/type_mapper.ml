@@ -601,7 +601,14 @@ class virtual ['a] t =
       let proto_t' = self#type_ cx map_cx proto_t in
       let call_t' = OptionUtils.ident_map (self#call_prop cx map_cx) call_t in
       let reachable_targs' =
-        ListUtils.ident_map (fun (t, p) -> (self#type_ cx map_cx t, p)) reachable_targs
+        ListUtils.ident_map
+          (fun ((t, p) as tup) ->
+            let t' = self#type_ cx map_cx t in
+            if t == t' then
+              tup
+            else
+              (t', p))
+          reachable_targs
       in
       if
         flags' == flags

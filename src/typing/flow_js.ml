@@ -5891,24 +5891,20 @@ struct
       ~covariant_flow
       ~contravariant_flow
       any
-      { flags = _; props_tmap; proto_t; call_t; reachable_targs = _ } =
+      { flags = _; props_tmap = _; proto_t = _; call_t = _; reachable_targs } =
     (* NOTE: Doing this always would be correct and desirable, but the
      * performance of doing this always is just not good enough. Instead,
      * we do it only in implicit instantiation to ensure that we do not get
      * spurious underconstrained errors when objects contain type arguments
      * that get any as a lower bound *)
-    if Context.in_lti_implicit_instantiation cx then (
-      covariant_flow ~use_op proto_t;
-      any_prop_properties
-        cx
-        trace
-        ~use_op
-        ~covariant_flow
-        ~contravariant_flow
-        any
-        (Context.find_props cx props_tmap);
-      any_prop_call_prop cx ~use_op ~covariant_flow call_t
-    )
+    if Context.in_lti_implicit_instantiation cx then
+      reachable_targs
+      |> List.iter (fun (t, p) ->
+             match p with
+             | Polarity.Positive -> covariant_flow ~use_op t
+             | Polarity.Negative -> contravariant_flow ~use_op t
+             | Polarity.Neutral -> invariant_any_propagation_flow cx trace ~use_op any t
+         )
 
   (* FullyResolved tvars cannot contain non-FullyResolved parts, so there's no need to
    * deeply traverse them! *)

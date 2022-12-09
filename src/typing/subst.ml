@@ -102,6 +102,11 @@ let substituter =
 
     val mutable change_id = false
 
+    (* Objects store a list of reachable targs and their polarity so that we
+     * can do any-propagation without exploring the full structure of the
+     * type. *)
+    val mutable obj_reachable_targs = None
+
     method tvar _cx _map_cx _r id = id
 
     method call_prop cx map_cx id =
@@ -166,15 +171,18 @@ let substituter =
             begin
               match Subst_name.Map.find_opt name map with
               | None -> super#type_ cx map_cx t
-              | Some (TypeSubst ((GenericT _ as param_t), _)) ->
-                change_id <- true;
-                mod_reason_of_t
-                  (fun param_reason ->
-                    annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
-                  param_t
               | Some (TypeSubst (param_t, _)) ->
                 change_id <- true;
-                param_t
+                (match (obj_reachable_targs, param_t) with
+                | (_, GenericT _) ->
+                  mod_reason_of_t
+                    (fun param_reason ->
+                      annot_reason ~annot_loc @@ repos_reason annot_loc param_reason)
+                    param_t
+                | (Some targs, OpenT _) ->
+                  obj_reachable_targs <- Some ((param_t, Polarity.Neutral) :: targs);
+                  param_t
+                | _ -> param_t)
               | Some (AlphaRename name') ->
                 let t = GenericT { gen with name = name' } in
                 super#type_ cx map_cx t
@@ -281,6 +289,25 @@ let substituter =
         else
           LatentP (t', i)
       | p -> p
+
+    method! obj_type cx map_cx t =
+      let old_obj_reachable_targs = obj_reachable_targs in
+      obj_reachable_targs <- Some [];
+      let t' = super#obj_type cx map_cx t in
+      let reachable_targs =
+        match obj_reachable_targs with
+        | Some ts -> ts
+        | _ -> failwith "Invariant violation: reachable targs are None after visiting an object"
+      in
+      obj_reachable_targs <-
+        (match old_obj_reachable_targs with
+        | Some targs -> Some (targs @ reachable_targs)
+        | None -> None);
+
+      if reachable_targs == t'.reachable_targs then
+        t'
+      else
+        { t' with reachable_targs }
 
     (* The EvalT case is the only case that calls this function. We've explicitly overrided it
      * in all cases, so this should never be called *)
