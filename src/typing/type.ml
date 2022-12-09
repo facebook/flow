@@ -1167,6 +1167,10 @@ module rec TypeTerm : sig
     props_tmap: Properties.id;
     proto_t: prototype;
     call_t: int option;
+    (* reachable_targs is populated during substitution. We use those reachable
+     * targs to avoid traversing the full objtype structure during any-propagation
+     * and instead pollute the reachable_targs directly. *)
+    reachable_targs: (t * Polarity.t) list;
   }
 
   (* Object.assign(target, source1, ...source2) first resolves target then the
@@ -3948,7 +3952,7 @@ let mk_opt_methodcalltype
 let default_flags = { obj_kind = Exact; frozen = false }
 
 let mk_objecttype ?(flags = default_flags) ~call pmap proto =
-  { flags; proto_t = proto; props_tmap = pmap; call_t = call }
+  { flags; proto_t = proto; props_tmap = pmap; call_t = call; reachable_targs = [] }
 
 let mk_object_def_type ~reason ?(flags = default_flags) ~call pmap proto =
   let reason = update_desc_reason invalidate_rtype_alias reason in

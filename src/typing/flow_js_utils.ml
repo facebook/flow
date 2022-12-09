@@ -1991,7 +1991,13 @@ let objt_to_obj_rest cx props_tmap flags reason xs =
 (* $Values *)
 
 let get_values_type_of_obj_t cx o reason =
-  let { flags; proto_t = _; props_tmap = tmap; call_t = _ (* call props excluded from values *) } =
+  let {
+    flags;
+    proto_t = _;
+    props_tmap = tmap;
+    call_t = _ (* call props excluded from values *);
+    reachable_targs = _;
+  } =
     o
   in
   (* Find all of the props. *)
