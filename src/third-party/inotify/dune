@@ -1,8 +1,0 @@
-(library
- (name inotify)
- (enabled_if
-  (= %{system} linux))
- (wrapped false)
- (foreign_stubs
-  (language c)
-  (names inotify_stubs)))

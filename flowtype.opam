@@ -16,6 +16,7 @@ depends: [
   "dtoa" {>= "0.3.2"}
   "fileutils" {>= "0.6.3"}
   "flow_parser" {= "0.195.0"}
+  "inotify" {os = "linux" & >= "2.4.1"}
   "ounit2" {with-test}
   "sedlex" {>= "2.3"}
   "lwt" {>= "5.4.0"}
