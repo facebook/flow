@@ -138,8 +138,24 @@ module Make (Flow : INPUT) : OUTPUT = struct
         rec_flow cx trace (ft1.return_t, out)
 
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
-    let { flags = lflags; call_t = lcall; props_tmap = lflds; proto_t = lproto } = l_obj in
-    let { flags = rflags; call_t = ucall; props_tmap = uflds; proto_t = uproto } = u_obj in
+    let {
+      flags = lflags;
+      call_t = lcall;
+      props_tmap = lflds;
+      proto_t = lproto;
+      reachable_targs = _;
+    } =
+      l_obj
+    in
+    let {
+      flags = rflags;
+      call_t = ucall;
+      props_tmap = uflds;
+      proto_t = uproto;
+      reachable_targs = _;
+    } =
+      u_obj
+    in
     (* if inflowing type is literal (thus guaranteed to be
        unaliased), propertywise subtyping is sound *)
     let lit = is_literal_object_reason lreason || lflags.frozen in
@@ -893,7 +909,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * Note: should be able to do this with LookupT rather than
      * slices, but that approach behaves in nonobvious ways. TODO why?
      *)
-    | (IntersectionT _, DefT (r, _, ObjT { flags; props_tmap; proto_t; call_t }))
+    | ( IntersectionT _,
+        DefT (r, _, ObjT { flags; props_tmap; proto_t; call_t; reachable_targs = _ })
+      )
       when NameUtils.Map.cardinal (Context.find_props cx props_tmap) > 1 ->
       Context.iter_real_props cx props_tmap (fun x p ->
           let pmap = NameUtils.Map.singleton x p in

@@ -5987,7 +5987,7 @@ struct
       ~covariant_flow
       ~contravariant_flow
       any
-      { flags = _; props_tmap; proto_t; call_t } =
+      { flags = _; props_tmap; proto_t; call_t; reachable_targs = _ } =
     (* NOTE: Doing this always would be correct and desirable, but the
      * performance of doing this always is just not good enough. Instead,
      * we do it only in implicit instantiation to ensure that we do not get
@@ -6409,6 +6409,7 @@ struct
               props_tmap = lprops;
               proto_t = lproto;
               call_t = lcall;
+              reachable_targs = lreachable_targs;
             }
         ) ->
       let own_props = Context.find_props cx own_props_id in
@@ -6447,6 +6448,7 @@ struct
           (* Interfaces have no prototype *)
           proto_t = ObjProtoT reason_struct;
           call_t = call_id;
+          reachable_targs = [];
         }
       in
       let lower =
@@ -6459,6 +6461,7 @@ struct
                 props_tmap = lprops;
                 proto_t = lproto;
                 call_t = lcall;
+                reachable_targs = lreachable_targs;
               }
           )
       in

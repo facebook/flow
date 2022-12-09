@@ -595,16 +595,30 @@ class virtual ['a] t =
         flags
 
     method obj_type cx map_cx t =
-      let { flags; props_tmap; proto_t; call_t } = t in
+      let { flags; props_tmap; proto_t; call_t; reachable_targs } = t in
       let flags' = self#obj_flags cx map_cx flags in
       let props_tmap' = self#props cx map_cx props_tmap in
       let proto_t' = self#type_ cx map_cx proto_t in
       let call_t' = OptionUtils.ident_map (self#call_prop cx map_cx) call_t in
-      if flags' == flags && props_tmap' == props_tmap && proto_t' == proto_t && call_t' == call_t
+      let reachable_targs' =
+        ListUtils.ident_map (fun (t, p) -> (self#type_ cx map_cx t, p)) reachable_targs
+      in
+      if
+        flags' == flags
+        && props_tmap' == props_tmap
+        && proto_t' == proto_t
+        && call_t' == call_t
+        && reachable_targs == reachable_targs'
       then
         t
       else
-        { flags = flags'; props_tmap = props_tmap'; proto_t = proto_t'; call_t = call_t' }
+        {
+          flags = flags';
+          props_tmap = props_tmap';
+          proto_t = proto_t';
+          call_t = call_t';
+          reachable_targs = reachable_targs';
+        }
 
     method virtual call_prop : Context.t -> 'a -> int -> int
 

@@ -117,7 +117,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       List.iter (check_polarity cx ?trace tparams Polarity.Neutral) ts
     | DefT (_, _, ArrT (ROArrayAT t)) -> check_polarity cx ?trace tparams polarity t
     | DefT (_, _, ObjT o) ->
-      let { flags; props_tmap; proto_t; call_t } = o in
+      let { flags; props_tmap; proto_t; call_t; reachable_targs = _ } = o in
       check_polarity_propmap cx ?trace tparams polarity props_tmap;
       let dict = Obj_type.get_dict_opt flags.obj_kind in
       Base.Option.iter dict ~f:(check_polarity_dict cx ?trace tparams polarity);
