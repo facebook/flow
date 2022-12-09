@@ -28,3 +28,7 @@ h((null: any));
 
 declare function i<T>(x: (y: PolyObj<T>) => mixed): PolyObj<T> => mixed;
 i((null: any));
+
+type Foo = number;
+declare function j<X>(): <Y: X>(x: {foo: Y}) => Y;
+j<Foo>()((null: any));
