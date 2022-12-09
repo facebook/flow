@@ -1349,11 +1349,17 @@ let print_initialize ~key (r : Initialize.result) : json =
     let cap = r.server_capabilities in
     let sync = cap.textDocumentSync in
     let experimental =
-      let { server_snippetTextEdit } = cap.server_experimental in
+      let { server_snippetTextEdit; strictCompletionOrder } = cap.server_experimental in
       let props = [] in
       let props =
         if server_snippetTextEdit then
           ("snippetTextEdit", JSON_Bool true) :: props
+        else
+          props
+      in
+      let props =
+        if strictCompletionOrder then
+          ("strictCompletionOrder", JSON_Bool true) :: props
         else
           props
       in

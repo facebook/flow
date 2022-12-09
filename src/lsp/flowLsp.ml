@@ -814,7 +814,7 @@ let do_initialize params : Initialize.result =
         selectionRangeProvider = true;
         typeCoverageProvider = true;
         rageProvider = true;
-        server_experimental = { server_snippetTextEdit };
+        server_experimental = { server_snippetTextEdit; strictCompletionOrder = true };
       };
     server_info = { name = "Flow"; version = Flow_version.version };
   }

@@ -394,7 +394,10 @@ module Initialize : sig
 
   and experimentalClientCapabilities = { snippetTextEdit: bool }
 
-  and experimentalServerCapabilities = { server_snippetTextEdit: bool }
+  and experimentalServerCapabilities = {
+    server_snippetTextEdit: bool;
+    strictCompletionOrder: bool;
+  }
 
   and server_capabilities = {
     textDocumentSync: TextDocumentSyncOptions.t;

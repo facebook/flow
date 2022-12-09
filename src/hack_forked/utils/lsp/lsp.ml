@@ -529,7 +529,12 @@ module Initialize = struct
   (* Flow LSP specific capabilities. *)
   and experimentalClientCapabilities = { snippetTextEdit: bool }
 
-  and experimentalServerCapabilities = { server_snippetTextEdit: bool }
+  and experimentalServerCapabilities = {
+    server_snippetTextEdit: bool;
+    strictCompletionOrder: bool;
+        (** true if the server strictly orders completion results. when set, the editor
+            should not do its own sorting. *)
+  }
 
   (** What capabilities the server provides *)
   and server_capabilities = {
