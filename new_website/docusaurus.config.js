@@ -7,7 +7,7 @@
  * @format
  */
 
-const getFlowVersions = require('./src/js/flow-versions');
+const allFlowVersions = require('./src/js/flow-versions');
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
@@ -180,11 +180,10 @@ module.exports = {
     },
   },
   customFields: {
-    flowVersion: 'v0.195.0',
-    allFlowVersions: getFlowVersions(
-      Boolean(process.env.EXCLUDE_FLOW_RELEASES),
-      Boolean(process.env.EXCLUDE_FLOW_MASTER),
-    ),
+    /* The latest release is in the second slot, but it might be unavailable if
+       INCLUDE_PAST_RELEASES env var is not on. In that case, we default to master. */
+    flowVersion: allFlowVersions[1] || allFlowVersions[0],
+    allFlowVersions,
   },
   presets: [
     [

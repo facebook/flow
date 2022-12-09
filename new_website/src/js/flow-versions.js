@@ -8,55 +8,41 @@
  * @format
  */
 
-const {execSync} = require('child_process');
+const {execSync, spawnSync} = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
-function gitTagVersions() {
-  const cmd = `git ls-remote --tags 2>/dev/null`;
-  const versionStrings = execSync(cmd, {cwd: '..', shell: true})
+function getReleases() /*: Array<string> */ {
+  // GitHub API Docs: https://docs.github.com/en/rest/releases/releases
+  const authHeader = process.env.FLOW_BOT_TOKEN
+    ? `-H "Authorization: Bearer ${process.env.FLOW_BOT_TOKEN}"`
+    : '';
+  const options =
+    spawnSync('type', ['fwdproxy-config'], {shell: true, stdio: 'pipe'})
+      .status == 0
+      ? '$(fwdproxy-config curl) '
+      : '';
+  const cmd = `curl ${authHeader} ${options}"https://api.github.com/repos/facebook/flow/releases?per_page=80" | jq --raw-output '.[] | .tag_name'`;
+  return execSync(cmd, {shell: true, stdio: ['ignore', 'pipe', 'ignore']})
     .toString('utf8')
     .trim()
-    .split('\n')
-    .map(line => {
-      let versionString = line;
-      // Remove version hash
-      versionString = versionString.split('\t')[1];
-      // refs/tags/v0.100.0 => v0.100.0
-      versionString = versionString.substring('refs/tags/'.length);
-      // v0.100.0-rc => v0.100.0
-      versionString = versionString.split('-')[0];
-      // v0.100.0^{} => v0.100.0
-      versionString = versionString.split('^')[0];
-      // v0.100.0 => 0.100.0
-      if (versionString.startsWith('v')) {
-        versionString = versionString.substring(1);
-      }
-      return versionString;
-    });
-  return Array.from(new Set(versionStrings), versionString =>
-    versionString.split('.').map(s => parseInt(s, 10)),
-  )
-    .sort(([major1, minor1, patch1], [major2, minor2, patch2]) => {
-      let c = major2 - major1;
-      if (c != 0) return c;
-      c = minor2 - minor1;
-      if (c != 0) return c;
-      return patch2 - patch1;
-    })
-    .map(([major, minor, patch]) => `v${major}.${minor}.${patch}`);
+    .split('\n');
 }
 
-function getFlowVersions(
-  excludeReleases /*: ?boolean */ = false,
-  excludeMaster /*: ?boolean */ = false,
-) /*: Array<string> */ {
-  const versions = [];
-  if (!excludeMaster) {
-    versions.push('master');
+const CACHE_FILE = '.docusaurus/flow-versions-cache.json';
+
+function getCachedReleases() /*: Array<string> */ {
+  if (!process.env.INCLUDE_PAST_RELEASES) return [];
+  if (fs.existsSync(CACHE_FILE)) {
+    return JSON.parse(fs.readFileSync(CACHE_FILE).toString());
+  } else {
+    const releases = getReleases();
+    fs.mkdirSync(path.dirname(CACHE_FILE), {recursive: true});
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(releases));
+    return releases;
   }
-  if (!excludeReleases) {
-    versions.push(...gitTagVersions());
-  }
-  return versions;
 }
 
-module.exports = getFlowVersions;
+const allFlowVersions /*: Array<string> */ = ['master', ...getCachedReleases()];
+
+module.exports = allFlowVersions;
