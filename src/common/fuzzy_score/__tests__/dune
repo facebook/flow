@@ -1,0 +1,7 @@
+(library
+ (name fuzzy_score_test)
+ (libraries fuzzy_score)
+ (flags
+  (:standard -w -40))
+ (inline_tests)
+ (preprocess (pps ppx_expect)))
