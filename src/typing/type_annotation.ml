@@ -491,15 +491,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (DefT (mk_annot_reason RROArrayType loc, infer_trust cx, ArrT (ROArrayAT elemt)))
                 targs
           )
-        (* These utilities are no longer supported *)
-        (* $Supertype<T> acts as any over supertypes of T *)
-        | "$Supertype" ->
-          Error_message.EDeprecatedUtility (loc, name) |> Flow_js_utils.add_output cx;
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let t = List.hd ts in
-              reconstruct_ast (reason_of_t t |> AnyT.annot) targs
-          )
         (* $Subtype<T> acts as any over subtypes of T *)
         | "$Subtype" ->
           Error_message.EDeprecatedUtility (loc, name) |> Flow_js_utils.add_output cx;

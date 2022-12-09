@@ -36,20 +36,12 @@ References:
                     ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- libs/lints.js:3:17
-
-Deprecated utility. Using `$Supertype` types is not recommended! [deprecated-utility]
-
-   3| declare var x0: $Supertype<any>; /* deprecated-utility */
-                      ^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- libs/lints.js:13:18
+Error ----------------------------------------------------------------------------------------------- libs/lints.js:3:18
 
 Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-setting]
 
-   13| /* flowlint-line unknown rule:off */ // unknown rule
-                        ^^^^^^^^^^^^
+   3| /* flowlint-line unknown rule:off */ // unknown rule
+                       ^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- libs/missing_name.js:13:6
@@ -83,7 +75,7 @@ References:
 
 
 
-Found 8 errors
+Found 7 errors
 
 ============================================
 With warnings:
@@ -123,20 +115,12 @@ References:
                     ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- libs/lints.js:3:17
-
-Deprecated utility. Using `$Supertype` types is not recommended! [deprecated-utility]
-
-   3| declare var x0: $Supertype<any>; /* deprecated-utility */
-                      ^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- libs/lints.js:13:18
+Error ----------------------------------------------------------------------------------------------- libs/lints.js:3:18
 
 Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-setting]
 
-   13| /* flowlint-line unknown rule:off */ // unknown rule
-                        ^^^^^^^^^^^^
+   3| /* flowlint-line unknown rule:off */ // unknown rule
+                       ^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- libs/missing_name.js:13:6
@@ -169,14 +153,6 @@ References:
              ^^^^^^ [2]
 
 
-Warning -------------------------------------------------------------------------------------------- libs/lints.js:10:23
-
-Unused suppression comment.
-
-   10| /* flowlint-next-line deprecated-utility:off */
-                             ^^^^^^^^^^^^^^^^^^^^^^
-
-
 Warning -------------------------------------------------------------------------------------- libs/missing_name.js:10:3
 
 Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[cannot-resolve-name]`
@@ -186,4 +162,4 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 
 
-Found 8 errors and 2 warnings
+Found 7 errors and 1 warning
