@@ -1,3 +1,10 @@
+### 0.195.1
+
+Misc:
+* Improved performance for the experimental post-inference implicit instantiation checks.
+
+
+
 ### 0.195.0
 
 * Add a quick fix for the `unused-promise-in-async-scope` lint which will insert `void`.
