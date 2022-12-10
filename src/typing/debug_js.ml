@@ -1584,7 +1584,6 @@ let dump_error_message =
       spf "EUntypedImport (%s, %s)" (string_of_aloc loc) module_name
     | ENonstrictImport loc -> spf "ENonstrictImport (%s)" (string_of_aloc loc)
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
-    | EDeprecatedUtility (loc, name) -> spf "EDeprecatedUtility (%s, %s)" (string_of_aloc loc) name
     | EDeprecatedType loc -> spf "EDeprecatedType (%s)" (string_of_aloc loc)
     | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)

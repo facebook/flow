@@ -23,17 +23,10 @@ type warning = int * string
 
 type error = int * string
 
-let default_explicit_values =
-  LintMap.singleton Lints.DeprecatedUtility (Severity.Err, None)
-  |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
+let default_explicit_values = LintMap.singleton Lints.UntypedTypeImport (Severity.Err, None)
 
 let ignored_by_all =
-  [
-    Lints.DeprecatedUtility;
-    Lints.ImplicitInexactObject;
-    Lints.AmbiguousObjectType;
-    Lints.UninitializedInstanceProperty;
-  ]
+  [Lints.ImplicitInexactObject; Lints.AmbiguousObjectType; Lints.UninitializedInstanceProperty]
 
 let config_default kind =
   LintMap.find_opt kind default_explicit_values |> Base.Option.value ~default:(Severity.Off, None)

@@ -291,7 +291,6 @@ and 'loc t' =
   | ENonstrictImport of 'loc
   | EUnclearType of 'loc
   | EDeprecatedType of 'loc
-  | EDeprecatedUtility of 'loc * string
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
   | ECodelessSuppression of 'loc * string
@@ -910,7 +909,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENonstrictImport loc -> ENonstrictImport (f loc)
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedType loc -> EDeprecatedType (f loc)
-  | EDeprecatedUtility (loc, s) -> EDeprecatedUtility (f loc, s)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
   | ECodelessSuppression (loc, c) -> ECodelessSuppression (f loc, c)
@@ -1298,7 +1296,6 @@ let util_use_op_of_msg nope util = function
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedType _
-  | EDeprecatedUtility _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
   | ECodelessSuppression _
@@ -1442,7 +1439,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENonstrictImport loc
   | EUnclearType loc
   | EDeprecatedType loc
-  | EDeprecatedUtility (loc, _)
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
@@ -1573,7 +1569,6 @@ let kind_of_msg =
     | ENonstrictImport _ -> LintError Lints.NonstrictImport
     | EUnclearType _ -> LintError Lints.UnclearType
     | EDeprecatedType _ -> LintError Lints.DeprecatedType
-    | EDeprecatedUtility _ -> LintError Lints.DeprecatedUtility
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
@@ -3271,11 +3266,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EDeprecatedType _ ->
     Normal
       { features = [text "Deprecated type. Using "; code "*"; text " types is not recommended!"] }
-  | EDeprecatedUtility (_, name) ->
-    Normal
-      {
-        features = [text "Deprecated utility. Using "; code name; text " types is not recommended!"];
-      }
   | EUnsafeGettersSetters _ ->
     Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
   | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
@@ -4144,7 +4134,6 @@ let is_lint_error = function
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedType _
-  | EDeprecatedUtility _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
@@ -4417,7 +4406,6 @@ let error_code_of_message err : error_code option =
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedType _
-  | EDeprecatedUtility _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _

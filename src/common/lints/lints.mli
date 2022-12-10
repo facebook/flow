@@ -33,7 +33,6 @@ type lint_kind =
   | NonstrictImport
   | UnclearType
   | DeprecatedType
-  | DeprecatedUtility
   | UnsafeGettersSetters
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
