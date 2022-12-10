@@ -751,14 +751,6 @@ import typeof * as T from 'my-module';
 export type MyModuleType = T;
 ```
 
-## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
-
-This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-utility) for details.
-
-## `$Subtype<T>` <a class="toc" id="toc-subtype" href="#toc-subtype"></a>
-
-This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-utility) for details.
-
 ## Existential Type (`*`) <a class="toc" id="toc-existential-type" href="#toc-existential-type"></a>
 
 This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-type) for details.

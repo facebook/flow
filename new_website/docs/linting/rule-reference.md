@@ -17,10 +17,6 @@ Like [`implicit-inexact-object`](#toc-implicit-inexact-object), except triggers 
 Triggers when you use the `*` (existential) type, as this type is unsafe and usually just equivalent to `any`.
 The effect of `*` can generally be achieved by simply not providing a type annotation.
 
-### `deprecated-utility` {#toc-deprecated-utility}
-Triggers when you use the `$Supertype` or `$Subtype` utility types, as these types are
-unsafe and equivalent to `any`.
-
 ### `implicit-inexact-object` {#toc-implicit-inexact-object}
 Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
 

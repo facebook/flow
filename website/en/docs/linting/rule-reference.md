@@ -7,7 +7,6 @@ layout: guide
 * [`all`](#toc-all)
 * [`ambiguous-object-type`](#toc-ambiguous-object-type)
 * [`deprecated-type`](#toc-deprecated-type)
-* [`deprecated-utility`](#toc-deprecated-utility)
 * [`implicit-inexact-object`](#toc-implicit-inexact-object)
 * [`nonstrict-import`](#toc-nonstrict-import)
 * [`sketchy-null`](#toc-sketchy-null)
@@ -32,10 +31,6 @@ Like [`implicit-inexact-object`](#toc-implicit-inexact-object), except triggers 
 #### `deprecated-type` <a class="toc" id="toc-deprecated-type" href="#toc-deprecated-type"></a>
 Triggers when you use the `*` (existential) type, as this type is unsafe and usually just equivalent to `any`.
 The effect of `*` can generally be achieved by simply not providing a type annotation.
-
-#### `deprecated-utility` <a class="toc" id="toc-deprecated-utility" href="#toc-deprecated-utility"></a>
-Triggers when you use the `$Supertype` or `$Subtype` utility types, as these types are
-unsafe and equivalent to `any`.
 
 #### `implicit-inexact-object` <a class="toc" id="toc-implicit-inexact-object" href="#toc-implicit-inexact-object"></a>
 Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
