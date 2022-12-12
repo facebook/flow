@@ -1,3 +1,11 @@
+Error ------------------------------------------------------------------------------------------------------ arr.js:3:14
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   3| export const a = []
+                   ^
+
+
 Error ------------------------------------------------------------------------------------------------------ arr.js:3:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
@@ -375,4 +383,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 37 errors
+Found 38 errors
