@@ -1,0 +1,1 @@
+cmd: check --experimental.post_inference_implicit_instantiation false

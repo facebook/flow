@@ -902,6 +902,7 @@ module Options_flags = struct
     traces: int option;
     trust_mode: Options.trust_mode option;
     inference_mode: Options.inference_mode option;
+    run_post_inference_implicit_instantiation: bool option;
     abstract_locations: bool option;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -973,6 +974,7 @@ let options_flags =
       include_suppressions
       trust_mode
       inference_mode
+      run_post_inference_implicit_instantiation
       estimate_recheck_time
       distributed =
     (match merge_timeout with
@@ -987,6 +989,7 @@ let options_flags =
         all;
         wait_for_recheck;
         inference_mode;
+        run_post_inference_implicit_instantiation;
         traces;
         no_flowlib;
         munge_underscore_members;
@@ -1072,6 +1075,7 @@ let options_flags =
               )
            )
            ~doc:""
+      |> flag "--experimental.run-post-inference-implicit-instantiation" (optional bool) ~doc:""
       (* restarting to save time is a hack and should be removed. this should
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
@@ -1418,7 +1422,9 @@ let make_options
         ~f:(fun s -> Files.expand_project_root_token ~root s)
         (FlowConfig.cycle_errors_includes flowconfig);
     opt_run_post_inference_implicit_instantiation =
-      FlowConfig.run_post_inference_implicit_instantiation flowconfig;
+      Base.Option.value
+        options_flags.run_post_inference_implicit_instantiation
+        ~default:(FlowConfig.run_post_inference_implicit_instantiation flowconfig);
     opt_enable_post_inference_targ_widened_check = false;
     opt_save_implicit_instantiation_results = false;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
