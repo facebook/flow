@@ -72,6 +72,7 @@ let dummy_options_flags =
     verbose = None;
     wait_for_recheck = None;
     inference_mode = Some Options.ConstrainWrites;
+    run_post_inference_implicit_instantiation = None;
     include_suppressions = false;
     estimate_recheck_time = None;
     distributed = false;

@@ -1,0 +1,12 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+experimental.run_post_inference_implicit_instantiation=true
+
+[strict]
