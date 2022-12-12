@@ -301,15 +301,15 @@ const math1 = {
   foo: "Hello",
   subobj: {
     foo: is_zero,
-    meth(x: number): bool { return true }
+    meth(x: number): boolean { return true }
   },
-  odd(x: number): bool {
+  odd(x: number): boolean {
     if (x === 0) {
       return false;
     }
     return math1.even(x - 1)
   },
-  even: (x: number): bool => {
+  even: (x: number): boolean => {
     if (x === 0) {
       return true;
     }

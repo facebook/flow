@@ -15,7 +15,7 @@ function foo() {
         y = {};
     }
     // here via [try; finally] only.
-    x(); // string ~/> function call (no num or bool error)
+    x(); // string ~/> function call (no num or boolean error)
     y(); // object ~/> function call (no uninitialized error)
 }
 

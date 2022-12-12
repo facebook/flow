@@ -1,4 +1,4 @@
 // @flow
 
-type X<T: number> = bool;
+type X<T: number> = boolean;
 (true: X<string>);

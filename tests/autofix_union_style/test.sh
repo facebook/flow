@@ -12,8 +12,8 @@ spec_it a.js 8 9
 spec_it a.js 10 9
 spec_it a.js 12 9
 spec_it a.js 14 9
-spec_it a.js 16 16
-spec_it a.js 18 16
+spec_it a.js 16 19
+spec_it a.js 18 19
 spec_it a.js 20 17
 spec_it a.js 22 17
 spec_it a.js 24 15

@@ -17,12 +17,12 @@ Error --------------------------------------------------------------------------
 Cannot assign `true` to `lengthTest4` because boolean [1] is incompatible with `IHasLength` [2]. [incompatible-type]
 
    builtin.js:12:31
-   12| var lengthTest4: IHasLength = true; // bool doesn't have length
+   12| var lengthTest4: IHasLength = true; // boolean doesn't have length
                                      ^^^^ [1]
 
 References:
    builtin.js:12:18
-   12| var lengthTest4: IHasLength = true; // bool doesn't have length
+   12| var lengthTest4: IHasLength = true; // boolean doesn't have length
                         ^^^^^^^^^^ [2]
 
 

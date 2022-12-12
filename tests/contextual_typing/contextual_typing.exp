@@ -111,7 +111,7 @@ References:
 Error -------------------------------------------------------------------------------------------- intersections.js:10:3
 
 Cannot call `foo` because: [incompatible-call]
- - Either string [1] is incompatible with string literal `bool` [2].
+ - Either string [1] is incompatible with string literal `boolean` [2].
  - Or string [1] is incompatible with string literal `str` [3].
  - Or string [1] is incompatible with string literal `num` [4].
 
@@ -124,8 +124,8 @@ References:
    10|   foo('a', (x) => { (x: number); }); // error
              ^^^ [1]
    intersections.js:4:29
-    4|   declare function foo(tag: 'bool', cb: (x: boolean) => void): void;
-                                   ^^^^^^ [2]
+    4|   declare function foo(tag: 'boolean', cb: (x: boolean) => void): void;
+                                   ^^^^^^^^^ [2]
    intersections.js:5:29
     5|   declare function foo(tag: 'str', cb: (x: string) => void): void;
                                    ^^^^^ [3]
@@ -176,21 +176,21 @@ References:
                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- intersections.js:31:25
+Error ------------------------------------------------------------------------------------------- intersections.js:31:28
 
 Cannot cast `x` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
-   intersections.js:31:25
-   31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
-                               ^
+   intersections.js:31:28
+   31|   bak('boolean', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
+                                  ^
 
 References:
-   intersections.js:14:34
-   14|   type B = (tag: 'bool', cb: (x: boolean) => void) => void;
-                                        ^^^^^^^ [1]
-   intersections.js:31:28
-   31|   bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
-                                  ^^^^^^ [2]
+   intersections.js:14:37
+   14|   type B = (tag: 'boolean', cb: (x: boolean) => void) => void;
+                                           ^^^^^^^ [1]
+   intersections.js:31:31
+   31|   bak('boolean', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
+                                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ lits.js:3:5

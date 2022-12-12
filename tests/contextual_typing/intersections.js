@@ -1,34 +1,34 @@
 // @flow
 
 function test1() {
-  declare function foo(tag: 'bool', cb: (x: boolean) => void): void;
+  declare function foo(tag: 'boolean', cb: (x: boolean) => void): void;
   declare function foo(tag: 'str', cb: (x: string) => void): void;
   declare function foo(tag: 'num', cb: (x: number) => void): void;
 
-  foo('bool', (x) => { (x: boolean); }); // okay
+  foo('boolean', (x) => { (x: boolean); }); // okay
   foo('str', (x) => { (x: number); }); // error
   foo('a', (x) => { (x: number); }); // error
 }
 
 function test2() {
-  type B = (tag: 'bool', cb: (x: boolean) => void) => void;
+  type B = (tag: 'boolean', cb: (x: boolean) => void) => void;
   type S = (tag: 'str', cb: (x: string) => void) => void;
   type N = (tag: 'num', cb: (x: number) => void) => void;
   type O = (tag: 'obj', cb: (x: {}) => void) => void;
 
   declare var foo: B & (S & (N & O));
-  foo('bool', (x) => { (x: boolean); }); // okay
+  foo('boolean', (x) => { (x: boolean); }); // okay
   foo('str', (x) => { (x: string); }); // okay
   foo('obj', (x) => { (x: string); }); // error
 
   declare var bar: (B & S) & (N & O);
-  bar('bool', (x) => { (x: boolean); }); // okay
+  bar('boolean', (x) => { (x: boolean); }); // okay
   bar('str', (x) => { (x: string); }); // okay
   bar('obj', (x) => { (x: string); }); // error
 
   declare var bak: (B & S) & (N & B);
-  bak('bool', (x) => { (x: boolean); }); // ok
-  bak('bool', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
+  bak('boolean', (x) => { (x: boolean); }); // ok
+  bak('boolean', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
 }
 
 function test3() {

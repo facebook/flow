@@ -29,7 +29,7 @@ function str(x: mixed) {
   }
 }
 
-function bool(x: mixed) {
+function boolean(x: mixed) {
   if (typeof x === "boolean") {
     takesString(x); // error
     (x: true); // error: we don't know the truthiness of x

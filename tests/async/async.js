@@ -8,8 +8,8 @@ async function f0(): Promise<number> {
   return 1;
 }
 
-async function f1(): Promise<bool> {
-  return 1;  // error, number != bool
+async function f1(): Promise<boolean> {
+  return 1;  // error, number != boolean
 }
 
 // await: (p: Promise<T> | T) => T
@@ -27,8 +27,8 @@ async function f3(p: Promise<number>): Promise<number> {
 
 // TODO: this is one of those bad generic errors, currently:
 // "inconsistent use of library definitions" with two core.js locs
-async function f4(p: Promise<number>): Promise<bool> {
-  return await p; // error, number != bool
+async function f4(p: Promise<number>): Promise<boolean> {
+  return await p; // error, number != boolean
 }
 
 // async arrow functions

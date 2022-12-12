@@ -40,7 +40,7 @@ function k(x: null | 1) {
 
  	 */
 
-var x1: ?bool = false;
+var x1: ?boolean = false;
 if (x1) { /* sketchy */ }
 
 //docblock-style tests
@@ -52,7 +52,7 @@ if (x1) { /* sketchy */ }
  *
  */
 
-var x2: ?bool = false;
+var x2: ?boolean = false;
 if (x2) { /* sketchy; suppressed */ }
 
 /*
@@ -61,7 +61,7 @@ if (x2) { /* sketchy; suppressed */ }
  *    error,
  * sketchy-null-bool:
  *    off
- */ //The bool suppression is unused
+ */ //The boolean suppression is unused
 
 var x3: ?string = "";
 if (x3) { /* sketchy */ }

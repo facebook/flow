@@ -25,7 +25,7 @@ type WritableStreamOptions = {
 // used in test_fun.js
 //
 type ObjA = { foo: number, bar: string, ... };
-type ObjB = { baz: bool, ... };
+type ObjB = { baz: boolean, ... };
 
 // used in test_obj.js
 //

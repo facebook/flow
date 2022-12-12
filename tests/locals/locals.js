@@ -1,18 +1,18 @@
 var x:string = 0;
 var x:number = 1;
 
-function foo(p: bool) {}
+function foo(p: boolean) {}
 
-function sorry(really: bool) {
+function sorry(really: boolean) {
     if (really) {
         var x: number | string = 1337;
     } else {
-        var x: bool = true;
+        var x: boolean = true;
     }
     foo(x);
 }
 
-function foo0(b: bool): number {
+function foo0(b: boolean): number {
   var x: number | string = 0;
   if (b) {
     x = "";

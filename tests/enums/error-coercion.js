@@ -14,7 +14,7 @@ const c: number = E.A; // Error, message does not include suggestion because str
 enum B of boolean {
   A = true,
 }
-const bool: boolean = B.A; // Error, with suggestion
+const boolean: boolean = B.A; // Error, with suggestion
 const x: number = B.A; // Error, no suggestion
 
 enum N of number {

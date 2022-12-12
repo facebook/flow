@@ -1,6 +1,6 @@
 /* @flow */
 
-let bool: boolean = false;
+let boolean: boolean = false;
 let buffer: Buffer = new Buffer(0);
 let num: number = 0;
 let maybeNum: ?number;
@@ -18,8 +18,8 @@ buffer.copyWithin(0, 0, 0);
 
 const it1: Iterator<[number, number]> = buffer.entries();
 
-bool = buffer.every((element: number) => false);
-bool = buffer.every((element: number) => false, buffer);
+boolean = buffer.every((element: number) => false);
+boolean = buffer.every((element: number) => false, buffer);
 
 buffer = buffer.fill(1);
 buffer = buffer.fill(1, 0, 0);
@@ -37,8 +37,8 @@ num = buffer.findIndex((element: number, index: number, array:Uint8Array) => fal
 buffer.forEach((value: number) => console.log(value), buffer);
 buffer.forEach((value: number, index:number, array:Uint8Array) => console.log(value), buffer);
 
-bool = buffer.includes(3);
-bool = buffer.includes(3, 4);
+boolean = buffer.includes(3);
+boolean = buffer.includes(3, 4);
 
 num = buffer.indexOf(3);
 num = buffer.indexOf(3, 4);

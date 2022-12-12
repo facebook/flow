@@ -3,13 +3,13 @@ Error --------------------------------------------------------------------------
 Cannot return `1` because number [1] is incompatible with boolean [2] in type argument `R` [3]. [incompatible-return]
 
    async.js:12:10
-     12|   return 1;  // error, number != bool
+     12|   return 1;  // error, number != boolean
                   ^ [1]
 
 References:
    async.js:11:30
-     11| async function f1(): Promise<bool> {
-                                      ^^^^ [2]
+     11| async function f1(): Promise<boolean> {
+                                      ^^^^^^^ [2]
    <BUILTINS>/core.js:1832:24
    1832| declare class Promise<+R = mixed> {
                                 ^ [3]
@@ -21,16 +21,16 @@ Cannot return `await p` because number [1] is incompatible with boolean [2] in t
 [incompatible-return]
 
    async.js:31:10
-     31|   return await p; // error, number != bool
+     31|   return await p; // error, number != boolean
                   ^^^^^^^
 
 References:
    async.js:30:30
-     30| async function f4(p: Promise<number>): Promise<bool> {
+     30| async function f4(p: Promise<number>): Promise<boolean> {
                                       ^^^^^^ [1]
    async.js:30:48
-     30| async function f4(p: Promise<number>): Promise<bool> {
-                                                        ^^^^ [2]
+     30| async function f4(p: Promise<number>): Promise<boolean> {
+                                                        ^^^^^^^ [2]
    <BUILTINS>/core.js:1832:24
    1832| declare class Promise<+R = mixed> {
                                 ^ [3]

@@ -1,1 +1,1 @@
-function foo(callback: (_:bool) => number){}
+function foo(callback: (_:boolean) => number){}

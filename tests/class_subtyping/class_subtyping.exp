@@ -12,22 +12,22 @@ References:
              ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:6:41
+Error ---------------------------------------------------------------------------------------------------- test3.js:6:44
 
 Cannot assign `c` to `a` because boolean [1] is incompatible with array type [2] in type argument `Z` [3].
 [incompatible-type-arg]
 
-   test3.js:6:41
-   6| var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
-                                              ^
+   test3.js:6:44
+   6| var a: A<string, number, Array<boolean>> = c; // the third type arg is incorrect
+                                                 ^
 
 References:
    test3.js:2:35
-   2| class B extends A<string, number, bool> {}
-                                        ^^^^ [1]
+   2| class B extends A<string, number, boolean> {}
+                                        ^^^^^^^ [1]
    test3.js:6:26
-   6| var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
-                               ^^^^^^^^^^^ [2]
+   6| var a: A<string, number, Array<boolean>> = c; // the third type arg is incorrect
+                               ^^^^^^^^^^^^^^ [2]
    test3.js:1:15
    1| class A<X, Y, Z> {}
                     ^ [3]

@@ -341,7 +341,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
 
    class_method.js:27:18
-   27| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - bool ~> number
+   27| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
                         ^^^ [1]
 
 References:
@@ -356,7 +356,7 @@ Cannot get `(new A()).method` because property `method` [1] cannot be unbound fr
 [method-unbinding]
 
    class_method.js:27:42
-   27| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - bool ~> number
+   27| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
                                                 ^^^^^^ [1]
 
 References:
@@ -406,7 +406,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
 
    class_method.js:34:18
-   34| let _5 = {prop : 123, method : A.staticMethod }.method();// Error - bool ~> number
+   34| let _5 = {prop : 123, method : A.staticMethod }.method();// Error - boolean ~> number
                         ^^^ [1]
 
 References:
@@ -435,7 +435,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
 
    class_method.js:41:18
-   41| let _8 = {prop : 123, method : (new A()).propUnboundNonMethod }.method(); // Error - bool ~> number
+   41| let _8 = {prop : 123, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
                         ^^^ [1]
 
 References:
@@ -464,7 +464,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
 
    class_method.js:48:19
-   48| let _11 = {prop : 123, method : A.staticPropUnboundNonMethod }.method();// Error - bool ~> number
+   48| let _11 = {prop : 123, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
                          ^^^ [1]
 
 References:
@@ -845,7 +845,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_class_method.js:19:18
-   19| let _2 = {prop : true, method : (new A()).method }.method(); // Error - bool ~> number
+   19| let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
                         ^^^^ [1]
 
 References:
@@ -860,7 +860,7 @@ Cannot get `(new A()).method` because property `method` [1] cannot be unbound fr
 [method-unbinding]
 
    declare_class_method.js:19:43
-   19| let _2 = {prop : true, method : (new A()).method }.method(); // Error - bool ~> number
+   19| let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
                                                  ^^^^^^ [1]
 
 References:
@@ -904,7 +904,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_class_method.js:26:18
-   26| let _5 = {prop : true, method : A.staticMethod }.method();// Error - bool ~> number
+   26| let _5 = {prop : true, method : A.staticMethod }.method();// Error - boolean ~> number
                         ^^^^ [1]
 
 References:
@@ -933,7 +933,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_class_method.js:33:18
-   33| let _8 = {prop : true, method : (new A()).propUnboundNonMethod }.method(); // Error - bool ~> number
+   33| let _8 = {prop : true, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
                         ^^^^ [1]
 
 References:
@@ -962,7 +962,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_class_method.js:40:19
-   40| let _11 = {prop : true, method : A.staticPropUnboundNonMethod }.method();// Error - bool ~> number
+   40| let _11 = {prop : true, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
                          ^^^^ [1]
 
 References:
@@ -991,7 +991,7 @@ Error --------------------------------------------------------------------------
 Cannot call `myFun.bind` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_function.js:14:19
-   14| myFun.bind({prop: true}); // Error - bool ~> number
+   14| myFun.bind({prop: true}); // Error - boolean ~> number
                          ^^^^ [1]
 
 References:
@@ -1005,7 +1005,7 @@ Error --------------------------------------------------------------------------
 Cannot call `myFun.apply` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_function.js:15:20
-   15| myFun.apply({prop: true}, []); // Error - bool ~> number
+   15| myFun.apply({prop: true}, []); // Error - boolean ~> number
                           ^^^^ [1]
 
 References:
@@ -1019,7 +1019,7 @@ Error --------------------------------------------------------------------------
 Cannot call `myFun.call` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_function.js:16:19
-   16| myFun.call({prop: true}); // Error - bool ~> number
+   16| myFun.call({prop: true}); // Error - boolean ~> number
                          ^^^^ [1]
 
 References:
@@ -1033,7 +1033,7 @@ Error --------------------------------------------------------------------------
 Cannot call `myPolyFun.bind` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_function.js:17:23
-   17| myPolyFun.bind({prop: true}); // Error - bool ~> number
+   17| myPolyFun.bind({prop: true}); // Error - boolean ~> number
                              ^^^^ [1]
 
 References:
@@ -1048,7 +1048,7 @@ Cannot call `myPolyFun.apply` because boolean [1] is incompatible with number [2
 [incompatible-call]
 
    declare_function.js:18:24
-   18| myPolyFun.apply({prop: true}, []); // Error - bool ~> number
+   18| myPolyFun.apply({prop: true}, []); // Error - boolean ~> number
                               ^^^^ [1]
 
 References:
@@ -1062,7 +1062,7 @@ Error --------------------------------------------------------------------------
 Cannot call `myPolyFun.call` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_function.js:19:23
-   19| myPolyFun.call({prop: true}); // Error - bool ~> number
+   19| myPolyFun.call({prop: true}); // Error - boolean ~> number
                              ^^^^ [1]
 
 References:
@@ -1476,7 +1476,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    interface.js:16:18
-   16| let _2 = {prop : true, method : AImpl.method }.method(); // Error - bool ~> number
+   16| let _2 = {prop : true, method : AImpl.method }.method(); // Error - boolean ~> number
                         ^^^^ [1]
 
 References:
@@ -1491,7 +1491,7 @@ Cannot get `AImpl.method` because property `method` [1] cannot be unbound from t
 [method-unbinding]
 
    interface.js:16:39
-   16| let _2 = {prop : true, method : AImpl.method }.method(); // Error - bool ~> number
+   16| let _2 = {prop : true, method : AImpl.method }.method(); // Error - boolean ~> number
                                              ^^^^^^ [1]
 
 References:
@@ -1535,7 +1535,7 @@ Error --------------------------------------------------------------------------
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    interface.js:23:18
-   23| let _5 = {prop : true, method : AImpl.propUnboundNonMethod }.method(); // Error - bool ~> number
+   23| let _5 = {prop : true, method : AImpl.propUnboundNonMethod }.method(); // Error - boolean ~> number
                         ^^^^ [1]
 
 References:

@@ -43,11 +43,11 @@ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant 
 
 References:
    simple_sketchies.js:43:10
-   43| var x1: ?bool = false;
-                ^^^^ [1]
+   43| var x1: ?boolean = false;
+                ^^^^^^^ [1]
    simple_sketchies.js:43:9
-   43| var x1: ?bool = false;
-               ^^^^^ [2]
+   43| var x1: ?boolean = false;
+               ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:67:5

@@ -1,1 +1,1 @@
-function foo():(_:bool) => number{}
+function foo():(_:boolean) => number{}

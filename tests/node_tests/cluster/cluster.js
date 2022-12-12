@@ -4,8 +4,8 @@ import type {ClusterSettings, ClusterSettingsOpt} from 'cluster';
 
 const cluster = require('cluster');
 
-(cluster.isMaster: bool);
-(cluster.isWorker: bool);
+(cluster.isMaster: boolean);
+(cluster.isWorker: boolean);
 (cluster.settings: ClusterSettings);
 (cluster.settings.exec: string); // not optional
 

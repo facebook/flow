@@ -1,1 +1,1 @@
-var a: number & (string | bool)
+var a: number & (string | boolean)

@@ -1,6 +1,6 @@
 /* @flow */
 
-type thing = number | bool
+type thing = number | boolean
 
 function foo(x: thing) {
   if (x === true) {

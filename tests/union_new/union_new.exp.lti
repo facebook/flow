@@ -30,13 +30,13 @@ Cannot call `this.foo` with `p` bound to `p` because: [incompatible-call]
 
 References:
    issue-824.js:13:17
-   13|   static bar(p: I & K): bool {
+   13|   static bar(p: I & K): boolean {
                        ^ [1]
    issue-824.js:3:10
     3| type K = B | C;
                 ^ [2]
    issue-824.js:13:21
-   13|   static bar(p: I & K): bool {
+   13|   static bar(p: I & K): boolean {
                            ^ [3]
    issue-824.js:3:14
     3| type K = B | C;
@@ -119,8 +119,8 @@ References:
    16| var x: boolean | string = false;
                         ^^^^^^ [3]
    test16.js:6:23
-    6| type Foo = T | (() => bool);
-                             ^^^^ [4]
+    6| type Foo = T | (() => boolean);
+                             ^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test16.js:14:5
@@ -138,14 +138,14 @@ References:
    16| var x: boolean | string = false;
               ^^^^^^^ [1]
    test16.js:8:28
-    8| type Bar = number | (() => string) | (() => bool);
+    8| type Bar = number | (() => string) | (() => boolean);
                                   ^^^^^^ [2]
    test16.js:16:18
    16| var x: boolean | string = false;
                         ^^^^^^ [3]
    test16.js:8:45
-    8| type Bar = number | (() => string) | (() => bool);
-                                                   ^^^^ [4]
+    8| type Bar = number | (() => string) | (() => boolean);
+                                                   ^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:2

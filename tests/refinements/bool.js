@@ -1,6 +1,6 @@
 /* @flow */
 
-function foo(x: ?bool) {
+function foo(x: ?boolean) {
   if (x === false) {
     return;
   }
@@ -12,7 +12,7 @@ function foo(x: ?bool) {
   x[0]; // error on null and undefined
 }
 
-function bar(x: ?bool) {
+function bar(x: ?boolean) {
   if (x !== true) {
     if (x !== false) {
       x[0]; // error on null and undefined
@@ -20,7 +20,7 @@ function bar(x: ?bool) {
   }
 }
 
-function baz(x: ?bool) {
+function baz(x: ?boolean) {
   if (100 * false) {
     return;
   }

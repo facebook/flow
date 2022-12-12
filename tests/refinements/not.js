@@ -1,8 +1,8 @@
 /* @flow */
 
-function foo(x: ?bool) {
+function foo(x: ?boolean) {
   if (!x) {
-    x++; // should error for null, void and bool (false)
+    x++; // should error for null, void and boolean (false)
   }
 }
 

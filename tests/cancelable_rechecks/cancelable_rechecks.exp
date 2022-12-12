@@ -3,18 +3,18 @@ Init cannot be canceled
 
 
 Recheck can be canceled
-Error ------------------------------------------------------------------------------------------------------ foo.js:3:20
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:23
 
 Cannot assign `123` to `foo` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   foo.js:3:20
-   3|  const foo: bool = 123;
-                         ^^^ [1]
+   foo.js:3:23
+   3|  const foo: boolean = 123;
+                            ^^^ [1]
 
 References:
    foo.js:3:13
-   3|  const foo: bool = 123;
-                  ^^^^ [2]
+   3|  const foo: boolean = 123;
+                  ^^^^^^^ [2]
 
 
 

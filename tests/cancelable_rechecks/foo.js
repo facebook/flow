@@ -1,3 +1,3 @@
 // @flow
 
- const foo: bool = 123;
+ const foo: boolean = 123;

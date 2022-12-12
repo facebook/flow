@@ -8,7 +8,7 @@ var x1 : boolean = veryOptimistic(true);
 var y1 : boolean = veryOptimistic(false); // error
 
 function veryPessimistic(isThisAwesome: true): boolean {
-  return !isThisAwesome; // test bool conversion
+  return !isThisAwesome; // test boolean conversion
 }
 
 var x2 : boolean = veryPessimistic(true);

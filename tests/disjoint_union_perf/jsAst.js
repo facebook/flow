@@ -456,7 +456,7 @@ export type MemberExpression = {
   type: 'MemberExpression',
   object: Expression,
   property: Identifier | Expression,
-  computed: bool,
+  computed: boolean,
 }
 // ast-types exports all expressions as patterns.
 // That seems not like it was intended.
@@ -618,7 +618,7 @@ export const builders : {
   memberExpression(
     object: Expression,
     property: Identifier | Expression,
-    computed: bool
+    computed: boolean
   ) : MemberExpression,
   variableDeclaration(
     kind: 'var' | 'let' | 'const',

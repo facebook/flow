@@ -1,10 +1,10 @@
 //flowlint sketchy-null:error
-var x: bool|mixed|number|string = null
+var x: boolean|mixed|number|string = null
 
 //Four errors: one for each type
 if (x){}
 
-//No bool error
+//No boolean error
 //flowlint-next-line sketchy-null-bool:off
 if (x){}
 
@@ -22,7 +22,7 @@ if (x){}
 
 //flowlint sketchy-null:off
 
-//Only bool error
+//Only boolean error
 //flowlint-next-line sketchy-null-bool:error
 if (x){}
 

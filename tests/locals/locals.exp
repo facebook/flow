@@ -116,7 +116,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `x` [1] because var redeclaration is not supported. [name-already-bound]
 
    locals.js:10:13
-   10|         var x: bool = true;
+   10|         var x: boolean = true;
                    ^
 
 References:
@@ -138,8 +138,8 @@ References:
     8|         var x: number | string = 1337;
                       ^^^^^^ [1]
    locals.js:4:17
-    4| function foo(p: bool) {}
-                       ^^^^ [2]
+    4| function foo(p: boolean) {}
+                       ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- locals.js:12:9
@@ -155,8 +155,8 @@ References:
     8|         var x: number | string = 1337;
                                ^^^^^^ [1]
    locals.js:4:17
-    4| function foo(p: bool) {}
-                       ^^^^ [2]
+    4| function foo(p: boolean) {}
+                       ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- locals.js:20:10
@@ -171,9 +171,9 @@ References:
    locals.js:16:19
    16|   var x: number | string = 0;
                          ^^^^^^ [1]
-   locals.js:15:25
-   15| function foo0(b: bool): number {
-                               ^^^^^^ [2]
+   locals.js:15:28
+   15| function foo0(b: boolean): number {
+                                  ^^^^^^ [2]
 
 
 

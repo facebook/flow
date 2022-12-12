@@ -86,7 +86,7 @@ takesSubtypeOfPerson2(returnsExactlyPerson()); // error
 
 // right now, only exact object types are supported.
 //
-type PersonPred = (person: Person) => bool;
+type PersonPred = (person: Person) => boolean;
 
 declare function returnsExactlyPersonPred(): $Exact<PersonPred>;
 declare function takesPersonPred(pred: PersonPred): void;

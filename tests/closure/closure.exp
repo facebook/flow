@@ -229,9 +229,9 @@ References:
    cond_havoc.js:7:19
     7|   var x: number | string = 0;
                          ^^^^^^ [1]
-   cond_havoc.js:6:28
-    6| function example(b: bool): number {
-                                  ^^^^^^ [2]
+   cond_havoc.js:6:31
+    6| function example(b: boolean): number {
+                                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- const.js:20:38

@@ -1,4 +1,4 @@
-function foo(a: ?string, b: ?number, c : bool) {
+function foo(a: ?string, b: ?number, c : boolean) {
   (undefined ?? "hello" : string);
   (a ?? "hello" : string);
   (a ?? "hello" : empty); // Error

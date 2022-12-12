@@ -79,8 +79,8 @@ Cannot get `x[0]` because null or undefined [1] does not have properties. [incom
 
 References:
    bool.js:3:17
-    3| function foo(x: ?bool) {
-                       ^^^^^ [1]
+    3| function foo(x: ?boolean) {
+                       ^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:18:9
@@ -93,8 +93,8 @@ Cannot get `x[0]` because null or undefined [1] does not have properties. [incom
 
 References:
    bool.js:15:17
-   15| function bar(x: ?bool) {
-                       ^^^^^ [1]
+   15| function bar(x: ?boolean) {
+                       ^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:24:13
@@ -3501,13 +3501,13 @@ Error --------------------------------------------------------------------------
 Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
 
    not.js:5:5
-   5|     x++; // should error for null, void and bool (false)
+   5|     x++; // should error for null, void and boolean (false)
           ^
 
 References:
    not.js:3:17
-   3| function foo(x: ?bool) {
-                      ^^^^^ [1]
+   3| function foo(x: ?boolean) {
+                      ^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
@@ -3515,13 +3515,13 @@ Error --------------------------------------------------------------------------
 Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
 
    not.js:5:5
-   5|     x++; // should error for null, void and bool (false)
+   5|     x++; // should error for null, void and boolean (false)
           ^
 
 References:
    not.js:3:18
-   3| function foo(x: ?bool) {
-                       ^^^^ [1]
+   3| function foo(x: ?boolean) {
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ not.js:11:5
@@ -5108,20 +5108,20 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:153:8
 
-Cannot cast `x.bool` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
-`false` [2]. [incompatible-cast]
+Cannot cast `x.boolean` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean
+literal `false` [2]. [incompatible-cast]
 
    tagged_union.js:153:8
-   153|       (x.bool: false); // error: true !~> false
-               ^^^^^^
+   153|       (x.boolean: false); // error: true !~> false
+               ^^^^^^^^^
 
 References:
    tagged_union.js:152:9
-   152|     if (x.bool === true) {
-                ^^^^^^ [1]
-   tagged_union.js:153:16
-   153|       (x.bool: false); // error: true !~> false
-                       ^^^^^ [2]
+   152|     if (x.boolean === true) {
+                ^^^^^^^^^ [1]
+   tagged_union.js:153:19
+   153|       (x.boolean: false); // error: true !~> false
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:156:11
@@ -5134,8 +5134,8 @@ Cannot get `x.badStr` because property `badStr` is missing in object type [1]. [
 
 References:
    tagged_union.js:145:15
-   145|   function(x: { str: string, num: number, bool: boolean }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   145|   function(x: { str: string, num: number, boolean: boolean }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:157:8
@@ -5165,8 +5165,8 @@ Cannot get `x.badNum` because property `badNum` is missing in object type [1]. [
 
 References:
    tagged_union.js:145:15
-   145|   function(x: { str: string, num: number, bool: boolean }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   145|   function(x: { str: string, num: number, boolean: boolean }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:160:8
@@ -5188,7 +5188,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:162:11
 
-Cannot get `x.badBool` because property `badBool` (did you mean `bool`?) is missing in object type [1]. [prop-missing]
+Cannot get `x.badBool` because property `badBool` is missing in object type [1]. [prop-missing]
 
    tagged_union.js:162:11
    162|     if (x.badBool === true) { // Error, reading unknown property
@@ -5196,8 +5196,8 @@ Cannot get `x.badBool` because property `badBool` (did you mean `bool`?) is miss
 
 References:
    tagged_union.js:145:15
-   145|   function(x: { str: string, num: number, bool: boolean }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   145|   function(x: { str: string, num: number, boolean: boolean }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:163:8
@@ -5592,8 +5592,8 @@ Cannot get `x[0]` because an index signature declaring the expected key / value 
 
 References:
    typeof.js:3:17
-   3| function foo(x: bool | number) {
-                      ^^^^ [1]
+   3| function foo(x: boolean | number) {
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:12:12

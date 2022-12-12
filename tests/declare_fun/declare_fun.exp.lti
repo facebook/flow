@@ -8,7 +8,7 @@ Cannot call `f` with `"a"` bound to `x` because string [1] is incompatible with 
 
 References:
    declare_pred.js:1:23
-   1| declare function f(x: number): bool %checks (x === 0);
+   1| declare function f(x: number): boolean %checks (x === 0);
                             ^^^^^^ [2]
 
 
@@ -35,12 +35,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `h` [1] because the name is already bound. [name-already-bound]
 
    declare_pred.js:21:18
-   21| declare function h(x: number): bool %checks (x === 0);
+   21| declare function h(x: number): boolean %checks (x === 0);
                         ^
 
 References:
    declare_pred.js:20:10
-   20| function h(x: number): bool %checks { return x === 1 }
+   20| function h(x: number): boolean %checks { return x === 1 }
                 ^ [1]
 
 
@@ -49,12 +49,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `i` [1] because the name is already bound. [name-already-bound]
 
    declare_pred.js:26:18
-   26| declare function i(x: string): bool %checks (x === "A");
+   26| declare function i(x: string): boolean %checks (x === "A");
                         ^
 
 References:
    declare_pred.js:25:18
-   25| declare function i(x: number): bool %checks (x === 0);
+   25| declare function i(x: number): boolean %checks (x === 0);
                         ^ [1]
 
 
@@ -63,12 +63,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `j` [1] because the name is already bound. [name-already-bound]
 
    declare_pred.js:31:18
-   31| declare function j(x: string): bool %checks (x === "A");
+   31| declare function j(x: string): boolean %checks (x === "A");
                         ^
 
 References:
    declare_pred.js:30:18
-   30| declare function j(x: number): bool;
+   30| declare function j(x: number): boolean;
                         ^ [1]
 
 
@@ -77,12 +77,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `k` [1] because the name is already bound. [name-already-bound]
 
    declare_pred.js:34:18
-   34| declare function k(x: number): bool;
+   34| declare function k(x: number): boolean;
                         ^
 
 References:
    declare_pred.js:33:18
-   33| declare function k(x: string): bool %checks (x === "A");
+   33| declare function k(x: string): boolean %checks (x === "A");
                         ^ [1]
 
 
@@ -91,12 +91,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `l` [1] because the name is already bound. [name-already-bound]
 
    declare_pred.js:37:18
-   37| declare function l(x: string): bool %checks (x === "A");
+   37| declare function l(x: string): boolean %checks (x === "A");
                         ^
 
 References:
    declare_pred.js:36:18
-   36| declare function l(x: boolean): bool;
+   36| declare function l(x: boolean): boolean;
                         ^ [1]
 
 

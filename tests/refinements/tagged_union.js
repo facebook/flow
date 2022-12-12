@@ -142,15 +142,15 @@ let tests = [
   },
 
   // sentinel props become the RHS
-  function(x: { str: string, num: number, bool: boolean }) {
+  function(x: { str: string, num: number, boolean: boolean }) {
     if (x.str === 'str') {
       (x.str: 'not str'); // error: 'str' !~> 'not str'
     }
     if (x.num === 123) {
       (x.num: 456); // error: 123 !~> 456
     }
-    if (x.bool === true) {
-      (x.bool: false); // error: true !~> false
+    if (x.boolean === true) {
+      (x.boolean: false); // error: true !~> false
     }
     // even if it doesn't exist...
     if (x.badStr === 'bad') { // Error, reading unknown property

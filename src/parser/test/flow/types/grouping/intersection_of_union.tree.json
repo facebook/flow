@@ -1,30 +1,30 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":31}},
-  "range":[0,31],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":34}},
+  "range":[0,34],
   "body":[
     {
       "type":"VariableDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":31}},
-      "range":[0,31],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":34}},
+      "range":[0,34],
       "declarations":[
         {
           "type":"VariableDeclarator",
-          "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":31}},
-          "range":[4,31],
+          "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":34}},
+          "range":[4,34],
           "id":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":31}},
-            "range":[4,31],
+            "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":34}},
+            "range":[4,34],
             "name":"a",
             "typeAnnotation":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":31}},
-              "range":[5,31],
+              "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":34}},
+              "range":[5,34],
               "typeAnnotation":{
                 "type":"IntersectionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":31}},
-                "range":[7,31],
+                "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":34}},
+                "range":[7,34],
                 "types":[
                   {
                     "type":"NumberTypeAnnotation",
@@ -33,8 +33,8 @@
                   },
                   {
                     "type":"UnionTypeAnnotation",
-                    "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":30}},
-                    "range":[17,30],
+                    "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":33}},
+                    "range":[17,33],
                     "types":[
                       {
                         "type":"StringTypeAnnotation",
@@ -43,8 +43,8 @@
                       },
                       {
                         "type":"BooleanTypeAnnotation",
-                        "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":30}},
-                        "range":[26,30]
+                        "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":33}},
+                        "range":[26,33]
                       }
                     ]
                   }

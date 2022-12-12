@@ -68,7 +68,7 @@ grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
 
 printf "\n== Adding code that doesn't import has no effect on dep graph ==\n"
 # Unchanged during `ResolvedRequires`
-assert_ok echo "export var foo: bool = 123" >> src/node_modules/dependency.js
+assert_ok echo "export var foo: boolean = 123" >> src/node_modules/dependency.js
 assert_ok "$FLOW" force-recheck src/node_modules/dependency.js
 
 assert_errors "$FLOW" status --no-auto-start src

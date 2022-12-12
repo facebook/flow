@@ -3,9 +3,9 @@
 // annotations
 
 type T = number | (() => string);
-type Foo = T | (() => bool);
+type Foo = T | (() => boolean);
 
-type Bar = number | (() => string) | (() => bool);
+type Bar = number | (() => string) | (() => boolean);
 
 function foo(x: Foo) { }
 foo(() => qux());

@@ -53,7 +53,7 @@ let tests = [
     f({x: 234}); // error, 234 !~> 123
   },
 
-  // bool literal errors track use ops
+  // boolean literal errors track use ops
   function() {
     function f(y: { x: false }): void {}
     f({x: true}); // error, true !~> false

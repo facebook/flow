@@ -2,7 +2,7 @@
 
 class Foo {
   bar: number
-  #baz: bool
+  #baz: boolean
 }
 
 function callMeMaybe(foo: ?Foo) {

@@ -245,7 +245,7 @@ Error --------------------------------------------------------------------------
 Cannot call `x` because string [1] is not a function. [not-a-function]
 
    test.js:18:5
-   18|     x(); // string ~/> function call (no num or bool error)
+   18|     x(); // string ~/> function call (no num or boolean error)
            ^
 
 References:
