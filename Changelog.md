@@ -1,3 +1,9 @@
+### 0.195.2
+
+Misc:
+*  Adds an `--experimental.run-post-inference-implicit-instantiation true/false` CLI flag
+to override the respective experimental flowconfig option.
+
 ### 0.195.1
 
 Misc:
