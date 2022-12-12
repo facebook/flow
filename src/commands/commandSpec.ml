@@ -75,12 +75,23 @@ module ArgSpec = struct
   let bool =
     {
       parse =
-        (fun ~name:_ -> function
+        (fun ~name -> function
           | Some ["0"]
           | Some ["false"]
           | None ->
             Some false
-          | Some _ -> Some true);
+          | Some ["1"]
+          | Some ["true"] ->
+            Some true
+          | Some _ ->
+            raise
+              (Failed_to_parse
+                 {
+                   arg = name;
+                   msg = "Invalid argument";
+                   details = Some "expected one of: true, false, 0, 1";
+                 }
+              ));
       arg = Arg;
     }
 
