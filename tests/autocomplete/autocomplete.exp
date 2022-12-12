@@ -11068,44 +11068,6 @@ Flags: --lsp
   }
 }
 
-upper_bounds_3.js:12:5
-Flags: --pretty
-{
-  "result":[
-    {"name":"'bar'","type":"\"bar\""},
-    {"name":"'baz'","type":"\"baz\""},
-    {"name":"'foo'","type":"\"foo\""},
-    {"name":"f","type":"(Union) => void"},
-    {"name":"x","type":"empty"}
-  ]
-}
-
-upper_bounds_4.js:15:7
-Flags: --pretty
-{
-  "result":[
-    {"name":"'bar'","type":"\"bar\""},
-    {"name":"'baz'","type":"\"baz\""},
-    {"name":"'foo'","type":"\"foo\""},
-    {"name":"cond","type":"boolean"},
-    {"name":"f","type":"(Union) => void"},
-    {"name":"x","type":"\"foo\""}
-  ]
-}
-
-upper_bounds_5.js:13:5
-Flags: --pretty
-{
-  "result":[
-    {"name":"'bar'","type":"\"bar\""},
-    {"name":"'baz'","type":"\"baz\""},
-    {"name":"'foo'","type":"\"foo\""},
-    {"name":"f","type":"(Union) => void"},
-    {"name":"g","type":"(Union) => void"},
-    {"name":"x","type":"empty"}
-  ]
-}
-
 upper_bounds_6.js:5:5
 Flags: --pretty
 {
