@@ -180,8 +180,8 @@
 .featureDecorationRise::after {
   bottom: 0;
   left: 0;
-  border-top: 0;
-  border-left: 0;
+  border-top: 0 !important;
+  border-left: 0 !important;
   border-right-color: transparent !important;
 }
 
@@ -198,8 +198,8 @@
 .featureDecorationDrop::after {
   top: 0;
   right: 0;
-  border-bottom-width: 0;
-  border-right-width: 0;
+  border-bottom-width: 0 !important;
+  border-right-width: 0 !important;
   border-left-color: transparent !important;
 }
 
