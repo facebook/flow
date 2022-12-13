@@ -5,7 +5,7 @@ function foo(x:string) { }
 
 var a = [];
 a[0] = 1;
-a[1] = "...";
+a[1] = "..."; // no error under old inference, error under LTI
 
 foo(a[1]);
 var y;

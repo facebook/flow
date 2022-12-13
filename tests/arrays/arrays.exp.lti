@@ -1,0 +1,130 @@
+Error ---------------------------------------------------------------------------------------------------- Arrays.js:8:8
+
+Cannot assign `"..."` to `a[1]` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   Arrays.js:8:8
+   8| a[1] = "..."; // no error under old inference, error under LTI
+             ^^^^^ [1]
+
+References:
+   Arrays.js:7:8
+   7| a[0] = 1;
+             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- isarray.js:4:31
+
+Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+[incompatible-type]
+
+   isarray.js:4:31
+   4|     const problem: Array<Z> = array; // error
+                                    ^^^^^
+
+References:
+   isarray.js:2:25
+   2| function hmm1<Z>(array: Z) {
+                              ^ [1]
+   isarray.js:4:20
+   4|     const problem: Array<Z> = array; // error
+                         ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- isarray.js:11:31
+
+Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+[incompatible-type]
+
+   isarray.js:11:31
+   11|     const problem: Array<Z> = array; // error
+                                     ^^^^^
+
+References:
+   isarray.js:9:26
+    9|   function hmm<Z>(array: Z): Z  {
+                                ^ [1]
+   isarray.js:11:20
+   11|     const problem: Array<Z> = array; // error
+                          ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- isarray.js:24:35
+
+Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+[incompatible-type]
+
+   isarray.js:24:35
+   24|     const problem: Array<mixed> = array; // error
+                                         ^^^^^
+
+References:
+   isarray.js:22:22
+   22| function hmm2(array: mixed) {
+                            ^^^^^ [1]
+   isarray.js:24:20
+   24|     const problem: Array<mixed> = array; // error
+                          ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ map.js:8:13
+
+empty string [1] is incompatible with number [2]. [incompatible-type]
+
+   map.js:8:13
+   8|   if (n !== '') { // number incompatible with string
+                  ^^ [1]
+
+References:
+   map.js:4:21
+   4|   a: $ReadOnlyArray<number>,
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- numeric_elem.js:6:1
+
+Cannot assign `0` to `arr[day]` because `Date` [1] is not an array index. [incompatible-use]
+
+   numeric_elem.js:6:1
+   6| arr[day] = 0;
+      ^^^^^^^^
+
+References:
+   numeric_elem.js:2:11
+   2| var day = new Date;
+                ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- numeric_elem.js:7:2
+
+Cannot get `arr[day]` because `Date` [1] is not an array index. [incompatible-use]
+
+   numeric_elem.js:7:2
+   7| (arr[day]: string); // error: number ~> string
+       ^^^^^^^^
+
+References:
+   numeric_elem.js:2:11
+   2| var day = new Date;
+                ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:69:2
+
+Cannot cast array literal to array type because number [1] is incompatible with string [2] in array element.
+[incompatible-cast]
+
+   spread.js:69:2
+   69| ([...emp]: Array<string>); // error
+        ^^^^^^^^
+
+References:
+   spread.js:68:10
+   68| emp.push(42);
+                ^^ [1]
+   spread.js:69:18
+   69| ([...emp]: Array<string>); // error
+                        ^^^^^^ [2]
+
+
+
+Found 8 errors
