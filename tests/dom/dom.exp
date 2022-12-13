@@ -7,8 +7,8 @@ Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompati
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2416:13
-   2416|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2417:13
+   2417|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
@@ -21,8 +21,8 @@ Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompati
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2416:24
-   2416|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2417:24
+   2417|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
@@ -100,8 +100,8 @@ References:
    Element.js:14:40
      14|     element.scrollIntoView({ behavior: 'invalid' });
                                                 ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1865:22
-   1865|          behavior?: ('auto' | 'instant' | 'smooth'),
+   <BUILTINS>/dom.js:1866:22
+   1866|          behavior?: ('auto' | 'instant' | 'smooth'),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -118,8 +118,8 @@ References:
    Element.js:15:37
      15|     element.scrollIntoView({ block: 'invalid' });
                                              ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1866:19
-   1866|          block?: ('start' | 'center' | 'end' | 'nearest'),
+   <BUILTINS>/dom.js:1867:19
+   1867|          block?: ('start' | 'center' | 'end' | 'nearest'),
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -133,8 +133,8 @@ Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] 
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1864:25
-   1864|   scrollIntoView(arg?: (boolean | {
+   <BUILTINS>/dom.js:1865:25
+   1865|   scrollIntoView(arg?: (boolean | {
                                  ^^^^^^^ [2]
 
 
@@ -175,8 +175,8 @@ Cannot call `element.hasAttributes` because no arguments are expected by functio
                                    ^^^^^
 
 References:
-   <BUILTINS>/dom.js:1853:3
-   1853|   hasAttributes(): boolean;
+   <BUILTINS>/dom.js:1854:3
+   1854|   hasAttributes(): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -193,8 +193,8 @@ References:
    HTMLElement.js:22:39
      22|     element.scrollIntoView({behavior: 'invalid'});
                                                ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1865:22
-   1865|          behavior?: ('auto' | 'instant' | 'smooth'),
+   <BUILTINS>/dom.js:1866:22
+   1866|          behavior?: ('auto' | 'instant' | 'smooth'),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -211,8 +211,8 @@ References:
    HTMLElement.js:23:36
      23|     element.scrollIntoView({block: 'invalid'});
                                             ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1866:19
-   1866|          block?: ('start' | 'center' | 'end' | 'nearest'),
+   <BUILTINS>/dom.js:1867:19
+   1867|          block?: ('start' | 'center' | 'end' | 'nearest'),
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -226,8 +226,8 @@ Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] 
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1864:25
-   1864|   scrollIntoView(arg?: (boolean | {
+   <BUILTINS>/dom.js:1865:25
+   1865|   scrollIntoView(arg?: (boolean | {
                                  ^^^^^^^ [2]
 
 
@@ -244,8 +244,8 @@ References:
    HTMLElement.js:46:56
      46|     (element.getElementsByTagName(str): HTMLCollection<HTMLAnchorElement>);
                                                                 ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1796:54
-   1796|   getElementsByTagName(name: string): HTMLCollection<HTMLElement>;
+   <BUILTINS>/dom.js:1797:54
+   1797|   getElementsByTagName(name: string): HTMLCollection<HTMLElement>;
                                                               ^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:1030:31
    1030| declare class HTMLCollection<+Elem: HTMLElement> {
@@ -269,8 +269,8 @@ References:
    HTMLElement.js:50:23
      50|     ): HTMLCollection<HTMLAnchorElement>);
                                ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1850:90
-   1850|   getElementsByTagNameNS(namespaceURI: string | null, localName: string): HTMLCollection<HTMLElement>;
+   <BUILTINS>/dom.js:1851:90
+   1851|   getElementsByTagNameNS(namespaceURI: string | null, localName: string): HTMLCollection<HTMLElement>;
                                                                                                   ^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:1030:31
    1030| declare class HTMLCollection<+Elem: HTMLElement> {
@@ -287,8 +287,8 @@ Cannot cast `element.querySelector(...)` to union type because `HTMLElement` [1]
               ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1955:36
-   1955|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:1956:36
+   1956|   querySelector(selector: string): HTMLElement | null;
                                             ^^^^^^^^^^^ [1]
    HTMLElement.js:51:34
      51|     (element.querySelector(str): HTMLAnchorElement | null);
@@ -308,8 +308,8 @@ References:
    HTMLElement.js:52:46
      52|     (element.querySelectorAll(str): NodeList<HTMLAnchorElement>);
                                                       ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:2019:48
-   2019|   querySelectorAll(selector: string): NodeList<HTMLElement>;
+   <BUILTINS>/dom.js:2020:48
+   2020|   querySelectorAll(selector: string): NodeList<HTMLElement>;
                                                         ^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:994:24
     994| declare class NodeList<T> {
@@ -329,8 +329,8 @@ References:
    HTMLElement.js:55:58
      55|     (element.getElementsByTagName('div'): HTMLCollection<HTMLAnchorElement>);
                                                                   ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1755:53
-   1755|   getElementsByTagName(name: 'div'): HTMLCollection<HTMLDivElement>;
+   <BUILTINS>/dom.js:1756:53
+   1756|   getElementsByTagName(name: 'div'): HTMLCollection<HTMLDivElement>;
                                                              ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:1030:31
    1030| declare class HTMLCollection<+Elem: HTMLElement> {
@@ -354,8 +354,8 @@ References:
    HTMLElement.js:59:23
      59|     ): HTMLCollection<HTMLAnchorElement>);
                                ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1809:89
-   1809|   getElementsByTagNameNS(namespaceURI: string | null, localName: 'div'): HTMLCollection<HTMLDivElement>;
+   <BUILTINS>/dom.js:1810:89
+   1810|   getElementsByTagNameNS(namespaceURI: string | null, localName: 'div'): HTMLCollection<HTMLDivElement>;
                                                                                                  ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:1030:31
    1030| declare class HTMLCollection<+Elem: HTMLElement> {
@@ -372,8 +372,8 @@ Cannot cast `element.querySelector(...)` to union type because `HTMLDivElement` 
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1908:35
-   1908|   querySelector(selector: 'div'): HTMLDivElement | null;
+   <BUILTINS>/dom.js:1909:35
+   1909|   querySelector(selector: 'div'): HTMLDivElement | null;
                                            ^^^^^^^^^^^^^^ [1]
    HTMLElement.js:60:36
      60|     (element.querySelector('div'): HTMLAnchorElement | null);
@@ -390,8 +390,8 @@ Cannot cast `element.querySelectorAll(...)` to `NodeList` because `HTMLDivElemen
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:1972:47
-   1972|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
+   <BUILTINS>/dom.js:1973:47
+   1973|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
                                                        ^^^^^^^^^^^^^^ [1]
    HTMLElement.js:61:48
      61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
@@ -414,8 +414,8 @@ References:
    HTMLElement.js:61:48
      61|     (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
                                                         ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1972:47
-   1972|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
+   <BUILTINS>/dom.js:1973:47
+   1973|   querySelectorAll(selector: 'div'): NodeList<HTMLDivElement>;
                                                        ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/dom.js:994:24
     994| declare class NodeList<T> {
@@ -432,8 +432,8 @@ in property `preventScroll`. [incompatible-call]
                                            ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1687:39
-   1687| type FocusOptions = { preventScroll?: boolean, ... }
+   <BUILTINS>/dom.js:1688:39
+   1688| type FocusOptions = { preventScroll?: boolean, ... }
                                                ^^^^^^^ [2]
 
 
@@ -447,8 +447,8 @@ Cannot call `element.focus` with `1` bound to `options` because number [1] is in
                            ^ [1]
 
 References:
-   <BUILTINS>/dom.js:2031:19
-   2031|   focus(options?: FocusOptions): void;
+   <BUILTINS>/dom.js:2032:19
+   2032|   focus(options?: FocusOptions): void;
                            ^^^^^^^^^^^^ [2]
 
 
@@ -461,8 +461,8 @@ Cannot get `el.className` because property `className` is missing in null [1]. [
             ^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3345:43
-   3345|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:3346:43
+   3346|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -475,8 +475,8 @@ Cannot get `el.className` because property `className` is missing in null [1]. [
             ^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3345:43
-   3345|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:3346:43
+   3346|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -492,8 +492,8 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3726:45
-   3726|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3727:45
+   3727|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
@@ -509,8 +509,8 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3727:78
-   3727|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3728:78
+   3728|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
@@ -523,8 +523,8 @@ Cannot get `form.action` because property `action` is missing in null [1]. [inco
               ^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3789:27
-   3789|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3790:27
+   3790|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -537,8 +537,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3807:44
-   3807|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3808:44
+   3808|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -551,8 +551,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3808:48
-   3808|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3809:48
+   3809|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -695,8 +695,8 @@ References:
    path2d.js:16:33
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                          ^^^^ [1]
-   <BUILTINS>/dom.js:2281:83
-   2281|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
+   <BUILTINS>/dom.js:2282:83
+   2282|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                            ^^^^^^ [2]
 
 
@@ -1096,11 +1096,11 @@ literal union [2] in the return value. [incompatible-call]
                                                                     ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4276:1
+   <BUILTINS>/dom.js:4277:1
          v--------------------------------
-   4276| typeof NodeFilter.FILTER_ACCEPT |
-   4277| typeof NodeFilter.FILTER_REJECT |
-   4278| typeof NodeFilter.FILTER_SKIP;
+   4277| typeof NodeFilter.FILTER_ACCEPT |
+   4278| typeof NodeFilter.FILTER_REJECT |
+   4279| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1114,11 +1114,11 @@ literal union [2] in the return value of property `acceptNode`. [incompatible-ca
                                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4276:1
+   <BUILTINS>/dom.js:4277:1
          v--------------------------------
-   4276| typeof NodeFilter.FILTER_ACCEPT |
-   4277| typeof NodeFilter.FILTER_REJECT |
-   4278| typeof NodeFilter.FILTER_SKIP;
+   4277| typeof NodeFilter.FILTER_ACCEPT |
+   4278| typeof NodeFilter.FILTER_REJECT |
+   4279| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1174,11 +1174,11 @@ union [2] in the return value. [incompatible-call]
                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4276:1
+   <BUILTINS>/dom.js:4277:1
          v--------------------------------
-   4276| typeof NodeFilter.FILTER_ACCEPT |
-   4277| typeof NodeFilter.FILTER_REJECT |
-   4278| typeof NodeFilter.FILTER_SKIP;
+   4277| typeof NodeFilter.FILTER_ACCEPT |
+   4278| typeof NodeFilter.FILTER_REJECT |
+   4279| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1192,11 +1192,11 @@ literal union [2] in the return value of property `acceptNode`. [incompatible-ca
                                                                                 ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4276:1
+   <BUILTINS>/dom.js:4277:1
          v--------------------------------
-   4276| typeof NodeFilter.FILTER_ACCEPT |
-   4277| typeof NodeFilter.FILTER_REJECT |
-   4278| typeof NodeFilter.FILTER_SKIP;
+   4277| typeof NodeFilter.FILTER_ACCEPT |
+   4278| typeof NodeFilter.FILTER_REJECT |
+   4279| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
