@@ -2032,6 +2032,9 @@ end = struct
       | DefT (_, _, SingletonNumT lit)
       | DefT (_, _, NumT (Literal (_, lit))) ->
         Some (UnionEnum.Num lit)
+      | DefT (_, _, SingletonBigIntT lit)
+      | DefT (_, _, BigIntT (Literal (_, lit))) ->
+        Some (UnionEnum.BigInt lit)
       | DefT (_, _, SingletonBoolT lit)
       | DefT (_, _, BoolT (Some lit)) ->
         Some (UnionEnum.Bool lit)
@@ -2045,6 +2048,7 @@ end = struct
       function
       | DefT (_, _, SingletonStrT _)
       | DefT (_, _, SingletonNumT _)
+      | DefT (_, _, SingletonBigIntT _)
       | DefT (_, _, SingletonBoolT _)
       | DefT (_, _, VoidT)
       | DefT (_, _, NullT) ->
