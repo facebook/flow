@@ -57,10 +57,10 @@ class Empt {}
 let _a : $Shape<A> = { x : 4 }; // no error
 let _b : $Shape<A> = { y : 4 }; // flow error
 let _c : $Shape<B> = { x : 4 }; // no error
-let _d : $Shape<B> = { y : "4" }; // no error
+let _d : $Shape<B> = { y : "4" }; // no error in old inference, error in LTI
 let _e : $Shape<B> = { z : 4 }; // flow error
 let _f : $Shape<C> = { x : 4 }; // no error
-let _g : $Shape<C> = { y : "4" }; // no error
+let _g : $Shape<C> = { y : "4" }; // no error in old inference, error in LTI
 let _h : $Shape<C> = { z : "4" }; // no error
 let _i : $Shape<C> = { a : 4 }; // flow error
 let _j : $Shape<Empt> = {}; // no error

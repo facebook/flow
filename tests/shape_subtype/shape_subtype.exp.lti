@@ -1,0 +1,190 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:8:28
+
+Cannot assign object literal to `z2` because property `s` is missing in `typeof o2` [1] but exists in object
+literal [2]. [prop-missing]
+
+   test.js:8:28
+   8| let z2:$Shape<typeof o2> = {s : 4}; // flow error
+                                 ^^^^^^^ [2]
+
+References:
+   test.js:8:15
+   8| let z2:$Shape<typeof o2> = {s : 4}; // flow error
+                    ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:29
+
+Cannot assign object literal to `z8` because property `y` is missing in `typeof a` [1] but exists in object literal [2].
+[incompatible-use]
+
+   test.js:16:29
+   16| let z8 : $Shape<typeof a> = {y : 4}; // flow error
+                                   ^^^^^^^ [2]
+
+References:
+   test.js:16:17
+   16| let z8 : $Shape<typeof a> = {y : 4}; // flow error
+                       ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:19:27
+
+Cannot assign object literal to `z9` because property `x` is missing in number [1] but exists in object literal [2].
+[incompatible-use]
+
+   test.js:19:27
+   19| let z9 : $Shape<number> = {x : 3}; // flow error
+                                 ^^^^^^^ [2]
+
+References:
+   test.js:19:17
+   19| let z9 : $Shape<number> = {x : 3}; // flow error
+                       ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:22:28
+
+Cannot assign object literal to `z11` because property `x` is missing in string [1] but exists in object literal [2].
+[incompatible-use]
+
+   test.js:22:28
+   22| let z11 : $Shape<string> = {x : 3}; // flow error
+                                  ^^^^^^^ [2]
+
+References:
+   test.js:22:18
+   22| let z11 : $Shape<string> = {x : 3}; // flow error
+                        ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:24:24
+
+Cannot assign object literal to `z14` because property `p` is missing in object type [1] but exists in object
+literal [2]. [prop-missing]
+
+   test.js:24:24
+   24| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
+                              ^^^^^^^^^^^ [2]
+
+References:
+   test.js:24:18
+   24| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
+                        ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:58:22
+
+Cannot assign object literal to `_b` because property `y` is missing in `A` [1] but exists in object literal [2].
+[prop-missing]
+
+   test.js:58:22
+   58| let _b : $Shape<A> = { y : 4 }; // flow error
+                            ^^^^^^^^^ [2]
+
+References:
+   test.js:58:17
+   58| let _b : $Shape<A> = { y : 4 }; // flow error
+                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:60:22
+
+Cannot assign object literal to `_d` because string [1] is incompatible with number [2] in property `y`.
+[incompatible-type]
+
+   test.js:60:22
+   60| let _d : $Shape<B> = { y : "4" }; // no error in old inference, error in LTI
+                            ^^^^^^^^^^^
+
+References:
+   test.js:60:28
+   60| let _d : $Shape<B> = { y : "4" }; // no error in old inference, error in LTI
+                                  ^^^ [1]
+   test.js:48:8
+   48|   +y = 4;
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:61:22
+
+Cannot assign object literal to `_e` because property `z` is missing in `B` [1] but exists in object literal [2].
+[prop-missing]
+
+   test.js:61:22
+   61| let _e : $Shape<B> = { z : 4 }; // flow error
+                            ^^^^^^^^^ [2]
+
+References:
+   test.js:61:17
+   61| let _e : $Shape<B> = { z : 4 }; // flow error
+                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:63:22
+
+Cannot assign object literal to `_g` because string [1] is incompatible with number [2] in property `y`.
+[incompatible-type]
+
+   test.js:63:22
+   63| let _g : $Shape<C> = { y : "4" }; // no error in old inference, error in LTI
+                            ^^^^^^^^^^^
+
+References:
+   test.js:63:28
+   63| let _g : $Shape<C> = { y : "4" }; // no error in old inference, error in LTI
+                                  ^^^ [1]
+   test.js:48:8
+   48|   +y = 4;
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:65:22
+
+Cannot assign object literal to `_i` because property `a` is missing in `C` [1] but exists in object literal [2].
+[prop-missing]
+
+   test.js:65:22
+   65| let _i : $Shape<C> = { a : 4 }; // flow error
+                            ^^^^^^^^^ [2]
+
+References:
+   test.js:65:17
+   65| let _i : $Shape<C> = { a : 4 }; // flow error
+                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:67:25
+
+Cannot assign object literal to `_k` because property `x` is missing in `Empt` [1] but exists in object literal [2].
+[prop-missing]
+
+   test.js:67:25
+   67| let _k : $Shape<Empt> = { x : 4 }; // flow error
+                               ^^^^^^^^^ [2]
+
+References:
+   test.js:67:17
+   67| let _k : $Shape<Empt> = { x : 4 }; // flow error
+                       ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:78:22
+
+Cannot assign object literal to `_l` because `A` [1] is incompatible with `B` [2] in property `n`. [incompatible-type]
+
+   test.js:78:22
+   78| let _l : $Shape<D> = {m : a_inst, n : a_inst}; // flow error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:69:14
+   69| let a_inst : A = new A;
+                    ^ [1]
+   test.js:75:7
+   75|   n : B = b_inst;
+             ^ [2]
+
+
+
+Found 12 errors
