@@ -129,6 +129,7 @@ let gather_declarations ast =
         (match import with
         | {
          ImportDeclaration.specifiers = Some (ImportDeclaration.ImportNamespaceSpecifier specifier);
+         import_kind = ImportDeclaration.ImportValue;
          _;
         } ->
           add_import_star acc specifier
