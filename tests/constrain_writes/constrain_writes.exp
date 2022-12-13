@@ -167,6 +167,14 @@ References:
                           ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:87:7
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   87|   let x = []; // error
+             ^
+
+
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:13
 
 Cannot assign `'Our new pr...'` to `product` because string [1] is incompatible with number [2]. All writes to `product`
@@ -569,7 +577,7 @@ References:
 
 
 
-Found 27 errors
+Found 28 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
