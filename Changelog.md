@@ -1,3 +1,29 @@
+### 0.196.0
+
+Likely to cause new Flow errors:
+* Instead of `mixed`, type the result of `Object.values` and `Object.entries` on a dictionary to be the dictionary values, and `Object.entries` keys to behave like `Object.keys`. Closes #2174, #2221, #4771, #4997, #5838.
+* Ban array inputs to `Object.values` and `Object.entries`.
+* Function's `name` and `length` property are now not writable.
+* Fix `Object.keys`, `$Values`, and `$Keys` on interfaces with indexers.
+* Delete `$Subtype` and `$SuperType` utilities.
+* Delete `deprecated-utility` Flow lint.
+
+New Features:
+* An annotation is no longer required when exporting + expressions (e.g., `export default (3 + 3 : number)` can now just be `export default 3 + 3;`).
+
+Notable bug fixes:
+* Fix unary and binary arithmetic operations on bigints being exported/imported across modules as `any` or `number`.
+* Fix autocomplete of string literals in bracket syntax, after a quote has already been typed.
+* Improve sorting of results when autocompleting types.
+* Boolean CLI flags must now be `1` or `true` to be truthy. Before, anything other than `0` and `false` was considered truthy.
+
+Misc:
+* Autocomplete results are now sorted case-insensitively.
+* Autocomplete results are now sorted using a fuzzy score, in the same manner as VSCode.
+
+Library Definitions:
+* Add `ReactSetStateFunction` type alias in react. This is the type of `setVal` in `const [val, setVal] = React.useState(...)`.
+
 ### 0.195.2
 
 Misc:
