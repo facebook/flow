@@ -10,7 +10,6 @@ open Reason
 open Loc_collections
 module Env = Ty_normalizer_env
 module T = Type
-module VSet = ISet
 module File_sig = File_sig.With_ALoc
 
 (* The type normalizer converts infered types (of type `Type.t`) under a context
@@ -113,54 +112,13 @@ end = struct
     | TVarKey of int
     | EvalKey of Type.Eval.id
 
-  (* A cache for resolved OpenTs/EvalTs. We cache the result even when the output
-   * is an error. This is mostly useful for the batch call (`from_types`). The
-   * key to this map is the Type.tvar identifier or an Eval.id.
-   *)
-  module Cache = struct
-    type t = {
-      open_ts: (Ty.t, error) result IMap.t;
-      eval_ts: (Ty.t, error) result Type.Eval.Map.t;
-    }
-
-    let empty = { open_ts = IMap.empty; eval_ts = Type.Eval.Map.empty }
-
-    let find i c =
-      match i with
-      | TVarKey i -> IMap.find_opt i c.open_ts
-      | EvalKey i -> Type.Eval.Map.find_opt i c.eval_ts
-
-    let update i t c =
-      match i with
-      | TVarKey i -> { c with open_ts = IMap.add i t c.open_ts }
-      | EvalKey i -> { c with eval_ts = Type.Eval.Map.add i t c.eval_ts }
-  end
-
   module State = struct
     type t = {
-      (* Source of fresh ints for creating new Ty.tvar's *)
-      counter: int;
-      cache: Cache.t;
-      (* This set is useful for synthesizing recursive types. It holds the set
-       * of type variables that are encountered "free". We say that a type
-       * variable is free when it appears in the body of its own definition.
-       * The process of calculating free variables in a type could be
-       * implemented post-fact. The reason we prefer to keep this in the state
-       * instead is performance, since it trivializes the "check if variable
-       * appears free". *)
-      free_tvars: VSet.t;
       rec_tvar_ids: ISet.t;
       rec_eval_ids: Type.EvalIdSet.t;
     }
 
-    let empty =
-      {
-        counter = 0;
-        cache = Cache.empty;
-        free_tvars = VSet.empty;
-        rec_tvar_ids = ISet.empty;
-        rec_eval_ids = Type.EvalIdSet.empty;
-      }
+    let empty = { rec_tvar_ids = ISet.empty; rec_eval_ids = Type.EvalIdSet.empty }
   end
 
   include StateResult.Make (State)
@@ -193,13 +151,6 @@ end = struct
 
   let concat_fold_m f xs = mapM f xs >>| Base.List.concat
 
-  let fresh_num =
-    let open State in
-    let%bind st = get in
-    let n = st.counter in
-    let%map _ = put { st with counter = n + 1 } in
-    n
-
   let terr ~kind ?msg t =
     let t_str = Base.Option.map t ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t)) in
     let msg = Base.List.filter_opt [msg; t_str] |> String.concat ", " in
@@ -213,20 +164,6 @@ end = struct
     | _ -> return env
 
   (* Update state *)
-
-  let find_in_cache i =
-    let open State in
-    let%map state = get in
-    Cache.find i state.cache
-
-  let update_cache i t =
-    let open State in
-    let%bind state = get in
-    put { state with cache = Cache.update i t state.cache }
-
-  let add_to_free_tvars v =
-    let open State in
-    modify (fun state -> { state with free_tvars = VSet.add v state.free_tvars })
 
   let add_rec_id id =
     let open State in
@@ -290,109 +227,6 @@ end = struct
     | Ty.EmptyTypeDestructorTriggerT _
     | Ty.NoLowerWithUpper _ ->
       Ty.Bot bot_kind
-
-  (*********************)
-  (* Recursive types   *)
-  (*********************)
-
-  (* There are three phases in resolving a type variable:
-   *
-   * A. UNSEEN: Type variable has not been seen yet. It does not appear in the
-   *    type cache.
-   *
-   * B. UNDER RESOLUTION: Variable has been seen at least once and it is set to
-   *    "under resolution". It appears in the type_cache as a mapping from
-   *    the original `Type.tvar` to a fresh `Ty.tvar`. This binding is important
-   *    for termination purposes as well as determining if the variable appears
-   *    free in a type context.
-   *
-   * C. RESOLVED: All lower bounds of the variable have been normalized and so
-   *    the variable is considered resolved. The cache is updated with the final
-   *    type or an error message.
-   *)
-
-  module Recursive = struct
-    (* Constructing recursive types.
-     *
-     * This function is expected to be called after fully normalizing the lower
-     * bounds of a type variable `v` and constructing a type `t`. `free_vars` is
-     * the set of free variables appearing in `t`. This information is available
-     * from the state of the monad.
-     *
-     * To determine if we truly have a recursive type we take the following into
-     * account:
-     *
-     * - If `v` does NOT appear in `free_vars`, then `t` is NOT recursive, so
-     *   we return it as-is.
-     *
-     * - If `v` appears in `free_vars`, we may be dealing with a recursive type
-     *   but we also might have a degenerate case like this one:
-     *
-     *   Mu (v, v | string)
-     *
-     *   which is not a recursive type. (It is equivalent to string.)
-     *
-     *   NOTE that we need to recompute free vars since the simplifications might
-     *   have eliminated some of them. Here we use the FreeVars module. This is
-     *   an expensive pass, which is why we avoid doing it if it's definitely
-     *   not a recursive type.
-     *)
-    let make free_vars i t =
-      if VSet.mem i free_vars then
-        Ty.Mu (i, t)
-      else
-        t
-
-    (* Normalize potentially recursive types.
-     *
-     * Input here is a unique `id` (e.g. tvar) and a type-level operation `f`.
-     * To avoid non-termination we make use of the tvar_cache, that holds the result
-     * of ids that have been resolved, or are "in resolution". Depending on whether
-     * we have seen `id` before, there are a few cases here:
-     *
-     * a. The variable is "under resolution": We return the recursive variable as
-     *    result and update the set of free_tvars, which is later used to construct
-     *    the normalized recursive type.
-     *
-     * b. The variable is "resolved": Return the result.
-     *
-     * c. The variable resolution led to an error: Propagate error.
-     *
-     * d. The variable has never been seen before:
-     *    - We set the variable to "under resolution" and introduce a recursive
-     *      variable 'rid' to represent the normalized result.
-     *    - We evaluate the type (`f ()`). This typically includes a Flow_js constraint
-     *      level computation, like resolving lower-bounds, evaluating a type
-     *      destructor.
-     *    - We remove 'rid' from free_tvars, since it will no longer be in scope.
-     *    - We return the result.
-     *)
-    let with_cache id ~f =
-      let open State in
-      match%bind find_in_cache id with
-      | Some (Ok Ty.(TVar (RVar v, _) as t)) ->
-        let%map () = add_to_free_tvars v in
-        t
-      | Some (Ok t) -> return t
-      | Some (Error s) -> error s
-      | None ->
-        let%bind rid = fresh_num in
-        let rvar = Ty.RVar rid in
-        (* Set current variable "under resolution" *)
-        let%bind () = update_cache id (Ok (Ty.TVar (rvar, None))) in
-        let%bind in_st = get in
-        let (result, out_st) = run in_st (f ()) in
-        let result = Base.Result.map ~f:(make out_st.free_tvars rid) result in
-        (* Reset state by removing the current tvar from the free vars set *)
-        let out_st = { out_st with free_tvars = VSet.remove rid out_st.free_tvars } in
-        let%bind () = put out_st in
-        (* Update cache with final result *)
-        let%bind () = update_cache id result in
-        (* Throw the error if one was encountered *)
-        (match result with
-        | Ok ty -> return ty
-        | Error e -> error e)
-  end
 
   (***********************)
   (* Construct built-ins *)
@@ -535,13 +369,11 @@ end = struct
     | T.TypeDestructorT (use_op, reason, d) ->
       if Env.evaluate_type_destructors env || force_eval then
         let cx = Env.get_cx env in
-        Recursive.with_cache (EvalKey id) ~f:(fun () ->
-            let trace = Trace.dummy_trace in
-            let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
-            match Lookahead.peek ~env tout with
-            | Lookahead.LowerBounds [t] -> cont ~env ~id:(EvalKey id) t
-            | _ -> default ~env tout
-        )
+        let trace = Trace.dummy_trace in
+        let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
+        match Lookahead.peek ~env tout with
+        | Lookahead.LowerBounds [t] -> cont ~env ~id:(EvalKey id) t
+        | _ -> default ~env tout
       else
         non_eval ~env t d
     | T.LatentPredT _ ->
@@ -612,11 +444,8 @@ end = struct
         | [] -> empty_with_upper_bounds bounds
         | hd :: tl -> return (Ty.mk_union ~from_bounds:true ~flattened:true (hd, tl)))
     in
-    let (root_id, constraints) =
-      (* Use `root_id` as a proxy for `id` *)
-      Context.find_constraints Env.(env.genv.cx) id
-    in
-    Recursive.with_cache (TVarKey root_id) ~f:(fun () -> resolve_bounds constraints)
+    let (_, constraints) = Context.find_constraints Env.(env.genv.cx) id in
+    resolve_bounds constraints
 
   let maybe_t ~env ?id ~(cont : fn_t) t =
     let%map t = cont ~env ?id t in
