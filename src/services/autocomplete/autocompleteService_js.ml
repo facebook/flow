@@ -118,6 +118,7 @@ let autocomplete_create_result
     ?(preselect = false)
     ?documentation
     ?tags
+    ?(snippet = false)
     ~exact_by_default
     ~log_info
     (name, edit_locs)
@@ -126,6 +127,12 @@ let autocomplete_create_result
   let kind = Some (lsp_completion_of_type ty) in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
+  let insert_text_format =
+    if snippet then
+      Lsp.Completion.SnippetFormat
+    else
+      Lsp.Completion.PlainText
+  in
   {
     ServerProt.Response.Completion.kind;
     name;
@@ -139,6 +146,7 @@ let autocomplete_create_result
     log_info;
     source = None;
     type_ = lsp_detail;
+    insert_text_format;
   }
 
 let autocomplete_create_result_decl
@@ -147,6 +155,7 @@ let autocomplete_create_result_decl
     ?(preselect = false)
     ?documentation
     ?tags
+    ?(snippet = false)
     ~exact_by_default
     ~log_info
     (name, edit_locs)
@@ -155,6 +164,12 @@ let autocomplete_create_result_decl
   let (cli_detail, lsp_detail) = detail_of_ty_decl ~exact_by_default d in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
+  let insert_text_format =
+    if snippet then
+      Lsp.Completion.SnippetFormat
+    else
+      Lsp.Completion.PlainText
+  in
   {
     ServerProt.Response.Completion.kind;
     name;
@@ -168,6 +183,7 @@ let autocomplete_create_result_decl
     log_info;
     source = None;
     type_ = lsp_detail;
+    insert_text_format;
   }
 
 let autocomplete_create_result_elt
@@ -502,6 +518,7 @@ let completion_item_of_autoimport
       log_info = "global";
       source = None;
       type_ = None;
+      insert_text_format = Lsp.Completion.PlainText;
     }
   | Some { Code_action_service.title; edits; from } ->
     let additional_text_edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
@@ -518,6 +535,7 @@ let completion_item_of_autoimport
       log_info = "autoimport";
       source = Some from;
       type_ = None (* TODO: include the type *);
+      insert_text_format = Lsp.Completion.PlainText;
     }
 
 let add_locals ~f locals set =
@@ -711,6 +729,7 @@ let autocomplete_id
         log_info = "this";
         source = None;
         type_ = None (* TODO: include the class type *);
+        insert_text_format = Lsp.Completion.PlainText;
       }
       :: items_rev
     else
@@ -732,6 +751,7 @@ let autocomplete_id
         log_info = "super";
         source = None;
         type_ = None (* TODO: include the parent class type *);
+        insert_text_format = Lsp.Completion.PlainText;
       }
       :: items_rev
     else
@@ -933,6 +953,7 @@ let make_builtin_type ~edit_locs name =
     log_info = "builtin type";
     source = None;
     type_ = None;
+    insert_text_format = Lsp.Completion.PlainText;
   }
 
 let builtin_types =
@@ -965,6 +986,7 @@ let make_utility_type ~edit_locs name =
     log_info = "builtin type";
     source = None;
     type_ = None;
+    insert_text_format = Lsp.Completion.PlainText;
   }
 
 let utility_types =
@@ -1004,6 +1026,7 @@ let make_type_param ~edit_locs { Type.name; _ } =
     log_info = "unqualified type parameter";
     source = None;
     type_ = None;
+    insert_text_format = Lsp.Completion.PlainText;
   }
 
 let local_type_identifiers ~typed_ast ~cx ~file_sig =
