@@ -832,14 +832,22 @@ end = struct
     and type_ctor ~env ?id ~(cont : fn_t) t =
       let open Type in
       match t with
-      | OpenT (_, id) -> type_variable ~env ~cont:type__ id
+      | OpenT (_, id') ->
+        let (root_id, _) = Context.find_constraints (Env.get_cx env) id' in
+        if id = Some (TVarKey root_id) then
+          return Ty.(Bot (NoLowerWithUpper NoUpper))
+        else
+          type_variable ~env ~cont:type__ root_id
       | GenericT { bound; reason; name; _ } ->
         let loc = Reason.def_aloc_of_reason reason in
         let default _ = type__ ~env bound in
         lookup_tparam ~default env bound name loc
       | AnnotT (_, t, _) -> type__ ~env ?id t
-      | EvalT (t, d, id) ->
-        eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id)
+      | EvalT (t, d, id') ->
+        if id = Some (EvalKey id') then
+          return Ty.(Bot (NoLowerWithUpper NoUpper))
+        else
+          eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id')
       | ExactT (_, t) -> exact_t ~env t
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t t i
@@ -2292,7 +2300,12 @@ end = struct
     and type__ ~env ?id ~proto ~(imode : instance_mode) t =
       let open Type in
       match t with
-      | OpenT (_, id) -> type_variable ~env ~cont:(type__ ~proto ~imode) id
+      | OpenT (_, id') ->
+        let (root_id, _) = Context.find_constraints (Env.get_cx env) id' in
+        if id = Some (TVarKey root_id) then
+          return Ty.(Bot (NoLowerWithUpper NoUpper))
+        else
+          type_variable ~env ~cont:(type__ ~proto ~imode) id'
       | AnnotT (_, t, _) -> type__ ~env ~proto ~imode t
       | DefT (_, _, IdxWrapper t) ->
         idx_hook ();
@@ -2325,14 +2338,17 @@ end = struct
       | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~cont:(type__ ~proto ~imode) r use_op t ts
       | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~proto ~imode) t
-      | EvalT (t, d, id) ->
-        eval_t
-          ~env
-          ~cont:(type__ ~proto ~imode)
-          ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
-          ~non_eval:TypeConverter.convert_type_destructor_unevaluated
-          ~force_eval:true
-          (t, d, id)
+      | EvalT (t, d, id') ->
+        if id = Some (EvalKey id') then
+          return Ty.(Bot (NoLowerWithUpper NoUpper))
+        else
+          eval_t
+            ~env
+            ~cont:(type__ ~proto ~imode)
+            ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
+            ~non_eval:TypeConverter.convert_type_destructor_unevaluated
+            ~force_eval:true
+            (t, d, id')
       | ExactT (_, t) -> type__ ~env ~proto ~imode t
       | GenericT { bound; _ } -> type__ ~env ~proto ~imode bound
       | OpaqueT (r, o) -> opaque_t ~env ~proto ~imode r o
@@ -2369,19 +2385,27 @@ end = struct
       let open Type in
       let%bind env = descend env t in
       match t with
-      | OpenT (_, id) -> type_variable ~env ~cont:type__ id
+      | OpenT (_, id') ->
+        let (root_id, _) = Context.find_constraints (Env.get_cx env) id' in
+        if id = Some (TVarKey root_id) then
+          return Ty.(Bot (NoLowerWithUpper NoUpper))
+        else
+          type_variable ~env ~cont:type__ root_id
       | AnnotT (_, t, _) -> type__ ~env ?id t
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~cont:type__ r use_op t ts
-      | EvalT (t, d, id) ->
-        eval_t
-          ~env
-          ~cont:type__
-          ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
-          ~non_eval:TypeConverter.convert_type_destructor_unevaluated
-          ~force_eval:true
-          (t, d, id)
+      | EvalT (t, d, id') ->
+        if id = Some (EvalKey id') then
+          return Ty.(Bot (NoLowerWithUpper NoUpper))
+        else
+          eval_t
+            ~env
+            ~cont:type__
+            ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
+            ~non_eval:TypeConverter.convert_type_destructor_unevaluated
+            ~force_eval:true
+            (t, d, id')
       | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
       | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
