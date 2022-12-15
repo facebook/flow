@@ -157,6 +157,13 @@ end = struct
   include StateResult.Make (State)
   open Let_syntax
 
+  (* [id] is the identifier of the most recent OpenT or EvalT seen until we reach
+   * a conctete constructor for a type. It is passed down recursively through types
+   * like AnnotT, UnionT, MaybeT, etc., but will be turned to None when we descend
+   * into an ObjT for example. It is useful in determining trivially recursive types
+   * of the form `T = T | number`. *)
+  type fn_t = env:Env.t -> ?id:id_key -> Type.t -> (Ty.t, error) t
+
   (* Monadic helper functions *)
   let mapM f xs = all (Base.List.map ~f xs)
 
@@ -571,7 +578,7 @@ end = struct
    * - default: apply when destructuring returned 0 or >1 types, or a recursive type
    * - non_eval: apply when no destructuring happened
    *)
-  let eval_t ~env ~cont ~default ~non_eval ?(force_eval = false) (t, d, id) =
+  let eval_t ~env ~(cont : fn_t) ~(default : fn_t) ~non_eval ?(force_eval = false) (t, d, id) =
     match d with
     | T.TypeDestructorT (use_op, reason, d) ->
       if Env.evaluate_type_destructors env || force_eval then
@@ -580,7 +587,7 @@ end = struct
             let trace = Trace.dummy_trace in
             let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
             match Lookahead.peek ~env tout with
-            | Lookahead.LowerBounds [t] -> cont ~env t
+            | Lookahead.LowerBounds [t] -> cont ~env ~id:(EvalKey id) t
             | _ -> default ~env tout
         )
       else
@@ -595,7 +602,7 @@ end = struct
       in
       cont ~env t'
 
-  let type_variable ~env ~cont id =
+  let type_variable ~env ~(cont : fn_t) id =
     let uses_t =
       let rec uses_t_aux acc uses =
         match uses with
@@ -619,7 +626,7 @@ end = struct
           | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl))))
         | T.UseT (_, t) :: rest
         | T.TypeCastT (_, t) :: rest ->
-          let%bind t = cont ~env t in
+          let%bind t = cont ~env ~id:(TVarKey id) t in
           uses_t_aux (t :: acc) rest
         | T.ReposLowerT (_, _, u) :: rest -> uses_t_aux acc (u :: rest)
         (* skip these *)
@@ -638,7 +645,7 @@ end = struct
     let resolve_from_lower_bounds bounds =
       T.TypeMap.keys bounds.T.Constraint.lower
       |> mapM (fun t ->
-             let%map ty = cont ~env t in
+             let%map ty = cont ~env ~id:(TVarKey id) t in
              Nel.to_list (Ty.bk_union ty)
          )
       >>| Base.List.concat
@@ -647,7 +654,7 @@ end = struct
     let resolve_bounds = function
       | T.Constraint.Resolved (_, t)
       | T.Constraint.FullyResolved (_, (lazy t)) ->
-        cont ~env t
+        cont ~env ~id:(TVarKey id) t
       | T.Constraint.Unresolved bounds ->
         (match%bind resolve_from_lower_bounds bounds with
         | [] -> empty_with_upper_bounds bounds
@@ -659,15 +666,15 @@ end = struct
     in
     Recursive.with_cache (TVarKey root_id) ~f:(fun () -> resolve_bounds constraints)
 
-  let maybe_t ~env ~cont t =
-    let%map t = cont ~env t in
+  let maybe_t ~env ?id ~(cont : fn_t) t =
+    let%map t = cont ~env ?id t in
     Ty.mk_union ~from_bounds:false (Ty.Void, [Ty.Null; t])
 
-  let optional_t ~env ~cont t =
-    let%map t = cont ~env t in
+  let optional_t ~env ?id ~(cont : fn_t) t =
+    let%map t = cont ~env ?id t in
     Ty.mk_union ~from_bounds:false (Ty.Void, [t])
 
-  let type_app_t ~env ~cont reason use_op c ts =
+  let type_app_t ~env ~(cont : fn_t) reason use_op c ts =
     let cx = Env.get_cx env in
     let trace = Trace.dummy_trace in
     let reason_op = reason in
@@ -767,30 +774,29 @@ end = struct
 
     val convert_type_destructor_unevaluated : env:Env.t -> Type.t -> T.destructor -> (Ty.t, error) t
   end = struct
-    let rec type__ =
-      let type_debug ~env ~depth t state =
-        let cx = Env.get_cx env in
-        let prefix = spf "%*s[Norm|run_id:%d|depth:%d]" (2 * depth) "" (get_run_id ()) depth in
-        prerr_endlinef "%s Input: %s\n" prefix (Debug_js.dump_t cx t);
-        let result = type_with_alias_reason ~env t state in
-        let result_str =
-          match result with
-          | (Ok ty, _) -> "[Ok] " ^ Ty_debug.dump_t ty
-          | (Error e, _) -> "[Error] " ^ error_to_string e
-        in
-        prerr_endlinef "%s Output: %s\n" prefix result_str;
-        result
+    let rec type_debug ~env ?id ~depth t state =
+      let cx = Env.get_cx env in
+      let prefix = spf "%*s[Norm|run_id:%d|depth:%d]" (2 * depth) "" (get_run_id ()) depth in
+      prerr_endlinef "%s Input: %s\n" prefix (Debug_js.dump_t cx t);
+      let result = type_with_alias_reason ~env ?id t state in
+      let result_str =
+        match result with
+        | (Ok ty, _) -> "[Ok] " ^ Ty_debug.dump_t ty
+        | (Error e, _) -> "[Error] " ^ error_to_string e
       in
-      fun ~env t ->
-        let%bind env = descend env t in
-        let options = env.Env.options in
-        let depth = env.Env.depth - 1 in
-        if options.Env.verbose_normalizer then
-          type_debug ~env ~depth t
-        else
-          type_with_alias_reason ~env t
+      prerr_endlinef "%s Output: %s\n" prefix result_str;
+      result
 
-    and type_with_alias_reason ~env t =
+    and type__ ~env ?id t =
+      let%bind env = descend env t in
+      let options = env.Env.options in
+      let depth = env.Env.depth - 1 in
+      if options.Env.verbose_normalizer then
+        type_debug ~env ?id ~depth t
+      else
+        type_with_alias_reason ~env ?id t
+
+    and type_with_alias_reason ~env ?id t =
       let open Type in
       (* These type are treated as transparent when it comes to the type alias
        * annotation.
@@ -801,7 +807,7 @@ end = struct
       match t with
       | OpenT _
       | TypeDestructorTriggerT _ ->
-        type_ctor ~env ~cont:type_with_alias_reason t
+        type_ctor ~env ?id ~cont:type_with_alias_reason t
       | EvalT _ when Env.evaluate_type_destructors env ->
         type_ctor ~env ~cont:type_with_alias_reason t
       | _ ->
@@ -820,10 +826,10 @@ end = struct
             (* We are now beyond the point of the one-off expansion. Reset the environment
                assigning None to under_type_alias, so that aliases are used in subsequent
                invocations. *)
-            type_ctor ~env ~cont:type_with_alias_reason t
+            type_ctor ~env ?id ~cont:type_with_alias_reason t
         end
 
-    and type_ctor ~env ~cont t =
+    and type_ctor ~env ?id ~(cont : fn_t) t =
       let open Type in
       match t with
       | OpenT (_, id) -> type_variable ~env ~cont:type__ id
@@ -831,7 +837,7 @@ end = struct
         let loc = Reason.def_aloc_of_reason reason in
         let default _ = type__ ~env bound in
         lookup_tparam ~default env bound name loc
-      | AnnotT (_, t, _) -> type__ ~env t
+      | AnnotT (_, t, _) -> type__ ~env ?id t
       | EvalT (t, d, id) ->
         eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id)
       | ExactT (_, t) -> exact_t ~env t
@@ -860,8 +866,8 @@ end = struct
       | DefT (_, _, SingletonStrT lit) -> return (Ty.StrLit lit)
       | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
       | DefT (_, _, SingletonBigIntT (_, lit)) -> return (Ty.BigIntLit lit)
-      | MaybeT (_, t) -> maybe_t ~env ~cont:type__ t
-      | OptionalT { type_ = t; _ } -> optional_t ~env ~cont:type__ t
+      | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
+      | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
       | DefT (_, _, FunT (static, f)) ->
         let%map t = fun_ty ~env static f None in
         Ty.Fun t
@@ -869,8 +875,8 @@ end = struct
         let%map o = obj_ty ~env r o in
         Ty.Obj o
       | DefT (r, _, ArrT a) -> arr_ty ~env r a
-      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env) rep
-      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env) rep
+      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
+      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
       | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
@@ -1709,9 +1715,9 @@ end = struct
 
     let convert_t ?(skip_reason = false) =
       if skip_reason then
-        type_ctor_
+        type_ctor_ ?id:None
       else
-        type__
+        type__ ?id:None
 
     let convert_type_params_t = type_params_t
 
@@ -2283,7 +2289,7 @@ end = struct
       | IMUnset when not force_instance -> type__ ~env ~proto ~imode:IMStatic t
       | _ -> type__ ~env ~proto ~imode t
 
-    and type__ ~env ~proto ~(imode : instance_mode) t =
+    and type__ ~env ?id ~proto ~(imode : instance_mode) t =
       let open Type in
       match t with
       | OpenT (_, id) -> type_variable ~env ~cont:(type__ ~proto ~imode) id
@@ -2312,18 +2318,18 @@ end = struct
         let tparams_rev = List.rev (Nel.to_list tparams) @ env.Env.tparams_rev in
         let env = Env.{ env with tparams_rev } in
         type__ ~env ~proto ~imode t_out
-      | MaybeT (_, t) -> maybe_t ~env ~cont:(type__ ~proto ~imode) t
-      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ~proto ~imode) rep
-      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ~proto ~imode) rep
+      | MaybeT (_, t) -> maybe_t ~env ?id ~cont:(type__ ~proto ~imode) t
+      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id ~proto ~imode) rep
+      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id ~proto ~imode) rep
       | DefT (_, _, FunT (static, _)) -> type__ ~env ~proto ~imode static
       | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~cont:(type__ ~proto ~imode) r use_op t ts
       | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
-      | OptionalT { type_ = t; _ } -> optional_t ~env ~cont:(type__ ~proto ~imode) t
+      | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~proto ~imode) t
       | EvalT (t, d, id) ->
         eval_t
           ~env
           ~cont:(type__ ~proto ~imode)
-          ~default:(TypeConverter.convert_t ~skip_reason:false)
+          ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
           ~non_eval:TypeConverter.convert_type_destructor_unevaluated
           ~force_eval:true
           (t, d, id)
@@ -2359,25 +2365,25 @@ end = struct
   module ExpandLiteralUnionConverter : sig
     val convert_t : env:Env.t -> Type.t -> (Ty.t, error) t
   end = struct
-    let rec type__ ~env t =
+    let rec type__ ~env ?id t =
       let open Type in
       let%bind env = descend env t in
       match t with
       | OpenT (_, id) -> type_variable ~env ~cont:type__ id
-      | AnnotT (_, t, _) -> type__ ~env t
-      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env) rep
-      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env) rep
+      | AnnotT (_, t, _) -> type__ ~env ?id t
+      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
+      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~cont:type__ r use_op t ts
       | EvalT (t, d, id) ->
         eval_t
           ~env
           ~cont:type__
-          ~default:(TypeConverter.convert_t ~skip_reason:false)
+          ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
           ~non_eval:TypeConverter.convert_type_destructor_unevaluated
           ~force_eval:true
           (t, d, id)
-      | MaybeT (_, t) -> maybe_t ~env ~cont:type__ t
-      | OptionalT { type_ = t; _ } -> optional_t ~env ~cont:type__ t
+      | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
+      | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
       | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
       | DefT (_, _, SingletonStrT lit) -> return (Ty.StrLit lit)
       | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
