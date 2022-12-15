@@ -36,7 +36,6 @@ let lsp_completion_of_type =
   | Null
   | Obj _
   | Inter _
-  | TVar _
   | Bound _
   | Generic _
   | Any _
@@ -51,7 +50,6 @@ let lsp_completion_of_type =
   | TypeOf _
   | Utility _
   | IndexedAccess _
-  | Mu _
   | CharSet _ ->
     Lsp.Completion.Variable
 

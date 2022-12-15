@@ -502,8 +502,6 @@ module Validator = struct
       method! on_t env t =
         match t with
         (* Recursive types unsupported *)
-        | Ty.Mu _
-        | Ty.TVar _
         | Ty.Any Ty.Recursive ->
           env := Recursive :: !env;
           Ty.explicit_any

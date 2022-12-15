@@ -196,8 +196,6 @@ and dump_generics ~depth = function
   | Some ts -> "<" ^ dump_list (dump_t ~depth) ts ^ ">"
   | _ -> ""
 
-and dump_tvar (RVar i) = spf "T_%d" i
-
 and dump_utility ~depth u =
   let ctor = Ty.string_of_utility_ctor u in
   match Ty.types_of_utility u with
@@ -210,7 +208,6 @@ and dump_t ?(depth = 10) t =
   else
     let depth = depth - 1 in
     match t with
-    | TVar (v, ts) -> spf "TVAR(%s, params=%s)" (dump_tvar v) (dump_generics ~depth ts)
     | Bound (_, s) -> spf "Bound(%s)" s
     | Generic g -> dump_generic ~depth g
     | Any kind -> spf "Any (%s)" (dump_any_kind kind)
@@ -256,7 +253,6 @@ and dump_t ?(depth = 10) t =
         (dump_t ~depth _object)
         (dump_t ~depth index)
         optional
-    | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
     | CharSet s -> spf "CharSet (%s)" s
 
 and dump_class_decl ~depth (name, ps) =
@@ -294,17 +290,12 @@ and dump_elt ~depth = function
   | Type t -> spf "Type (%s)" (dump_t ~depth t)
   | Decl d -> spf "Decl (%s)" (dump_decl ~depth d)
 
-let dump_binding (v, ty) = Utils_js.spf "type %s = %s" (dump_tvar v) (dump_t ty)
-
-let dump_env_t s = Base.List.map ~f:dump_binding s |> String.concat "\n"
-
 let string_of_polarity = function
   | Negative -> "Negative"
   | Neutral -> "Neutral"
   | Positive -> "Positive"
 
 let string_of_ctor_t = function
-  | TVar (RVar _, _) -> "RecVar"
   | Bound _ -> "Bound"
   | Generic _ -> "Generic"
   | Any (Annotated _) -> "Explicit Any"
@@ -332,7 +323,6 @@ let string_of_ctor_t = function
   | TypeOf _ -> "Typeof"
   | Utility _ -> "Utility"
   | IndexedAccess _ -> "IndexedAccess"
-  | Mu _ -> "Mu"
   | CharSet _ -> "CharSet"
 
 let string_of_ctor_decl = function
@@ -378,7 +368,6 @@ let json_of_elt ~strip_root =
   and json_of_t_list t =
     Hh_json.(
       match t with
-      | TVar (v, ts) -> json_of_tvar v @ json_of_targs ts
       | Bound (_, name) -> [("bound", JSON_String name)]
       | Generic g -> json_of_generic g
       | Any (Annotated _) -> [("any", JSON_String "explicit")]
@@ -424,10 +413,8 @@ let json_of_elt ~strip_root =
         [
           ("object", json_of_t _object); ("index", json_of_t index); ("optional", JSON_Bool optional);
         ]
-      | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)]
       | CharSet s -> [("literal", JSON_String s)]
     )
-  and json_of_tvar (RVar i) = Hh_json.[("id", int_ i)]
   and json_of_generic (s, k, targs_opt) =
     json_of_targs targs_opt
     @ [
