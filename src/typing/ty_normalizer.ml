@@ -91,6 +91,7 @@ module NormalizerMonad : sig
     include_proto_members:bool ->
     idx_hook:(unit -> unit) ->
     force_instance:bool ->
+    include_interface_members:bool ->
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
@@ -2126,6 +2127,8 @@ end = struct
     val idx_hook : unit -> unit
 
     val force_instance : bool
+
+    val include_interface_members : bool
   end
 
   (* Expand the toplevel structure of the input type into an object type. This is
@@ -2183,17 +2186,32 @@ end = struct
         ~imode:IMInstance
         (Flow_js.get_builtin (Env.get_cx env) (OrdinaryName builtin) r)
 
-    and member_expand_object ~env ~proto super inst =
+    and member_expand_object ~env ~proto super implements inst =
       let { T.own_props; proto_props; _ } = inst in
       let%bind own_ty_props = TypeConverter.convert_obj_props_t ~env own_props None in
       let%bind proto_ty_props = TypeConverter.convert_obj_props_t ~env ~proto proto_props None in
-      let%map obj_props =
+      let%bind super_props =
         if include_proto_members then
           let%map super_ty = type__ ~env ~proto ~imode:IMInstance super in
-          Ty.SpreadProp super_ty :: own_ty_props @ proto_ty_props
+          [Ty.SpreadProp super_ty]
         else
-          return (own_ty_props @ proto_ty_props)
+          return []
       in
+      let%map interface_props =
+        if include_interface_members then
+          mapM
+            (fun t ->
+              let%map ty = type__ ~env ~proto ~imode:IMInstance t in
+              Ty.SpreadProp ty)
+            implements
+        else
+          return []
+      in
+      (* The order of these props is significant to ty_members which will take the
+         last one in case of name conflicts. They are ordered here by distance in
+         the prototype chain (and interface members last), so, for example,
+         overriding methods will have priority. *)
+      let obj_props = interface_props @ super_props @ proto_ty_props @ own_ty_props in
       Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_frozen = false; obj_literal = None; obj_props }
 
     and enum_t ~env reason trust enum =
@@ -2239,7 +2257,7 @@ end = struct
       let t = Flow_js.get_builtin_type (Env.get_cx env) reason (OrdinaryName builtin) in
       type__ ~env ~proto:true ~imode:IMUnset t
 
-    and instance_t ~env ~proto ~imode r static super inst =
+    and instance_t ~env ~proto ~imode r static super implements inst =
       let { T.inst_kind; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc, imode) with
@@ -2247,7 +2265,7 @@ end = struct
       | (T.ClassKind, _, IMStatic) -> type__ ~env ~proto:false ~imode static
       | (T.ClassKind, _, (IMUnset | IMInstance))
       | (T.InterfaceKind _, _, _) ->
-        member_expand_object ~env ~proto super inst
+        member_expand_object ~env ~proto super implements inst
 
     and opaque_t ~env ~proto ~imode r opaquetype =
       let current_source = Env.current_file env in
@@ -2287,8 +2305,8 @@ end = struct
       | DefT (_, _, ClassT t) -> type__ ~env ~proto ~imode t
       | DefT (r, _, ArrT a) -> arr_t ~env r a
       | DefT (r, tr, EnumObjectT e) -> enum_t ~env r tr e
-      | DefT (r, _, InstanceT (static, super, _, inst)) ->
-        instance_t ~env ~proto ~imode r static super inst
+      | DefT (r, _, InstanceT (static, super, implements, inst)) ->
+        instance_t ~env ~proto ~imode r static super implements inst
       | ThisClassT (_, t, _, _) -> this_class_t ~env ~proto ~imode t
       | DefT (_, _, PolyT { tparams; t_out; _ }) ->
         let tparams_rev = List.rev (Nel.to_list tparams) @ env.Env.tparams_rev in
@@ -2317,13 +2335,16 @@ end = struct
     let convert_t ~env t = type__ ~env ~proto:false ~imode:IMUnset t
   end
 
-  let run_expand_members ~include_proto_members ~idx_hook ~force_instance =
+  let run_expand_members ~include_proto_members ~idx_hook ~force_instance ~include_interface_members
+      =
     let module Converter = ExpandMembersConverter (struct
       let include_proto_members = include_proto_members
 
       let idx_hook = idx_hook
 
       let force_instance = force_instance
+
+      let include_interface_members = include_interface_members
     end) in
     run_type_aux ~f:Converter.convert_t ~simpl:Ty_utils.simplify_type
 
@@ -2440,7 +2461,14 @@ let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
   in
   result
 
-let expand_members ~include_proto_members ~idx_hook ~force_instance ~options ~genv scheme =
+let expand_members
+    ~include_proto_members
+    ~idx_hook
+    ~force_instance
+    ~include_interface_members
+    ~options
+    ~genv
+    scheme =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
@@ -2451,6 +2479,7 @@ let expand_members ~include_proto_members ~idx_hook ~force_instance ~options ~ge
       ~include_proto_members
       ~idx_hook
       ~force_instance
+      ~include_interface_members
       ~imported_names
       ~tparams_rev
       State.empty

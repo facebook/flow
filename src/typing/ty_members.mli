@@ -26,6 +26,7 @@ type ty_members = {
 val extract :
   include_proto_members:bool ->
   ?force_instance:bool ->
+  ?include_interface_members:bool ->
   cx:Context.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   file_sig:File_sig.With_ALoc.t ->
