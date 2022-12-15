@@ -143,7 +143,12 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     let kind =
       match kind with
       | Annotated _ -> "explicit"
-      | _ -> "implicit"
+      | Recursive -> "recursive"
+      | Placeholder -> "placeholder"
+      | AnyError _
+      | Unsound _
+      | Untyped ->
+        "implicit"
     in
     fuse
       [

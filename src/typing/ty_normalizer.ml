@@ -149,9 +149,18 @@ end = struct
        * instead is performance, since it trivializes the "check if variable
        * appears free". *)
       free_tvars: VSet.t;
+      rec_tvar_ids: ISet.t;
+      rec_eval_ids: Type.EvalIdSet.t;
     }
 
-    let empty = { counter = 0; cache = Cache.empty; free_tvars = VSet.empty }
+    let empty =
+      {
+        counter = 0;
+        cache = Cache.empty;
+        free_tvars = VSet.empty;
+        rec_tvar_ids = ISet.empty;
+        rec_eval_ids = Type.EvalIdSet.empty;
+      }
   end
 
   include StateResult.Make (State)
@@ -218,6 +227,20 @@ end = struct
   let add_to_free_tvars v =
     let open State in
     modify (fun state -> { state with free_tvars = VSet.add v state.free_tvars })
+
+  let add_rec_id id =
+    let open State in
+    match id with
+    | TVarKey id ->
+      modify (fun state -> { state with rec_tvar_ids = ISet.add id state.rec_tvar_ids })
+    | EvalKey id ->
+      modify (fun state -> { state with rec_eval_ids = Type.EvalIdSet.add id state.rec_eval_ids })
+
+  let is_rec_id id =
+    let%map state = get in
+    match id with
+    | TVarKey id -> ISet.mem id state.State.rec_tvar_ids
+    | EvalKey id -> Type.EvalIdSet.mem id state.State.rec_eval_ids
 
   (* Lookup a type parameter T in the current environment. There are three outcomes:
      1. T appears in env and for its first occurence locations match. This means it
@@ -766,7 +789,14 @@ end = struct
         if id = Some (TVarKey root_id) then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
-          type_variable ~env ~cont:type__ root_id
+          if%bind is_rec_id (TVarKey root_id) then
+            return (Ty.Any Ty.Recursive)
+          else if ISet.mem root_id env.Env.seen_tvar_ids then
+            let%map () = add_rec_id (TVarKey root_id) in
+            Ty.Any Ty.Recursive
+          else
+            let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
+            type_variable ~env ~cont:type__ root_id
       | GenericT { bound; reason; name; _ } ->
         let loc = Reason.def_aloc_of_reason reason in
         let default _ = type__ ~env bound in
@@ -776,7 +806,16 @@ end = struct
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
-          eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id')
+          if%bind is_rec_id (EvalKey id') then
+            return (Ty.Any Ty.Recursive)
+          else if Type.EvalIdSet.mem id' env.Env.seen_eval_ids then
+            let%map () = add_rec_id (EvalKey id') in
+            Ty.Any Ty.Recursive
+          else
+            let env =
+              { env with Env.seen_eval_ids = Type.EvalIdSet.add id' env.Env.seen_eval_ids }
+            in
+            eval_t ~env ~cont ~default:type__ ~non_eval:type_destructor_unevaluated (t, d, id')
       | ExactT (_, t) -> exact_t ~env t
       | CustomFunT (_, f) -> custom_fun ~env f
       | InternalT i -> internal_t t i
@@ -1650,25 +1689,33 @@ end = struct
 
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 
-    let convert_t ?(skip_reason = false) =
+    let reset_env env =
+      {
+        env with
+        Env.under_type_alias = Env.SymbolSet.empty;
+        seen_tvar_ids = ISet.empty;
+        seen_eval_ids = Type.EvalIdSet.empty;
+      }
+
+    let convert_t ?(skip_reason = false) ~env =
       if skip_reason then
-        type_ctor_ ?id:None
+        type_ctor_ ~env:(reset_env env) ?id:None
       else
-        type__ ?id:None
+        type__ ~env ?id:None
 
-    let convert_type_params_t = type_params_t
+    let convert_type_params_t ~env = type_params_t ~env:(reset_env env)
 
-    let convert_react_component_class = react_component_class
+    let convert_react_component_class ~env = react_component_class ~env:(reset_env env)
 
-    let convert_instance_t = instance_t
+    let convert_instance_t ~env = instance_t ~env:(reset_env env)
 
-    let convert_inline_interface = inline_interface
+    let convert_inline_interface ~env = inline_interface ~env:(reset_env env)
 
-    let convert_obj_props_t = obj_props_t
+    let convert_obj_props_t ~env = obj_props_t ~env:(reset_env env)
 
-    let convert_obj_t = obj_ty
+    let convert_obj_t ~env = obj_ty ~env:(reset_env env)
 
-    let convert_type_destructor_unevaluated = type_destructor_unevaluated
+    let convert_type_destructor_unevaluated ~env = type_destructor_unevaluated ~env:(reset_env env)
   end
 
   module ElementConverter : sig
@@ -2234,7 +2281,14 @@ end = struct
         if id = Some (TVarKey root_id) then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
-          type_variable ~env ~cont:(type__ ~proto ~imode) id'
+          if%bind is_rec_id (TVarKey root_id) then
+            return (Ty.Any Ty.Recursive)
+          else if ISet.mem root_id env.Env.seen_tvar_ids then
+            let%map () = add_rec_id (TVarKey root_id) in
+            Ty.Any Ty.Recursive
+          else
+            let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
+            type_variable ~env ~cont:(type__ ~proto ~imode) id'
       | AnnotT (_, t, _) -> type__ ~env ~proto ~imode t
       | DefT (_, _, IdxWrapper t) ->
         idx_hook ();
@@ -2271,13 +2325,22 @@ end = struct
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
-          eval_t
-            ~env
-            ~cont:(type__ ~proto ~imode)
-            ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
-            ~non_eval:TypeConverter.convert_type_destructor_unevaluated
-            ~force_eval:true
-            (t, d, id')
+          if%bind is_rec_id (EvalKey id') then
+            return (Ty.Any Ty.Recursive)
+          else if Type.EvalIdSet.mem id' env.Env.seen_eval_ids then
+            let%map () = add_rec_id (EvalKey id') in
+            Ty.Any Ty.Recursive
+          else
+            let env =
+              { env with Env.seen_eval_ids = Type.EvalIdSet.add id' env.Env.seen_eval_ids }
+            in
+            eval_t
+              ~env
+              ~cont:(type__ ~proto ~imode)
+              ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
+              ~non_eval:TypeConverter.convert_type_destructor_unevaluated
+              ~force_eval:true
+              (t, d, id')
       | ExactT (_, t) -> type__ ~env ~proto ~imode t
       | GenericT { bound; _ } -> type__ ~env ~proto ~imode bound
       | OpaqueT (r, o) -> opaque_t ~env ~proto ~imode r o
@@ -2319,7 +2382,14 @@ end = struct
         if id = Some (TVarKey root_id) then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
-          type_variable ~env ~cont:type__ root_id
+          if%bind is_rec_id (TVarKey root_id) then
+            return (Ty.Any Ty.Recursive)
+          else if ISet.mem root_id env.Env.seen_tvar_ids then
+            let%map () = add_rec_id (TVarKey root_id) in
+            Ty.Any Ty.Recursive
+          else
+            let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
+            type_variable ~env ~cont:type__ root_id
       | AnnotT (_, t, _) -> type__ ~env ?id t
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
@@ -2328,13 +2398,22 @@ end = struct
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
-          eval_t
-            ~env
-            ~cont:type__
-            ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
-            ~non_eval:TypeConverter.convert_type_destructor_unevaluated
-            ~force_eval:true
-            (t, d, id')
+          if%bind is_rec_id (EvalKey id') then
+            return (Ty.Any Ty.Recursive)
+          else if Type.EvalIdSet.mem id' env.Env.seen_eval_ids then
+            let%map () = add_rec_id (EvalKey id') in
+            Ty.Any Ty.Recursive
+          else
+            let env =
+              { env with Env.seen_eval_ids = Type.EvalIdSet.add id' env.Env.seen_eval_ids }
+            in
+            eval_t
+              ~env
+              ~cont:type__
+              ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
+              ~non_eval:TypeConverter.convert_type_destructor_unevaluated
+              ~force_eval:true
+              (t, d, id')
       | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
       | DefT (_, _, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)

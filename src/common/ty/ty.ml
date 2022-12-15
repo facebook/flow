@@ -69,6 +69,7 @@ and generic_t = symbol * gen_kind * t list option
 and any_kind =
   | Annotated of aloc
   | AnyError of any_error_kind option
+  | Recursive
   | Unsound of unsoundness_kind
   | Untyped
   | Placeholder
@@ -494,9 +495,10 @@ class ['A] comparator_ty =
       function
       | Annotated _ -> 0
       | AnyError _ -> 1
-      | Unsound _ -> 2
-      | Untyped -> 3
-      | Placeholder -> 4
+      | Recursive -> 2
+      | Unsound _ -> 3
+      | Untyped -> 4
+      | Placeholder -> 5
 
     method tag_of_unsoundness_kind _ =
       function

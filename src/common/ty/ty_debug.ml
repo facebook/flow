@@ -64,6 +64,7 @@ let rec dump_opt (f : 'a -> string) (o : 'a option) =
 and dump_any_kind = function
   | Annotated _ -> "Annotated"
   | AnyError kind -> spf "AnyError (%s)" (dump_any_error_kind kind)
+  | Recursive -> "Recursive"
   | Unsound kind -> spf "Unsound (%s)" (dump_any_unsoundness_kind kind)
   | Untyped -> "Untyped"
   | Placeholder -> "Placeholder"

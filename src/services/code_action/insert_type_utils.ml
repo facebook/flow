@@ -503,7 +503,8 @@ module Validator = struct
         match t with
         (* Recursive types unsupported *)
         | Ty.Mu _
-        | Ty.TVar _ ->
+        | Ty.TVar _
+        | Ty.Any Ty.Recursive ->
           env := Recursive :: !env;
           Ty.explicit_any
         | Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper u)) ->

@@ -3131,6 +3131,12 @@ module EvalIdCacheMap = WrappedMap.Make (struct
   let compare = Stdlib.compare
 end)
 
+module EvalIdSet = Flow_set.Make (struct
+  type t = Eval.id
+
+  let compare = Stdlib.compare
+end)
+
 module IdCacheMap = WrappedMap.Make (struct
   type t = TypeTerm.t * TypeTerm.defer_use_t
 
