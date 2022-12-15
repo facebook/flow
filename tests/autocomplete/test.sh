@@ -133,3 +133,4 @@ queries_in_file autocomplete "typeof.js" --lsp
 queries_in_file autocomplete "typeof_2.js" --lsp
 queries_in_file autocomplete "recursive.js" --pretty
 queries_in_file autocomplete "class_members.js" --pretty
+queries_in_file autocomplete "method_signature.js" --pretty

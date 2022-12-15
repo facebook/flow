@@ -1607,6 +1607,105 @@ let autocomplete_module_exports
   AcResult
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
+let unused_super_methods
+    ~reader ~options ~cx ~file_sig ~typed_ast ~edit_locs ~tparams_rev enclosing_class_t =
+  let open Base.Result.Let_syntax in
+  let get_members ~exclude_proto_members ~include_interface_members ~exclude_keys =
+    members_of_type
+      ~reader
+      ~exclude_proto_members
+      ~force_instance:true
+      ~include_interface_members
+      ~exclude_keys
+      cx
+      file_sig
+      typed_ast
+      enclosing_class_t
+      ~tparams_rev
+  in
+  (* We want to suggest methods from supertypes, except for those which already exist locally *)
+  let%bind (existing_members, _, _) =
+    get_members
+      ~exclude_proto_members:true
+      ~include_interface_members:false
+      ~exclude_keys:SSet.empty
+  in
+  let exclude_keys =
+    existing_members |> Base.List.map ~f:(fun (name, _, _, _) -> name) |> SSet.of_list
+  in
+  let%bind (mems, errors_to_log, _) =
+    get_members ~exclude_proto_members:false ~include_interface_members:true ~exclude_keys
+  in
+  let items =
+    mems
+    |> Base.List.filter_map ~f:(fun (name, documentation, tags, { Ty_members.ty; def_loc; _ }) ->
+           let open Base.Option in
+           (* Find the AST node for member we want to override *)
+           def_loc
+           >>| loc_of_aloc ~reader
+           >>= Find_method.find reader
+           (* Replace the method's body with just one placeholder statement expression: AUTO332 *)
+           >>| Ast_builder.Classes.Methods.with_body
+                 ~body:
+                   (Ast_builder.Functions.body
+                      [
+                        Ast_builder.Statements.expression
+                          (Ast_builder.Expressions.identifier "AUTO332");
+                      ]
+                   )
+           >>| Ast_builder.Classes.Methods.with_docs ~docs:None
+           (* Print the node to a string and replace the AUTO332 expression with an LSP snippet placeholder *)
+           >>| Js_layout_generator.class_method ~opts:(Code_action_service.layout_options options)
+           >>| Pretty_printer.print ~source_maps:None ~skip_endline:true
+           >>| Source.contents
+           >>| Base.String.substr_replace_first ~pattern:"AUTO332;" ~with_:"$0"
+           (* Construct the autocomplete result *)
+           >>| fun insert_text ->
+           autocomplete_create_result
+             ~insert_text
+             ?documentation
+             ?tags
+             ~snippet:true
+             ~exact_by_default:(Context.exact_by_default cx)
+             ~log_info:"class key"
+             (name, edit_locs)
+             ty
+       )
+  in
+  return (items, errors_to_log)
+
+let autocomplete_class_key
+    ~reader ~options ~cx ~file_sig ~typed_ast ~token ~edit_locs ~tparams_rev enclosing_class_t =
+  match enclosing_class_t with
+  | Some enclosing_class_t ->
+    begin
+      match
+        unused_super_methods
+          ~reader
+          ~options
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~edit_locs
+          ~tparams_rev
+          enclosing_class_t
+      with
+      | Error err -> AcFatalError err
+      | Ok (items, errors_to_log) ->
+        let items = filter_by_token_and_sort token items in
+        AcResult
+          {
+            result = { ServerProt.Response.Completion.items; is_incomplete = false };
+            errors_to_log;
+          }
+    end
+  | None ->
+    AcResult
+      {
+        result = { ServerProt.Response.Completion.items = []; is_incomplete = false };
+        errors_to_log = [];
+      }
+
 let autocomplete_object_key
     ~reader
     ~options
@@ -1742,9 +1841,19 @@ let autocomplete_get_results
       | Ac_ignored -> ("Empty", AcEmpty "Ignored")
       | Ac_comment -> ("Empty", AcEmpty "Comment")
       | Ac_jsx_text -> ("Empty", AcEmpty "JSXText")
-      | Ac_class_key ->
-        (* TODO: include superclass keys *)
-        ("Ac_class_key", AcEmpty "ClassKey")
+      | Ac_class_key { enclosing_class_t } ->
+        ( "Ac_class_key",
+          autocomplete_class_key
+            ~reader
+            ~options
+            ~cx
+            ~file_sig
+            ~typed_ast
+            ~token
+            ~edit_locs
+            ~tparams_rev
+            enclosing_class_t
+        )
       | Ac_module ->
         (* TODO: complete module names *)
         ("Acmodule", AcEmpty "Module")
