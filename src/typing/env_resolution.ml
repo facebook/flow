@@ -596,7 +596,9 @@ let resolve_binding_partial cx reason loc b =
           if has_hint then
             Flow_js.add_output
               cx
-              (Error_message.EMissingLocalAnnotation { reason; hint_available = true });
+              (Error_message.EMissingLocalAnnotation
+                 { reason; hint_available = true; from_generic_function = false }
+              );
           AnyT.error reason
         | Some t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
       else
@@ -607,7 +609,9 @@ let resolve_binding_partial cx reason loc b =
       | Hint_api.Hint_None ->
         Flow_js.add_output
           cx
-          (Error_message.EMissingLocalAnnotation { reason; hint_available = false })
+          (Error_message.EMissingLocalAnnotation
+             { reason; hint_available = false; from_generic_function = false }
+          )
       | _ -> ()
     in
     Env.bind_function_param cx t param_loc;

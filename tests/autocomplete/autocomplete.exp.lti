@@ -1503,7 +1503,7 @@ Flags: --pretty
   "result":[
     {"name":"a","type":"{b: T, ...}"},
     {"name":"c","type":"T"},
-    {"name":"foo","type":"<T>(a: {b: T, ...}) => empty"},
+    {"name":"foo","type":"<T>(a: {b: T, ...}) => any"},
     {"name":"this","type":"this"}
   ]
 }

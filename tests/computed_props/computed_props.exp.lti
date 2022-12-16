@@ -17,6 +17,22 @@ References:
        ^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- poly.js:3:29
+
+Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
+
+   3| function f1<T: string>(x: T) { return {[x]: x} } // ok
+                                  
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:4:21
+
+Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
+
+   4| function f2<T>(x: T) { return {[x]: x} } // error. mixed can't be used as a computed prop
+                          
+
+
 Error ----------------------------------------------------------------------------------------------------- poly.js:4:33
 
 Cannot assign computed property using `T` [1]. [invalid-computed-prop]
@@ -231,4 +247,4 @@ References:
 
 
 
-Found 14 errors
+Found 16 errors
