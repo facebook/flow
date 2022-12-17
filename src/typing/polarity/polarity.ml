@@ -34,6 +34,13 @@ let mult = function
     Neutral
   | _ -> Negative
 
+let equal = function
+  | (Positive, Positive)
+  | (Negative, Negative)
+  | (Neutral, Neutral) ->
+    true
+  | _ -> false
+
 (* printer *)
 let string = function
   | Positive -> "covariant"
