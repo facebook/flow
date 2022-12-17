@@ -1106,30 +1106,20 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
           use_op
         | _ -> use_op
       in
-      let expected =
-        match lpole with
-        | Polarity.Positive -> "read-only"
-        | Polarity.Negative -> "write-only"
-        | Polarity.Neutral ->
-          (match upole with
-          | Polarity.Negative -> "readable"
-          | Polarity.Positive -> "writable"
-          | Polarity.Neutral -> failwith "unreachable")
-      in
-      let actual =
-        match upole with
-        | Polarity.Positive -> "read-only"
-        | Polarity.Negative -> "write-only"
-        | Polarity.Neutral ->
-          (match lpole with
-          | Polarity.Negative -> "readable"
-          | Polarity.Positive -> "writable"
-          | Polarity.Neutral -> failwith "unreachable")
-      in
+      let expected = polarity_explanation (lpole, upole) in
+      let actual = polarity_explanation (upole, lpole) in
       let message =
         mk_prop_message prop
-        @ [text (" is " ^ expected ^ " in "); ref lower; text " but "]
-        @ [text (actual ^ " in "); ref upper]
+        @ [
+            text " is ";
+            text expected;
+            text " in ";
+            ref lower;
+            text " but ";
+            text actual;
+            text " in ";
+            ref upper;
+          ]
       in
       mk_use_op_error (loc_of_reason lower) use_op message
     in

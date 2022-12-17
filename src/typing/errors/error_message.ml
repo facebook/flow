@@ -1607,6 +1607,13 @@ let kind_of_msg =
     | _ -> InferError
   )
 
+let polarity_explanation = function
+  | (Polarity.Positive, _) -> "read-only"
+  | (Polarity.Negative, _) -> "write-only"
+  | (Polarity.Neutral, Polarity.Negative) -> "readable"
+  | (Polarity.Neutral, Polarity.Positive) -> "writable"
+  | (Polarity.Neutral, Polarity.Neutral) -> failwith "unreachable"
+
 let mk_prop_message =
   Errors.Friendly.(
     function
