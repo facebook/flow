@@ -12,4 +12,4 @@ val fuzzy_score :
   ?word_start:int ->
   pattern:string ->
   string ->
-  int
+  int option
