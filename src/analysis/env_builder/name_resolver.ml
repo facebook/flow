@@ -5511,16 +5511,6 @@ module Make
         this#mark_dead_write (Env_api.FunctionThisLoc, loc);
         super#function_declaration loc expr
 
-      method! pattern ?kind ((loc, _) as patt) =
-        write_entries <-
-          EnvMap.update
-            (Env_api.PatternLoc, loc)
-            (function
-              | None -> Some Env_api.NonAssigningWrite
-              | x -> x)
-            write_entries;
-        super#pattern ?kind patt
-
       method! function_param_pattern ((loc, _) as patt) =
         write_entries <-
           EnvMap.update
