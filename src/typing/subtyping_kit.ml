@@ -1589,10 +1589,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (fun t1 t2 ->
           match (t1, t2) with
           | (Some t1, Some t2) ->
-            n := !n + 1;
             let use_op =
               Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
             in
+            n := !n + 1;
             flow_to_mutable_child cx trace use_op fresh t1 t2
           | _ -> ())
         (ts1, ts2)
