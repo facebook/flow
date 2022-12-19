@@ -238,7 +238,7 @@ let fuzzy_score
     || word_start >= word_len
     || pattern_len - pattern_start > word_len - word_start
   then
-    0
+    None
   else
     let min_word_match_pos = Array.make pattern_len 0 in
 
@@ -257,7 +257,7 @@ let fuzzy_score
         word
     in
     if not fuzzy_matches then
-      0
+      None
     else
       (* Find the max matching word position for each pattern position *)
       let max_word_match_pos =
@@ -374,7 +374,7 @@ let fuzzy_score
       let (row, column) = fill_rows 1 1 pattern_start in
 
       if (not !has_strong_first_match) && not first_match_can_be_weak then
-        0
+        None
       else
         let row = row - 1 in
         let column = column - 1 in
@@ -458,4 +458,4 @@ let fuzzy_score
         let skipped_chars_count = max_match_column - pattern_len in
         let result = result - skipped_chars_count in
 
-        result
+        Some result

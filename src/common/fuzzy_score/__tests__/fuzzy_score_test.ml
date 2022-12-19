@@ -21,120 +21,120 @@ let compare (a_score, a_len, a) (b_score, b_len, b) =
     | k -> k)
   | k -> k
 
-let test pattern words =
-  Base.List.map words ~f:(fun word ->
-      let score = Fuzzy_score.fuzzy_score ~pattern word in
-      (score, String.length word, word)
-  )
-  |> Base.List.sort ~compare
-  |> Base.List.iter ~f:(fun (score, _, word) ->
-         Printf.printf "%-20s: %3d\n" ("\"" ^ word ^ "\"") score
-     )
+let test pattern word =
+  let score =
+    match Fuzzy_score.fuzzy_score ~pattern word with
+    | Some score -> Printf.sprintf "%d" score
+    | None -> "none"
+  in
+  Printf.printf "%S ~> %S: %s\n" pattern word score
 
 [@@@ocamlformat "disable"]
 
 let%expect_test "fuzzyScore" =
-  test "ab" ["abA"];
-  test "ccm" ["cacmelCase"];
-  test "bti" ["the_black_knight"];
-  test "ccm" ["camelCase"];
-  test "cmcm" ["camelCase"];
-  test "cmcm" ["camelCase"];
-  test "BK" ["the_black_knight"];
-  test "KeyboardLayout=" ["KeyboardLayout"];
-  test "LLL" ["SVisualLoggerLogsList"];
-  test "LLLL" ["SVilLoLosLi"];
-  test "LLLL" ["SVisualLoggerLogsList"];
-  test "TEdit" ["TextEdit"];
-  test "TEdit" ["TextEditor"];
-  test "TEdit" ["Textedit"];
-  test "TEdit" ["text_edit"];
-  test "TEditDit" ["TextEditorDecorationType"];
-  test "TEdit" ["TextEditorDecorationType"];
-  test "Tedit" ["TextEdit"];
-  test "ba" ["?AB?"];
-  test "bkn" ["the_black_knight"];
-  test "bt" ["the_black_knight"];
-  test "ccm" ["camelCasecm"];
-  test "fdm" ["findModel"];
-  test "fob" ["foobar"];
-  test "fobz" ["foobar"];
-  test "foobar" ["foobar"];
-  test "form" ["editor.formatOnSave"];
-  test "g p" ["Git: Pull"];
-  test "g p" ["Git: Pull"];
-  test "gip" ["Git: Pull"];
-  test "gip" ["Git: Pull"];
-  test "gp" ["Git: Pull"];
-  test "gp" ["Git_Git_Pull"];
-  test "is" ["ImportStatement"];
-  test "is" ["isValid"];
-  test "lowrd" ["lowWord"];
-  test "myvable" ["myvariable"];
-  test "no" [""];
-  test "no" ["match"];
-  test "ob" ["foobar"];
-  test "sl" ["SVisualLoggerLogsList"];
-  test "sllll" ["SVisualLoggerLogsList"];
-  test "Three" ["HTMLHRElement"];
-  test "Three" ["Three"];
-  test "fo" ["barfoo"];
-  test "fo" ["bar_foo"];
-  test "fo" ["bar_Foo"];
-  test "fo" ["bar foo"];
-  test "fo" ["bar.foo"];
-  test "fo" ["bar/foo"];
-  test "fo" ["bar\\foo"];
+  test "ab" "abA";
+  test "ccm" "cacmelCase";
+  test "bti" "the_black_knight";
+  test "ccm" "camelCase";
+  test "cmcm" "camelCase";
+  test "cmcm" "camelCase";
+  test "BK" "the_black_knight";
+  test "KeyboardLayout=" "KeyboardLayout";
+  test "LLL" "SVisualLoggerLogsList";
+  test "LLLL" "SVilLoLosLi";
+  test "LLLL" "SVisualLoggerLogsList";
+  test "TEdit" "TextEdit";
+  test "TEdit" "TextEditor";
+  test "TEdit" "Textedit";
+  test "TEdit" "text_edit";
+  test "TEditDit" "TextEditorDecorationType";
+  test "TEdit" "TextEditorDecorationType";
+  test "Tedit" "TextEdit";
+  test "ba" "?AB?";
+  test "bkn" "the_black_knight";
+  test "bt" "the_black_knight";
+  test "ccm" "camelCasecm";
+  test "fdm" "findModel";
+  test "fob" "foobar";
+  test "fobz" "foobar";
+  test "foobar" "foobar";
+  test "form" "editor.formatOnSave";
+  test "g p" "Git: Pull";
+  test "g p" "Git: Pull";
+  test "gip" "Git: Pull";
+  test "gip" "Git: Pull";
+  test "gp" "Git: Pull";
+  test "gp" "Git_Git_Pull";
+  test "is" "ImportStatement";
+  test "is" "isValid";
+  test "lowrd" "lowWord";
+  test "myvable" "myvariable";
+  test "no" "";
+  test "no" "match";
+  test "ob" "foobar";
+  test "sl" "SVisualLoggerLogsList";
+  test "sllll" "SVisualLoggerLogsList";
+  test "Three" "HTMLHRElement";
+  test "Three" "Three";
+  test "fo" "barfoo";
+  test "fo" "bar_foo";
+  test "fo" "bar_Foo";
+  test "fo" "bar foo";
+  test "fo" "bar.foo";
+  test "fo" "bar/foo";
+  test "fo" "bar\\foo";
+  test "f" "Foo";
   [%expect {|
-    "abA"               :  10
-    "cacmelCase"        :  -1
-    "the_black_knight"  :   0
-    "camelCase"         :   0
-    "camelCase"         :   0
-    "camelCase"         :   0
-    "the_black_knight"  : -10
-    "KeyboardLayout"    :   0
-    "SVisualLoggerLogsList":  -8
-    "SVilLoLosLi"       :   0
-    "SVisualLoggerLogsList":   0
-    "TextEdit"          :   9
-    "TextEditor"        :   9
-    "Textedit"          :   5
-    "text_edit"         :   4
-    "TextEditorDecorationType":   1
-    "TextEditorDecorationType":   9
-    "TextEdit"          :   7
-    "?AB?"              :   0
-    "the_black_knight"  :  -8
-    "the_black_knight"  : -21
-    "camelCasecm"       :  -8
-    "findModel"         :   1
-    "foobar"            :   5
-    "foobar"            :   0
-    "foobar"            :  44
-    "editor.formatOnSave":  -4
-    "Git: Pull"         :   4
-    "Git: Pull"         :   4
-    "Git: Pull"         :   7
-    "Git: Pull"         :   7
-    "Git: Pull"         :  -2
-    "Git_Git_Pull"      :  -5
-    "ImportStatement"   :  -3
-    "isValid"           :  10
-    "lowWord"           :  14
-    "myvariable"        :  23
-    ""                  :   0
-    "match"             :   0
-    "foobar"            :   0
-    "SVisualLoggerLogsList":  -4
-    "SVisualLoggerLogsList":  -8
-    "HTMLHRElement"     :   0
-    "Three"             :  36
-    "barfoo"            :   0
-    "bar_foo"           :  -5
-    "bar_Foo"           :  -5
-    "bar foo"           :  -5
-    "bar.foo"           :  -5
-    "bar/foo"           :  -5
-    "bar\foo"           :  -5
+    "ab" ~> "abA": 10
+    "ccm" ~> "cacmelCase": -1
+    "bti" ~> "the_black_knight": none
+    "ccm" ~> "camelCase": none
+    "cmcm" ~> "camelCase": none
+    "cmcm" ~> "camelCase": none
+    "BK" ~> "the_black_knight": -10
+    "KeyboardLayout=" ~> "KeyboardLayout": none
+    "LLL" ~> "SVisualLoggerLogsList": -8
+    "LLLL" ~> "SVilLoLosLi": none
+    "LLLL" ~> "SVisualLoggerLogsList": none
+    "TEdit" ~> "TextEdit": 9
+    "TEdit" ~> "TextEditor": 9
+    "TEdit" ~> "Textedit": 5
+    "TEdit" ~> "text_edit": 4
+    "TEditDit" ~> "TextEditorDecorationType": 1
+    "TEdit" ~> "TextEditorDecorationType": 9
+    "Tedit" ~> "TextEdit": 7
+    "ba" ~> "?AB?": none
+    "bkn" ~> "the_black_knight": -8
+    "bt" ~> "the_black_knight": -21
+    "ccm" ~> "camelCasecm": -8
+    "fdm" ~> "findModel": 1
+    "fob" ~> "foobar": 5
+    "fobz" ~> "foobar": none
+    "foobar" ~> "foobar": 44
+    "form" ~> "editor.formatOnSave": -4
+    "g p" ~> "Git: Pull": 4
+    "g p" ~> "Git: Pull": 4
+    "gip" ~> "Git: Pull": 7
+    "gip" ~> "Git: Pull": 7
+    "gp" ~> "Git: Pull": -2
+    "gp" ~> "Git_Git_Pull": -5
+    "is" ~> "ImportStatement": -3
+    "is" ~> "isValid": 10
+    "lowrd" ~> "lowWord": 14
+    "myvable" ~> "myvariable": 23
+    "no" ~> "": none
+    "no" ~> "match": none
+    "ob" ~> "foobar": none
+    "sl" ~> "SVisualLoggerLogsList": -4
+    "sllll" ~> "SVisualLoggerLogsList": -8
+    "Three" ~> "HTMLHRElement": none
+    "Three" ~> "Three": 36
+    "fo" ~> "barfoo": none
+    "fo" ~> "bar_foo": -5
+    "fo" ~> "bar_Foo": -5
+    "fo" ~> "bar foo": -5
+    "fo" ~> "bar.foo": -5
+    "fo" ~> "bar/foo": -5
+    "fo" ~> "bar\\foo": -5
+    "f" ~> "Foo": 0
   |}]

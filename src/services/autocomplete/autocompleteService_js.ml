@@ -600,8 +600,8 @@ let filter_by_token_and_sort token items =
     Base.List.rev_filter_map items ~f:(fun item ->
         let open ServerProt.Response.Completion in
         match Fuzzy_score.fuzzy_score ~pattern:before item.name with
-        | 0 -> None
-        | score -> Some (score, item)
+        | None -> None
+        | Some score -> Some (score, item)
     )
     |> Base.List.stable_sort ~compare:(fun a b ->
            (* since the list is reversed, we sort backwards *)
@@ -622,8 +622,8 @@ let filter_by_token_and_sort_rev token items =
     Base.List.rev_filter_map items ~f:(fun item ->
         let open ServerProt.Response.Completion in
         match Fuzzy_score.fuzzy_score ~pattern:before item.name with
-        | 0 -> None
-        | score -> Some (score, item)
+        | None -> None
+        | Some score -> Some (score, item)
     )
     |> Base.List.stable_sort ~compare:(fun a b -> Base.Int.compare (fst b) (fst a))
     |> Base.List.rev_map ~f:snd
