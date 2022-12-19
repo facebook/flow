@@ -1,3 +1,7 @@
+### 0.196.1
+
+* Fix some missing autocomplete results (regression in 0.196.0)
+
 ### 0.196.0
 
 Likely to cause new Flow errors:
