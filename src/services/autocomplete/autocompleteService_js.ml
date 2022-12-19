@@ -757,15 +757,14 @@ let autocomplete_id
     else
       items_rev
   in
-  let items_rev = filter_by_token_and_sort_rev token items_rev in
-  let (items_rev, is_incomplete) =
+  let (items_rev, is_incomplete, sorted) =
     if imports then
       let (before, _after) = Autocomplete_sigil.remove token in
       if before = "" then
         (* for empty autocomplete requests (hitting ctrl-space without typing anything),
            don't include any autoimport results, but do set `is_incomplete` so that
            it queries again when you type something. *)
-        (items_rev, true)
+        (items_rev, true, false)
       else
         let locals = set_of_locals ~f:(fun ((name, _docs, _tags), _ty) -> name) identifiers in
         let { Export_search.results = auto_imports; is_incomplete } =
@@ -773,6 +772,14 @@ let autocomplete_id
             ~options:default_autoimport_options
             before
             env.ServerEnv.exports
+        in
+        let items_rev =
+          if imports_ranked_usage then
+            (* to maintain the order of the autoimports, we sort the non-imports
+               here, and then don't sort the whole list later. *)
+            filter_by_token_and_sort_rev token items_rev
+          else
+            items_rev
         in
         let items_rev =
           append_completion_items_of_autoimports
@@ -786,10 +793,23 @@ let autocomplete_id
             auto_imports
             items_rev
         in
-        (items_rev, is_incomplete)
+        let items_rev =
+          if imports_ranked_usage then
+            (* when ranked imports are enabled, don't fuzzy score them *)
+            items_rev
+          else
+            filter_by_token_and_sort_rev token items_rev
+        in
+        (items_rev, is_incomplete, true)
     else
       (* if autoimports are not enabled, then we have all the results *)
-      (items_rev, false)
+      (items_rev, false, false)
+  in
+  let items_rev =
+    if not sorted then
+      filter_by_token_and_sort_rev token items_rev
+    else
+      items_rev
   in
   let result = { ServerProt.Response.Completion.items = List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
