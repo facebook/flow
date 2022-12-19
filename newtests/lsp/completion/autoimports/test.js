@@ -33,6 +33,388 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
+                  label: 'Foo',
+                  kind: 6,
+                  detail: 'Import from ./foo',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'Foo',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import { Foo } from "./foo";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'fAUTO332',
+                        index: 0,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'Foo',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'far',
+                  kind: 6,
+                  detail: '(global)',
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'far',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {
+                        token: 'fAUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'far',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'foo',
+                  kind: 6,
+                  detail: 'Import default from ./foo',
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'foo',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import foo from "./foo";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'fAUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'foo',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'foo',
+                  kind: 6,
+                  detail: 'Import from LibA',
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'foo',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import { foo } from "LibA";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'fAUTO332',
+                        index: 3,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'foo',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'foo',
+                  kind: 6,
+                  detail: 'Import * from ./foo',
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'foo',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import * as foo from "./foo";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'fAUTO332',
+                        index: 4,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'foo',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'foobar',
+                  kind: 6,
+                  detail: 'Import default from ./foobar',
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'foobar',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import foobar from "./foobar";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'fAUTO332',
+                        index: 5,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'foobar',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Function',
+                  kind: 6,
+                  detail: '(global)',
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'Function',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {
+                        token: 'fAUTO332',
+                        index: 6,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'Function',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'undefined',
+                  kind: 6,
+                  detail: '(global)',
+                  sortText: '00000000000000000007',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'undefined',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {
+                        token: 'fAUTO332',
+                        index: 7,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'undefined',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
+
+    test('textDocument/completion with ranked autoimports', [
+      addFiles('foo.js', 'bar.js', 'foobar.js', 'lib/builtins.js'),
+      addCode(`f`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 1},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
                   label: 'foo',
                   kind: 6,
                   detail: 'Import default from ./foo',
@@ -397,7 +779,7 @@ module.exports = (suite(
           '$/cancelRequest',
         ],
       ),
-    ]).flowConfig('_flowconfig_autoimports'),
+    ]).flowConfig('_flowconfig_ranked'),
 
     test('textDocument/completion with JSX autoimports', [
       addCode(`function Foo(props: {...}): null {}`),
@@ -574,7 +956,7 @@ module.exports = (suite(
           '$/cancelRequest',
         ],
       ),
-    ]).flowConfig('_flowconfig_autoimports'),
+    ]),
 
     test('textDocument/completion should exclude reserved words', [
       addFiles('reserved.js'),
@@ -661,7 +1043,7 @@ module.exports = (suite(
           '$/cancelRequest',
         ],
       ),
-    ]).flowConfig('_flowconfig_autoimports'),
+    ]),
 
     // should not suggest importing `foobar` from foobar.js
     test('textDocument/completion should exclude variables already in scope', [
@@ -724,7 +1106,7 @@ module.exports = (suite(
           '$/cancelRequest',
         ],
       ),
-    ]).flowConfig('_flowconfig_autoimports'),
+    ]),
 
     test('should sort properly', [
       addFiles('AllTheThings.js'),
@@ -903,7 +1285,7 @@ module.exports = (suite(
           '$/cancelRequest',
         ],
       ),
-    ]).flowConfig('_flowconfig_autoimports'),
+    ]),
 
     test('should handle scoped module names', [
       addFiles('lib/scoped.js'),
@@ -980,6 +1362,6 @@ module.exports = (suite(
           '$/cancelRequest',
         ],
       ),
-    ]).flowConfig('_flowconfig_autoimports'),
+    ]),
   ],
 ): Suite);
