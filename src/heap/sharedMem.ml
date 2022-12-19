@@ -800,47 +800,19 @@ module NewAPI = struct
     mutable remaining_size: int;
   }
 
-  type heap_string
+  type +'k parse_kind
 
-  type heap_int64
+  type 'k parse = [ `parse of 'k parse_kind ]
 
-  type 'a entity
+  type 'k entity = [ `entity of 'k ]
+
+  type 'k sklist = [ `sklist of 'k ]
+
+  type 'k sknode = [ `sknode of 'k ]
+
+  type 'k tbl = [ `tbl of 'k ]
 
   type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
-
-  type 'a addr_tbl
-
-  type 'a sklist
-
-  type 'a sknode
-
-  type ast
-
-  type docblock
-
-  type aloc_table
-
-  type type_sig
-
-  type file_sig
-
-  type exports
-
-  type resolved_requires
-
-  type imports
-
-  type package_info
-
-  type cas_digest
-
-  type +'a parse
-
-  type haste_info
-
-  type file
-
-  type haste_module
 
   type size = int
 
@@ -1087,7 +1059,7 @@ module NewAPI = struct
 
   let read_string addr = read_string_generic String_tag addr 0
 
-  external compare_string : heap_string addr -> heap_string addr -> int = "hh_compare_string"
+  external compare_string : [ `string ] addr -> [ `string ] addr -> int = "hh_compare_string"
     [@@noalloc]
 
   (** Int64 *)

@@ -13,14 +13,14 @@ module FileHeap =
   SharedMem.NoCacheAddr
     (File_key)
     (struct
-      type t = Heap.file
+      type t = [ `file ]
     end)
 
 module HasteModuleHeap =
   SharedMem.NoCacheAddr
     (StringKey)
     (struct
-      type t = Heap.haste_module
+      type t = [ `haste_module ]
     end)
 
 exception File_not_found of string
@@ -68,15 +68,15 @@ type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
-type file_addr = Heap.file SharedMem.addr
+type file_addr = [ `file ] SharedMem.addr
 
 type +'a parse_addr = 'a Heap.parse SharedMem.addr
 
-type haste_info_addr = Heap.haste_info SharedMem.addr
+type haste_info_addr = [ `haste_info ] SharedMem.addr
 
-type haste_module_addr = Heap.haste_module SharedMem.addr
+type haste_module_addr = [ `haste_module ] SharedMem.addr
 
-type provider_addr = Heap.file Heap.entity SharedMem.addr
+type provider_addr = [ `file ] Heap.entity SharedMem.addr
 
 type resolved_module = (Modulename.t, string) Result.t
 

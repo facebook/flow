@@ -15,42 +15,42 @@ module H1 =
   NoCacheAddr
     (StringKey)
     (struct
-      type t = heap_string
+      type t = [ `string ]
     end)
 
 module H2 =
   NoCacheAddr
     (StringKey)
     (struct
-      type t = heap_string addr_tbl
+      type t = [ `string ] tbl
     end)
 
 module H3 =
   NoCacheAddr
     (StringKey)
     (struct
-      type t = heap_string addr_tbl addr_tbl
+      type t = [ `string ] tbl tbl
     end)
 
 module Ent =
   NoCacheAddr
     (StringKey)
     (struct
-      type t = heap_string entity
+      type t = [ `string ] entity
     end)
 
 module Files =
   NoCacheAddr
     (StringKey)
     (struct
-      type t = file
+      type t = [ `file ]
     end)
 
 module HasteModules =
   NoCacheAddr
     (StringKey)
     (struct
-      type t = haste_module
+      type t = [ `haste_module ]
     end)
 
 let assert_heap_size wsize =
