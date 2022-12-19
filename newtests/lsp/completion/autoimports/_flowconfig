@@ -1,0 +1,9 @@
+[libs]
+lib/
+
+[options]
+autoimports=true
+autoimports_ranked_by_usage=false
+
+; disabling the builtins prevents this test from failing every time they change
+no_flowlib=true
