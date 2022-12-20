@@ -80,6 +80,19 @@ let default_options =
     max_depth = Some 50;
   }
 
+let default_codemod_options =
+  {
+    expand_internal_types = false;
+    flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
+    optimize_types = false;
+    omit_targ_defaults = true;
+    merge_bot_and_any_kinds = false;
+    verbose_normalizer = false;
+    max_depth = None;
+  }
+
 (* This is a global environment that should not change during normalization *)
 type genv = {
   (* File the query originated from *)
