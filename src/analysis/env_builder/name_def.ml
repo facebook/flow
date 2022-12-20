@@ -1082,7 +1082,30 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       super#function_this_param this_
 
     method! catch_clause_pattern pat =
-      this#add_destructure_bindings Catch pat;
+      let source =
+        match pat with
+        | ( _,
+            Ast.Pattern.Identifier
+              {
+                Ast.Pattern.Identifier.annot =
+                  Ast.Type.Available (_, (_, (Ast.Type.Any _ | Ast.Type.Mixed _)));
+                _;
+              }
+          ) ->
+          (match Destructure.type_of_pattern pat with
+          | Some annot ->
+            Annotation
+              {
+                tparams_map = ALocMap.empty;
+                optional = false;
+                has_default_expression = false;
+                param_loc = None;
+                annot;
+              }
+          | None -> CatchUnannotated)
+        | _ -> CatchUnannotated
+      in
+      this#add_destructure_bindings source pat;
       super#catch_clause_pattern pat
 
     method visit_function_expr

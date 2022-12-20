@@ -702,15 +702,26 @@ opaque type T<X>: S<X> = Y<X>
     (4, 14) to (4, 15) =>
     legal scc: (((2, 5) to (2, 6)); ((4, 12) to (4, 13))) |}]
 
-let%expect_test "catch" =
+let%expect_test "unannotated catch" =
   print_init_test {|
 var x;
 try {} catch (e) { x = e }
   |};
   [%expect {|
     [
-      (3, 14) to (3, 15) => catch;
+      (3, 14) to (3, 15) => unannotated catch param;
       (3, 19) to (3, 20) => val (3, 23) to (3, 24)
+    ] |}]
+
+let%expect_test "catch with mixed" =
+  print_init_test {|
+var x;
+try {} catch (e: mixed) { x = e }
+  |};
+  [%expect {|
+    [
+      (3, 14) to (3, 15) => annot (3, 15) to (3, 22);
+      (3, 26) to (3, 27) => val (3, 30) to (3, 31)
     ] |}]
 
 let%expect_test "declarepred" =

@@ -104,7 +104,7 @@ type root =
       optional: bool;
       default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
     }
-  | Catch
+  | CatchUnannotated
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
 type selector =
@@ -221,7 +221,7 @@ module Print = struct
   let string_of_root = function
     | Contextual _ -> "contextual"
     | EmptyArray _ -> "[]"
-    | Catch -> "catch"
+    | CatchUnannotated -> "unannotated catch param"
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
     | FunctionValue { function_loc; _ } -> spf "function val %s" (ALoc.debug_to_string function_loc)

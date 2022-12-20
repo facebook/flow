@@ -622,8 +622,8 @@ let resolve_binding_partial cx reason loc b =
         t
     in
     (t, mk_use_op t)
-  | Root Catch ->
-    let t = AnyT.annot (mk_reason (RCustom "catch parameter") loc) in
+  | Root CatchUnannotated ->
+    let t = AnyT.annot (mk_reason (RCustom "unannotated catch parameter") loc) in
     (t, mk_use_op t)
   | Root (For (kind, exp)) ->
     let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
