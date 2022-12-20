@@ -944,9 +944,9 @@ end = struct
       | T.TupleAT (_, ts) ->
         let%map elements =
           mapM
-            (fun (T.TupleElement { name; t }) ->
+            (fun (T.TupleElement { name; t; polarity }) ->
               let%map t = type__ ~env t in
-              Ty.TupleElement { name; t })
+              Ty.TupleElement { name; t; polarity = type_polarity polarity })
             ts
         in
         Ty.Tup elements

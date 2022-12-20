@@ -3856,7 +3856,7 @@ struct
             | TupleAT (_, elements) ->
               (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
               List.iter
-                (fun (TupleElement { t = from; name = _ }) ->
+                (fun (TupleElement { t = from; polarity = _; name = _ }) ->
                   rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
                 elements
             | ArrayAT (_, Some ts) ->
@@ -4242,7 +4242,8 @@ struct
               TupleAT
                 ( f elem_t,
                   Base.List.map
-                    ~f:(fun (TupleElement { name; t }) -> TupleElement { name; t = f t })
+                    ~f:(fun (TupleElement { name; t; polarity }) ->
+                      TupleElement { name; t = f t; polarity })
                     elements
                 )
             | ROArrayAT elemt -> ROArrayAT (f elemt)
@@ -5856,7 +5857,8 @@ struct
             (TupleAT
                ( any,
                  Base.List.map
-                   ~f:(fun (TupleElement { name; t }) -> TupleElement { name; t = only_any t })
+                   ~f:(fun (TupleElement { name; t; polarity }) ->
+                     TupleElement { name; t = only_any t; polarity })
                    elements
                )
             )
@@ -8332,8 +8334,9 @@ struct
           iter2opt
             (fun t1 t2 ->
               match (t1, t2) with
-              | (Some (TupleElement { t = t1; name = _ }), Some (TupleElement { t = t2; name = _ }))
-                ->
+              | ( Some (TupleElement { t = t1; polarity = _; name = _ }),
+                  Some (TupleElement { t = t2; polarity = _; name = _ })
+                ) ->
                 rec_unify cx trace ~use_op t1 t2
               | _ -> ())
             (ts1, ts2)
@@ -8940,7 +8943,10 @@ struct
                   ArrT
                     (TupleAT
                        ( elemt,
-                         Base.List.map ~f:(fun t -> TupleElement { name = None; t }) tuple_types
+                         Base.List.map
+                           ~f:(fun t ->
+                             TupleElement { name = None; t; polarity = Polarity.Neutral })
+                           tuple_types
                        )
                     )
                 )
@@ -8976,7 +8982,10 @@ struct
             | ResolvedSpreadArg (_, TupleAT (_, elements), generic) :: rest ->
               let args =
                 List.rev_append
-                  (List.map (fun (TupleElement { t; name = _ }) -> (t, generic)) elements)
+                  (List.map
+                     (fun (TupleElement { t; polarity = _; name = _ }) -> (t, generic))
+                     elements
+                  )
                   args
               in
               flatten cx r args spread rest

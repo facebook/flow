@@ -215,7 +215,12 @@ let rec merge_type cx =
         ArrT (ArrayAT (merge_type cx (t1, t2), tuple_types))
       )
   | (DefT (_, _, ArrT (TupleAT (t1, ts1))), DefT (_, _, ArrT (TupleAT (t2, ts2))))
-    when List.length ts1 = List.length ts2 ->
+    when List.length ts1 = List.length ts2
+         && List.for_all2
+              (fun (TupleElement { polarity = p1; _ }) (TupleElement { polarity = p2; _ }) ->
+                Polarity.equal (p1, p2))
+              ts1
+              ts2 ->
     DefT
       ( locationless_reason (RCustom "tuple"),
         bogus_trust (),
@@ -224,8 +229,8 @@ let rec merge_type cx =
              ( merge_type cx (t1, t2),
                Base.List.map2_exn
                  ~f:
-                   (fun (TupleElement { name = name1; t = t1 })
-                        (TupleElement { name = name2; t = t2 }) ->
+                   (fun (TupleElement { name = name1; t = t1; polarity })
+                        (TupleElement { name = name2; t = t2; polarity = _ }) ->
                    let name =
                      if name1 = name2 then
                        name1
@@ -233,7 +238,7 @@ let rec merge_type cx =
                        None
                    in
                    let t = merge_type cx (t1, t2) in
-                   TupleElement { name; t })
+                   TupleElement { name; t; polarity })
                  ts1
                  ts2
              )

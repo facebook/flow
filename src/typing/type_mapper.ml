@@ -654,12 +654,12 @@ class virtual ['a] t =
         let t'' = self#type_ cx map_cx t' in
         let tlist' =
           ListUtils.ident_map
-            (fun (TupleElement { name; t } as element) ->
+            (fun (TupleElement { name; t; polarity } as element) ->
               let t' = self#type_ cx map_cx t in
               if t' == t then
                 element
               else
-                TupleElement { name; t = t' })
+                TupleElement { name; t = t'; polarity })
             tlist
         in
         if t'' == t' && tlist' == tlist then

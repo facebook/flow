@@ -1753,15 +1753,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (t, List.rev rev_prop_asts)
 
-  and convert_tuple_element cx tparams_map (loc, { Ast.Type.Tuple.Element.name; annot }) =
+  and convert_tuple_element cx tparams_map (loc, { Ast.Type.Tuple.Element.name; annot; variance }) =
     let (((_, t), _) as annot) = convert cx tparams_map annot in
     let (id_name, str_name) =
       match name with
       | None -> (None, None)
       | Some (loc, ({ Ast.Identifier.name; _ } as id_name)) -> (Some ((loc, t), id_name), Some name)
     in
-    let element_ast = (loc, { Ast.Type.Tuple.Element.name = id_name; annot }) in
-    (t, TupleElement { name = str_name; t }, element_ast)
+    let element_ast = (loc, { Ast.Type.Tuple.Element.name = id_name; annot; variance }) in
+    (t, TupleElement { name = str_name; t; polarity = polarity variance }, element_ast)
 
   and mk_func_sig =
     let open Ast.Type.Function in

@@ -232,7 +232,9 @@ and dump_t ?(depth = 10) t =
     | Obj o -> dump_obj ~depth o
     | Arr a -> dump_arr ~depth a
     | Tup ts ->
-      spf "Tup (%s)" (dump_list (fun (TupleElement { name = _; t }) -> dump_t ~depth t) ~sep:"," ts)
+      spf
+        "Tup (%s)"
+        (dump_list (fun (TupleElement { t; name = _; polarity = _ }) -> dump_t ~depth t) ~sep:"," ts)
     | Union (_, t1, t2, ts) ->
       spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (Base.List.take (t1 :: t2 :: ts) 10))
     | Inter (t1, t2, ts) -> spf "Inter (%s)" (dump_list (dump_t ~depth) ~sep:", " (t1 :: t2 :: ts))
@@ -398,7 +400,8 @@ let json_of_elt ~strip_root =
       | Tup ts ->
         [
           ( "types",
-            JSON_Array (Base.List.map ~f:(fun (TupleElement { name = _; t }) -> json_of_t t) ts)
+            JSON_Array
+              (Base.List.map ~f:(fun (TupleElement { t; name = _; polarity = _ }) -> json_of_t t) ts)
           );
         ]
       | Union (_, t0, t1, ts) ->

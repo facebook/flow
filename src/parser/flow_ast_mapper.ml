@@ -1436,13 +1436,14 @@ class ['loc] mapper =
 
     method tuple_element (t : ('loc, 'loc) Ast.Type.Tuple.Element.t) =
       let open Ast.Type.Tuple.Element in
-      let (loc, { annot; name }) = t in
+      let (loc, { annot; name; variance }) = t in
       let annot' = this#type_ annot in
       let name' = map_opt this#identifier name in
-      if annot' == annot && name' == name then
+      let variance' = this#variance_opt variance in
+      if annot' == annot && name' == name && variance' == variance then
         t
       else
-        (loc, { annot = annot'; name = name' })
+        (loc, { annot = annot'; name = name'; variance = variance' })
 
     method array_type (t : ('loc, 'loc) Ast.Type.Array.t) =
       let open Ast.Type.Array in

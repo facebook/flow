@@ -1663,12 +1663,16 @@ with type t = Impl.t = struct
       node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
     and tuple_type (loc, { Type.Tuple.elements; comments }) =
       node ?comments "TupleTypeAnnotation" loc [("types", array_of_list tuple_element elements)]
-    and tuple_element ?comments (loc, { Type.Tuple.Element.name; annot }) =
+    and tuple_element ?comments (loc, { Type.Tuple.Element.name; annot; variance = variance_ }) =
       node
         ?comments
         "TupleTypeElement"
         loc
-        [("label", option identifier name); ("elementType", _type annot)]
+        [
+          ("label", option identifier name);
+          ("elementType", _type annot);
+          ("variance", option variance variance_);
+        ]
     and string_literal_type (loc, { Ast.StringLiteral.value; raw; comments }) =
       node
         ?comments

@@ -107,9 +107,15 @@ let type_ options =
     | Tup elements ->
       let%map els =
         mapM
-          (fun (TupleElement { name; t }) ->
+          (fun (TupleElement { name; t; polarity }) ->
             let%map annot = type_ t in
-            (Loc.none, { T.Tuple.Element.name = Base.Option.map ~f:id_from_string name; annot }))
+            ( Loc.none,
+              {
+                T.Tuple.Element.name = Base.Option.map ~f:id_from_string name;
+                annot;
+                variance = variance_ polarity;
+              }
+            ))
           elements
       in
       (Loc.none, T.Tuple { T.Tuple.elements = els; comments = None })

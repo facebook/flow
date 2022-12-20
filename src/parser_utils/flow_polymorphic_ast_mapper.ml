@@ -1037,10 +1037,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method tuple_element (t : ('M, 'T) Ast.Type.Tuple.Element.t) : ('N, 'U) Ast.Type.Tuple.Element.t
         =
       let open Ast.Type.Tuple.Element in
-      let (annot, { annot = t_annot; name }) = t in
+      let (annot, { annot = t_annot; name; variance }) = t in
       let t_annot' = this#type_ t_annot in
       let name' = Option.map ~f:this#t_identifier name in
-      (this#on_loc_annot annot, { annot = t_annot'; name = name' })
+      let variance' = Option.map ~f:this#variance variance in
+      (this#on_loc_annot annot, { annot = t_annot'; name = name'; variance = variance' })
 
     method array_type (t : ('M, 'T) Ast.Type.Array.t) : ('N, 'U) Ast.Type.Array.t =
       let open Ast.Type.Array in

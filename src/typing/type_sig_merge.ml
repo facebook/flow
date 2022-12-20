@@ -499,9 +499,12 @@ and merge_annot tps file = function
     let elem_reason = Reason.(mk_annot_reason RTupleElement loc) in
     (* NB: tail-recursive map in case of very large types *)
     let (elements, ts) =
-      Base.List.fold elems_rev ~init:([], []) ~f:(fun (els, ts) (TupleElement { name; t }) ->
+      Base.List.fold
+        elems_rev
+        ~init:([], [])
+        ~f:(fun (els, ts) (TupleElement { name; t; polarity }) ->
           let t = merge tps file t in
-          let el = Type.TupleElement { name; t } in
+          let el = Type.TupleElement { name; t; polarity } in
           (el :: els, t :: ts)
       )
     in
