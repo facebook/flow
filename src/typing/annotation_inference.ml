@@ -852,7 +852,7 @@ module rec ConsGen : S = struct
     | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
       let use_op = unknown_use in
       let reason_op = Type.AConstraint.reason_of_op op in
-      let t = instantiate_poly cx ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
+      let (t, _) = instantiate_poly cx ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
       elab_t cx t op
     | (ThisClassT (r, i, is_this, this_name), _) ->
       let reason = Type.AConstraint.reason_of_op op in

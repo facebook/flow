@@ -2802,7 +2802,7 @@ struct
                 | MethodT (_, _, _, _, NoMethodAction, _) -> true
                 | _ -> false
               in
-              let t_ =
+              let (t_, _) =
                 instantiate_poly
                   cx
                   trace
@@ -6919,16 +6919,19 @@ struct
         (targs, [])
         xs
     in
-    instantiate_poly_with_targs
-      cx
-      trace
-      ~use_op
-      ~reason_op
-      ~reason_tapp
-      ?cache:None
-      ?errs_ref
-      (tparams_loc, xs, t)
-      (List.rev ts)
+    let (t, _) =
+      instantiate_poly_with_targs
+        cx
+        trace
+        ~use_op
+        ~reason_op
+        ~reason_tapp
+        ?cache:None
+        ?errs_ref
+        (tparams_loc, xs, t)
+        (List.rev ts)
+    in
+    t
 
   (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
   (* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)
@@ -6943,7 +6946,10 @@ struct
         xs
     in
     let ts = List.rev ts in
-    instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) ts
+    let (t, _) =
+      instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) ts
+    in
+    t
 
   (* Specialize This in a class. Eventually this causes substitution. *)
   and instantiate_this_class cx trace reason tc this k =
