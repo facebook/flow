@@ -1588,14 +1588,28 @@ module Make (Flow : INPUT) : OUTPUT = struct
       iter2opt
         (fun t1 t2 ->
           match (t1, t2) with
-          | ( Some (TupleElement { t = t1; polarity = _; name = _ }),
-              Some (TupleElement { t = t2; polarity = _; name = _ })
+          | ( Some (TupleElement { t = t1; polarity = p1; name = _ }),
+              Some (TupleElement { t = t2; polarity = p2; name = _ })
             ) ->
+            if not (fresh || Polarity.equal (p1, p2)) then
+              add_output
+                cx
+                ~trace
+                (Error_message.ETupleElementPolarityMismatch
+                   {
+                     index = !n;
+                     reason_lower = r1;
+                     polarity_lower = p1;
+                     reason_upper = r2;
+                     polarity_upper = p2;
+                     use_op;
+                   }
+                );
             let use_op =
               Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
             in
-            n := !n + 1;
-            flow_to_mutable_child cx trace use_op fresh t1 t2
+            flow_to_mutable_child cx trace use_op fresh t1 t2;
+            n := !n + 1
           | _ -> ())
         (ts1, ts2)
     (* Arrays with known elements can flow to tuples *)

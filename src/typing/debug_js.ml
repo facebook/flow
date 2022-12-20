@@ -1361,6 +1361,28 @@ let dump_error_message =
         "ETupleUnsafeWrite { reason = %s; use_op = %s }"
         (dump_reason cx reason)
         (string_of_use_op use_op)
+    | ETupleElementNotReadable { reason; index; name = _; use_op } ->
+      spf
+        "ETupleElementNotReadable { reason = %s; index = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (string_of_int index)
+        (string_of_use_op use_op)
+    | ETupleElementNotWritable { reason; index; name = _; use_op } ->
+      spf
+        "ETupleElementNotWritable { reason = %s; index = %s; use_op = %s }"
+        (dump_reason cx reason)
+        (string_of_int index)
+        (string_of_use_op use_op)
+    | ETupleElementPolarityMismatch
+        { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op } ->
+      spf
+        "ETupleElementPolarityMismatch { index = %s; reason_lower = %s; polarity_lower = %s; reason_upper = %s; polarity_upper = %s; use_op = %s }"
+        (string_of_int index)
+        (dump_reason cx reason_lower)
+        (Polarity.string polarity_lower)
+        (dump_reason cx reason_upper)
+        (Polarity.string polarity_upper)
+        (string_of_use_op use_op)
     | EROArrayWrite ((reason1, reason2), use_op) ->
       spf
         "EROArrayWrite (%s, %s, %s)"
