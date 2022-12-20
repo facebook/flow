@@ -652,7 +652,16 @@ class virtual ['a] t =
           ArrayAT (t'', tlistopt')
       | TupleAT (t', tlist) ->
         let t'' = self#type_ cx map_cx t' in
-        let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+        let tlist' =
+          ListUtils.ident_map
+            (fun (TupleElement { name; t } as element) ->
+              let t' = self#type_ cx map_cx t in
+              if t' == t then
+                element
+              else
+                TupleElement { name; t = t' })
+            tlist
+        in
         if t'' == t' && tlist' == tlist then
           t
         else

@@ -5937,7 +5937,19 @@ module Make
       let values_t = get_values ~arr_reason o in
       let elem_t = UnionT (mk_reason RTupleElement loc, UnionRep.make keys_t values_t []) in
       let entry_t =
-        DefT (mk_reason RTupleType loc, bogus_trust (), ArrT (TupleAT (elem_t, [keys_t; values_t])))
+        DefT
+          ( mk_reason RTupleType loc,
+            bogus_trust (),
+            ArrT
+              (TupleAT
+                 ( elem_t,
+                   [
+                     TupleElement { name = Some "key"; t = keys_t };
+                     TupleElement { name = Some "value"; t = values_t };
+                   ]
+                 )
+              )
+          )
       in
       ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT (entry_t, None))),
         None,

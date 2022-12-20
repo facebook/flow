@@ -1426,13 +1426,23 @@ class ['loc] mapper =
 
     method tuple_type (t : ('loc, 'loc) Ast.Type.Tuple.t) =
       let open Ast.Type.Tuple in
-      let { types; comments } = t in
-      let types' = map_list this#type_ types in
+      let { elements; comments } = t in
+      let elements' = map_list this#tuple_element elements in
       let comments' = this#syntax_opt comments in
-      if types == types' && comments == comments' then
+      if elements == elements' && comments == comments' then
         t
       else
-        { types = types'; comments = comments' }
+        { elements = elements'; comments = comments' }
+
+    method tuple_element (t : ('loc, 'loc) Ast.Type.Tuple.Element.t) =
+      let open Ast.Type.Tuple.Element in
+      let (loc, { annot; name }) = t in
+      let annot' = this#type_ annot in
+      let name' = map_opt this#identifier name in
+      if annot' == annot && name' == name then
+        t
+      else
+        (loc, { annot = annot'; name = name' })
 
     method array_type (t : ('loc, 'loc) Ast.Type.Array.t) =
       let open Ast.Type.Array in

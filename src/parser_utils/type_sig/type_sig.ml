@@ -105,6 +105,13 @@ type ('loc, 'a) fun_sig =
     }
 [@@deriving iter, map, show { with_path = false }]
 
+type 'a tuple_element =
+  | TupleElement of {
+      name: string option;
+      t: 'a;
+    }
+[@@deriving iter, map, show { with_path = false }]
+
 type ('loc, 'a) obj_annot_proto =
   | ObjAnnotImplicitProto
   | ObjAnnotExplicitProto of 'loc * 'a
@@ -405,7 +412,7 @@ type ('loc, 'a) annot =
     }
   | Tuple of {
       loc: 'loc;
-      ts: 'a tailrec_list;
+      elems_rev: 'a tuple_element tailrec_list;
     }
   | Array of 'loc * 'a
   | ReadOnlyArray of 'loc * 'a

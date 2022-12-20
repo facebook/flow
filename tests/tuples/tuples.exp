@@ -16,6 +16,34 @@ References:
                                        ^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- labeled.js:5:3
+
+Cannot cast array literal to `A` because boolean [1] is incompatible with string [2] in index 0. [incompatible-cast]
+
+   labeled.js:5:3
+   5| ([true, 1]: A); // ERROR
+        ^^^^ [1]
+
+References:
+   labeled.js:2:16
+   2| type A = [foo: string, bar: number];
+                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- labeled.js:11:8
+
+Cannot cast array literal to `B` because boolean [1] is incompatible with number [2] in index 1. [incompatible-cast]
+
+   labeled.js:11:8
+   11| (["s", true]: B); // ERROR
+              ^^^^ [1]
+
+References:
+   labeled.js:8:24
+    8| type B = [string, bar: number];
+                              ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- number-index.js:7:1
 
 Cannot assign `123` to `tup[0]` because the index must be statically known to write a tuple element.
@@ -263,4 +291,4 @@ References:
 
 
 
-Found 18 errors
+Found 20 errors

@@ -267,7 +267,11 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, trust, ArrT (TupleAT (_, tup))) ->
       p
         ~trust:(Some trust)
-        ~extra:(spf "Tuple [%s]" (String.concat ", " (Base.List.map ~f:kid tup)))
+        ~extra:
+          (spf
+             "Tuple [%s]"
+             (String.concat ", " (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) tup))
+          )
         t
     | DefT (_, trust, ArrT (ROArrayAT elemt)) ->
       p ~trust:(Some trust) ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t

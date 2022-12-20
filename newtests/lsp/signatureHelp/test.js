@@ -121,6 +121,74 @@ module.exports = (suite(
           }),
         ),
         verifySignatureHelp(
+          '<PLACEHOLDER_PROJECT_URL>/tupleRestParam.js',
+          {line: 18, character: 1},
+          JSON.stringify({
+            signatures: [
+              {
+                label: '(foo: string, bar: number): void',
+                parameters: [
+                  {label: 'foo: string'},
+                  {label: 'bar: number'},
+                ],
+              },
+            ],
+            activeSignature: 0,
+            activeParameter: 0,
+          }),
+        ),
+        verifySignatureHelp(
+          '<PLACEHOLDER_PROJECT_URL>/tupleRestParam.js',
+          {line: 24, character: 1},
+          JSON.stringify({
+            signatures: [
+              {
+                label: '(foo: string, bar: number): void',
+                parameters: [
+                  {label: 'foo: string'},
+                  {label: 'bar: number'},
+                ],
+              },
+            ],
+            activeSignature: 0,
+            activeParameter: 0,
+          }),
+        ),
+        verifySignatureHelp(
+          '<PLACEHOLDER_PROJECT_URL>/tupleRestParam.js',
+          {line: 30, character: 1},
+          JSON.stringify({
+            signatures: [
+              {
+                label: '(foo: string, arg[1]: number): void',
+                parameters: [
+                  {label: 'foo: string'},
+                  {label: 'arg[1]: number'},
+                ],
+              },
+            ],
+            activeSignature: 0,
+            activeParameter: 0,
+          }),
+        ),
+        verifySignatureHelp(
+          '<PLACEHOLDER_PROJECT_URL>/tupleRestParam.js',
+          {line: 36, character: 1},
+          JSON.stringify({
+            signatures: [
+              {
+                label: '(foo: string, params[1]: number): void',
+                parameters: [
+                  {label: 'foo: string'},
+                  {label: 'params[1]: number'},
+                ],
+              },
+            ],
+            activeSignature: 0,
+            activeParameter: 0,
+          }),
+        ),
+        verifySignatureHelp(
           '<PLACEHOLDER_PROJECT_URL>/paramDocumentation.js',
           {line: 12, character: 5},
           JSON.stringify({

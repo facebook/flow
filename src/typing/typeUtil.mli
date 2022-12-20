@@ -55,7 +55,9 @@ val quick_subtype : bool -> Type.t -> Type.t -> bool
 
 val reason_of_propref : Type.propref -> reason
 
-val tuple_length : reason -> Trust.trust_rep -> Type.t list -> Type.t
+val tuple_length : reason -> Trust.trust_rep -> Type.tuple_element list -> Type.t
+
+val tuple_ts_of_elements : Type.tuple_element list -> Type.t list
 
 val optional : ?annot_loc:ALoc.t -> ?use_desc:bool -> Type.t -> Type.t
 

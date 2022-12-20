@@ -3196,7 +3196,30 @@ let%expect_test "tuple_annot" =
          name = "A"; tparams = Mono;
          body =
          (Annot
-            Tuple {loc = [1:16-32]; ts = [(Annot (String [1:17-23])); (Annot (Number [1:25-31]))]})}
+            Tuple {loc = [1:16-32];
+              elems_rev =
+              [TupleElement {name = None; t = (Annot (Number [1:25-31]))};
+                TupleElement {name = None; t = (Annot (String [1:17-23]))}]})}
+  |}]
+
+let%expect_test "tuple_annot_labeled" =
+  print_sig {|
+    export type A = [foo: string, bar: number];
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info = CJSModuleInfo {type_export_keys = [|"A"|]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         name = "A"; tparams = Mono;
+         body =
+         (Annot
+            Tuple {loc = [1:16-42];
+              elems_rev =
+              [TupleElement {name = (Some "bar"); t = (Annot (Number [1:35-41]))};
+                TupleElement {name = (Some "foo"); t = (Annot (String [1:22-28]))}]})}
   |}]
 
 let%expect_test "cycle" =

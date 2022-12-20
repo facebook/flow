@@ -280,12 +280,18 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ( (loc, ConsGen.mk_typeof_annotation cx reason valtype),
         Typeof { Typeof.argument = qualification_ast; comments }
       )
-    | (loc, Tuple { Tuple.types = ts; comments }) ->
-      let (tuple_types, ts_ast) = convert_list cx tparams_map ts in
+    | (loc, Tuple { Tuple.elements; comments }) ->
+      let (ts_rev, els_rev, els_ast_rev) =
+        Base.List.fold elements ~init:([], [], []) ~f:(fun (ts, els, els_ast) element ->
+            let (t, el, el_ast) = convert_tuple_element cx tparams_map element in
+            (t :: ts, el :: els, el_ast :: els_ast)
+        )
+      in
+      let (ts, els, els_ast) = (List.rev ts_rev, List.rev els_rev, List.rev els_ast_rev) in
       let reason = mk_annot_reason RTupleType loc in
       let element_reason = mk_annot_reason RTupleElement loc in
-      let elemt =
-        match tuple_types with
+      let elem_t =
+        match ts with
         | [] -> EmptyT.why element_reason |> with_trust bogus_trust
         | [t] -> t
         | t0 :: t1 :: ts ->
@@ -305,8 +311,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           *)
           UnionT (element_reason, UnionRep.make t0 t1 ts)
       in
-      ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))),
-        Tuple { Tuple.types = ts_ast; comments }
+      ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elem_t, els)))),
+        Tuple { Tuple.elements = els_ast; comments }
       )
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
@@ -1746,6 +1752,16 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           )
       in
       (t, List.rev rev_prop_asts)
+
+  and convert_tuple_element cx tparams_map (loc, { Ast.Type.Tuple.Element.name; annot }) =
+    let (((_, t), _) as annot) = convert cx tparams_map annot in
+    let (id_name, str_name) =
+      match name with
+      | None -> (None, None)
+      | Some (loc, ({ Ast.Identifier.name; _ } as id_name)) -> (Some ((loc, t), id_name), Some name)
+    in
+    let element_ast = (loc, { Ast.Type.Tuple.Element.name = id_name; annot }) in
+    (t, TupleElement { name = str_name; t }, element_ast)
 
   and mk_func_sig =
     let open Ast.Type.Function in

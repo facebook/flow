@@ -2629,11 +2629,20 @@ let program
       (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.t) (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.t) :
       node change list option =
     let open Ast.Type.Tuple in
-    let { types = types1; comments = comments1 } = t1 in
-    let { types = types2; comments = comments2 } = t2 in
-    let types_diff = diff_and_recurse_nonopt_no_trivial type_ types1 types2 in
+    let { elements = elements1; comments = comments1 } = t1 in
+    let { elements = elements2; comments = comments2 } = t2 in
+    let elements_diff = diff_and_recurse_no_trivial tuple_element elements1 elements2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [types_diff; comments_diff]
+    join_diff_list [elements_diff; comments_diff]
+  and tuple_element
+      (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.Element.t) (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.Element.t)
+      : node change list option =
+    let open Ast.Type.Tuple.Element in
+    let (_loc1, { name = name1; annot = annot1 }) = t1 in
+    let (_loc2, { name = name2; annot = annot2 }) = t2 in
+    let name_diff = diff_if_changed_nonopt_fn identifier name1 name2 in
+    let annot_diff = Some (diff_if_changed type_ annot1 annot2) in
+    join_diff_list [name_diff; annot_diff]
   and type_args (pi1 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) (pi2 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t)
       : node change list option =
     let open Ast.Type.TypeArgs in

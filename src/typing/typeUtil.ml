@@ -726,6 +726,8 @@ and tuple_length reason trust ts =
   in
   DefT (r, trust, t)
 
+and tuple_ts_of_elements elements = Base.List.map ~f:(fun (TupleElement { t; _ }) -> t) elements
+
 let optional ?annot_loc ?(use_desc = false) t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in
   let reason =

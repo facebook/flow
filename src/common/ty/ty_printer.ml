@@ -105,8 +105,21 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
           Atom "["
       in
       fuse [type_ ~depth _object; left_delim; type_ ~depth index; Atom "]"]
-    | Tup ts ->
-      list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") ~trailing:false (counted_map (type_ ~depth) ts)
+    | Tup elements ->
+      let tuple_element ~depth (TupleElement { name; t }) =
+        fuse
+          [
+            (match name with
+            | Some id -> fuse [identifier (Reason.OrdinaryName id); Atom ":"; pretty_space]
+            | None -> Empty);
+            type_ ~depth t;
+          ]
+      in
+      list
+        ~wrap:(Atom "[", Atom "]")
+        ~sep:(Atom ",")
+        ~trailing:false
+        (counted_map (tuple_element ~depth) elements)
     | StrLit raw -> fuse (in_quotes ~prefer_single_quotes (Reason.display_string_of_name raw))
     | NumLit raw -> Atom raw
     | BoolLit value ->

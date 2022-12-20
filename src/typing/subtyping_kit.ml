@@ -1588,7 +1588,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       iter2opt
         (fun t1 t2 ->
           match (t1, t2) with
-          | (Some t1, Some t2) ->
+          | (Some (TupleElement { t = t1; name = _ }), Some (TupleElement { t = t2; name = _ })) ->
             let use_op =
               Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
             in
@@ -1601,7 +1601,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
       begin
         match ts1 with
         | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
-        | Some ts1 -> rec_flow_t cx trace ~use_op (DefT (r1, trust, ArrT (TupleAT (t1, ts1))), u)
+        | Some ts1 ->
+          rec_flow_t
+            cx
+            trace
+            ~use_op
+            ( DefT
+                ( r1,
+                  trust,
+                  ArrT
+                    (TupleAT (t1, Base.List.map ~f:(fun t -> TupleElement { name = None; t }) ts1))
+                ),
+              u
+            )
       end
     (* Read only arrays are the super type of all tuples and arrays *)
     | ( DefT (r1, _, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT t1)),

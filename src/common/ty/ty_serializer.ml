@@ -104,9 +104,15 @@ let type_ options =
       (Loc.none, T.Function f)
     | Obj o -> obj_ o
     | Arr a -> arr a
-    | Tup ts ->
-      let%map ts = mapM type_ ts in
-      (Loc.none, T.Tuple { T.Tuple.types = ts; comments = None })
+    | Tup elements ->
+      let%map els =
+        mapM
+          (fun (TupleElement { name; t }) ->
+            let%map annot = type_ t in
+            (Loc.none, { T.Tuple.Element.name = Base.Option.map ~f:id_from_string name; annot }))
+          elements
+      in
+      (Loc.none, T.Tuple { T.Tuple.elements = els; comments = None })
     | Union (from_bounds, t0, t1, ts) as t -> union t (from_bounds, t0, t1, ts)
     | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
     | Utility s -> utility s

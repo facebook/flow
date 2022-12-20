@@ -942,8 +942,14 @@ end = struct
         let%map t = type__ ~env t in
         Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
       | T.TupleAT (_, ts) ->
-        let%map ts = mapM (type__ ~env) ts in
-        Ty.Tup ts
+        let%map elements =
+          mapM
+            (fun (T.TupleElement { name; t }) ->
+              let%map t = type__ ~env t in
+              Ty.TupleElement { name; t })
+            ts
+        in
+        Ty.Tup elements
 
     (* Used for instances of React.createClass(..) *)
     and react_component_instance =

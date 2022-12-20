@@ -46,7 +46,7 @@ type t =
   | Fun of fun_t
   | Obj of obj_t
   | Arr of arr_t
-  | Tup of t list
+  | Tup of tuple_element list
   | Union of bool (* from annotation *) * t * t * t list
   | Inter of t * t * t list
   | InlineInterface of interface_t
@@ -149,6 +149,12 @@ and arr_t = {
   arr_literal: bool option;
   arr_elt_t: t;
 }
+
+and tuple_element =
+  | TupleElement of {
+      name: string option;
+      t: t;
+    }
 
 and interface_t = {
   if_extends: generic_t list;
