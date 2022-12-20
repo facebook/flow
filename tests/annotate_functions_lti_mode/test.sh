@@ -4,4 +4,4 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-"$FLOW" check --inference-mode experimental.lti --json | "$FLOW" codemod annotate-functions-and-classes --strip-root --quiet --errors-json-file - ./
+"$FLOW" check --inference-mode lti --json | "$FLOW" codemod annotate-functions-and-classes --strip-root --quiet --errors-json-file - ./

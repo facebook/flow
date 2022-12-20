@@ -715,6 +715,7 @@ module Opts = struct
     string (fun opts s ->
         match s with
         | "constrain_writes" -> Ok { opts with inference_mode = Options.ConstrainWrites }
+        | "lti" -> Ok { opts with inference_mode = Options.LTI }
         | "experimental.lti" -> Ok { opts with inference_mode = Options.LTI }
         | inference_mode -> Error (spf "\"%s\" is not a valid inference_mode option" inference_mode)
     )
@@ -768,6 +769,7 @@ module Opts = struct
       ("experimental.cycle_errors.includes", cycle_errors_includes_parser);
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("inference_mode", inference_mode_parser);
+      ("inference_mode.lti.includes", inference_mode_lti_includes_parser);
       ("inference_mode.experimental.lti.includes", inference_mode_lti_includes_parser);
       ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
       ( "experimental.array_literal_providers.includes",

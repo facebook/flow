@@ -1,2 +1,2 @@
 [options]
-inference_mode=experimental.lti
+inference_mode=lti
