@@ -1,3 +1,10 @@
+### 0.196.2
+
+🎁 This is (hopefully) our last release of the year. Happy holidays! 🎁
+
+* Improve performance when unions flow to intersections
+* Fix a crash when using the experimental `saved_state.allow_reinit` option
+
 ### 0.196.1
 
 * Fix some missing autocomplete results (regression in 0.196.0)
