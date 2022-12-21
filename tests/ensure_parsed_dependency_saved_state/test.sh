@@ -38,7 +38,7 @@ printf "\\n\\n==== ensure_parsed skips dependent ====\\n"
 # ensure_parsed included dependency.js as a dependency update, which means
 # it does not fan out to dependency.js's dependents (dependent.js)
 assert_ok "$FLOW" status --no-auto-start
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"
 
 # now simulate the file system event for dependency.js
 assert_ok "$FLOW" force-recheck dependency.js
@@ -48,7 +48,7 @@ printf "\\n\\n==== force-recheck checks dependent ====\\n"
 # (updated the parsing heaps and the dep graph), its signature changed so we
 # need to recheck its dependents now.
 assert_errors "$FLOW" status --no-auto-start
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"
 
 # now focus dependent.js (similar to opening it in an IDE)
 assert_ok "$FLOW" force-recheck --focus dependent.js
@@ -56,4 +56,4 @@ assert_ok "$FLOW" force-recheck --focus dependent.js
 printf "\\n\\n==== force-recheck on dependent finds errors ====\\n"
 assert_errors "$FLOW" status --no-auto-start
 # should check dependent.js (0 of 1 skipped)
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"

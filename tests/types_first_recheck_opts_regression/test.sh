@@ -15,7 +15,7 @@ printf "\\nAdding whitespace to a.js\\n"
 cp tmp1/a-v2.js a.js
 assert_ok "$FLOW" force-recheck a.js
 assert_ok "$FLOW" status --strip-root
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"
 
 printf "\\nReverting change to a.js\\n"
 cp tmp1/a-v1.js a.js
@@ -31,6 +31,6 @@ printf "\\nAdding whitespace to a.js\\n"
 cp tmp1/a-v2.js a.js
 assert_ok "$FLOW" force-recheck a.js
 assert_ok "$FLOW" status --strip-root
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"
 
 assert_ok "$FLOW" stop

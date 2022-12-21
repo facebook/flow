@@ -15,13 +15,13 @@ printf "\\nAdding a line should cause minimal rechecking (but preserve errors)\\
 cp tmp1/test1.js test1.js
 assert_ok "$FLOW" force-recheck --focus test1.js
 assert_errors "$FLOW" status --strip-root
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"
 
 printf "\\nAdding a comment should cause minimal rechecking (but preserve errors)\\n"
 cp tmp2/test1.js test1.js
 assert_ok "$FLOW" force-recheck --focus test1.js
 assert_errors "$FLOW" status --strip-root
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"
 
 assert_ok "$FLOW" stop
 
