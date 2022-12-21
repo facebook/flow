@@ -1,0 +1,4 @@
+shell: test.sh
+saved_state_only: true
+auto_start: false
+git: true
