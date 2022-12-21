@@ -1525,7 +1525,7 @@ let with_error ?(stack : Utils.callstack option) ~(reason : string) (metadata : 
   let stack =
     match stack with
     | Some stack -> stack
-    | None -> Utils.Callstack (Exception.get_current_callstack_string 100)
+    | None -> Utils.Callstack ""
   in
   let error_info = Some (ExpectedError, reason, stack) in
   { metadata with error_info }
