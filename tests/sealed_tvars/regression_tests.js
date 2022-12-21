@@ -32,6 +32,7 @@ class MissingAnnotations {
   i(): number { return 42 }
   j() { return 42 }
   k = function (x: number) { }
+  l = null; // error
 }
 
 class MoreMA {
