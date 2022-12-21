@@ -40,3 +40,31 @@ declare var osr: [+foo: {a: number}];
 Object.assign({a: 1}, ...osr); // OK
 declare var osw: [-foo: {a: number}];
 Object.assign({a: 1}, ...osw); // ERROR - can't read
+
+// $ReadOnly on tuple
+type ROC = $ReadOnly<C>;
+declare var roc: ROC;
+(roc: [+foo: string]); // OK
+(roc: [-foo: string]); // ERROR
+(roc: [foo: string]); // ERROR
+(roc[0]: string); // OK
+roc[0] = "s"; // ERROR - can't write
+
+type ROB = $ReadOnly<B>;
+declare var rob: ROB;
+(rob: [+foo: string]); // OK
+(rob: [-foo: string]); // ERROR
+(rob: [foo: string]); // ERROR
+(rob[0]: string); // OK
+rob[0] = "s"; // ERROR - can't write
+
+type Union = $ReadOnly<[string, number] | [string, boolean]>;
+declare var u: Union;
+u[0] = "s"; // ERROR - can't write
+(u[0]: string); // OK
+(u[1]: number | boolean); // OK
+
+type Intersection = $ReadOnly<[string, number] & [string, boolean]>;
+declare var inter: Intersection;
+inter[0] = "s"; // ERROR - can't write
+(inter[0]: string); // OK
