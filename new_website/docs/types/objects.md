@@ -118,127 +118,61 @@ let b = {
 
 ## Object type inference {#toc-object-type-inference}
 
-Flow can infer the type of object literals in two different ways depending on
-how they are used.
+> NOTE: The behavior of empty object literals has changed as of version 0.191 -
+> see this [blog post](https://medium.com/flow-type/improved-handling-of-the-empty-object-in-flow-ead91887e40c) for more details.
 
-### Sealed objects {#toc-sealed-objects}
-
-When you create an object with its properties, you create a _sealed_ object
-type in Flow. These sealed objects will know all of the properties you declared
-them with and the types of their values.
+When you create an object value, its type is set at the creation point. You cannot add new properties,
+or modify the type of existing properties.
 
 ```js flow-check
-// @flow
-var obj = {
+const obj = {
   foo: 1,
   bar: true,
-  baz: 'three'
 };
 
-var foo: number  = obj.foo; // Works!
-var bar: boolean = obj.bar; // Works!
-// $ExpectError
-var baz: null    = obj.baz; // Error!
-var bat: string  = obj.bat; // Error!
+const n: number  = obj.foo; // Works!
+const b: boolean = obj.bar; // Works!
+
+obj.UNKNOWN; // Error - prop `UNKNOWN` is not in the object value
+obj.foo = true; // Error - `foo` is of type `number`
 ```
 
-But when objects are sealed, Flow will not allow you to add new properties to
-them.
+If you supply an annotation, you can add properties missing in the object value as optional properties:
 
 ```js flow-check
-// @flow
-var obj = {
-  foo: 1
+const obj: {
+  foo?: number,
+  bar: boolean,
+} = {
+  // `foo` is not set here
+  bar: true,
 };
 
-// $ExpectError
-obj.bar = true;    // Error!
-// $ExpectError
-obj.baz = 'three'; // Error!
+const n: number | void = obj.foo; // Works!
+const b: boolean = obj.bar; // Works!
+
+if (b) {
+  obj.foo = 3; // Works!
+}
 ```
 
-The workaround here might be to turn your object into an _unsealed object_.
-
-### Unsealed objects {#toc-unsealed-objects}
-
-When you create an object without any properties, you create an _unsealed_
-object type in Flow. These unsealed objects will not know all of their
-properties and will allow you to add new ones.
+You can also give a wider type for a particular property:
 
 ```js flow-check
-// @flow
-var obj = {};
+const obj: {
+  foo: number | string,
+} = {
+  foo: 1,
+};
 
-obj.foo = 1;       // Works!
-obj.bar = true;    // Works!
-obj.baz = 'three'; // Works!
+const foo: number | string = obj.foo; // Works!
+obj.foo = "hi"; // Works!
 ```
 
-The inferred type of the property becomes what you set it to.
+The empty object can be interpreted as a [dictionary](#toc-objects-as-maps), if you supply the appropriate annotation:
 
 ```js flow-check
-// @flow
-var obj = {};
-obj.foo = 42;
-var num: number = obj.foo;
-```
-
-#### Reassigning unsealed object properties {#toc-reassigning-unsealed-object-properties}
-
-Similar to [`var` and `let` variables](../variables/#toc-reassigning-variables)
-if you reassign a property of an unsealed object, by default Flow will give it
-the type of all possible assignments.
-
-```js flow-check
-// @flow
-var obj = {};
-
-if (Math.random()) obj.prop = true;
-else obj.prop = "hello";
-
-// $ExpectError
-var val1: boolean = obj.prop; // Error!
-// $ExpectError
-var val2: string  = obj.prop; // Error!
-var val3: boolean | string = obj.prop; // Works!
-```
-
-Sometimes Flow is able to figure out (with certainty) the type of a property
-after reassignment. In that case, Flow will give it the known type.
-
-```js flow-check
-// @flow
-var obj = {};
-
-obj.prop = true;
-obj.prop = "hello";
-
-// $ExpectError
-var val1: boolean = obj.prop; // Error!
-var val2: string  = obj.prop; // Works!
-```
-
-As Flow gets smarter and smarter, it will figure out the types of properties in more scenarios.
-
-#### Unknown property lookup on unsealed objects is unsafe {#toc-unknown-property-lookup-on-unsealed-objects-is-unsafe}
-
-Unsealed objects allow new properties to be written at any time. Flow ensures
-that reads are compatible with writes, but does not ensure that writes happen
-before reads (in the order of execution).
-
-This means that reads from unsealed objects with no matching writes are never
-checked. This is an unsafe behavior of Flow which may be improved in the
-future.
-
-```js flow-check
-var obj = {};
-
-obj.foo = 1;
-obj.bar = true;
-
-var foo: number  = obj.foo; // Works!
-var bar: boolean = obj.bar; // Works!
-var baz: string  = obj.baz; // Works?
+const dict: {[string]: number} = {}; // Works!
 ```
 
 ## Exact object types {#toc-exact-object-types}
