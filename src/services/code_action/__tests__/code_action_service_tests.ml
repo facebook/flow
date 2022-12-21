@@ -19,19 +19,11 @@ let node_resolver_dirnames = ["node_modules"]
 (** Creates a mutator so we can write some files to sharedmem, and
     cleans up at the end. *)
 let with_transaction iter_files f =
-  let exception Rollback of Exception.t option in
-  try
-    Transaction.with_transaction_sync "test" (fun transaction ->
-        let mutator = Parsing_heaps.Saved_state_mutator.create transaction iter_files in
-        (try f mutator with
-        | exn ->
-          let exn = Exception.wrap exn in
-          raise (Rollback (Some exn)));
-        raise (Rollback None)
-    )
-  with
-  | Rollback None -> ()
-  | Rollback (Some exn) -> Exception.reraise exn
+  Transaction.with_transaction_sync "test" (fun transaction ->
+      let _reader = Mutator_state_reader.create transaction in
+      let mutator = Parsing_heaps.Saved_state_mutator.create transaction iter_files in
+      f mutator
+  )
 
 let reader = State_reader.create ()
 
@@ -46,10 +38,19 @@ let add_package mutator file_key pkg =
 
 let with_package fn pkg f =
   let file_key = File_key.JsonFile fn in
+  let file_set = Utils_js.FilenameSet.singleton file_key in
   let iter_files f = f file_key in
-  with_transaction iter_files @@ fun (_master_mutator, mutator) ->
-  add_package mutator file_key pkg;
-  f ()
+  let () =
+    with_transaction iter_files @@ fun (_master_mutator, mutator) ->
+    add_package mutator file_key pkg
+  in
+  let finally () =
+    with_transaction iter_files @@ fun (master_mutator, mutator) ->
+    let dirty_modules = Parsing_heaps.Saved_state_mutator.clear_not_found mutator file_key in
+    ignore (dirty_modules : Modulename.Set.t);
+    Parsing_heaps.Saved_state_mutator.record_not_found master_mutator file_set
+  in
+  Fun.protect ~finally f
 
 let tests =
   "path_of_modulename"
