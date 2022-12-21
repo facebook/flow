@@ -872,6 +872,18 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                       begin
                         match left with
                         | S.ForOf.LeftDeclaration decl -> variable_declaration ~opts decl
+                        | S.ForOf.LeftPattern
+                            ( ( _,
+                                Ast.Pattern.Identifier
+                                  {
+                                    Ast.Pattern.Identifier.name =
+                                      (_, { Ast.Identifier.name = "async"; _ });
+                                    annot = Ast.Type.Missing _;
+                                    _;
+                                  }
+                              ) as patt
+                            ) ->
+                          wrap_in_parens (pattern ~opts patt)
                         | S.ForOf.LeftPattern patt -> pattern ~opts patt
                       end;
                       Atom "of";
