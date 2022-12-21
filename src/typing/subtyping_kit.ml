@@ -830,6 +830,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
           rec_flow_t ~use_op cx trace (remove_predicate_from_union reason cx filter_void rep, opt)
         | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
+    | (UnionT _, IntersectionT (_, rep)) ->
+      ( if Context.is_verbose cx then
+        match l with
+        | UnionT _ -> prerr_endline "UnionT ~> IntersectionT slow case"
+        | _ -> ()
+      );
+      InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (l, UseT (use_op, t)))
     | (UnionT (_, rep), _) ->
       ( if Context.is_verbose cx then
         match u with
