@@ -21,3 +21,21 @@ function react_abstract_component_subtyping() {
     (props: empty); // error
   };
 }
+
+function jsx_function_children_ok() {
+  declare function Child({foo: number}): React.Node;
+  declare function Parent({children: (number) => React.Node}): React.Node;
+
+  return <Parent>
+    {n => <Child foo={(n: number)} /> /* OK */}
+  </Parent>;
+}
+
+function jsx_function_children_error() {
+  declare function Child({foo: number}): React.Node;
+  declare function Parent({children: (number) => React.Node}): React.Node;
+
+  return <Parent>
+    {n => <Child foo={(n: empty)} /> /* ERROR */}
+  </Parent>;
+}

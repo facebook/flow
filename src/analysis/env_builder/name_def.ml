@@ -2216,6 +2216,13 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       expr
 
     method private visit_jsx_children ~hint (_, children) =
+      let children =
+        Base.List.filter children ~f:(function
+            | (loc, Ast.JSX.Text { Ast.JSX.Text.value; _ }) ->
+              Base.Option.is_some (Utils_jsx.trim_jsx_text (ALoc.to_loc_exn loc) value)
+            | _ -> true
+            )
+      in
       let single_child =
         match children with
         | [_] -> true
