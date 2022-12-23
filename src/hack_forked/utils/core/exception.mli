@@ -15,6 +15,8 @@ val unwrap : t -> exn
 
 val reraise : t -> 'a
 
+val raise_with_backtrace : exn -> t -> 'a
+
 val to_exn : t -> exn
 
 val to_string : t -> string

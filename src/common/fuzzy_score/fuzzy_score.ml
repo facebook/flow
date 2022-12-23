@@ -285,7 +285,7 @@ let fuzzy_score
               word_len
           in
 
-          let rec fill_columns column word_pos =
+          let rec fill_columns_unsafe column word_pos =
             if word_pos >= next_max_word_match_pos then
               column
             else
@@ -365,6 +365,20 @@ let fuzzy_score
               ) else
                 failwith "not possible";
               fill_columns (column + 1) (word_pos + 1)
+          and fill_columns column word_pos =
+            try fill_columns_unsafe column word_pos with
+            | Invalid_argument msg as exn ->
+              let exn = Exception.wrap exn in
+              let msg =
+                Printf.sprintf
+                  "%s (pattern: %S, word: %S, row: %d, column: %d)"
+                  msg
+                  pattern
+                  word
+                  row
+                  column
+              in
+              Exception.raise_with_backtrace (Invalid_argument msg) exn
           in
           let column = fill_columns (min_word_match_pos_ - word_start + 1) min_word_match_pos_ in
 
