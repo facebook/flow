@@ -338,12 +338,6 @@ let prepare_write_haste_info_for_name name =
   in
   (size, write)
 
-let prepare_write_haste_info_opt = function
-  | None -> (0, Fun.const None)
-  | Some name ->
-    let (size, write) = prepare_write_haste_info_for_name name in
-    (size, (fun chunk -> Some (write chunk)))
-
 let prepare_update_haste_info haste_ent name =
   let (size, write) = prepare_write_haste_info_for_name name in
   (size, (fun chunk -> Heap.entity_advance haste_ent (Some (write chunk))))
@@ -380,13 +374,6 @@ let prepare_write_ast (ast : (Loc.t, Loc.t) Flow_ast.Program.t) =
   let serialized = Marshal.to_string (compactify_loc ast) [] in
   Heap.prepare_write_serialized_ast serialized
 
-let prepare_write_cas_digest_opt = function
-  | None -> (0, (fun _ -> None))
-  | Some cas_digest ->
-    let open Heap in
-    let (size, write) = prepare_write_cas_digest cas_digest in
-    (size, (fun chunk -> Some (write chunk)))
-
 let prepare_write_docblock (docblock : Docblock.t) =
   let serialized = Marshal.to_string docblock [] in
   let size = Heap.header_size + Heap.docblock_size serialized in
@@ -408,13 +395,6 @@ let prepare_write_imports (imports : Imports.t) =
 let prepare_write_resolved_requires (resolved_requires : resolved_requires) =
   let serialized = Marshal.to_string resolved_requires [] in
   Heap.prepare_write_serialized_resolved_requires serialized
-
-let prepare_write_resolved_requires_opt (resolved_requires_opt : resolved_requires option) =
-  match resolved_requires_opt with
-  | None -> (0, Fun.const None)
-  | Some resolved_requires ->
-    let (size, write) = prepare_write_resolved_requires resolved_requires in
-    (size, (fun chunk -> Some (write chunk)))
 
 let prepare_write_type_sig type_sig =
   let open Heap in
@@ -602,7 +582,7 @@ let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt 
       prepare_update_revdeps old_resolved_requires resolved_requires_opt
     in
     let (resolved_requires_size, write_resolved_requires_opt) =
-      prepare_write_resolved_requires_opt resolved_requires_opt
+      Heap.prepare_opt prepare_write_resolved_requires resolved_requires_opt
     in
     let size = revdeps_size + resolved_requires_size in
     let write chunk file parse =
@@ -631,7 +611,9 @@ let prepare_create_file file_key module_name resolved_requires_opt =
   let (resolved_requires_size, update_resolved_requires) =
     prepare_update_resolved_requires_if_changed None resolved_requires_opt
   in
-  let (haste_info_size, write_haste_info) = prepare_write_haste_info_opt module_name in
+  let (haste_info_size, write_haste_info) =
+    prepare_opt prepare_write_haste_info_for_name module_name
+  in
   let (dependents_size, write_dependents) =
     if Files.has_flow_ext file_key then
       let impl_key = Files.chop_flow_ext file_key in
@@ -841,7 +823,7 @@ let add_checked_file
     | Either.Right (write_parse_ents, create_or_update_file) ->
       let (exports_size, write_exports) = prepare_write_exports exports in
       let (imports_size, write_imports) = prepare_write_imports imports in
-      let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_opt cas_digest in
+      let (cas_digest_size, write_cas_digest) = prepare_opt prepare_write_cas_digest cas_digest in
       let size =
         (2 * header_size)
         + typed_parse_size
