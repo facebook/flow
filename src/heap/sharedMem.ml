@@ -816,6 +816,8 @@ module NewAPI = struct
 
   type size = int
 
+  type 'a prep = size * (chunk -> 'a)
+
   let bsize_wsize wsize = wsize * Sys.word_size / 8
 
   let addr_offset addr size = addr + bsize_wsize size
@@ -838,6 +840,41 @@ module NewAPI = struct
       Printf.ksprintf failwith "alloc: %d requested, %d remaining" size chunk.remaining_size;
     assert (chunk.next_addr = addr_offset addr size);
     x
+
+  (** Prepare *)
+
+  let prepare_map (size, write) f = (size, (fun chunk -> f (write chunk)))
+
+  let prepare_product (size1, write1) (size2, write2) =
+    let write chunk =
+      let x1 = write1 chunk in
+      let x2 = write2 chunk in
+      (x1, x2)
+    in
+    (size1 + size2, write)
+
+  module Prepare_syntax = struct
+    let ( let+ ) = prepare_map
+
+    let ( and+ ) = prepare_product
+  end
+
+  let prepare_const x = (0, Fun.const x)
+
+  let prepare_opt prep = function
+    | None -> prepare_const None
+    | Some x ->
+      let open Prepare_syntax in
+      let+ x = prep x in
+      Some x
+
+  let prepare_iter prep xs =
+    let f size_acc x =
+      let (size, write) = prep x in
+      (size_acc + size, write)
+    in
+    let (size, writes) = Array.fold_left_map f 0 xs in
+    (size, (fun chunk -> Array.iter (fun write -> write chunk) writes))
 
   (** Primitives
 
