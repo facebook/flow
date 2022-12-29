@@ -261,7 +261,7 @@ module NewAPI : sig
 
   val write_sklist : chunk -> 'a sklist addr
 
-  val prepare_write_sknode : unit -> size * (chunk -> 'a addr -> 'a sknode addr)
+  val prepare_write_sknode : unit -> ('a addr -> 'a sknode addr) prep
 
   val sklist_iter : ('a addr -> unit) -> 'a sklist addr -> unit
 
@@ -289,44 +289,43 @@ module NewAPI : sig
 
   (* ast *)
 
-  val prepare_write_serialized_ast : string -> size * (chunk -> [ `ast ] addr)
+  val prepare_write_serialized_ast : string -> [ `ast ] addr prep
 
   val read_ast : [ `ast ] addr -> string
 
   (* file sig *)
 
-  val prepare_write_serialized_file_sig : string -> size * (chunk -> [ `file_sig ] addr)
+  val prepare_write_serialized_file_sig : string -> [ `file_sig ] addr prep
 
   val read_file_sig : [ `file_sig ] addr -> string
 
   (* exports *)
 
-  val prepare_write_serialized_exports : string -> size * (chunk -> [ `exports ] addr)
+  val prepare_write_serialized_exports : string -> [ `exports ] addr prep
 
   val read_exports : [ `exports ] addr -> string
 
   (* resolved requires *)
 
-  val prepare_write_serialized_resolved_requires :
-    string -> size * (chunk -> [ `resolved_requires ] addr)
+  val prepare_write_serialized_resolved_requires : string -> [ `resolved_requires ] addr prep
 
   val read_resolved_requires : [ `resolved_requires ] addr -> string
 
   (* imports *)
 
-  val prepare_write_serialized_imports : string -> size * (chunk -> [ `imports ] addr)
+  val prepare_write_serialized_imports : string -> [ `imports ] addr prep
 
   val read_imports : [ `imports ] addr -> string
 
   (* package info *)
 
-  val prepare_write_package_info : string -> size * (chunk -> [ `package_info ] addr)
+  val prepare_write_package_info : string -> [ `package_info ] addr prep
 
   val read_package_info : [ `package_info ] addr -> string
 
   (* cas_digest *)
 
-  val prepare_write_cas_digest : Cas_digest.t -> size * (chunk -> [ `cas_digest ] addr)
+  val prepare_write_cas_digest : Cas_digest.t -> [ `cas_digest ] addr prep
 
   val read_cas_digest : [ `cas_digest ] addr -> Cas_digest.t
 
