@@ -670,14 +670,30 @@ let prepare_add_checked_file
     cas_digest
     resolved_requires_opt_opt =
   let open Heap in
+  let prepare_set_parse_data () =
+    let+ set_ast = prepare_set_ast_opt ast_opt
+    and+ set_docblock = prepare_set_docblock_opt docblock_opt
+    and+ set_aloc_table = prepare_set_aloc_table_opt locs_opt
+    and+ set_type_sig = prepare_set_type_sig_opt type_sig_opt
+    and+ set_file_sig = prepare_set_file_sig_opt file_sig_opt in
+    fun parse ->
+      set_ast parse;
+      set_docblock parse;
+      set_aloc_table parse;
+      set_type_sig parse;
+      set_file_sig parse
+  in
   let prepare_create_parse_with_ents () =
     let+ hash = prepare_write_int64 hash
     and+ exports = prepare_write_exports exports
     and+ imports = prepare_write_imports imports
     and+ cas_digest = prepare_opt prepare_write_cas_digest cas_digest
-    and+ parse = prepare_write_typed_parse in
+    and+ parse = prepare_write_typed_parse
+    and+ set_parse_data = prepare_set_parse_data () in
     fun resolved_requires leader sig_hash ->
-      parse hash exports resolved_requires imports leader sig_hash cas_digest
+      let parse = parse hash exports resolved_requires imports leader sig_hash cas_digest in
+      set_parse_data parse;
+      parse
   in
   let prepare_create_parse () =
     let+ resolved_requires_ent = prepare_write_entity
@@ -686,85 +702,73 @@ let prepare_add_checked_file
     and+ create_parse = prepare_create_parse_with_ents () in
     create_parse (resolved_requires_ent None) (leader_ent None) (sig_hash_ent None)
   in
-  let+ set_ast = prepare_set_ast_opt ast_opt
-  and+ set_docblock = prepare_set_docblock_opt docblock_opt
-  and+ set_aloc_table = prepare_set_aloc_table_opt locs_opt
-  and+ set_type_sig = prepare_set_type_sig_opt type_sig_opt
-  and+ set_file_sig = prepare_set_file_sig_opt file_sig_opt
-  and+ (parse, dirty_modules) =
-    match file_opt with
+  match file_opt with
+  | None ->
+    let resolved_requires_opt = Option.join resolved_requires_opt_opt in
+    let+ parse = prepare_create_parse ()
+    and+ create_file = prepare_create_file file_key module_name resolved_requires_opt in
+    create_file (parse :> [ `typed | `untyped | `package ] parse_addr)
+  | Some file ->
+    let parse_ent = get_parse file in
+    let typed_parse =
+      let* parse = entity_read_latest parse_ent in
+      coerce_typed parse
+    in
+    (match typed_parse with
     | None ->
-      let resolved_requires_opt = Option.join resolved_requires_opt_opt in
       let+ parse = prepare_create_parse ()
-      and+ create_file = prepare_create_file file_key module_name resolved_requires_opt in
-      (parse, create_file (parse :> [ `typed | `untyped | `package ] parse_addr))
-    | Some file ->
-      let parse_ent = get_parse file in
-      let typed_parse =
-        let* parse = entity_read_latest parse_ent in
-        coerce_typed parse
+      and+ update_file =
+        prepare_update_file file_key file parse_ent module_name resolved_requires_opt_opt
       in
-      (match typed_parse with
-      | None ->
-        let+ parse = prepare_create_parse ()
+      update_file (parse :> [ `typed | `untyped | `package ] parse_addr)
+    | Some parse ->
+      (* This file has been "parsed" before. If we loaded from a saved state,
+         it wasn't truly parsed but we will have some existing data with a
+         matching hash. In this case, we want to update the existing data with
+         parse information. If the hash doesn't match, then it's a fresh parse
+         of a changed file. *)
+
+      (* when reloading from saved state, clear the previous leader
+         and sig hash. normally, it's ok for these to be temporarily
+         stale because we'll merge the changed components which will
+         update them, but we don't do that during a reinit. *)
+      let leader_ent = get_leader parse in
+      let sig_hash_ent = get_sig_hash parse in
+      let clear_leader =
+        match type_sig_opt with
+        | Some _ -> Fun.id
+        | None ->
+          fun () ->
+            entity_advance leader_ent None;
+            entity_advance sig_hash_ent None
+      in
+
+      let old_hash = read_int64 (get_file_hash parse) in
+      if Int64.equal hash old_hash then
+        (* the resolved requires can be affected by changes to other files. we
+           have to update them even though this file is unchanged. *)
+        let+ update_resolved_requires =
+          match resolved_requires_opt_opt with
+          | None -> prepare_const (fun _ _ -> false)
+          | Some resolved_requires_opt ->
+            prepare_update_resolved_requires_if_changed (Some parse) resolved_requires_opt
+        and+ set_parse_data = prepare_set_parse_data () in
+        let _did_change : bool = update_resolved_requires file parse in
+        let () = set_parse_data parse in
+        let () = clear_leader () in
+        MSet.empty
+      else
+        (* reuse the existing resolved_requires ent. this enables
+           [prepare_update_resolved_requires], called by [prepare_update_file],
+           to determine whether [resolved_requires_opt_opt] have changed. *)
+        let resolved_requires_ent = get_resolved_requires parse in
+        let+ create_parse = prepare_create_parse_with_ents ()
         and+ update_file =
           prepare_update_file file_key file parse_ent module_name resolved_requires_opt_opt
         in
-        (parse, update_file (parse :> [ `typed | `untyped | `package ] parse_addr))
-      | Some parse ->
-        (* This file has been "parsed" before. If we loaded from a saved state,
-           it wasn't truly parsed but we will have some existing data with a
-           matching hash. In this case, we want to update the existing data with
-           parse information. If the hash doesn't match, then it's a fresh parse
-           of a changed file. *)
-
-        (* when reloading from saved state, clear the previous leader
-           and sig hash. normally, it's ok for these to be temporarily
-           stale because we'll merge the changed components which will
-           update them, but we don't do that during a reinit. *)
-        let leader_ent = get_leader parse in
-        let sig_hash_ent = get_sig_hash parse in
-        let clear_leader =
-          match type_sig_opt with
-          | Some _ -> Fun.id
-          | None ->
-            fun () ->
-              entity_advance leader_ent None;
-              entity_advance sig_hash_ent None
-        in
-
-        let old_hash = read_int64 (get_file_hash parse) in
-        if Int64.equal hash old_hash then
-          (* the resolved requires can be affected by changes to other files. we
-             have to update them even though this file is unchanged. *)
-          let+ update_resolved_requires =
-            match resolved_requires_opt_opt with
-            | None -> prepare_const (fun _ _ -> false)
-            | Some resolved_requires_opt ->
-              prepare_update_resolved_requires_if_changed (Some parse) resolved_requires_opt
-          in
-          let _did_change : bool = update_resolved_requires file parse in
-          let () = clear_leader () in
-          (parse, MSet.empty)
-        else
-          (* reuse the existing resolved_requires ent. this enables
-             [prepare_update_resolved_requires], called by [prepare_update_file],
-             to determine whether [resolved_requires_opt_opt] have changed. *)
-          let resolved_requires_ent = get_resolved_requires parse in
-          let+ create_parse = prepare_create_parse_with_ents ()
-          and+ update_file =
-            prepare_update_file file_key file parse_ent module_name resolved_requires_opt_opt
-          in
-          let parse = create_parse resolved_requires_ent leader_ent sig_hash_ent in
-          let () = clear_leader () in
-          (parse, update_file (parse :> [ `typed | `untyped | `package ] parse_addr)))
-  in
-  set_ast parse;
-  set_docblock parse;
-  set_aloc_table parse;
-  set_type_sig parse;
-  set_file_sig parse;
-  dirty_modules
+        let parse = create_parse resolved_requires_ent leader_ent sig_hash_ent in
+        let () = clear_leader () in
+        update_file (parse :> [ `typed | `untyped | `package ] parse_addr))
 
 let prepare_add_unparsed_file file_key file_opt hash module_name =
   let open Heap in
