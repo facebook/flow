@@ -1201,7 +1201,7 @@ module NewAPI = struct
       done;
       addr
     in
-    (size, write)
+    (header_size + size, write)
 
   let sklist_search_level_addr sklist = addr_offset sklist 1
 
@@ -1552,7 +1552,7 @@ module NewAPI = struct
       chunk.next_addr <- addr_offset chunk.next_addr compressed_wsize;
       addr
     in
-    (compressed_wsize, write)
+    (header_size + compressed_wsize, write)
 
   let read_compressed tag addr =
     let heap = get_heap () in
@@ -1678,7 +1678,7 @@ module NewAPI = struct
       unsafe_write_string chunk cas_digest;
       addr
     in
-    (size, write)
+    (header_size + size, write)
 
   let read_cas_digest addr =
     let bytes = read_string_generic Cas_digest_tag addr 0 in

@@ -98,7 +98,7 @@ let skip_list_test workers _ctxt =
     let write_fns =
       let f file =
         let (size, write) = prepare_write_sknode () in
-        size_acc := header_size + size + !size_acc;
+        size_acc := size + !size_acc;
         (fun chunk -> write chunk file)
       in
       Array.map f files
