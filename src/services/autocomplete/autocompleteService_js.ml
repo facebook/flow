@@ -1540,8 +1540,17 @@ let autocomplete_jsx_element
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
 let autocomplete_jsx_attribute
-    ~reader cx file_sig typed_ast cls attribute ~used_attr_names ~has_value ~tparams_rev ~edit_locs
-    =
+    ~reader
+    ~used_attr_names
+    ~has_value
+    ~tparams_rev
+    ~edit_locs
+    ~token
+    cx
+    file_sig
+    typed_ast
+    cls
+    attribute =
   let open Flow_js in
   let reason =
     let (aloc, name) = attribute in
@@ -1592,11 +1601,12 @@ let autocomplete_jsx_attribute
                ty
          )
     in
+    let items = filter_by_token_and_sort token items in
     let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
 let autocomplete_module_exports
-    ~reader ~cx ~file_sig ~typed_ast ~tparams_rev ~edit_locs ~kind ?filter_name module_type =
+    ~reader ~cx ~file_sig ~typed_ast ~tparams_rev ~edit_locs ~token ~kind ?filter_name module_type =
   let scheme = Type.TypeScheme.{ tparams_rev; type_ = module_type } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
@@ -1622,6 +1632,7 @@ let autocomplete_module_exports
         []
       )
   in
+  let items = filter_by_token_and_sort token items in
   AcResult
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
@@ -1817,6 +1828,7 @@ let autocomplete_object_key
                  ty
          )
     in
+    let items = filter_by_token_and_sort token items in
     let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
@@ -1895,6 +1907,7 @@ let autocomplete_get_results
             ~typed_ast
             ~tparams_rev
             ~edit_locs
+            ~token
             ~kind
             ~filter_name
             module_type
@@ -1923,8 +1936,9 @@ let autocomplete_get_results
         let prefer_single_quotes = Options.format_single_quotes options in
         let items =
           autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound
+          |> filter_by_token_and_sort token
         in
-        let result = ServerProt.Response.Completion.{ items; is_incomplete = false } in
+        let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
         ("Acliteral", AcResult { result; errors_to_log = [] })
       | Ac_id { include_super; include_this; type_; enclosing_class_t } ->
         ( "Acid",
@@ -2047,15 +2061,16 @@ let autocomplete_get_results
         ( "Acjsx",
           autocomplete_jsx_attribute
             ~reader
+            ~used_attr_names
+            ~has_value
+            ~tparams_rev
+            ~edit_locs
+            ~token
             cx
             file_sig
             typed_ast
             component_t
             (ac_loc, attribute_name)
-            ~used_attr_names
-            ~has_value
-            ~tparams_rev
-            ~edit_locs
         )
       | Ac_type ->
         ( "Actype",
@@ -2085,6 +2100,7 @@ let autocomplete_get_results
             ~typed_ast
             ~tparams_rev
             ~edit_locs
+            ~token
             ~kind:`Type
             qtype
         ))

@@ -11072,10 +11072,10 @@ upper_bounds_6.js:5:5
 Flags: --pretty
 {
   "result":[
-    {"name":"Symbol.iterator","type":"any"},
+    {"name":"'foo.bar'","type":"boolean"},
     {"name":"bar","type":"string"},
     {"name":"foo","type":"number"},
-    {"name":"'foo.bar'","type":"boolean"}
+    {"name":"Symbol.iterator","type":"any"}
   ]
 }
 
@@ -11085,19 +11085,11 @@ Flags: --pretty
 
 upper_bounds_8.js:5:6
 Flags: --pretty
-{
-  "result":[
-    {"name":"bar","type":"string"},
-    {"name":"foo","type":"number"},
-    {"name":"\"foo.bar\"","type":"boolean"}
-  ]
-}
+{"result":[{"name":"'foo.bar'","type":"boolean"}]}
 
 upper_bounds_9.js:5:14
 Flags: --pretty
-{
-  "result":[{"name":"bar","type":"string"},{"name":"\"foo.bar\"","type":"boolean"}]
-}
+{"result":[{"name":"'foo.bar'","type":"boolean"}]}
 
 upper_bounds_10.js:19:16
 Flags: --pretty
