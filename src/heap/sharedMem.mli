@@ -253,10 +253,6 @@ module NewAPI : sig
 
   (* addr tbl *)
 
-  val addr_tbl_size : 'a array -> size
-
-  val write_addr_tbl : (chunk -> 'a -> 'k addr) -> chunk -> 'a array -> 'k tbl addr
-
   val prepare_write_addr_tbl : 'k addr prep array -> 'k tbl addr prep
 
   val read_addr_tbl_generic : ('k addr -> 'a) -> 'k tbl addr -> (int -> (int -> 'a) -> 'b) -> 'b
