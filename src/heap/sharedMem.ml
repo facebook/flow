@@ -841,6 +841,8 @@ module NewAPI = struct
     assert (chunk.next_addr = addr_offset addr size);
     x
 
+  let alloc_prep (size, write) = alloc size write
+
   (** Prepare *)
 
   let prepare_map (size, write) f = (size, (fun chunk -> f (write chunk)))
@@ -1088,6 +1090,8 @@ module NewAPI = struct
     unsafe_write_string chunk s;
     heap_string
 
+  let prepare_write_string s = (header_size + string_size s, (fun chunk -> write_string chunk s))
+
   let read_string_generic tag addr offset =
     let hd = read_header_checked (get_heap ()) tag addr in
     let str_addr = addr_offset addr (header_size + offset) in
@@ -1113,6 +1117,8 @@ module NewAPI = struct
     unsafe_write_int64 chunk n;
     addr
 
+  let prepare_write_int64 n = (header_size + int64_size, (fun chunk -> write_int64 chunk n))
+
   let read_int64 addr =
     let heap = get_heap () in
     let _ = read_header_checked heap Int64_tag addr in
@@ -1135,6 +1141,25 @@ module NewAPI = struct
           unsafe_write_addr_at chunk.heap (addr_offset map (header_size + i)) addr)
         xs;
       map
+
+  let prepare_write_addr_tbl preps =
+    let n = Array.length preps in
+    if n = 0 then
+      prepare_const null_addr
+    else
+      let tbl_size = addr_size * n in
+      let elems_size = Array.fold_left (fun acc (size, _) -> acc + size) 0 preps in
+      let write chunk =
+        let map = write_header chunk Addr_tbl_tag tbl_size in
+        chunk.next_addr <- addr_offset chunk.next_addr tbl_size;
+        Array.iteri
+          (fun i (_, write) ->
+            let addr = write chunk in
+            unsafe_write_addr_at chunk.heap (addr_offset map (header_size + i)) addr)
+          preps;
+        map
+      in
+      (header_size + tbl_size + elems_size, write)
 
   let read_addr_tbl_generic f addr init =
     if addr = null_addr then
@@ -1226,6 +1251,8 @@ module NewAPI = struct
       unsafe_write_addr chunk null_addr
     done;
     addr
+
+  let prepare_write_sklist = (header_size + sklist_size, write_sklist)
 
   let prepare_write_sknode () =
     let level = sklist_random_level () in
@@ -1490,6 +1517,8 @@ module NewAPI = struct
     unsafe_write_int64 chunk (i64 version);
     addr
 
+  let prepare_write_entity = (header_size + entity_size, write_entity)
+
   let get_entity_version heap entity = Int64.to_int (buf_read_int64 heap (version_addr entity))
 
   (* To write new data for an entity, we advance its version, then write the new
@@ -1622,6 +1651,9 @@ module NewAPI = struct
     unsafe_write_string chunk docblock;
     addr
 
+  let prepare_write_docblock docblock =
+    (header_size + docblock_size docblock, (fun chunk -> write_docblock chunk docblock))
+
   (** ALoc tables *)
 
   let aloc_table_size = string_size
@@ -1630,6 +1662,9 @@ module NewAPI = struct
     let addr = write_header chunk ALoc_table_tag (aloc_table_size tbl) in
     unsafe_write_string chunk tbl;
     addr
+
+  let prepare_write_aloc_table tbl =
+    (header_size + aloc_table_size tbl, (fun chunk -> write_aloc_table chunk tbl))
 
   let read_aloc_table addr = read_string_generic ALoc_table_tag addr 0
 
@@ -1652,6 +1687,9 @@ module NewAPI = struct
     f buf;
     chunk.next_addr <- addr_offset chunk.next_addr size;
     addr
+
+  let prepare_write_type_sig bsize f =
+    (header_size + type_sig_size bsize, (fun chunk -> write_type_sig chunk bsize f))
 
   let type_sig_buf addr =
     let heap = get_heap () in
@@ -1767,6 +1805,12 @@ module NewAPI = struct
     unsafe_write_addr chunk package_info;
     addr
 
+  let prepare_write_untyped_parse = (header_size + untyped_parse_size, write_untyped_parse)
+
+  let prepare_write_typed_parse = (header_size + typed_parse_size, write_typed_parse)
+
+  let prepare_write_package_parse = (header_size + package_parse_size, write_package_parse)
+
   let is_typed parse =
     let hd = read_header (get_heap ()) parse in
     obj_tag hd = tag_val Typed_tag
@@ -1857,6 +1901,8 @@ module NewAPI = struct
     unsafe_write_addr chunk null_addr (* next haste provider *);
     addr
 
+  let prepare_write_haste_info = (header_size + haste_info_size, write_haste_info)
+
   let haste_module_addr parse = addr_offset parse 1
 
   let next_haste_provider_addr parse = addr_offset parse 2
@@ -1889,6 +1935,8 @@ module NewAPI = struct
     unsafe_write_addr chunk haste_info;
     unsafe_write_addr chunk dependents;
     addr
+
+  let prepare_write_file kind = (header_size + file_size, (fun chunk -> write_file chunk kind))
 
   let file_name_addr file = addr_offset file 1
 
@@ -1948,6 +1996,8 @@ module NewAPI = struct
     unsafe_write_addr chunk null_addr (* all providers *);
     unsafe_write_addr chunk dependents;
     addr
+
+  let prepare_write_haste_module = (header_size + haste_module_size, write_haste_module)
 
   let haste_modules_equal = Int.equal
 

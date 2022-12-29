@@ -203,6 +203,8 @@ module NewAPI : sig
    * allocated space. *)
   val alloc : size -> (chunk -> 'a) -> 'a
 
+  val alloc_prep : 'a prep -> 'a
+
   (* prepare *)
 
   val prepare_map : 'a prep -> ('a -> 'b) -> 'b prep
@@ -233,6 +235,8 @@ module NewAPI : sig
 
   val write_string : chunk -> string -> [ `string ] addr
 
+  val prepare_write_string : string -> [ `string ] addr prep
+
   val read_string : [ `string ] addr -> string
 
   val compare_string : [ `string ] addr -> [ `string ] addr -> int
@@ -243,6 +247,8 @@ module NewAPI : sig
 
   val write_int64 : chunk -> int64 -> [ `int64 ] addr
 
+  val prepare_write_int64 : int64 -> [ `int64 ] addr prep
+
   val read_int64 : [ `int64 ] addr -> int64
 
   (* addr tbl *)
@@ -250,6 +256,8 @@ module NewAPI : sig
   val addr_tbl_size : 'a array -> size
 
   val write_addr_tbl : (chunk -> 'a -> 'k addr) -> chunk -> 'a array -> 'k tbl addr
+
+  val prepare_write_addr_tbl : 'k addr prep array -> 'k tbl addr prep
 
   val read_addr_tbl_generic : ('k addr -> 'a) -> 'k tbl addr -> (int -> (int -> 'a) -> 'b) -> 'b
 
@@ -260,6 +268,8 @@ module NewAPI : sig
   val sklist_size : size
 
   val write_sklist : chunk -> 'a sklist addr
+
+  val prepare_write_sklist : 'a sklist addr prep
 
   val prepare_write_sknode : unit -> ('a addr -> 'a sknode addr) prep
 
@@ -272,6 +282,8 @@ module NewAPI : sig
   val entity_size : int
 
   val write_entity : chunk -> 'k addr option -> 'k entity addr
+
+  val prepare_write_entity : ('k addr option -> 'k entity addr) prep
 
   val entity_advance : 'k entity addr -> 'k addr option -> unit
 
@@ -335,6 +347,8 @@ module NewAPI : sig
 
   val write_docblock : chunk -> string -> [ `docblock ] addr
 
+  val prepare_write_docblock : string -> [ `docblock ] addr prep
+
   val read_docblock : [ `docblock ] addr -> string
 
   (* aloc table *)
@@ -343,6 +357,8 @@ module NewAPI : sig
 
   val write_aloc_table : chunk -> string -> [ `aloc_table ] addr
 
+  val prepare_write_aloc_table : string -> [ `aloc_table ] addr prep
+
   val read_aloc_table : [ `aloc_table ] addr -> string
 
   (* type sig *)
@@ -350,6 +366,8 @@ module NewAPI : sig
   val type_sig_size : int -> size
 
   val write_type_sig : chunk -> int -> (buf -> unit) -> [ `type_sig ] addr
+
+  val prepare_write_type_sig : int -> (buf -> unit) -> [ `type_sig ] addr prep
 
   val read_type_sig : [ `type_sig ] addr -> (buf -> 'a) -> 'a
 
@@ -378,6 +396,23 @@ module NewAPI : sig
 
   val write_package_parse :
     chunk -> [ `int64 ] addr -> [ `package_info ] addr -> [ `package ] parse addr
+
+  val prepare_write_untyped_parse : ([ `int64 ] addr -> [ `untyped ] parse addr) prep
+
+  val prepare_write_typed_parse :
+    ([ `int64 ] addr ->
+    [ `exports ] addr ->
+    [ `resolved_requires ] entity addr ->
+    [ `imports ] addr ->
+    [ `file ] entity addr ->
+    [ `int64 ] entity addr ->
+    [ `cas_digest ] addr option ->
+    [ `typed ] parse addr
+    )
+    prep
+
+  val prepare_write_package_parse :
+    ([ `int64 ] addr -> [ `package_info ] addr -> [ `package ] parse addr) prep
 
   val is_typed : [> ] parse addr -> bool
 
@@ -431,6 +466,8 @@ module NewAPI : sig
 
   val write_haste_info : chunk -> [ `haste_module ] addr -> [ `haste_info ] addr
 
+  val prepare_write_haste_info : ([ `haste_module ] addr -> [ `haste_info ] addr) prep
+
   val get_haste_module : [ `haste_info ] addr -> [ `haste_module ] addr
 
   val haste_info_equal : [ `haste_info ] addr -> [ `haste_info ] addr -> bool
@@ -453,6 +490,16 @@ module NewAPI : sig
     [ `haste_info ] entity addr ->
     [ `file ] sklist addr option ->
     [ `file ] addr
+
+  val prepare_write_file :
+    file_kind ->
+    ([ `string ] addr ->
+    [ `typed | `untyped | `package ] parse entity addr ->
+    [ `haste_info ] entity addr ->
+    [ `file ] sklist addr option ->
+    [ `file ] addr
+    )
+    prep
 
   val get_file_kind : [ `file ] addr -> file_kind
 
@@ -478,6 +525,10 @@ module NewAPI : sig
     [ `file ] entity addr ->
     [ `file ] sklist addr ->
     [ `haste_module ] addr
+
+  val prepare_write_haste_module :
+    ([ `string ] addr -> [ `file ] entity addr -> [ `file ] sklist addr -> [ `haste_module ] addr)
+    prep
 
   val haste_modules_equal : [ `haste_module ] addr -> [ `haste_module ] addr -> bool
 

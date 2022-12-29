@@ -328,7 +328,7 @@ let prepare_add_haste_module name =
 
 let prepare_find_or_add_haste_module = prepare_find_or_add get_haste_module prepare_add_haste_module
 
-let prepare_write_haste_info name =
+let prepare_write_haste_info_for_name name =
   let open Heap in
   let (haste_module_size, find_or_add_haste_module) = prepare_find_or_add_haste_module name in
   let size = haste_module_size + header_size + haste_info_size in
@@ -341,11 +341,11 @@ let prepare_write_haste_info name =
 let prepare_write_haste_info_opt = function
   | None -> (0, Fun.const None)
   | Some name ->
-    let (size, write) = prepare_write_haste_info name in
+    let (size, write) = prepare_write_haste_info_for_name name in
     (size, (fun chunk -> Some (write chunk)))
 
 let prepare_update_haste_info haste_ent name =
-  let (size, write) = prepare_write_haste_info name in
+  let (size, write) = prepare_write_haste_info_for_name name in
   (size, (fun chunk -> Heap.entity_advance haste_ent (Some (write chunk))))
 
 let prepare_update_haste_info_if_changed haste_ent name_opt =
@@ -366,7 +366,7 @@ let prepare_update_haste_info_if_changed haste_ent name_opt =
     if String.equal name old_name then
       (0, Fun.const ())
     else
-      let (size, write) = prepare_write_haste_info name in
+      let (size, write) = prepare_write_haste_info_for_name name in
       (size, (fun chunk -> entity_advance haste_ent (Some (write chunk))))
 
 let prepare_write_aloc_table locs =
