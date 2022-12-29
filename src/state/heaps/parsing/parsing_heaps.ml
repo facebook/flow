@@ -815,7 +815,7 @@ let clear_file file_key =
           let* addr = entity_read_latest (get_resolved_requires parse) in
           Some (read_resolved_requires_caml addr)
         in
-        alloc_prep
+        alloc
           (let+ update_revdeps = prepare_update_revdeps old_resolved_requires None in
            update_revdeps file)
       in
@@ -839,7 +839,7 @@ let rollback_resolved_requires file ent =
       let* addr = Heap.entity_read_latest ent in
       Some (read_resolved_requires addr)
     in
-    Heap.alloc_prep
+    Heap.alloc
       (let+ update_revdeps = prepare_update_revdeps new_resolved_requires old_resolved_requires in
        update_revdeps file);
     Heap.entity_rollback ent
@@ -925,7 +925,7 @@ let rollback_file =
           let* addr = entity_read_latest (get_resolved_requires old_parse) in
           Some (read_resolved_requires_caml addr)
         in
-        alloc_prep
+        alloc
           (let+ update_revdeps = prepare_update_revdeps None old_resolved_requires in
            update_revdeps file)
       | (None, Some new_parse) ->
@@ -936,7 +936,7 @@ let rollback_file =
           let* addr = entity_read_latest (get_resolved_requires new_parse) in
           Some (read_resolved_requires_caml addr)
         in
-        alloc_prep
+        alloc
           (let+ update_revdeps = prepare_update_revdeps new_resolved_requires None in
            update_revdeps file)
       | (Some _, Some new_parse) ->
@@ -1061,7 +1061,7 @@ let add_parsed
     type_sig
     cas_digest : MSet.t =
   WorkerCancel.with_no_cancellations (fun () ->
-      Heap.alloc_prep
+      Heap.alloc
         (prepare_add_checked_file
            file_key
            file_opt
@@ -1081,12 +1081,12 @@ let add_parsed
 
 let add_unparsed file_key file_opt hash module_name : MSet.t =
   WorkerCancel.with_no_cancellations (fun () ->
-      Heap.alloc_prep (prepare_add_unparsed_file file_key file_opt hash module_name)
+      Heap.alloc (prepare_add_unparsed_file file_key file_opt hash module_name)
   )
 
 let add_package file_key file_opt hash module_name package_info : MSet.t =
   WorkerCancel.with_no_cancellations (fun () ->
-      Heap.alloc_prep (prepare_add_package_file file_key file_opt hash module_name package_info)
+      Heap.alloc (prepare_add_package_file file_key file_opt hash module_name package_info)
   )
 
 let clear_not_found file_key = WorkerCancel.with_no_cancellations (fun () -> clear_file file_key)
@@ -1558,7 +1558,7 @@ module Resolved_requires_mutator = struct
 
   let add_resolved_requires () file parse resolved_requires =
     WorkerCancel.with_no_cancellations (fun () ->
-        Heap.alloc_prep
+        Heap.alloc
           (let+ update_resolved_requires =
              prepare_update_resolved_requires_if_changed (Some parse) (Some resolved_requires)
            in
@@ -1609,7 +1609,7 @@ module Merge_context_mutator = struct
     match old_sig_hash with
     | Some old_sig_hash when Int64.equal old_sig_hash sig_hash -> false
     | _ ->
-      alloc_prep
+      alloc
         (let+ sig_hash = prepare_write_int64 sig_hash in
          entity_advance ent (Some sig_hash));
       true
@@ -2024,7 +2024,7 @@ module Saved_state_mutator = struct
 
   let add_parsed () file_key file_opt hash module_name exports resolved_requires imports cas_digest
       =
-    Heap.alloc_prep
+    Heap.alloc
       (prepare_add_checked_file
          file_key
          file_opt

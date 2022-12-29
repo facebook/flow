@@ -201,9 +201,7 @@ module NewAPI : sig
   (* Allocate the requested space (in words) in the heap. All writes must be
    * done within the provided callback, and the writes must fully consume all
    * allocated space. *)
-  val alloc : size -> (chunk -> 'a) -> 'a
-
-  val alloc_prep : 'a prep -> 'a
+  val alloc : 'a prep -> 'a
 
   (* prepare *)
 
@@ -223,17 +221,7 @@ module NewAPI : sig
     val ( and+ ) : 'a prep -> 'b prep -> ('a * 'b) prep
   end
 
-  (* headers *)
-
-  val header_size : size
-
-  val with_header_size : ('a -> size) -> 'a -> size
-
   (* strings *)
-
-  val string_size : string -> size
-
-  val write_string : chunk -> string -> [ `string ] addr
 
   val prepare_write_string : string -> [ `string ] addr prep
 
@@ -242,10 +230,6 @@ module NewAPI : sig
   val compare_string : [ `string ] addr -> [ `string ] addr -> int
 
   (* hash *)
-
-  val int64_size : size
-
-  val write_int64 : chunk -> int64 -> [ `int64 ] addr
 
   val prepare_write_int64 : int64 -> [ `int64 ] addr prep
 
@@ -261,10 +245,6 @@ module NewAPI : sig
 
   (* skip lists *)
 
-  val sklist_size : size
-
-  val write_sklist : chunk -> 'a sklist addr
-
   val prepare_write_sklist : 'a sklist addr prep
 
   val prepare_write_sknode : unit -> ('a addr -> 'a sknode addr) prep
@@ -274,10 +254,6 @@ module NewAPI : sig
   val sklist_is_empty : 'a sklist addr -> bool
 
   (* entities *)
-
-  val entity_size : int
-
-  val write_entity : chunk -> 'k addr option -> 'k entity addr
 
   val prepare_write_entity : ('k addr option -> 'k entity addr) prep
 
@@ -339,29 +315,17 @@ module NewAPI : sig
 
   (* docblock *)
 
-  val docblock_size : string -> size
-
-  val write_docblock : chunk -> string -> [ `docblock ] addr
-
   val prepare_write_docblock : string -> [ `docblock ] addr prep
 
   val read_docblock : [ `docblock ] addr -> string
 
   (* aloc table *)
 
-  val aloc_table_size : string -> size
-
-  val write_aloc_table : chunk -> string -> [ `aloc_table ] addr
-
   val prepare_write_aloc_table : string -> [ `aloc_table ] addr prep
 
   val read_aloc_table : [ `aloc_table ] addr -> string
 
   (* type sig *)
-
-  val type_sig_size : int -> size
-
-  val write_type_sig : chunk -> int -> (buf -> unit) -> [ `type_sig ] addr
 
   val prepare_write_type_sig : int -> (buf -> unit) -> [ `type_sig ] addr prep
 
@@ -370,28 +334,6 @@ module NewAPI : sig
   val type_sig_buf : [ `type_sig ] addr -> buf
 
   (* parse data *)
-
-  val untyped_parse_size : size
-
-  val typed_parse_size : size
-
-  val package_parse_size : size
-
-  val write_untyped_parse : chunk -> [ `int64 ] addr -> [ `untyped ] parse addr
-
-  val write_typed_parse :
-    chunk ->
-    [ `int64 ] addr ->
-    [ `exports ] addr ->
-    [ `resolved_requires ] entity addr ->
-    [ `imports ] addr ->
-    [ `file ] entity addr ->
-    [ `int64 ] entity addr ->
-    [ `cas_digest ] addr option ->
-    [ `typed ] parse addr
-
-  val write_package_parse :
-    chunk -> [ `int64 ] addr -> [ `package_info ] addr -> [ `package ] parse addr
 
   val prepare_write_untyped_parse : ([ `int64 ] addr -> [ `untyped ] parse addr) prep
 
@@ -458,10 +400,6 @@ module NewAPI : sig
 
   (* haste info *)
 
-  val haste_info_size : size
-
-  val write_haste_info : chunk -> [ `haste_module ] addr -> [ `haste_info ] addr
-
   val prepare_write_haste_info : ([ `haste_module ] addr -> [ `haste_info ] addr) prep
 
   val get_haste_module : [ `haste_info ] addr -> [ `haste_module ] addr
@@ -475,17 +413,6 @@ module NewAPI : sig
     | Json_file
     | Resource_file
     | Lib_file
-
-  val file_size : size
-
-  val write_file :
-    chunk ->
-    file_kind ->
-    [ `string ] addr ->
-    [ `typed | `untyped | `package ] parse entity addr ->
-    [ `haste_info ] entity addr ->
-    [ `file ] sklist addr option ->
-    [ `file ] addr
 
   val prepare_write_file :
     file_kind ->
@@ -512,15 +439,6 @@ module NewAPI : sig
   val file_changed : [ `file ] addr -> bool
 
   (* haste module *)
-
-  val haste_module_size : size
-
-  val write_haste_module :
-    chunk ->
-    [ `string ] addr ->
-    [ `file ] entity addr ->
-    [ `file ] sklist addr ->
-    [ `haste_module ] addr
 
   val prepare_write_haste_module :
     ([ `string ] addr -> [ `file ] entity addr -> [ `file ] sklist addr -> [ `haste_module ] addr)
