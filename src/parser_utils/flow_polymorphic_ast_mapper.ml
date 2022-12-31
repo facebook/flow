@@ -1027,21 +1027,30 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method typeof_member_identifier id = this#t_identifier id
 
+    method tuple_element (element : ('M, 'T) Ast.Type.Tuple.element)
+        : ('N, 'U) Ast.Type.Tuple.element =
+      let open Ast.Type.Tuple in
+      match element with
+      | (annot, UnlabeledElement t_annot) ->
+        (this#on_loc_annot annot, UnlabeledElement (this#type_ t_annot))
+      | (annot, LabeledElement e) ->
+        (this#on_loc_annot annot, LabeledElement (this#tuple_labeled_element e))
+
+    method tuple_labeled_element (t : ('M, 'T) Ast.Type.Tuple.LabeledElement.t)
+        : ('N, 'U) Ast.Type.Tuple.LabeledElement.t =
+      let open Ast.Type.Tuple.LabeledElement in
+      let { annot = t_annot; name; variance } = t in
+      let t_annot' = this#type_ t_annot in
+      let name' = this#t_identifier name in
+      let variance' = Option.map ~f:this#variance variance in
+      { annot = t_annot'; name = name'; variance = variance' }
+
     method tuple_type (t : ('M, 'T) Ast.Type.Tuple.t) : ('N, 'U) Ast.Type.Tuple.t =
       let open Ast.Type.Tuple in
       let { elements; comments } = t in
       let elements' = List.map ~f:this#tuple_element elements in
       let comments' = Option.map ~f:this#syntax comments in
       { elements = elements'; comments = comments' }
-
-    method tuple_element (t : ('M, 'T) Ast.Type.Tuple.Element.t) : ('N, 'U) Ast.Type.Tuple.Element.t
-        =
-      let open Ast.Type.Tuple.Element in
-      let (annot, { annot = t_annot; name; variance }) = t in
-      let t_annot' = this#type_ t_annot in
-      let name' = Option.map ~f:this#t_identifier name in
-      let variance' = Option.map ~f:this#variance variance in
-      (this#on_loc_annot annot, { annot = t_annot'; name = name'; variance = variance' })
 
     method array_type (t : ('M, 'T) Ast.Type.Array.t) : ('N, 'U) Ast.Type.Array.t =
       let open Ast.Type.Array in

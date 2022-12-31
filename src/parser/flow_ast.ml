@@ -357,19 +357,24 @@ and Type : sig
   end
 
   module Tuple : sig
-    module Element : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
-        name: ('M, 'T) Identifier.t option;
+    module LabeledElement : sig
+      type ('M, 'T) t = {
+        name: ('M, 'T) Identifier.t;
         annot: ('M, 'T) Type.t;
         variance: 'M Variance.t option;
       }
       [@@deriving show]
     end
 
-    type ('M, 'T) t = {
-      elements: ('M, 'T) Element.t list;
+    type ('M, 'T) element = 'M * ('M, 'T) element' [@@deriving show]
+
+    and ('M, 'T) element' =
+      | UnlabeledElement of ('M, 'T) Type.t
+      | LabeledElement of ('M, 'T) LabeledElement.t
+    [@@deriving show]
+
+    and ('M, 'T) t = {
+      elements: ('M, 'T) element list;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

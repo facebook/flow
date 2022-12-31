@@ -106,17 +106,31 @@ let type_ options =
     | Arr a -> arr a
     | Tup elements ->
       let%map els =
-        mapM
-          (fun (TupleElement { name; t; polarity }) ->
-            let%map annot = type_ t in
-            ( Loc.none,
-              {
-                T.Tuple.Element.name = Base.Option.map ~f:id_from_string name;
-                annot;
-                variance = variance_ polarity;
-              }
-            ))
-          elements
+        all
+          ((Base.List.mapi ~f:(fun i (TupleElement { name; t; polarity }) ->
+                let%map annot = type_ t in
+                let el =
+                  match (name, polarity) with
+                  | (Some name, _) ->
+                    T.Tuple.LabeledElement
+                      {
+                        T.Tuple.LabeledElement.name = id_from_string name;
+                        annot;
+                        variance = variance_ polarity;
+                      }
+                  | (None, Neutral) -> T.Tuple.UnlabeledElement annot
+                  | _ ->
+                    (* No label, but has polarity - e.g. `$ReadOnly<[string, number]>`
+                       We must make up a name. *)
+                    let name = id_from_string (Printf.sprintf "element_%d" i) in
+                    T.Tuple.LabeledElement
+                      { T.Tuple.LabeledElement.name; annot; variance = variance_ polarity }
+                in
+                (Loc.none, el)
+            )
+           )
+             elements
+          )
       in
       (Loc.none, T.Tuple { T.Tuple.elements = els; comments = None })
     | Union (from_bounds, t0, t1, ts) as t -> union t (from_bounds, t0, t1, ts)

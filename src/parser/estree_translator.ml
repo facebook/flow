@@ -1662,14 +1662,27 @@ with type t = Impl.t = struct
       let qualification = typeof_expr qualification in
       node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
     and tuple_type (loc, { Type.Tuple.elements; comments }) =
-      node ?comments "TupleTypeAnnotation" loc [("types", array_of_list tuple_element elements)]
-    and tuple_element ?comments (loc, { Type.Tuple.Element.name; annot; variance = variance_ }) =
       node
         ?comments
-        "TupleTypeElement"
+        "TupleTypeAnnotation"
         loc
         [
-          ("label", option identifier name);
+          ( "types",
+            array_of_list
+              (function
+                | (_, Type.Tuple.UnlabeledElement annot) -> _type annot
+                | (loc, Type.Tuple.LabeledElement e) -> tuple_labeled_element loc e)
+              elements
+          );
+        ]
+    and tuple_labeled_element
+        ?comments loc { Type.Tuple.LabeledElement.name; annot; variance = variance_ } =
+      node
+        ?comments
+        "TupleTypeLabeledElement"
+        loc
+        [
+          ("label", identifier name);
           ("elementType", _type annot);
           ("variance", option variance variance_);
         ]

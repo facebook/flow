@@ -831,26 +831,14 @@
         "range":[1438,1448],
         "types":[
           {
-            "type":"TupleTypeElement",
+            "type":"AnyTypeAnnotation",
             "loc":{"source":null,"start":{"line":41,"column":36},"end":{"line":41,"column":39}},
-            "range":[1439,1442],
-            "label":null,
-            "elementType":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":41,"column":36},"end":{"line":41,"column":39}},
-              "range":[1439,1442]
-            }
+            "range":[1439,1442]
           },
           {
-            "type":"TupleTypeElement",
+            "type":"AnyTypeAnnotation",
             "loc":{"source":null,"start":{"line":41,"column":41},"end":{"line":41,"column":44}},
-            "range":[1444,1447],
-            "label":null,
-            "elementType":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":41,"column":41},"end":{"line":41,"column":44}},
-              "range":[1444,1447]
-            }
+            "range":[1444,1447]
           }
         ]
       }

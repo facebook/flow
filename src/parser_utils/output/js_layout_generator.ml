@@ -3782,21 +3782,20 @@ and type_tuple ~opts loc { Ast.Type.Tuple.elements; comments } =
          new_list
            ~wrap:(Atom "[", Atom "]")
            ~sep:(Atom ",")
-           (Base.List.map ~f:(fun (loc, element) -> type_tuple_element ~opts loc element) elements);
+           (Base.List.map
+              ~f:(function
+                | (_, Ast.Type.Tuple.UnlabeledElement annot) -> type_ ~opts annot
+                | (loc, Ast.Type.Tuple.LabeledElement e) -> type_tuple_labeled_element ~opts loc e)
+              elements
+           );
        ]
     )
 
-and type_tuple_element ~opts loc { Ast.Type.Tuple.Element.name; annot; variance = variance_ } =
+and type_tuple_labeled_element
+    ~opts loc { Ast.Type.Tuple.LabeledElement.name; annot; variance = variance_ } =
   source_location_with_comments
     ( loc,
-      fuse
-        [
-          option variance variance_;
-          (match name with
-          | Some name -> fuse [identifier name; Atom ":"; pretty_space]
-          | None -> Empty);
-          type_ ~opts annot;
-        ]
+      fuse [option variance variance_; identifier name; Atom ":"; pretty_space; type_ ~opts annot]
     )
 
 and type_array ~opts loc { Ast.Type.Array.argument; comments } =

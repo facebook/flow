@@ -615,9 +615,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method try_catch : ('M, 'T) Ast.Statement.Try.t -> ('N, 'U) Ast.Statement.Try.t
 
-    method tuple_type : ('M, 'T) Ast.Type.Tuple.t -> ('N, 'U) Ast.Type.Tuple.t
+    method tuple_element : ('M, 'T) Ast.Type.Tuple.element -> ('N, 'U) Ast.Type.Tuple.element
 
-    method tuple_element : ('M, 'T) Ast.Type.Tuple.Element.t -> ('N, 'U) Ast.Type.Tuple.Element.t
+    method tuple_labeled_element :
+      ('M, 'T) Ast.Type.Tuple.LabeledElement.t -> ('N, 'U) Ast.Type.Tuple.LabeledElement.t
+
+    method tuple_type : ('M, 'T) Ast.Type.Tuple.t -> ('N, 'U) Ast.Type.Tuple.t
 
     method type_ : ('M, 'T) Flow_ast.Type.t -> ('N, 'U) Ast.Type.t
 

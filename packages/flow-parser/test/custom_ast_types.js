@@ -22,15 +22,15 @@ function custom_ast_types(fork) {
   /////////
   def('ObjectTypeIndexer').field('id', or(def('Identifier'), null));
 
-  def('TupleTypeElement')
+  def('TupleTypeLabeledElement')
     .build('elementType', 'label')
     .field('elementType', def('FlowType'))
-    .field('label', or(def('FlowType'), null));
+    .field('label', def('Identifier'));
 
   def('TupleTypeAnnotation')
     .bases('FlowType')
     .build('types')
-    .field('types', [def('TupleTypeElement')]);
+    .field('types', [or(def('FlowType'), def('TupleTypeLabeledElement'))]);
 
   def('TypeofTypeAnnotation')
     .bases('FlowType')
