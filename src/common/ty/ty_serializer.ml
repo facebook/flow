@@ -117,6 +117,7 @@ let type_ options =
                         T.Tuple.LabeledElement.name = id_from_string name;
                         annot;
                         variance = variance_ polarity;
+                        optional = false;
                       }
                   | (None, Neutral) -> T.Tuple.UnlabeledElement annot
                   | _ ->
@@ -124,7 +125,12 @@ let type_ options =
                        We must make up a name. *)
                     let name = id_from_string (Printf.sprintf "element_%d" i) in
                     T.Tuple.LabeledElement
-                      { T.Tuple.LabeledElement.name; annot; variance = variance_ polarity }
+                      {
+                        T.Tuple.LabeledElement.name;
+                        annot;
+                        variance = variance_ polarity;
+                        optional = false;
+                      }
                 in
                 (Loc.none, el)
             )

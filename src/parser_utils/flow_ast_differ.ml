@@ -2647,12 +2647,18 @@ let program
       (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.LabeledElement.t)
       (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.LabeledElement.t) : node change list option =
     let open Ast.Type.Tuple.LabeledElement in
-    let { name = name1; annot = annot1; variance = var1 } = t1 in
-    let { name = name2; annot = annot2; variance = var2 } = t2 in
+    let { name = name1; annot = annot1; variance = var1; optional = opt1 } = t1 in
+    let { name = name2; annot = annot2; variance = var2; optional = opt2 } = t2 in
     let name_diff = Some (diff_if_changed identifier name1 name2) in
     let annot_diff = Some (diff_if_changed type_ annot1 annot2) in
     let variance_diff = diff_if_changed_ret_opt variance var1 var2 in
-    join_diff_list [name_diff; annot_diff; variance_diff]
+    let optional_diff =
+      if opt1 = opt2 then
+        Some []
+      else
+        None
+    in
+    join_diff_list [name_diff; annot_diff; variance_diff; optional_diff]
   and type_args (pi1 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) (pi2 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t)
       : node change list option =
     let open Ast.Type.TypeArgs in
