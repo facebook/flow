@@ -352,7 +352,7 @@
         ],
         "loc":{"source":null,"start":{"line":9,"column":31},"end":{"line":9,"column":76}},
         "range":[475,520],
-        "types":[
+        "elementTypes":[
           {
             "type":"GenericTypeAnnotation",
             "loc":{"source":null,"start":{"line":9,"column":53},"end":{"line":9,"column":54}},

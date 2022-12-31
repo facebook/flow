@@ -1359,7 +1359,7 @@
         ],
         "loc":{"source":null,"start":{"line":52,"column":23},"end":{"line":52,"column":28}},
         "range":[1517,1522],
-        "types":[
+        "elementTypes":[
           {
             "type":"AnyTypeAnnotation",
             "loc":{"source":null,"start":{"line":52,"column":24},"end":{"line":52,"column":27}},

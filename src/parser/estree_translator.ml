@@ -1667,7 +1667,7 @@ with type t = Impl.t = struct
         "TupleTypeAnnotation"
         loc
         [
-          ( "types",
+          ( "elementTypes",
             array_of_list
               (function
                 | (_, Type.Tuple.UnlabeledElement annot) -> _type annot
