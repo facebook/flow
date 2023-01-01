@@ -584,6 +584,7 @@ and 'loc unsupported_syntax =
   | ImportDynamicArgument
   | IllegalName
   | TupleOptionalElement
+  | TupleSpreadElement
   | UnsupportedInternalSlot of {
       name: string;
       static: bool;
@@ -669,8 +670,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
       | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
       | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
-      | ImportDynamicArgument | IllegalName | TupleOptionalElement | UnsupportedInternalSlot _
-      | AnnotationInsideDestructuring ) as u ->
+      | ImportDynamicArgument | IllegalName | TupleOptionalElement | TupleSpreadElement
+      | UnsupportedInternalSlot _ | AnnotationInsideDestructuring ) as u ->
       u
   in
   function
@@ -2601,6 +2602,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | SpreadArgument -> [text "A spread argument is unsupported here."]
       | IllegalName -> [text "Illegal name."]
       | TupleOptionalElement -> [text "Optional tuple elements are not supported."]
+      | TupleSpreadElement -> [text "Tuple spread is not supported."]
       | UnsupportedInternalSlot { name; static = false } ->
         [text "Unsupported internal slot "; code name; text "."]
       | UnsupportedInternalSlot { name; static = true } ->

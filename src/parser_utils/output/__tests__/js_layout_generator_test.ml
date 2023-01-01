@@ -2084,7 +2084,11 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             "type T = [foo?: string, +bar?: number, -baz?: boolean];"
+             "type T = [foo?: string, +bar?: number, -baz?: boolean];";
+           assert_statement_string ~ctxt "type T=[...S];";
+           assert_statement_string ~ctxt ~pretty:true "type T = [...S];";
+           assert_statement_string ~ctxt "type T=[...bar:S];";
+           assert_statement_string ~ctxt ~pretty:true "type T = [...bar: S];"
          );
          ( "type_union_or_intersection" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=a|b;";

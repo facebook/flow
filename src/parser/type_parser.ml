@@ -442,27 +442,46 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let element =
           with_loc
             (fun env ->
-              let variance =
-                match Peek.token env with
-                | T_PLUS -> maybe_variance env
-                | T_MINUS when Peek.ith_is_identifier ~i:1 env ->
-                  (* `-1` is a valid type but not a valid tuple label.
-                     But `-foo` is only valid as a tuple label. *)
-                  maybe_variance env
-                | _ -> None
-              in
-              match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
-              | (true, T_PLING)
-              | (true, T_COLON) ->
-                let name = identifier_name env in
-                let optional = Eat.maybe env T_PLING in
-                Expect.token env T_COLON;
+              match Peek.token env with
+              | T_ELLIPSIS ->
+                Expect.token env T_ELLIPSIS;
+                let name =
+                  match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
+                  | (true, T_PLING)
+                  | (true, T_COLON) ->
+                    let name = identifier_name env in
+                    if Peek.token env = T_PLING then (
+                      error env Parse_error.InvalidTupleOptionalSpread;
+                      Eat.token env
+                    );
+                    Expect.token env T_COLON;
+                    Some name
+                  | _ -> None
+                in
                 let annot = _type env in
-                Type.Tuple.LabeledElement
-                  { Type.Tuple.LabeledElement.name; annot; variance; optional }
+                Type.Tuple.SpreadElement { Type.Tuple.SpreadElement.name; annot }
               | _ ->
-                if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
-                Type.Tuple.UnlabeledElement (_type env))
+                let variance =
+                  match Peek.token env with
+                  | T_PLUS -> maybe_variance env
+                  | T_MINUS when Peek.ith_is_identifier ~i:1 env ->
+                    (* `-1` is a valid type but not a valid tuple label.
+                       But `-foo` is only valid as a tuple label. *)
+                    maybe_variance env
+                  | _ -> None
+                in
+                (match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
+                | (true, T_PLING)
+                | (true, T_COLON) ->
+                  let name = identifier_name env in
+                  let optional = Eat.maybe env T_PLING in
+                  Expect.token env T_COLON;
+                  let annot = _type env in
+                  Type.Tuple.LabeledElement
+                    { Type.Tuple.LabeledElement.name; annot; variance; optional }
+                | _ ->
+                  if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
+                  Type.Tuple.UnlabeledElement (_type env)))
             env
         in
         let acc = element :: acc in

@@ -3785,7 +3785,8 @@ and type_tuple ~opts loc { Ast.Type.Tuple.elements; comments } =
            (Base.List.map
               ~f:(function
                 | (_, Ast.Type.Tuple.UnlabeledElement annot) -> type_ ~opts annot
-                | (loc, Ast.Type.Tuple.LabeledElement e) -> type_tuple_labeled_element ~opts loc e)
+                | (loc, Ast.Type.Tuple.LabeledElement e) -> type_tuple_labeled_element ~opts loc e
+                | (loc, Ast.Type.Tuple.SpreadElement e) -> type_tuple_spread_element ~opts loc e)
               elements
            );
        ]
@@ -3808,6 +3809,14 @@ and type_tuple_labeled_element
           pretty_space;
           type_ ~opts annot;
         ]
+    )
+
+and type_tuple_spread_element ~opts loc { Ast.Type.Tuple.SpreadElement.name; annot } =
+  source_location_with_comments
+    ( loc,
+      match name with
+      | Some name -> fuse [Atom "..."; identifier name; Atom ":"; pretty_space; type_ ~opts annot]
+      | None -> fuse [Atom "..."; type_ ~opts annot]
     )
 
 and type_array ~opts loc { Ast.Type.Array.argument; comments } =

@@ -1778,6 +1778,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         )
       in
       (t, TupleElement { name = Some str_name; t; polarity = polarity variance }, element_ast)
+    | Ast.Type.Tuple.SpreadElement spread_el ->
+      Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, TupleSpreadElement));
+      let t = AnyT.at (AnyError None) loc in
+      let element_ast =
+        (loc, Ast.Type.Tuple.SpreadElement (Tast_utils.error_mapper#tuple_spread_element spread_el))
+      in
+      (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast)
 
   and mk_func_sig =
     let open Ast.Type.Function in

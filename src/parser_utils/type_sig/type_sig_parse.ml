@@ -1265,7 +1265,10 @@ and annot_with_loc opts scope tbls xs (loc, t) =
                   name = Some (id_name name);
                   t = annot opts scope tbls xs t;
                   polarity = polarity variance;
-                })
+                }
+            | (loc, T.Tuple.SpreadElement _) ->
+              let loc = push_loc tbls loc in
+              TupleElement { name = None; t = Annot (Any loc); polarity = Polarity.Neutral })
           elements
       in
       Annot (Tuple { loc; elems_rev })

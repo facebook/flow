@@ -1671,7 +1671,8 @@ with type t = Impl.t = struct
             array_of_list
               (function
                 | (_, Type.Tuple.UnlabeledElement annot) -> _type annot
-                | (loc, Type.Tuple.LabeledElement e) -> tuple_labeled_element loc e)
+                | (loc, Type.Tuple.LabeledElement e) -> tuple_labeled_element loc e
+                | (loc, Type.Tuple.SpreadElement e) -> tuple_spread_element loc e)
               elements
           );
         ]
@@ -1687,6 +1688,12 @@ with type t = Impl.t = struct
           ("variance", option variance variance_);
           ("optional", bool optional);
         ]
+    and tuple_spread_element ?comments loc { Type.Tuple.SpreadElement.name; annot } =
+      node
+        ?comments
+        "TupleTypeSpreadElement"
+        loc
+        [("label", option identifier name); ("typeAnnotation", _type annot)]
     and string_literal_type (loc, { Ast.StringLiteral.value; raw; comments }) =
       node
         ?comments
