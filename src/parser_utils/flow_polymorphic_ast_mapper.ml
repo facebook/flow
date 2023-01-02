@@ -1125,7 +1125,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Number comments -> Number (Option.map ~f:this#syntax comments)
         | BigInt comments -> BigInt (Option.map ~f:this#syntax comments)
         | String comments -> String (Option.map ~f:this#syntax comments)
-        | Boolean comments -> Boolean (Option.map ~f:this#syntax comments)
+        | Boolean { raw; comments } ->
+          Boolean { raw; comments = Option.map ~f:this#syntax comments }
         | Exists comments -> Exists (Option.map ~f:this#syntax comments)
         | Nullable t' -> Nullable (this#nullable_type t')
         | Array t' -> Array (this#array_type t')

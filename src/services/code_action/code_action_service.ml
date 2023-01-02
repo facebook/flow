@@ -390,6 +390,23 @@ let loc_opt_intersects ~loc ~error_loc =
   | Some loc -> Loc.intersects error_loc loc
 
 let ast_transforms_of_error ?loc = function
+  | Error_message.EDeprecatedBool error_loc ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Replace `bool` with `boolean`";
+          diagnostic_title = "replace_bool";
+          transform =
+            Autofix_replace_type.replace_type ~f:(function
+                | Flow_ast.Type.Boolean { raw = _; comments } ->
+                  Flow_ast.Type.Boolean { raw = `Boolean; comments }
+                | unexpected -> unexpected
+                );
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some fixed_prop_name; _ } ->
     let error_loc = Reason.loc_of_reason reason in
     if loc_opt_intersects ~error_loc ~loc then

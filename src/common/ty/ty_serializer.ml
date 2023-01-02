@@ -87,7 +87,7 @@ let type_ options =
            "$TEMPORARY$boolean"
            ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))])
         )
-    | Bool None -> just (T.Boolean None)
+    | Bool None -> just (T.Boolean { raw = `Boolean; comments = None })
     | BigInt (Some lit) ->
       return
         (builtin_from_string

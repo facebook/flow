@@ -3857,7 +3857,13 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Number comments -> layout_node_with_comments_opt loc comments (Atom "number")
       | T.BigInt comments -> layout_node_with_comments_opt loc comments (Atom "bigint")
       | T.String comments -> layout_node_with_comments_opt loc comments (Atom "string")
-      | T.Boolean comments -> layout_node_with_comments_opt loc comments (Atom "boolean")
+      | T.Boolean { raw; comments } ->
+        let raw =
+          match raw with
+          | `Boolean -> "boolean"
+          | `Bool -> "bool"
+        in
+        layout_node_with_comments_opt loc comments (Atom raw)
       | T.Nullable t -> type_nullable ~opts loc t
       | T.Function func -> type_function ~opts ~sep:(fuse [pretty_space; Atom "=>"]) loc func
       | T.Object obj -> type_object ~opts loc obj

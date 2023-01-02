@@ -311,6 +311,7 @@ and 'loc t' =
   | EUntypedImport of 'loc * string
   | ENonstrictImport of 'loc
   | EUnclearType of 'loc
+  | EDeprecatedBool of 'loc
   | EDeprecatedType of 'loc
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
@@ -946,6 +947,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUntypedImport (loc, s) -> EUntypedImport (f loc, s)
   | ENonstrictImport loc -> ENonstrictImport (f loc)
   | EUnclearType loc -> EUnclearType (f loc)
+  | EDeprecatedBool loc -> EDeprecatedBool (f loc)
   | EDeprecatedType loc -> EDeprecatedType (f loc)
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
@@ -1344,6 +1346,7 @@ let util_use_op_of_msg nope util = function
   | EUntypedImport (_, _)
   | ENonstrictImport _
   | EUnclearType _
+  | EDeprecatedBool _
   | EDeprecatedType _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
@@ -1488,6 +1491,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUntypedImport (loc, _)
   | ENonstrictImport loc
   | EUnclearType loc
+  | EDeprecatedBool loc
   | EDeprecatedType loc
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
@@ -1622,7 +1626,8 @@ let kind_of_msg =
     | EUntypedImport _ -> LintError Lints.UntypedImport
     | ENonstrictImport _ -> LintError Lints.NonstrictImport
     | EUnclearType _ -> LintError Lints.UnclearType
-    | EDeprecatedType _ -> LintError Lints.DeprecatedType
+    | EDeprecatedBool _ -> LintError Lints.(DeprecatedType DeprecatedBool)
+    | EDeprecatedType _ -> LintError Lints.(DeprecatedType DeprecatedStar)
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
@@ -3378,6 +3383,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EDeprecatedBool _ ->
+    Normal { features = [text "Deprecated type. Use "; code "boolean"; text " instead."] }
   | EDeprecatedType _ ->
     Normal
       { features = [text "Deprecated type. Using "; code "*"; text " types is not recommended!"] }
@@ -4261,6 +4268,7 @@ let is_lint_error = function
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _
+  | EDeprecatedBool _
   | EDeprecatedType _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
@@ -4537,6 +4545,7 @@ let error_code_of_message err : error_code option =
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _
+  | EDeprecatedBool _
   | EDeprecatedType _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _

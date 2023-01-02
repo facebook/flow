@@ -402,10 +402,16 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       Eat.token env;
       let trailing = Eat.trailing_comments env in
       Some (Type.Empty (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
-    | T_BOOLEAN_TYPE _ ->
+    | T_BOOLEAN_TYPE kind ->
       Eat.token env;
       let trailing = Eat.trailing_comments env in
-      Some (Type.Boolean (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+      let raw =
+        match kind with
+        | BOOL -> `Bool
+        | BOOLEAN -> `Boolean
+      in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      Some (Type.Boolean { raw; comments })
     | T_NUMBER_TYPE ->
       Eat.token env;
       let trailing = Eat.trailing_comments env in
@@ -1404,7 +1410,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | Number comments -> Number (merge_comments comments)
       | BigInt comments -> BigInt (merge_comments comments)
       | String comments -> String (merge_comments comments)
-      | Boolean comments -> Boolean (merge_comments comments)
+      | Boolean ({ comments; _ } as t) -> Boolean { t with comments = merge_comments comments }
       | Symbol comments -> Symbol (merge_comments comments)
       | Exists comments -> Exists (merge_comments comments)
       | Nullable ({ Nullable.comments; _ } as t) ->

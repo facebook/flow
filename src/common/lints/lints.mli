@@ -25,6 +25,10 @@ type property_assignment_kind =
   | ThisBeforeEverythingInitialized
   | PropertyFunctionCallBeforeEverythingInitialized
 
+type deprecated_type_kind =
+  | DeprecatedBool
+  | DeprecatedStar
+
 type lint_kind =
   | SketchyNull of sketchy_null_kind
   | SketchyNumber of sketchy_number_kind
@@ -32,7 +36,7 @@ type lint_kind =
   | UntypedImport
   | NonstrictImport
   | UnclearType
-  | DeprecatedType
+  | DeprecatedType of deprecated_type_kind
   | UnsafeGettersSetters
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
