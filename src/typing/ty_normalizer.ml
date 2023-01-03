@@ -359,6 +359,42 @@ end = struct
         | ts -> LowerBounds ts
   end
 
+  let should_eval_skip_aliases ~env () =
+    match Env.evaluate_type_destructors env with
+    | Env.EvaluateNone -> false
+    | Env.EvaluateSome -> false
+    | Env.EvaluateAll -> true
+
+  let should_evaluate_destructor ~env ~force_eval d =
+    force_eval
+    ||
+    match Env.evaluate_type_destructors env with
+    | Env.EvaluateNone -> false
+    | Env.EvaluateSome ->
+      T.(
+        (match d with
+        | NonMaybeType
+        | PropertyType _
+        | ElementType _
+        | OptionalIndexedAccessNonMaybeType _
+        | OptionalIndexedAccessResultType _
+        | CallType _ ->
+          true
+        | ReadOnlyType
+        | PartialType
+        | SpreadType _
+        | RestType _
+        | ValuesType
+        | TypeMap _
+        | ReactElementPropsType
+        | ReactElementConfigType
+        | ReactElementRefType
+        | ReactConfigType _
+        | IdxUnwrapType ->
+          false)
+      )
+    | Env.EvaluateAll -> true
+
   (* Arguments:
    * - cont: apply when destructuring returned a single type
    * - default: apply when destructuring returned 0 or >1 types, or a recursive type
@@ -367,7 +403,7 @@ end = struct
   let eval_t ~env ~(cont : fn_t) ~(default : fn_t) ~non_eval ?(force_eval = false) (t, d, id) =
     match d with
     | T.TypeDestructorT (use_op, reason, d) ->
-      if Env.evaluate_type_destructors env || force_eval then
+      if should_evaluate_destructor ~env ~force_eval d then
         let cx = Env.get_cx env in
         let trace = Trace.dummy_trace in
         let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
@@ -589,7 +625,7 @@ end = struct
       | OpenT _
       | TypeDestructorTriggerT _ ->
         type_ctor ~env ?id ~cont:type_with_alias_reason t
-      | EvalT _ when Env.evaluate_type_destructors env ->
+      | EvalT _ when should_eval_skip_aliases ~env () ->
         type_ctor ~env ~cont:type_with_alias_reason t
       | _ ->
         begin

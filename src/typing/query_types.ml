@@ -80,7 +80,7 @@ let insert_type_normalize
       (* Utility types won't are not serialized so it may be worth evaluating them away
        * if we find them in the resulting Ty.t. The trade off is that types might get
        * larger. *)
-      evaluate_type_destructors = false;
+      evaluate_type_destructors = Ty_normalizer_env.EvaluateNone;
       (* Optimize types is false because Insert_types manually calls the simplifier with
          a custom comparison operation *)
       optimize_types = false;
