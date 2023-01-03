@@ -1832,6 +1832,27 @@ let autocomplete_object_key
     let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
+(** Used for logging to classify the kind of completion request *)
+let string_of_autocomplete_type ac_type =
+  let open Autocomplete_js in
+  match ac_type with
+  | Ac_ignored -> "Empty"
+  | Ac_binding -> "Empty"
+  | Ac_comment -> "Empty"
+  | Ac_enum -> "Acenum"
+  | Ac_module -> "Acmodule"
+  | Ac_type -> "Actype"
+  | Ac_jsx_text -> "Empty"
+  | Ac_id _ -> "Acid"
+  | Ac_class_key _ -> "Ac_class_key"
+  | Ac_import_specifier _ -> "Ac_import_specifier"
+  | Ac_key _ -> "Ackey"
+  | Ac_literal _ -> "Acliteral"
+  | Ac_qualified_type _ -> "Acqualifiedtype"
+  | Ac_member _ -> "Acmem"
+  | Ac_jsx_element _ -> "Ac_jsx_element"
+  | Ac_jsx_attribute _ -> "Acjsx"
+
 let autocomplete_get_results
     ~env
     ~options
@@ -1851,7 +1872,8 @@ let autocomplete_get_results
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
     ( None,
       None,
-      ("None", AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] })
+      "None",
+      AcResult { result; errors_to_log = ["Autocomplete token not found in AST"] }
     )
   | Some { tparams_rev; ac_loc; token; autocomplete_type } ->
     (* say you're completing `foo|Baz`. the token is "fooBaz" and ac_loc points at
@@ -1864,29 +1886,26 @@ let autocomplete_get_results
       let insert_loc = Loc.btwn replace_loc cursor in
       (insert_loc, replace_loc)
     in
-    ( Some token,
-      Some ac_loc,
-      (match autocomplete_type with
-      | Ac_binding -> ("Empty", AcEmpty "Binding")
-      | Ac_ignored -> ("Empty", AcEmpty "Ignored")
-      | Ac_comment -> ("Empty", AcEmpty "Comment")
-      | Ac_jsx_text -> ("Empty", AcEmpty "JSXText")
+    let result =
+      match autocomplete_type with
+      | Ac_binding -> AcEmpty "Binding"
+      | Ac_ignored -> AcEmpty "Ignored"
+      | Ac_comment -> AcEmpty "Comment"
+      | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
-        ( "Ac_class_key",
-          autocomplete_class_key
-            ~reader
-            ~options
-            ~cx
-            ~file_sig
-            ~typed_ast
-            ~token
-            ~edit_locs
-            ~tparams_rev
-            enclosing_class_t
-        )
+        autocomplete_class_key
+          ~reader
+          ~options
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~token
+          ~edit_locs
+          ~tparams_rev
+          enclosing_class_t
       | Ac_module ->
         (* TODO: complete module names *)
-        ("Acmodule", AcEmpty "Module")
+        AcEmpty "Module"
       | Ac_import_specifier { module_type; used_keys; is_type } ->
         (* TODO: is_type should be an import_kind:
            ImportType = `Type
@@ -1899,35 +1918,31 @@ let autocomplete_get_results
             `Either
         in
         let filter_name name = not (SSet.mem name used_keys) in
-        ( "Ac_import_specifier",
-          autocomplete_module_exports
-            ~reader
-            ~cx
-            ~file_sig
-            ~typed_ast
-            ~tparams_rev
-            ~edit_locs
-            ~token
-            ~kind
-            ~filter_name
-            module_type
-        )
-      | Ac_enum -> ("Acenum", AcEmpty "Enum")
+        autocomplete_module_exports
+          ~reader
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~tparams_rev
+          ~edit_locs
+          ~token
+          ~kind
+          ~filter_name
+          module_type
+      | Ac_enum -> AcEmpty "Enum"
       | Ac_key { obj_type; used_keys; spreads } ->
-        ( "Ackey",
-          autocomplete_object_key
-            ~reader
-            ~options
-            ~cx
-            ~file_sig
-            ~typed_ast
-            ~edit_locs
-            ~token
-            ~used_keys
-            ~spreads
-            obj_type
-            ~tparams_rev
-        )
+        autocomplete_object_key
+          ~reader
+          ~options
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~edit_locs
+          ~token
+          ~used_keys
+          ~spreads
+          obj_type
+          ~tparams_rev
       | Ac_literal { lit_type } ->
         let genv =
           Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig
@@ -1939,109 +1954,10 @@ let autocomplete_get_results
           |> filter_by_token_and_sort token
         in
         let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
-        ("Acliteral", AcResult { result; errors_to_log = [] })
+        AcResult { result; errors_to_log = [] }
       | Ac_id { include_super; include_this; type_; enclosing_class_t } ->
-        ( "Acid",
-          let result_id =
-            autocomplete_id
-              ~env
-              ~options
-              ~reader
-              ~cx
-              ~ac_loc
-              ~file_sig
-              ~ast
-              ~typed_ast
-              ~include_super
-              ~include_this
-              ~imports
-              ~imports_ranked_usage
-              ~tparams_rev
-              ~edit_locs
-              ~token
-              ~type_
-          in
-          (match enclosing_class_t with
-          | Some t ->
-            let result_member =
-              autocomplete_member
-                ~env
-                ~reader
-                ~options
-                ~cx
-                ~file_sig
-                ~ast
-                ~typed_ast
-                ~imports
-                ~imports_ranked_usage
-                ~edit_locs
-                ~token
-                t
-                false
-                ac_loc
-                ~tparams_rev
-                ~bracket_syntax:None
-                ~member_loc:None
-                ~is_type_annotation:false
-                ~force_instance:true
-            in
-            (match result_member with
-            | AcFatalError _ as err -> err
-            | AcEmpty _ -> AcResult result_id
-            | AcResult result_member ->
-              let open ServerProt.Response.Completion in
-              let rev_items =
-                Base.List.fold
-                  ~init:(List.rev result_id.result.items)
-                  ~f:(fun acc item ->
-                    let name = "this." ^ item.name in
-                    {
-                      item with
-                      name;
-                      text_edit = Some (text_edit ?insert_text:(Some name) name edit_locs);
-                    }
-                    :: acc)
-                  result_member.result.items
-                |> filter_by_token_and_sort_rev token
-              in
-              AcResult
-                {
-                  result =
-                    {
-                      ServerProt.Response.Completion.items = List.rev rev_items;
-                      is_incomplete =
-                        result_id.result.is_incomplete || result_member.result.is_incomplete;
-                    };
-                  errors_to_log = result_id.errors_to_log @ result_member.errors_to_log;
-                })
-          | _ -> AcResult result_id)
-        )
-      | Ac_member { obj_type; in_optional_chain; bracket_syntax; member_loc; is_type_annotation } ->
-        ( "Acmem",
-          autocomplete_member
-            ~env
-            ~reader
-            ~options
-            ~cx
-            ~file_sig
-            ~ast
-            ~typed_ast
-            ~imports
-            ~imports_ranked_usage
-            ~edit_locs
-            ~token
-            obj_type
-            in_optional_chain
-            ac_loc
-            ~tparams_rev
-            ~bracket_syntax
-            ~member_loc
-            ~is_type_annotation
-            ~force_instance:false
-        )
-      | Ac_jsx_element { type_ } ->
-        ( "Ac_jsx_element",
-          autocomplete_jsx_element
+        let result_id =
+          autocomplete_id
             ~env
             ~options
             ~reader
@@ -2050,58 +1966,146 @@ let autocomplete_get_results
             ~file_sig
             ~ast
             ~typed_ast
+            ~include_super
+            ~include_this
             ~imports
             ~imports_ranked_usage
             ~tparams_rev
             ~edit_locs
             ~token
             ~type_
-        )
+        in
+        (match enclosing_class_t with
+        | Some t ->
+          let result_member =
+            autocomplete_member
+              ~env
+              ~reader
+              ~options
+              ~cx
+              ~file_sig
+              ~ast
+              ~typed_ast
+              ~imports
+              ~imports_ranked_usage
+              ~edit_locs
+              ~token
+              t
+              false
+              ac_loc
+              ~tparams_rev
+              ~bracket_syntax:None
+              ~member_loc:None
+              ~is_type_annotation:false
+              ~force_instance:true
+          in
+          (match result_member with
+          | AcFatalError _ as err -> err
+          | AcEmpty _ -> AcResult result_id
+          | AcResult result_member ->
+            let open ServerProt.Response.Completion in
+            let rev_items =
+              Base.List.fold
+                ~init:(List.rev result_id.result.items)
+                ~f:(fun acc item ->
+                  let name = "this." ^ item.name in
+                  {
+                    item with
+                    name;
+                    text_edit = Some (text_edit ?insert_text:(Some name) name edit_locs);
+                  }
+                  :: acc)
+                result_member.result.items
+              |> filter_by_token_and_sort_rev token
+            in
+            AcResult
+              {
+                result =
+                  {
+                    ServerProt.Response.Completion.items = List.rev rev_items;
+                    is_incomplete =
+                      result_id.result.is_incomplete || result_member.result.is_incomplete;
+                  };
+                errors_to_log = result_id.errors_to_log @ result_member.errors_to_log;
+              })
+        | _ -> AcResult result_id)
+      | Ac_member { obj_type; in_optional_chain; bracket_syntax; member_loc; is_type_annotation } ->
+        autocomplete_member
+          ~env
+          ~reader
+          ~options
+          ~cx
+          ~file_sig
+          ~ast
+          ~typed_ast
+          ~imports
+          ~imports_ranked_usage
+          ~edit_locs
+          ~token
+          obj_type
+          in_optional_chain
+          ac_loc
+          ~tparams_rev
+          ~bracket_syntax
+          ~member_loc
+          ~is_type_annotation
+          ~force_instance:false
+      | Ac_jsx_element { type_ } ->
+        autocomplete_jsx_element
+          ~env
+          ~options
+          ~reader
+          ~cx
+          ~ac_loc
+          ~file_sig
+          ~ast
+          ~typed_ast
+          ~imports
+          ~imports_ranked_usage
+          ~tparams_rev
+          ~edit_locs
+          ~token
+          ~type_
       | Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value } ->
-        ( "Acjsx",
-          autocomplete_jsx_attribute
-            ~reader
-            ~used_attr_names
-            ~has_value
-            ~tparams_rev
-            ~edit_locs
-            ~token
-            cx
-            file_sig
-            typed_ast
-            component_t
-            (ac_loc, attribute_name)
-        )
+        autocomplete_jsx_attribute
+          ~reader
+          ~used_attr_names
+          ~has_value
+          ~tparams_rev
+          ~edit_locs
+          ~token
+          cx
+          file_sig
+          typed_ast
+          component_t
+          (ac_loc, attribute_name)
       | Ac_type ->
-        ( "Actype",
-          AcResult
-            (autocomplete_unqualified_type
-               ~env
-               ~options
-               ~reader
-               ~cx
-               ~imports
-               ~imports_ranked_usage
-               ~tparams_rev
-               ~ac_loc
-               ~ast
-               ~typed_ast
-               ~file_sig
-               ~edit_locs
-               ~token
-            )
-        )
+        AcResult
+          (autocomplete_unqualified_type
+             ~env
+             ~options
+             ~reader
+             ~cx
+             ~imports
+             ~imports_ranked_usage
+             ~tparams_rev
+             ~ac_loc
+             ~ast
+             ~typed_ast
+             ~file_sig
+             ~edit_locs
+             ~token
+          )
       | Ac_qualified_type qtype ->
-        ( "Acqualifiedtype",
-          autocomplete_module_exports
-            ~reader
-            ~cx
-            ~file_sig
-            ~typed_ast
-            ~tparams_rev
-            ~edit_locs
-            ~token
-            ~kind:`Type
-            qtype
-        ))
-    )
+        autocomplete_module_exports
+          ~reader
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~tparams_rev
+          ~edit_locs
+          ~token
+          ~kind:`Type
+          qtype
+    in
+    (Some token, Some ac_loc, string_of_autocomplete_type autocomplete_type, result)
