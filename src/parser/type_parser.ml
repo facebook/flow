@@ -89,19 +89,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and union_with =
     let rec unions leading acc env =
-      match Peek.token env with
-      | T_BIT_OR ->
-        Expect.token env T_BIT_OR;
+      if Eat.maybe env T_BIT_OR then
         unions leading (intersection env :: acc) env
-      | _ ->
-        (match List.rev acc with
+      else
+        match List.rev acc with
         | t0 :: t1 :: ts ->
           Type.Union
             {
               Type.Union.types = (t0, t1, ts);
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             }
-        | _ -> assert false)
+        | _ -> assert false
     in
     fun env ?(leading = []) left ->
       if Peek.token env = T_BIT_OR then
@@ -123,19 +121,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and intersection_with =
     let rec intersections leading acc env =
-      match Peek.token env with
-      | T_BIT_AND ->
-        Expect.token env T_BIT_AND;
+      if Eat.maybe env T_BIT_AND then
         intersections leading (anon_function_without_parens env :: acc) env
-      | _ ->
-        (match List.rev acc with
+      else
+        match List.rev acc with
         | t0 :: t1 :: ts ->
           Type.Intersection
             {
               Type.Intersection.types = (t0, t1, ts);
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             }
-        | _ -> assert false)
+        | _ -> assert false
     in
     fun env ?(leading = []) left ->
       if Peek.token env = T_BIT_AND then
@@ -294,7 +290,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     match Peek.token env with
     | T_MULT ->
       let leading = Peek.comments env in
-      Expect.token env T_MULT;
+      Eat.token env;
       let trailing = Eat.trailing_comments env in
       (loc, Type.Exists (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | T_LESS_THAN -> _function env
@@ -307,7 +303,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       with_loc
         (fun env ->
           let leading = Peek.comments env in
-          Expect.token env T_INTERFACE;
+          Eat.token env;
           let (extends, body) = interface_helper env in
           Type.Interface
             { Type.Interface.extends; body; comments = Flow_ast_utils.mk_comments_opt ~leading () })
@@ -321,7 +317,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       let leading = Peek.comments env in
-      Expect.token env (T_STRING (loc, value, raw, octal));
+      Eat.token env;
       let trailing = Eat.trailing_comments env in
       ( loc,
         Type.StringLiteral
@@ -334,7 +330,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
       if kind = LEGACY_OCTAL then strict_error env Parse_error.StrictOctalLiteral;
       let leading = Peek.comments env in
-      Expect.token env (T_NUMBER_SINGLETON_TYPE { kind; value; raw });
+      Eat.token env;
       let trailing = Eat.trailing_comments env in
       ( loc,
         Type.NumberLiteral
@@ -344,9 +340,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       )
-    | T_BIGINT_SINGLETON_TYPE { kind; value; raw } ->
+    | T_BIGINT_SINGLETON_TYPE { kind = _; value; raw } ->
       let leading = Peek.comments env in
-      Expect.token env (T_BIGINT_SINGLETON_TYPE { kind; value; raw });
+      Eat.token env;
       let trailing = Eat.trailing_comments env in
       ( loc,
         Type.BigIntLiteral
@@ -358,7 +354,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       )
     | (T_TRUE | T_FALSE) as token ->
       let leading = Peek.comments env in
-      Expect.token env token;
+      Eat.token env;
       let trailing = Eat.trailing_comments env in
       let value = token = T_TRUE in
       ( loc,
@@ -448,9 +444,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let element =
           with_loc
             (fun env ->
-              match Peek.token env with
-              | T_ELLIPSIS ->
-                Expect.token env T_ELLIPSIS;
+              if Eat.maybe env T_ELLIPSIS then
                 let name =
                   match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
                   | (true, T_PLING)
@@ -466,7 +460,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 in
                 let annot = _type env in
                 Type.Tuple.SpreadElement { Type.Tuple.SpreadElement.name; annot }
-              | _ ->
+              else
                 let variance =
                   match Peek.token env with
                   | T_PLUS -> maybe_variance env
@@ -476,7 +470,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                     maybe_variance env
                   | _ -> None
                 in
-                (match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
+                match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
                 | (true, T_PLING)
                 | (true, T_COLON) ->
                   let name = identifier_name env in
@@ -487,7 +481,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                     { Type.Tuple.LabeledElement.name; annot; variance; optional }
                 | _ ->
                   if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
-                  Type.Tuple.UnlabeledElement (_type env)))
+                  Type.Tuple.UnlabeledElement (_type env))
             env
         in
         let acc = element :: acc in
@@ -1224,11 +1218,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     in
     fun env ->
       let extends =
-        if Peek.token env = T_EXTENDS then (
-          Expect.token env T_EXTENDS;
+        if Eat.maybe env T_EXTENDS then
           let extends = supers env [] in
           generic_type_list_remove_trailing env extends
-        ) else
+        else
           []
       in
       let body = _object env ~allow_exact:false ~allow_spread:false ~is_class:false in
