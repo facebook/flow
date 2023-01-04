@@ -3182,6 +3182,23 @@ let%expect_test "destruct_array_shared" =
     5. PropP {id_loc = [1:24-25]; name = "d"; def = 3}
   |}]
 
+let%expect_test "tuple_annot" =
+  print_sig {|
+    export type A = [string, number];
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info = CJSModuleInfo {type_export_keys = [|"A"|]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         name = "A"; tparams = Mono;
+         body =
+         (Annot
+            Tuple {loc = [1:16-32]; ts = [(Annot (String [1:17-23])); (Annot (Number [1:25-31]))]})}
+  |}]
+
 let%expect_test "cycle" =
   print_sig {|
     export type A = { p: ?B };
