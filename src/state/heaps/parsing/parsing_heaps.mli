@@ -9,15 +9,15 @@ type locs_tbl = Loc.t Type_sig_collections.Locs.t
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
-type file_addr = SharedMem.NewAPI.file SharedMem.addr
+type file_addr = [ `file ] SharedMem.addr
 
 type +'a parse_addr = 'a SharedMem.NewAPI.parse SharedMem.addr
 
-type haste_info_addr = SharedMem.NewAPI.haste_info SharedMem.addr
+type haste_info_addr = [ `haste_info ] SharedMem.addr
 
-type haste_module_addr = SharedMem.NewAPI.haste_module SharedMem.addr
+type haste_module_addr = [ `haste_module ] SharedMem.addr
 
-type provider_addr = SharedMem.NewAPI.file SharedMem.NewAPI.entity SharedMem.addr
+type provider_addr = [ `file ] SharedMem.NewAPI.entity SharedMem.addr
 
 type resolved_module = (Modulename.t, string) Result.t
 
