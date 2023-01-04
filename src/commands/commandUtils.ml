@@ -1069,11 +1069,7 @@ let options_flags =
            ~doc:""
       |> flag
            "--inference-mode"
-           (optional
-              (enum
-                 [("constrain_writes", Options.ConstrainWrites); ("experimental.lti", Options.LTI)]
-              )
-           )
+           (optional (enum [("constrain_writes", Options.ConstrainWrites); ("lti", Options.LTI)]))
            ~doc:""
       |> flag "--experimental.run-post-inference-implicit-instantiation" (optional bool) ~doc:""
       (* restarting to save time is a hack and should be removed. this should

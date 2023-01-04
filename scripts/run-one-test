@@ -381,7 +381,7 @@ runtest() {
         fi
 
         if [[ "$lti" -eq 1 ]]; then
-          inference_flag="--inference-mode experimental.lti"
+          inference_flag="--inference-mode lti"
         fi
 
         # Helper function to generate saved state. If anything goes wrong, it
