@@ -5312,32 +5312,38 @@ module Make
           hoist#eval hoist#program program
         in
         this#statements_with_bindings loc bindings statements ~finally:(fun () ->
-            let toplevel_members =
-              (bindings
+            let rev_bindings =
+              bindings
               |> Bindings.to_map
-              |> SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name)
               |> SMap.keys
-              |> Base.List.map ~f:(fun name -> (OrdinaryName name, this#synthesize_read name))
-              )
-              @ Base.List.filter_map statements ~f:(function
-                    | ( _,
-                        Ast.Statement.DeclareModule
-                          {
-                            Ast.Statement.DeclareModule.id =
-                              ( Ast.Statement.DeclareModule.Identifier
-                                  (loc, { Ast.Identifier.name; _ })
-                              | Ast.Statement.DeclareModule.Literal
-                                  (loc, { Ast.StringLiteral.value = name; _ }) );
-                            _;
-                          }
-                      )
-                      when not @@ this#is_excluded (internal_module_name name) ->
-                      let reason = mk_reason (RModule (OrdinaryName name)) loc in
-                      let v = Val.one reason |> Val.simplify (Some loc) None (Some name) in
-                      Some (internal_module_name name, v)
-                    | _ -> None
-                    )
+              |> Base.List.rev_filter_map ~f:(fun name ->
+                     if not (this#is_excluded_ordinary_name name) then
+                       Some (OrdinaryName name, this#synthesize_read name)
+                     else
+                       None
+                 )
             in
+            let statements =
+              Base.List.filter_map statements ~f:(function
+                  | ( _,
+                      Ast.Statement.DeclareModule
+                        {
+                          Ast.Statement.DeclareModule.id =
+                            ( Ast.Statement.DeclareModule.Identifier
+                                (loc, { Ast.Identifier.name; _ })
+                            | Ast.Statement.DeclareModule.Literal
+                                (loc, { Ast.StringLiteral.value = name; _ }) );
+                          _;
+                        }
+                    )
+                    when not (this#is_excluded (internal_module_name name)) ->
+                    let reason = mk_reason (RModule (OrdinaryName name)) loc in
+                    let v = Val.one reason |> Val.simplify (Some loc) None (Some name) in
+                    Some (internal_module_name name, v)
+                  | _ -> None
+                  )
+            in
+            let toplevel_members = Base.List.rev_append rev_bindings statements in
             env_state <- { env_state with toplevel_members }
         )
     end
