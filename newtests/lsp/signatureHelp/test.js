@@ -33,6 +33,7 @@ module.exports = (suite(
           'nestedClasses.js',
           'nestedFunctions.js',
           'paramDocumentation.js',
+          'tupleRestParam.js',
         ),
         lspStartAndConnect(),
         verifySignatureHelp(
@@ -84,6 +85,40 @@ module.exports = (suite(
           '<PLACEHOLDER_PROJECT_URL>/nestedFunctions.js',
           {line: 8, character: 2}, // inside nested function body
           '{null}',
+        ),
+        verifySignatureHelp(
+          '<PLACEHOLDER_PROJECT_URL>/tupleRestParam.js',
+          {line: 6, character: 1},
+          JSON.stringify({
+            signatures: [
+              {
+                label: '(arg[0]: string, arg[1]: number): void',
+                parameters: [
+                  {label: 'arg[0]: string'},
+                  {label: 'arg[1]: number'},
+                ],
+              },
+            ],
+            activeSignature: 0,
+            activeParameter: 0,
+          }),
+        ),
+        verifySignatureHelp(
+          '<PLACEHOLDER_PROJECT_URL>/tupleRestParam.js',
+          {line: 12, character: 1},
+          JSON.stringify({
+            signatures: [
+              {
+                label: '(params[0]: string, params[1]: number): void',
+                parameters: [
+                  {label: 'params[0]: string'},
+                  {label: 'params[1]: number'},
+                ],
+              },
+            ],
+            activeSignature: 0,
+            activeParameter: 0,
+          }),
         ),
         verifySignatureHelp(
           '<PLACEHOLDER_PROJECT_URL>/paramDocumentation.js',
