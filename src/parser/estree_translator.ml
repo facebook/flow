@@ -1258,7 +1258,7 @@ with type t = Impl.t = struct
             ]
         )
       | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
-        node ?comments "SpreadProperty" loc [("argument", expression argument)]
+        node ?comments "SpreadElement" loc [("argument", expression argument)]
     and object_pattern_property =
       let open Pattern.Object in
       function

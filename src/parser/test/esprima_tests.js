@@ -2348,13 +2348,6 @@ module.exports = {
         }
     ],
 
-    // https://gist.github.com/sebmarkbage/aa849c7973cb4452c547
-    'ES7 Proposal: Spread Properties': [
-        'let z = {...x}',
-        'z = {x, ...y}',
-        '({x, ...y, a, ...b, c})',
-    ],
-
     'Harmony Invalid syntax': [
         '"\\u{110000}"',
         '[v] += ary',

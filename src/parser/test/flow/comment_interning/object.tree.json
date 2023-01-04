@@ -203,7 +203,7 @@
         "range":[212,273],
         "properties":[
           {
-            "type":"SpreadProperty",
+            "type":"SpreadElement",
             "leadingComments":[
               {
                 "type":"Block",

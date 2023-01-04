@@ -13,7 +13,7 @@
         "range":[1,13],
         "properties":[
           {
-            "type":"SpreadProperty",
+            "type":"SpreadElement",
             "loc":{"source":null,"start":{"line":1,"column":2},"end":{"line":1,"column":9}},
             "range":[2,9],
             "argument":{
