@@ -27,7 +27,6 @@ type aloc = (ALoc.t[@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no
  * comparator_ty.
  *)
 type t =
-  | TVar of tvar * t list option
   | Bound of aloc * string
   | Generic of generic_t
   | Any of any_kind
@@ -53,15 +52,12 @@ type t =
   | InlineInterface of interface_t
   | TypeOf of builtin_or_symbol
   | Utility of utility
-  | Mu of int * t
   | CharSet of string
   | IndexedAccess of {
       _object: t;
       index: t;
       optional: bool;
     }
-
-and tvar = RVar of int [@@unboxed]
 
 (* Recursive variable *)
 and generic_t = symbol * gen_kind * t list option
@@ -448,7 +444,6 @@ class ['A] comparator_ty =
       | StrLit _ -> 11
       | Str _ -> 12
       | Symbol -> 13
-      | TVar _ -> 14
       | Bound _ -> 15
       | Generic _ -> 16
       | TypeOf _ -> 17
@@ -460,9 +455,8 @@ class ['A] comparator_ty =
       | Obj _ -> 23
       | Inter _ -> 24
       | Union _ -> 25
-      | Mu _ -> 26
-      | InlineInterface _ -> 27
-      | CharSet _ -> 28
+      | InlineInterface _ -> 26
+      | CharSet _ -> 27
 
     method tag_of_decl _ =
       function
@@ -639,7 +633,7 @@ let mk_generic_interface symbol targs = Generic (symbol, InterfaceKind, targs)
 
 let mk_generic_talias symbol targs = Generic (symbol, TypeAliasKind, targs)
 
-let rec mk_exact ty =
+let mk_exact ty =
   match ty with
   | Obj o ->
     let obj_kind =
@@ -648,7 +642,6 @@ let rec mk_exact ty =
       | _ -> o.obj_kind
     in
     Obj { o with obj_kind }
-  | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)
   | Any _
   | Top
@@ -674,7 +667,6 @@ let rec mk_exact ty =
   | Utility (Exact _) -> ty
   (* Wrap in $Exact<...> *)
   | Generic _
-  | TVar _
   | Bound _
   | Union _
   | Inter _

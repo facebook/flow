@@ -5,42 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module FreeVars = struct
-  type env = {
-    is_toplevel: bool;
-    skip: ISet.t;
-  }
-  [@@warning "-69"]
-
-  let searcher =
-    object
-      inherit [_] Ty.reduce_ty as super
-
-      method zero = ISet.empty
-
-      method plus = ISet.union
-
-      method! on_t env t =
-        Ty.(
-          match t with
-          | TVar (RVar i, _) when not (ISet.mem i env.skip) -> ISet.singleton i
-          | Mu (v, t) ->
-            let env = { env with skip = ISet.add v env.skip } in
-            super#on_t env t
-          | t -> super#on_t env t
-        )
-    end
-
-  (* Computes the set of variables appearing free in the input. *)
-  let of_type ~is_toplevel t =
-    let env = { is_toplevel; skip = ISet.empty } in
-    searcher#on_t env t
-end
-
-let tvar_appears_in_type ~is_toplevel v t =
-  let (Ty.RVar v) = v in
-  ISet.mem v (FreeVars.of_type ~is_toplevel t)
-
 module Size = struct
   exception SizeCutOff
 

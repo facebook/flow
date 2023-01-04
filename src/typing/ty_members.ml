@@ -202,13 +202,12 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     (mems, errs)
   in
   function
-  | Mu (_, t) -> members_of_ty t
   | Obj { obj_props; _ } -> members_of_obj obj_props
   | Fun { fun_static; _ } -> members_of_ty fun_static
   | Union (from_bounds, t1, t2, ts) -> members_of_union ~from_bounds (t1, t2, ts)
   | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
-  | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | BigInt _ | NumLit _
-    | StrLit _ | BoolLit _ | BigIntLit _ | Arr _ | Tup _ ) as t ->
+  | ( Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | BigInt _ | NumLit _ | StrLit _
+    | BoolLit _ | BigIntLit _ | Arr _ | Tup _ ) as t ->
     ( NameUtils.Map.empty,
       [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)]
     )

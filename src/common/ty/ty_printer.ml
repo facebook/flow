@@ -50,7 +50,6 @@ let variance_ = function
 
 let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~exact_by_default elt
     =
-  let env_map : Layout.layout_node IMap.t ref = ref IMap.empty in
   let size = ref size in
   (* util to limit the number of calls to a (usually recursive) function *)
   let counted_map f xs =
@@ -80,7 +79,6 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     count_calls ~counter:size ~default:crop_atom (fun () -> type_impl ~depth t)
   and type_impl ~depth (t : Ty.t) =
     match t with
-    | TVar (v, targs) -> type_reference ~depth (type_var v) targs
     | Bound (_, name) -> Atom name
     | Any k -> any ~depth k
     | Top -> Atom "mixed"
@@ -122,13 +120,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | InlineInterface { if_extends; if_props; if_dict } ->
       type_interface ~depth if_extends if_props if_dict
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
-    | Mu (i, t) ->
-      let t = type_ ~depth:0 t in
-      env_map := IMap.add i t !env_map;
-      Atom (varname i)
     | CharSet s ->
       fuse [Atom "$CharSet"; Atom "<"; fuse (in_quotes ~prefer_single_quotes s); Atom ">"]
-  and type_var (RVar i) = Atom (varname i)
   and type_generic ~depth g =
     let ({ sym_name = name; _ }, _, targs) = g in
     let name = identifier name in
@@ -428,19 +421,9 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | EnumDecl n -> enum_decl n
     | ModuleDecl { name; exports = _; default = _ } -> module_ ~depth name
   in
-  let elt_ ~depth = function
-    | Type t -> type_ ~depth t
-    | Decl d -> decl ~depth d
-  in
-  let env_ (i, layout) =
-    with_semicolon
-      (fuse [Atom "type"; space; Atom (varname i); pretty_space; Atom "="; pretty_space; layout])
-  in
-  (* Main call *)
-  let layout = elt_ ~depth:0 elt in
-  (* Run type_ first so that env_map has been populated *)
-  let env_layout = Base.List.map ~f:env_ (IMap.bindings !env_map) in
-  Layout.(join Newline (env_layout @ [layout]))
+  match elt with
+  | Type t -> type_ ~depth:0 t
+  | Decl d -> decl ~depth:0 d
 
 (* Same as Compact_printer with the exception of locations *)
 let print_single_line ~source_maps node =

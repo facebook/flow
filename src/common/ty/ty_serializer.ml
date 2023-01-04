@@ -48,8 +48,6 @@ let builtin_from_string ?targs x =
   let x = id_from_string x in
   mk_generic_type x targs
 
-let tvar (RVar _) = Error "Unsupported recursive variables."
-
 let variance_ = function
   | Neutral -> None
   | Positive -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Plus; comments = None })
@@ -60,7 +58,6 @@ let type_ options =
     let just t = return (Loc.none, t) in
     let just' t = (Loc.none, t) in
     match t with
-    | TVar (v, _) -> tvar v
     | Bound (_, name) -> Ok (builtin_from_string name)
     | Generic (x, _, ts) -> generic_type x ts
     | Any _ -> just (T.Any None)
@@ -128,8 +125,7 @@ let type_ options =
     | TypeOf (TSymbol name) ->
       let%map id = id_from_symbol name in
       just' (T.Typeof { T.Typeof.argument = mk_typeof_expr id; comments = None })
-    | TypeOf _
-    | Mu _ ->
+    | TypeOf _ ->
       Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))
   and generic x targs =
     let%bind id = id_from_symbol x in
