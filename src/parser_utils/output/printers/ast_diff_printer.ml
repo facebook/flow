@@ -60,13 +60,12 @@ let layout_of_node ~opts = function
   | ClassProperty prop -> Js_layout_generator.class_property ~opts prop
   | ObjectProperty prop -> Js_layout_generator.object_property ~opts prop
   | TemplateLiteral (_, t_lit) -> Js_layout_generator.template_literal ~opts t_lit
-  | JSXChild child ->
-    begin
-      match Js_layout_generator.jsx_child ~opts child with
-      | Some (_, layout_node) -> layout_node
-      (* This case shouldn't happen, so return Empty *)
-      | None -> Layout.Empty
-    end
+  | JSXChild child -> begin
+    match Js_layout_generator.jsx_child ~opts child with
+    | Some (_, layout_node) -> layout_node
+    (* This case shouldn't happen, so return Empty *)
+    | None -> Layout.Empty
+  end
   | JSXIdentifier id -> Js_layout_generator.jsx_identifier id
 
 let text_of_layout layout =
@@ -169,13 +168,14 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
             )
         )
     )
-    :: (loc2, Delete _) :: tl
+    :: (loc2, Delete _)
+    :: tl
     when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
     edits_of_changes
       ~opts
       (( new_loc,
          Replace (old_node, Statement ((new_loc, expression_statement), TopLevelParentOfStatement))
        )
-       :: tl
+      :: tl
       )
   | hd :: tl -> edit_of_change ~opts hd :: edits_of_changes ~opts tl

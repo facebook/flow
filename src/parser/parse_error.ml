@@ -256,31 +256,30 @@ module PP = struct
         "Enum member names and initializers are separated with `=`. Replace `%s:` with `%s =`."
         member_name
         member_name
-    | EnumInvalidMemberInitializer { enum_name; explicit_type; member_name } ->
-      begin
-        match explicit_type with
-        | Some (Enum_common.Boolean as explicit_type)
-        | Some (Enum_common.Number as explicit_type)
-        | Some (Enum_common.String as explicit_type)
-        | Some (Enum_common.BigInt as explicit_type) ->
-          let explicit_type_str = Enum_common.string_of_explicit_type explicit_type in
-          Printf.sprintf
-            "Enum `%s` has type `%s`, so the initializer of `%s` needs to be a %s literal."
-            enum_name
-            explicit_type_str
-            member_name
-            explicit_type_str
-        | Some Enum_common.Symbol ->
-          Printf.sprintf
-            "Symbol enum members cannot be initialized. Use `%s,` in enum `%s`."
-            member_name
-            enum_name
-        | None ->
-          Printf.sprintf
-            "The enum member initializer for `%s` needs to be a literal (either a boolean, number, or string) in enum `%s`."
-            member_name
-            enum_name
-      end
+    | EnumInvalidMemberInitializer { enum_name; explicit_type; member_name } -> begin
+      match explicit_type with
+      | Some (Enum_common.Boolean as explicit_type)
+      | Some (Enum_common.Number as explicit_type)
+      | Some (Enum_common.String as explicit_type)
+      | Some (Enum_common.BigInt as explicit_type) ->
+        let explicit_type_str = Enum_common.string_of_explicit_type explicit_type in
+        Printf.sprintf
+          "Enum `%s` has type `%s`, so the initializer of `%s` needs to be a %s literal."
+          enum_name
+          explicit_type_str
+          member_name
+          explicit_type_str
+      | Some Enum_common.Symbol ->
+        Printf.sprintf
+          "Symbol enum members cannot be initialized. Use `%s,` in enum `%s`."
+          member_name
+          enum_name
+      | None ->
+        Printf.sprintf
+          "The enum member initializer for `%s` needs to be a literal (either a boolean, number, or string) in enum `%s`."
+          member_name
+          enum_name
+    end
     | EnumInvalidMemberName { enum_name; member_name } ->
       (* Based on the error condition, we will only receive member names starting with [a-z] *)
       let suggestion = String.capitalize_ascii member_name in

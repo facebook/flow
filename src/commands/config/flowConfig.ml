@@ -479,9 +479,9 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with facebook_module_interop = v })
 
   let file_watcher_parser =
-    enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
-        Ok { opts with file_watcher = Some v }
-    )
+    enum
+      [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)]
+      (fun opts v -> Ok { opts with file_watcher = Some v })
 
   let file_watcher_mergebase_with_parser =
     string (fun opts v -> Ok { opts with file_watcher_mergebase_with = Some v })
@@ -540,8 +540,7 @@ module Opts = struct
         ("watchman", Watchman_DEPRECATED);
         ("none", Non_lazy);
       ]
-      (fun opts v -> Ok { opts with lazy_mode = Some v }
-    )
+      (fun opts v -> Ok { opts with lazy_mode = Some v })
 
   let merge_timeout_parser =
     uint (fun opts v ->
@@ -565,9 +564,9 @@ module Opts = struct
         Ok { opts with missing_module_generators = v :: opts.missing_module_generators })
 
   let module_system_parser =
-    enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
-        Ok { opts with module_system = v }
-    )
+    enum
+      [("node", Options.Node); ("haste", Options.Haste)]
+      (fun opts v -> Ok { opts with module_system = v })
 
   let name_mapper_parser =
     mapping
@@ -626,8 +625,7 @@ module Opts = struct
   let react_runtime_parser =
     enum
       [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
-      (fun opts react_runtime -> Ok { opts with react_runtime }
-    )
+      (fun opts react_runtime -> Ok { opts with react_runtime })
 
   let react_server_component_exts_parser =
     string
@@ -673,8 +671,7 @@ module Opts = struct
         ("scm", Options.Scm_fetcher);
         ("fb", Options.Fb_fetcher);
       ]
-      (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher }
-    )
+      (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher })
 
   let shm_hash_table_pow_parser =
     uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow })
@@ -702,8 +699,7 @@ module Opts = struct
   let trust_mode_parser =
     enum
       [("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust)]
-      (fun opts trust_mode -> Ok { opts with trust_mode }
-    )
+      (fun opts trust_mode -> Ok { opts with trust_mode })
 
   let cycle_errors_includes_parser =
     string

@@ -163,32 +163,31 @@ let precedence_of_expression expr =
   | (_, E.Update { E.Update.prefix = true; _ })
   | (_, E.Unary _) ->
     17
-  | (_, E.Binary { E.Binary.operator; _ }) ->
-    begin
-      match operator with
-      | E.Binary.Exp -> 16
-      | E.Binary.Mult -> 15
-      | E.Binary.Div -> 15
-      | E.Binary.Mod -> 15
-      | E.Binary.Plus -> 14
-      | E.Binary.Minus -> 14
-      | E.Binary.LShift -> 13
-      | E.Binary.RShift -> 13
-      | E.Binary.RShift3 -> 13
-      | E.Binary.LessThan -> 12
-      | E.Binary.LessThanEqual -> 12
-      | E.Binary.GreaterThan -> 12
-      | E.Binary.GreaterThanEqual -> 12
-      | E.Binary.In -> 12
-      | E.Binary.Instanceof -> 12
-      | E.Binary.Equal -> 11
-      | E.Binary.NotEqual -> 11
-      | E.Binary.StrictEqual -> 11
-      | E.Binary.StrictNotEqual -> 11
-      | E.Binary.BitAnd -> 10
-      | E.Binary.Xor -> 9
-      | E.Binary.BitOr -> 8
-    end
+  | (_, E.Binary { E.Binary.operator; _ }) -> begin
+    match operator with
+    | E.Binary.Exp -> 16
+    | E.Binary.Mult -> 15
+    | E.Binary.Div -> 15
+    | E.Binary.Mod -> 15
+    | E.Binary.Plus -> 14
+    | E.Binary.Minus -> 14
+    | E.Binary.LShift -> 13
+    | E.Binary.RShift -> 13
+    | E.Binary.RShift3 -> 13
+    | E.Binary.LessThan -> 12
+    | E.Binary.LessThanEqual -> 12
+    | E.Binary.GreaterThan -> 12
+    | E.Binary.GreaterThanEqual -> 12
+    | E.Binary.In -> 12
+    | E.Binary.Instanceof -> 12
+    | E.Binary.Equal -> 11
+    | E.Binary.NotEqual -> 11
+    | E.Binary.StrictEqual -> 11
+    | E.Binary.StrictNotEqual -> 11
+    | E.Binary.BitAnd -> 10
+    | E.Binary.Xor -> 9
+    | E.Binary.BitOr -> 8
+  end
   | (_, E.Logical { E.Logical.operator = E.Logical.And; _ }) -> 7
   | (_, E.Logical { E.Logical.operator = E.Logical.Or; _ }) -> 6
   | (_, E.Logical { E.Logical.operator = E.Logical.NullishCoalesce; _ }) -> 5
@@ -209,65 +208,59 @@ let definitely_needs_parens =
   let module E = Ast.Expression in
   let context_needs_parens ctxt expr =
     match ctxt with
-    | { group = In_arrow_func; _ } ->
+    | { group = In_arrow_func; _ } -> begin
       (* an object body expression in an arrow function needs parens to not
          make it become a block with label statement. *)
-      begin
-        match expr with
-        | (_, E.Object _) -> true
-        | _ -> false
-      end
-    | { group = In_for_init; _ } ->
+      match expr with
+      | (_, E.Object _) -> true
+      | _ -> false
+    end
+    | { group = In_for_init; _ } -> begin
       (* an `in` binary expression in the init of a for loop needs parens to not
          make the for loop become a for-in loop. *)
-      begin
-        match expr with
-        | (_, E.Binary { E.Binary.operator = E.Binary.In; _ }) -> true
-        | _ -> false
-      end
-    | { left = In_expression_statement; _ } ->
+      match expr with
+      | (_, E.Binary { E.Binary.operator = E.Binary.In; _ }) -> true
+      | _ -> false
+    end
+    | { left = In_expression_statement; _ } -> begin
       (* functions (including async functions, but not arrow functions) and
          classes must be wrapped in parens to avoid ambiguity with function and
          class declarations. objects must be also, to not be confused with
          blocks.
 
          https://tc39.github.io/ecma262/#prod-ExpressionStatement *)
-      begin
-        match expr with
-        | (_, E.Class _)
-        | (_, E.Function _)
-        | (_, E.Object _)
-        | (_, E.Assignment { E.Assignment.left = (_, Ast.Pattern.Object _); _ }) ->
-          true
-        | _ -> false
-      end
-    | { left = In_tagged_template; _ } ->
-      begin
-        match expr with
-        | (_, E.Class _)
-        | (_, E.Function _)
-        | (_, E.New _)
-        | (_, E.Import _)
-        | (_, E.Object _) ->
-          true
-        | _ -> false
-      end
-    | { left = In_minus_op; _ } ->
-      begin
-        match expr with
-        | (_, E.Unary { E.Unary.operator = E.Unary.Minus; _ })
-        | (_, E.Update { E.Update.operator = E.Update.Decrement; prefix = true; _ }) ->
-          true
-        | _ -> false
-      end
-    | { left = In_plus_op; _ } ->
-      begin
-        match expr with
-        | (_, E.Unary { E.Unary.operator = E.Unary.Plus; _ })
-        | (_, E.Update { E.Update.operator = E.Update.Increment; prefix = true; _ }) ->
-          true
-        | _ -> false
-      end
+      match expr with
+      | (_, E.Class _)
+      | (_, E.Function _)
+      | (_, E.Object _)
+      | (_, E.Assignment { E.Assignment.left = (_, Ast.Pattern.Object _); _ }) ->
+        true
+      | _ -> false
+    end
+    | { left = In_tagged_template; _ } -> begin
+      match expr with
+      | (_, E.Class _)
+      | (_, E.Function _)
+      | (_, E.New _)
+      | (_, E.Import _)
+      | (_, E.Object _) ->
+        true
+      | _ -> false
+    end
+    | { left = In_minus_op; _ } -> begin
+      match expr with
+      | (_, E.Unary { E.Unary.operator = E.Unary.Minus; _ })
+      | (_, E.Update { E.Update.operator = E.Update.Decrement; prefix = true; _ }) ->
+        true
+      | _ -> false
+    end
+    | { left = In_plus_op; _ } -> begin
+      match expr with
+      | (_, E.Unary { E.Unary.operator = E.Unary.Plus; _ })
+      | (_, E.Update { E.Update.operator = E.Update.Increment; prefix = true; _ }) ->
+        true
+      | _ -> false
+    end
     | { left = Normal_left; group = Normal_group } -> false
   in
   fun ~precedence ctxt expr ->
@@ -350,69 +343,68 @@ let utf8_escape =
   in
   let f ~quote ~next buf _i = function
     | Wtf8.Malformed -> buf
-    | Wtf8.Point cp ->
-      begin
-        match cp with
-        (* SingleEscapeCharacter: http://www.ecma-international.org/ecma-262/6.0/#table-34 *)
-        | 0x0 ->
-          let zero =
-            match next with
-            | Some (_i, Wtf8.Point n) when 0x30 <= n && n <= 0x39 -> "\\x00"
-            | _ -> "\\0"
-          in
-          Buffer.add_string buf zero;
-          buf
-        | 0x8 ->
-          Buffer.add_string buf "\\b";
-          buf
-        | 0x9 ->
-          Buffer.add_string buf "\\t";
-          buf
-        | 0xA ->
-          Buffer.add_string buf "\\n";
-          buf
-        | 0xB ->
-          Buffer.add_string buf "\\v";
-          buf
-        | 0xC ->
-          Buffer.add_string buf "\\f";
-          buf
-        | 0xD ->
-          Buffer.add_string buf "\\r";
-          buf
-        | 0x22 when quote = "\"" ->
-          Buffer.add_string buf "\\\"";
-          buf
-        | 0x27 when quote = "'" ->
-          Buffer.add_string buf "\\'";
-          buf
-        | 0x5C ->
-          Buffer.add_string buf "\\\\";
-          buf
-        (* printable ascii *)
-        | n when 0x1F < n && n < 0x7F ->
-          Buffer.add_char buf (Char.unsafe_chr cp);
-          buf
-        (* basic multilingual plane, 2 digits *)
-        | n when n < 0x100 ->
-          Printf.bprintf buf "\\x%02x" n;
-          buf
-        (* basic multilingual plane, 4 digits *)
-        | n when n < 0x10000 ->
-          Printf.bprintf buf "\\u%04x" n;
-          buf
-        (* supplemental planes *)
-        | n ->
-          (* ES5 does not support the \u{} syntax, so print surrogate pairs
-             "\ud83d\udca9" instead of "\u{1f4A9}". if we add a flag to target
-             ES6, we should change this. *)
-          let n' = n - 0x10000 in
-          let hi = 0xD800 lor (n' lsr 10) in
-          let lo = 0xDC00 lor (n' land 0x3FF) in
-          Printf.bprintf buf "\\u%4x" hi;
-          Printf.bprintf buf "\\u%4x" lo;
-          buf
-      end
+    | Wtf8.Point cp -> begin
+      match cp with
+      (* SingleEscapeCharacter: http://www.ecma-international.org/ecma-262/6.0/#table-34 *)
+      | 0x0 ->
+        let zero =
+          match next with
+          | Some (_i, Wtf8.Point n) when 0x30 <= n && n <= 0x39 -> "\\x00"
+          | _ -> "\\0"
+        in
+        Buffer.add_string buf zero;
+        buf
+      | 0x8 ->
+        Buffer.add_string buf "\\b";
+        buf
+      | 0x9 ->
+        Buffer.add_string buf "\\t";
+        buf
+      | 0xA ->
+        Buffer.add_string buf "\\n";
+        buf
+      | 0xB ->
+        Buffer.add_string buf "\\v";
+        buf
+      | 0xC ->
+        Buffer.add_string buf "\\f";
+        buf
+      | 0xD ->
+        Buffer.add_string buf "\\r";
+        buf
+      | 0x22 when quote = "\"" ->
+        Buffer.add_string buf "\\\"";
+        buf
+      | 0x27 when quote = "'" ->
+        Buffer.add_string buf "\\'";
+        buf
+      | 0x5C ->
+        Buffer.add_string buf "\\\\";
+        buf
+      (* printable ascii *)
+      | n when 0x1F < n && n < 0x7F ->
+        Buffer.add_char buf (Char.unsafe_chr cp);
+        buf
+      (* basic multilingual plane, 2 digits *)
+      | n when n < 0x100 ->
+        Printf.bprintf buf "\\x%02x" n;
+        buf
+      (* basic multilingual plane, 4 digits *)
+      | n when n < 0x10000 ->
+        Printf.bprintf buf "\\u%04x" n;
+        buf
+      (* supplemental planes *)
+      | n ->
+        (* ES5 does not support the \u{} syntax, so print surrogate pairs
+           "\ud83d\udca9" instead of "\u{1f4A9}". if we add a flag to target
+           ES6, we should change this. *)
+        let n' = n - 0x10000 in
+        let hi = 0xD800 lor (n' lsr 10) in
+        let lo = 0xDC00 lor (n' land 0x3FF) in
+        Printf.bprintf buf "\\u%4x" hi;
+        Printf.bprintf buf "\\u%4x" lo;
+        buf
+    end
   in
   fun ~quote str ->
     str |> lookahead_fold_wtf_8 (f ~quote) (Buffer.create (String.length str)) |> Buffer.contents
@@ -2844,12 +2836,11 @@ and jsx_child ~opts (loc, child) =
   | Ast.JSX.Fragment frag -> Some (loc, jsx_fragment ~opts loc frag)
   | Ast.JSX.ExpressionContainer express -> Some (loc, jsx_expression_container ~opts loc express)
   | Ast.JSX.SpreadChild spread -> Some (loc, jsx_spread_child ~opts loc spread)
-  | Ast.JSX.Text { Ast.JSX.Text.raw; _ } ->
-    begin
-      match Utils_jsx.trim_jsx_text loc raw with
-      | Some (loc, txt) -> Some (loc, Atom txt)
-      | None -> None
-    end
+  | Ast.JSX.Text { Ast.JSX.Text.raw; _ } -> begin
+    match Utils_jsx.trim_jsx_text loc raw with
+    | Some (loc, txt) -> Some (loc, Atom txt)
+    | None -> None
+  end
 
 and partition_specifiers ~opts default specifiers =
   let open Ast.Statement.ImportDeclaration in

@@ -65,12 +65,11 @@ let parse_status raw_status_contents =
 let parse_cgroup raw_cgroup_contents =
   match String.split raw_cgroup_contents ~on:'\n' with
   | [] -> Error "Expected at least one cgroup in /proc/<PID>/cgroup file"
-  | first_line :: _ ->
-    begin
-      match String.split first_line ~on:':' with
-      | [_id; _controllers; cgroup] -> Ok cgroup
-      | _ -> Error "First line of  /proc/<PID>/cgroup file was not correctly formatted"
-    end
+  | first_line :: _ -> begin
+    match String.split first_line ~on:':' with
+    | [_id; _controllers; cgroup] -> Ok cgroup
+    | _ -> Error "First line of  /proc/<PID>/cgroup file was not correctly formatted"
+  end
 
 let asset_procfs_supported =
   let memoized_result = ref None in

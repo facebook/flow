@@ -265,74 +265,72 @@ with type t = Impl.t = struct
       | ( loc,
           DeclareExportDeclaration
             { DeclareExportDeclaration.specifiers; declaration; default; source; comments }
-        ) ->
-        begin
-          match specifiers with
-          | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
-            node
-              ?comments
-              "DeclareExportAllDeclaration"
-              loc
-              [("source", option string_literal source)]
-          | _ ->
-            let declaration =
-              match declaration with
-              | Some (DeclareExportDeclaration.Variable v) -> declare_variable v
-              | Some (DeclareExportDeclaration.Function f) -> declare_function f
-              | Some (DeclareExportDeclaration.Class c) -> declare_class c
-              | Some (DeclareExportDeclaration.DefaultType t) -> _type t
-              | Some (DeclareExportDeclaration.NamedType t) -> type_alias t
-              | Some (DeclareExportDeclaration.NamedOpaqueType t) -> opaque_type ~declare:true t
-              | Some (DeclareExportDeclaration.Interface i) -> interface_declaration i
-              | Some (DeclareExportDeclaration.Enum enum) -> declare_enum enum
-              | None -> null
-            in
-            node
-              ?comments
-              "DeclareExportDeclaration"
-              loc
-              [
-                ( "default",
-                  bool
-                    (match default with
-                    | Some _ -> true
-                    | None -> false)
-                );
-                ("declaration", declaration);
-                ("specifiers", export_specifiers specifiers);
-                ("source", option string_literal source);
-              ]
-        end
+        ) -> begin
+        match specifiers with
+        | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
+          node
+            ?comments
+            "DeclareExportAllDeclaration"
+            loc
+            [("source", option string_literal source)]
+        | _ ->
+          let declaration =
+            match declaration with
+            | Some (DeclareExportDeclaration.Variable v) -> declare_variable v
+            | Some (DeclareExportDeclaration.Function f) -> declare_function f
+            | Some (DeclareExportDeclaration.Class c) -> declare_class c
+            | Some (DeclareExportDeclaration.DefaultType t) -> _type t
+            | Some (DeclareExportDeclaration.NamedType t) -> type_alias t
+            | Some (DeclareExportDeclaration.NamedOpaqueType t) -> opaque_type ~declare:true t
+            | Some (DeclareExportDeclaration.Interface i) -> interface_declaration i
+            | Some (DeclareExportDeclaration.Enum enum) -> declare_enum enum
+            | None -> null
+          in
+          node
+            ?comments
+            "DeclareExportDeclaration"
+            loc
+            [
+              ( "default",
+                bool
+                  (match default with
+                  | Some _ -> true
+                  | None -> false)
+              );
+              ("declaration", declaration);
+              ("specifiers", export_specifiers specifiers);
+              ("source", option string_literal source);
+            ]
+      end
       | (loc, DeclareModuleExports { DeclareModuleExports.annot; comments }) ->
         node ?comments "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
       | ( loc,
           ExportNamedDeclaration
             { ExportNamedDeclaration.specifiers; declaration; source; export_kind; comments }
-        ) ->
-        begin
-          match specifiers with
-          | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, exported)) ->
-            node
-              ?comments
-              "ExportAllDeclaration"
-              loc
-              [
-                ("source", option string_literal source);
-                ("exported", option identifier exported);
-                ("exportKind", string (string_of_export_kind export_kind));
-              ]
-          | _ ->
-            node
-              ?comments
-              "ExportNamedDeclaration"
-              loc
-              [
-                ("declaration", option statement declaration);
-                ("specifiers", export_specifiers specifiers);
-                ("source", option string_literal source);
-                ("exportKind", string (string_of_export_kind export_kind));
-              ]
-        end
+        ) -> begin
+        match specifiers with
+        | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, exported)) ->
+          node
+            ?comments
+            "ExportAllDeclaration"
+            loc
+            [
+              ("source", option string_literal source);
+              ("exported", option identifier exported);
+              ("exportKind", string (string_of_export_kind export_kind));
+            ]
+        | _ ->
+          node
+            ?comments
+            "ExportNamedDeclaration"
+            loc
+            [
+              ("declaration", option statement declaration);
+              ("specifiers", export_specifiers specifiers);
+              ("source", option string_literal source);
+              ("exportKind", string (string_of_export_kind export_kind));
+            ]
+      end
       | ( loc,
           ExportDefaultDeclaration
             {

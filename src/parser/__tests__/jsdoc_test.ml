@@ -181,8 +181,7 @@ let tests =
                          );
                        ]
                      );
-                   ]
-                 ;
+                   ];
          "advanced_params"
          >:: mk_test
                (mk_block_comment
@@ -254,8 +253,7 @@ let tests =
                          );
                        ]
                      );
-                   ]
-                 ;
+                   ];
          "description_tag"
          >:: mk_test
                (mk_block_comment
@@ -276,8 +274,7 @@ let tests =
                      ( "b",
                        [(Name, { description = Some "another parameter"; optional = NotOptional })]
                      );
-                   ]
-                 ;
+                   ];
          "desc_tag"
          >:: mk_test
                (mk_block_comment
@@ -297,8 +294,7 @@ let tests =
                      ( "b",
                        [(Name, { description = Some "another parameter"; optional = NotOptional })]
                      );
-                   ]
-                 ;
+                   ];
          "unrecognized_tags"
          >:: mk_test
                (mk_block_comment

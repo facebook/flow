@@ -170,8 +170,8 @@ let connect_once ~flowconfig_name ~client_handshake ~tmp_dir root =
       ~do_:
         begin
           fun timeout ->
-          establish_connection ~flowconfig_name ~timeout ~client_handshake ~tmp_dir root
-          >>= fun (sockaddr, (ic, oc)) -> get_handshake ~timeout sockaddr ic oc
+            establish_connection ~flowconfig_name ~timeout ~client_handshake ~tmp_dir root
+            >>= fun (sockaddr, (ic, oc)) -> get_handshake ~timeout sockaddr ic oc
         end
     >>= fun (sockaddr, ic, oc, server_handshake) ->
     verify_handshake ~client_handshake ~server_handshake sockaddr ic >>= fun () -> Ok (ic, oc)

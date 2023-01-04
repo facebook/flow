@@ -779,18 +779,17 @@ let json_truncate
         JSON_Array []
       ) else
         JSON_Array (truncate_children ~child_count:0 values ~f)
-    | JSON_String s ->
-      begin
-        match max_string_length with
-        | None -> json
-        | Some max_string_length ->
-          if String.length s <= max_string_length then
-            JSON_String s
-          else (
-            mark_changed ();
-            JSON_String (String.sub s 0 max_string_length ^ "...")
-          )
-      end
+    | JSON_String s -> begin
+      match max_string_length with
+      | None -> json
+      | Some max_string_length ->
+        if String.length s <= max_string_length then
+          JSON_String s
+        else (
+          mark_changed ();
+          JSON_String (String.sub s 0 max_string_length ^ "...")
+        )
+    end
   in
   truncate ~depth:0 json
 

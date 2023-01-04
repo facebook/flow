@@ -172,14 +172,13 @@ module Expression
         raise Try.Rollback
       (* async x => 123 -- and we've already parsed async as an identifier
        * expression *)
-      | _ when Peek.is_identifier env ->
-        begin
-          match ret with
-          | Cover_expr (_, Expression.Identifier (_, { Identifier.name = "async"; comments = _ }))
-            when not (Peek.is_line_terminator env) ->
-            raise Try.Rollback
-          | _ -> ret
-        end
+      | _ when Peek.is_identifier env -> begin
+        match ret with
+        | Cover_expr (_, Expression.Identifier (_, { Identifier.name = "async"; comments = _ }))
+          when not (Peek.is_line_terminator env) ->
+          raise Try.Rollback
+        | _ -> ret
+      end
       | _ -> ret
     in
     fun env ->
@@ -260,8 +259,7 @@ module Expression
               delegate;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               result_out = Loc.btwn start_loc end_loc;
-            }
-          )
+            })
       env
 
   and is_lhs =
@@ -587,13 +585,12 @@ module Expression
       let open Expression in
       (match (operator, argument) with
       | (Unary.Delete, (_, Identifier _)) -> strict_error_at env (loc, Parse_error.StrictDelete)
-      | (Unary.Delete, (_, Member member)) ->
-        begin
-          match member.Ast.Expression.Member.property with
-          | Ast.Expression.Member.PropertyPrivateName _ ->
-            error_at env (loc, Parse_error.PrivateDelete)
-          | _ -> ()
-        end
+      | (Unary.Delete, (_, Member member)) -> begin
+        match member.Ast.Expression.Member.property with
+        | Ast.Expression.Member.PropertyPrivateName _ ->
+          error_at env (loc, Parse_error.PrivateDelete)
+        | _ -> ()
+      end
       | _ -> ());
       Cover_expr
         ( loc,
@@ -1151,16 +1148,14 @@ module Expression
           | Failure _ -> failwith ("Invalid number " ^ raw)
         end
       | BINARY
-      | OCTAL ->
-        begin
-          try Int64.to_float (Int64.of_string raw) with
-          | Failure _ -> failwith ("Invalid binary/octal " ^ raw)
-        end
-      | NORMAL ->
-        begin
-          try float_of_string raw with
-          | Failure _ -> failwith ("Invalid number " ^ raw)
-        end
+      | OCTAL -> begin
+        try Int64.to_float (Int64.of_string raw) with
+        | Failure _ -> failwith ("Invalid binary/octal " ^ raw)
+      end
+      | NORMAL -> begin
+        try float_of_string raw with
+        | Failure _ -> failwith ("Invalid number " ^ raw)
+      end
     in
     Expect.token env (T_NUMBER { kind; raw });
     value

@@ -97,12 +97,11 @@ let dedup ?(compare = Stdlib.compare) (x, xs) =
   | _ -> failwith "impossible: dedup must have removed a nonduplicate"
 
 let result_all = function
-  | (Ok x, rest) ->
-    begin
-      match Base.Result.all rest with
-      | Ok rest -> Ok (x, rest)
-      | Error _ as err -> err
-    end
+  | (Ok x, rest) -> begin
+    match Base.Result.all rest with
+    | Ok rest -> Ok (x, rest)
+    | Error _ as err -> err
+  end
   | ((Error _ as err), _) -> err
 
 let cat_maybes nel =
@@ -110,10 +109,10 @@ let cat_maybes nel =
     fold_left
       begin
         fun acc elt ->
-        match (acc, elt) with
-        | (_, None) -> acc
-        | (None, Some x) -> Some (one x)
-        | (Some lst, Some x) -> Some (cons x lst)
+          match (acc, elt) with
+          | (_, None) -> acc
+          | (None, Some x) -> Some (one x)
+          | (Some lst, Some x) -> Some (cons x lst)
       end
       None
       nel

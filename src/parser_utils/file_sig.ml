@@ -746,20 +746,19 @@ struct
       method private handle_literal loc lit =
         let open Ast.Literal in
         match opts.module_ref_prefix with
-        | Some prefix ->
-          begin
-            match lit with
-            | String s when String.starts_with ~prefix s ->
-              this#add_require
-                (Require
-                   {
-                     source = (loc, String_utils.lstrip s prefix);
-                     require_loc = loc;
-                     bindings = None;
-                   }
-                )
-            | _ -> ()
-          end
+        | Some prefix -> begin
+          match lit with
+          | String s when String.starts_with ~prefix s ->
+            this#add_require
+              (Require
+                 {
+                   source = (loc, String_utils.lstrip s prefix);
+                   require_loc = loc;
+                   bindings = None;
+                 }
+              )
+          | _ -> ()
+        end
         | None -> ()
 
       method! declare_module loc (m : (L.t, L.t) Ast.Statement.DeclareModule.t) =

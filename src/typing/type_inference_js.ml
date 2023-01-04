@@ -65,21 +65,19 @@ let scan_for_error_suppressions cx =
   Base.List.fold_left
     ~f:
       (fun acc -> function
-        | (({ Loc.start = { Loc.line; _ }; _ } as loc), { Ast.Comment.text; _ }) ->
-          begin
-            match (should_suppress text loc, acc) with
-            | (Ok (Some (Specific _ as codes)), Some (prev_loc, (Specific _ as prev_codes)))
-              when line = prev_loc.Loc._end.Loc.line + 1 ->
-              Some
-                ({ prev_loc with Loc._end = loc.Loc._end }, join_applicable_codes codes prev_codes)
-            | (Ok codes, _) ->
-              Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
-              Base.Option.map codes ~f:(mk_tuple loc)
-            | (Error (), _) ->
-              Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
-              Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
-              None
-          end)
+        | (({ Loc.start = { Loc.line; _ }; _ } as loc), { Ast.Comment.text; _ }) -> begin
+          match (should_suppress text loc, acc) with
+          | (Ok (Some (Specific _ as codes)), Some (prev_loc, (Specific _ as prev_codes)))
+            when line = prev_loc.Loc._end.Loc.line + 1 ->
+            Some ({ prev_loc with Loc._end = loc.Loc._end }, join_applicable_codes codes prev_codes)
+          | (Ok codes, _) ->
+            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
+            Base.Option.map codes ~f:(mk_tuple loc)
+          | (Error (), _) ->
+            Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
+            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
+            None
+        end)
     ~init:None
   %> Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry)
 

@@ -54,53 +54,49 @@ let main base_flags temp_dir quiet root () =
 
   CommandConnectSimple.(
     match connect_once ~flowconfig_name ~client_handshake ~tmp_dir root with
-    | Ok _ ->
-      begin
-        try
-          if not quiet then
-            prerr_endlinef
-              "Told server for `%s` to die. Waiting for confirmation..."
-              (Path.to_string root);
-          let i = ref 0 in
-          while CommandConnectSimple.server_exists ~flowconfig_name ~tmp_dir root do
-            incr i;
-            if !i < 5 then
-              ignore @@ Unix.sleep 1
-            else
-              raise FailedToKillNicely
-          done;
-          if not quiet then
-            prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
-        with
-        | FailedToKillNicely ->
-          let msg = spf "Failed to kill server nicely for `%s`" root_s in
-          Exit.(exit ~msg Kill_error)
-      end
+    | Ok _ -> begin
+      try
+        if not quiet then
+          prerr_endlinef
+            "Told server for `%s` to die. Waiting for confirmation..."
+            (Path.to_string root);
+        let i = ref 0 in
+        while CommandConnectSimple.server_exists ~flowconfig_name ~tmp_dir root do
+          incr i;
+          if !i < 5 then
+            ignore @@ Unix.sleep 1
+          else
+            raise FailedToKillNicely
+        done;
+        if not quiet then prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
+      with
+      | FailedToKillNicely ->
+        let msg = spf "Failed to kill server nicely for `%s`" root_s in
+        Exit.(exit ~msg Kill_error)
+    end
     | Error Server_missing ->
       if not quiet then prerr_endlinef "Warning: no server to kill for `%s`" root_s
     | Error (Build_id_mismatch Server_exited) ->
       if not quiet then prerr_endlinef "Successfully killed server for `%s`" root_s
     | Error (Build_id_mismatch (Client_should_error _))
     | Error (Server_busy _)
-    | Error Server_socket_missing ->
-      begin
-        try
-          if not quiet then
-            prerr_endlinef "Attempting to meanly kill server for `%s`" (Path.to_string root);
-          CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
-          if not quiet then
-            prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
-        with
-        | CommandMeanKill.FailedToKill err ->
-          if not quiet then (
-            match err with
-            | Some err -> prerr_endline err
-            | None ->
-              ();
-              let msg = spf "Failed to kill server meanly for `%s`" root_s in
-              Exit.(exit ~msg Kill_error)
-          )
-      end
+    | Error Server_socket_missing -> begin
+      try
+        if not quiet then
+          prerr_endlinef "Attempting to meanly kill server for `%s`" (Path.to_string root);
+        CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
+        if not quiet then prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
+      with
+      | CommandMeanKill.FailedToKill err ->
+        if not quiet then (
+          match err with
+          | Some err -> prerr_endline err
+          | None ->
+            ();
+            let msg = spf "Failed to kill server meanly for `%s`" root_s in
+            Exit.(exit ~msg Kill_error)
+        )
+    end
   )
 
 let command = CommandSpec.command spec main

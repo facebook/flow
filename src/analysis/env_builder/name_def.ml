@@ -356,30 +356,28 @@ let rec obj_properties_synthesizable
     | Ast.Expression.ArrowFunction fn
     | Ast.Expression.Function fn ->
       handle_fun (Some elem_loc) this_write_locs acc (func_is_synthesizable_from_annotation fn)
-    | Ast.Expression.Object obj ->
-      begin
-        match obj_properties_synthesizable ~this_write_locs:(obj_this_write_locs obj) obj with
-        | ObjectSynthesizable { this_write_locs = new_this_write_locs } ->
-          Ok (acc, EnvSet.union this_write_locs new_this_write_locs)
-        | MissingMemberAnnots { locs = (hd, tl) } -> Ok (hd :: tl @ acc, this_write_locs)
-        | Unsynthesizable -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
-      end
-    | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
-      begin
-        match
-          Base.List.fold_result
-            elements
-            ~init:(acc, this_write_locs)
-            ~f:(fun (acc, this_write_locs) -> function
-            | Ast.Expression.Array.Expression exp
-            | Ast.Expression.Array.Spread (_, { Ast.Expression.SpreadElement.argument = exp; _ }) ->
-              synthesizable_expression (acc, this_write_locs) exp
-            | Ast.Expression.Array.Hole _ -> Error ()
-          )
-        with
-        | Ok res -> Ok res
-        | Error () -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
-      end
+    | Ast.Expression.Object obj -> begin
+      match obj_properties_synthesizable ~this_write_locs:(obj_this_write_locs obj) obj with
+      | ObjectSynthesizable { this_write_locs = new_this_write_locs } ->
+        Ok (acc, EnvSet.union this_write_locs new_this_write_locs)
+      | MissingMemberAnnots { locs = (hd, tl) } -> Ok ((hd :: tl) @ acc, this_write_locs)
+      | Unsynthesizable -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
+    end
+    | Ast.Expression.Array { Ast.Expression.Array.elements; _ } -> begin
+      match
+        Base.List.fold_result
+          elements
+          ~init:(acc, this_write_locs)
+          ~f:(fun (acc, this_write_locs) -> function
+          | Ast.Expression.Array.Expression exp
+          | Ast.Expression.Array.Spread (_, { Ast.Expression.SpreadElement.argument = exp; _ }) ->
+            synthesizable_expression (acc, this_write_locs) exp
+          | Ast.Expression.Array.Hole _ -> Error ()
+        )
+      with
+      | Ok res -> Ok res
+      | Error () -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
+    end
     | _ -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
   in
 

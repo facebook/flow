@@ -227,19 +227,18 @@ module Make (Extra : BASE_STATS) = struct
         in
         fun loc ty_or_type_ast f ->
           match ty_or_type_ast with
-          | Ty_ ty ->
-            begin
-              match run loc ty with
-              | Ok t_ast ->
-                let size = Ty_utils.size_of_type ~max:max_type_size ty in
-                let t_ast' = Insert_type_utils.patch_up_type_ast t_ast in
-                added_annotations_locmap <- LMap.add loc size added_annotations_locmap;
-                Ok (f (Loc.none, t_ast'))
-              | Error e ->
-                this#update_acc (fun acc -> Acc.error acc loc e);
-                codemod_error_locs <- LSet.add loc codemod_error_locs;
-                Error e
-            end
+          | Ty_ ty -> begin
+            match run loc ty with
+            | Ok t_ast ->
+              let size = Ty_utils.size_of_type ~max:max_type_size ty in
+              let t_ast' = Insert_type_utils.patch_up_type_ast t_ast in
+              added_annotations_locmap <- LMap.add loc size added_annotations_locmap;
+              Ok (f (Loc.none, t_ast'))
+            | Error e ->
+              this#update_acc (fun acc -> Acc.error acc loc e);
+              codemod_error_locs <- LSet.add loc codemod_error_locs;
+              Error e
+          end
           | Type_ast { Annotate_exports_hardcoded_expr_fixes.tast_type = t; tast_imports } ->
             let size = Some 1 (* TODO *) in
             added_annotations_locmap <- LMap.add loc size added_annotations_locmap;

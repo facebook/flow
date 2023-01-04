@@ -981,9 +981,7 @@ module Make
           )
       | (Bindings.Enum, AssignmentWrite) ->
         Some
-          Error_message.(
-            EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc)
-          )
+          Error_message.(EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc))
       | (Bindings.Type { imported }, AssignmentWrite) ->
         Some
           Error_message.(
@@ -2552,123 +2550,120 @@ module Make
               ( Identifier { Ast.Pattern.Identifier.annot; _ }
               | Object { Ast.Pattern.Object.annot; _ }
               | Array { Ast.Pattern.Array.annot; _ } )
-            ) ->
-            begin
-              match (init, id) with
-              | ( Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
-                  ( _,
-                    Identifier
-                      {
-                        Ast.Pattern.Identifier.annot = Ast.Type.Missing _;
-                        name = (name_loc, { Ast.Identifier.name = x; _ });
-                        _;
-                      }
-                  )
+            ) -> begin
+            match (init, id) with
+            | ( Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
+                ( _,
+                  Identifier
+                    {
+                      Ast.Pattern.Identifier.annot = Ast.Type.Missing _;
+                      name = (name_loc, { Ast.Identifier.name = x; _ });
+                      _;
+                    }
                 )
-                when not @@ this#is_excluded_ordinary_name x ->
-                let kind = variable_declaration_binding_kind_to_pattern_write_kind (Some kind) in
-                let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) name_loc in
-                let write_kind = Env_api.AssigningWrite reason in
-                let assigned_val =
-                  Base.Option.value_map
-                    ~f:(fun { Env_api.Provider_api.array_providers; _ } ->
-                      Val.empty_array reason array_providers)
-                    ~default:(Val.one reason)
-                    (Env_api.Provider_api.providers_of_def provider_info name_loc)
-                in
+              )
+              when not @@ this#is_excluded_ordinary_name x ->
+              let kind = variable_declaration_binding_kind_to_pattern_write_kind (Some kind) in
+              let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) name_loc in
+              let write_kind = Env_api.AssigningWrite reason in
+              let assigned_val =
+                Base.Option.value_map
+                  ~f:(fun { Env_api.Provider_api.array_providers; _ } ->
+                    Val.empty_array reason array_providers)
+                  ~default:(Val.one reason)
+                  (Env_api.Provider_api.providers_of_def provider_info name_loc)
+              in
 
-                let {
-                  val_ref;
-                  heap_refinements;
-                  kind = stored_binding_kind;
-                  def_loc;
-                  havoc = _;
-                  writes_by_closure_provider_val = _;
-                } =
-                  this#env_read x
-                in
+              let {
+                val_ref;
+                heap_refinements;
+                kind = stored_binding_kind;
+                def_loc;
+                havoc = _;
+                writes_by_closure_provider_val = _;
+              } =
+                this#env_read x
+              in
 
-                (match
-                   error_for_assignment_kind cx x name_loc def_loc stored_binding_kind kind !val_ref
-                 with
-                | Some err ->
-                  add_output err;
-                  let write_entries =
-                    EnvMap.add_ordinary name_loc Env_api.NonAssigningWrite env_state.write_entries
-                  in
-                  env_state <- { env_state with write_entries }
-                | _ ->
-                  this#record_pattern_loc_writes id;
-                  this#havoc_heap_refinements heap_refinements;
-                  let write_entries =
-                    if not (Val.is_declared_function !val_ref) then (
-                      val_ref := assigned_val;
-                      (* Unlike with a typical write, we don't want to create a write_entry here,
-                         because the type should be computed from the array providers. *)
-                      EnvMap.add_ordinary name_loc write_kind env_state.write_entries
-                    ) else
-                      (* All of the providers are aleady in the map. We don't want to overwrite them with
-                       * a non-assigning write. We _do_ want to enter regular function declarations as
-                       * non-assigning writes so that they are not checked against the providers in
-                       * Env.set_env_entry *)
-                      EnvMap.update_ordinary
-                        name_loc
-                        (fun x ->
-                          match x with
-                          | None -> Some Env_api.NonAssigningWrite
-                          | _ -> x)
-                        env_state.write_entries
-                  in
-                  env_state <- { env_state with write_entries })
-              | (Some init, _) ->
-                (* given `var x = e`, read e then write x *)
-                ignore @@ this#expression init;
-                ignore @@ this#binding_pattern_track_object_destructuring ~kind ~acc:init id
-              | (None, _) ->
-                (* No rhs means no write occurs, but the variable moves from undeclared to
-                 * uninitialized. *)
+              (match
+                 error_for_assignment_kind cx x name_loc def_loc stored_binding_kind kind !val_ref
+               with
+              | Some err ->
+                add_output err;
+                let write_entries =
+                  EnvMap.add_ordinary name_loc Env_api.NonAssigningWrite env_state.write_entries
+                in
+                env_state <- { env_state with write_entries }
+              | _ ->
                 this#record_pattern_loc_writes id;
-                Flow_ast_utils.fold_bindings_of_pattern
-                  (fun () (loc, { Flow_ast.Identifier.name; _ }) ->
-                    if this#is_excluded_ordinary_name name then
-                      ()
-                    else
-                      let { val_ref; kind = stored_binding_kind; def_loc; _ } =
-                        this#env_read name
-                      in
-                      let kind =
-                        variable_declaration_binding_kind_to_pattern_write_kind (Some kind)
-                      in
-                      let error =
-                        error_for_assignment_kind
-                          cx
-                          name
-                          loc
-                          def_loc
-                          stored_binding_kind
-                          kind
-                          !val_ref
-                      in
-                      if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc;
-                      let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-                      match (error, annot) with
-                      | (None, Ast.Type.Available _) ->
-                        env_state <-
-                          {
-                            env_state with
-                            write_entries =
-                              EnvMap.add_ordinary
-                                loc
-                                (Env_api.AssigningWrite reason)
-                                env_state.write_entries;
-                          }
-                      | (Some err, _) ->
-                        this#error_assignment loc reason stored_binding_kind kind err val_ref
-                      | _ -> ())
-                  ()
-                  id;
-                ignore @@ this#type_annotation_hint annot
-            end
+                this#havoc_heap_refinements heap_refinements;
+                let write_entries =
+                  if not (Val.is_declared_function !val_ref) then (
+                    val_ref := assigned_val;
+                    (* Unlike with a typical write, we don't want to create a write_entry here,
+                       because the type should be computed from the array providers. *)
+                    EnvMap.add_ordinary name_loc write_kind env_state.write_entries
+                  ) else
+                    (* All of the providers are aleady in the map. We don't want to overwrite them with
+                     * a non-assigning write. We _do_ want to enter regular function declarations as
+                     * non-assigning writes so that they are not checked against the providers in
+                     * Env.set_env_entry *)
+                    EnvMap.update_ordinary
+                      name_loc
+                      (fun x ->
+                        match x with
+                        | None -> Some Env_api.NonAssigningWrite
+                        | _ -> x)
+                      env_state.write_entries
+                in
+                env_state <- { env_state with write_entries })
+            | (Some init, _) ->
+              (* given `var x = e`, read e then write x *)
+              ignore @@ this#expression init;
+              ignore @@ this#binding_pattern_track_object_destructuring ~kind ~acc:init id
+            | (None, _) ->
+              (* No rhs means no write occurs, but the variable moves from undeclared to
+               * uninitialized. *)
+              this#record_pattern_loc_writes id;
+              Flow_ast_utils.fold_bindings_of_pattern
+                (fun () (loc, { Flow_ast.Identifier.name; _ }) ->
+                  if this#is_excluded_ordinary_name name then
+                    ()
+                  else
+                    let { val_ref; kind = stored_binding_kind; def_loc; _ } = this#env_read name in
+                    let kind =
+                      variable_declaration_binding_kind_to_pattern_write_kind (Some kind)
+                    in
+                    let error =
+                      error_for_assignment_kind
+                        cx
+                        name
+                        loc
+                        def_loc
+                        stored_binding_kind
+                        kind
+                        !val_ref
+                    in
+                    if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc;
+                    let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+                    match (error, annot) with
+                    | (None, Ast.Type.Available _) ->
+                      env_state <-
+                        {
+                          env_state with
+                          write_entries =
+                            EnvMap.add_ordinary
+                              loc
+                              (Env_api.AssigningWrite reason)
+                              env_state.write_entries;
+                        }
+                    | (Some err, _) ->
+                      this#error_assignment loc reason stored_binding_kind kind err val_ref
+                    | _ -> ())
+                ()
+                id;
+              ignore @@ this#type_annotation_hint annot
+          end
           | (_, Expression _) -> statement_error
         end;
         decl
@@ -3448,21 +3443,20 @@ module Make
                filtered TestProp checks. *)
             begin
               match discriminant with
-              | (_, Ast.Expression.Member { Ast.Expression.Member._object; _ }) ->
-                begin
-                  match this#get_val_of_expression _object with
-                  | None ->
-                    let values = L.LMap.remove case_loc env_state.values in
-                    env_state <- { env_state with values }
-                  | Some refined_v ->
-                    let values =
-                      L.LMap.add
-                        case_loc
-                        { def_loc = None; value = refined_v; binding_kind_opt = None; name = None }
-                        env_state.values
-                    in
-                    env_state <- { env_state with values }
-                end
+              | (_, Ast.Expression.Member { Ast.Expression.Member._object; _ }) -> begin
+                match this#get_val_of_expression _object with
+                | None ->
+                  let values = L.LMap.remove case_loc env_state.values in
+                  env_state <- { env_state with values }
+                | Some refined_v ->
+                  let values =
+                    L.LMap.add
+                      case_loc
+                      { def_loc = None; value = refined_v; binding_kind_opt = None; name = None }
+                      env_state.values
+                  in
+                  env_state <- { env_state with values }
+              end
               | _ -> ()
             end;
             ignore @@ this#expression test;
@@ -4796,8 +4790,7 @@ module Make
           ~on_type_of_test:this#typeof_test
           ~on_literal_test:this#literal_test
           ~on_null_test:this#null_test
-          ~on_void_test:
-            this#void_test
+          ~on_void_test:this#void_test
             (* Member expressions compared against non-literals that include
                * an optional chain cannot refine like we do in literal cases. The
                * non-literal value we are comparing against may be null or undefined,

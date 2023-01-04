@@ -89,13 +89,12 @@ module InsertType = struct
     match (in_place, path, source_path) with
     | (false, _, _) -> stdout
     | (true, Some p, _)
-    | (true, None, Some p) ->
-      begin
-        try open_out p with
-        | _ ->
-          handle_error ~code:Exit.Path_is_not_a_file
-          @@ Printf.sprintf "failed to open output file: %s" p
-      end
+    | (true, None, Some p) -> begin
+      try open_out p with
+      | _ ->
+        handle_error ~code:Exit.Path_is_not_a_file
+        @@ Printf.sprintf "failed to open output file: %s" p
+    end
     | (true, None, None) ->
       handle_error "Flow: --in-place flag used without input file or explicit path"
 
@@ -191,13 +190,12 @@ module Exports = struct
     match (in_place, path, source_path) with
     | (false, _, _) -> stdout
     | (true, Some p, _)
-    | (true, None, p) ->
-      begin
-        try open_out p with
-        | _ ->
-          handle_error ~code:Exit.Path_is_not_a_file
-          @@ Printf.sprintf "failed to open output file: %s" p
-      end
+    | (true, None, p) -> begin
+      try open_out p with
+      | _ ->
+        handle_error ~code:Exit.Path_is_not_a_file
+        @@ Printf.sprintf "failed to open output file: %s" p
+    end
 
   let avg_error_size = 100
 

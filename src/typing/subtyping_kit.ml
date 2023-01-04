@@ -1622,31 +1622,29 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | _ -> ())
         (ts1, ts2)
     (* Arrays with known elements can flow to tuples *)
-    | (DefT (r1, trust, ArrT (ArrayAT (t1, ts1))), DefT (r2, _, ArrT (TupleAT _))) ->
-      begin
-        match ts1 with
-        | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
-        | Some ts1 ->
-          rec_flow_t
-            cx
-            trace
-            ~use_op
-            ( DefT
-                ( r1,
-                  trust,
-                  ArrT
-                    (TupleAT
-                       ( t1,
-                         Base.List.map
-                           ~f:(fun t ->
-                             TupleElement { name = None; polarity = Polarity.Neutral; t })
-                           ts1
-                       )
-                    )
-                ),
-              u
-            )
-      end
+    | (DefT (r1, trust, ArrT (ArrayAT (t1, ts1))), DefT (r2, _, ArrT (TupleAT _))) -> begin
+      match ts1 with
+      | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
+      | Some ts1 ->
+        rec_flow_t
+          cx
+          trace
+          ~use_op
+          ( DefT
+              ( r1,
+                trust,
+                ArrT
+                  (TupleAT
+                     ( t1,
+                       Base.List.map
+                         ~f:(fun t -> TupleElement { name = None; polarity = Polarity.Neutral; t })
+                         ts1
+                     )
+                  )
+              ),
+            u
+          )
+    end
     (* Read only arrays are the super type of all tuples and arrays *)
     | ( DefT (r1, _, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT t1)),
         DefT (r2, _, ArrT (ROArrayAT t2))
@@ -1871,20 +1869,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
         )
     | ( GenericT ({ bound = bound1; id = id1; reason = reason1; _ } as g1),
         GenericT ({ bound = bound2; id = id2; reason = reason2; _ } as g2)
-      ) ->
-      begin
-        match Generic.satisfies ~printer:(print_if_verbose_lazy cx ~trace) id1 id2 with
-        | Generic.Satisfied ->
-          rec_flow_t
-            cx
-            trace
-            ~use_op
-            (reposition_reason cx reason1 bound1, reposition_reason cx reason2 bound2)
-        | Generic.Lower id ->
-          rec_flow_t cx trace ~use_op (GenericT { g1 with id }, reposition_reason cx reason2 bound2)
-        | Generic.Upper id ->
-          rec_flow_t cx trace ~use_op (reposition_reason cx reason1 bound1, GenericT { g2 with id })
-      end
+      ) -> begin
+      match Generic.satisfies ~printer:(print_if_verbose_lazy cx ~trace) id1 id2 with
+      | Generic.Satisfied ->
+        rec_flow_t
+          cx
+          trace
+          ~use_op
+          (reposition_reason cx reason1 bound1, reposition_reason cx reason2 bound2)
+      | Generic.Lower id ->
+        rec_flow_t cx trace ~use_op (GenericT { g1 with id }, reposition_reason cx reason2 bound2)
+      | Generic.Upper id ->
+        rec_flow_t cx trace ~use_op (reposition_reason cx reason1 bound1, GenericT { g2 with id })
+    end
     | (GenericT { reason; bound; _ }, _) ->
       rec_flow_t cx trace ~use_op (reposition_reason cx reason bound, u)
     | (_, GenericT { reason; name; _ }) ->

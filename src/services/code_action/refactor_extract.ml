@@ -445,14 +445,13 @@ let available_refactors_for_statements
     in
     let extract_to_functions_refactor_results =
       top_level_function_refactor
-      ::
-      List.map
-        create_inner_function_refactor
-        (InsertionPointCollectors.collect_function_method_inserting_points
-           ~typed_ast
-           ~reader
-           ~extracted_loc:extracted_statements_loc
-        )
+      :: List.map
+           create_inner_function_refactor
+           (InsertionPointCollectors.collect_function_method_inserting_points
+              ~typed_ast
+              ~reader
+              ~extracted_loc:extracted_statements_loc
+           )
     in
     let extract_to_functions_refactors =
       Base.List.filter_map extract_to_functions_refactor_results ~f:Base.Result.ok

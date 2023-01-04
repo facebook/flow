@@ -32,10 +32,9 @@ let actual_trust cx t =
   Trust_constraint.(
     match expand t with
     | QualifiedTrust trust -> trust
-    | InferredTrust ident ->
-      begin
-        match Context.find_trust_graph cx ident with
-        | TrustResolved trust -> trust
-        | TrustUnresolved bounds -> get_trust bounds
-      end
+    | InferredTrust ident -> begin
+      match Context.find_trust_graph cx ident with
+      | TrustResolved trust -> trust
+      | TrustUnresolved bounds -> get_trust bounds
+    end
   )

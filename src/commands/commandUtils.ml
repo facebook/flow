@@ -1271,7 +1271,13 @@ let no_cgroup_flag =
           | flow_exe :: command :: args -> flow_exe :: command :: "--no-cgroup" :: args
         in
         systemd_exe
-        :: "--quiet" :: "--user" :: "--scope" :: "--slice" :: "flow.slice" :: "--" :: flow_args
+        :: "--quiet"
+        :: "--user"
+        :: "--scope"
+        :: "--slice"
+        :: "flow.slice"
+        :: "--"
+        :: flow_args
         |> Array.of_list
         |> Unix.execv systemd_exe
   in

@@ -821,7 +821,8 @@ let clear_file file_key =
         in
         alloc
           (let+ update_revdeps = prepare_update_revdeps old_resolved_requires None in
-           update_revdeps file)
+           update_revdeps file
+          )
       in
       entity_advance parse_ent None;
       let dirty_modules = MSet.singleton (Files.eponymous_module file_key) in
@@ -845,7 +846,8 @@ let rollback_resolved_requires file ent =
     in
     Heap.alloc
       (let+ update_revdeps = prepare_update_revdeps new_resolved_requires old_resolved_requires in
-       update_revdeps file);
+       update_revdeps file
+      );
     Heap.entity_rollback ent
   )
 
@@ -931,7 +933,8 @@ let rollback_file =
         in
         alloc
           (let+ update_revdeps = prepare_update_revdeps None old_resolved_requires in
-           update_revdeps file)
+           update_revdeps file
+          )
       | (None, Some new_parse) ->
         (* the file was added or became typed. to undo that, we have to remove
            the revdeps, but rolling back the parse ent will remove the
@@ -942,7 +945,8 @@ let rollback_file =
         in
         alloc
           (let+ update_revdeps = prepare_update_revdeps new_resolved_requires None in
-           update_revdeps file)
+           update_revdeps file
+          )
       | (Some _, Some new_parse) ->
         (* these ents are copied from the old parse to the new parse, so we can
            just roll back the new_parse's copy. *)
@@ -1566,7 +1570,8 @@ module Resolved_requires_mutator = struct
           (let+ update_resolved_requires =
              prepare_update_resolved_requires_if_changed (Some parse) (Some resolved_requires)
            in
-           update_resolved_requires file parse)
+           update_resolved_requires file parse
+          )
     )
 end
 
@@ -1615,7 +1620,8 @@ module Merge_context_mutator = struct
     | _ ->
       alloc
         (let+ sig_hash = prepare_write_int64 sig_hash in
-         entity_advance ent (Some sig_hash));
+         entity_advance ent (Some sig_hash)
+        );
       true
 
   let add_merge_on_diff () component sig_hash =

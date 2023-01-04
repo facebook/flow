@@ -520,10 +520,10 @@ let get_module_system opts =
   | Some system -> system
   | None ->
     let module M =
-    ( val match Options.module_system opts with
-          | Options.Node -> (module Node : MODULE_SYSTEM)
-          | Options.Haste -> (module Haste : MODULE_SYSTEM)
-      )
+      ( val match Options.module_system opts with
+            | Options.Node -> (module Node : MODULE_SYSTEM)
+            | Options.Haste -> (module Haste : MODULE_SYSTEM)
+        )
     in
     let system = (module M : MODULE_SYSTEM) in
     module_system := Some system;

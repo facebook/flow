@@ -142,7 +142,7 @@ let save_averages ~options ?estimates new_averages =
       json_to_string
       @@ JSON_Object
            ((per_file_time_key, JSON_Number (Dtoa.ecma_string_of_float new_averages.per_file_time))
-            :: estimates
+           :: estimates
            )
     )
   in

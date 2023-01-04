@@ -15,15 +15,14 @@ open Hh_json_helpers
 
 let parse_id (json : json) : lsp_id =
   match json with
-  | JSON_Number s ->
-    begin
-      try NumberId (int_of_string s) with
-      | Failure _ ->
-        raise
-          (Error.LspException
-             { Error.code = Error.ParseError; message = "float ids not allowed: " ^ s; data = None }
-          )
-    end
+  | JSON_Number s -> begin
+    try NumberId (int_of_string s) with
+    | Failure _ ->
+      raise
+        (Error.LspException
+           { Error.code = Error.ParseError; message = "float ids not allowed: " ^ s; data = None }
+        )
+  end
   | JSON_String s -> StringId s
   | _ ->
     raise
@@ -555,19 +554,18 @@ let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
     let parse_code = function
       | None -> NoCode
       | Some (JSON_String s) -> StringCode s
-      | Some (JSON_Number s) ->
-        begin
-          try IntCode (int_of_string s) with
-          | Failure _ ->
-            raise
-              (Error.LspException
-                 {
-                   Error.code = Error.ParseError;
-                   message = "Diagnostic code expected to be an int: " ^ s;
-                   data = None;
-                 }
-              )
-        end
+      | Some (JSON_Number s) -> begin
+        try IntCode (int_of_string s) with
+        | Failure _ ->
+          raise
+            (Error.LspException
+               {
+                 Error.code = Error.ParseError;
+                 message = "Diagnostic code expected to be an int: " ^ s;
+                 data = None;
+               }
+            )
+      end
       | _ ->
         raise
           (Error.LspException
@@ -1550,7 +1548,8 @@ let print_error ?(include_error_stack_trace = true) (e : Error.t) (stack : strin
   in
   let entries =
     ("code", int_ (Error.code_to_enum e.Error.code))
-    :: ("message", string_ e.Error.message) :: entries
+    :: ("message", string_ e.Error.message)
+    :: entries
   in
   JSON_Object entries
 

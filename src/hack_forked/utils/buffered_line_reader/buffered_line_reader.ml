@@ -98,26 +98,25 @@ module Functor (Reader : Buffered_line_reader_sig.READER) :
   let get_next_line r =
     match !(r.unconsumed_buffer) with
     | None -> read_line [] r
-    | Some remainder ->
-      begin
-        match index remainder '\n' with
-        | `No_appearance ->
-          let () = set_buffer r None in
-          read_line [remainder] r
-        | `First_appearance i ->
-          let result = String.sub remainder 0 i in
-          let () =
-            if i + 1 < String.length remainder then
-              (* There are some bytes left beyond the first newline character. *)
-              let length = String.length remainder - (i + 1) in
-              let remainder = String.sub remainder (i + 1) length in
-              set_buffer r (Some remainder)
-            else
-              (* No bytes beyond the first newline character. *)
-              set_buffer r None
-          in
-          Reader.return @@ trim_trailing_cr result
-      end
+    | Some remainder -> begin
+      match index remainder '\n' with
+      | `No_appearance ->
+        let () = set_buffer r None in
+        read_line [remainder] r
+      | `First_appearance i ->
+        let result = String.sub remainder 0 i in
+        let () =
+          if i + 1 < String.length remainder then
+            (* There are some bytes left beyond the first newline character. *)
+            let length = String.length remainder - (i + 1) in
+            let remainder = String.sub remainder (i + 1) length in
+            set_buffer r (Some remainder)
+          else
+            (* No bytes beyond the first newline character. *)
+            set_buffer r None
+        in
+        Reader.return @@ trim_trailing_cr result
+    end
 
   let rec read_bytes r size chunks =
     let bytes_desired = min chunk_size size in

@@ -46,24 +46,24 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
     SMap.fold
       begin
         fun module_name reqlocs map ->
-        let requirements =
-          Modulename.Map.fold
-            (fun req loc assoc ->
-              let req =
-                match req with
-                | Modulename.String s -> s
-                | Modulename.Filename f ->
-                  let f = File_key.to_string f in
-                  if strip_root then
-                    Files.relative_path (Path.to_string root) f
-                  else
-                    f
-              in
-              (req, loc) :: assoc)
-            reqlocs
-            []
-        in
-        SMap.add module_name requirements map
+          let requirements =
+            Modulename.Map.fold
+              (fun req loc assoc ->
+                let req =
+                  match req with
+                  | Modulename.String s -> s
+                  | Modulename.Filename f ->
+                    let f = File_key.to_string f in
+                    if strip_root then
+                      Files.relative_path (Path.to_string root) f
+                    else
+                      f
+                in
+                (req, loc) :: assoc)
+              reqlocs
+              []
+          in
+          SMap.add module_name requirements map
       end
       requirements_map
       SMap.empty
@@ -96,9 +96,8 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
                     (fun acc loc ->
                       JSON_Object
                         (("import", JSON_String req)
-                         ::
-                         ("loc", json_of_loc_with_offset ~strip_root loc)
-                         :: Errors.deprecated_json_props_of_loc ~strip_root loc
+                        :: ("loc", json_of_loc_with_offset ~strip_root loc)
+                        :: Errors.deprecated_json_props_of_loc ~strip_root loc
                         )
                       :: acc)
                     acc

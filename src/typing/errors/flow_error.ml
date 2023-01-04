@@ -539,10 +539,9 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 | [r] -> [text "its "; ref (mk_reason (RCustom ("initial " ^ noun)) r)]
                 | providers ->
                   text (spf "one of its initial %ss" noun)
-                  ::
-                  (Base.List.map ~f:(fun r -> ref (mk_reason (RCustom "") r)) providers
-                  |> Base.List.intersperse ~sep:(text ",")
-                  )
+                  :: (Base.List.map ~f:(fun r -> ref (mk_reason (RCustom "") r)) providers
+                     |> Base.List.intersperse ~sep:(text ",")
+                     )
               in
               let message =
                 [text "All writes to "; code name; text " must be compatible with the type of "]
@@ -786,7 +785,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       let make_error loc message =
         let message =
           match additional_message with
-          | Some additional_message -> message @ text ". " :: additional_message
+          | Some additional_message -> message @ (text ". " :: additional_message)
           | None -> message
         in
         mk_use_op_error loc use_op message
@@ -884,47 +883,46 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
               [ref upper]
             )
         (* Default incompatibility. *)
-        | _ ->
-          begin
-            match (desc_of_reason lower, desc_of_reason upper) with
-            | (RLongStringLit n, RStringLit _) ->
-              make_error
-                (loc_of_reason lower)
-                [
-                  ref lower;
-                  text " is incompatible with ";
-                  ref upper;
-                  text " because strings longer than ";
-                  code (string_of_int n);
-                  text " characters are not treated as literals";
-                ]
-            | (RUnknownParameter n, _) ->
-              let message =
-                [
-                  ref lower;
-                  text " is incompatible with ";
-                  ref upper;
-                  text " (consider adding a type annotation to ";
-                  ref (update_desc_reason (fun _ -> RIdentifier (OrdinaryName n)) lower);
-                  text ")";
-                ]
-              in
-              make_error (loc_of_reason lower) message
-            | (_, RUnknownParameter n) ->
-              let message =
-                [
-                  ref lower;
-                  text " is incompatible with ";
-                  ref upper;
-                  text " (consider adding a type annotation to ";
-                  ref (update_desc_reason (fun _ -> RIdentifier (OrdinaryName n)) upper);
-                  text ")";
-                ]
-              in
-              make_error (loc_of_reason lower) message
-            | _ ->
-              make_error (loc_of_reason lower) [ref lower; text " is incompatible with "; ref upper]
-          end)
+        | _ -> begin
+          match (desc_of_reason lower, desc_of_reason upper) with
+          | (RLongStringLit n, RStringLit _) ->
+            make_error
+              (loc_of_reason lower)
+              [
+                ref lower;
+                text " is incompatible with ";
+                ref upper;
+                text " because strings longer than ";
+                code (string_of_int n);
+                text " characters are not treated as literals";
+              ]
+          | (RUnknownParameter n, _) ->
+            let message =
+              [
+                ref lower;
+                text " is incompatible with ";
+                ref upper;
+                text " (consider adding a type annotation to ";
+                ref (update_desc_reason (fun _ -> RIdentifier (OrdinaryName n)) lower);
+                text ")";
+              ]
+            in
+            make_error (loc_of_reason lower) message
+          | (_, RUnknownParameter n) ->
+            let message =
+              [
+                ref lower;
+                text " is incompatible with ";
+                ref upper;
+                text " (consider adding a type annotation to ";
+                ref (update_desc_reason (fun _ -> RIdentifier (OrdinaryName n)) upper);
+                text ")";
+              ]
+            in
+            make_error (loc_of_reason lower) message
+          | _ ->
+            make_error (loc_of_reason lower) [ref lower; text " is incompatible with "; ref upper]
+        end)
     in
     let mk_trust_incompatible_error lower upper use_op =
       match (desc_of_reason lower, desc_of_reason upper) with

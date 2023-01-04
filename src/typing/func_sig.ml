@@ -403,14 +403,13 @@ struct
     *)
     Ast.Statement.(
       match kind with
-      | Predicate ->
-        begin
-          match statements with
-          | [(_, Return { Return.argument = Some _; comments = _; return_out = _ })] -> ()
-          | _ ->
-            let loc = aloc_of_reason reason in
-            Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, PredicateInvalidBody))
-        end
+      | Predicate -> begin
+        match statements with
+        | [(_, Return { Return.argument = Some _; comments = _; return_out = _ })] -> ()
+        | _ ->
+          let loc = aloc_of_reason reason in
+          Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, PredicateInvalidBody))
+      end
       | _ -> ()
     );
 

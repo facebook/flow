@@ -888,22 +888,20 @@ and merge_annot tps file = function
     let fn_pred = merge tps file fn_pred in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (base, LatentPredT (reason, Type.LatentP (fn_pred, index)), id))
-  | Trusted (loc, t) ->
-    begin
-      match merge tps file t with
-      | Type.DefT (r, trust, def_t) ->
-        let reason = Reason.(mk_annot_reason (RTrusted (desc_of_reason r)) loc) in
-        Type.(DefT (reason, trust, def_t))
-      | _ -> Type.(AnyT.at (AnyError None) loc)
-    end
-  | Private (loc, t) ->
-    begin
-      match merge tps file t with
-      | Type.DefT (r, trust, def_t) ->
-        let reason = Reason.(mk_annot_reason (RPrivate (desc_of_reason r)) loc) in
-        Type.(DefT (reason, trust, def_t))
-      | _ -> Type.(AnyT.at (AnyError None) loc)
-    end
+  | Trusted (loc, t) -> begin
+    match merge tps file t with
+    | Type.DefT (r, trust, def_t) ->
+      let reason = Reason.(mk_annot_reason (RTrusted (desc_of_reason r)) loc) in
+      Type.(DefT (reason, trust, def_t))
+    | _ -> Type.(AnyT.at (AnyError None) loc)
+  end
+  | Private (loc, t) -> begin
+    match merge tps file t with
+    | Type.DefT (r, trust, def_t) ->
+      let reason = Reason.(mk_annot_reason (RPrivate (desc_of_reason r)) loc) in
+      Type.(DefT (reason, trust, def_t))
+    | _ -> Type.(AnyT.at (AnyError None) loc)
+  end
   | FunAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     let statics = merge_fun_statics tps file reason SMap.empty in

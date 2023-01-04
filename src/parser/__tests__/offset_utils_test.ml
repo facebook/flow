@@ -103,8 +103,8 @@ let run_full_test source =
   List.iter
     begin
       fun loc ->
-      let (_ : int) = get_offset offset_table loc in
-      ()
+        let (_ : int) = get_offset offset_table loc in
+        ()
     end
     all_positions
 

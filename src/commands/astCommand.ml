@@ -108,16 +108,15 @@ let main
   let file_type =
     match file_type_opt with
     | Some t -> t
-    | None ->
-      begin
-        match filename with
-        | Some fn ->
-          if Files.is_json_file fn then
-            File_json
-          else
-            File_js
-        | None -> File_js
-      end
+    | None -> begin
+      match filename with
+      | Some fn ->
+        if Files.is_json_file fn then
+          File_json
+        else
+          File_js
+      | None -> File_js
+    end
   in
 
   let module Translate =

@@ -111,16 +111,15 @@ let expanduser path =
     (Str.regexp "^~\\([^/]*\\)")
     begin
       fun s ->
-      match Str.matched_group 1 s with
-      | "" ->
-        begin
+        match Str.matched_group 1 s with
+        | "" -> begin
           match getenv_home () with
           | None -> (Unix.getpwuid (Unix.getuid ())).Unix.pw_dir
           | Some home -> home
         end
-      | unixname ->
-        (try (Unix.getpwnam unixname).Unix.pw_dir with
-        | Not_found -> Str.matched_string s)
+        | unixname ->
+          (try (Unix.getpwnam unixname).Unix.pw_dir with
+          | Not_found -> Str.matched_string s)
     end
     path
 
@@ -148,9 +147,9 @@ let executable_path : unit -> string =
         ~f:
           begin
             fun acc p ->
-            match acc with
-            | Some _ -> acc
-            | None -> realpath (expanduser (Filename.concat p path))
+              match acc with
+              | Some _ -> acc
+              | None -> realpath (expanduser (Filename.concat p path))
           end
         ~init:None
     in

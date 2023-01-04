@@ -194,33 +194,32 @@ end = struct
           env
           (loc, Parse_error.EnumInvalidMemberInitializer { enum_name; explicit_type; member_name });
         acc
-      | NoInit ->
-        begin
-          match explicit_type with
-          | Some Enum_common.Boolean ->
-            error_at
-              env
-              (member_loc, Parse_error.EnumBooleanMemberNotInitialized { enum_name; member_name });
-            acc
-          | Some Enum_common.Number ->
-            error_at
-              env
-              (member_loc, Parse_error.EnumNumberMemberNotInitialized { enum_name; member_name });
-            acc
-          | Some Enum_common.BigInt ->
-            error_at
-              env
-              (member_loc, Parse_error.EnumBigIntMemberNotInitialized { enum_name; member_name });
-            acc
-          | Some Enum_common.String
-          | Some Enum_common.Symbol
-          | None ->
-            let member = (member_loc, { DefaultedMember.id }) in
-            {
-              acc with
-              members = { members with defaulted_members = member :: members.defaulted_members };
-            }
-        end
+      | NoInit -> begin
+        match explicit_type with
+        | Some Enum_common.Boolean ->
+          error_at
+            env
+            (member_loc, Parse_error.EnumBooleanMemberNotInitialized { enum_name; member_name });
+          acc
+        | Some Enum_common.Number ->
+          error_at
+            env
+            (member_loc, Parse_error.EnumNumberMemberNotInitialized { enum_name; member_name });
+          acc
+        | Some Enum_common.BigInt ->
+          error_at
+            env
+            (member_loc, Parse_error.EnumBigIntMemberNotInitialized { enum_name; member_name });
+          acc
+        | Some Enum_common.String
+        | Some Enum_common.Symbol
+        | None ->
+          let member = (member_loc, { DefaultedMember.id }) in
+          {
+            acc with
+            members = { members with defaulted_members = member :: members.defaulted_members };
+          }
+      end
     )
 
   let rec enum_members ~enum_name ~explicit_type acc env =

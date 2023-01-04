@@ -561,48 +561,46 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (* speculatively match the pair of types in this trial *)
         let error = speculative_match cx trace { ignore; speculation_id; case } l u in
         (match error with
-        | None ->
+        | None -> begin
           (* no error, looking great so far... *)
-          begin
-            match match_state with
-            | NoMatch _ ->
-              (* everything had failed up to this point. so no ambiguity yet... *)
-              if
-                ISet.is_empty case.unresolved
-                (* ...and no unresolved tvars encountered during the speculative
-                 * match! This is great news. It means that this alternative will
-                 * definitely succeed. Fire any deferred actions and short-cut. *)
-              then
-                fire_actions cx trace spec case speculation_id
-              (* Otherwise, record that we've found a promising alternative. *)
-              else
-                loop (ConditionalMatch case) trials
-            | ConditionalMatch prev_case ->
-              (* umm, there's another previously found promising alternative *)
-              (* so compute the difference in side effects between that alternative
-               * and this *)
-              let ts = Speculation.case_diff cx prev_case case in
-              (* if the side effects of the previously found promising alternative
-               * are fewer, then keep holding on to that alternative *)
-              if ts = [] then
-                loop match_state trials
-              (* otherwise, we have an ambiguity; blame the unresolved tvars and
-               * short-cut *)
-              else
-                let prev_case_id = prev_case.case_id in
-                let cases : Type.t list = choices_of_spec spec in
-                blame_unresolved cx trace prev_case_id case_id cases case_r ts
-          end
-        | Some err ->
+          match match_state with
+          | NoMatch _ ->
+            (* everything had failed up to this point. so no ambiguity yet... *)
+            if
+              ISet.is_empty case.unresolved
+              (* ...and no unresolved tvars encountered during the speculative
+               * match! This is great news. It means that this alternative will
+               * definitely succeed. Fire any deferred actions and short-cut. *)
+            then
+              fire_actions cx trace spec case speculation_id
+            (* Otherwise, record that we've found a promising alternative. *)
+            else
+              loop (ConditionalMatch case) trials
+          | ConditionalMatch prev_case ->
+            (* umm, there's another previously found promising alternative *)
+            (* so compute the difference in side effects between that alternative
+             * and this *)
+            let ts = Speculation.case_diff cx prev_case case in
+            (* if the side effects of the previously found promising alternative
+             * are fewer, then keep holding on to that alternative *)
+            if ts = [] then
+              loop match_state trials
+            (* otherwise, we have an ambiguity; blame the unresolved tvars and
+             * short-cut *)
+            else
+              let prev_case_id = prev_case.case_id in
+              let cases : Type.t list = choices_of_spec spec in
+              blame_unresolved cx trace prev_case_id case_id cases case_r ts
+        end
+        | Some err -> begin
           (* if an error is found, then throw away this alternative... *)
-          begin
-            match match_state with
-            | NoMatch errs ->
-              (* ...adding to the error list if no promising alternative has been
-               * found yet *)
-              loop (NoMatch (err :: errs)) trials
-            | _ -> loop match_state trials
-          end)
+          match match_state with
+          | NoMatch errs ->
+            (* ...adding to the error list if no promising alternative has been
+             * found yet *)
+            loop (NoMatch (err :: errs)) trials
+          | _ -> loop match_state trials
+        end)
     and return = function
       | ConditionalMatch case ->
         (* best choice that survived, congrats! fire deferred actions  *)

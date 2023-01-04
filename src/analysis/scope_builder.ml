@@ -81,12 +81,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
     let rec get x t =
       match t with
       | [] -> None
-      | hd :: rest ->
-        begin
-          match SMap.find_opt x hd with
-          | Some def -> Some def
-          | None -> get x rest
-        end
+      | hd :: rest -> begin
+        match SMap.find_opt x hd with
+        | Some def -> Some def
+        | None -> get x rest
+      end
 
     let defs = function
       | [] -> SMap.empty

@@ -619,12 +619,11 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
 
   let rec update x f tree =
     match tree with
-    | Empty ->
-      begin
-        match f None with
-        | None -> Empty
-        | Some data -> singleton x data
-      end
+    | Empty -> begin
+      match f None with
+      | None -> Empty
+      | Some data -> singleton x data
+    end
     | Leaf { v; d } ->
       (* check *)
       let c = Ord.compare x v in
@@ -693,18 +692,16 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
   let rec merge f s1 s2 =
     match (s1, s2) with
     | (Empty, Empty) -> Empty
-    | (Leaf { v; d }, Empty) ->
-      begin
-        match f v (Some d) None with
-        | None -> empty
-        | Some data -> Leaf { v; d = data }
-      end
-    | (Empty, Leaf { v; d }) ->
-      begin
-        match f v None (Some d) with
-        | None -> empty
-        | Some data -> Leaf { v; d = data }
-      end
+    | (Leaf { v; d }, Empty) -> begin
+      match f v (Some d) None with
+      | None -> empty
+      | Some data -> Leaf { v; d = data }
+    end
+    | (Empty, Leaf { v; d }) -> begin
+      match f v None (Some d) with
+      | None -> empty
+      | Some data -> Leaf { v; d = data }
+    end
     | (Leaf { v = v1; d = d1 }, Leaf _) ->
       let (l2, d2, r2) = split v1 s2 in
       concat_or_join (merge f empty l2) v1 (f v1 (Some d1) d2) (merge f empty r2)
