@@ -306,7 +306,7 @@ let autocomplete
         ) ->
       Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
           let open AutocompleteService_js in
-          let (token_opt, ac_loc, (ac_type_string, results_res)) =
+          let (token_opt, ac_loc, ac_type_string, results_res) =
             autocomplete_get_results
               ~env
               ~options

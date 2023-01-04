@@ -27,4 +27,4 @@ val autocomplete_get_results :
   imports_ranked_usage:bool ->
   string option ->
   Loc.t ->
-  string option * ALoc.t option * (string * autocomplete_service_result)
+  string option * ALoc.t option * string * autocomplete_service_result
