@@ -1889,8 +1889,14 @@ end
 let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   let (value, ts, is_index_restricted, is_tuple) =
     match arrtype with
-    | ArrayAT (value, ts) -> (value, ts, false, false)
-    | TupleAT (value, elements) -> (value, Some (tuple_ts_of_elements elements), true, true)
+    | ArrayAT (value, ts) ->
+      let ts = Base.Option.map ~f:(Base.List.map ~f:(fun t -> (t, Polarity.Neutral, None))) ts in
+      (value, ts, false, false)
+    | TupleAT (value, elements) ->
+      let ts =
+        Base.List.map ~f:(fun (TupleElement { t; polarity; name }) -> (t, polarity, name)) elements
+      in
+      (value, Some ts, true, true)
     | ROArrayAT value -> (value, None, true, false)
   in
   let (can_write_tuple, value) =
@@ -1910,7 +1916,21 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
               in
               begin
                 match value_opt with
-                | Some value -> (true, value)
+                | Some (value, polarity, name) when is_tuple ->
+                  if write_action && (not @@ Polarity.compat (polarity, Polarity.Negative)) then
+                    add_output
+                      cx
+                      ~trace
+                      (Error_message.ETupleElementNotWritable { use_op; reason; index; name })
+                  else if
+                    (not write_action) && (not @@ Polarity.compat (polarity, Polarity.Positive))
+                  then
+                    add_output
+                      cx
+                      ~trace
+                      (Error_message.ETupleElementNotReadable { use_op; reason; index; name });
+                  (true, value)
+                | Some (value, _, _) -> (true, value)
                 | None ->
                   if is_tuple then (
                     add_output

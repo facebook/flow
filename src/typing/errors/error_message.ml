@@ -155,6 +155,26 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
+  | ETupleElementNotReadable of {
+      reason: 'loc virtual_reason;
+      index: int;
+      name: string option;
+      use_op: 'loc virtual_use_op;
+    }
+  | ETupleElementNotWritable of {
+      reason: 'loc virtual_reason;
+      index: int;
+      name: string option;
+      use_op: 'loc virtual_use_op;
+    }
+  | ETupleElementPolarityMismatch of {
+      index: int;
+      reason_lower: 'loc Reason.virtual_reason;
+      polarity_lower: Polarity.t;
+      reason_upper: 'loc Reason.virtual_reason;
+      polarity_upper: Polarity.t;
+      use_op: 'loc Type.virtual_use_op;
+    }
   | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
@@ -752,6 +772,21 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ETupleNonIntegerIndex { use_op = map_use_op use_op; reason = map_reason reason; index }
   | ETupleUnsafeWrite { reason; use_op } ->
     ETupleUnsafeWrite { reason = map_reason reason; use_op = map_use_op use_op }
+  | ETupleElementNotReadable { reason; index; name; use_op } ->
+    ETupleElementNotReadable { reason = map_reason reason; index; name; use_op = map_use_op use_op }
+  | ETupleElementNotWritable { reason; index; name; use_op } ->
+    ETupleElementNotWritable { reason = map_reason reason; index; name; use_op = map_use_op use_op }
+  | ETupleElementPolarityMismatch
+      { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op } ->
+    ETupleElementPolarityMismatch
+      {
+        index;
+        reason_lower = map_reason reason_lower;
+        polarity_lower;
+        reason_upper = map_reason reason_upper;
+        polarity_upper;
+        use_op = map_use_op use_op;
+      }
   | EROArrayWrite ((r1, r2), op) -> EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
     EUnionSpeculationFailed
@@ -1157,6 +1192,16 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> ETupleNonIntegerIndex { use_op; reason; index })
   | ETupleUnsafeWrite { reason; use_op } ->
     util use_op (fun use_op -> ETupleUnsafeWrite { reason; use_op })
+  | ETupleElementNotReadable { reason; index; name; use_op } ->
+    util use_op (fun use_op -> ETupleElementNotReadable { reason; index; name; use_op })
+  | ETupleElementNotWritable { reason; index; name; use_op } ->
+    util use_op (fun use_op -> ETupleElementNotWritable { reason; index; name; use_op })
+  | ETupleElementPolarityMismatch
+      { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op } ->
+    util use_op (fun use_op ->
+        ETupleElementPolarityMismatch
+          { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op }
+    )
   | EROArrayWrite (rs, op) -> util op (fun op -> EROArrayWrite (rs, op))
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
     util use_op (fun use_op -> EUnionSpeculationFailed { use_op; reason; reason_op; branches })
@@ -1538,6 +1583,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnionSpeculationFailed _
   | ETupleUnsafeWrite _
   | EROArrayWrite _
+  | ETupleElementNotReadable _
+  | ETupleElementNotWritable _
+  | ETupleElementPolarityMismatch _
   | ETupleOutOfBounds _
   | ETupleNonIntegerIndex _
   | ENonLitArrayToTuple _
@@ -1624,6 +1672,14 @@ let mk_prop_message =
     | Some "$call" -> [text "a call signature declaring the expected parameter / return type"]
     | Some prop -> [text "property "; code prop]
   )
+
+let mk_tuple_element_error_message ~reason ~index ~name kind =
+  let open Errors.Friendly in
+  let index_ref = Reference ([Code (string_of_int index)], def_loc_of_reason reason) in
+  let label =
+    Base.Option.value_map name ~default:[] ~f:(fun name -> [text " labeled "; code name])
+  in
+  [text "tuple element at index "; index_ref] @ label @ [text " is not "; text kind]
 
 let enum_name_of_reason reason =
   match desc_of_reason reason with
@@ -2269,6 +2325,42 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       {
         loc = loc_of_reason reason;
         features = [text "the index must be statically known to write a tuple element"];
+        use_op;
+      }
+  | ETupleElementNotReadable { reason; index; name; use_op } ->
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features = mk_tuple_element_error_message ~reason ~index ~name "readable";
+        use_op;
+      }
+  | ETupleElementNotWritable { reason; index; name; use_op } ->
+    UseOp
+      {
+        loc = loc_of_reason reason;
+        features = mk_tuple_element_error_message ~reason ~index ~name "writable";
+        use_op;
+      }
+  | ETupleElementPolarityMismatch
+      { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op } ->
+    let expected = polarity_explanation (polarity_lower, polarity_upper) in
+    let actual = polarity_explanation (polarity_upper, polarity_lower) in
+    UseOp
+      {
+        loc = loc_of_reason reason_lower;
+        features =
+          [
+            text "tuple element at index ";
+            code (string_of_int index);
+            text " is ";
+            text expected;
+            text " in ";
+            ref reason_lower;
+            text " but ";
+            text actual;
+            text " in ";
+            ref reason_upper;
+          ];
         use_op;
       }
   | EROArrayWrite (reasons, use_op) ->
@@ -4373,6 +4465,9 @@ let error_code_of_message err : error_code option =
   | ETrustedAnnot _ -> Some InvalidTrustedTypeArg
   | ETrustIncompatibleWithUseOp _ -> Some Error_codes.IncompatibleTrust
   | ETupleArityMismatch _ -> Some InvalidTupleArity
+  | ETupleElementNotReadable _ -> Some CannotRead
+  | ETupleElementNotWritable _ -> Some CannotWrite
+  | ETupleElementPolarityMismatch _ -> Some IncompatibleVariance
   | ETupleNonIntegerIndex _ -> Some InvalidTupleIndex
   | ETupleOutOfBounds _ -> Some InvalidTupleIndex
   | ETupleUnsafeWrite _ -> Some InvalidTupleIndex

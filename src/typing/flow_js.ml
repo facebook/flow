@@ -3846,7 +3846,7 @@ struct
           in
           let o = Obj_type.mk_with_proto cx reason (ObjProtoT reason) ~obj_kind:(Indexed dict) in
           rec_flow cx trace (o, u)
-        | (DefT (_, _, ArrT arrtype), ObjAssignFromT (use_op, r, o, t, ObjSpreadAssign)) ->
+        | (DefT (reason_arr, _, ArrT arrtype), ObjAssignFromT (use_op, r, o, t, ObjSpreadAssign)) ->
           begin
             match arrtype with
             | ArrayAT (elemt, None)
@@ -3855,8 +3855,15 @@ struct
               rec_flow cx trace (elemt, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
             | TupleAT (_, elements) ->
               (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
-              List.iter
-                (fun (TupleElement { t = from; polarity = _; name = _ }) ->
+              List.iteri
+                (fun n (TupleElement { t = from; polarity; name }) ->
+                  if not @@ Polarity.compat (polarity, Polarity.Positive) then
+                    add_output
+                      cx
+                      ~trace
+                      (Error_message.ETupleElementNotReadable
+                         { use_op; reason = reason_arr; index = n; name }
+                      );
                   rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
                 elements
             | ArrayAT (_, Some ts) ->
@@ -8331,13 +8338,29 @@ struct
           let l2 = List.length ts2 in
           if l1 <> l2 then
             add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), l1, l2, use_op));
+          let n = ref 0 in
           iter2opt
             (fun t1 t2 ->
               match (t1, t2) with
-              | ( Some (TupleElement { t = t1; polarity = _; name = _ }),
-                  Some (TupleElement { t = t2; polarity = _; name = _ })
+              | ( Some (TupleElement { t = t1; polarity = p1; name = _ }),
+                  Some (TupleElement { t = t2; polarity = p2; name = _ })
                 ) ->
-                rec_unify cx trace ~use_op t1 t2
+                if not @@ Polarity.equal (p1, p2) then
+                  add_output
+                    cx
+                    ~trace
+                    (Error_message.ETupleElementPolarityMismatch
+                       {
+                         index = !n;
+                         reason_lower = r1;
+                         polarity_lower = p1;
+                         reason_upper = r2;
+                         polarity_upper = p2;
+                         use_op;
+                       }
+                    );
+                rec_unify cx trace ~use_op t1 t2;
+                n := !n + 1
               | _ -> ())
             (ts1, ts2)
         | ( DefT (lreason, _, ObjT { props_tmap = lflds; flags = lflags; _ }),
