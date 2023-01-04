@@ -43,6 +43,8 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
 
   let prepass_init () = ()
 
+  let mod_prepass_options options = options
+
   let prepass_run cx () _file _reader _file_sig _typed_ast =
     let should_include_error =
       match Opts.error_codes with
