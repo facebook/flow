@@ -8459,7 +8459,7 @@ struct
       (* Error if polarity is not compatible both ways. *)
       let polarity1 = Property.polarity p1 in
       let polarity2 = Property.polarity p2 in
-      if not (Polarity.compat (polarity1, polarity2) && Polarity.compat (polarity2, polarity1)) then
+      if not (Polarity.equal (polarity1, polarity2)) then
         add_output
           cx
           ~trace

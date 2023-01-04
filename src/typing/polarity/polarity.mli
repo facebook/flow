@@ -17,6 +17,8 @@ val inv : t -> t
 
 val mult : t * t -> t
 
+val equal : t * t -> bool
+
 val string : t -> string
 
 val sigil : t -> string
