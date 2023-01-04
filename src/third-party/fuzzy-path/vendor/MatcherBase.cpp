@@ -273,7 +273,7 @@ vector<MatchResult> MatcherBase::findMatches(const std::string &query,
     query_case,
     matchOptions,
     options.record_match_indexes,
-    move(combined)
+    std::move(combined)
   );
 }
 
@@ -285,10 +285,10 @@ void MatcherBase::addCandidate(const string &candidate) {
     CandidateData data;
     data.value = candidate;
     data.bitmask = letter_bitmask(lowercase.c_str());
-    data.lowercase = move(lowercase);
+    data.lowercase = std::move(lowercase);
     data.last_match = true;
     data.num_dirs = num_dirs(candidate);
-    candidates_.emplace_back(move(data));
+    candidates_.emplace_back(std::move(data));
   }
 }
 
