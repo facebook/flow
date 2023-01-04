@@ -634,7 +634,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                   ]
                 )
             | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
-              `Frame (lower, use_op, [text "index "; text (string_of_int (n - 1))])
+              `Frame (lower, use_op, [text "index "; text (string_of_int n)])
             | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "type argument "; ref targ])
             | Frame (TypeParamBound { name }, use_op) ->
