@@ -7,5 +7,5 @@ type Union =
 
 declare var f : Union => void
 
-f("
+f('
 // ^
