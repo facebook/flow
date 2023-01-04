@@ -1706,28 +1706,24 @@ let unused_super_methods
 let autocomplete_class_key
     ~reader ~options ~cx ~file_sig ~typed_ast ~token ~edit_locs ~tparams_rev enclosing_class_t =
   match enclosing_class_t with
-  | Some enclosing_class_t ->
-    begin
-      match
-        unused_super_methods
-          ~reader
-          ~options
-          ~cx
-          ~file_sig
-          ~typed_ast
-          ~edit_locs
-          ~tparams_rev
-          enclosing_class_t
-      with
-      | Error err -> AcFatalError err
-      | Ok (items, errors_to_log) ->
-        let items = filter_by_token_and_sort token items in
-        AcResult
-          {
-            result = { ServerProt.Response.Completion.items; is_incomplete = false };
-            errors_to_log;
-          }
-    end
+  | Some enclosing_class_t -> begin
+    match
+      unused_super_methods
+        ~reader
+        ~options
+        ~cx
+        ~file_sig
+        ~typed_ast
+        ~edit_locs
+        ~tparams_rev
+        enclosing_class_t
+    with
+    | Error err -> AcFatalError err
+    | Ok (items, errors_to_log) ->
+      let items = filter_by_token_and_sort token items in
+      AcResult
+        { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
+  end
   | None ->
     AcResult
       {

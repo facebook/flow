@@ -627,24 +627,23 @@ end = struct
         type_ctor ~env ?id ~cont:type_with_alias_reason t
       | EvalT _ when should_eval_skip_aliases ~env () ->
         type_ctor ~env ~cont:type_with_alias_reason t
-      | _ ->
-        begin
-          match desc_of_reason ~unwrap:false (TypeUtil.reason_of_t t) with
-          | RTypeAlias (name, Some loc, _) ->
-            (* The default action is to avoid expansion by using the type alias name,
-               when this can be trusted. The one case where we want to skip this process
-               is when recovering the body of a type alias A. In that case the environment
-               field under_type_alias will be 'Some A'. If the type alias name in the reason
-               is also A, then we are still at the top-level of the type-alias, so we
-               proceed by expanding one level preserving the same environment. *)
-            let symbol = symbol_from_loc env loc (Reason.OrdinaryName name) in
-            return (generic_talias symbol None)
-          | _ ->
-            (* We are now beyond the point of the one-off expansion. Reset the environment
-               assigning None to under_type_alias, so that aliases are used in subsequent
-               invocations. *)
-            type_ctor ~env ?id ~cont:type_with_alias_reason t
-        end
+      | _ -> begin
+        match desc_of_reason ~unwrap:false (TypeUtil.reason_of_t t) with
+        | RTypeAlias (name, Some loc, _) ->
+          (* The default action is to avoid expansion by using the type alias name,
+             when this can be trusted. The one case where we want to skip this process
+             is when recovering the body of a type alias A. In that case the environment
+             field under_type_alias will be 'Some A'. If the type alias name in the reason
+             is also A, then we are still at the top-level of the type-alias, so we
+             proceed by expanding one level preserving the same environment. *)
+          let symbol = symbol_from_loc env loc (Reason.OrdinaryName name) in
+          return (generic_talias symbol None)
+        | _ ->
+          (* We are now beyond the point of the one-off expansion. Reset the environment
+             assigning None to under_type_alias, so that aliases are used in subsequent
+             invocations. *)
+          type_ctor ~env ?id ~cont:type_with_alias_reason t
+      end
 
     and type_ctor ~env ?id ~(cont : fn_t) t =
       let open Type in
