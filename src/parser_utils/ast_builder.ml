@@ -267,6 +267,39 @@ end
 module Classes = struct
   open Ast.Class
 
+  module Methods = struct
+    let make ?comments ?(decorators = []) ?(static = false) ~id function_ =
+      ( Loc.none,
+        {
+          Method.kind = Method.Method;
+          key = Ast.Expression.Object.Property.Identifier (Identifiers.identifier id);
+          value = (Loc.none, function_);
+          static;
+          decorators;
+          comments;
+        }
+      )
+
+    let with_body method_ ~body =
+      let (loc, method_) = method_ in
+      let (value_loc, fun_) = method_.Flow_ast.Class.Method.value in
+      let fun_ = { fun_ with Flow_ast.Function.body } in
+      (loc, { method_ with Flow_ast.Class.Method.value = (value_loc, fun_) })
+
+    let with_docs method_ ~docs =
+      let open Flow_ast.Expression.Object.Property in
+      let (loc, method_) = method_ in
+      let key =
+        match method_.Flow_ast.Class.Method.key with
+        | Literal (t, lit) -> Literal (t, { lit with Flow_ast.Literal.comments = docs })
+        | Identifier (t, id) -> Identifier (t, { id with Flow_ast.Identifier.comments = docs })
+        | PrivateName (loc, pn) ->
+          PrivateName (loc, { pn with Flow_ast.PrivateName.comments = docs })
+        | Computed (loc, ck) -> Computed (loc, { ck with Flow_ast.ComputedKey.comments = docs })
+      in
+      (loc, { method_ with Flow_ast.Class.Method.key })
+  end
+
   let implements ?targs id = (Loc.none, { Implements.Interface.id; targs })
 
   let property ?comments ?(annot = Ast.Type.Missing Loc.none) ?(static = false) ?variance ~id value
@@ -284,19 +317,8 @@ module Classes = struct
       )
 
   let method_ ?comments ?(decorators = []) ?(static = false) ~id function_ =
-    Body.Method
-      ( Loc.none,
-        {
-          Method.kind = Method.Method;
-          key = Ast.Expression.Object.Property.Identifier (Identifiers.identifier id);
-          value = (Loc.none, function_);
-          static;
-          decorators;
-          comments;
-        }
-      )
+    Body.Method (Methods.make ?comments ~decorators ~static ~id function_)
 
-  (* TODO: add property *)
   let make ?comments ?super ?(implements = []) ?id elements =
     let extends =
       match super with
