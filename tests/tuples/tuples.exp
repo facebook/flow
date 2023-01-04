@@ -485,5 +485,109 @@ References:
                         ^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- variance.js:48:2
 
-Found 32 errors
+Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `ROC` [1] but write-only in tuple
+type [2]. [incompatible-variance]
+
+   variance.js:48:2
+   48| (roc: [-foo: string]); // ERROR
+        ^^^
+
+References:
+   variance.js:46:18
+   46| declare var roc: ROC;
+                        ^^^ [1]
+   variance.js:48:7
+   48| (roc: [-foo: string]); // ERROR
+             ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:49:2
+
+Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `ROC` [1] but writable in tuple
+type [2]. [incompatible-variance]
+
+   variance.js:49:2
+   49| (roc: [foo: string]); // ERROR
+        ^^^
+
+References:
+   variance.js:46:18
+   46| declare var roc: ROC;
+                        ^^^ [1]
+   variance.js:49:7
+   49| (roc: [foo: string]); // ERROR
+             ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:51:1
+
+Cannot assign `"s"` to `roc[0]` because tuple element at index `0` [1] labeled `foo` is not writable. [cannot-write]
+
+   51| roc[0] = "s"; // ERROR - can't write
+       ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:56:2
+
+Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `ROB` [1] but write-only in tuple
+type [2]. [incompatible-variance]
+
+   variance.js:56:2
+   56| (rob: [-foo: string]); // ERROR
+        ^^^
+
+References:
+   variance.js:54:18
+   54| declare var rob: ROB;
+                        ^^^ [1]
+   variance.js:56:7
+   56| (rob: [-foo: string]); // ERROR
+             ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:57:2
+
+Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `ROB` [1] but writable in tuple
+type [2]. [incompatible-variance]
+
+   variance.js:57:2
+   57| (rob: [foo: string]); // ERROR
+        ^^^
+
+References:
+   variance.js:54:18
+   54| declare var rob: ROB;
+                        ^^^ [1]
+   variance.js:57:7
+   57| (rob: [foo: string]); // ERROR
+             ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:59:1
+
+Cannot assign `"s"` to `rob[0]` because tuple element at index `0` [1] labeled `foo` is not writable. [cannot-write]
+
+   59| rob[0] = "s"; // ERROR - can't write
+       ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:63:1
+
+Cannot assign `"s"` to `u[0]` because tuple element at index `0` [1] is not writable. [cannot-write]
+
+   63| u[0] = "s"; // ERROR - can't write
+       ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:69:1
+
+Cannot assign `"s"` to `inter[0]` because tuple element at index `0` [1] is not writable. [cannot-write]
+
+   69| inter[0] = "s"; // ERROR - can't write
+       ^^^^^^^^ [1]
+
+
+
+Found 40 errors
