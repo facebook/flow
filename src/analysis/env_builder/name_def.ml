@@ -360,7 +360,8 @@ let rec obj_properties_synthesizable
       match obj_properties_synthesizable ~this_write_locs:(obj_this_write_locs obj) obj with
       | ObjectSynthesizable { this_write_locs = new_this_write_locs } ->
         Ok (acc, EnvSet.union this_write_locs new_this_write_locs)
-      | MissingMemberAnnots { locs = (hd, tl) } -> Ok ((hd :: tl) @ acc, this_write_locs)
+      | MissingMemberAnnots { locs = (hd, tl) } ->
+        Ok (Base.List.append (hd :: tl) acc, this_write_locs)
       | Unsynthesizable -> Ok (OtherMissingAnnot elem_loc :: acc, this_write_locs)
     end
     | Ast.Expression.Array { Ast.Expression.Array.elements; _ } -> begin
