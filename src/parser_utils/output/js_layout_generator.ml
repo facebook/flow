@@ -3761,12 +3761,29 @@ and type_typeof ~opts:_ loc { Ast.Type.Typeof.argument; comments } =
     comments
     (fuse [Atom "typeof"; space; generic_identifier argument])
 
-and type_tuple ~opts loc { Ast.Type.Tuple.types; comments } =
+and type_tuple ~opts loc { Ast.Type.Tuple.elements; comments } =
   layout_node_with_comments_opt
     loc
     comments
     (group
-       [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Base.List.map ~f:(type_ ~opts) types)]
+       [
+         new_list
+           ~wrap:(Atom "[", Atom "]")
+           ~sep:(Atom ",")
+           (Base.List.map ~f:(fun (loc, element) -> type_tuple_element ~opts loc element) elements);
+       ]
+    )
+
+and type_tuple_element ~opts loc { Ast.Type.Tuple.Element.name; annot } =
+  source_location_with_comments
+    ( loc,
+      fuse
+        [
+          (match name with
+          | Some name -> fuse [identifier name; Atom ":"; pretty_space]
+          | None -> Empty);
+          type_ ~opts annot;
+        ]
     )
 
 and type_array ~opts loc { Ast.Type.Array.argument; comments } =

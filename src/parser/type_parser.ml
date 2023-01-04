@@ -433,28 +433,43 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | _ -> None
 
   and tuple =
-    let rec types env acc =
+    let rec elements env acc =
       match Peek.token env with
       | T_EOF
       | T_RBRACKET ->
         List.rev acc
       | _ ->
-        let acc = _type env :: acc in
+        let element =
+          with_loc
+            (fun env ->
+              let name =
+                if Peek.ith_token ~i:1 env = T_COLON then (
+                  let name = identifier_name env in
+                  Expect.token env T_COLON;
+                  Some name
+                ) else
+                  None
+              in
+              let annot = _type env in
+              { Type.Tuple.Element.name; annot })
+            env
+        in
+        let acc = element :: acc in
         (* Trailing comma support (like [number, string,]) *)
         if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-        types env acc
+        elements env acc
     in
     fun env ->
       with_loc
         (fun env ->
           let leading = Peek.comments env in
           Expect.token env T_LBRACKET;
-          let tl = types (with_no_anon_function_type false env) [] in
+          let els = elements (with_no_anon_function_type false env) [] in
           Expect.token env T_RBRACKET;
           let trailing = Eat.trailing_comments env in
           Type.Tuple
             {
-              Type.Tuple.types = tl;
+              Type.Tuple.elements = els;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
         env

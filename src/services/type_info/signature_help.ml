@@ -65,20 +65,25 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
   let param_tys =
     match rest_param with
     | None -> param_tys
-    | Some (name, t) ->
+    | Some (rest_param_name, t) ->
       let rest =
         (* show the rest param's docs for all of the expanded params *)
-        let param_documentation = documentation_of_param name in
+        let param_documentation = documentation_of_param rest_param_name in
         match t with
         | Ty.Tup ts ->
           Base.List.mapi
-            ~f:(fun i t ->
-              let param_name = Printf.sprintf "%s[%d]" (Base.Option.value name ~default:"arg") i in
+            ~f:(fun i (Ty.TupleElement { name; t }) ->
+              let param_name =
+                match name with
+                | Some name -> name
+                | None ->
+                  Printf.sprintf "%s[%d]" (Base.Option.value rest_param_name ~default:"arg") i
+              in
               let param_ty = string_of_ty ~exact_by_default t in
               { ServerProt.Response.param_name; param_ty; param_documentation })
             ts
         | _ ->
-          let param_name = "..." ^ parameter_name false name in
+          let param_name = "..." ^ parameter_name false rest_param_name in
           let param_ty = string_of_ty ~exact_by_default t in
           [{ ServerProt.Response.param_name; param_ty; param_documentation }]
       in

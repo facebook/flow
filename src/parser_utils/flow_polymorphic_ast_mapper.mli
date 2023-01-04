@@ -617,6 +617,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method tuple_type : ('M, 'T) Ast.Type.Tuple.t -> ('N, 'U) Ast.Type.Tuple.t
 
+    method tuple_element : ('M, 'T) Ast.Type.Tuple.Element.t -> ('N, 'U) Ast.Type.Tuple.Element.t
+
     method type_ : ('M, 'T) Flow_ast.Type.t -> ('N, 'U) Ast.Type.t
 
     method type_alias : ('M, 'T) Ast.Statement.TypeAlias.t -> ('N, 'U) Ast.Statement.TypeAlias.t

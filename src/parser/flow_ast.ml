@@ -357,8 +357,18 @@ and Type : sig
   end
 
   module Tuple : sig
+    module Element : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        name: ('M, 'T) Identifier.t option;
+        annot: ('M, 'T) Type.t;
+      }
+      [@@deriving show]
+    end
+
     type ('M, 'T) t = {
-      types: ('M, 'T) Type.t list;
+      elements: ('M, 'T) Element.t list;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

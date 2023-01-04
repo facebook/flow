@@ -345,7 +345,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     in
     let coerce_array t =
       match drop_generic t with
-      | DefT (_, _, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) -> Ok ts
+      | DefT (_, _, ArrT (ArrayAT (_, Some ts))) -> Ok ts
+      | DefT (_, _, ArrT (TupleAT (_, elements))) -> Ok (tuple_ts_of_elements elements)
       | DefT (reason, _, ArrT _)
       | AnyT (reason, _) ->
         Error reason

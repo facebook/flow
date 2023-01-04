@@ -1157,10 +1157,16 @@ module rec TypeTerm : sig
      * that they don't need to recompute their general type when you do
      * myTuple[expr]
      *)
-    | TupleAT of t * t list
+    | TupleAT of t * tuple_element list
     (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
      * elemt is a supertype of every element type *)
     | ROArrayAT of t
+
+  and tuple_element =
+    | TupleElement of {
+        name: string option;
+        t: t;
+      }
 
   and objtype = {
     flags: flags;

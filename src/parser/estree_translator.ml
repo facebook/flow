@@ -1661,8 +1661,14 @@ with type t = Impl.t = struct
     and typeof_qualifier (loc, { Type.Typeof.Target.id; qualification }) =
       let qualification = typeof_expr qualification in
       node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
-    and tuple_type (loc, { Type.Tuple.types; comments }) =
-      node ?comments "TupleTypeAnnotation" loc [("types", array_of_list _type types)]
+    and tuple_type (loc, { Type.Tuple.elements; comments }) =
+      node ?comments "TupleTypeAnnotation" loc [("types", array_of_list tuple_element elements)]
+    and tuple_element ?comments (loc, { Type.Tuple.Element.name; annot }) =
+      node
+        ?comments
+        "TupleTypeElement"
+        loc
+        [("label", option identifier name); ("elementType", _type annot)]
     and string_literal_type (loc, { Ast.StringLiteral.value; raw; comments }) =
       node
         ?comments

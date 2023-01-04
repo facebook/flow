@@ -114,7 +114,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       raise (UnexpectedType (Debug_js.dump_t cx t))
     | DefT (_, _, ArrT (ArrayAT (t, None))) -> check_polarity cx ?trace tparams Polarity.Neutral t
     | DefT (_, _, ArrT (TupleAT (_, ts))) ->
-      List.iter (check_polarity cx ?trace tparams Polarity.Neutral) ts
+      List.iter
+        (fun (TupleElement { t; name = _ }) -> check_polarity cx ?trace tparams Polarity.Neutral t)
+        ts
     | DefT (_, _, ArrT (ROArrayAT t)) -> check_polarity cx ?trace tparams polarity t
     | DefT (_, _, ObjT o) ->
       let { flags; props_tmap; proto_t; call_t; reachable_targs = _ } = o in

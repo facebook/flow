@@ -308,10 +308,15 @@ class ['a] t =
     method private arr_type cx pole acc =
       function
       | ArrayAT (t, None) -> self#type_ cx P.Neutral acc t
-      | ArrayAT (t, Some ts)
-      | TupleAT (t, ts) ->
+      | ArrayAT (t, Some ts) ->
         let acc = self#type_ cx P.Neutral acc t in
         let acc = self#list (self#type_ cx P.Neutral) acc ts in
+        acc
+      | TupleAT (t, ts) ->
+        let acc = self#type_ cx P.Neutral acc t in
+        let acc =
+          self#list (fun acc (TupleElement { t; name = _ }) -> self#type_ cx P.Neutral acc t) acc ts
+        in
         acc
       | ROArrayAT t -> self#type_ cx pole acc t
 

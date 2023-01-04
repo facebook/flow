@@ -1890,7 +1890,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   let (value, ts, is_index_restricted, is_tuple) =
     match arrtype with
     | ArrayAT (value, ts) -> (value, ts, false, false)
-    | TupleAT (value, ts) -> (value, Some ts, true, true)
+    | TupleAT (value, elements) -> (value, Some (tuple_ts_of_elements elements), true, true)
     | ROArrayAT value -> (value, None, true, false)
   in
   let (can_write_tuple, value) =

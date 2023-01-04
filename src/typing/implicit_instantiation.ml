@@ -453,17 +453,22 @@ struct
     )
 
   and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param =
-    let tuple_members = params |> List.map (fun param -> snd param) in
+    let (tuple_elements_rev, tuple_ts) =
+      Base.List.fold params ~init:([], []) ~f:(fun (els, ts) (name, t) ->
+          let el = TupleElement { name; t } in
+          (el :: els, t :: ts)
+      )
+    in
     let arr_type =
       match rest_param with
       | None ->
         let general =
-          match tuple_members with
+          match tuple_ts with
           | [] -> EmptyT.why reason |> with_trust bogus_trust
           | [t] -> t
           | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
         in
-        TupleAT (general, tuple_members)
+        TupleAT (general, Base.List.rev tuple_elements_rev)
       | Some (_, _, rest_param_t) ->
         let rest_elem_t =
           Tvar.mk_no_wrap_where cx reason (fun tout ->
@@ -475,7 +480,7 @@ struct
           )
         in
         let general =
-          match tuple_members with
+          match tuple_ts with
           | [] -> rest_elem_t
           | t :: ts -> UnionT (reason, UnionRep.make rest_elem_t t ts)
         in

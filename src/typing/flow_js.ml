@@ -3853,7 +3853,12 @@ struct
             | ROArrayAT elemt ->
               (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
               rec_flow cx trace (elemt, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
-            | TupleAT (_, ts)
+            | TupleAT (_, elements) ->
+              (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
+              List.iter
+                (fun (TupleElement { t = from; name = _ }) ->
+                  rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
+                elements
             | ArrayAT (_, Some ts) ->
               (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
               List.iter
@@ -4233,7 +4238,13 @@ struct
           let arrtype =
             match arrtype with
             | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Base.Option.map ~f:(Base.List.map ~f) ts)
-            | TupleAT (elemt, ts) -> TupleAT (f elemt, Base.List.map ~f ts)
+            | TupleAT (elem_t, elements) ->
+              TupleAT
+                ( f elem_t,
+                  Base.List.map
+                    ~f:(fun (TupleElement { name; t }) -> TupleElement { name; t = f t })
+                    elements
+                )
             | ROArrayAT elemt -> ROArrayAT (f elemt)
           in
           let t =
@@ -5837,8 +5848,19 @@ struct
     let only_any _ = any in
     match t with
     | DefT (r, trust, ArrT (ArrayAT _)) -> DefT (r, trust, ArrT (ArrayAT (any, None)))
-    | DefT (r, trust, ArrT (TupleAT (_, ts))) ->
-      DefT (r, trust, ArrT (TupleAT (any, Base.List.map ~f:only_any ts)))
+    | DefT (r, trust, ArrT (TupleAT (_, elements))) ->
+      DefT
+        ( r,
+          trust,
+          ArrT
+            (TupleAT
+               ( any,
+                 Base.List.map
+                   ~f:(fun (TupleElement { name; t }) -> TupleElement { name; t = only_any t })
+                   elements
+               )
+            )
+        )
     | OpaqueT (r, ({ underlying_t; super_t; opaque_type_args; _ } as opaquetype)) ->
       let opaquetype =
         {
@@ -8310,7 +8332,9 @@ struct
           iter2opt
             (fun t1 t2 ->
               match (t1, t2) with
-              | (Some t1, Some t2) -> rec_unify cx trace ~use_op t1 t2
+              | (Some (TupleElement { t = t1; name = _ }), Some (TupleElement { t = t2; name = _ }))
+                ->
+                rec_unify cx trace ~use_op t1 t2
               | _ -> ())
             (ts1, ts2)
         | ( DefT (lreason, _, ObjT { props_tmap = lflds; flags = lflags; _ }),
@@ -8785,12 +8809,16 @@ struct
                     * we folded over the empty tuple_types list, then this would
                     * cause an empty result. *)
                    param :: acc
-                 | ArrayAT (_, Some tuple_types)
-                 | TupleAT (_, tuple_types) ->
+                 | ArrayAT (_, Some tuple_types) ->
                    Base.List.fold_left
                      ~f:(fun acc elem -> ResolvedArg (elem, generic) :: acc)
                      ~init:acc
                      tuple_types
+                 | TupleAT (_, elements) ->
+                   Base.List.fold_left
+                     ~f:(fun acc (TupleElement { t; _ }) -> ResolvedArg (t, generic) :: acc)
+                     ~init:acc
+                     elements
                  | ROArrayAT _ -> param :: acc
                end
              | ResolvedAnySpreadArg _
@@ -8906,7 +8934,16 @@ struct
             | (_, `Array) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
             | (_, `Literal) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, tuple_types)))
             | (Some tuple_types, `Tuple) ->
-              DefT (reason_op, bogus_trust (), ArrT (TupleAT (elemt, tuple_types)))
+              DefT
+                ( reason_op,
+                  bogus_trust (),
+                  ArrT
+                    (TupleAT
+                       ( elemt,
+                         Base.List.map ~f:(fun t -> TupleElement { name = None; t }) tuple_types
+                       )
+                    )
+                )
             | (None, `Tuple) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
           in
           Base.Option.value_map
@@ -8933,8 +8970,15 @@ struct
           | None ->
             (match resolved with
             | ResolvedArg (t, generic) :: rest -> flatten cx r ((t, generic) :: args) spread rest
-            | ResolvedSpreadArg (_, (ArrayAT (_, Some ts) | TupleAT (_, ts)), generic) :: rest ->
+            | ResolvedSpreadArg (_, ArrayAT (_, Some ts), generic) :: rest ->
               let args = List.rev_append (List.map (fun t -> (t, generic)) ts) args in
+              flatten cx r args spread rest
+            | ResolvedSpreadArg (_, TupleAT (_, elements), generic) :: rest ->
+              let args =
+                List.rev_append
+                  (List.map (fun (TupleElement { t; name = _ }) -> (t, generic)) elements)
+                  args
+              in
               flatten cx r args spread rest
             | ResolvedSpreadArg (r, _, _) :: _
             | ResolvedAnySpreadArg r :: _ ->

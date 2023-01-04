@@ -220,7 +220,24 @@ let rec merge_type cx =
       ( locationless_reason (RCustom "tuple"),
         bogus_trust (),
         ArrT
-          (TupleAT (merge_type cx (t1, t2), Base.List.map2_exn ~f:(merge_type cx |> curry) ts1 ts2))
+          (TupleAT
+             ( merge_type cx (t1, t2),
+               Base.List.map2_exn
+                 ~f:
+                   (fun (TupleElement { name = name1; t = t1 })
+                        (TupleElement { name = name2; t = t2 }) ->
+                   let name =
+                     if name1 = name2 then
+                       name1
+                     else
+                       None
+                   in
+                   let t = merge_type cx (t1, t2) in
+                   TupleElement { name; t })
+                 ts1
+                 ts2
+             )
+          )
       )
   | (DefT (_, _, ArrT (ROArrayAT elemt1)), DefT (_, _, ArrT (ROArrayAT elemt2))) ->
     DefT
