@@ -630,21 +630,22 @@ let token_is_reserved t =
 let is_reserved_type str_val =
   match str_val with
   | "any"
+  | "bigint"
   | "bool"
   | "boolean"
   | "empty"
+  | "extends"
   | "false"
+  | "interface"
   | "mixed"
   | "null"
   | "number"
-  | "bigint"
   | "static"
   | "string"
+  | "symbol"
   | "true"
   | "typeof"
   | "void"
-  | "interface"
-  | "extends"
   | "_" ->
     true
   | _ -> false
