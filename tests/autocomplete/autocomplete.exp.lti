@@ -13392,7 +13392,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"ab","type":"number"},
-    {"name":"ac","type":"React$AbstractComponent<V$1, any>"}
+    {"name":"ac","type":"React$AbstractComponent<Props, any>"}
   ]
 }
 
