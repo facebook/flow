@@ -367,11 +367,20 @@ and Type : sig
       [@@deriving show]
     end
 
+    module SpreadElement : sig
+      type ('M, 'T) t = {
+        name: ('M, 'T) Identifier.t option;
+        annot: ('M, 'T) Type.t;
+      }
+      [@@deriving show]
+    end
+
     type ('M, 'T) element = 'M * ('M, 'T) element' [@@deriving show]
 
     and ('M, 'T) element' =
       | UnlabeledElement of ('M, 'T) Type.t
       | LabeledElement of ('M, 'T) LabeledElement.t
+      | SpreadElement of ('M, 'T) SpreadElement.t
     [@@deriving show]
 
     and ('M, 'T) t = {

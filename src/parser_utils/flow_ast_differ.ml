@@ -2642,6 +2642,7 @@ let program
     | ((_, UnlabeledElement annot1), (_, UnlabeledElement annot2)) ->
       Some (diff_if_changed type_ annot1 annot2)
     | ((_, LabeledElement e1), (_, LabeledElement e2)) -> tuple_labeled_element e1 e2
+    | ((_, SpreadElement e1), (_, SpreadElement e2)) -> tuple_spread_element e1 e2
     | _ -> None
   and tuple_labeled_element
       (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.LabeledElement.t)
@@ -2659,6 +2660,15 @@ let program
         None
     in
     join_diff_list [name_diff; annot_diff; variance_diff; optional_diff]
+  and tuple_spread_element
+      (e1 : (Loc.t, Loc.t) Ast.Type.Tuple.SpreadElement.t)
+      (e2 : (Loc.t, Loc.t) Ast.Type.Tuple.SpreadElement.t) : node change list option =
+    let open Ast.Type.Tuple.SpreadElement in
+    let { name = name1; annot = annot1 } = e1 in
+    let { name = name2; annot = annot2 } = e2 in
+    let name_diff = diff_if_changed_nonopt_fn identifier name1 name2 in
+    let annot_diff = Some (diff_if_changed type_ annot1 annot2) in
+    join_diff_list [name_diff; annot_diff]
   and type_args (pi1 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) (pi2 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t)
       : node change list option =
     let open Ast.Type.TypeArgs in

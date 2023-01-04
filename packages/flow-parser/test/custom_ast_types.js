@@ -28,11 +28,20 @@ function custom_ast_types(fork) {
     .field('label', def('Identifier'))
     .field('optional', Boolean);
 
+  def('TupleTypeSpreadElement')
+    .build('typeAnnotation', 'label')
+    .field('typeAnnotation', def('FlowType'))
+    .field('label', or(def('Identifier'), null));
+
   def('TupleTypeAnnotation')
     .bases('FlowType')
     .build('elementTypes')
     .field('elementTypes', [
-      or(def('FlowType'), def('TupleTypeLabeledElement')),
+      or(
+        def('FlowType'),
+        def('TupleTypeLabeledElement'),
+        def('TupleTypeSpreadElement'),
+      ),
     ])
     .field('types', undefined);
 

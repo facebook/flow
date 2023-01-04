@@ -95,6 +95,7 @@ type t =
   | InvalidRegExp
   | InvalidRegExpFlags of string
   | InvalidSciBigInt
+  | InvalidTupleOptionalSpread
   | InvalidTupleVariance
   | InvalidTypeof
   | JSXAttributeValueEmptyExpression
@@ -368,6 +369,7 @@ module PP = struct
       Printf.sprintf "Invalid flags supplied to RegExp constructor '%s'" flags
     | InvalidSciBigInt -> "A bigint literal cannot use exponential notation"
     | InvalidTypeof -> "`typeof` can only be used to get the type of variables."
+    | InvalidTupleOptionalSpread -> "Tuple spread elements cannot be optional."
     | InvalidTupleVariance ->
       "Tuple variance annotations can only be used with labeled tuple elements, e.g. `[+foo: number]`"
     | JSXAttributeValueEmptyExpression ->

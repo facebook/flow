@@ -91,6 +91,22 @@ Optional tuple elements are not supported. [unsupported-syntax]
                              ^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- spread.js:3:11
+
+Tuple spread is not supported. [unsupported-syntax]
+
+   3| type A = [...S]; // ERROR: syntax not supported
+                ^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:4:11
+
+Tuple spread is not supported. [unsupported-syntax]
+
+   4| type B = [...foo: S]; // ERROR: syntax not supported
+                ^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- too-few.js:5:5
 
 Cannot call `foo` with array literal bound to `a` because array literal [1] has an arity of 1 but tuple type [2] has an
@@ -598,4 +614,4 @@ Cannot assign `"s"` to `inter[0]` because tuple element at index `0` [1] is not 
 
 
 
-Found 41 errors
+Found 43 errors

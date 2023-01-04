@@ -1035,6 +1035,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         (this#on_loc_annot annot, UnlabeledElement (this#type_ t_annot))
       | (annot, LabeledElement e) ->
         (this#on_loc_annot annot, LabeledElement (this#tuple_labeled_element e))
+      | (annot, SpreadElement e) ->
+        (this#on_loc_annot annot, SpreadElement (this#tuple_spread_element e))
 
     method tuple_labeled_element (t : ('M, 'T) Ast.Type.Tuple.LabeledElement.t)
         : ('N, 'U) Ast.Type.Tuple.LabeledElement.t =
@@ -1044,6 +1046,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let name' = this#t_identifier name in
       let variance' = Option.map ~f:this#variance variance in
       { annot = t_annot'; name = name'; variance = variance'; optional }
+
+    method tuple_spread_element (t : ('M, 'T) Ast.Type.Tuple.SpreadElement.t)
+        : ('N, 'U) Ast.Type.Tuple.SpreadElement.t =
+      let open Ast.Type.Tuple.SpreadElement in
+      let { annot = t_annot; name } = t in
+      let t_annot' = this#type_ t_annot in
+      let name' = Option.map ~f:this#t_identifier name in
+      { annot = t_annot'; name = name' }
 
     method tuple_type (t : ('M, 'T) Ast.Type.Tuple.t) : ('N, 'U) Ast.Type.Tuple.t =
       let open Ast.Type.Tuple in

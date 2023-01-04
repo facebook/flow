@@ -1440,6 +1440,7 @@ class ['loc] mapper =
       | (loc, UnlabeledElement t) -> id this#type_ t el (fun t -> (loc, UnlabeledElement t))
       | (loc, LabeledElement e) ->
         id this#tuple_labeled_element e el (fun e -> (loc, LabeledElement e))
+      | (loc, SpreadElement e) -> id this#tuple_spread_element e el (fun e -> (loc, SpreadElement e))
 
     method tuple_labeled_element (t : ('loc, 'loc) Ast.Type.Tuple.LabeledElement.t) =
       let open Ast.Type.Tuple.LabeledElement in
@@ -1451,6 +1452,16 @@ class ['loc] mapper =
         t
       else
         { annot = annot'; name = name'; variance = variance'; optional }
+
+    method tuple_spread_element (t : ('loc, 'loc) Ast.Type.Tuple.SpreadElement.t) =
+      let open Ast.Type.Tuple.SpreadElement in
+      let { annot; name } = t in
+      let annot' = this#type_ annot in
+      let name' = map_opt this#identifier name in
+      if annot' == annot && name' == name then
+        t
+      else
+        { annot = annot'; name = name' }
 
     method array_type (t : ('loc, 'loc) Ast.Type.Array.t) =
       let open Ast.Type.Array in
