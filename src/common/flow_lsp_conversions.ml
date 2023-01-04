@@ -104,7 +104,6 @@ let flow_completion_item_to_lsp
     let column_width = 80 in
     Some (trunc column_width item.detail)
   in
-  let insertTextFormat = Some Lsp.Completion.PlainText in
   let textEdit =
     Base.Option.map
       ~f:(fun { ServerProt.Response.newText; insert; replace } ->
@@ -182,7 +181,7 @@ let flow_completion_item_to_lsp
     sortText = item.sort_text;
     filterText = None;
     insertText = None (* deprecated and should not be used *);
-    insertTextFormat;
+    insertTextFormat = Some item.insert_text_format;
     textEdit;
     additionalTextEdits;
     command;

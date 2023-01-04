@@ -219,6 +219,7 @@ module Response = struct
       log_info: string;
       source: string option;  (** autoimport source *)
       type_: string option;
+      insert_text_format: Lsp.Completion.insertTextFormat;
     }
 
     type t = {
