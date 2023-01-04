@@ -435,56 +435,56 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | _ -> None
 
   and tuple =
+    let element env =
+      with_loc
+        (fun env ->
+          if Eat.maybe env T_ELLIPSIS then
+            let name =
+              match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
+              | (true, T_PLING)
+              | (true, T_COLON) ->
+                let name = identifier_name env in
+                if Peek.token env = T_PLING then (
+                  error env Parse_error.InvalidTupleOptionalSpread;
+                  Eat.token env
+                );
+                Expect.token env T_COLON;
+                Some name
+              | _ -> None
+            in
+            let annot = _type env in
+            Type.Tuple.SpreadElement { Type.Tuple.SpreadElement.name; annot }
+          else
+            let variance =
+              match Peek.token env with
+              | T_PLUS -> maybe_variance env
+              | T_MINUS when Peek.ith_is_identifier ~i:1 env ->
+                (* `-1` is a valid type but not a valid tuple label.
+                   But `-foo` is only valid as a tuple label. *)
+                maybe_variance env
+              | _ -> None
+            in
+            match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
+            | (true, T_PLING)
+            | (true, T_COLON) ->
+              let name = identifier_name env in
+              let optional = Eat.maybe env T_PLING in
+              Expect.token env T_COLON;
+              let annot = _type env in
+              Type.Tuple.LabeledElement
+                { Type.Tuple.LabeledElement.name; annot; variance; optional }
+            | _ ->
+              if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
+              Type.Tuple.UnlabeledElement (_type env))
+        env
+    in
     let rec elements env acc =
       match Peek.token env with
       | T_EOF
       | T_RBRACKET ->
         List.rev acc
       | _ ->
-        let element =
-          with_loc
-            (fun env ->
-              if Eat.maybe env T_ELLIPSIS then
-                let name =
-                  match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
-                  | (true, T_PLING)
-                  | (true, T_COLON) ->
-                    let name = identifier_name env in
-                    if Peek.token env = T_PLING then (
-                      error env Parse_error.InvalidTupleOptionalSpread;
-                      Eat.token env
-                    );
-                    Expect.token env T_COLON;
-                    Some name
-                  | _ -> None
-                in
-                let annot = _type env in
-                Type.Tuple.SpreadElement { Type.Tuple.SpreadElement.name; annot }
-              else
-                let variance =
-                  match Peek.token env with
-                  | T_PLUS -> maybe_variance env
-                  | T_MINUS when Peek.ith_is_identifier ~i:1 env ->
-                    (* `-1` is a valid type but not a valid tuple label.
-                       But `-foo` is only valid as a tuple label. *)
-                    maybe_variance env
-                  | _ -> None
-                in
-                match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
-                | (true, T_PLING)
-                | (true, T_COLON) ->
-                  let name = identifier_name env in
-                  let optional = Eat.maybe env T_PLING in
-                  Expect.token env T_COLON;
-                  let annot = _type env in
-                  Type.Tuple.LabeledElement
-                    { Type.Tuple.LabeledElement.name; annot; variance; optional }
-                | _ ->
-                  if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
-                  Type.Tuple.UnlabeledElement (_type env))
-            env
-        in
-        let acc = element :: acc in
+        let acc = element env :: acc in
         (* Trailing comma support (like [number, string,]) *)
         if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
         elements env acc
