@@ -117,8 +117,8 @@ let fold_json_of_parse_errors parse_errors acc =
   match parse_errors with
   | err :: _ ->
     ("parse_error", json_of_parse_error err)
-    ::
-    ("parse_error_count", Hh_json.JSON_Number (parse_errors |> List.length |> string_of_int)) :: acc
+    :: ("parse_error_count", Hh_json.JSON_Number (parse_errors |> List.length |> string_of_int))
+    :: acc
   | [] -> acc
 
 let file_input_of_text_document_identifier ~client t =
@@ -294,9 +294,9 @@ let autocomplete
         let open Hh_json in
         JSON_Object
           (("errors", JSON_Array [JSON_String err_str])
-           ::
-           ("result", JSON_String "FAILURE_CHECK_CONTENTS")
-           :: ("count", JSON_Number "0") :: initial_json_props
+          :: ("result", JSON_String "FAILURE_CHECK_CONTENTS")
+          :: ("count", JSON_Number "0")
+          :: initial_json_props
           )
       in
       (Error err_str, Some json_data_to_log)
@@ -322,14 +322,12 @@ let autocomplete
           in
           let json_props_to_log =
             ("ac_type", Hh_json.JSON_String ac_type_string)
-            ::
-            ("docblock", Docblock.json_of_docblock info)
-            ::
-            ( "token",
-              match token_opt with
-              | None -> Hh_json.JSON_Null
-              | Some token -> Hh_json.JSON_String token
-            )
+            :: ("docblock", Docblock.json_of_docblock info)
+            :: ( "token",
+                 match token_opt with
+                 | None -> Hh_json.JSON_Null
+                 | Some token -> Hh_json.JSON_String token
+               )
             :: initial_json_props
           in
           let (response, json_props_to_log) =
@@ -352,12 +350,9 @@ let autocomplete
               in
               ( Ok (token_opt, result, ac_loc),
                 ("result", JSON_String result_string)
-                ::
-                ("count", JSON_Number (items |> List.length |> string_of_int))
-                ::
-                ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
-                ::
-                ("documentation", JSON_Bool at_least_one_result_has_documentation)
+                :: ("count", JSON_Number (items |> List.length |> string_of_int))
+                :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
+                :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                 :: json_props_to_log
               )
             | AcEmpty reason ->
@@ -367,14 +362,15 @@ let autocomplete
                     ac_loc
                   ),
                 ("result", JSON_String "SUCCESS")
-                ::
-                ("count", JSON_Number "0")
-                :: ("empty_reason", JSON_String reason) :: json_props_to_log
+                :: ("count", JSON_Number "0")
+                :: ("empty_reason", JSON_String reason)
+                :: json_props_to_log
               )
             | AcFatalError error ->
               ( Error error,
                 ("result", JSON_String "FAILURE")
-                :: ("errors", JSON_Array [JSON_String error]) :: json_props_to_log
+                :: ("errors", JSON_Array [JSON_String error])
+                :: json_props_to_log
               )
           in
           let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
@@ -421,7 +417,8 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
         ( Ok loc,
           Some
             (("result", Hh_json.JSON_String "PARTIAL_FAILURE")
-             :: ("error", Hh_json.JSON_String msg) :: json_props
+            :: ("error", Hh_json.JSON_String msg)
+            :: json_props
             )
         )
       | Bad_loc -> (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
@@ -429,7 +426,8 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
         ( Error msg,
           Some
             (("result", Hh_json.JSON_String "FAILURE")
-             :: ("error", Hh_json.JSON_String msg) :: json_props
+            :: ("error", Hh_json.JSON_String msg)
+            :: json_props
             )
         )
   )
