@@ -957,12 +957,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
         (Subst_name.Map.empty, ts, [])
         xs
     in
-    let ts_with_names = List.rev all_ts_rev in
-    Context.add_possibly_speculating_implicit_instantiation_result
-      cx
-      (Reason.aloc_of_reason reason_op)
-      ts_with_names;
-    reposition cx ~trace (aloc_of_reason reason_tapp) (subst cx ~use_op map t)
+    (reposition cx ~trace (aloc_of_reason reason_tapp) (subst cx ~use_op map t), all_ts_rev)
 
   let mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id tparams_loc xs t ts =
     match cache with
@@ -976,6 +971,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
         ~cache
         (tparams_loc, xs, t)
         ts
+      |> fst
     | None ->
       let key = (id, ts) in
       let cache = Context.subst_cache cx in
@@ -992,6 +988,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
             ~errs_ref
             (tparams_loc, xs, t)
             ts
+          |> fst
         in
         cache := Type.SubstCacheMap.add key (!errs_ref, t) !cache;
         t

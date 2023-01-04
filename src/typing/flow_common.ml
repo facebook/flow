@@ -201,7 +201,7 @@ module type SUBTYPING = sig
     ?unify_bounds:bool ->
     ALoc.t * Type.typeparam Nel.t * Type.t ->
     Type.t list ->
-    Type.t
+    Type.t * (Type.t * Subst_name.t) list
 
   val instantiate_poly :
     Context.t ->
@@ -212,7 +212,7 @@ module type SUBTYPING = sig
     ?cache:Reason.reason Base.List.t ->
     ?unify_bounds:bool ->
     ALoc.t * Type.typeparam Nel.t * Type.t ->
-    Type.t
+    Type.t * (Type.t * Subst_name.t) list
 
   val specialize_class :
     Context.t ->

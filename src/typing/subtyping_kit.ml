@@ -1114,7 +1114,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
      *)
     | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
       let reason_op = reason_of_t u in
-      let t_ = instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
+      let (t_, _) =
+        instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t)
+      in
       rec_flow_t cx trace ~use_op (t_, u)
     (* when a this-abstracted class flows to upper bounds, fix the class *)
     | (ThisClassT (r, i, this, this_name), _) ->
