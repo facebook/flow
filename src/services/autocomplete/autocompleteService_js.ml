@@ -267,6 +267,7 @@ let members_of_type
     ~reader
     ~exclude_proto_members
     ?(force_instance = false)
+    ?(include_interface_members = false)
     ?(exclude_keys = SSet.empty)
     ~tparams_rev
     cx
@@ -277,6 +278,7 @@ let members_of_type
     Ty_members.extract
       ~include_proto_members:(not exclude_proto_members)
       ~force_instance
+      ~include_interface_members
       ~cx
       ~typed_ast
       ~file_sig

@@ -64,6 +64,7 @@ val expand_members :
   include_proto_members:bool ->
   idx_hook:(unit -> unit) ->
   force_instance:bool ->
+  include_interface_members:bool ->
   options:options ->
   genv:genv ->
   Type.TypeScheme.t ->
