@@ -124,23 +124,23 @@ function-poly-0.js:3:30 = {
   "loc":{
     "source":"function-poly-0.js",
     "type":"SourceFile",
-    "start":{"line":3,"column":30,"offset":39},
-    "end":{"line":3,"column":30,"offset":40}
+    "start":{"line":3,"column":33,"offset":42},
+    "end":{"line":3,"column":33,"offset":43}
   },
   "path":"function-poly-0.js",
   "line":3,
   "endline":3,
-  "start":30,
-  "end":30
+  "start":33,
+  "end":33
 }
 function-poly-0.js:4:7 = {
-  "type":"mixed",
+  "type":"number",
   "reasons":[],
   "loc":{
     "source":"function-poly-0.js",
     "type":"SourceFile",
-    "start":{"line":4,"column":7,"offset":50},
-    "end":{"line":4,"column":7,"offset":51}
+    "start":{"line":4,"column":7,"offset":53},
+    "end":{"line":4,"column":7,"offset":54}
   },
   "path":"function-poly-0.js",
   "line":4,
@@ -319,8 +319,8 @@ function-poly-4.js:7:7 = {
   "loc":{
     "source":"function-poly-4.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":7,"offset":62},
-    "end":{"line":7,"column":9,"offset":65}
+    "start":{"line":7,"column":7,"offset":72},
+    "end":{"line":7,"column":9,"offset":75}
   },
   "path":"function-poly-4.js",
   "line":7,
@@ -334,8 +334,8 @@ function-poly-4.js:9:7 = {
   "loc":{
     "source":"function-poly-4.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":7,"offset":100},
-    "end":{"line":9,"column":9,"offset":103}
+    "start":{"line":9,"column":7,"offset":120},
+    "end":{"line":9,"column":9,"offset":123}
   },
   "path":"function-poly-4.js",
   "line":9,

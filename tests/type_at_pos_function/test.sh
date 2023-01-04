@@ -28,7 +28,7 @@ assert_ok "$FLOW" type-at-pos default.js 5 17 --strip-root --pretty
 printf "function-poly-0.js:3:10 = "
 assert_ok "$FLOW" type-at-pos function-poly-0.js 3 10 --strip-root --pretty
 printf "function-poly-0.js:3:30 = "
-assert_ok "$FLOW" type-at-pos function-poly-0.js 3 30 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-0.js 3 33 --strip-root --pretty
 printf "function-poly-0.js:4:7 = "
 assert_ok "$FLOW" type-at-pos function-poly-0.js 4 7 --strip-root --pretty
 

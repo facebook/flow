@@ -182,6 +182,14 @@ References:
                                             ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- test19.js:5:16
+
+Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
+
+   5| function m<X>() {
+                     
+
+
 Error --------------------------------------------------------------------------------------------------- test20.js:14:6
 
 Cannot call `[...].reduce` because string [1] is incompatible with number [2] in the first parameter.
@@ -323,7 +331,7 @@ References:
 
 
 
-Found 17 errors
+Found 18 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -217,6 +217,7 @@ and 'loc t' =
   | EMissingLocalAnnotation of {
       reason: 'loc virtual_reason;
       hint_available: bool;
+      from_generic_function: bool;
     }
   | EBindingError of binding_error * 'loc * name * ALoc.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
@@ -864,8 +865,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, map_unsupported_syntax u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
   | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Base.List.map ~f:map_reason rs)
-  | EMissingLocalAnnotation { reason; hint_available } ->
-    EMissingLocalAnnotation { reason = map_reason reason; hint_available }
+  | EMissingLocalAnnotation { reason; hint_available; from_generic_function } ->
+    EMissingLocalAnnotation { reason = map_reason reason; hint_available; from_generic_function }
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
@@ -2531,7 +2532,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
      * visited to get to the missing annotation error and report that as the
      * trace *)
     Normal { features }
-  | EMissingLocalAnnotation { reason; hint_available } ->
+  | EMissingLocalAnnotation { reason; hint_available; from_generic_function } ->
     if hint_available then
       Normal
         {
@@ -2540,6 +2541,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               text "An annotation on ";
               desc reason;
               text " is required because Flow cannot infer its type from local context.";
+            ];
+        }
+    else if from_generic_function then
+      Normal
+        {
+          features =
+            [
+              text "Missing an annotation on ";
+              desc reason;
+              text " because generic functions must be fully annotated.";
             ];
         }
     else
@@ -4311,7 +4322,7 @@ let error_code_of_message err : error_code option =
   | EInvalidExtends _ -> Some InvalidExtends
   | ELintSetting _ -> Some LintSetting
   | EMissingAnnotation _ -> Some MissingAnnot
-  | EMissingLocalAnnotation { reason; hint_available = _ } ->
+  | EMissingLocalAnnotation { reason; hint_available = _; from_generic_function = _ } ->
     begin
       match desc_of_reason reason with
       | RImplicitThis _ -> Some MissingThisAnnot

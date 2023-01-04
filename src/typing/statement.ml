@@ -6260,7 +6260,11 @@ module Make
               Flow.add_output
                 cx
                 (Error_message.EMissingLocalAnnotation
-                   { reason = repos_reason annot_loc reason; hint_available = false }
+                   {
+                     reason = repos_reason annot_loc reason;
+                     hint_available = false;
+                     from_generic_function = false;
+                   }
                 );
               if Context.lti cx then
                 Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
@@ -6278,7 +6282,11 @@ module Make
       in
       (match (init, annot_or_inferred) with
       | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _) ->
-        Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
+        Flow.add_output
+          cx
+          (Error_message.EMissingLocalAnnotation
+             { reason; hint_available = false; from_generic_function = false }
+          );
         if Context.lti cx then
           Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
       | _ -> ());
@@ -6960,7 +6968,11 @@ module Make
                func.Ast.Function.body
                func.Ast.Function.params ->
         let reason = mk_reason (RImplicitThis (RFunction RNormal)) param_loc in
-        Flow.add_output cx (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
+        Flow.add_output
+          cx
+          (Error_message.EMissingLocalAnnotation
+             { reason; hint_available = false; from_generic_function = false }
+          );
         if Context.lti cx then
           Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
       | _ -> ()
@@ -7079,13 +7091,19 @@ module Make
               ~async:(kind = Async)
               return
           in
+          let from_generic_function = Base.Option.is_some tparams in
+          let require_return_annot =
+            require_return_annot || (Context.lti cx && from_generic_function)
+          in
           begin
             match return with
             | (Inferred t, _) when has_nonvoid_return && require_return_annot ->
               let reason = repos_reason ret_loc ret_reason in
               Flow_js.add_output
                 cx
-                (Error_message.EMissingLocalAnnotation { reason; hint_available = false });
+                (Error_message.EMissingLocalAnnotation
+                   { reason; hint_available = false; from_generic_function }
+                );
               if Context.lti cx then
                 Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
             | _ -> ()
