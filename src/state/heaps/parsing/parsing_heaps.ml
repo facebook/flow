@@ -319,14 +319,14 @@ let prepare_add_haste_module name =
   in
   (size, write)
 
-let prepare_add_haste_module_maybe name =
+let prepare_find_or_add_haste_module name =
   match HasteModuleHeap.get name with
   | Some addr -> (0, Fun.const addr)
   | None ->
     let (size, write) = prepare_add_haste_module name in
     (size, write)
 
-let prepare_write_new_haste_info_maybe old_haste_info = function
+let prepare_write_new_haste_info_if_changed old_haste_info = function
   | None -> (0, Fun.const None)
   | Some name ->
     let open Heap in
@@ -342,10 +342,10 @@ let prepare_write_new_haste_info_maybe old_haste_info = function
     (match old_haste_info with
     | Some old_info when haste_module_unchanged old_info -> (0, Fun.const old_haste_info)
     | _ ->
-      let (haste_module_size, add_haste_module_maybe) = prepare_add_haste_module_maybe name in
+      let (haste_module_size, find_or_add_haste_module) = prepare_find_or_add_haste_module name in
       let size = haste_module_size + header_size + haste_info_size in
       let write chunk =
-        let haste_module = add_haste_module_maybe chunk in
+        let haste_module = find_or_add_haste_module chunk in
         Some (write_haste_info chunk haste_module)
       in
       (size, write))
@@ -361,7 +361,7 @@ let prepare_write_ast (ast : (Loc.t, Loc.t) Flow_ast.Program.t) =
   let serialized = Marshal.to_string (compactify_loc ast) [] in
   Heap.prepare_write_serialized_ast serialized
 
-let prepare_write_cas_digest_maybe = function
+let prepare_write_cas_digest_opt = function
   | None -> (0, (fun _ -> None))
   | Some cas_digest ->
     let open Heap in
@@ -390,7 +390,7 @@ let prepare_write_resolved_requires (resolved_requires : resolved_requires) =
   let serialized = Marshal.to_string resolved_requires [] in
   Heap.prepare_write_serialized_resolved_requires serialized
 
-let prepare_write_resolved_requires_maybe (resolved_requires_opt : resolved_requires option) =
+let prepare_write_resolved_requires_opt (resolved_requires_opt : resolved_requires option) =
   match resolved_requires_opt with
   | None -> (0, Fun.const None)
   | Some resolved_requires ->
@@ -574,7 +574,7 @@ let prepare_update_revdeps =
       (old_dependencies, new_dependencies)
 
 (** The writer returns whether the resolved requires changed. *)
-let prepare_update_resolved_requires old_parse resolved_requires_opt =
+let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt =
   let old_resolved_requires =
     let* parse = old_parse in
     let* parse = Heap.coerce_typed parse in
@@ -590,8 +590,8 @@ let prepare_update_resolved_requires old_parse resolved_requires_opt =
     let (revdeps_size, update_revdeps) =
       prepare_update_revdeps old_resolved_requires resolved_requires_opt
     in
-    let (resolved_requires_size, write_resolved_requires_maybe) =
-      prepare_write_resolved_requires_maybe resolved_requires_opt
+    let (resolved_requires_size, write_resolved_requires_opt) =
+      prepare_write_resolved_requires_opt resolved_requires_opt
     in
     let size = revdeps_size + resolved_requires_size in
     let write chunk file parse =
@@ -606,7 +606,7 @@ let prepare_update_resolved_requires old_parse resolved_requires_opt =
       in
       Option.iter
         (fun resolved_requires_ent ->
-          let resolved_requires_opt = write_resolved_requires_maybe chunk in
+          let resolved_requires_opt = write_resolved_requires_opt chunk in
           Heap.entity_advance resolved_requires_ent resolved_requires_opt)
         resolved_requires_ent_opt;
 
@@ -618,10 +618,10 @@ let prepare_create_file file_key module_name resolved_requires_opt =
   let open Heap in
   let (file_kind, file_name) = file_kind_and_name file_key in
   let (resolved_requires_size, update_resolved_requires) =
-    prepare_update_resolved_requires None resolved_requires_opt
+    prepare_update_resolved_requires_if_changed None resolved_requires_opt
   in
-  let (haste_info_size, write_new_haste_info_maybe) =
-    prepare_write_new_haste_info_maybe None module_name
+  let (haste_info_size, write_new_haste_info) =
+    prepare_write_new_haste_info_if_changed None module_name
   in
   let (dependents_size, write_dependents) =
     if Files.has_flow_ext file_key then
@@ -650,7 +650,7 @@ let prepare_create_file file_key module_name resolved_requires_opt =
   let write chunk parse =
     let file_name = write_string chunk file_name in
     let parse_ent = write_entity chunk (Some parse) in
-    let haste_info = write_new_haste_info_maybe chunk in
+    let haste_info = write_new_haste_info chunk in
     let haste_ent = write_entity chunk haste_info in
     let dependents = write_dependents chunk in
     let file = write_file chunk file_kind file_name parse_ent haste_ent dependents in
@@ -686,27 +686,27 @@ let prepare_update_file file_key file parse_ent module_name resolved_requires_op
   let open Heap in
   let haste_ent = get_haste_info file in
   let old_haste_info = entity_read_latest haste_ent in
-  let (haste_info_size, write_new_haste_info_maybe) =
-    prepare_write_new_haste_info_maybe old_haste_info module_name
+  let (haste_info_size, write_new_haste_info) =
+    prepare_write_new_haste_info_if_changed old_haste_info module_name
   in
-  let (resolved_requires_size, update_resolved_requires_maybe) =
+  let (resolved_requires_size, update_resolved_requires) =
     match resolved_requires_opt_opt with
     | None -> (0, (fun _ _ _ -> false))
     | Some resolved_requires_opt ->
       let parse = entity_read_latest parse_ent in
-      prepare_update_resolved_requires parse resolved_requires_opt
+      prepare_update_resolved_requires_if_changed parse resolved_requires_opt
   in
   let size = haste_info_size + resolved_requires_size in
   let write chunk parse =
     entity_advance parse_ent (Some parse);
-    let new_haste_info = write_new_haste_info_maybe chunk in
+    let new_haste_info = write_new_haste_info chunk in
     let () =
       match (old_haste_info, new_haste_info) with
       | (None, None) -> ()
       | (Some old_info, Some new_info) when haste_info_equal old_info new_info -> ()
       | _ -> entity_advance haste_ent new_haste_info
     in
-    let _did_change : bool = update_resolved_requires_maybe chunk file parse in
+    let _did_change : bool = update_resolved_requires chunk file parse in
     calc_dirty_modules file_key file haste_ent
   in
   (size, write)
@@ -717,7 +717,7 @@ let prepare_write_typed_parse_ents =
   let write chunk = (write_entity chunk None, write_entity chunk None, write_entity chunk None) in
   (size, write)
 
-let prepare_set_maybe prepare_write setter opt =
+let prepare_set_opt prepare_write setter opt =
   match opt with
   | None -> (0, (fun _ _ -> ()))
   | Some x ->
@@ -728,15 +728,15 @@ let prepare_set_maybe prepare_write setter opt =
     in
     (size, write)
 
-let prepare_set_aloc_table_maybe = prepare_set_maybe prepare_write_aloc_table Heap.set_aloc_table
+let prepare_set_aloc_table_opt = prepare_set_opt prepare_write_aloc_table Heap.set_aloc_table
 
-let prepare_set_ast_maybe = prepare_set_maybe prepare_write_ast Heap.set_ast
+let prepare_set_ast_opt = prepare_set_opt prepare_write_ast Heap.set_ast
 
-let prepare_set_docblock_maybe = prepare_set_maybe prepare_write_docblock Heap.set_docblock
+let prepare_set_docblock_opt = prepare_set_opt prepare_write_docblock Heap.set_docblock
 
-let prepare_set_file_sig_maybe = prepare_set_maybe prepare_write_file_sig Heap.set_file_sig
+let prepare_set_file_sig_opt = prepare_set_opt prepare_write_file_sig Heap.set_file_sig
 
-let prepare_set_type_sig_maybe = prepare_set_maybe prepare_write_type_sig Heap.set_type_sig
+let prepare_set_type_sig_opt = prepare_set_opt prepare_write_type_sig Heap.set_type_sig
 
 (* Write parsed data for checked file to shared memory. If we loaded from saved
  * state, a checked file entry will already exist without parse data and this
@@ -757,18 +757,20 @@ let add_checked_file
     cas_digest
     resolved_requires_opt_opt =
   let open Heap in
-  let (ast_size, set_ast_maybe) = prepare_set_ast_maybe ast_opt in
-  let (docblock_size, set_docblock_maybe) = prepare_set_docblock_maybe docblock_opt in
-  let (aloc_table_size, set_aloc_table_maybe) = prepare_set_aloc_table_maybe locs_opt in
-  let (type_sig_size, set_type_sig_maybe) = prepare_set_type_sig_maybe type_sig_opt in
-  let (file_sig_size, set_file_sig_maybe) = prepare_set_file_sig_maybe file_sig_opt in
+  let (ast_size, set_ast) = prepare_set_ast_opt ast_opt in
+  let (docblock_size, set_docblock) = prepare_set_docblock_opt docblock_opt in
+  let (aloc_table_size, set_aloc_table) = prepare_set_aloc_table_opt locs_opt in
+  let (type_sig_size, set_type_sig) = prepare_set_type_sig_opt type_sig_opt in
+  let (file_sig_size, set_file_sig) = prepare_set_file_sig_opt file_sig_opt in
   let (file_size, unchanged_or_fresh_parse) =
     match file_opt with
     | None ->
       let resolved_requires_opt = Option.join resolved_requires_opt_opt in
       let (parse_ents_size, write_parse_ents) = prepare_write_typed_parse_ents in
-      let (file_size, add_file) = prepare_create_file file_key module_name resolved_requires_opt in
-      (parse_ents_size + file_size, Either.Right (write_parse_ents, add_file))
+      let (file_size, create_file) =
+        prepare_create_file file_key module_name resolved_requires_opt
+      in
+      (parse_ents_size + file_size, Either.Right (write_parse_ents, create_file))
     | Some file ->
       let parse_ent = get_parse file in
       let typed_parse =
@@ -812,14 +814,14 @@ let add_checked_file
             match resolved_requires_opt_opt with
             | None -> (0, (fun _ _ _ -> false))
             | Some resolved_requires_opt ->
-              prepare_update_resolved_requires (Some parse) resolved_requires_opt
+              prepare_update_resolved_requires_if_changed (Some parse) resolved_requires_opt
           in
-          let write chunk =
+          let update_unchanged_file chunk =
             let _did_change : bool = update_resolved_requires chunk file parse in
             clear_leader ();
             (parse, MSet.empty)
           in
-          (resolved_requires_size, Either.Left write)
+          (resolved_requires_size, Either.Left update_unchanged_file)
         else
           let update_parse_ents _chunk =
             (* reuse the existing resolved_requires ent. this enables
@@ -834,13 +836,13 @@ let add_checked_file
           in
           (file_size, Either.Right (update_parse_ents, update_file)))
   in
-  let (parse_size, add_file_maybe) =
+  let (parse_size, create_or_update_file) =
     match unchanged_or_fresh_parse with
     | Either.Left update_unchanged_file -> (0, update_unchanged_file)
-    | Either.Right (write_parse_ents_maybe, add_file_maybe) ->
+    | Either.Right (write_parse_ents, create_or_update_file) ->
       let (exports_size, write_exports) = prepare_write_exports exports in
       let (imports_size, write_imports) = prepare_write_imports imports in
-      let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
+      let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_opt cas_digest in
       let size =
         (2 * header_size)
         + typed_parse_size
@@ -854,12 +856,12 @@ let add_checked_file
         let exports = write_exports chunk in
         let imports = write_imports chunk in
         let cas_digest = write_cas_digest chunk in
-        let (resolved_requires, leader, sig_hash) = write_parse_ents_maybe chunk in
+        let (resolved_requires, leader, sig_hash) = write_parse_ents chunk in
         let parse =
           write_typed_parse chunk hash exports resolved_requires imports leader sig_hash cas_digest
         in
         let dirty_modules =
-          add_file_maybe chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
+          create_or_update_file chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
         in
         (parse, dirty_modules)
       in
@@ -875,18 +877,18 @@ let add_checked_file
     + parse_size
   in
   alloc size (fun chunk ->
-      let (parse, dirty_modules) = add_file_maybe chunk in
-      set_ast_maybe chunk parse;
-      set_docblock_maybe chunk parse;
-      set_aloc_table_maybe chunk parse;
-      set_type_sig_maybe chunk parse;
-      set_file_sig_maybe chunk parse;
+      let (parse, dirty_modules) = create_or_update_file chunk in
+      set_ast chunk parse;
+      set_docblock chunk parse;
+      set_aloc_table chunk parse;
+      set_type_sig chunk parse;
+      set_file_sig chunk parse;
       dirty_modules
   )
 
 let add_unparsed_file file_key file_opt hash module_name =
   let open Heap in
-  let (file_size, add_file_maybe) =
+  let (file_size, create_or_update_file) =
     match file_opt with
     | None -> prepare_create_file file_key module_name None
     | Some file ->
@@ -897,7 +899,7 @@ let add_unparsed_file file_key file_opt hash module_name =
   alloc size (fun chunk ->
       let hash = write_int64 chunk hash in
       let parse = write_untyped_parse chunk hash in
-      add_file_maybe chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
+      create_or_update_file chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
   )
 
 let add_package_file
@@ -906,7 +908,7 @@ let add_package_file
   let serialize x = Marshal.to_string x [] in
   let package_info = serialize package_info in
   let (package_info_size, write_package_info) = prepare_write_package_info package_info in
-  let (file_size, add_file_maybe) =
+  let (file_size, create_or_update_file) =
     match file_opt with
     | None -> prepare_create_file file_key module_name None
     | Some file ->
@@ -918,7 +920,7 @@ let add_package_file
       let hash = write_int64 chunk hash in
       let package_info = write_package_info chunk in
       let parse = write_package_parse chunk hash package_info in
-      add_file_maybe chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
+      create_or_update_file chunk (parse :> [ `typed | `untyped | `package ] parse_addr)
   )
 
 (* If this file used to exist, but no longer does, then it was deleted. Record
@@ -1677,7 +1679,7 @@ module Resolved_requires_mutator = struct
 
   let add_resolved_requires () file parse resolved_requires =
     let (size, update_resolved_requires) =
-      prepare_update_resolved_requires (Some parse) (Some resolved_requires)
+      prepare_update_resolved_requires_if_changed (Some parse) (Some resolved_requires)
     in
     WorkerCancel.with_no_cancellations (fun () ->
         Heap.alloc size (fun chunk -> update_resolved_requires chunk file parse)
