@@ -259,7 +259,7 @@ module Annotate_lti_command = struct
 
       type prepass_state = unit
 
-      type prepass_result = Loc.t list FilenameMap.t
+      type prepass_result = Loc.t list
 
       let reporter = string_reporter (module Acc)
 
@@ -267,32 +267,23 @@ module Annotate_lti_command = struct
 
       let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
 
-      let prepass_run cx () file_key _reader _file_sig _typed_ast =
-        let error_locs =
-          Context.errors cx
-          |> Flow_error.ErrorSet.elements
-          |> List.filter_map (fun error ->
-                 match Flow_error.code_of_error error with
-                 | Some Error_codes.MissingLocalAnnot ->
-                   error
-                   |> Flow_error.msg_of_error
-                   |> Error_message.loc_of_msg
-                   |> Base.Option.map ~f:(fun error_aloc ->
-                          Parsing_heaps.Reader.loc_of_aloc ~reader error_aloc
-                      )
-                 | _ -> None
-             )
-        in
-        FilenameMap.singleton file_key error_locs
+      let prepass_run cx () _file_key _reader _file_sig _typed_ast =
+        Context.errors cx
+        |> Flow_error.ErrorSet.elements
+        |> List.filter_map (fun error ->
+               match Flow_error.code_of_error error with
+               | Some Error_codes.MissingLocalAnnot ->
+                 error
+                 |> Flow_error.msg_of_error
+                 |> Error_message.loc_of_msg
+                 |> Base.Option.map ~f:(fun error_aloc ->
+                        Parsing_heaps.Reader.loc_of_aloc ~reader error_aloc
+                    )
+               | _ -> None
+           )
 
       let store_precheck_result result =
-        result
-        |> FilenameMap.values
-        |> Base.List.filter_map ~f:Base.Result.ok
-        |> Base.List.fold
-             ~init:FilenameMap.empty
-             ~f:(FilenameMap.union ~combine:(fun _ tes1 tes2 -> Some (tes1 @ tes2)))
-        |> FilenameMap.iter LtiPerFileErrorsHeap.add
+        FilenameMap.iter (fun file -> Base.Result.iter ~f:(LtiPerFileErrorsHeap.add file)) result
 
       let visit ~options program =
         let provided_error_locs =
