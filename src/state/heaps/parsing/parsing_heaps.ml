@@ -1737,9 +1737,9 @@ end
 module Reader = struct
   type reader = State_reader.t
 
-  let read ~reader:_ addr = Heap.entity_read_latest addr
+  let read ~reader:_ addr = Heap.entity_read_committed addr
 
-  let get_provider ~reader:_ m = read_provider Heap.entity_reader_latest m
+  let get_provider ~reader:_ m = read_provider Heap.entity_reader_committed m
 
   let is_typed_file ~reader file =
     match read ~reader (Heap.get_parse file) with
