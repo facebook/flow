@@ -241,6 +241,23 @@ References:
                    ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- react_tests.js:39:24
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   react_tests.js:39:24
+   39|     {n => <Child foo={(n: empty)} /> /* ERROR */}
+                              ^
+
+References:
+   react_tests.js:36:39
+   36|   declare function Parent({children: (number) => React.Node}): React.Node;
+                                             ^^^^^^ [1]
+   react_tests.js:39:27
+   39|     {n => <Child foo={(n: empty)} /> /* ERROR */}
+                                 ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:43
 
 Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -365,4 +382,4 @@ References:
 
 
 
-Found 26 errors
+Found 27 errors
