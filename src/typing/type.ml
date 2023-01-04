@@ -2450,7 +2450,7 @@ end = struct
 
   let map f (t0, t1, ts) = make (f t0) (f t1) (Base.List.map ~f ts)
 
-  let append ts2 (t0, t1, ts1) = make t0 t1 (ts1 @ ts2)
+  let append ts2 (t0, t1, ts1) = make t0 t1 (Base.List.append ts1 ts2)
 
   let ident_map f ((t0, t1, ts) as rep) =
     let t0_ = f t0 in
