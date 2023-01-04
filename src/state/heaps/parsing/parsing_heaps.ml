@@ -353,7 +353,7 @@ let prepare_write_new_haste_info_maybe size old_haste_info = function
 let prepare_write_aloc_table locs =
   let open Type_sig_collections in
   let serialized = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
-  let size = Heap.aloc_table_size serialized in
+  let size = Heap.header_size + Heap.aloc_table_size serialized in
   let write chunk = Heap.write_aloc_table chunk serialized in
   (size, write)
 
@@ -366,11 +366,11 @@ let prepare_write_cas_digest_maybe = function
   | Some cas_digest ->
     let open Heap in
     let (size, write) = prepare_write_cas_digest cas_digest in
-    (header_size + size, (fun chunk -> Some (write chunk)))
+    (size, (fun chunk -> Some (write chunk)))
 
 let prepare_write_docblock (docblock : Docblock.t) =
   let serialized = Marshal.to_string docblock [] in
-  let size = Heap.docblock_size serialized in
+  let size = Heap.header_size + Heap.docblock_size serialized in
   let write chunk = Heap.write_docblock chunk serialized in
   (size, write)
 
@@ -391,17 +391,16 @@ let prepare_write_resolved_requires (resolved_requires : resolved_requires) =
   Heap.prepare_write_serialized_resolved_requires serialized
 
 let prepare_write_resolved_requires_maybe (resolved_requires_opt : resolved_requires option) =
-  let open Heap in
   match resolved_requires_opt with
   | None -> (0, Fun.const None)
   | Some resolved_requires ->
     let (size, write) = prepare_write_resolved_requires resolved_requires in
-    (header_size + size, (fun chunk -> Some (write chunk)))
+    (size, (fun chunk -> Some (write chunk)))
 
 let prepare_write_type_sig type_sig =
   let open Heap in
   let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
-  let size = type_sig_size sig_bsize in
+  let size = header_size + type_sig_size sig_bsize in
   let write chunk = write_type_sig chunk sig_bsize write_sig in
   (size, write)
 
@@ -562,7 +561,7 @@ let prepare_update_revdeps =
           (read_file_name file)
           (Modulename.to_string mname)
     in
-    (size_acc + module_size + Heap.header_size + sknode_size, write)
+    (size_acc + module_size + sknode_size, write)
   in
   fun old_resolved_requires new_resolved_requires ->
     let old_dependencies = all_dependencies old_resolved_requires in
@@ -713,7 +712,6 @@ let prepare_write_typed_parse_ents size =
   (size, write)
 
 let prepare_set_maybe prepare_write setter opt =
-  let open Heap in
   match opt with
   | None -> (0, (fun _ _ -> ()))
   | Some x ->
@@ -722,7 +720,7 @@ let prepare_set_maybe prepare_write setter opt =
       let ast = write chunk in
       setter parse ast
     in
-    (header_size + size, write)
+    (size, write)
 
 let prepare_set_aloc_table_maybe = prepare_set_maybe prepare_write_aloc_table Heap.set_aloc_table
 
@@ -841,7 +839,7 @@ let add_checked_file
       let (cas_digest_size, write_cas_digest) = prepare_write_cas_digest_maybe cas_digest in
       let size =
         size
-        + (4 * header_size)
+        + (2 * header_size)
         + typed_parse_size
         + int64_size
         + exports_size
@@ -896,7 +894,7 @@ let add_package_file
   let package_info = serialize package_info in
   let (package_info_size, write_package_info) = Heap.prepare_write_package_info package_info in
   let open Heap in
-  let size = (3 * header_size) + package_parse_size + int64_size + package_info_size in
+  let size = (2 * header_size) + package_parse_size + int64_size + package_info_size in
   let (size, add_file_maybe) =
     match file_opt with
     | None -> prepare_create_file size file_key module_name None
