@@ -328,29 +328,46 @@ let prepare_add_haste_module name =
 
 let prepare_find_or_add_haste_module = prepare_find_or_add get_haste_module prepare_add_haste_module
 
-let prepare_write_new_haste_info_if_changed old_haste_info = function
+let prepare_write_haste_info name =
+  let open Heap in
+  let (haste_module_size, find_or_add_haste_module) = prepare_find_or_add_haste_module name in
+  let size = haste_module_size + header_size + haste_info_size in
+  let write chunk =
+    let haste_module = find_or_add_haste_module chunk in
+    write_haste_info chunk haste_module
+  in
+  (size, write)
+
+let prepare_write_haste_info_opt = function
   | None -> (0, Fun.const None)
   | Some name ->
+    let (size, write) = prepare_write_haste_info name in
+    (size, (fun chunk -> Some (write chunk)))
+
+let prepare_update_haste_info haste_ent name =
+  let (size, write) = prepare_write_haste_info name in
+  (size, (fun chunk -> Heap.entity_advance haste_ent (Some (write chunk))))
+
+let prepare_update_haste_info_if_changed haste_ent name_opt =
+  let open Heap in
+  let old_haste_info = entity_read_latest haste_ent in
+  match (old_haste_info, name_opt) with
+  | (None, None) -> (0, Fun.const ())
+  | (Some _, None) -> (0, (fun _ -> entity_advance haste_ent None))
+  | (None, Some name) -> prepare_update_haste_info haste_ent name
+  | (Some old_info, Some name) ->
     let open Heap in
-    let haste_module_unchanged old_info =
-      try
-        let old_name = read_string (get_haste_name (get_haste_module old_info)) in
-        String.equal name old_name
-      with
+    let old_name =
+      try read_module_name old_info with
       | exn ->
         let exn = Exception.wrap exn in
         raise (Failed_to_read_haste_info (name, exn))
     in
-    (match old_haste_info with
-    | Some old_info when haste_module_unchanged old_info -> (0, Fun.const old_haste_info)
-    | _ ->
-      let (haste_module_size, find_or_add_haste_module) = prepare_find_or_add_haste_module name in
-      let size = haste_module_size + header_size + haste_info_size in
-      let write chunk =
-        let haste_module = find_or_add_haste_module chunk in
-        Some (write_haste_info chunk haste_module)
-      in
-      (size, write))
+    if String.equal name old_name then
+      (0, Fun.const ())
+    else
+      let (size, write) = prepare_write_haste_info name in
+      (size, (fun chunk -> entity_advance haste_ent (Some (write chunk))))
 
 let prepare_write_aloc_table locs =
   let open Type_sig_collections in
@@ -614,9 +631,7 @@ let prepare_create_file file_key module_name resolved_requires_opt =
   let (resolved_requires_size, update_resolved_requires) =
     prepare_update_resolved_requires_if_changed None resolved_requires_opt
   in
-  let (haste_info_size, write_new_haste_info) =
-    prepare_write_new_haste_info_if_changed None module_name
-  in
+  let (haste_info_size, write_haste_info) = prepare_write_haste_info_opt module_name in
   let (dependents_size, write_dependents) =
     if Files.has_flow_ext file_key then
       let impl_key = Files.chop_flow_ext file_key in
@@ -641,7 +656,7 @@ let prepare_create_file file_key module_name resolved_requires_opt =
   let write chunk parse =
     let file_name = write_string chunk file_name in
     let parse_ent = write_entity chunk (Some parse) in
-    let haste_info = write_new_haste_info chunk in
+    let haste_info = write_haste_info chunk in
     let haste_ent = write_entity chunk haste_info in
     let dependents = write_dependents chunk in
     let file = write_file chunk file_kind file_name parse_ent haste_ent dependents in
@@ -676,27 +691,20 @@ let prepare_create_file file_key module_name resolved_requires_opt =
 let prepare_update_file file_key file parse_ent module_name resolved_requires_opt_opt =
   let open Heap in
   let haste_ent = get_haste_info file in
-  let old_haste_info = entity_read_latest haste_ent in
-  let (haste_info_size, write_new_haste_info) =
-    prepare_write_new_haste_info_if_changed old_haste_info module_name
+  let (haste_info_size, update_haste_info) =
+    prepare_update_haste_info_if_changed haste_ent module_name
   in
   let (resolved_requires_size, update_resolved_requires) =
     match resolved_requires_opt_opt with
     | None -> (0, (fun _ _ _ -> false))
     | Some resolved_requires_opt ->
-      let parse = entity_read_latest parse_ent in
-      prepare_update_resolved_requires_if_changed parse resolved_requires_opt
+      let old_parse = entity_read_latest parse_ent in
+      prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt
   in
   let size = haste_info_size + resolved_requires_size in
   let write chunk parse =
     entity_advance parse_ent (Some parse);
-    let new_haste_info = write_new_haste_info chunk in
-    let () =
-      match (old_haste_info, new_haste_info) with
-      | (None, None) -> ()
-      | (Some old_info, Some new_info) when haste_info_equal old_info new_info -> ()
-      | _ -> entity_advance haste_ent new_haste_info
-    in
+    let () = update_haste_info chunk in
     let _did_change : bool = update_resolved_requires chunk file parse in
     calc_dirty_modules file_key file haste_ent
   in
