@@ -1577,7 +1577,7 @@ let dismiss_tracks (state : server_state) : server_state =
         data = None;
       }
     in
-    let stack = Exception.get_current_callstack_string 100 in
+    let stack = "" in
     let json =
       let key = command_key_of_server_state state in
       Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack))
