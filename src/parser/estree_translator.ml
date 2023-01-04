@@ -1397,7 +1397,7 @@ with type t = Impl.t = struct
         | Number comments -> number_type loc comments
         | BigInt comments -> bigint_type loc comments
         | String comments -> string_type loc comments
-        | Boolean comments -> boolean_type loc comments
+        | Boolean { raw = _; comments } -> boolean_type loc comments
         | Nullable t -> nullable_type loc t
         | Function fn -> function_type (loc, fn)
         | Object o -> object_type ~include_inexact:true (loc, o)

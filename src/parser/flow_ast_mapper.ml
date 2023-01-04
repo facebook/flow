@@ -1515,8 +1515,8 @@ class ['loc] mapper =
         id this#syntax_opt comments t (fun comments -> (loc, BigInt comments))
       | (loc, String comments) ->
         id this#syntax_opt comments t (fun comments -> (loc, String comments))
-      | (loc, Boolean comments) ->
-        id this#syntax_opt comments t (fun comments -> (loc, Boolean comments))
+      | (loc, Boolean { raw; comments }) ->
+        id this#syntax_opt comments t (fun comments -> (loc, Boolean { raw; comments }))
       | (loc, Exists comments) ->
         id this#syntax_opt comments t (fun comments -> (loc, Exists comments))
       | (loc, Nullable t') -> id this#nullable_type t' t (fun t' -> (loc, Nullable t'))

@@ -169,7 +169,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UntypedImport -> UntypedImport
   | Lints.NonstrictImport -> NonstrictImport
   | Lints.UnclearType -> UnclearType
-  | Lints.DeprecatedType -> DeprecatedType
+  | Lints.DeprecatedType _ -> DeprecatedType
   | Lints.UnsafeGettersSetters -> UnsafeGettersSetters
   | Lints.UnnecessaryOptionalChain -> UnnecessaryOptionalChain
   | Lints.UnnecessaryInvariant -> UnnecessaryInvariant

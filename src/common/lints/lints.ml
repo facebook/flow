@@ -25,6 +25,10 @@ type property_assignment_kind =
   | ThisBeforeEverythingInitialized
   | PropertyFunctionCallBeforeEverythingInitialized
 
+type deprecated_type_kind =
+  | DeprecatedBool
+  | DeprecatedStar
+
 type lint_kind =
   | SketchyNull of sketchy_null_kind
   | SketchyNumber of sketchy_number_kind
@@ -32,7 +36,7 @@ type lint_kind =
   | UntypedImport
   | NonstrictImport
   | UnclearType
-  | DeprecatedType
+  | DeprecatedType of deprecated_type_kind
   | UnsafeGettersSetters
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
@@ -66,6 +70,10 @@ let string_of_sketchy_null_kind = function
 let string_of_sketchy_number_kind = function
   | SketchyNumberAnd -> "sketchy-number-and"
 
+let string_of_deprecated_type_kind = function
+  | DeprecatedBool -> "deprecated-type-bool"
+  | DeprecatedStar -> "deprecated-type-star"
+
 let string_of_kind = function
   | SketchyNull kind -> string_of_sketchy_null_kind kind
   | SketchyNumber kind -> string_of_sketchy_number_kind kind
@@ -73,7 +81,7 @@ let string_of_kind = function
   | UntypedImport -> "untyped-import"
   | NonstrictImport -> "nonstrict-import"
   | UnclearType -> "unclear-type"
-  | DeprecatedType -> "deprecated-type"
+  | DeprecatedType kind -> string_of_deprecated_type_kind kind
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
@@ -114,7 +122,9 @@ let kinds_of_string = function
   | "nonstrict-import" -> Some [NonstrictImport]
   | "untyped-import" -> Some [UntypedImport]
   | "unclear-type" -> Some [UnclearType]
-  | "deprecated-type" -> Some [DeprecatedType]
+  | "deprecated-type" -> Some [DeprecatedType DeprecatedBool; DeprecatedType DeprecatedStar]
+  | "deprecated-type-bool" -> Some [DeprecatedType DeprecatedBool]
+  | "deprecated-type-star" -> Some [DeprecatedType DeprecatedStar]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]

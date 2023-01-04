@@ -427,7 +427,10 @@ and Type : sig
     | Number of ('M, unit) Syntax.t option
     | BigInt of ('M, unit) Syntax.t option
     | String of ('M, unit) Syntax.t option
-    | Boolean of ('M, unit) Syntax.t option
+    | Boolean of {
+        raw: [ `Boolean | `Bool ];
+        comments: ('M, unit) Syntax.t option;
+      }
     | Symbol of ('M, unit) Syntax.t option
     | Exists of ('M, unit) Syntax.t option
     | Nullable of ('M, 'T) Nullable.t

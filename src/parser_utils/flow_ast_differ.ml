@@ -2386,9 +2386,13 @@ let program
       | (Number c1, Number c2)
       | (BigInt c1, BigInt c2)
       | (String c1, String c2)
-      | (Boolean c1, Boolean c2)
       | (Exists c1, Exists c2) ->
         diff_if_changed_ret_opt (syntax_opt loc1) c1 c2
+      | (Boolean { raw = r1; comments = c1 }, Boolean { raw = r2; comments = c2 }) ->
+        if r1 == r2 then
+          diff_if_changed_ret_opt (syntax_opt loc1) c1 c2
+        else
+          None
       | (Function fn1, Function fn2) -> diff_if_changed_ret_opt (function_type loc1) fn1 fn2
       | (Interface i1, Interface i2) -> diff_if_changed_ret_opt (interface_type loc1) i1 i2
       | (Generic g1, Generic g2) -> diff_if_changed_ret_opt (generic_type loc1) g1 g2
