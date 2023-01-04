@@ -301,6 +301,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/types/mixed/":
   title: "Mixed Types"
   description: "Typing unknown types with mixed"
+"/docs/types/empty/":
+  title: "Empty"
+  description: "The empty type"
 "/docs/types/any/":
   title: "Any Types"
   description: "Opting out of the type system with any"

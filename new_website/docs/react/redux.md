@@ -174,7 +174,7 @@ function reducer(state: State, action: Action): State {
 ```
 
 You can also validate that you have handled every single type of action by
-using the `empty` type in your `default` case.
+using the [`empty`](../../types/empty) type in your `default` case.
 
 ```js
 // @flow

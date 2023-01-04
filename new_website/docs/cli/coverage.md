@@ -55,9 +55,9 @@ of `x` as a number. Thus `x` is considered uncovered.
 
 **The empty type**
 
-An interesting type from a coverage perspective is the `empty` type. This type
-roughly corresponds to *dead code*. As such checking around expressions with type
-`empty` is more relaxed, but for a good reason: this code will not be executed at
+An interesting type from a coverage perspective is the [`empty`](../../types/empty) type.
+This type roughly corresponds to *dead code*. As such checking around expressions with
+type `empty` is more relaxed, but for a good reason: this code will not be executed at
 runtime. Since it is a common practice to clean up such code, Flow coverage will
 also report code whose type is inferred to be `empty`, but distinguishes it from
 the case of `any`.

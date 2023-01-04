@@ -18,6 +18,7 @@
     - path: "/docs/types/literals/"
 
     - path: "/docs/types/mixed/"
+    - path: "/docs/types/empty/"
     - path: "/docs/types/any/"
 
     - path: "/docs/types/maybe/"
