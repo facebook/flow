@@ -154,6 +154,7 @@ and tuple_element =
   | TupleElement of {
       name: string option;
       t: t;
+      polarity: polarity;
     }
 
 and interface_t = {

@@ -442,6 +442,15 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let element =
           with_loc
             (fun env ->
+              let variance =
+                match Peek.token env with
+                | T_PLUS -> maybe_variance env
+                | T_MINUS when Peek.ith_is_identifier ~i:1 env ->
+                  (* `-1` is a valid type but not a valid tuple label.
+                     But `-foo` is only valid as a tuple label. *)
+                  maybe_variance env
+                | _ -> None
+              in
               let name =
                 if Peek.ith_token ~i:1 env = T_COLON then (
                   let name = identifier_name env in
@@ -451,7 +460,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                   None
               in
               let annot = _type env in
-              { Type.Tuple.Element.name; annot })
+              { Type.Tuple.Element.name; annot; variance })
             env
         in
         let acc = element :: acc in

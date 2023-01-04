@@ -1166,6 +1166,7 @@ module rec TypeTerm : sig
     | TupleElement of {
         name: string option;
         t: t;
+        polarity: Polarity.t;
       }
 
   and objtype = {

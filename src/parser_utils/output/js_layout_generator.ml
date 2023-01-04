@@ -3774,11 +3774,12 @@ and type_tuple ~opts loc { Ast.Type.Tuple.elements; comments } =
        ]
     )
 
-and type_tuple_element ~opts loc { Ast.Type.Tuple.Element.name; annot } =
+and type_tuple_element ~opts loc { Ast.Type.Tuple.Element.name; annot; variance = variance_ } =
   source_location_with_comments
     ( loc,
       fuse
         [
+          option variance variance_;
           (match name with
           | Some name -> fuse [identifier name; Atom ":"; pretty_space]
           | None -> Empty);

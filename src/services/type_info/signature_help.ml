@@ -72,7 +72,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
         match t with
         | Ty.Tup ts ->
           Base.List.mapi
-            ~f:(fun i (Ty.TupleElement { name; t }) ->
+            ~f:(fun i (Ty.TupleElement { name; t; polarity = _ }) ->
               let param_name =
                 match name with
                 | Some name -> name

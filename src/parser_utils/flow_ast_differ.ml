@@ -2638,11 +2638,12 @@ let program
       (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.Element.t) (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.Element.t)
       : node change list option =
     let open Ast.Type.Tuple.Element in
-    let (_loc1, { name = name1; annot = annot1 }) = t1 in
-    let (_loc2, { name = name2; annot = annot2 }) = t2 in
+    let (_loc1, { name = name1; annot = annot1; variance = var1 }) = t1 in
+    let (_loc2, { name = name2; annot = annot2; variance = var2 }) = t2 in
     let name_diff = diff_if_changed_nonopt_fn identifier name1 name2 in
     let annot_diff = Some (diff_if_changed type_ annot1 annot2) in
-    join_diff_list [name_diff; annot_diff]
+    let variance_diff = diff_if_changed_ret_opt variance var1 var2 in
+    join_diff_list [name_diff; annot_diff; variance_diff]
   and type_args (pi1 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t) (pi2 : (Loc.t, Loc.t) Ast.Type.TypeArgs.t)
       : node change list option =
     let open Ast.Type.TypeArgs in

@@ -106,9 +106,10 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       in
       fuse [type_ ~depth _object; left_delim; type_ ~depth index; Atom "]"]
     | Tup elements ->
-      let tuple_element ~depth (TupleElement { name; t }) =
+      let tuple_element ~depth (TupleElement { name; t; polarity }) =
         fuse
           [
+            variance_ polarity;
             (match name with
             | Some id -> fuse [identifier (Reason.OrdinaryName id); Atom ":"; pretty_space]
             | None -> Empty);

@@ -109,6 +109,7 @@ type 'a tuple_element =
   | TupleElement of {
       name: string option;
       t: 'a;
+      polarity: Polarity.t;
     }
 [@@deriving iter, map, show { with_path = false }]
 

@@ -1588,7 +1588,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       iter2opt
         (fun t1 t2 ->
           match (t1, t2) with
-          | (Some (TupleElement { t = t1; name = _ }), Some (TupleElement { t = t2; name = _ })) ->
+          | ( Some (TupleElement { t = t1; polarity = _; name = _ }),
+              Some (TupleElement { t = t2; polarity = _; name = _ })
+            ) ->
             let use_op =
               Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
             in
@@ -1610,7 +1612,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 ( r1,
                   trust,
                   ArrT
-                    (TupleAT (t1, Base.List.map ~f:(fun t -> TupleElement { name = None; t }) ts1))
+                    (TupleAT
+                       ( t1,
+                         Base.List.map
+                           ~f:(fun t ->
+                             TupleElement { name = None; polarity = Polarity.Neutral; t })
+                           ts1
+                       )
+                    )
                 ),
               u
             )

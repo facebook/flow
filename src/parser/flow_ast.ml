@@ -363,6 +363,7 @@ and Type : sig
       and ('M, 'T) t' = {
         name: ('M, 'T) Identifier.t option;
         annot: ('M, 'T) Type.t;
+        variance: 'M Variance.t option;
       }
       [@@deriving show]
     end
