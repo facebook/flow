@@ -7,6 +7,11 @@
 
 module File_sig = File_sig.With_ALoc
 
+type evaluate_type_destructors_mode =
+  | EvaluateNone
+  | EvaluateAll
+  | EvaluateSome
+
 type options = {
   (* If this flag is set to `true` then the normalizer will attempt to reuse the
    * cached results of evaluated type-destructors. If this is set to `false`, then
@@ -17,7 +22,7 @@ type options = {
    * Choosing 'false' will typically result in smaller produced types, which makes
    * it a more appropriate option for codemods.
    *)
-  evaluate_type_destructors: bool;
+  evaluate_type_destructors: evaluate_type_destructors_mode;
   (* Expand the signatures of built-in functions, such as:
    * Function.prototype.apply: (thisArg: any, argArray?: any): any
    *)
@@ -69,7 +74,7 @@ type options = {
 
 let default_options =
   {
-    evaluate_type_destructors = false;
+    evaluate_type_destructors = EvaluateNone;
     expand_internal_types = false;
     flag_shadowed_type_params = false;
     merge_bot_and_any_kinds = true;
@@ -85,7 +90,7 @@ let default_codemod_options =
     expand_internal_types = false;
     flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
-    evaluate_type_destructors = false;
+    evaluate_type_destructors = EvaluateSome;
     optimize_types = false;
     omit_targ_defaults = true;
     merge_bot_and_any_kinds = false;

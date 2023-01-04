@@ -490,6 +490,12 @@ let infer_type
       (Error err_str, Some (Hh_json.JSON_Object json_props))
     | Ok ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as check_result)
       ->
+      let evaluate_type_destructors =
+        if evaluate_type_destructors then
+          Ty_normalizer_env.EvaluateAll
+        else
+          Ty_normalizer_env.EvaluateNone
+      in
       let ((loc, ty), type_at_pos_json_props) =
         Type_info_service.type_at_pos
           ~cx
@@ -1241,6 +1247,12 @@ let get_ephemeral_handler genv command =
     let fn = Files.filename_from_string ~options:file_options filename in
     Handle_nonparallelizable (handle_cycle ~fn ~types_only)
   | ServerProt.Request.DUMP_TYPES { input; evaluate_type_destructors; wait_for_recheck } ->
+    let evaluate_type_destructors =
+      if evaluate_type_destructors then
+        Ty_normalizer_env.EvaluateAll
+      else
+        Ty_normalizer_env.EvaluateNone
+    in
     mk_parallelizable
       ~wait_for_recheck
       ~options
