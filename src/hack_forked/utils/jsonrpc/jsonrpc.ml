@@ -153,26 +153,25 @@ let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
     in
     let should_continue =
       match operation with
-      | Read ->
-        begin
-          try
-            let timestamped_json = internal_read_message reader in
-            Queue.push timestamped_json messages_to_send;
-            true
-          with
-          | exn ->
-            let e = Exception.wrap exn in
-            let message = Exception.get_ctor_string e in
-            let stack = Exception.get_full_backtrace_string 500 e in
-            let edata = { Marshal_tools.message; stack } in
-            let (should_continue, marshal) =
-              match exn with
-              | Hh_json.Syntax_error _ -> (true, Recoverable_exception edata)
-              | _ -> (false, Fatal_exception edata)
-            in
-            Marshal_tools.to_fd_with_preamble out_fd marshal |> ignore;
-            should_continue
-        end
+      | Read -> begin
+        try
+          let timestamped_json = internal_read_message reader in
+          Queue.push timestamped_json messages_to_send;
+          true
+        with
+        | exn ->
+          let e = Exception.wrap exn in
+          let message = Exception.get_ctor_string e in
+          let stack = Exception.get_full_backtrace_string 500 e in
+          let edata = { Marshal_tools.message; stack } in
+          let (should_continue, marshal) =
+            match exn with
+            | Hh_json.Syntax_error _ -> (true, Recoverable_exception edata)
+            | _ -> (false, Fatal_exception edata)
+          in
+          Marshal_tools.to_fd_with_preamble out_fd marshal |> ignore;
+          should_continue
+      end
       | Write ->
         assert (not (Queue.is_empty messages_to_send));
         let timestamped_json = Queue.pop messages_to_send in

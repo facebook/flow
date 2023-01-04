@@ -87,8 +87,7 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
   let of_list elts =
     List.fold_left
       begin
-        fun acc (key, value) ->
-        add key value acc
+        (fun acc (key, value) -> add key value acc)
       end
       empty
       elts
@@ -96,8 +95,7 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
   let of_function domain f =
     List.fold_left
       begin
-        fun acc key ->
-        add key (f key) acc
+        (fun acc key -> add key (f key) acc)
       end
       empty
       domain

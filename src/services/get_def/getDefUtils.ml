@@ -71,30 +71,29 @@ let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
     match !prop_access_info with
     | Error _ -> ()
     | Ok None -> prop_access_info := Ok (Some new_info)
-    | Ok (Some info) ->
-      begin
-        match (info, new_info) with
-        | (Use _, Use _)
-        | (Class_def _, Class_def _)
-        | (Obj_def _, Obj_def _) ->
-          (* If we see hooks firing multiple times for the same
-           * location, this is innocuous and we should take the last result.
-           * Previously, this would occur due to generate-tests.
-           *)
-          set_ok new_info
-        (* Literals can flow into multiple types. Include them all. *)
-        | (Use_in_literal (types, name), Use_in_literal (new_types, new_name)) ->
-          if name = new_name then
-            set_ok (Use_in_literal (Nel.rev_append new_types types, name))
-          else
-            set_err "Names did not match"
-        (* We should not see mismatches. *)
-        | (Use _, _)
-        | (Class_def _, _)
-        | (Obj_def _, _)
-        | (Use_in_literal _, _) ->
-          set_err "Unexpected mismatch between definition kind"
-      end
+    | Ok (Some info) -> begin
+      match (info, new_info) with
+      | (Use _, Use _)
+      | (Class_def _, Class_def _)
+      | (Obj_def _, Obj_def _) ->
+        (* If we see hooks firing multiple times for the same
+         * location, this is innocuous and we should take the last result.
+         * Previously, this would occur due to generate-tests.
+         *)
+        set_ok new_info
+      (* Literals can flow into multiple types. Include them all. *)
+      | (Use_in_literal (types, name), Use_in_literal (new_types, new_name)) ->
+        if name = new_name then
+          set_ok (Use_in_literal (Nel.rev_append new_types types, name))
+        else
+          set_err "Names did not match"
+      (* We should not see mismatches. *)
+      | (Use _, _)
+      | (Class_def _, _)
+      | (Obj_def _, _)
+      | (Use_in_literal _, _) ->
+        set_err "Unexpected mismatch between definition kind"
+    end
   in
   let use_hook ret _ctxt name loc ty =
     let loc = loc_of_aloc ~reader loc in

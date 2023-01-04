@@ -42,7 +42,6 @@ open Constraint
    (e.g., when they are part of inferred types), they are logged; when they
    are unexpected (e.g., when they are part of annotations), they are
    converted to `any`. For more details see bindings_of_jobs.
-
 *)
 type t =
   | Binding of Type.tvar

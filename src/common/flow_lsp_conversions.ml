@@ -158,8 +158,7 @@ let flow_completion_item_to_lsp
                   );
                   ("completion", JSON_String item.name);
                 ];
-            ]
-          ;
+            ];
       }
   in
 

@@ -367,21 +367,19 @@ class ['A] comparator_ty =
     method! private on_string env x y =
       (* In order to sort integer literals we try to parse all strings as integers *)
       match int_of_string x with
-      | x ->
-        begin
-          match int_of_string y with
-          (* If both parse as integers then we compare them as integers *)
-          | y -> this#on_int env x y
-          (* If xor parses as an integer then that one is "less than" the other *)
-          | exception Failure _ -> raise (Difference (-1))
-        end
-      | exception Failure _ ->
-        begin
-          match int_of_string y with
-          | _ -> raise (Difference 1)
-          (* If neither parse as integers then we compare them as strings *)
-          | exception Failure _ -> assert0 (String.compare x y)
-        end
+      | x -> begin
+        match int_of_string y with
+        (* If both parse as integers then we compare them as integers *)
+        | y -> this#on_int env x y
+        (* If xor parses as an integer then that one is "less than" the other *)
+        | exception Failure _ -> raise (Difference (-1))
+      end
+      | exception Failure _ -> begin
+        match int_of_string y with
+        | _ -> raise (Difference 1)
+        (* If neither parse as integers then we compare them as strings *)
+        | exception Failure _ -> assert0 (String.compare x y)
+      end
 
     method! private on_bool _env x y = assert0 (Stdlib.compare x y)
 

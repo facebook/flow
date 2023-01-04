@@ -166,14 +166,13 @@ let strict_equatable_error cond_context (l, r) =
     None
   (* We allow the comparison of enums to null and void outside of switches. *)
   | (DefT (_, _, EnumT _), DefT (_, _, (NullT | VoidT)))
-  | (DefT (_, _, (NullT | VoidT)), DefT (_, _, EnumT _)) ->
-    begin
-      match cond_context with
-      | Some (SwitchTest _) -> Some (Lazy.force comparison_error)
-      | None
-      | Some _ ->
-        None
-    end
+  | (DefT (_, _, (NullT | VoidT)), DefT (_, _, EnumT _)) -> begin
+    match cond_context with
+    | Some (SwitchTest _) -> Some (Lazy.force comparison_error)
+    | None
+    | Some _ ->
+      None
+  end
   (* We don't allow the comparison of enums and other types in general. *)
   | (DefT (_, _, EnumT _), _)
   | (_, DefT (_, _, EnumT _)) ->
@@ -325,48 +324,46 @@ struct
     | SuperProp (use_op, lp) -> rec_flow_p cx ~trace ~use_op ureason lreason propref (lp, p)
     | ReadProp { use_op; obj_t = _; tout } ->
       FlowJs.perform_read_prop_action cx trace use_op propref p ureason tout
-    | WriteProp { use_op; obj_t = _; tin; write_ctx; prop_tout; mode } ->
-      begin
-        match (Property.write_t ~ctx:write_ctx p, target_kind, mode) with
-        | (Some t, IndexerProperty, Delete) ->
-          (* Always OK to delete a property we found via an indexer *)
-          let void = VoidT.why (reason_of_t t) |> with_trust literal_trust in
-          Base.Option.iter
-            ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (void, prop_tout))
-            prop_tout
-        | (Some t, _, _) ->
-          rec_flow cx trace (tin, UseT (use_op, t));
-          Base.Option.iter
-            ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_tout))
-            prop_tout
-        | (None, _, _) ->
-          let (reason_prop, prop_name) =
-            match propref with
-            | Named (r, x) -> (r, Some x)
-            | Computed t -> (reason_of_t t, None)
-          in
-          let msg = Error_message.EPropNotWritable { reason_prop; prop_name; use_op } in
-          add_output cx ~trace msg
-      end
-    | MatchProp { use_op; drop_generic = drop_generic_; prop_t = tin } ->
-      begin
-        match Property.read_t p with
-        | Some t ->
-          let t =
-            if drop_generic_ then
-              drop_generic t
-            else
-              t
-          in
-          rec_flow cx trace (tin, UseT (use_op, t))
-        | None ->
-          let (reason_prop, prop_name) =
-            match propref with
-            | Named (r, x) -> (r, Some x)
-            | Computed t -> (reason_of_t t, None)
-          in
-          add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
-      end
+    | WriteProp { use_op; obj_t = _; tin; write_ctx; prop_tout; mode } -> begin
+      match (Property.write_t ~ctx:write_ctx p, target_kind, mode) with
+      | (Some t, IndexerProperty, Delete) ->
+        (* Always OK to delete a property we found via an indexer *)
+        let void = VoidT.why (reason_of_t t) |> with_trust literal_trust in
+        Base.Option.iter
+          ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (void, prop_tout))
+          prop_tout
+      | (Some t, _, _) ->
+        rec_flow cx trace (tin, UseT (use_op, t));
+        Base.Option.iter
+          ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_tout))
+          prop_tout
+      | (None, _, _) ->
+        let (reason_prop, prop_name) =
+          match propref with
+          | Named (r, x) -> (r, Some x)
+          | Computed t -> (reason_of_t t, None)
+        in
+        let msg = Error_message.EPropNotWritable { reason_prop; prop_name; use_op } in
+        add_output cx ~trace msg
+    end
+    | MatchProp { use_op; drop_generic = drop_generic_; prop_t = tin } -> begin
+      match Property.read_t p with
+      | Some t ->
+        let t =
+          if drop_generic_ then
+            drop_generic t
+          else
+            t
+        in
+        rec_flow cx trace (tin, UseT (use_op, t))
+      | None ->
+        let (reason_prop, prop_name) =
+          match propref with
+          | Named (r, x) -> (r, Some x)
+          | Computed t -> (reason_of_t t, None)
+        in
+        add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
+    end
 
   let lookup_prop cx trace options l reason_prop reason_op x action =
     let l =
@@ -2869,17 +2866,16 @@ struct
           |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
         | ( DefT (r, _, ObjT { call_t = Some id; _ }),
             (ReactInToProps (_, props) | ReactPropsToOut (_, props))
-          ) ->
-          begin
-            match Context.find_call cx id with
-            | ( DefT (_, _, FunT (_, { rest_param = None; is_predicate = false; _ }))
-              | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
-              (* Keep the object's reason for better error reporting *)
-              rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
-            | _ ->
-              React.GetProps props
-              |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
-          end
+          ) -> begin
+          match Context.find_call cx id with
+          | ( DefT (_, _, FunT (_, { rest_param = None; is_predicate = false; _ }))
+            | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
+            (* Keep the object's reason for better error reporting *)
+            rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
+          | _ ->
+            React.GetProps props
+            |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
+        end
         | (AnyT _, ReactPropsToOut (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (l, props)
         | (AnyT _, ReactInToProps (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (props, l)
         | (DefT (r, _, _), (ReactPropsToOut (_, props) | ReactInToProps (_, props))) ->
@@ -3847,32 +3843,32 @@ struct
           let o = Obj_type.mk_with_proto cx reason (ObjProtoT reason) ~obj_kind:(Indexed dict) in
           rec_flow cx trace (o, u)
         | (DefT (reason_arr, _, ArrT arrtype), ObjAssignFromT (use_op, r, o, t, ObjSpreadAssign)) ->
-          begin
-            match arrtype with
-            | ArrayAT (elemt, None)
-            | ROArrayAT elemt ->
-              (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-              rec_flow cx trace (elemt, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
-            | TupleAT (_, elements) ->
-              (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
-              List.iteri
-                (fun n (TupleElement { t = from; polarity; name }) ->
-                  if not @@ Polarity.compat (polarity, Polarity.Positive) then
-                    add_output
-                      cx
-                      ~trace
-                      (Error_message.ETupleElementNotReadable
-                         { use_op; reason = reason_arr; index = n; name }
-                      );
-                  rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
-                elements
-            | ArrayAT (_, Some ts) ->
-              (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
-              List.iter
-                (fun from ->
-                  rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
-                ts
-          end
+        begin
+          match arrtype with
+          | ArrayAT (elemt, None)
+          | ROArrayAT elemt ->
+            (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
+            rec_flow cx trace (elemt, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
+          | TupleAT (_, elements) ->
+            (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
+            List.iteri
+              (fun n (TupleElement { t = from; polarity; name }) ->
+                if not @@ Polarity.compat (polarity, Polarity.Positive) then
+                  add_output
+                    cx
+                    ~trace
+                    (Error_message.ETupleElementNotReadable
+                       { use_op; reason = reason_arr; index = n; name }
+                    );
+                rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
+              elements
+          | ArrayAT (_, Some ts) ->
+            (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
+            List.iter
+              (fun from ->
+                rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
+              ts
+        end
         (*************************)
         (* objects can be copied *)
         (*************************)
@@ -7302,30 +7298,26 @@ struct
   (**********)
   and guard cx trace source pred result sink =
     match pred with
-    | ExistsP ->
-      begin
-        match Type_filter.exists cx source with
-        | DefT (_, _, EmptyT) -> ()
-        | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
-      end
-    | NotP ExistsP ->
-      begin
-        match Type_filter.not_exists cx source with
-        | DefT (_, _, EmptyT) -> ()
-        | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
-      end
-    | MaybeP ->
-      begin
-        match Type_filter.maybe cx source with
-        | DefT (_, _, EmptyT) -> ()
-        | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
-      end
-    | NotP MaybeP ->
-      begin
-        match Type_filter.not_maybe cx source with
-        | DefT (_, _, EmptyT) -> ()
-        | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
-      end
+    | ExistsP -> begin
+      match Type_filter.exists cx source with
+      | DefT (_, _, EmptyT) -> ()
+      | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
+    end
+    | NotP ExistsP -> begin
+      match Type_filter.not_exists cx source with
+      | DefT (_, _, EmptyT) -> ()
+      | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
+    end
+    | MaybeP -> begin
+      match Type_filter.maybe cx source with
+      | DefT (_, _, EmptyT) -> ()
+      | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
+    end
+    | NotP MaybeP -> begin
+      match Type_filter.not_maybe cx source with
+      | DefT (_, _, EmptyT) -> ()
+      | _ -> rec_flow_t cx trace ~use_op:unknown_use (result, OpenT sink)
+    end
     | NotP (NotP p) -> guard cx trace source p result sink
     | _ ->
       let loc = aloc_of_reason (fst sink) in
@@ -7772,54 +7764,52 @@ struct
         Some UnionEnum.(One (BigInt value))
       | DefT (_, _, VoidT) -> Some UnionEnum.(One Void)
       | DefT (_, _, NullT) -> Some UnionEnum.(One Null)
-      | UnionT (_, rep) ->
-        begin
-          match UnionRep.check_enum rep with
-          | Some enums -> Some UnionEnum.(Many enums)
-          | None -> None
-        end
+      | UnionT (_, rep) -> begin
+        match UnionRep.check_enum rep with
+        | Some enums -> Some UnionEnum.(Many enums)
+        | None -> None
+      end
       | _ -> None
     in
     fun (sense, obj, t) ->
       match sentinel_of_literal t with
-      | Some s ->
-        begin
-          match obj with
-          (* obj.key ===/!== literal value *)
-          | DefT (_, _, ObjT { props_tmap; _ }) -> flow_sentinel sense props_tmap obj s
-          (* instance.key ===/!== literal value *)
-          | DefT (_, _, InstanceT (_, _, _, { own_props; _ })) ->
-            (* TODO: add test for sentinel test on implements *)
-            flow_sentinel sense own_props obj s
-          (* tuple.length ===/!== literal value *)
-          | DefT (reason, trust, ArrT (TupleAT (_, ts))) when key = "length" ->
-            let test =
-              let desc = RMatchingProp (key, desc_of_sentinel s) in
-              let r = replace_desc_reason desc (fst result) in
-              SentinelPropTestT (r, orig_obj, key, sense, s, result)
-            in
-            rec_flow cx trace (tuple_length reason trust ts, test)
-          | IntersectionT (_, rep) ->
-            (* For an intersection of object types, try the test for each object
-               type in turn, while recording the original intersection so that we
-               end up with the right refinement. See the comment on the
-               implementation of IntersectionPreprocessKit for more details. *)
-            let reason = fst result in
-            InterRep.members rep
-            |> List.iter (fun obj ->
-                   rec_flow
-                     cx
-                     trace
-                     ( obj,
-                       SpeculationKit.intersection_preprocess_kit
-                         reason
-                         (SentinelPropTest (sense, key, t, orig_obj, result))
-                     )
-               )
-          | _ ->
-            (* not enough info to refine *)
-            rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
-        end
+      | Some s -> begin
+        match obj with
+        (* obj.key ===/!== literal value *)
+        | DefT (_, _, ObjT { props_tmap; _ }) -> flow_sentinel sense props_tmap obj s
+        (* instance.key ===/!== literal value *)
+        | DefT (_, _, InstanceT (_, _, _, { own_props; _ })) ->
+          (* TODO: add test for sentinel test on implements *)
+          flow_sentinel sense own_props obj s
+        (* tuple.length ===/!== literal value *)
+        | DefT (reason, trust, ArrT (TupleAT (_, ts))) when key = "length" ->
+          let test =
+            let desc = RMatchingProp (key, desc_of_sentinel s) in
+            let r = replace_desc_reason desc (fst result) in
+            SentinelPropTestT (r, orig_obj, key, sense, s, result)
+          in
+          rec_flow cx trace (tuple_length reason trust ts, test)
+        | IntersectionT (_, rep) ->
+          (* For an intersection of object types, try the test for each object
+             type in turn, while recording the original intersection so that we
+             end up with the right refinement. See the comment on the
+             implementation of IntersectionPreprocessKit for more details. *)
+          let reason = fst result in
+          InterRep.members rep
+          |> List.iter (fun obj ->
+                 rec_flow
+                   cx
+                   trace
+                   ( obj,
+                     SpeculationKit.intersection_preprocess_kit
+                       reason
+                       (SentinelPropTest (sense, key, t, orig_obj, result))
+                   )
+             )
+        | _ ->
+          (* not enough info to refine *)
+          rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
+      end
       | None ->
         (* not enough info to refine *)
         rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
@@ -8463,7 +8453,7 @@ struct
         | (TypeAppT (_, _, c1, ts1), TypeAppT (_, _, c2, ts2))
           when c1 = c2 && List.length ts1 = List.length ts2 ->
           List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
-        | (AnnotT (_, OpenT (_, id1), _), AnnotT (_, OpenT (_, id2), _)) ->
+        | (AnnotT (_, OpenT (_, id1), _), AnnotT (_, OpenT (_, id2), _)) -> begin
           (* It is tempting to unify the tvars here, but that would be problematic. These tvars should
              eventually resolve to the type definitions that these annotations reference. By unifying
              them, we might accidentally resolve one of the tvars to the type definition of the other,
@@ -8471,29 +8461,28 @@ struct
 
              On the other hand, if the tvars are already resolved, then we can do something
              interesting... *)
-          begin
-            match (Context.find_graph cx id1, Context.find_graph cx id2) with
-            | ( (Resolved (_, t1) | FullyResolved (_, (lazy t1))),
-                (Resolved (_, t2) | FullyResolved (_, (lazy t2)))
-              )
-            (* Can we unify these types? Tempting, again, but annotations can refer to recursive type
-               definitions, and we might get into an infinite loop (which could perhaps be avoided by
-               a unification cache, but we'd rather not cache if we can get away with it).
+          match (Context.find_graph cx id1, Context.find_graph cx id2) with
+          | ( (Resolved (_, t1) | FullyResolved (_, (lazy t1))),
+              (Resolved (_, t2) | FullyResolved (_, (lazy t2)))
+            )
+          (* Can we unify these types? Tempting, again, but annotations can refer to recursive type
+             definitions, and we might get into an infinite loop (which could perhaps be avoided by
+             a unification cache, but we'd rather not cache if we can get away with it).
 
-               The alternative is to do naive unification, but we must be careful. In particular, it
-               could cause confusing errors: recall that the naive unification of annotations goes
-               through repositioning over these types.
+             The alternative is to do naive unification, but we must be careful. In particular, it
+             could cause confusing errors: recall that the naive unification of annotations goes
+             through repositioning over these types.
 
-               But if we simulate the same repositioning here, we won't really save anything. For
-               example, these types could be essentially the same union, and repositioning them would
-               introduce differences in their representations that would kill other
-               optimizations. Thus, we focus on the special case where these types have the same
-               reason, and then do naive unification. *)
-              when Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
-              ->
-              naive_unify cx trace ~use_op t1 t2
-            | _ -> naive_unify cx trace ~use_op t1 t2
-          end
+             But if we simulate the same repositioning here, we won't really save anything. For
+             example, these types could be essentially the same union, and repositioning them would
+             introduce differences in their representations that would kill other
+             optimizations. Thus, we focus on the special case where these types have the same
+             reason, and then do naive unification. *)
+            when Reason.concretize_equal (Context.aloc_tables cx) (reason_of_t t1) (reason_of_t t2)
+            ->
+            naive_unify cx trace ~use_op t1 t2
+          | _ -> naive_unify cx trace ~use_op t1 t2
+        end
         | _ -> naive_unify cx trace ~use_op t1 t2
     )
 
@@ -8832,27 +8821,26 @@ struct
       |> Base.List.fold_left
            ~f:(fun acc param ->
              match param with
-             | ResolvedSpreadArg (_, arrtype, generic) ->
-               begin
-                 match arrtype with
-                 | ArrayAT (_, None)
-                 | ArrayAT (_, Some []) ->
-                   (* The latter case corresponds to the empty array literal. If
-                    * we folded over the empty tuple_types list, then this would
-                    * cause an empty result. *)
-                   param :: acc
-                 | ArrayAT (_, Some tuple_types) ->
-                   Base.List.fold_left
-                     ~f:(fun acc elem -> ResolvedArg (elem, generic) :: acc)
-                     ~init:acc
-                     tuple_types
-                 | TupleAT (_, elements) ->
-                   Base.List.fold_left
-                     ~f:(fun acc (TupleElement { t; _ }) -> ResolvedArg (t, generic) :: acc)
-                     ~init:acc
-                     elements
-                 | ROArrayAT _ -> param :: acc
-               end
+             | ResolvedSpreadArg (_, arrtype, generic) -> begin
+               match arrtype with
+               | ArrayAT (_, None)
+               | ArrayAT (_, Some []) ->
+                 (* The latter case corresponds to the empty array literal. If
+                  * we folded over the empty tuple_types list, then this would
+                  * cause an empty result. *)
+                 param :: acc
+               | ArrayAT (_, Some tuple_types) ->
+                 Base.List.fold_left
+                   ~f:(fun acc elem -> ResolvedArg (elem, generic) :: acc)
+                   ~init:acc
+                   tuple_types
+               | TupleAT (_, elements) ->
+                 Base.List.fold_left
+                   ~f:(fun acc (TupleElement { t; _ }) -> ResolvedArg (t, generic) :: acc)
+                   ~init:acc
+                   elements
+               | ROArrayAT _ -> param :: acc
+             end
              | ResolvedAnySpreadArg _
              | ResolvedArg _ ->
                param :: acc)

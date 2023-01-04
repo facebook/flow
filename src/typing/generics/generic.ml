@@ -207,7 +207,6 @@ type sat_result =
      }
 
    The rules below show examples of what scenario triggers them.
-
 *)
 
 let rec satisfies ~printer id1 id2 =
@@ -381,13 +380,12 @@ module ArraySpread = struct
     | (Top, _) ->
       Top
     | (Generic (id, _), Some id') when equal_id id id' -> merge_ro t ro'
-    | (Generic (id, ro), Some id') ->
-      begin
-        match (satisfies ~printer id' id, satisfies ~printer id id') with
-        | (Upper _, Upper _) -> Top
-        | (Upper _, _) -> merge_ro (Generic (id', ro')) ro
-        | _ -> merge_ro t ro'
-      end
+    | (Generic (id, ro), Some id') -> begin
+      match (satisfies ~printer id' id, satisfies ~printer id id') with
+      | (Upper _, Upper _) -> Top
+      | (Upper _, _) -> merge_ro (Generic (id', ro')) ro
+      | _ -> merge_ro t ro'
+    end
     | _ -> Top
 
   let to_option = function

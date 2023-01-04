@@ -338,23 +338,20 @@ let mk_num_singleton number_type (lexeme : int array) =
   (* convert singleton number type into a float *)
   let value =
     match number_type with
-    | LEGACY_OCTAL ->
-      begin
-        try Int64.to_float (Int64.of_string ("0o" ^ num)) with
-        | Failure _ -> failwith ("Invalid legacy octal " ^ num)
-      end
+    | LEGACY_OCTAL -> begin
+      try Int64.to_float (Int64.of_string ("0o" ^ num)) with
+      | Failure _ -> failwith ("Invalid legacy octal " ^ num)
+    end
     | BINARY
-    | OCTAL ->
-      begin
-        try Int64.to_float (Int64.of_string num) with
-        | Failure _ -> failwith ("Invalid binary/octal " ^ num)
-      end
+    | OCTAL -> begin
+      try Int64.to_float (Int64.of_string num) with
+      | Failure _ -> failwith ("Invalid binary/octal " ^ num)
+    end
     | LEGACY_NON_OCTAL
-    | NORMAL ->
-      begin
-        try float_of_string num with
-        | Failure _ -> failwith ("Invalid number " ^ num)
-      end
+    | NORMAL -> begin
+      try float_of_string num with
+      | Failure _ -> failwith ("Invalid number " ^ num)
+    end
   in
   let value =
     if neg then

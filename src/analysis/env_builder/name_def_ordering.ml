@@ -1145,21 +1145,21 @@ struct
           | Scope_api.With_ALoc.Missing_def _ -> functions
         end
       | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
-        begin
-          try
-            let { Provider_api.state; _ } =
-              Base.Option.value_exn (Provider_api.providers_of_def providers loc)
+      begin
+        try
+          let { Provider_api.state; _ } =
+            Base.Option.value_exn (Provider_api.providers_of_def providers loc)
+          in
+          match state with
+          | Find_providers.AnnotatedVar { contextual = false; _ } -> []
+          | _ ->
+            let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
+              Scope_api.With_ALoc.def_of_use scopes loc
             in
-            match state with
-            | Find_providers.AnnotatedVar { contextual = false; _ } -> []
-            | _ ->
-              let { Scope_api.With_ALoc.Def.locs = (loc, _); _ } =
-                Scope_api.With_ALoc.def_of_use scopes loc
-              in
-              [Env_api.Loc loc]
-          with
-          | Scope_api.With_ALoc.Missing_def _ -> []
-        end
+            [Env_api.Loc loc]
+        with
+        | Scope_api.With_ALoc.Missing_def _ -> []
+      end
       | Select _ -> []
     in
     function

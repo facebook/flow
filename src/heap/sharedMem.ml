@@ -557,8 +557,7 @@ module FreqCache (Config : CacheConfig) :
       let l = ref [] in
       Hashtbl.iter
         begin
-          fun key (freq, v) ->
-          l := (key, !freq, v) :: !l
+          (fun key (freq, v) -> l := (key, !freq, v) :: !l)
         end
         cache;
       Hashtbl.clear cache;
@@ -787,8 +786,7 @@ struct
   let () =
     invalidate_callback_list :=
       begin
-        fun () ->
-        Cache.clear ()
+        (fun () -> Cache.clear ())
       end
       :: !invalidate_callback_list
 end

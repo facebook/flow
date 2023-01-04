@@ -190,11 +190,10 @@ module Layout_matcher = struct
     | x -> Error ("expected Group", x)
 
   let nth_group n = function
-    | Group xs as layout ->
-      begin
-        try Ok (List.nth xs n) with
-        | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Group element", layout)
-      end
+    | Group xs as layout -> begin
+      try Ok (List.nth xs n) with
+      | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Group element", layout)
+    end
     | x -> Error ("expected Group", x)
 
   let fused = function
@@ -202,11 +201,10 @@ module Layout_matcher = struct
     | x -> Error ("expected Concat", x)
 
   let nth_fused n = function
-    | Concat xs as layout ->
-      begin
-        try Ok (List.nth xs n) with
-        | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Concat element", layout)
-      end
+    | Concat xs as layout -> begin
+      try Ok (List.nth xs n) with
+      | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Concat element", layout)
+    end
     | layout -> Error ("expected Concat", layout)
 
   let atom = function
@@ -219,11 +217,10 @@ module Layout_matcher = struct
     | x -> Error ("expected Sequence", x)
 
   let nth_sequence n = function
-    | Sequence (_, xs) as layout ->
-      begin
-        try Ok (List.nth xs n) with
-        | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Layout element", layout)
-      end
+    | Sequence (_, xs) as layout -> begin
+      try Ok (List.nth xs n) with
+      | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Layout element", layout)
+    end
     | layout -> Error ("expected Sequence", layout)
 
   let pretty_space = function

@@ -547,17 +547,16 @@ struct
               ( Identifier { Ast.Pattern.Identifier.annot; _ }
               | Object { Ast.Pattern.Object.annot; _ }
               | Array { Ast.Pattern.Array.annot; _ } )
-            ) ->
-            begin
-              match init with
-              | Some init ->
-                (* given `var x = e`, read e then write x *)
-                ignore @@ this#expression init;
-                ignore @@ this#variable_declarator_pattern ~kind id
-              | None ->
-                (* `var x;` is not a write of `x`, but there might be unbound names in the annotation *)
-                ignore @@ this#type_annotation_hint annot
-            end
+            ) -> begin
+            match init with
+            | Some init ->
+              (* given `var x = e`, read e then write x *)
+              ignore @@ this#expression init;
+              ignore @@ this#variable_declarator_pattern ~kind id
+            | None ->
+              (* `var x;` is not a write of `x`, but there might be unbound names in the annotation *)
+              ignore @@ this#type_annotation_hint annot
+          end
           | (_, Expression _) ->
             (* This is an invalid expression that will cause a runtime error, so we skip the left hand side *)
             ignore @@ Base.Option.map ~f:this#expression init

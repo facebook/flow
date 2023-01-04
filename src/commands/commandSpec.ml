@@ -151,25 +151,24 @@ module ArgSpec = struct
     {
       parse =
         (fun ~name -> function
-          | Some [x] ->
-            begin
-              match Base.List.find ~f:(fun (s, _) -> s = x) values with
-              | Some (_, v) -> Some v
-              | None ->
-                raise
-                  (Failed_to_parse
-                     {
-                       arg = name;
-                       msg = "Invalid argument";
-                       details =
-                         Some
-                           (Printf.sprintf
-                              "expected one of: %s"
-                              (String.concat ", " (Base.List.map ~f:fst values))
-                           );
-                     }
-                  )
-            end
+          | Some [x] -> begin
+            match Base.List.find ~f:(fun (s, _) -> s = x) values with
+            | Some (_, v) -> Some v
+            | None ->
+              raise
+                (Failed_to_parse
+                   {
+                     arg = name;
+                     msg = "Invalid argument";
+                     details =
+                       Some
+                         (Printf.sprintf
+                            "expected one of: %s"
+                            (String.concat ", " (Base.List.map ~f:fst values))
+                         );
+                   }
+                )
+          end
           | _ -> None);
       arg = Arg;
     }
@@ -178,12 +177,11 @@ module ArgSpec = struct
     {
       parse =
         (fun ~name -> function
-          | Some (cmd_name :: argv) ->
-            begin
-              match (enum cmds).parse ~name (Some [cmd_name]) with
-              | Some cmd -> Some (cmd, argv)
-              | None -> None
-            end
+          | Some (cmd_name :: argv) -> begin
+            match (enum cmds).parse ~name (Some [cmd_name]) with
+            | Some cmd -> Some (cmd, argv)
+            | None -> None
+          end
           | Some []
           | None ->
             None);
@@ -213,16 +211,13 @@ module ArgSpec = struct
     {
       parse =
         (fun ~name -> function
-          | None ->
-            begin
-              match default with
-              | Some default -> default
-              | None ->
-                raise
-                  (Failed_to_parse
-                     { arg = name; msg = "Missing required arguments"; details = None }
-                  )
-            end
+          | None -> begin
+            match default with
+            | Some default -> default
+            | None ->
+              raise
+                (Failed_to_parse { arg = name; msg = "Missing required arguments"; details = None })
+          end
           | value ->
             (match arg_type.parse ~name value with
             | None ->
@@ -480,16 +475,15 @@ and parse_flag values spec arg args =
       in
       let values = SMap.add arg' [value] values in
       parse values spec args
-    | ArgSpec.Arg ->
-      begin
-        match args with
-        | [] -> raise (Failed_to_parse { arg; msg = "Option needs an argument"; details = None })
-        | value :: args ->
-          if is_arg value then
-            raise (Failed_to_parse { arg; msg = "Option needs an argument"; details = None });
-          let values = SMap.add arg [value] values in
-          parse values spec args
-      end
+    | ArgSpec.Arg -> begin
+      match args with
+      | [] -> raise (Failed_to_parse { arg; msg = "Option needs an argument"; details = None })
+      | value :: args ->
+        if is_arg value then
+          raise (Failed_to_parse { arg; msg = "Option needs an argument"; details = None });
+        let values = SMap.add arg [value] values in
+        parse values spec args
+    end
     | ArgSpec.Arg_List ->
       let (value_list, args) = consume_args args in
       let values = SMap.add arg value_list values in
@@ -530,13 +524,12 @@ let init_from_env spec =
   SMap.fold
     (fun arg flag acc ->
       match flag.ArgSpec.env with
-      | Some env ->
-        begin
-          match Sys.getenv env with
-          | "" -> acc
-          | env -> SMap.add arg [env] acc
-          | exception Not_found -> acc
-        end
+      | Some env -> begin
+        match Sys.getenv env with
+        | "" -> acc
+        | env -> SMap.add arg [env] acc
+        | exception Not_found -> acc
+      end
       | None -> acc)
     flags
     SMap.empty

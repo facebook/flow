@@ -433,20 +433,20 @@ module JSX (Parse : Parser_common.PARSER) = struct
                 children;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
-            | (start_loc, Ok `Fragment)
-            | (start_loc, Error `Fragment) ->
-              `Fragment
-                {
-                  JSX.frag_opening_element = start_loc;
-                  frag_closing_element =
-                    (match closing_element with
-                    | `Fragment loc -> loc
-                    (* the following are parse erros *)
-                    | `Element (loc, _) -> loc
-                    | _ -> end_loc);
-                  frag_children = children;
-                  frag_comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-                }
+        | (start_loc, Ok `Fragment)
+        | (start_loc, Error `Fragment) ->
+          `Fragment
+            {
+              JSX.frag_opening_element = start_loc;
+              frag_closing_element =
+                (match closing_element with
+                | `Fragment loc -> loc
+                (* the following are parse erros *)
+                | `Element (loc, _) -> loc
+                | _ -> end_loc);
+              frag_children = children;
+              frag_comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            }
       in
 
       (Loc.btwn (fst opening_element) end_loc, result)

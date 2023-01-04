@@ -211,8 +211,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             | (_, PrivateName _) -> failwith "Internal Error: Found object private prop"
             | (_, Computed key) -> Pattern.Object.Property.Computed key
           in
-          Some
-            Pattern.Object.(Property (loc, Property.{ key; pattern; default; shorthand = false }))
+          Some Pattern.Object.(Property (loc, Property.{ key; pattern; default; shorthand = false }))
         | _ ->
           (match raw_key with
           | ( _,

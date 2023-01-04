@@ -230,22 +230,21 @@ module Make
     let open Ast.Expression.CallTypeArg in
     let rec loop ts tasts cx tparams_map = function
       | [] -> (List.rev ts, List.rev tasts)
-      | ast :: asts ->
-        begin
-          match ast with
-          | Explicit ast ->
-            let (((_, t), _) as tast) = Anno.convert cx tparams_map ast in
-            loop (ExplicitArg t :: ts) (Explicit tast :: tasts) cx tparams_map asts
-          | Implicit (loc, impl) ->
-            let reason = mk_reason RImplicitInstantiation loc in
-            let id = Tvar.mk_no_wrap cx reason in
-            loop
-              (ImplicitArg (reason, id) :: ts)
-              (Implicit ((loc, OpenT (reason, id)), impl) :: tasts)
-              cx
-              tparams_map
-              asts
-        end
+      | ast :: asts -> begin
+        match ast with
+        | Explicit ast ->
+          let (((_, t), _) as tast) = Anno.convert cx tparams_map ast in
+          loop (ExplicitArg t :: ts) (Explicit tast :: tasts) cx tparams_map asts
+        | Implicit (loc, impl) ->
+          let reason = mk_reason RImplicitInstantiation loc in
+          let id = Tvar.mk_no_wrap cx reason in
+          loop
+            (ImplicitArg (reason, id) :: ts)
+            (Implicit ((loc, OpenT (reason, id)), impl) :: tasts)
+            cx
+            tparams_map
+            asts
+      end
     in
     fun cx tparams_map call_targs ->
       let open Ast.Expression.CallTypeArgs in
@@ -4370,25 +4369,24 @@ module Make
       let make_trust = Context.trust_constructor cx in
       let open Ast.Literal in
       match lit.Ast.Literal.value with
-      | String s ->
-        begin
-          match Context.haste_module_ref_prefix cx with
-          | Some prefix when String.starts_with ~prefix s ->
-            let m = String_utils.lstrip s prefix in
-            let t = Import_export.require cx (loc, m) loc in
-            let reason = mk_reason (RCustom "module reference") loc in
-            Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [t]
-          | _ ->
-            (* It's too expensive to track literal information for large strings.*)
-            let max_literal_length = Context.max_literal_length cx in
-            let (lit, r_desc) =
-              if max_literal_length = 0 || String.length s <= max_literal_length then
-                (Literal (None, OrdinaryName s), RString)
-              else
-                (AnyLiteral, RLongStringLit max_literal_length)
-            in
-            DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit)
-        end
+      | String s -> begin
+        match Context.haste_module_ref_prefix cx with
+        | Some prefix when String.starts_with ~prefix s ->
+          let m = String_utils.lstrip s prefix in
+          let t = Import_export.require cx (loc, m) loc in
+          let reason = mk_reason (RCustom "module reference") loc in
+          Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [t]
+        | _ ->
+          (* It's too expensive to track literal information for large strings.*)
+          let max_literal_length = Context.max_literal_length cx in
+          let (lit, r_desc) =
+            if max_literal_length = 0 || String.length s <= max_literal_length then
+              (Literal (None, OrdinaryName s), RString)
+            else
+              (AnyLiteral, RLongStringLit max_literal_length)
+          in
+          DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit)
+      end
       | Boolean b -> DefT (mk_annot_reason RBoolean loc, make_trust (), BoolT (Some b))
       | Null -> NullT.at loc |> with_trust make_trust
       | Number f ->

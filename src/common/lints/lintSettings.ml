@@ -104,12 +104,11 @@ let of_lines base_settings =
       begin
         match left with
         | "all" -> Ok (AllSetting (of_default value))
-        | _ ->
-          begin
-            match kinds_of_string left with
-            | Some kinds -> Ok (EntryList (kinds, (value, Some loc)))
-            | None -> Error (label, Printf.sprintf "Invalid lint rule \"%s\" encountered." left)
-          end
+        | _ -> begin
+          match kinds_of_string left with
+          | Some kinds -> Ok (EntryList (kinds, (value, Some loc)))
+          | None -> Error (label, Printf.sprintf "Invalid lint rule \"%s\" encountered." left)
+        end
       end
     | _ ->
       Error (label, "Malformed lint rule. Properly formed rules contain a single '=' character.")

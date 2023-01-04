@@ -14,24 +14,23 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
   (* TODO: flesh this out *)
   let rec check_polarity cx ?trace tparams polarity = function
     (* base case *)
-    | GenericT { reason; name; bound; _ } ->
-      begin
-        match Subst_name.Map.find_opt name tparams with
-        | None -> check_polarity cx ?trace tparams polarity bound
-        | Some tp ->
-          if not (Polarity.compat (tp.polarity, polarity)) then
-            Flow_js_utils.add_output
-              cx
-              ?trace
-              (Error_message.EPolarityMismatch
-                 {
-                   reason;
-                   name = Subst_name.string_of_subst_name name;
-                   expected_polarity = tp.polarity;
-                   actual_polarity = polarity;
-                 }
-              )
-      end
+    | GenericT { reason; name; bound; _ } -> begin
+      match Subst_name.Map.find_opt name tparams with
+      | None -> check_polarity cx ?trace tparams polarity bound
+      | Some tp ->
+        if not (Polarity.compat (tp.polarity, polarity)) then
+          Flow_js_utils.add_output
+            cx
+            ?trace
+            (Error_message.EPolarityMismatch
+               {
+                 reason;
+                 name = Subst_name.string_of_subst_name name;
+                 expected_polarity = tp.polarity;
+                 actual_polarity = polarity;
+               }
+            )
+    end
     (* No need to walk into tvars, since we're looking for GenericT types, which
      * will certainly never appear in the bounds of a tvar. *)
     | OpenT _ -> ()

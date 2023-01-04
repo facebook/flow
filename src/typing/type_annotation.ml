@@ -1484,64 +1484,62 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let named_property cx tparams_map loc acc prop =
       match prop with
       | { Object.Property.key; value = Object.Property.Init value; optional; variance; _method; _ }
-        ->
-        begin
-          match key with
-          | Ast.Expression.Object.Property.Literal
-              (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
-          | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ })
-            ->
-            Type_inference_hooks_js.dispatch_obj_type_prop_decl_hook cx name loc;
-            let (((_, t), _) as value_ast) = convert cx tparams_map value in
-            let prop_ast t =
-              {
-                prop with
-                Object.Property.key =
-                  begin
-                    match key with
-                    | Ast.Expression.Object.Property.Literal (_, lit) ->
-                      Ast.Expression.Object.Property.Literal ((loc, t), lit)
-                    | Ast.Expression.Object.Property.Identifier
-                        (_loc, { Ast.Identifier.name = _; comments = comments_inner }) ->
-                      Ast.Expression.Object.Property.Identifier
-                        ((loc, t), { Ast.Identifier.name; comments = comments_inner })
-                    | _ -> assert_false "branch invariant"
-                  end;
-                value = Object.Property.Init value_ast;
-              }
+        -> begin
+        match key with
+        | Ast.Expression.Object.Property.Literal
+            (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
+        | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
+          Type_inference_hooks_js.dispatch_obj_type_prop_decl_hook cx name loc;
+          let (((_, t), _) as value_ast) = convert cx tparams_map value in
+          let prop_ast t =
+            {
+              prop with
+              Object.Property.key =
+                begin
+                  match key with
+                  | Ast.Expression.Object.Property.Literal (_, lit) ->
+                    Ast.Expression.Object.Property.Literal ((loc, t), lit)
+                  | Ast.Expression.Object.Property.Identifier
+                      (_loc, { Ast.Identifier.name = _; comments = comments_inner }) ->
+                    Ast.Expression.Object.Property.Identifier
+                      ((loc, t), { Ast.Identifier.name; comments = comments_inner })
+                  | _ -> assert_false "branch invariant"
+                end;
+              value = Object.Property.Init value_ast;
+            }
+          in
+          if name = "__proto__" && (not (_method || optional)) && variance = None then
+            let reason = mk_reason RPrototype (fst value) in
+            let proto = ConsGen.obj_test_proto cx reason t in
+            let acc =
+              match Acc.add_proto (ConsGen.mk_typeof_annotation cx reason proto) acc with
+              | Ok acc -> acc
+              | Error err ->
+                Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+                acc
             in
-            if name = "__proto__" && (not (_method || optional)) && variance = None then
-              let reason = mk_reason RPrototype (fst value) in
-              let proto = ConsGen.obj_test_proto cx reason t in
-              let acc =
-                match Acc.add_proto (ConsGen.mk_typeof_annotation cx reason proto) acc with
-                | Ok acc -> acc
-                | Error err ->
-                  Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
-                  acc
-              in
-              (acc, prop_ast proto)
-            else
-              let t =
-                if optional then
-                  TypeUtil.optional t
-                else
-                  t
-              in
-              let prop =
-                if _method then
-                  Properties.add_method (OrdinaryName name) (Some loc) t
-                else
-                  Properties.add_field (OrdinaryName name) (polarity variance) (Some loc) t
-              in
-              (Acc.add_prop prop acc, prop_ast t)
-          | Ast.Expression.Object.Property.Literal (loc, _)
-          | Ast.Expression.Object.Property.PrivateName (loc, _)
-          | Ast.Expression.Object.Property.Computed (loc, _) ->
-            Flow_js_utils.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
-            let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
-            (acc, prop_ast)
-        end
+            (acc, prop_ast proto)
+          else
+            let t =
+              if optional then
+                TypeUtil.optional t
+              else
+                t
+            in
+            let prop =
+              if _method then
+                Properties.add_method (OrdinaryName name) (Some loc) t
+              else
+                Properties.add_field (OrdinaryName name) (polarity variance) (Some loc) t
+            in
+            (Acc.add_prop prop acc, prop_ast t)
+        | Ast.Expression.Object.Property.Literal (loc, _)
+        | Ast.Expression.Object.Property.PrivateName (loc, _)
+        | Ast.Expression.Object.Property.Computed (loc, _) ->
+          Flow_js_utils.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
+          let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
+          (acc, prop_ast)
+      end
       (* unsafe getter property *)
       | {
        Object.Property.key =

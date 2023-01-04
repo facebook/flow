@@ -199,18 +199,17 @@ let serialize ?(imports_react = false) ~exact_by_default loc ty =
 let remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty loc =
   let open Autofix_options in
   match ambiguity_strategy with
-  | Fail ->
-    begin
-      try fail_on_ambiguity ty with
-      | FoundAmbiguousType ->
-        raise
-        @@ expected
-        @@ MulipleTypesPossibleAtPoint
-             {
-               specialized = specialize_temporary_types ty |> serialize ~exact_by_default loc;
-               generalized = generalize_temporary_types ty |> serialize ~exact_by_default loc;
-             }
-    end
+  | Fail -> begin
+    try fail_on_ambiguity ty with
+    | FoundAmbiguousType ->
+      raise
+      @@ expected
+      @@ MulipleTypesPossibleAtPoint
+           {
+             specialized = specialize_temporary_types ty |> serialize ~exact_by_default loc;
+             generalized = generalize_temporary_types ty |> serialize ~exact_by_default loc;
+           }
+  end
   | Generalize -> generalize_temporary_types ty
   | Specialize -> specialize_temporary_types ty
   | Fixme -> fixme_ambiguous_types ty

@@ -22,14 +22,13 @@ let exit =
     | FlowExitStatus.No_error
     | FlowExitStatus.Type_error ->
       ()
-    | _ ->
-      begin
-        match !json_mode with
-        | None -> ()
-        | Some { pretty } ->
-          let json = Hh_json.JSON_Object (FlowExitStatus.json_props_of_t ?msg t) in
-          Hh_json.print_json_endline ~pretty json
-      end
+    | _ -> begin
+      match !json_mode with
+      | None -> ()
+      | Some { pretty } ->
+        let json = Hh_json.JSON_Object (FlowExitStatus.json_props_of_t ?msg t) in
+        Hh_json.print_json_endline ~pretty json
+    end
   in
   fun ?msg t ->
     (match msg with

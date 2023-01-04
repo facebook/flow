@@ -193,61 +193,60 @@ end = struct
         | File_utils.Dir dir ->
           let test = { test_name = relativize dir; cases = SMap.empty } in
           test :: acc
-        | File_utils.File file ->
-          begin
-            match acc with
-            | test :: rest ->
-              let case_name = strip_prefix (test.test_name ^ Filename.dir_sep) (relativize file) in
-              let (case_name, ext) = split_extension case_name in
-              let cases =
-                match ext with
-                | "js" when Filename.check_suffix case_name ".source" ->
-                  let case_name = Filename.chop_suffix case_name ".source" in
-                  let case = find_case case_name test.cases in
-                  let case =
-                    let content = Sys_utils.cat file in
-                    match eval_source content with
-                    | Some source -> { case with source = Some source }
-                    | None -> { case with skipped = file :: case.skipped }
-                  in
-                  SMap.add case_name case test.cases
-                | "js" ->
-                  let case = find_case case_name test.cases in
-                  let source = Sys_utils.cat file in
-                  let case = { case with source = Some source } in
-                  SMap.add case_name case test.cases
-                | "json" ->
-                  let (case_name, kind) = split_extension case_name in
-                  let case = find_case case_name test.cases in
+        | File_utils.File file -> begin
+          match acc with
+          | test :: rest ->
+            let case_name = strip_prefix (test.test_name ^ Filename.dir_sep) (relativize file) in
+            let (case_name, ext) = split_extension case_name in
+            let cases =
+              match ext with
+              | "js" when Filename.check_suffix case_name ".source" ->
+                let case_name = Filename.chop_suffix case_name ".source" in
+                let case = find_case case_name test.cases in
+                let case =
                   let content = Sys_utils.cat file in
-                  let case =
-                    match kind with
-                    | "module" -> { case with expected = Some (Module content) }
-                    | "tree" -> { case with expected = Some (Tree content) }
-                    | "tokens" -> { case with expected = Some (Tokens content) }
-                    | "failure" -> { case with expected = Some (Failure content) }
-                    | "options" ->
-                      (* TODO: propagate errors better *)
-                      let options = Base.Result.ok_or_failwith (parse_options content) in
-                      { case with options = (fst options, Some (snd options)) }
-                    | _ -> { case with skipped = file :: case.skipped }
-                  in
-                  SMap.add case_name case test.cases
-                | "diff" ->
-                  let case = find_case case_name test.cases in
-                  let source = Sys_utils.cat file in
-                  let case = { case with diff = Diff source } in
-                  SMap.add case_name case test.cases
-                | "skip" ->
-                  let case = find_case case_name test.cases in
-                  let skip = Sys_utils.cat file |> String.trim in
-                  let case = { case with diff = Todo skip } in
-                  SMap.add case_name case test.cases
-                | _ -> test.cases
-              in
-              { test with cases } :: rest
-            | _ -> acc
-          end)
+                  match eval_source content with
+                  | Some source -> { case with source = Some source }
+                  | None -> { case with skipped = file :: case.skipped }
+                in
+                SMap.add case_name case test.cases
+              | "js" ->
+                let case = find_case case_name test.cases in
+                let source = Sys_utils.cat file in
+                let case = { case with source = Some source } in
+                SMap.add case_name case test.cases
+              | "json" ->
+                let (case_name, kind) = split_extension case_name in
+                let case = find_case case_name test.cases in
+                let content = Sys_utils.cat file in
+                let case =
+                  match kind with
+                  | "module" -> { case with expected = Some (Module content) }
+                  | "tree" -> { case with expected = Some (Tree content) }
+                  | "tokens" -> { case with expected = Some (Tokens content) }
+                  | "failure" -> { case with expected = Some (Failure content) }
+                  | "options" ->
+                    (* TODO: propagate errors better *)
+                    let options = Base.Result.ok_or_failwith (parse_options content) in
+                    { case with options = (fst options, Some (snd options)) }
+                  | _ -> { case with skipped = file :: case.skipped }
+                in
+                SMap.add case_name case test.cases
+              | "diff" ->
+                let case = find_case case_name test.cases in
+                let source = Sys_utils.cat file in
+                let case = { case with diff = Diff source } in
+                SMap.add case_name case test.cases
+              | "skip" ->
+                let case = find_case case_name test.cases in
+                let skip = Sys_utils.cat file |> String.trim in
+                let case = { case with diff = Todo skip } in
+                SMap.add case_name case test.cases
+              | _ -> test.cases
+            in
+            { test with cases } :: rest
+          | _ -> acc
+        end)
       []
     |> List.filter (fun test -> SMap.cardinal test.cases > 0)
     |> List.rev
@@ -495,90 +494,88 @@ end = struct
   let rec apply_diff diff expected =
     let open Ast.Expression in
     match diff with
-    | (_, Object { Object.properties = diff_props; _ }) ->
-      begin
-        match expected with
-        | (loc, Object { Object.properties = expected_props; comments }) ->
-          let properties =
-            List.fold_left
-              (fun props diff_prop ->
-                match diff_prop with
-                | Object.Property (diff_loc, diff_prop) ->
-                  let (diff_name, diff_value) = prop_name_and_value diff_prop in
-                  if not (has_prop diff_name props) then
-                    Object.Property (diff_loc, diff_prop) :: props
-                  else
-                    List.fold_left
-                      (fun acc exp ->
-                        match exp with
-                        | Object.Property (exp_loc, exp_prop) ->
-                          let exp_key =
-                            match exp_prop with
-                            | Object.Property.Init { key; _ } -> key
-                            | _ -> failwith "Invalid JSON"
-                          in
-                          let (exp_name, exp_value) = prop_name_and_value exp_prop in
-                          if exp_name = diff_name then
-                            (* recursively apply diff *)
-                            match apply_diff diff_value exp_value with
-                            | Some value ->
-                              let prop =
-                                Object.Property
-                                  ( exp_loc,
-                                    Object.Property.Init { key = exp_key; value; shorthand = false }
-                                  )
-                              in
-                              prop :: acc
-                            | None -> acc
-                          else
-                            let prop = Object.Property (exp_loc, exp_prop) in
+    | (_, Object { Object.properties = diff_props; _ }) -> begin
+      match expected with
+      | (loc, Object { Object.properties = expected_props; comments }) ->
+        let properties =
+          List.fold_left
+            (fun props diff_prop ->
+              match diff_prop with
+              | Object.Property (diff_loc, diff_prop) ->
+                let (diff_name, diff_value) = prop_name_and_value diff_prop in
+                if not (has_prop diff_name props) then
+                  Object.Property (diff_loc, diff_prop) :: props
+                else
+                  List.fold_left
+                    (fun acc exp ->
+                      match exp with
+                      | Object.Property (exp_loc, exp_prop) ->
+                        let exp_key =
+                          match exp_prop with
+                          | Object.Property.Init { key; _ } -> key
+                          | _ -> failwith "Invalid JSON"
+                        in
+                        let (exp_name, exp_value) = prop_name_and_value exp_prop in
+                        if exp_name = diff_name then
+                          (* recursively apply diff *)
+                          match apply_diff diff_value exp_value with
+                          | Some value ->
+                            let prop =
+                              Object.Property
+                                ( exp_loc,
+                                  Object.Property.Init { key = exp_key; value; shorthand = false }
+                                )
+                            in
                             prop :: acc
-                        | prop -> prop :: acc)
-                      []
-                      props
-                | _ -> failwith "Invalid JSON")
-              expected_props
-              diff_props
-          in
-          Some (loc, Object { Object.properties; comments })
-        | (loc, Array { Array.elements = expected_elems; comments }) ->
-          let expected_length = List.length expected_elems in
-          let elements =
-            List.fold_left
-              (fun elems diff_prop ->
-                match diff_prop with
-                | Object.Property (_, diff_prop) ->
-                  let (diff_name, diff_value) = prop_name_and_value diff_prop in
-                  let diff_index = int_of_string diff_name in
-                  if diff_index >= expected_length then
-                    (* append the diff *)
-                    (* TODO: this should insert gaps, but I don't expect people to
-                       write diffs that have gaps. *)
-                    List.rev (Array.Expression diff_value :: List.rev elems)
-                  else
-                    (* apply the diff *)
-                    Base.List.mapi
-                      ~f:(fun index elem ->
-                        if index <> diff_index then
-                          elem
+                          | None -> acc
                         else
-                          match elem with
-                          | Array.Hole _ -> Array.Expression diff_value
-                          | Array.Expression exp_value ->
-                            begin
-                              match apply_diff diff_value exp_value with
-                              | Some value -> Array.Expression value
-                              | None -> Array.Hole Loc.none
-                            end
-                          | Array.Spread _ -> failwith "Invalid JSON")
-                      elems
-                | _ -> failwith "Invalid JSON")
-              expected_elems
-              diff_props
-          in
-          Some (loc, Array { Array.elements; comments })
-        | _ -> Some expected
-      end
+                          let prop = Object.Property (exp_loc, exp_prop) in
+                          prop :: acc
+                      | prop -> prop :: acc)
+                    []
+                    props
+              | _ -> failwith "Invalid JSON")
+            expected_props
+            diff_props
+        in
+        Some (loc, Object { Object.properties; comments })
+      | (loc, Array { Array.elements = expected_elems; comments }) ->
+        let expected_length = List.length expected_elems in
+        let elements =
+          List.fold_left
+            (fun elems diff_prop ->
+              match diff_prop with
+              | Object.Property (_, diff_prop) ->
+                let (diff_name, diff_value) = prop_name_and_value diff_prop in
+                let diff_index = int_of_string diff_name in
+                if diff_index >= expected_length then
+                  (* append the diff *)
+                  (* TODO: this should insert gaps, but I don't expect people to
+                     write diffs that have gaps. *)
+                  List.rev (Array.Expression diff_value :: List.rev elems)
+                else
+                  (* apply the diff *)
+                  Base.List.mapi
+                    ~f:(fun index elem ->
+                      if index <> diff_index then
+                        elem
+                      else
+                        match elem with
+                        | Array.Hole _ -> Array.Expression diff_value
+                        | Array.Expression exp_value -> begin
+                          match apply_diff diff_value exp_value with
+                          | Some value -> Array.Expression value
+                          | None -> Array.Hole Loc.none
+                        end
+                        | Array.Spread _ -> failwith "Invalid JSON")
+                    elems
+              | _ -> failwith "Invalid JSON")
+            expected_elems
+            diff_props
+        in
+        Some (loc, Array { Array.elements; comments })
+      | _ -> Some expected
+    end
     | (_, Literal _) -> Some diff
     | (_, Identifier (_, { Ast.Identifier.name = "undefined"; comments = _ })) -> None
     | _ -> failwith "Invalid diff format"

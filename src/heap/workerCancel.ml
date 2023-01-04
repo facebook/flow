@@ -38,8 +38,8 @@ let with_no_cancellations f =
       ~f:
         begin
           fun () ->
-          set_can_worker_stop false;
-          f ()
+            set_can_worker_stop false;
+            f ()
         end
       ~finally:(fun () ->
         set_can_worker_stop true;

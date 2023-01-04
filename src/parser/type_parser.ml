@@ -749,8 +749,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 value;
                 static = static <> None;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-            )
+              })
           env
       in
       Type.Object.CallProperty prop
@@ -779,8 +778,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 _method = false;
                 variance;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-            )
+              })
           env
       in
       Type.Object.Property prop
@@ -826,8 +824,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 _method = false;
                 variance = None;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-            )
+              })
           env
       in
       Type.Object.Property prop
@@ -1148,38 +1145,36 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               ( Expression.Object.Property.Identifier
                   (_, { Identifier.name = ("get" | "set") as name; comments = _ }) as key
               )
-            ) ->
-            begin
-              match Peek.token env with
-              | T_LESS_THAN
-              | T_LPAREN ->
-                error_unexpected_proto env proto;
-                error_unexpected_variance env variance;
-                method_property env start_loc static key ~leading
-              | T_COLON
-              | T_PLING ->
-                init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key)
-              | _ ->
-                ignore (object_key_remove_trailing env key);
-                let key = object_key env in
-                let is_getter = name = "get" in
-                let leading = leading @ leading_key in
-                error_unexpected_proto env proto;
-                error_unexpected_variance env variance;
-                getter_or_setter ~is_getter ~leading env start_loc static key
-            end
-          | (key_loc, key) ->
-            begin
-              match Peek.token env with
-              | T_LESS_THAN
-              | T_LPAREN ->
-                error_unexpected_proto env proto;
-                error_unexpected_variance env variance;
-                method_property env start_loc static key ~leading
-              | _ ->
-                error_invalid_property_name env is_class static key;
-                init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key)
-            end))
+            ) -> begin
+            match Peek.token env with
+            | T_LESS_THAN
+            | T_LPAREN ->
+              error_unexpected_proto env proto;
+              error_unexpected_variance env variance;
+              method_property env start_loc static key ~leading
+            | T_COLON
+            | T_PLING ->
+              init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key)
+            | _ ->
+              ignore (object_key_remove_trailing env key);
+              let key = object_key env in
+              let is_getter = name = "get" in
+              let leading = leading @ leading_key in
+              error_unexpected_proto env proto;
+              error_unexpected_variance env variance;
+              getter_or_setter ~is_getter ~leading env start_loc static key
+          end
+          | (key_loc, key) -> begin
+            match Peek.token env with
+            | T_LESS_THAN
+            | T_LPAREN ->
+              error_unexpected_proto env proto;
+              error_unexpected_variance env variance;
+              method_property env start_loc static key ~leading
+            | _ ->
+              error_invalid_property_name env is_class static key;
+              init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key)
+          end))
     in
     fun ~is_class ~allow_exact ~allow_spread env ->
       let exact = allow_exact && Peek.token env = T_LCURLYBAR in

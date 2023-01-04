@@ -26,7 +26,6 @@ type t
 
    On Unix, the type `in_channel` is in fact an alias for
    `Stdlib.in_channel`.
-
 *)
 val with_timeout : timeout:int -> on_timeout:(unit -> 'a) -> do_:(t -> 'a) -> 'a
 

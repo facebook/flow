@@ -33,14 +33,13 @@ let read_headers (reader : Buffered_line_reader.t) : string list =
 let parse_headers_to_lowercase_map (headers : string list) : string SMap.t =
   let rec parse_internal acc = function
     | [] -> acc
-    | line :: rest ->
-      begin
-        match Str.bounded_split (Str.regexp ":") line 2 with
-        | [k; v] ->
-          let (k', v') = (String.lowercase_ascii k, String.trim v) in
-          parse_internal (SMap.add k' v' acc) rest
-        | _ -> parse_internal acc rest
-      end
+    | line :: rest -> begin
+      match Str.bounded_split (Str.regexp ":") line 2 with
+      | [k; v] ->
+        let (k', v') = (String.lowercase_ascii k, String.trim v) in
+        parse_internal (SMap.add k' v' acc) rest
+      | _ -> parse_internal acc rest
+    end
   in
   parse_internal SMap.empty headers
 

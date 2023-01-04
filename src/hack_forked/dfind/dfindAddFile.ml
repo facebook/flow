@@ -134,11 +134,11 @@ and add_new_file links env path =
         SSet.fold
           begin
             fun file all_files ->
-            try
-              let sub_dir = SMap.find file env.dirs in
-              SSet.union sub_dir all_files
-            with
-            | Not_found -> SSet.add file all_files
+              try
+                let sub_dir = SMap.find file env.dirs in
+                SSet.union sub_dir all_files
+              with
+              | Not_found -> SSet.add file all_files
           end
           files
           prev_files

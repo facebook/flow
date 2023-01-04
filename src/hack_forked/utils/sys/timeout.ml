@@ -448,16 +448,15 @@ module Select_timeout = struct
        * to use getsockopt to read the SO_ERROR option at level SOL_SOCKET to figure out if the
        * connect worked. However, this code is only used on Windows, so that's fine *)
       try Unix.connect sock sockaddr with
-      | Unix.Unix_error ((Unix.EINPROGRESS | Unix.EWOULDBLOCK), _, _) ->
-        begin
-          match select ?timeout [] [sock] [] no_select_timeout with
-          | (_, [], [exn_sock]) when exn_sock = sock -> failwith "Failed to connect to socket"
-          | (_, [], _) ->
-            failwith
-              "This should be unreachable. How did select return with no fd when there is no timeout?"
-          | (_, [_sock], _) -> ()
-          | (_, _, _) -> assert false
-        end
+      | Unix.Unix_error ((Unix.EINPROGRESS | Unix.EWOULDBLOCK), _, _) -> begin
+        match select ?timeout [] [sock] [] no_select_timeout with
+        | (_, [], [exn_sock]) when exn_sock = sock -> failwith "Failed to connect to socket"
+        | (_, [], _) ->
+          failwith
+            "This should be unreachable. How did select return with no fd when there is no timeout?"
+        | (_, [_sock], _) -> ()
+        | (_, _, _) -> assert false
+      end
       | exn ->
         let exn = Exception.wrap exn in
         Unix.close sock;

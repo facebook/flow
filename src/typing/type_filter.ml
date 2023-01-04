@@ -41,12 +41,11 @@ let recurse_into_union cx filter_fn ((r, ts) : reason * Type.t list) =
 let recurse_into_intersection =
   let rec helper filter_fn r acc = function
     | [] -> List.rev acc
-    | t :: ts ->
-      begin
-        match filter_fn t with
-        | DefT (_, _, EmptyT) -> []
-        | filtered_type -> helper filter_fn r (filtered_type :: acc) ts
-      end
+    | t :: ts -> begin
+      match filter_fn t with
+      | DefT (_, _, EmptyT) -> []
+      | filtered_type -> helper filter_fn r (filtered_type :: acc) ts
+    end
   in
   fun filter_fn ((r, ts) : reason * Type.t list) ->
     match helper filter_fn r [] ts with
@@ -56,12 +55,11 @@ let recurse_into_intersection =
 
 let map_poly ~f t =
   match t with
-  | DefT (r, tr, PolyT ({ t_out; _ } as poly)) ->
-    begin
-      match f t_out with
-      | DefT (_, _, EmptyT) as empty -> empty
-      | t_out -> DefT (r, tr, PolyT { poly with t_out })
-    end
+  | DefT (r, tr, PolyT ({ t_out; _ } as poly)) -> begin
+    match f t_out with
+    | DefT (_, _, EmptyT) as empty -> empty
+    | t_out -> DefT (r, tr, PolyT { poly with t_out })
+  end
   | _ -> t
 
 let rec exists cx = function

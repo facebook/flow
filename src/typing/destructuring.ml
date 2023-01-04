@@ -239,9 +239,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     let check_for_invalid_annot annot =
       match (acc.has_parent, annot) with
       | (true, Ast.Type.Available (loc, _)) ->
-        Flow_js.add_output
-          cx
-          Error_message.(EUnsupportedSyntax (loc, AnnotationInsideDestructuring))
+        Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, AnnotationInsideDestructuring))
       | _ -> ()
     in
     let open Ast.Pattern in

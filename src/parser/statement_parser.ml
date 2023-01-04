@@ -131,12 +131,11 @@ module Statement
     | _ when is_strict_reserved name -> strict_error_at env (loc, Parse_error.StrictReservedWord)
     | _ when is_reserved name ->
       error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
-    | _ ->
-      begin
-        match restricted_error with
-        | Some err when is_restricted name -> strict_error_at env (loc, err)
-        | _ -> ()
-      end
+    | _ -> begin
+      match restricted_error with
+      | Some err when is_restricted name -> strict_error_at env (loc, err)
+      | _ -> ()
+    end
 
   let string_literal env (loc, value, raw, octal) =
     if octal then strict_error env Parse_error.StrictOctalLiteral;
@@ -1956,18 +1955,17 @@ module Statement
         | T_COMMA
         | T_RCURLY ->
           (identifier env, None)
-        | _ ->
-          begin
-            match (error_if_type, Peek.token env) with
-            | (Some error_if_type, T_TYPE)
-            | (Some error_if_type, T_TYPEOF) ->
-              error env error_if_type;
-              Eat.token env;
+        | _ -> begin
+          match (error_if_type, Peek.token env) with
+          | (Some error_if_type, T_TYPE)
+          | (Some error_if_type, T_TYPEOF) ->
+            error env error_if_type;
+            Eat.token env;
 
-              (* consume `type` or `typeof` *)
-              (Type.type_identifier env, None)
-            | _ -> (identifier env, None)
-          end
+            (* consume `type` or `typeof` *)
+            (Type.type_identifier env, None)
+          | _ -> (identifier env, None)
+        end
         (*
            ImportSpecifier[Type]:
              [~Type] ImportedBinding
@@ -2012,35 +2010,34 @@ module Statement
             assert_identifier_name_is_identifier env remote;
             { remote; local = None; kind = None }
           (* `type as foo` (value named `type`) or `type as,` (type named `as`) *)
-          | T_IDENTIFIER { raw = "as"; _ } ->
-            begin
-              match Peek.ith_token ~i:1 env with
-              | T_EOF
-              | T_RCURLY
-              | T_COMMA ->
-                (* `type as` *)
-                { remote = Type.type_identifier env; local = None; kind }
-              | T_IDENTIFIER { raw = "as"; _ } ->
-                (* `type as as foo` *)
-                let remote = identifier_name env in
-                (* first `as` *)
-                Eat.token env;
+          | T_IDENTIFIER { raw = "as"; _ } -> begin
+            match Peek.ith_token ~i:1 env with
+            | T_EOF
+            | T_RCURLY
+            | T_COMMA ->
+              (* `type as` *)
+              { remote = Type.type_identifier env; local = None; kind }
+            | T_IDENTIFIER { raw = "as"; _ } ->
+              (* `type as as foo` *)
+              let remote = identifier_name env in
+              (* first `as` *)
+              Eat.token env;
 
-                (* second `as` *)
-                let local = Some (Type.type_identifier env) in
-                (* `foo` *)
-                { remote; local; kind }
-              | _ ->
-                (* `type as foo` *)
-                let remote = type_keyword_or_remote in
-                (* `type` becomes a value *)
-                assert_identifier_name_is_identifier env remote;
-                Eat.token env;
+              (* second `as` *)
+              let local = Some (Type.type_identifier env) in
+              (* `foo` *)
+              { remote; local; kind }
+            | _ ->
+              (* `type as foo` *)
+              let remote = type_keyword_or_remote in
+              (* `type` becomes a value *)
+              assert_identifier_name_is_identifier env remote;
+              Eat.token env;
 
-                (* `as` *)
-                let local = Some (Parse.identifier env) in
-                { remote; local; kind = None }
-            end
+              (* `as` *)
+              let local = Some (Parse.identifier env) in
+              { remote; local; kind = None }
+          end
           (* `type x`, or `type x as y` *)
           | _ ->
             let (remote, local) = with_maybe_as ~for_type:true env in
@@ -2191,35 +2188,34 @@ module Statement
               }
           (* `import type [...] from "ModuleName";`
              note that if [...] is missing, we're importing a value named `type`! *)
-          | T_TYPE when should_parse_types env ->
-            begin
-              match Peek.ith_token ~i:1 env with
-              (* `import type, { other, names } from "ModuleName";` *)
-              | T_COMMA
-              (* `import type from "ModuleName";` *)
-              | T_IDENTIFIER { raw = "from"; _ } ->
-                (* Importing the exported value named "type". This is not a type-import.*)
-                with_default ImportValue env leading
-              (* `import type *` is invalid, since the namespace can't be a type *)
-              | T_MULT ->
-                (* consume `type` *)
-                Eat.token env;
+          | T_TYPE when should_parse_types env -> begin
+            match Peek.ith_token ~i:1 env with
+            (* `import type, { other, names } from "ModuleName";` *)
+            | T_COMMA
+            (* `import type from "ModuleName";` *)
+            | T_IDENTIFIER { raw = "from"; _ } ->
+              (* Importing the exported value named "type". This is not a type-import.*)
+              with_default ImportValue env leading
+            (* `import type *` is invalid, since the namespace can't be a type *)
+            | T_MULT ->
+              (* consume `type` *)
+              Eat.token env;
 
-                (* unexpected `*` *)
-                error_unexpected env;
+              (* unexpected `*` *)
+              error_unexpected env;
 
-                with_specifiers ImportType env leading
-              | T_LCURLY ->
-                (* consume `type` *)
-                Eat.token env;
+              with_specifiers ImportType env leading
+            | T_LCURLY ->
+              (* consume `type` *)
+              Eat.token env;
 
-                with_specifiers ImportType env leading
-              | _ ->
-                (* consume `type` *)
-                Eat.token env;
+              with_specifiers ImportType env leading
+            | _ ->
+              (* consume `type` *)
+              Eat.token env;
 
-                with_default ImportType env leading
-            end
+              with_default ImportType env leading
+          end
           (* `import typeof ... from "ModuleName";` *)
           | T_TYPEOF when should_parse_types env ->
             Expect.token env T_TYPEOF;

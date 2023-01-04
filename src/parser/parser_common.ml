@@ -202,12 +202,11 @@ let is_simple_parameter_list =
  * https://tc39.github.io/ecma262/#sec-islabelledfunction
  *)
 let rec is_labelled_function = function
-  | (_, Flow_ast.Statement.Labeled { Flow_ast.Statement.Labeled.body; _ }) ->
-    begin
-      match body with
-      | (_, Flow_ast.Statement.FunctionDeclaration _) -> true
-      | _ -> is_labelled_function body
-    end
+  | (_, Flow_ast.Statement.Labeled { Flow_ast.Statement.Labeled.body; _ }) -> begin
+    match body with
+    | (_, Flow_ast.Statement.FunctionDeclaration _) -> true
+    | _ -> is_labelled_function body
+  end
   | _ -> false
 
 let with_loc ?start_loc fn env =

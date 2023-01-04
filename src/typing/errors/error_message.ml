@@ -2972,7 +2972,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       let features =
         text "Cannot build a typed interface for this module. "
-        :: text "You should annotate the exports of this module with types. " :: features
+        :: text "You should annotate the exports of this module with types. "
+        :: features
       in
       Normal { features }
     )
@@ -3803,7 +3804,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             Friendly.conjunction_concat
               (Base.List.map ~f:(fun member -> [code member]) left_to_check)
         in
-        text "the members " :: members_features @ [text " of enum "; ref enum_reason; text " have"]
+        (text "the members " :: members_features)
+        @ [text " of enum "; ref enum_reason; text " have"]
     in
     let default_features =
       match default_case with
@@ -3818,7 +3820,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | None -> []
     in
     let features =
-      text "Incomplete exhaustive check: " :: left_to_check_features
+      (text "Incomplete exhaustive check: " :: left_to_check_features)
       @ [text " not been considered in check of "; desc reason; text "."]
       @ default_features
     in
@@ -4132,11 +4134,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                 text "this object property"
             in
             text " or to "
-            :: these :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) properties
+            :: these
+            :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) properties
           else
             []
         in
-        text "these definitions" :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) locs
+        (text "these definitions" :: Base.List.map ~f:(fun l -> ref (mk_reason (RCustom "") l)) locs)
         @ props
     in
     let features =
@@ -4147,7 +4150,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         itself;
       ]
       @ tl_recur
-      @ text ". Please add an annotation to " :: annot_message
+      @ (text ". Please add an annotation to " :: annot_message)
     in
     Normal { features }
   | EDefinitionCycle dependencies ->
@@ -4207,11 +4210,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       text
         "The following definitions recursively depend on each other, and Flow cannot compute their types:\n"
       :: deps
-      @ text "Please add type annotations to these definitions" :: annot_message locs
+      @ (text "Please add type annotations to these definitions" :: annot_message locs)
     in
     let features =
       if List.length properties <= 5 && List.length properties > 0 then
-        features @ text " or to these object properties" :: annot_message properties
+        features @ (text " or to these object properties" :: annot_message properties)
       else
         features
     in
@@ -4338,27 +4341,25 @@ let error_code_of_message err : error_code option =
   | EInvalidImportStarUse _ -> Some InvalidImportStarUse
   | EBinaryInLHS _ -> Some InvalidInLhs
   | EBinaryInRHS _ -> Some InvalidInRhs
-  | EBindingError (binding_error, _, _, _) ->
-    begin
-      match binding_error with
-      | ENameAlreadyBound -> Some NameAlreadyBound
-      | EVarRedeclaration -> Some NameAlreadyBound
-      | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
-      | ETypeInValuePosition _
-      | ETypeAliasInValuePosition ->
-        Some TypeAsValue
-      | EConstReassigned
-      | EConstParamReassigned ->
-        Some ReassignConst
-      | EImportReassigned -> Some ReassignImport
-      | EEnumReassigned -> Some ReassignEnum
-    end
-  | EBuiltinLookupFailed { name; _ } ->
-    begin
-      match name with
-      | Some x when is_internal_module_name x -> Some CannotResolveModule
-      | _ -> Some CannotResolveName
-    end
+  | EBindingError (binding_error, _, _, _) -> begin
+    match binding_error with
+    | ENameAlreadyBound -> Some NameAlreadyBound
+    | EVarRedeclaration -> Some NameAlreadyBound
+    | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
+    | ETypeInValuePosition _
+    | ETypeAliasInValuePosition ->
+      Some TypeAsValue
+    | EConstReassigned
+    | EConstParamReassigned ->
+      Some ReassignConst
+    | EImportReassigned -> Some ReassignImport
+    | EEnumReassigned -> Some ReassignEnum
+  end
+  | EBuiltinLookupFailed { name; _ } -> begin
+    match name with
+    | Some x when is_internal_module_name x -> Some CannotResolveModule
+    | _ -> Some CannotResolveName
+  end
   | ECallTypeArity _ -> Some NonpolymorphicTypeArg
   | ECannotDelete _ -> Some CannotDelete
   | ECannotResolveOpenTvar _ -> Some CannotInferType
@@ -4372,17 +4373,16 @@ let error_code_of_message err : error_code option =
   | EComputedPropertyWithMultipleLowerBounds _ -> Some InvalidComputedProp
   | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
   | EDebugPrint (_, _) -> None
-  | EDocblockError (_, err) ->
-    begin
-      match err with
-      | MultipleFlowAttributes -> Some DuplicateFlowDecl
-      | InvalidFlowMode _ -> Some InvalidFlowModeDecl
-      | MultipleProvidesModuleAttributes -> Some DuplicateProvideModuleDecl
-      | MultipleJSXAttributes -> Some DuplicateJsxDecl
-      | InvalidJSXAttribute _ -> Some InvalidJsxDecl
-      | MultipleJSXRuntimeAttributes -> Some DuplicateJsxRuntimeDecl
-      | InvalidJSXRuntimeAttribute -> Some InvalidJsxRuntimeDecl
-    end
+  | EDocblockError (_, err) -> begin
+    match err with
+    | MultipleFlowAttributes -> Some DuplicateFlowDecl
+    | InvalidFlowMode _ -> Some InvalidFlowModeDecl
+    | MultipleProvidesModuleAttributes -> Some DuplicateProvideModuleDecl
+    | MultipleJSXAttributes -> Some DuplicateJsxDecl
+    | InvalidJSXAttribute _ -> Some InvalidJsxDecl
+    | MultipleJSXRuntimeAttributes -> Some DuplicateJsxRuntimeDecl
+    | InvalidJSXRuntimeAttribute -> Some InvalidJsxRuntimeDecl
+  end
   | EDuplicateModuleProvider _ -> Some DuplicateModule
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
@@ -4447,12 +4447,11 @@ let error_code_of_message err : error_code option =
   | EInvalidExtends _ -> Some InvalidExtends
   | ELintSetting _ -> Some LintSetting
   | EMissingAnnotation _ -> Some MissingAnnot
-  | EMissingLocalAnnotation { reason; hint_available = _; from_generic_function = _ } ->
-    begin
-      match desc_of_reason reason with
-      | RImplicitThis _ -> Some MissingThisAnnot
-      | _ -> Some MissingLocalAnnot
-    end
+  | EMissingLocalAnnotation { reason; hint_available = _; from_generic_function = _ } -> begin
+    match desc_of_reason reason with
+    | RImplicitThis _ -> Some MissingThisAnnot
+    | _ -> Some MissingLocalAnnot
+  end
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
@@ -4499,12 +4498,11 @@ let error_code_of_message err : error_code option =
   | ETupleUnsafeWrite _ -> Some InvalidTupleIndex
   | ETypeParamArity (_, _) -> Some NonpolymorphicTypeApp
   | ETypeParamMinArity (_, _) -> Some MissingTypeArg
-  | EUnableToSpread { error_kind; _ } ->
-    begin
-      match error_kind with
-      | Inexact -> Some CannotSpreadInexact
-      | Indexer -> Some CannotSpreadIndexer
-    end
+  | EUnableToSpread { error_kind; _ } -> begin
+    match error_kind with
+    | Inexact -> Some CannotSpreadInexact
+    | Indexer -> Some CannotSpreadIndexer
+  end
   | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
   | EUnexpectedThisType _ -> Some IllegalThis
   | EUnionSpeculationFailed { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
@@ -4555,9 +4553,8 @@ let error_code_of_message err : error_code option =
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
   | EUninitializedInstanceProperty _
-  | EUnusedPromise _ ->
-    begin
-      match kind_of_msg err with
-      | Errors.LintError kind -> Some (Error_codes.code_of_lint kind)
-      | _ -> None
-    end
+  | EUnusedPromise _ -> begin
+    match kind_of_msg err with
+    | Errors.LintError kind -> Some (Error_codes.code_of_lint kind)
+    | _ -> None
+  end

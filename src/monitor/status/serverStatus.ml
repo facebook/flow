@@ -309,35 +309,34 @@ let is_significant_transition old_status new_status =
      | (Typechecking (old_mode, old_tc_status), Typechecking (new_mode, new_tc_status)) ->
        (* A change in mode is always signifcant *)
        old_mode <> new_mode
-       ||
-       begin
-         match (old_tc_status, new_tc_status) with
-         | (Parsing _, Parsing _)
-         | (Indexing _, Indexing _)
-         | (Merging _, Merging _)
-         | (Checking _, Checking _)
-         | (Canceling _, Canceling _) ->
-           (* Making progress within parsing, merging or canceling is not significant *)
-           false
-         | (_, Fetching_saved_state _)
-         | (_, Reading_saved_state)
-         | (_, Loading_saved_state _)
-         | (_, Parsing _)
-         | (_, Indexing _)
-         | (_, Resolving_dependencies)
-         | (_, Calculating_dependencies)
-         | (_, Merging _)
-         | (_, Checking _)
-         | (_, Canceling _)
-         | (_, Waiting_for_watchman _)
-         | (_, Collating_errors) ->
-           (* But changing typechecking status always is significant *)
-           true
-         | (_, Starting_typecheck)
-         | (_, Finishing_typecheck) ->
-           (* also handled above *)
-           false
-       end
+       || begin
+            match (old_tc_status, new_tc_status) with
+            | (Parsing _, Parsing _)
+            | (Indexing _, Indexing _)
+            | (Merging _, Merging _)
+            | (Checking _, Checking _)
+            | (Canceling _, Canceling _) ->
+              (* Making progress within parsing, merging or canceling is not significant *)
+              false
+            | (_, Fetching_saved_state _)
+            | (_, Reading_saved_state)
+            | (_, Loading_saved_state _)
+            | (_, Parsing _)
+            | (_, Indexing _)
+            | (_, Resolving_dependencies)
+            | (_, Calculating_dependencies)
+            | (_, Merging _)
+            | (_, Checking _)
+            | (_, Canceling _)
+            | (_, Waiting_for_watchman _)
+            | (_, Collating_errors) ->
+              (* But changing typechecking status always is significant *)
+              true
+            | (_, Starting_typecheck)
+            | (_, Finishing_typecheck) ->
+              (* also handled above *)
+              false
+          end
      | (_, Starting_up)
      | (_, Free)
      | (_, Typechecking _)

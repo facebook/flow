@@ -151,7 +151,8 @@ type 'loc virtual_reason_desc =
       Subst_name.t
       * ('loc virtual_reason_desc * 'loc)
       * (*reason op *)
-      ('loc virtual_reason_desc * 'loc) (* reason tapp *)
+      ('loc virtual_reason_desc * 'loc)
+    (* reason tapp *)
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option
@@ -352,27 +353,25 @@ let in_range loc range =
 let string_of_source ?(strip_root = None) =
   File_key.(
     function
-    | LibFile file ->
-      begin
-        match strip_root with
-        | Some root ->
-          let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-          if String.starts_with ~prefix:root_str file then
-            spf "[LIB] %s" (Files.relative_path root_str file)
-          else
-            spf "[LIB] %s" (Filename.basename file)
-        | None -> file
-      end
+    | LibFile file -> begin
+      match strip_root with
+      | Some root ->
+        let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+        if String.starts_with ~prefix:root_str file then
+          spf "[LIB] %s" (Files.relative_path root_str file)
+        else
+          spf "[LIB] %s" (Filename.basename file)
+      | None -> file
+    end
     | SourceFile file
     | JsonFile file
-    | ResourceFile file ->
-      begin
-        match strip_root with
-        | Some root ->
-          let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-          Files.relative_path root_str file
-        | None -> file
-      end
+    | ResourceFile file -> begin
+      match strip_root with
+      | Some root ->
+        let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+        Files.relative_path root_str file
+      | None -> file
+    end
   )
 
 let string_of_loc ?(strip_root = None) loc =

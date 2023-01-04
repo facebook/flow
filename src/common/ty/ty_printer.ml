@@ -231,54 +231,52 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     Ty.(
       fun ~depth prop ->
         match prop with
-        | NamedProp { name = key; prop = named_prop; _ } ->
-          begin
-            match named_prop with
-            | Field { t; polarity; optional } ->
-              fuse
-                [
-                  variance_ polarity;
-                  to_key (Reason.display_string_of_name key);
-                  ( if optional then
-                    Atom "?"
-                  else
-                    Empty
-                  );
-                  Atom ":";
-                  pretty_space;
-                  type_ ~depth t;
-                ]
-            | Method func ->
-              fuse
-                [
-                  to_key (Reason.display_string_of_name key);
-                  type_function ~depth ~sep:(Atom ":") func;
-                ]
-            | Get t ->
-              group
-                [
-                  Atom "get";
-                  space;
-                  to_key (Reason.display_string_of_name key);
-                  Atom "(";
-                  softline;
-                  Atom ")";
-                  Atom ":";
-                  pretty_space;
-                  type_ ~depth t;
-                ]
-            | Set t ->
-              group
-                [
-                  Atom "set";
-                  space;
-                  to_key (Reason.display_string_of_name key);
-                  wrap_and_indent (Atom "(", Atom ")") [type_ ~depth t];
-                  Atom ":";
-                  pretty_space;
-                  type_ ~depth Void;
-                ]
-          end
+        | NamedProp { name = key; prop = named_prop; _ } -> begin
+          match named_prop with
+          | Field { t; polarity; optional } ->
+            fuse
+              [
+                variance_ polarity;
+                to_key (Reason.display_string_of_name key);
+                ( if optional then
+                  Atom "?"
+                else
+                  Empty
+                );
+                Atom ":";
+                pretty_space;
+                type_ ~depth t;
+              ]
+          | Method func ->
+            fuse
+              [
+                to_key (Reason.display_string_of_name key); type_function ~depth ~sep:(Atom ":") func;
+              ]
+          | Get t ->
+            group
+              [
+                Atom "get";
+                space;
+                to_key (Reason.display_string_of_name key);
+                Atom "(";
+                softline;
+                Atom ")";
+                Atom ":";
+                pretty_space;
+                type_ ~depth t;
+              ]
+          | Set t ->
+            group
+              [
+                Atom "set";
+                space;
+                to_key (Reason.display_string_of_name key);
+                wrap_and_indent (Atom "(", Atom ")") [type_ ~depth t];
+                Atom ":";
+                pretty_space;
+                type_ ~depth Void;
+              ]
+        end
         | CallProp func -> fuse [type_function ~depth ~sep:(Atom ":") func]
         | SpreadProp t -> fuse [Atom "..."; type_ ~depth t]
     )

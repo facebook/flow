@@ -638,7 +638,8 @@ module rec TypeTerm : sig
         lookup_action: lookup_action;
         ids: Properties.Set.t option;
         method_accessible: bool;
-      } (* operations on objects *)
+      }
+    (* operations on objects *)
     (* Resolves the object into which the properties are assigned *)
     | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
@@ -2088,12 +2089,11 @@ end = struct
   let make =
     let rec mk_enum tset = function
       | [] -> Some tset
-      | t :: ts ->
-        begin
-          match canon t with
-          | Some tcanon when is_base t -> mk_enum (UnionEnumSet.add tcanon tset) ts
-          | _ -> None
-        end
+      | t :: ts -> begin
+        match canon t with
+        | Some tcanon when is_base t -> mk_enum (UnionEnumSet.add tcanon tset) ts
+        | _ -> None
+      end
     in
     fun t0 t1 ts ->
       let enum =
@@ -2217,16 +2217,15 @@ end = struct
     let unique_values =
       let rec unique_values ~reasonless_eq idx = function
         | [] -> Some idx
-        | (enum, t) :: values ->
-          begin
-            match UnionEnumMap.find_opt enum idx with
-            | None -> unique_values ~reasonless_eq (UnionEnumMap.add enum t idx) values
-            | Some t' ->
-              if reasonless_eq t t' then
-                unique_values ~reasonless_eq idx values
-              else
-                None
-          end
+        | (enum, t) :: values -> begin
+          match UnionEnumMap.find_opt enum idx with
+          | None -> unique_values ~reasonless_eq (UnionEnumMap.add enum t idx) values
+          | Some t' ->
+            if reasonless_eq t t' then
+              unique_values ~reasonless_eq idx values
+            else
+              None
+        end
       in
       unique_values UnionEnumMap.empty
     in
@@ -2318,30 +2317,29 @@ end = struct
   (* assume we know that l is a canonizable type *)
   let quick_mem_enum ~quick_subtype l (_t0, _t1, _ts, specialization) =
     match canon l with
-    | Some tcanon ->
-      begin
-        match !specialization with
-        | None -> Unknown
-        | Some Unoptimized -> Unknown
-        | Some Empty -> No
-        | Some (Singleton t) ->
-          if quick_subtype l t then
-            Yes
-          else
-            Conditional t
-        | Some (DisjointUnion _) -> No
-        | Some (PartiallyOptimizedDisjointUnion _) -> Unknown
-        | Some (EnumUnion tset) ->
-          if UnionEnumSet.mem tcanon tset then
-            Yes
-          else
-            No
-        | Some (PartiallyOptimizedUnionEnum tset) ->
-          if UnionEnumSet.mem tcanon tset then
-            Yes
-          else
-            Unknown
-      end
+    | Some tcanon -> begin
+      match !specialization with
+      | None -> Unknown
+      | Some Unoptimized -> Unknown
+      | Some Empty -> No
+      | Some (Singleton t) ->
+        if quick_subtype l t then
+          Yes
+        else
+          Conditional t
+      | Some (DisjointUnion _) -> No
+      | Some (PartiallyOptimizedDisjointUnion _) -> Unknown
+      | Some (EnumUnion tset) ->
+        if UnionEnumSet.mem tcanon tset then
+          Yes
+        else
+          No
+      | Some (PartiallyOptimizedUnionEnum tset) ->
+        if UnionEnumSet.mem tcanon tset then
+          Yes
+        else
+          Unknown
+    end
     | None -> failwith "quick_mem_enum is defined only for canonizable type"
 
   let lookup_disjoint_union find_resolved prop_map ~partial map =
@@ -2351,21 +2349,19 @@ end = struct
           acc
         else
           match NameUtils.Map.find_opt key prop_map with
-          | Some p ->
-            begin
-              match canon_prop find_resolved p with
-              | Some enum ->
-                begin
-                  match UnionEnumMap.find_opt enum idx with
-                  | Some t' -> Conditional t'
-                  | None ->
-                    if partial then
-                      Unknown
-                    else
-                      No
-                end
-              | None -> Unknown
+          | Some p -> begin
+            match canon_prop find_resolved p with
+            | Some enum -> begin
+              match UnionEnumMap.find_opt enum idx with
+              | Some t' -> Conditional t'
+              | None ->
+                if partial then
+                  Unknown
+                else
+                  No
             end
+            | None -> Unknown
+          end
           | None ->
             if partial then
               Unknown
@@ -2378,24 +2374,22 @@ end = struct
   let quick_mem_disjoint_union
       ~find_resolved ~find_props ~quick_subtype l (_t0, _t1, _ts, specialization) =
     match props_of find_props l with
-    | Some prop_map ->
-      begin
-        match !specialization with
-        | None -> Unknown
-        | Some Unoptimized -> Unknown
-        | Some Empty -> No
-        | Some (Singleton t) ->
-          if quick_subtype l t then
-            Yes
-          else
-            Conditional t
-        | Some (DisjointUnion map) ->
-          lookup_disjoint_union find_resolved prop_map ~partial:false map
-        | Some (PartiallyOptimizedDisjointUnion map) ->
-          lookup_disjoint_union find_resolved prop_map ~partial:true map
-        | Some (EnumUnion _) -> No
-        | Some (PartiallyOptimizedUnionEnum _) -> Unknown
-      end
+    | Some prop_map -> begin
+      match !specialization with
+      | None -> Unknown
+      | Some Unoptimized -> Unknown
+      | Some Empty -> No
+      | Some (Singleton t) ->
+        if quick_subtype l t then
+          Yes
+        else
+          Conditional t
+      | Some (DisjointUnion map) -> lookup_disjoint_union find_resolved prop_map ~partial:false map
+      | Some (PartiallyOptimizedDisjointUnion map) ->
+        lookup_disjoint_union find_resolved prop_map ~partial:true map
+      | Some (EnumUnion _) -> No
+      | Some (PartiallyOptimizedUnionEnum _) -> Unknown
+    end
     | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
 
   let check_enum (_, _, _, specialization) =

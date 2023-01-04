@@ -251,25 +251,24 @@ let patt_that_needs_concretization = function
   | _ -> false
 
 let parts_to_replace_t cx = function
-  | DefT (_, _, ObjT { call_t = Some id; _ }) ->
-    begin
-      match Context.find_call cx id with
-      | DefT (_, _, FunT (_, ft)) ->
-        let ts =
-          List.fold_left
-            (fun acc (_, t) ->
-              if patt_that_needs_concretization t then
-                t :: acc
-              else
-                acc)
-            []
-            ft.params
-        in
-        (match ft.rest_param with
-        | Some (_, _, t) when patt_that_needs_concretization t -> t :: ts
-        | _ -> ts)
-      | _ -> []
-    end
+  | DefT (_, _, ObjT { call_t = Some id; _ }) -> begin
+    match Context.find_call cx id with
+    | DefT (_, _, FunT (_, ft)) ->
+      let ts =
+        List.fold_left
+          (fun acc (_, t) ->
+            if patt_that_needs_concretization t then
+              t :: acc
+            else
+              acc)
+          []
+          ft.params
+      in
+      (match ft.rest_param with
+      | Some (_, _, t) when patt_that_needs_concretization t -> t :: ts
+      | _ -> ts)
+    | _ -> []
+  end
   | DefT (_, _, FunT (_, ft)) ->
     let ts =
       List.fold_left
@@ -331,19 +330,18 @@ let replace_parts =
       replace_args (arg :: acc) (ys, args)
   in
   fun cx resolved -> function
-    | UseT (op, DefT (r1, t1, ObjT ({ call_t = Some id; _ } as o))) as u ->
-      begin
-        match Context.find_call cx id with
-        | DefT (r2, t2, FunT (static, ft)) ->
-          let (resolved, params) = replace_params [] (resolved, ft.params) in
-          let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
-          assert (resolved = []);
-          let id' =
-            Context.make_call_prop cx (DefT (r2, t2, FunT (static, { ft with params; rest_param })))
-          in
-          UseT (op, DefT (r1, t1, ObjT { o with call_t = Some id' }))
-        | _ -> u
-      end
+    | UseT (op, DefT (r1, t1, ObjT ({ call_t = Some id; _ } as o))) as u -> begin
+      match Context.find_call cx id with
+      | DefT (r2, t2, FunT (static, ft)) ->
+        let (resolved, params) = replace_params [] (resolved, ft.params) in
+        let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
+        assert (resolved = []);
+        let id' =
+          Context.make_call_prop cx (DefT (r2, t2, FunT (static, { ft with params; rest_param })))
+        in
+        UseT (op, DefT (r1, t1, ObjT { o with call_t = Some id' }))
+      | _ -> u
+    end
     | UseT (op, DefT (r, trust, FunT (t1, ft))) ->
       let (resolved, params) = replace_params [] (resolved, ft.params) in
       let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
@@ -450,18 +448,17 @@ let add_output_generic ~src_cx:cx ~dst_cx ?trace msg =
   in
   let is_enabled =
     match Error_message.kind_of_msg msg with
-    | Errors.LintError lint_kind ->
-      begin
-        match Error_message.loc_of_msg msg with
-        | Some loc ->
-          ALoc.to_loc_with_tables (Context.aloc_tables cx) loc
-          |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
-          |> Base.Option.value_map ~default:true ~f:(fun lint_settings ->
-                 LintSettings.is_explicit lint_kind lint_settings
-                 || LintSettings.get_value lint_kind lint_settings <> Severity.Off
-             )
-        | _ -> true
-      end
+    | Errors.LintError lint_kind -> begin
+      match Error_message.loc_of_msg msg with
+      | Some loc ->
+        ALoc.to_loc_with_tables (Context.aloc_tables cx) loc
+        |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
+        |> Base.Option.value_map ~default:true ~f:(fun lint_settings ->
+               LintSettings.is_explicit lint_kind lint_settings
+               || LintSettings.get_value lint_kind lint_settings <> Severity.Off
+           )
+      | _ -> true
+    end
     | _ -> true
   in
   (* If the lint error isn't enabled at this location and isn't explicitly suppressed, just don't
@@ -525,8 +522,7 @@ let union_optimization_guard =
     match (l, u) with
     | (UnionT (_, rep1), UnionT (_, rep2)) ->
       rep1 = rep2
-      ||
-      (* Try O(n) check, then O(n log n) check, then O(n^2) check *)
+      || (* Try O(n) check, then O(n log n) check, then O(n^2) check *)
       begin
         (* Only optimize for enums, since this is the only fast path examined below.
          * Note that optimizing both reps with [UnionRep.optimize] can potentially
@@ -1898,68 +1894,66 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   in
   let (can_write_tuple, value) =
     match l with
-    | DefT (index_reason, _, NumT (Literal (_, (float_value, _)))) ->
-      begin
-        match ts with
-        | None -> (false, value)
-        | Some ts ->
-          let index_string = Dtoa.ecma_string_of_float float_value in
-          begin
-            match int_of_string_opt index_string with
-            | Some index ->
-              let value_opt =
-                try List.nth_opt ts index with
-                | Invalid_argument _ -> None
-              in
-              begin
-                match value_opt with
-                | Some (value, polarity, name) when is_tuple ->
-                  if write_action && (not @@ Polarity.compat (polarity, Polarity.Negative)) then
-                    add_output
-                      cx
-                      ~trace
-                      (Error_message.ETupleElementNotWritable { use_op; reason; index; name })
-                  else if
-                    (not write_action) && (not @@ Polarity.compat (polarity, Polarity.Positive))
-                  then
-                    add_output
-                      cx
-                      ~trace
-                      (Error_message.ETupleElementNotReadable { use_op; reason; index; name });
-                  (true, value)
-                | Some (value, _, _) -> (true, value)
-                | None ->
-                  if is_tuple then (
-                    add_output
-                      cx
-                      ~trace
-                      (Error_message.ETupleOutOfBounds
-                         {
-                           use_op;
-                           reason;
-                           reason_op = reason_tup;
-                           length = List.length ts;
-                           index = index_string;
-                         }
-                      );
-                    (true, AnyT.error (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason)))
-                  ) else
-                    (true, value)
-              end
-            | None ->
-              (* not an integer index *)
-              if is_tuple then (
-                add_output
-                  cx
-                  ~trace
-                  (Error_message.ETupleNonIntegerIndex
-                     { use_op; reason = index_reason; index = index_string }
-                  );
-                (true, AnyT.error reason)
-              ) else
+    | DefT (index_reason, _, NumT (Literal (_, (float_value, _)))) -> begin
+      match ts with
+      | None -> (false, value)
+      | Some ts ->
+        let index_string = Dtoa.ecma_string_of_float float_value in
+        begin
+          match int_of_string_opt index_string with
+          | Some index ->
+            let value_opt =
+              try List.nth_opt ts index with
+              | Invalid_argument _ -> None
+            in
+            begin
+              match value_opt with
+              | Some (value, polarity, name) when is_tuple ->
+                if write_action && (not @@ Polarity.compat (polarity, Polarity.Negative)) then
+                  add_output
+                    cx
+                    ~trace
+                    (Error_message.ETupleElementNotWritable { use_op; reason; index; name })
+                else if (not write_action) && (not @@ Polarity.compat (polarity, Polarity.Positive))
+                then
+                  add_output
+                    cx
+                    ~trace
+                    (Error_message.ETupleElementNotReadable { use_op; reason; index; name });
                 (true, value)
-          end
-      end
+              | Some (value, _, _) -> (true, value)
+              | None ->
+                if is_tuple then (
+                  add_output
+                    cx
+                    ~trace
+                    (Error_message.ETupleOutOfBounds
+                       {
+                         use_op;
+                         reason;
+                         reason_op = reason_tup;
+                         length = List.length ts;
+                         index = index_string;
+                       }
+                    );
+                  (true, AnyT.error (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason)))
+                ) else
+                  (true, value)
+            end
+          | None ->
+            (* not an integer index *)
+            if is_tuple then (
+              add_output
+                cx
+                ~trace
+                (Error_message.ETupleNonIntegerIndex
+                   { use_op; reason = index_reason; index = index_string }
+                );
+              (true, AnyT.error reason)
+            ) else
+              (true, value)
+        end
+    end
     | _ -> (false, value)
   in
   ( if is_index_restricted && (not can_write_tuple) && write_action then

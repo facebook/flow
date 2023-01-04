@@ -467,12 +467,11 @@ let value_of_token = function
   | T_ANY_TYPE -> "any"
   | T_MIXED_TYPE -> "mixed"
   | T_EMPTY_TYPE -> "empty"
-  | T_BOOLEAN_TYPE kind ->
-    begin
-      match kind with
-      | BOOL -> "bool"
-      | BOOLEAN -> "boolean"
-    end
+  | T_BOOLEAN_TYPE kind -> begin
+    match kind with
+    | BOOL -> "bool"
+    | BOOLEAN -> "boolean"
+  end
   | T_NUMBER_TYPE -> "number"
   | T_BIGINT_TYPE -> "bigint"
   | T_NUMBER_SINGLETON_TYPE { raw; _ } -> raw

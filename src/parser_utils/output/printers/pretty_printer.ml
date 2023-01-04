@@ -30,37 +30,36 @@ let rec fits ~width ~rest (items : item list) =
     match (items, rest) with
     | ([], []) -> true
     | ([], _) -> fits ~width ~rest:[] rest
-    | ((mode, hd) :: tl, _) ->
-      begin
-        match hd with
-        | Empty -> fits ~width ~rest tl
-        | SourceLocation (_, hd) -> fits ~width ~rest ((mode, hd) :: tl)
-        | IfPretty (hd, _) -> fits ~width ~rest ((mode, hd) :: tl)
-        | IfBreak (if_, else_) ->
-          let node =
-            match mode with
-            | Break -> if_
-            | Flat -> else_
-          in
-          fits ~width ~rest ((mode, node) :: tl)
-        | Group items
-        | Concat items ->
-          let rev_items = Base.List.rev_map ~f:(fun item -> (mode, item)) items in
-          fits ~width ~rest (Base.List.rev_append rev_items tl)
-        | Indent node -> fits ~width ~rest ((mode, node) :: tl)
-        (* Respect forced breaks *)
-        | Newline ->
-          (match mode with
-          | Break -> true
-          | Flat -> false)
-        | Sequence ({ break = Break_if_pretty; _ }, _) -> false
-        | Sequence ({ break = _; inline = (before, _); indent = _ }, nodes) ->
-          (* TODO: need to consider `after`. and indent? *)
-          ((not before) && mode = Break) || fits ~width ~rest ((mode, Concat nodes) :: tl)
-        | Identifier (_, x)
-        | Atom x ->
-          fits ~width:(width - String.length x) ~rest tl
-      end
+    | ((mode, hd) :: tl, _) -> begin
+      match hd with
+      | Empty -> fits ~width ~rest tl
+      | SourceLocation (_, hd) -> fits ~width ~rest ((mode, hd) :: tl)
+      | IfPretty (hd, _) -> fits ~width ~rest ((mode, hd) :: tl)
+      | IfBreak (if_, else_) ->
+        let node =
+          match mode with
+          | Break -> if_
+          | Flat -> else_
+        in
+        fits ~width ~rest ((mode, node) :: tl)
+      | Group items
+      | Concat items ->
+        let rev_items = Base.List.rev_map ~f:(fun item -> (mode, item)) items in
+        fits ~width ~rest (Base.List.rev_append rev_items tl)
+      | Indent node -> fits ~width ~rest ((mode, node) :: tl)
+      (* Respect forced breaks *)
+      | Newline ->
+        (match mode with
+        | Break -> true
+        | Flat -> false)
+      | Sequence ({ break = Break_if_pretty; _ }, _) -> false
+      | Sequence ({ break = _; inline = (before, _); indent = _ }, nodes) ->
+        (* TODO: need to consider `after`. and indent? *)
+        ((not before) && mode = Break) || fits ~width ~rest ((mode, Concat nodes) :: tl)
+      | Identifier (_, x)
+      | Atom x ->
+        fits ~width:(width - String.length x) ~rest tl
+    end
 
 let print =
   let break_and_indent ind (w : writer) =

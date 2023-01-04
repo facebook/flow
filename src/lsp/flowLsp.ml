@@ -751,10 +751,9 @@ let do_initialize params : Initialize.result =
     let supported_code_action_kinds =
       if supports_source_actions then
         CodeActionKind.source
-        ::
-        CodeActionKind.kind_of_string "source.addMissingImports.flow"
-        ::
-        CodeActionKind.kind_of_string "source.organizeImports.flow" :: supported_code_action_kinds
+        :: CodeActionKind.kind_of_string "source.addMissingImports.flow"
+        :: CodeActionKind.kind_of_string "source.organizeImports.flow"
+        :: supported_code_action_kinds
       else
         supported_code_action_kinds
     in
@@ -1413,13 +1412,12 @@ let do_rage flowconfig_name (state : server_state) : Rage.result =
         (* some systems have "pstack", some have "gstack", some have neither... *)
         let stack =
           try Sys_utils.exec_read_lines ~reverse:true ("pstack " ^ pid) with
-          | _ ->
-            begin
-              try Sys_utils.exec_read_lines ~reverse:true ("gstack " ^ pid) with
-              | e ->
-                let e = Exception.wrap e in
-                ["unable to pstack - " ^ Exception.get_ctor_string e]
-            end
+          | _ -> begin
+            try Sys_utils.exec_read_lines ~reverse:true ("gstack " ^ pid) with
+            | e ->
+              let e = Exception.wrap e in
+              ["unable to pstack - " ^ Exception.get_ctor_string e]
+          end
         in
         let stack = String.concat "\n" stack in
         add_string items (Printf.sprintf "PSTACK %s (%s) - %s\n\n" pid reason stack)
@@ -1799,18 +1797,17 @@ let try_connect ~version_mismatch_strategy flowconfig_name (env : disconnected_e
      is an old version of the server which doesn't even create the right
      sock file. We'll kill the server now so we can start a new one next.
      And if it was in that race? bad luck... *)
-  | Error (CommandConnectSimple.Server_socket_missing as reason) ->
-    begin
-      try
-        let tmp_dir = start_env.CommandConnect.tmp_dir in
-        let root = start_env.CommandConnect.root in
-        CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
-        show_connecting reason { env with d_server_status = None }
-      with
-      | CommandMeanKill.FailedToKill _ ->
-        let msg = "An old version of the Flow server is running. Please stop it." in
-        show_disconnected None (Some msg) { env with d_server_status = None }
-    end
+  | Error (CommandConnectSimple.Server_socket_missing as reason) -> begin
+    try
+      let tmp_dir = start_env.CommandConnect.tmp_dir in
+      let root = start_env.CommandConnect.root in
+      CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
+      show_connecting reason { env with d_server_status = None }
+    with
+    | CommandMeanKill.FailedToKill _ ->
+      let msg = "An old version of the Flow server is running. Please stop it." in
+      show_disconnected None (Some msg) { env with d_server_status = None }
+  end
   (* The server exited due to a version mismatch between the lsp and the server. *)
   | Error (CommandConnectSimple.(Build_id_mismatch Server_exited) as reason) ->
     if env.d_autostart then
@@ -2217,9 +2214,8 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
             Hh_json.(
               JSON_Object
                 (("uri", JSON_String (Lsp.DocumentUri.to_string uri))
-                 ::
-                 ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int))
-                 :: metadata.LspProt.extra_data
+                :: ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int))
+                :: metadata.LspProt.extra_data
                 )
               |> json_to_string
             )

@@ -138,20 +138,19 @@ end = struct
            we need to mark the codes it suppressed in the past *)
         (SpanMap.remove loc suppressions, used_universal_suppressions)
       | (_, All _) -> (SpanMap.remove loc suppressions, used_universal_suppressions)
-      | (None, Specific codes) ->
-        begin
-          match SpanMap.find_opt loc used_universal_suppressions with
-          | None -> (SpanMap.remove loc suppressions, used_universal_suppressions)
-          | Some old_universal ->
-            let supp_loc = CodeLocSet.choose old_universal |> snd in
-            let universal =
-              CodeSet.fold (fun (code, _) -> CodeLocSet.add (code, supp_loc)) codes old_universal
-            in
-            let used_universal_suppressions =
-              SpanMap.add supp_loc universal used_universal_suppressions
-            in
-            (SpanMap.remove loc suppressions, used_universal_suppressions)
-        end
+      | (None, Specific codes) -> begin
+        match SpanMap.find_opt loc used_universal_suppressions with
+        | None -> (SpanMap.remove loc suppressions, used_universal_suppressions)
+        | Some old_universal ->
+          let supp_loc = CodeLocSet.choose old_universal |> snd in
+          let universal =
+            CodeSet.fold (fun (code, _) -> CodeLocSet.add (code, supp_loc)) codes old_universal
+          in
+          let used_universal_suppressions =
+            SpanMap.add supp_loc universal used_universal_suppressions
+          in
+          (SpanMap.remove loc suppressions, used_universal_suppressions)
+      end
       | (_, Specific _) -> (suppressions, used_universal_suppressions)
     in
     { suppressions; lint_suppressions; used_universal_suppressions }
@@ -190,12 +189,12 @@ let add_lint_suppressions lint_suppressions map =
   LocSet.fold
     begin
       fun loc acc ->
-      let file = file_of_loc_unsafe loc in
-      let file_suppressions =
-        FilenameMap.find_opt file acc |> Base.Option.value ~default:FileSuppressions.empty
-      in
-      let file_suppressions = FileSuppressions.add_lint_suppression loc file_suppressions in
-      FilenameMap.add file file_suppressions acc
+        let file = file_of_loc_unsafe loc in
+        let file_suppressions =
+          FilenameMap.find_opt file acc |> Base.Option.value ~default:FileSuppressions.empty
+        in
+        let file_suppressions = FileSuppressions.add_lint_suppression loc file_suppressions in
+        FilenameMap.add file file_suppressions acc
     end
     lint_suppressions
     map
@@ -312,10 +311,10 @@ let update_suppressions current_suppressions new_suppressions =
   FilenameMap.fold
     begin
       fun file file_suppressions acc ->
-      if FileSuppressions.is_empty file_suppressions then
-        FilenameMap.remove file acc
-      else
-        FilenameMap.add file file_suppressions acc
+        if FileSuppressions.is_empty file_suppressions then
+          FilenameMap.remove file acc
+        else
+          FilenameMap.add file file_suppressions acc
     end
     new_suppressions
     current_suppressions

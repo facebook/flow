@@ -262,15 +262,14 @@ let concretize_if_possible available_tables loc =
     (* We shouldn't end up with a location with no source and a keyed representation. It may be
      * worth asserting here at some point. *)
     | None -> loc
-    | Some source ->
-      begin
-        match Utils_js.FilenameMap.find_opt source available_tables with
-        (* We don't have the right table, so just return the loc *)
-        | None -> loc
-        | Some table ->
-          (* Concretize by converting to a Loc.t, then back to an ALoc.t *)
-          of_loc (to_loc table loc)
-      end
+    | Some source -> begin
+      match Utils_js.FilenameMap.find_opt source available_tables with
+      (* We don't have the right table, so just return the loc *)
+      | None -> loc
+      | Some table ->
+        (* Concretize by converting to a Loc.t, then back to an ALoc.t *)
+        of_loc (to_loc table loc)
+    end
   else
     loc
 
@@ -304,12 +303,11 @@ let id_of_aloc table aloc =
     let (lazy { locs; _ }) = table in
     let loc = Repr.to_loc_exn aloc in
     (match Base.Array.binary_search locs ~compare:Packed_locs.compare_locs `First_equal_to loc with
-    | Some key ->
-      begin
-        match Repr.source aloc with
-        | Some _ as source -> Repr.of_key source key
-        | None -> failwith "Unexpectedly encountered a location without a source"
-      end
+    | Some key -> begin
+      match Repr.source aloc with
+      | Some _ as source -> Repr.of_key source key
+      | None -> failwith "Unexpectedly encountered a location without a source"
+    end
     | None -> aloc)
 
 let equal_id a b = quick_compare a b = 0

@@ -136,19 +136,18 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           let rec access_prop accesses =
             Ty.(
               function
-              | Obj { obj_props; _ } as t ->
-                begin
-                  match accesses with
-                  | [] -> t
-                  | n :: rest ->
-                    Base.List.find_map
-                      ~f:(function
-                        | NamedProp { name; prop = Field { t; _ }; _ } when name = n ->
-                          Some (access_prop rest t)
-                        | _ -> None)
-                      obj_props
-                    |> Base.Option.value ~default:(Ty.Any Ty.Untyped)
-                end
+              | Obj { obj_props; _ } as t -> begin
+                match accesses with
+                | [] -> t
+                | n :: rest ->
+                  Base.List.find_map
+                    ~f:(function
+                      | NamedProp { name; prop = Field { t; _ }; _ } when name = n ->
+                        Some (access_prop rest t)
+                      | _ -> None)
+                    obj_props
+                  |> Base.Option.value ~default:(Ty.Any Ty.Untyped)
+              end
               (* if we are object matching on a non-object, we should produce an any *)
               | _ when accesses <> [] -> Ty.Any Ty.Untyped
               | t -> t

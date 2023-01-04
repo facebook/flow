@@ -221,24 +221,23 @@ class ['M, 'T] searcher
           List.iter
             Object.(
               function
-              | Property (_, { Property.key; _ }) ->
-                begin
-                  match key with
-                  | Property.Literal
-                      (loc, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
-                    when covers_target loc ->
-                    this#request
-                      Get_def_request.(
-                        Member { prop_name = name; object_source = ObjectType pat_annot }
-                      )
-                  | Property.Identifier (id_annot, { Flow_ast.Identifier.name; _ })
-                    when annot_covers_target id_annot ->
-                    this#request
-                      Get_def_request.(
-                        Member { prop_name = name; object_source = ObjectType pat_annot }
-                      )
-                  | _ -> ()
-                end
+              | Property (_, { Property.key; _ }) -> begin
+                match key with
+                | Property.Literal
+                    (loc, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
+                  when covers_target loc ->
+                  this#request
+                    Get_def_request.(
+                      Member { prop_name = name; object_source = ObjectType pat_annot }
+                    )
+                | Property.Identifier (id_annot, { Flow_ast.Identifier.name; _ })
+                  when annot_covers_target id_annot ->
+                  this#request
+                    Get_def_request.(
+                      Member { prop_name = name; object_source = ObjectType pat_annot }
+                    )
+                | _ -> ()
+              end
               | _ -> ()
             )
             properties
