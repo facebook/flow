@@ -1,6 +1,10 @@
+### 0.196.3
+
+* Fix a bug that could cause IDE commands to fail while a recheck is ongoing
+
 ### 0.196.2
 
-🎁 This is (hopefully) our last release of the year. Happy holidays! 🎁
+🎁 This is ~~(hopefully)~~ our ~~last~~second to last release of the year. Happy holidays! 🎁
 
 * Improve performance when unions flow to intersections
 * Fix a crash when using the experimental `saved_state.allow_reinit` option
