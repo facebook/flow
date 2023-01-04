@@ -783,7 +783,17 @@ let do_initialize params : Initialize.result =
           Some
             {
               CompletionOptions.resolveProvider = false;
-              triggerCharacters = ["."; " "; "["];
+              triggerCharacters =
+                [
+                  "." (* member expressions *);
+                  "[" (* bracket notation *);
+                  " " (* before JSX attributes *);
+                  "<" (* JSX opening tags *);
+                  "/" (* inside JSX closing tags *);
+                  "\"" (* JSX attribute value *);
+                  "'" (* JSX attribute value *);
+                  "#" (* private identifiers *);
+                ];
               completionItem = { CompletionOptions.labelDetailsSupport = true };
             };
         signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
