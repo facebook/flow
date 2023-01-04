@@ -6228,7 +6228,16 @@ module Make
         | Ast.Class.Property.Initialized expr ->
           begin
             match (expr, annot_or_inferred) with
-            | ((_, Ast.Expression.Literal _), Inferred _) ->
+            | ( ( _,
+                  Ast.Expression.Literal
+                    {
+                      Ast.Literal.value =
+                        Ast.Literal.(String _ | Boolean _ | Number _ | BigInt _ | RegExp _);
+                      _;
+                    }
+                ),
+                Inferred _
+              ) ->
               let ((_, t), _) = expression cx expr in
               Flow.flow_t cx (t, annot_t)
             | ((_, Ast.Expression.(ArrowFunction function_ | Function function_)), Inferred _) ->
