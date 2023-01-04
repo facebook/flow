@@ -368,6 +368,11 @@ module Statement
         let leading = leading @ Peek.comments env in
         Expect.token env T_LPAREN;
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+        let init_starts_with_async =
+          match Peek.token env with
+          | T_ASYNC -> true
+          | _ -> false
+        in
         let (init, errs) =
           let env = env |> with_no_in true in
           match Peek.token env with
@@ -429,6 +434,25 @@ module Statement
             | Some (For_expression expr) ->
               (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
               let patt = Pattern_cover.as_pattern ~err:Parse_error.InvalidLHSInForOf env expr in
+              (match (init_starts_with_async, patt) with
+              | ( true,
+                  ( _,
+                    Pattern.Identifier
+                      {
+                        Pattern.Identifier.name =
+                          (id_loc, { Identifier.name = "async"; comments = _ });
+                        annot = _;
+                        optional = _;
+                      }
+                  )
+                ) ->
+                (* #prod-nLtPS4oB - `for (async of ...)` is forbidden because it is
+                   ambiguous whether it's a for-of with an `async` identifier, or a
+                   regular for loop with an async arrow function with a param named
+                   `of`. We can backtrack, so we know it's a for-of, but the spec
+                   still disallows it. *)
+                error_at env (id_loc, Parse_error.InvalidLHSInForOf)
+              | _ -> ());
               Statement.ForOf.LeftPattern patt
             | None -> assert false
           in

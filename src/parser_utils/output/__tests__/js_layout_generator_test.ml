@@ -1798,6 +1798,12 @@ let tests =
            assert_statement_string ~ctxt "for(let{x,y}of z);";
            assert_statement_string ~ctxt ~pretty:true "for (let {x, y} of z);"
          );
+         ( "forof_async" >:: fun ctxt ->
+           (* the parens are required *)
+           assert_statement_string ~ctxt "for((async)of y);";
+           assert_statement_string ~ctxt ~pretty:true "for ((async) of y);";
+           assert_statement_string ~ctxt ~pretty:true "for ((/* needs parens */ async) of y);"
+         );
          ( "yield_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "function* f(){yield}";
            assert_expression_string ~ctxt "function* f(){yield a}";
