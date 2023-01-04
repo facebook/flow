@@ -35,6 +35,11 @@ let unwrap { exn; backtrace = _ } = exn
 
 let reraise { exn; backtrace } = Printexc.raise_with_backtrace exn backtrace
 
+(** [raise_with_backtrace exn t] raises [exn] with the backtrace from [t].
+    This could be useful for reraising an exception with a new message,
+    without changing the backtrace. *)
+let raise_with_backtrace exn { backtrace; _ } = reraise { exn; backtrace }
+
 (* Converts back to an `exn` with the right backtrace. Generally, avoid this in favor of
    the helpers in this module, like `to_string` and `get_backtrace_string`. *)
 let to_exn t =
