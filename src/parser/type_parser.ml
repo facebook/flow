@@ -1232,57 +1232,54 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and type_params =
     let rec params env ~require_default acc =
-      Type.TypeParam.(
-        let (loc, (variance, name, bound, default, require_default)) =
-          with_loc
-            (fun env ->
-              let variance = maybe_variance env in
-              let (loc, (name, bound)) = bounded_type env in
-              let (default, require_default) =
-                match Peek.token env with
-                | T_ASSIGN ->
-                  Eat.token env;
-                  (Some (_type env), true)
-                | _ ->
-                  if require_default then error_at env (loc, Parse_error.MissingTypeParamDefault);
-                  (None, require_default)
-              in
-              (variance, name, bound, default, require_default))
-            env
-        in
-        let param = (loc, { name; bound; variance; default }) in
-        let acc = param :: acc in
-        match Peek.token env with
-        | T_EOF
-        | T_GREATER_THAN ->
+      let (param, require_default) =
+        with_loc_extra
+          (fun env ->
+            let variance = maybe_variance env in
+            let (loc, (name, bound)) = bounded_type env in
+            let (default, require_default) =
+              match Peek.token env with
+              | T_ASSIGN ->
+                Eat.token env;
+                (Some (_type env), true)
+              | _ ->
+                if require_default then error_at env (loc, Parse_error.MissingTypeParamDefault);
+                (None, require_default)
+            in
+            ({ Type.TypeParam.name; bound; variance; default }, require_default))
+          env
+      in
+      let acc = param :: acc in
+      match Peek.token env with
+      | T_EOF
+      | T_GREATER_THAN ->
+        List.rev acc
+      | _ ->
+        Expect.token env T_COMMA;
+        if Peek.token env = T_GREATER_THAN then
           List.rev acc
-        | _ ->
-          Expect.token env T_COMMA;
-          if Peek.token env = T_GREATER_THAN then
-            List.rev acc
-          else
-            params env ~require_default acc
-      )
+        else
+          params env ~require_default acc
     in
     fun env ->
       if Peek.token env = T_LESS_THAN then (
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
-        Some
-          (with_loc
-             (fun env ->
-               let leading = Peek.comments env in
-               Expect.token env T_LESS_THAN;
-               let params = params env ~require_default:false [] in
-               let internal = Peek.comments env in
-               Expect.token env T_GREATER_THAN;
-               let trailing = Eat.trailing_comments env in
-               {
-                 Type.TypeParams.params;
-                 comments =
-                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
-               })
-             env
-          )
+        let result =
+          with_loc
+            (fun env ->
+              let leading = Peek.comments env in
+              Expect.token env T_LESS_THAN;
+              let params = params env ~require_default:false [] in
+              let internal = Peek.comments env in
+              Expect.token env T_GREATER_THAN;
+              let trailing = Eat.trailing_comments env in
+              let comments =
+                Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
+              in
+              { Type.TypeParams.params; comments })
+            env
+        in
+        Some result
       ) else
         None
 
