@@ -154,10 +154,22 @@ type t = {
      or a unique ID of the type alias to make this distinction, but at the moment
      keeping this information around introduces a small space regression. *)
   under_type_alias: SymbolSet.t;
+  (* Detect recursive types *)
+  seen_tvar_ids: ISet.t;
+  seen_eval_ids: Type.EvalIdSet.t;
 }
 
 let init ~options ~genv ~tparams_rev ~imported_names =
-  { options; genv; depth = 0; tparams_rev; imported_names; under_type_alias = SymbolSet.empty }
+  {
+    options;
+    genv;
+    depth = 0;
+    tparams_rev;
+    imported_names;
+    under_type_alias = SymbolSet.empty;
+    seen_tvar_ids = ISet.empty;
+    seen_eval_ids = Type.EvalIdSet.empty;
+  }
 
 let descend e = { e with depth = e.depth + 1 }
 

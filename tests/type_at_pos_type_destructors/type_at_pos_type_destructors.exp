@@ -655,14 +655,14 @@ type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
 Flags: --evaluate-type-destructors
-type V$0 = {|g: V$0|};
-type RecursiveTypeDestructor = {|f: {|g: V$0|}|}
+type RecursiveTypeDestructor = {|f: {|g: {|g: any|}|}|}
 type-destructor.js:175:6,175:28
 
 type-destructor.js:182:6
 Flags: --evaluate-type-destructors
-type V$1 = {|h: V$1|} | X;
-type RecursiveTypeDestructorPoly<X> = {|f: ({|h: ({|h: V$1|} | X)|} | X)|}
+type RecursiveTypeDestructorPoly<X> = {|
+  f: ({|h: ({|h: ({|h: any|} | X)|} | X)|} | X)
+|}
 type-destructor.js:182:6,182:32
 
 type-destructor.js:188:6

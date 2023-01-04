@@ -993,3 +993,8 @@ Flags:
 number
 identifier.js:14:4,14:9
 
+reduce_recursive.js:16:25
+Flags:
+Obj
+reduce_recursive.js:16:25,16:27
+

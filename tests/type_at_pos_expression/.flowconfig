@@ -1,2 +1,4 @@
 [options]
 no_flowlib=false
+; adding this as regression test for reduce_recursive.js
+experimental.run_post_inference_implicit_instantiation=true
