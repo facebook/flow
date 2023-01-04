@@ -291,6 +291,11 @@ let read_resolved_requires addr : resolved_requires =
 
 let haste_modulename m = Modulename.String (Heap.read_string (Heap.get_haste_name m))
 
+let prepare_find_or_add find add key =
+  match find key with
+  | Some x -> (0, Fun.const x)
+  | None -> add key
+
 let prepare_add_phantom_file file_key =
   let open Heap in
   let (file_kind, file_name) = file_kind_and_name file_key in
@@ -307,6 +312,8 @@ let prepare_add_phantom_file file_key =
   in
   (size, write)
 
+let prepare_find_or_add_phantom_file = prepare_find_or_add get_file_addr prepare_add_phantom_file
+
 let prepare_add_haste_module name =
   let open Heap in
   let size = (4 * header_size) + haste_module_size + string_size name + entity_size + sklist_size in
@@ -319,12 +326,7 @@ let prepare_add_haste_module name =
   in
   (size, write)
 
-let prepare_find_or_add_haste_module name =
-  match HasteModuleHeap.get name with
-  | Some addr -> (0, Fun.const addr)
-  | None ->
-    let (size, write) = prepare_add_haste_module name in
-    (size, write)
+let prepare_find_or_add_haste_module = prepare_find_or_add get_haste_module prepare_add_haste_module
 
 let prepare_write_new_haste_info_if_changed old_haste_info = function
   | None -> (0, Fun.const None)
@@ -535,18 +537,10 @@ let prepare_update_revdeps =
     let (module_size, get_dependents) =
       match mname with
       | Modulename.String name ->
-        let (size, write) =
-          match get_haste_module name with
-          | Some m -> (0, Fun.const m)
-          | None -> prepare_add_haste_module name
-        in
+        let (size, write) = prepare_find_or_add_haste_module name in
         (size, (fun chunk -> Heap.get_haste_dependents (write chunk)))
       | Modulename.Filename key ->
-        let (size, write) =
-          match get_file_addr key with
-          | Some f -> (0, Fun.const f)
-          | None -> prepare_add_phantom_file key
-        in
+        let (size, write) = prepare_find_or_add_phantom_file key in
         (size, (fun chunk -> Option.get (Heap.get_file_dependents (write chunk))))
     in
     let (sknode_size, write_sknode) = Heap.prepare_write_sknode () in
@@ -626,15 +620,12 @@ let prepare_create_file file_key module_name resolved_requires_opt =
   let (dependents_size, write_dependents) =
     if Files.has_flow_ext file_key then
       let impl_key = Files.chop_flow_ext file_key in
-      match get_file_addr impl_key with
-      | Some _ -> (0, Fun.const None)
-      | None ->
-        let (size, write) = prepare_add_phantom_file impl_key in
-        let write chunk =
-          let (_ : file_addr) = write chunk in
-          None
-        in
-        (size, write)
+      let (size, write) = prepare_find_or_add_phantom_file impl_key in
+      let write chunk =
+        let (_ : file_addr) = write chunk in
+        None
+      in
+      (size, write)
     else
       (header_size + sklist_size, (fun chunk -> Some (write_sklist chunk)))
   in
