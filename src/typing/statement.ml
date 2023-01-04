@@ -345,11 +345,22 @@ module Make
       match param with
       | Some p ->
         (match p with
-        | ( loc,
-            Identifier { Identifier.name = (name_loc, id); annot = Ast.Type.Missing mloc; optional }
-          ) ->
+        | (loc, Identifier { Identifier.name = (name_loc, id); annot; optional }) ->
           let r = mk_reason (RCustom "catch") loc in
-          let t = AnyT.why CatchAny r in
+          let (t, ast_annot) =
+            match annot with
+            | Ast.Type.Missing mloc ->
+              let t = AnyT.why CatchAny r in
+              (t, Ast.Type.Missing (mloc, t))
+            | Ast.Type.Available ((_, (_, (Ast.Type.Any _ | Ast.Type.Mixed _))) as annot) ->
+              (* Not relevant with our limited accepted annotations. *)
+              let tparams_map = Subst_name.Map.empty in
+              let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
+              (t, Ast.Type.Available ast_annot)
+            | Ast.Type.Available (_, (loc, _)) ->
+              Flow.add_output cx (Error_message.EInvalidCatchParameterAnnotation loc);
+              (AnyT.why CatchAny r, Tast_utils.error_mapper#type_annotation_hint annot)
+          in
           let (stmts, abnormal_opt) = check cx b in
           ( {
               Try.CatchClause.param =
@@ -358,7 +369,7 @@ module Make
                     Ast.Pattern.Identifier
                       {
                         Ast.Pattern.Identifier.name = ((name_loc, t), id);
-                        annot = Ast.Type.Missing (mloc, t);
+                        annot = ast_annot;
                         optional;
                       }
                   );
@@ -367,9 +378,6 @@ module Make
             },
             abnormal_opt
           )
-        | (loc, Identifier _) ->
-          Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, CatchParameterAnnotation));
-          (Tast_utils.error_mapper#catch_clause catch_clause, None)
         | (loc, _) ->
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, CatchParameterDeclaration));
           (Tast_utils.error_mapper#catch_clause catch_clause, None))

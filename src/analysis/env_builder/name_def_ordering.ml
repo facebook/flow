@@ -902,7 +902,7 @@ struct
             )
           in
           depends_of_hint state hint
-        | Catch -> state
+        | CatchUnannotated -> state
       in
       let depends_of_selector state = function
         | Computed { expression; _ } -> depends_of_expression expression state
@@ -1043,7 +1043,7 @@ struct
     let recursively_resolvable =
       let rec bind_loop b =
         match b with
-        | Root Catch -> true
+        | Root CatchUnannotated -> true
         | Root (Annotation _) -> true
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
         | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
@@ -1111,7 +1111,7 @@ struct
   let annotation_locs scopes providers kind loc =
     let bind_loop b =
       match b with
-      | Root Catch
+      | Root CatchUnannotated
       | Root (Annotation _)
       | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) ->
         []

@@ -1825,6 +1825,8 @@ let dump_error_message =
     | EUnusedPromise { loc } -> spf "EUnusedPromise (%s)" (string_of_aloc loc)
     | EBigIntRShift3 reason -> spf "EBigIntRShift3 (%s)" (dump_reason cx reason)
     | EBigIntNumCoerce reason -> spf "EBigIntNumCoerce (%s)" (dump_reason cx reason)
+    | EInvalidCatchParameterAnnotation loc ->
+      spf "EInvalidCatchParameterAnnotation (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

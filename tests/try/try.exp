@@ -1,3 +1,29 @@
+Error ---------------------------------------------------------------------------------------------- catch-param.js:20:4
+
+Cannot cast `e` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   catch-param.js:20:4
+   20|   (e: empty); // ERROR - is `mixed`
+          ^
+
+References:
+   catch-param.js:19:13
+   19| } catch (e: mixed) { // OK
+                   ^^^^^ [1]
+   catch-param.js:20:7
+   20|   (e: empty); // ERROR - is `mixed`
+             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- catch-param.js:32:13
+
+Invalid catch parameter type annotation. Annotation must be `any` or `mixed` if specified.
+[invalid-catch-parameter-annotation]
+
+   32| } catch (e: Error) { // ERROR
+                   ^^^^^
+
+
 Error ------------------------------------------------------------------------------------------- finally-merge.js:11:10
 
 Cannot cast `p` to number because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -380,4 +406,4 @@ References:
 
 
 
-Found 24 errors
+Found 26 errors

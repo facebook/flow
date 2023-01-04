@@ -481,6 +481,7 @@ and 'loc t' =
   | EUnusedPromise of { loc: 'loc }
   | EBigIntRShift3 of 'loc virtual_reason
   | EBigIntNumCoerce of 'loc virtual_reason
+  | EInvalidCatchParameterAnnotation of 'loc
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -565,7 +566,6 @@ and 'loc unsupported_syntax =
   | ClassPropertyLiteral
   | ClassPropertyComputed
   | RequireDynamicArgument
-  | CatchParameterAnnotation
   | CatchParameterDeclaration
   | DestructuringObjectPropertyLiteralNonString
   | DestructuringExpressionPattern
@@ -662,7 +662,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | ( ComprehensionExpression | GeneratorExpression | MetaPropertyExpression
       | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
       | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
-      | RequireDynamicArgument | CatchParameterAnnotation | CatchParameterDeclaration
+      | RequireDynamicArgument | CatchParameterDeclaration
       | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern
       | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
       | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
@@ -1141,6 +1141,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnusedPromise { loc } -> EUnusedPromise { loc = f loc }
   | EBigIntRShift3 r -> EBigIntRShift3 (map_reason r)
   | EBigIntNumCoerce r -> EBigIntNumCoerce (map_reason r)
+  | EInvalidCatchParameterAnnotation loc -> EInvalidCatchParameterAnnotation (f loc)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1386,7 +1387,8 @@ let util_use_op_of_msg nope util = function
   | EEmptyArrayNoProvider _
   | EUnusedPromise _
   | EBigIntRShift3 _
-  | EBigIntNumCoerce _ ->
+  | EBigIntNumCoerce _
+  | EInvalidCatchParameterAnnotation _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1534,7 +1536,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EImportInternalReactServerModule loc
   | EInvalidGraphQL (loc, _)
   | EAnnotationInference (loc, _, _, _)
-  | EAnnotationInferenceRecursive (loc, _) ->
+  | EAnnotationInferenceRecursive (loc, _)
+  | EInvalidCatchParameterAnnotation loc ->
     Some loc
   | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (poly_loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
@@ -2561,8 +2564,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "The parameter passed to "; code "require"; text " must be a string literal."]
       | ImportDynamicArgument ->
         [text "The parameter passed to "; code "import"; text " must be a string literal."]
-      | CatchParameterAnnotation ->
-        [text "Type annotations for catch parameters are not yet supported."]
       | CatchParameterDeclaration -> [text "Unsupported catch parameter declaration."]
       | DestructuringObjectPropertyLiteralNonString ->
         [text "Unsupported non-string literal object property in destructuring."]
@@ -4237,6 +4238,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text "cannot be coerced to number.";
           ];
       }
+  | EInvalidCatchParameterAnnotation _ ->
+    Normal
+      {
+        features =
+          [
+            text "Invalid catch parameter type annotation. ";
+            text "Annotation must be ";
+            code "any";
+            text " or ";
+            code "mixed";
+            text " if specified.";
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -4513,6 +4527,7 @@ let error_code_of_message err : error_code option =
   | EEmptyArrayNoProvider _ -> Some EmptyArrayNoAnnot
   | EBigIntRShift3 _ -> Some BigIntRShift3
   | EBigIntNumCoerce _ -> Some BigIntNumCoerce
+  | EInvalidCatchParameterAnnotation _ -> Some InvalidCatchParameterAnnotation
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _
