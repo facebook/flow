@@ -961,23 +961,33 @@ end = struct
         call_props @ props
 
     and arr_ty ~env reason elt_t =
+      let desc = Reason.desc_of_reason reason in
       let arr_literal =
         if Env.(env.options.preserve_inferred_literal_types) then
           Some
-            (match Reason.desc_of_reason reason with
-            | Reason.RArrayLit -> true
+            (match desc with
+            | RArrayLit -> true
             | _ -> false)
         else
           None
       in
-      match elt_t with
-      | T.ArrayAT (t, _) ->
+      match (elt_t, desc) with
+      | (T.ArrayAT (_t, Some ts), RRestArrayLit _) ->
+        let%map elements =
+          mapM
+            (fun t ->
+              let%map t = type__ ~env t in
+              Ty.TupleElement { name = None; t; polarity = Ty.Neutral })
+            ts
+        in
+        Ty.Tup elements
+      | (T.ArrayAT (t, _), _) ->
         let%map t = type__ ~env t in
         Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t = t }
-      | T.ROArrayAT t ->
+      | (T.ROArrayAT t, _) ->
         let%map t = type__ ~env t in
         Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
-      | T.TupleAT (_, ts) ->
+      | (T.TupleAT (_, ts), _) ->
         let%map elements =
           mapM
             (fun (T.TupleElement { name; t; polarity }) ->

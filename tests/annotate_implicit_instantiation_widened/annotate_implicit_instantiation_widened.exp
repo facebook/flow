@@ -1,3 +1,14 @@
+>>> rest.js (#changes: 1)
+// @flow
+
+declare function foo<Args: $ReadOnlyArray<mixed>>(
+    f: (...Args) => mixed,
+  ): (...Args) => void;
+
+declare var x: (string, number) => void;
+
+(foo<[string, number]>(x))('a', 1); // should annotate with [string, number] to not cause new flow errors
+
 >>> test.js (#changes: 2)
 // @flow
 
@@ -15,9 +26,9 @@ const set2 = new Set(["a"]); // don't annotate
 >>> Launching report...
 
 Stats:
-  Files changed:                            1
-  Number of annotations added:              2
-  Total size of annotations:                6
+  Files changed:                            2
+  Number of annotations added:              3
+  Total size of annotations:                9
 
 Errors:
   Missing annot./normalizer error:          0

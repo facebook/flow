@@ -96,7 +96,7 @@ const f_expr = function fn_expr(x: string) {
   return (x: string);
 }
 
-function rest(x: number, ...args: Array<number>) {
+function rest(x: number, ...args: [number, number, number]) {
   return x;
 }
 rest(1, 2, 3, 4);
@@ -214,7 +214,7 @@ let arrow = () => { return this; }
 Stats:
   Files changed:                            5
   Number of annotations added:             37
-  Total size of annotations:               45
+  Total size of annotations:               47
   Number of LTI errors:                    46
 
 Errors:
