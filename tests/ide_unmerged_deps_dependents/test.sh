@@ -18,7 +18,7 @@ printf "\\n\\nexport const y = 123;\\n" >> dependency.js
 printf "\\n==== Checking file.js finds errors ====\\n"
 assert_errors "$FLOW" check-contents --strip-root file.js < file.js
 # 1 file should be merged (dependency) and nothing should be checked
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"
 
 # here's the late file watcher update
 assert_ok "$FLOW" force-recheck dependency.js
@@ -30,4 +30,4 @@ printf "\\n==== force-recheck checks dependent ====\\n"
 assert_errors "$FLOW" status --no-auto-start
 # 3 files (dependency.js and its dependents, dependent.js and file.js) should
 # be both merged and checked
-show_skipping_stats_types_first "$FLOW_LOG_FILE"
+show_skipping_stats "$FLOW_LOG_FILE"
