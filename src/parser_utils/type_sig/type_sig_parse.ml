@@ -1256,7 +1256,10 @@ and annot_with_loc opts scope tbls xs (loc, t) =
             | (_, T.Tuple.UnlabeledElement t) ->
               TupleElement
                 { name = None; t = annot opts scope tbls xs t; polarity = Polarity.Neutral }
-            | (_, T.Tuple.LabeledElement { T.Tuple.LabeledElement.annot = t; name; variance }) ->
+            | ( _,
+                T.Tuple.LabeledElement
+                  { T.Tuple.LabeledElement.annot = t; name; variance; optional = _ }
+              ) ->
               TupleElement
                 {
                   name = Some (id_name name);

@@ -3792,10 +3792,22 @@ and type_tuple ~opts loc { Ast.Type.Tuple.elements; comments } =
     )
 
 and type_tuple_labeled_element
-    ~opts loc { Ast.Type.Tuple.LabeledElement.name; annot; variance = variance_ } =
+    ~opts loc { Ast.Type.Tuple.LabeledElement.name; annot; variance = variance_; optional } =
   source_location_with_comments
     ( loc,
-      fuse [option variance variance_; identifier name; Atom ":"; pretty_space; type_ ~opts annot]
+      fuse
+        [
+          option variance variance_;
+          identifier name;
+          ( if optional then
+            Atom "?"
+          else
+            Empty
+          );
+          Atom ":";
+          pretty_space;
+          type_ ~opts annot;
+        ]
     )
 
 and type_array ~opts loc { Ast.Type.Array.argument; comments } =

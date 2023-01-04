@@ -1443,14 +1443,14 @@ class ['loc] mapper =
 
     method tuple_labeled_element (t : ('loc, 'loc) Ast.Type.Tuple.LabeledElement.t) =
       let open Ast.Type.Tuple.LabeledElement in
-      let { annot; name; variance } = t in
+      let { annot; name; variance; optional } = t in
       let annot' = this#type_ annot in
       let name' = this#identifier name in
       let variance' = this#variance_opt variance in
       if annot' == annot && name' == name && variance' == variance then
         t
       else
-        { annot = annot'; name = name'; variance = variance' }
+        { annot = annot'; name = name'; variance = variance'; optional }
 
     method array_type (t : ('loc, 'loc) Ast.Type.Array.t) =
       let open Ast.Type.Array in

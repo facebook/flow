@@ -362,6 +362,7 @@ and Type : sig
         name: ('M, 'T) Identifier.t;
         annot: ('M, 'T) Type.t;
         variance: 'M Variance.t option;
+        optional: bool;
       }
       [@@deriving show]
     end

@@ -451,15 +451,18 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                   maybe_variance env
                 | _ -> None
               in
-              if Peek.ith_token ~i:1 env = T_COLON then (
+              match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
+              | (true, T_PLING)
+              | (true, T_COLON) ->
                 let name = identifier_name env in
+                let optional = Eat.maybe env T_PLING in
                 Expect.token env T_COLON;
                 let annot = _type env in
-                Type.Tuple.LabeledElement { Type.Tuple.LabeledElement.name; annot; variance }
-              ) else (
+                Type.Tuple.LabeledElement
+                  { Type.Tuple.LabeledElement.name; annot; variance; optional }
+              | _ ->
                 if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
-                Type.Tuple.UnlabeledElement (_type env)
-              ))
+                Type.Tuple.UnlabeledElement (_type env))
             env
         in
         let acc = element :: acc in

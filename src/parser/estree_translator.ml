@@ -1676,7 +1676,7 @@ with type t = Impl.t = struct
           );
         ]
     and tuple_labeled_element
-        ?comments loc { Type.Tuple.LabeledElement.name; annot; variance = variance_ } =
+        ?comments loc { Type.Tuple.LabeledElement.name; annot; variance = variance_; optional } =
       node
         ?comments
         "TupleTypeLabeledElement"
@@ -1685,6 +1685,7 @@ with type t = Impl.t = struct
           ("label", identifier name);
           ("elementType", _type annot);
           ("variance", option variance variance_);
+          ("optional", bool optional);
         ]
     and string_literal_type (loc, { Ast.StringLiteral.value; raw; comments }) =
       node

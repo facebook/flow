@@ -1759,14 +1759,22 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
       let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
       (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast)
-    | Ast.Type.Tuple.LabeledElement { Ast.Type.Tuple.LabeledElement.name; annot; variance } ->
-      let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
+    | Ast.Type.Tuple.LabeledElement
+        { Ast.Type.Tuple.LabeledElement.name; annot; variance; optional } ->
+      let (((_, annot_t), _) as annot_ast) = convert cx tparams_map annot in
+      let t =
+        if optional then (
+          Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, TupleOptionalElement));
+          AnyT.at (AnyError None) loc
+        ) else
+          annot_t
+      in
       let (name_loc, ({ Ast.Identifier.name = str_name; _ } as name_ast)) = name in
       let id_name = ((name_loc, t), name_ast) in
       let element_ast =
         ( loc,
           Ast.Type.Tuple.LabeledElement
-            { Ast.Type.Tuple.LabeledElement.name = id_name; annot = annot_ast; variance }
+            { Ast.Type.Tuple.LabeledElement.name = id_name; annot = annot_ast; variance; optional }
         )
       in
       (t, TupleElement { name = Some str_name; t; polarity = polarity variance }, element_ast)

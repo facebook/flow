@@ -1039,11 +1039,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method tuple_labeled_element (t : ('M, 'T) Ast.Type.Tuple.LabeledElement.t)
         : ('N, 'U) Ast.Type.Tuple.LabeledElement.t =
       let open Ast.Type.Tuple.LabeledElement in
-      let { annot = t_annot; name; variance } = t in
+      let { annot = t_annot; name; variance; optional } = t in
       let t_annot' = this#type_ t_annot in
       let name' = this#t_identifier name in
       let variance' = Option.map ~f:this#variance variance in
-      { annot = t_annot'; name = name'; variance = variance' }
+      { annot = t_annot'; name = name'; variance = variance'; optional }
 
     method tuple_type (t : ('M, 'T) Ast.Type.Tuple.t) : ('N, 'U) Ast.Type.Tuple.t =
       let open Ast.Type.Tuple in
