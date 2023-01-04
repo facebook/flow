@@ -6,6 +6,31 @@
  *)
 
 type t =
+  | AccessorDataProperty
+  | AccessorGetSet
+  | AdjacentJSXElements
+  | AmbiguousDeclareModuleKind
+  | AmbiguousLetBracket
+  | AsyncFunctionAsStatement
+  | AwaitAsIdentifierReference
+  | ComputedShorthandProperty
+  | DeclareAsync
+  | DeclareClassElement
+  | DeclareClassFieldInitializer
+  | DeclareExportConst
+  | DeclareExportInterface
+  | DeclareExportLet
+  | DeclareExportType
+  | DeclareOpaqueTypeInitializer
+  | DuplicateConstructor
+  | DuplicateDeclareModuleExports
+  | DuplicateExport of string
+  | DuplicatePrivateFields of string
+  | ElementAfterRestElement
+  | EnumBigIntMemberNotInitialized of {
+      enum_name: string;
+      member_name: string;
+    }
   | EnumBooleanMemberNotInitialized of {
       enum_name: string;
       member_name: string;
@@ -15,6 +40,7 @@ type t =
       member_name: string;
     }
   | EnumInconsistentMemberValues of { enum_name: string }
+  | EnumInvalidEllipsis of { trailing_comma: bool }
   | EnumInvalidExplicitType of {
       enum_name: string;
       supplied_type: string option;
@@ -31,141 +57,115 @@ type t =
       member_name: string;
     }
   | EnumInvalidMemberSeparator
-  | EnumInvalidEllipsis of { trailing_comma: bool }
   | EnumNumberMemberNotInitialized of {
       enum_name: string;
       member_name: string;
     }
-  | EnumBigIntMemberNotInitialized of {
-      enum_name: string;
-      member_name: string;
-    }
   | EnumStringMemberInconsistentlyInitailized of { enum_name: string }
-  | Unexpected of string
-  | UnexpectedWithExpected of string * string
-  | UnexpectedTokenWithSuggestion of string * string
-  | UnexpectedReserved
-  | UnexpectedReservedType
-  | UnexpectedSuper
-  | UnexpectedSuperCall
-  | UnexpectedEOS
-  | UnexpectedVariance
-  | UnexpectedStatic
-  | UnexpectedProto
-  | UnexpectedTypeAlias
-  | UnexpectedOpaqueTypeAlias
-  | UnexpectedTypeAnnotation
-  | UnexpectedTypeDeclaration
-  | UnexpectedTypeImport
-  | UnexpectedTypeExport
-  | UnexpectedTypeInterface
-  | UnexpectedSpreadType
-  | UnexpectedExplicitInexactInObject
-  | InexactInsideExact
-  | InexactInsideNonObject
-  | NewlineAfterThrow
-  | InvalidFloatBigInt
-  | InvalidSciBigInt
-  | InvalidRegExp
-  | InvalidRegExpFlags of string
-  | UnterminatedRegExp
-  | InvalidLHSInAssignment
-  | InvalidLHSInExponentiation
-  | InvalidLHSInForIn
-  | InvalidLHSInForOf
-  | InvalidIndexedAccess of { has_bracket: bool }
-  | InvalidOptionalIndexedAccess
+  | ExpectedJSXClosingTag of string
   | ExpectedPatternFoundExpression
-  | MultipleDefaultsInSwitch
-  | NoCatchOrFinally
-  | UnknownLabel of string
-  | Redeclaration of string * string
-  | IllegalContinue
+  | ExportSpecifierMissingComma
+  | FunctionAsStatement of { in_strict_mode: bool }
+  | GeneratorFunctionAsStatement
+  | GetterArity
+  | GetterMayNotHaveThisParam
   | IllegalBreak
+  | IllegalContinue
   | IllegalReturn
   | IllegalUnicodeEscape
-  | StrictModeWith
-  | StrictCatchVariable
-  | StrictVarName
-  | StrictParamName
-  | StrictParamDupe
-  | StrictParamNotSimple
-  | StrictFunctionName
-  | StrictOctalLiteral
-  | StrictNonOctalLiteral
-  | StrictDelete
-  | StrictDuplicateProperty
-  | AccessorDataProperty
-  | AccessorGetSet
-  | InvalidTypeof
-  | StrictLHSAssignment
-  | StrictLHSPostfix
-  | StrictLHSPrefix
-  | StrictReservedWord
-  | JSXAttributeValueEmptyExpression
-  | InvalidJSXAttributeValue
-  | ExpectedJSXClosingTag of string
-  | NoUninitializedConst
-  | NoUninitializedDestructuring
-  | NewlineBeforeArrow
-  | FunctionAsStatement of { in_strict_mode: bool }
-  | AsyncFunctionAsStatement
-  | GeneratorFunctionAsStatement
-  | AdjacentJSXElements
-  | ParameterAfterRestParameter
-  | ElementAfterRestElement
-  | PropertyAfterRestElement
-  | DeclareAsync
-  | DeclareClassElement
-  | DeclareClassFieldInitializer
-  | DeclareOpaqueTypeInitializer
-  | DeclareExportLet
-  | DeclareExportConst
-  | DeclareExportType
-  | DeclareExportInterface
-  | DuplicateExport of string
-  | UnsupportedDecorator
-  | MissingTypeParamDefault
-  | DuplicateDeclareModuleExports
-  | AmbiguousDeclareModuleKind
-  | GetterArity
-  | SetterArity
-  | InvalidNonTypeImportInDeclareModule
-  | ImportTypeShorthandOnlyInPureImport
   | ImportSpecifierMissingComma
-  | ExportSpecifierMissingComma
-  | MalformedUnicode
-  | DuplicateConstructor
-  | DuplicatePrivateFields of string
+  | ImportTypeShorthandOnlyInPureImport
+  | InexactInsideExact
+  | InexactInsideNonObject
   | InvalidClassMemberName of {
       name: string;
       static: bool;
       method_: bool;
       private_: bool;
     }
-  | PrivateDelete
-  | UnboundPrivate of string
-  | PrivateNotInClass
-  | SuperPrivate
-  | YieldInFormalParameters
-  | AwaitAsIdentifierReference
-  | YieldAsIdentifierReference
-  | AmbiguousLetBracket
+  | InvalidFloatBigInt
+  | InvalidIndexedAccess of { has_bracket: bool }
+  | InvalidJSXAttributeValue
+  | InvalidLHSInAssignment
+  | InvalidLHSInExponentiation
+  | InvalidLHSInForIn
+  | InvalidLHSInForOf
+  | InvalidNonTypeImportInDeclareModule
+  | InvalidOptionalIndexedAccess
+  | InvalidRegExp
+  | InvalidRegExpFlags of string
+  | InvalidSciBigInt
+  | InvalidTypeof
+  | JSXAttributeValueEmptyExpression
   | LiteralShorthandProperty
-  | ComputedShorthandProperty
+  | MalformedUnicode
   | MethodInDestructuring
-  | TrailingCommaAfterRestElement
+  | MissingTypeParamDefault
+  | MultipleDefaultsInSwitch
+  | NewlineAfterThrow
+  | NewlineBeforeArrow
+  | NoCatchOrFinally
+  | NoUninitializedConst
+  | NoUninitializedDestructuring
+  | NullishCoalescingUnexpectedLogical of string
   | OptionalChainNew
   | OptionalChainTemplate
-  | NullishCoalescingUnexpectedLogical of string
-  | WhitespaceInPrivateName
-  | ThisParamAnnotationRequired
-  | ThisParamMustBeFirst
-  | ThisParamMayNotBeOptional
-  | GetterMayNotHaveThisParam
+  | ParameterAfterRestParameter
+  | PrivateDelete
+  | PrivateNotInClass
+  | PropertyAfterRestElement
+  | Redeclaration of string * string
+  | SetterArity
   | SetterMayNotHaveThisParam
+  | StrictCatchVariable
+  | StrictDelete
+  | StrictDuplicateProperty
+  | StrictFunctionName
+  | StrictLHSAssignment
+  | StrictLHSPostfix
+  | StrictLHSPrefix
+  | StrictModeWith
+  | StrictNonOctalLiteral
+  | StrictOctalLiteral
+  | StrictParamDupe
+  | StrictParamName
+  | StrictParamNotSimple
+  | StrictReservedWord
+  | StrictVarName
+  | SuperPrivate
+  | ThisParamAnnotationRequired
   | ThisParamBannedInArrowFunctions
   | ThisParamBannedInConstructor
+  | ThisParamMayNotBeOptional
+  | ThisParamMustBeFirst
+  | TrailingCommaAfterRestElement
+  | UnboundPrivate of string
+  | Unexpected of string
+  | UnexpectedEOS
+  | UnexpectedExplicitInexactInObject
+  | UnexpectedOpaqueTypeAlias
+  | UnexpectedProto
+  | UnexpectedReserved
+  | UnexpectedReservedType
+  | UnexpectedSpreadType
+  | UnexpectedStatic
+  | UnexpectedSuper
+  | UnexpectedSuperCall
+  | UnexpectedTokenWithSuggestion of string * string
+  | UnexpectedTypeAlias
+  | UnexpectedTypeAnnotation
+  | UnexpectedTypeDeclaration
+  | UnexpectedTypeExport
+  | UnexpectedTypeImport
+  | UnexpectedTypeInterface
+  | UnexpectedVariance
+  | UnexpectedWithExpected of string * string
+  | UnknownLabel of string
+  | UnsupportedDecorator
+  | UnterminatedRegExp
+  | WhitespaceInPrivateName
+  | YieldAsIdentifierReference
+  | YieldInFormalParameters
 [@@deriving ord]
 
 exception Error of (Loc.t * t) * (Loc.t * t) list
@@ -174,6 +174,47 @@ let error loc e = raise (Error ((loc, e), []))
 
 module PP = struct
   let error = function
+    | AccessorDataProperty ->
+      "Object literal may not have data and accessor property with the same name"
+    | AccessorGetSet -> "Object literal may not have multiple get/set accessors with the same name"
+    | AdjacentJSXElements ->
+      "Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclosing parent tag"
+    | AmbiguousDeclareModuleKind ->
+      "Found both `declare module.exports` and `declare export` in the same module. "
+      ^ "Modules can only have 1 since they are either an ES module xor they are a CommonJS module."
+    | AmbiguousLetBracket ->
+      "`let [` is ambiguous in this position because it is either a `let` binding pattern, or a member expression."
+    | AsyncFunctionAsStatement ->
+      "Async functions can only be declared at top level or immediately within another function."
+    | AwaitAsIdentifierReference -> "`await` is an invalid identifier in async functions"
+    | ComputedShorthandProperty -> "Computed properties must have a value."
+    | DeclareAsync ->
+      "async is an implementation detail and isn't necessary for your declare function statement. "
+      ^ "It is sufficient for your declare function to just have a Promise return type."
+    | DeclareClassElement -> "`declare` modifier can only appear on class fields."
+    | DeclareClassFieldInitializer ->
+      "Unexpected token `=`. Initializers are not allowed in a `declare`."
+    | DeclareExportConst ->
+      "`declare export const` is not supported. Use `declare export var` instead."
+    | DeclareExportInterface ->
+      "`declare export interface` is not supported. Use `export interface` instead."
+    | DeclareExportLet -> "`declare export let` is not supported. Use `declare export var` instead."
+    | DeclareExportType -> "`declare export type` is not supported. Use `export type` instead."
+    | DeclareOpaqueTypeInitializer ->
+      "Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
+    | DuplicateConstructor -> "Classes may only have one constructor"
+    | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` statement!"
+    | DuplicateExport export -> Printf.sprintf "Duplicate export for `%s`" export
+    | DuplicatePrivateFields name ->
+      Printf.sprintf
+        "Private fields may only be declared once. `#%s` is declared more than once."
+        name
+    | ElementAfterRestElement -> "Rest element must be final element of an array pattern"
+    | EnumBigIntMemberNotInitialized { enum_name; member_name } ->
+      Printf.sprintf
+        "bigint enum members need to be initialized, e.g. `%s = 1n,` in enum `%s`."
+        member_name
+        enum_name
     | EnumBooleanMemberNotInitialized { enum_name; member_name } ->
       Printf.sprintf
         "Boolean enum members need to be initialized. Use either `%s = true,` or `%s = false,` in enum `%s`."
@@ -189,6 +230,11 @@ module PP = struct
       Printf.sprintf
         "Enum `%s` has inconsistent member initializers. Either use no initializers, or consistently use literals (either booleans, numbers, or strings) for all member initializers."
         enum_name
+    | EnumInvalidEllipsis { trailing_comma } ->
+      if trailing_comma then
+        "The `...` must come at the end of the enum body. Remove the trailing comma."
+      else
+        "The `...` must come after all enum members. Move it to the end of the enum body."
     | EnumInvalidExplicitType { enum_name; supplied_type } ->
       let suggestion =
         Printf.sprintf
@@ -242,61 +288,63 @@ module PP = struct
         suggestion
         enum_name
     | EnumInvalidMemberSeparator -> "Enum members are separated with `,`. Replace `;` with `,`."
-    | EnumInvalidEllipsis { trailing_comma } ->
-      if trailing_comma then
-        "The `...` must come at the end of the enum body. Remove the trailing comma."
-      else
-        "The `...` must come after all enum members. Move it to the end of the enum body."
     | EnumNumberMemberNotInitialized { enum_name; member_name } ->
       Printf.sprintf
         "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
-        member_name
-        enum_name
-    | EnumBigIntMemberNotInitialized { enum_name; member_name } ->
-      Printf.sprintf
-        "bigint enum members need to be initialized, e.g. `%s = 1n,` in enum `%s`."
         member_name
         enum_name
     | EnumStringMemberInconsistentlyInitailized { enum_name } ->
       Printf.sprintf
         "String enum members need to consistently either all use initializers, or use no initializers, in enum %s."
         enum_name
-    | Unexpected unexpected -> Printf.sprintf "Unexpected %s" unexpected
-    | UnexpectedWithExpected (unexpected, expected) ->
-      Printf.sprintf "Unexpected %s, expected %s" unexpected expected
-    | UnexpectedTokenWithSuggestion (token, suggestion) ->
-      Printf.sprintf "Unexpected token `%s`. Did you mean `%s`?" token suggestion
-    | UnexpectedReserved -> "Unexpected reserved word"
-    | UnexpectedReservedType -> "Unexpected reserved type"
-    | UnexpectedSuper -> "Unexpected `super` outside of a class method"
-    | UnexpectedSuperCall -> "`super()` is only valid in a class constructor"
-    | UnexpectedEOS -> "Unexpected end of input"
-    | UnexpectedVariance -> "Unexpected variance sigil"
-    | UnexpectedStatic -> "Unexpected static modifier"
-    | UnexpectedProto -> "Unexpected proto modifier"
-    | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
-    | UnexpectedOpaqueTypeAlias -> "Opaque type aliases are not allowed in untyped mode"
-    | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"
-    | UnexpectedTypeDeclaration -> "Type declarations are not allowed in untyped mode"
-    | UnexpectedTypeImport -> "Type imports are not allowed in untyped mode"
-    | UnexpectedTypeExport -> "Type exports are not allowed in untyped mode"
-    | UnexpectedTypeInterface -> "Interfaces are not allowed in untyped mode"
-    | UnexpectedSpreadType -> "Spreading a type is only allowed inside an object type"
-    | UnexpectedExplicitInexactInObject ->
-      "Explicit inexact syntax must come at the end of an object type"
+    | ExpectedJSXClosingTag name ->
+      Printf.sprintf "Expected corresponding JSX closing tag for %s" name
+    | ExpectedPatternFoundExpression ->
+      "Expected an object pattern, array pattern, or an identifier but found an expression instead"
+    | ExportSpecifierMissingComma -> "Missing comma between export specifiers"
+    | FunctionAsStatement { in_strict_mode } ->
+      if in_strict_mode then
+        "In strict mode code, functions can only be declared at top level or "
+        ^ "immediately within another function."
+      else
+        "In non-strict mode code, functions can only be declared at top level, "
+        ^ "inside a block, or as the body of an if statement."
+    | GeneratorFunctionAsStatement ->
+      "Generators can only be declared at top level or immediately within another function."
+    | GetterArity -> "Getter should have zero parameters"
+    | GetterMayNotHaveThisParam -> "A getter cannot have a `this` parameter."
+    | IllegalBreak -> "Illegal break statement"
+    | IllegalContinue -> "Illegal continue statement"
+    | IllegalReturn -> "Illegal return statement"
+    | IllegalUnicodeEscape -> "Illegal Unicode escape"
+    | ImportSpecifierMissingComma -> "Missing comma between import specifiers"
+    | ImportTypeShorthandOnlyInPureImport ->
+      "The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. "
+      ^ "It cannot be used with `import type` or `import typeof` statements"
     | InexactInsideExact ->
       "Explicit inexact syntax cannot appear inside an explicit exact object type"
     | InexactInsideNonObject -> "Explicit inexact syntax can only appear inside an object type"
-    | NewlineAfterThrow -> "Illegal newline after throw"
+    | InvalidClassMemberName { name; static; method_; private_ } ->
+      let static_modifier =
+        if static then
+          "static "
+        else
+          ""
+      in
+      let category =
+        if method_ then
+          "methods"
+        else
+          "fields"
+      in
+      let name =
+        if private_ then
+          "#" ^ name
+        else
+          name
+      in
+      Printf.sprintf "Classes may not have %s%s named `%s`." static_modifier category name
     | InvalidFloatBigInt -> "A bigint literal must be an integer"
-    | InvalidSciBigInt -> "A bigint literal cannot use exponential notation"
-    | InvalidRegExp -> "Invalid regular expression"
-    | InvalidRegExpFlags flags -> "Invalid flags supplied to RegExp constructor '" ^ flags ^ "'"
-    | UnterminatedRegExp -> "Invalid regular expression: missing /"
-    | InvalidLHSInAssignment -> "Invalid left-hand side in assignment"
-    | InvalidLHSInExponentiation -> "Invalid left-hand side in exponentiation expression"
-    | InvalidLHSInForIn -> "Invalid left-hand side in for-in"
-    | InvalidLHSInForOf -> "Invalid left-hand side in for-of"
     | InvalidIndexedAccess { has_bracket } ->
       let msg =
         if has_bracket then
@@ -305,150 +353,105 @@ module PP = struct
           "Indexed access uses bracket notation."
       in
       Printf.sprintf "Invalid indexed access. %s Use the format `T[K]`." msg
+    | InvalidJSXAttributeValue -> "JSX value should be either an expression or a quoted JSX text"
+    | InvalidLHSInAssignment -> "Invalid left-hand side in assignment"
+    | InvalidLHSInExponentiation -> "Invalid left-hand side in exponentiation expression"
+    | InvalidLHSInForIn -> "Invalid left-hand side in for-in"
+    | InvalidLHSInForOf -> "Invalid left-hand side in for-of"
+    | InvalidNonTypeImportInDeclareModule ->
+      "Imports within a `declare module` body must always be `import type` or `import typeof`!"
     | InvalidOptionalIndexedAccess ->
       "Invalid optional indexed access. Indexed access uses bracket notation. Use the format `T?.[K]`."
-    | ExpectedPatternFoundExpression ->
-      "Expected an object pattern, array pattern, or an identifier but "
-      ^ "found an expression instead"
+    | InvalidRegExp -> "Invalid regular expression"
+    | InvalidRegExpFlags flags ->
+      Printf.sprintf "Invalid flags supplied to RegExp constructor '%s'" flags
+    | InvalidSciBigInt -> "A bigint literal cannot use exponential notation"
+    | InvalidTypeof -> "`typeof` can only be used to get the type of variables."
+    | JSXAttributeValueEmptyExpression ->
+      "JSX attributes must only be assigned a non-empty expression"
+    | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
+    | MalformedUnicode -> "Malformed unicode"
+    | MethodInDestructuring -> "Object pattern can't contain methods"
+    | MissingTypeParamDefault ->
+      "Type parameter declaration needs a default, since a preceding type parameter declaration has a default."
     | MultipleDefaultsInSwitch -> "More than one default clause in switch statement"
+    | NewlineAfterThrow -> "Illegal newline after throw"
+    | NewlineBeforeArrow -> "Illegal newline before arrow"
     | NoCatchOrFinally -> "Missing catch or finally after try"
-    | UnknownLabel label -> "Undefined label '" ^ label ^ "'"
-    | Redeclaration (what, name) -> what ^ " '" ^ name ^ "' has already been declared"
-    | IllegalContinue -> "Illegal continue statement"
-    | IllegalBreak -> "Illegal break statement"
-    | IllegalReturn -> "Illegal return statement"
-    | IllegalUnicodeEscape -> "Illegal Unicode escape"
-    | StrictModeWith -> "Strict mode code may not include a with statement"
+    | NoUninitializedConst -> "Const must be initialized"
+    | NoUninitializedDestructuring -> "Destructuring assignment must be initialized"
+    | NullishCoalescingUnexpectedLogical operator ->
+      Printf.sprintf
+        "Unexpected token `%s`. Parentheses are required to combine `??` with `&&` or `||` expressions."
+        operator
+    | OptionalChainNew -> "An optional chain may not be used in a `new` expression."
+    | OptionalChainTemplate -> "Template literals may not be used in an optional chain."
+    | ParameterAfterRestParameter -> "Rest parameter must be final parameter of an argument list"
+    | PrivateDelete -> "Private fields may not be deleted."
+    | PrivateNotInClass -> "Private fields can only be referenced from within a class."
+    | PropertyAfterRestElement -> "Rest property must be final property of an object pattern"
+    | Redeclaration (what, name) -> Printf.sprintf "%s '%s' has already been declared" what name
+    | SetterArity -> "Setter should have exactly one parameter"
+    | SetterMayNotHaveThisParam -> "A setter cannot have a `this` parameter."
     | StrictCatchVariable -> "Catch variable may not be eval or arguments in strict mode"
-    | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
-    | StrictParamName -> "Parameter name eval or arguments is not allowed in strict mode"
-    | StrictParamDupe -> "Strict mode function may not have duplicate parameter names"
-    | StrictParamNotSimple ->
-      "Illegal \"use strict\" directive in function with non-simple parameter list"
-    | StrictFunctionName -> "Function name may not be eval or arguments in strict mode"
-    | StrictOctalLiteral -> "Octal literals are not allowed in strict mode."
-    | StrictNonOctalLiteral -> "Number literals with leading zeros are not allowed in strict mode."
     | StrictDelete -> "Delete of an unqualified identifier in strict mode."
     | StrictDuplicateProperty ->
       "Duplicate data property in object literal not allowed in strict mode"
-    | AccessorDataProperty ->
-      "Object literal may not have data and accessor property with the same name"
-    | AccessorGetSet -> "Object literal may not have multiple get/set accessors with the same name"
+    | StrictFunctionName -> "Function name may not be eval or arguments in strict mode"
     | StrictLHSAssignment -> "Assignment to eval or arguments is not allowed in strict mode"
     | StrictLHSPostfix ->
       "Postfix increment/decrement may not have eval or arguments operand in strict mode"
     | StrictLHSPrefix ->
       "Prefix increment/decrement may not have eval or arguments operand in strict mode"
+    | StrictModeWith -> "Strict mode code may not include a with statement"
+    | StrictNonOctalLiteral -> "Number literals with leading zeros are not allowed in strict mode."
+    | StrictOctalLiteral -> "Octal literals are not allowed in strict mode."
+    | StrictParamDupe -> "Strict mode function may not have duplicate parameter names"
+    | StrictParamName -> "Parameter name eval or arguments is not allowed in strict mode"
+    | StrictParamNotSimple ->
+      "Illegal \"use strict\" directive in function with non-simple parameter list"
     | StrictReservedWord -> "Use of future reserved word in strict mode"
-    | JSXAttributeValueEmptyExpression ->
-      "JSX attributes must only be assigned a non-empty expression"
-    | InvalidJSXAttributeValue -> "JSX value should be either an expression or a quoted JSX text"
-    | ExpectedJSXClosingTag name -> "Expected corresponding JSX closing tag for " ^ name
-    | NoUninitializedConst -> "Const must be initialized"
-    | NoUninitializedDestructuring -> "Destructuring assignment must be initialized"
-    | NewlineBeforeArrow -> "Illegal newline before arrow"
-    | FunctionAsStatement { in_strict_mode } ->
-      if in_strict_mode then
-        "In strict mode code, functions can only be declared at top level or "
-        ^ "immediately within another function."
-      else
-        "In non-strict mode code, functions can only be declared at top level, "
-        ^ "inside a block, or as the body of an if statement."
-    | AsyncFunctionAsStatement ->
-      "Async functions can only be declared at top level or "
-      ^ "immediately within another function."
-    | GeneratorFunctionAsStatement ->
-      "Generators can only be declared at top level or " ^ "immediately within another function."
-    | AdjacentJSXElements ->
-      "Unexpected token <. Remember, adjacent JSX "
-      ^ "elements must be wrapped in an enclosing parent tag"
-    | ParameterAfterRestParameter -> "Rest parameter must be final parameter of an argument list"
-    | ElementAfterRestElement -> "Rest element must be final element of an array pattern"
-    | PropertyAfterRestElement -> "Rest property must be final property of an object pattern"
-    | DeclareAsync ->
-      "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
-    | DeclareClassElement -> "`declare` modifier can only appear on class fields."
-    | DeclareClassFieldInitializer ->
-      "Unexpected token `=`. Initializers are not allowed in a `declare`."
-    | DeclareOpaqueTypeInitializer ->
-      "Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
-    | DeclareExportLet -> "`declare export let` is not supported. Use `declare export var` instead."
-    | DeclareExportConst ->
-      "`declare export const` is not supported. Use `declare export var` instead."
-    | DeclareExportType -> "`declare export type` is not supported. Use `export type` instead."
-    | DeclareExportInterface ->
-      "`declare export interface` is not supported. Use `export interface` instead."
-    | DuplicateExport export -> Printf.sprintf "Duplicate export for `%s`" export
-    | UnsupportedDecorator -> "Found a decorator in an unsupported position."
-    | MissingTypeParamDefault ->
-      "Type parameter declaration needs a default, since a preceding type parameter declaration has a default."
-    | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` statement!"
-    | AmbiguousDeclareModuleKind ->
-      "Found both `declare module.exports` and `declare export` in the same module. Modules can only have 1 since they are either an ES module xor they are a CommonJS module."
-    | GetterArity -> "Getter should have zero parameters"
-    | SetterArity -> "Setter should have exactly one parameter"
-    | InvalidNonTypeImportInDeclareModule ->
-      "Imports within a `declare module` body must always be " ^ "`import type` or `import typeof`!"
-    | ImportTypeShorthandOnlyInPureImport ->
-      "The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements"
-    | ImportSpecifierMissingComma -> "Missing comma between import specifiers"
-    | ExportSpecifierMissingComma -> "Missing comma between export specifiers"
-    | MalformedUnicode -> "Malformed unicode"
-    | DuplicateConstructor -> "Classes may only have one constructor"
-    | DuplicatePrivateFields name ->
-      "Private fields may only be declared once. `#" ^ name ^ "` is declared more than once."
-    | InvalidClassMemberName { name; static; method_; private_ } ->
-      let static_modifier =
-        if static then
-          "static "
-        else
-          ""
-      in
-      let name =
-        if private_ then
-          "#" ^ name
-        else
-          name
-      in
-      let category =
-        if method_ then
-          "methods"
-        else
-          "fields"
-      in
-      "Classes may not have " ^ static_modifier ^ category ^ " named `" ^ name ^ "`."
-    | PrivateDelete -> "Private fields may not be deleted."
-    | UnboundPrivate name ->
-      "Private fields must be declared before they can be referenced. `#"
-      ^ name
-      ^ "` has not been declared."
-    | PrivateNotInClass -> "Private fields can only be referenced from within a class."
+    | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
     | SuperPrivate -> "You may not access a private field through the `super` keyword."
-    | YieldInFormalParameters -> "Yield expression not allowed in formal parameter"
-    | AwaitAsIdentifierReference -> "`await` is an invalid identifier in async functions"
-    | YieldAsIdentifierReference -> "`yield` is an invalid identifier in generators"
-    | AmbiguousLetBracket ->
-      "`let [` is ambiguous in this position because it is "
-      ^ "either a `let` binding pattern, or a member expression."
-    | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
-    | ComputedShorthandProperty -> "Computed properties must have a value."
-    | MethodInDestructuring -> "Object pattern can't contain methods"
-    | TrailingCommaAfterRestElement -> "A trailing comma is not permitted after the rest element"
-    | OptionalChainNew -> "An optional chain may not be used in a `new` expression."
-    | OptionalChainTemplate -> "Template literals may not be used in an optional chain."
-    | NullishCoalescingUnexpectedLogical operator ->
-      Printf.sprintf
-        "Unexpected token `%s`. Parentheses are required to combine `??` with `&&` or `||` expressions."
-        operator
-    | WhitespaceInPrivateName -> "Unexpected whitespace between `#` and identifier"
     | ThisParamAnnotationRequired -> "A type annotation is required for the `this` parameter."
-    | ThisParamMustBeFirst -> "The `this` parameter must be the first function parameter."
-    | ThisParamMayNotBeOptional -> "The `this` parameter cannot be optional."
-    | GetterMayNotHaveThisParam -> "A getter cannot have a `this` parameter."
-    | SetterMayNotHaveThisParam -> "A setter cannot have a `this` parameter."
     | ThisParamBannedInArrowFunctions ->
       "Arrow functions cannot have a `this` parameter; arrow functions automatically bind `this` when declared."
     | ThisParamBannedInConstructor ->
       "Constructors cannot have a `this` parameter; constructors don't bind `this` like other functions."
-    | InvalidTypeof -> "`typeof` can only be used to get the type of variables."
+    | ThisParamMayNotBeOptional -> "The `this` parameter cannot be optional."
+    | ThisParamMustBeFirst -> "The `this` parameter must be the first function parameter."
+    | TrailingCommaAfterRestElement -> "A trailing comma is not permitted after the rest element"
+    | UnboundPrivate name ->
+      Printf.sprintf
+        "Private fields must be declared before they can be referenced. `#%s` has not been declared."
+        name
+    | Unexpected unexpected -> Printf.sprintf "Unexpected %s" unexpected
+    | UnexpectedEOS -> "Unexpected end of input"
+    | UnexpectedExplicitInexactInObject ->
+      "Explicit inexact syntax must come at the end of an object type"
+    | UnexpectedOpaqueTypeAlias -> "Opaque type aliases are not allowed in untyped mode"
+    | UnexpectedProto -> "Unexpected proto modifier"
+    | UnexpectedReserved -> "Unexpected reserved word"
+    | UnexpectedReservedType -> "Unexpected reserved type"
+    | UnexpectedSpreadType -> "Spreading a type is only allowed inside an object type"
+    | UnexpectedStatic -> "Unexpected static modifier"
+    | UnexpectedSuper -> "Unexpected `super` outside of a class method"
+    | UnexpectedSuperCall -> "`super()` is only valid in a class constructor"
+    | UnexpectedTokenWithSuggestion (token, suggestion) ->
+      Printf.sprintf "Unexpected token `%s`. Did you mean `%s`?" token suggestion
+    | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
+    | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"
+    | UnexpectedTypeDeclaration -> "Type declarations are not allowed in untyped mode"
+    | UnexpectedTypeExport -> "Type exports are not allowed in untyped mode"
+    | UnexpectedTypeImport -> "Type imports are not allowed in untyped mode"
+    | UnexpectedTypeInterface -> "Interfaces are not allowed in untyped mode"
+    | UnexpectedVariance -> "Unexpected variance sigil"
+    | UnexpectedWithExpected (unexpected, expected) ->
+      Printf.sprintf "Unexpected %s, expected %s" unexpected expected
+    | UnknownLabel label -> Printf.sprintf "Undefined label '%s'" label
+    | UnsupportedDecorator -> "Found a decorator in an unsupported position."
+    | UnterminatedRegExp -> "Invalid regular expression: missing /"
+    | WhitespaceInPrivateName -> "Unexpected whitespace between `#` and identifier"
+    | YieldAsIdentifierReference -> "`yield` is an invalid identifier in generators"
+    | YieldInFormalParameters -> "Yield expression not allowed in formal parameter"
 end
