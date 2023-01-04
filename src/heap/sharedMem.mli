@@ -196,10 +196,30 @@ module NewAPI : sig
    * writes. *)
   type size = int
 
+  type 'a prep = size * (chunk -> 'a)
+
   (* Allocate the requested space (in words) in the heap. All writes must be
    * done within the provided callback, and the writes must fully consume all
    * allocated space. *)
   val alloc : size -> (chunk -> 'a) -> 'a
+
+  (* prepare *)
+
+  val prepare_map : 'a prep -> ('a -> 'b) -> 'b prep
+
+  val prepare_product : 'a prep -> 'b prep -> ('a * 'b) prep
+
+  val prepare_const : 'a -> 'a prep
+
+  val prepare_opt : ('a -> 'b prep) -> 'a option -> 'b option prep
+
+  val prepare_iter : ('a -> unit prep) -> 'a array -> unit prep
+
+  module Prepare_syntax : sig
+    val ( let+ ) : 'a prep -> ('a -> 'b) -> 'b prep
+
+    val ( and+ ) : 'a prep -> 'b prep -> ('a * 'b) prep
+  end
 
   (* headers *)
 
