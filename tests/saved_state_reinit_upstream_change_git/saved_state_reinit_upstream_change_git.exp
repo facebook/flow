@@ -1,0 +1,27 @@
+Creating git repo
+
+Creating initial commit
+
+Creating saved state
+
+Creating commit 2
+
+Creating second saved state
+
+Moving back to initial commit
+
+Found correct merge base hash: Yes
+
+Moving to commit 2
+
+No new errors:
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 0/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Found correct merge base hash: Yes
+
+check-contents works:
+No errors!
+

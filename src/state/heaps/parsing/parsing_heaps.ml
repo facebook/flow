@@ -785,10 +785,26 @@ let add_checked_file
            matching hash. In this case, we want to update the existing data with
            parse information. If the hash doesn't match, then it's a fresh parse
            of a changed file. *)
+
+        (* when reloading from saved state, clear the previous leader
+           and sig hash. normally, it's ok for these to be temporarily
+           stale because we'll merge the changed components which will
+           update them, but we don't do that during a reinit. *)
+        let leader_ent = get_leader parse in
+        let sig_hash_ent = get_sig_hash parse in
+        let clear_leader =
+          match type_sig_opt with
+          | Some _ -> Fun.id
+          | None ->
+            fun () ->
+              entity_advance leader_ent None;
+              entity_advance sig_hash_ent None
+        in
+
         let old_hash = read_int64 (get_file_hash parse) in
         if Int64.equal hash old_hash then
           (* the resolved requires can be affected by changes to other files. we
-             have to update them even if this file is unchanged. *)
+             have to update them even though this file is unchanged. *)
           let (resolved_requires_size, update_resolved_requires) =
             match resolved_requires_opt_opt with
             | None -> (0, (fun _ _ _ -> false))
@@ -798,15 +814,23 @@ let add_checked_file
           let size = size + resolved_requires_size in
           let write chunk =
             let _did_change : bool = update_resolved_requires chunk file parse in
+            clear_leader ();
             (parse, MSet.empty)
           in
           Either.Left (size, write)
         else
+          let update_parse_ents _chunk =
+            (* reuse the existing resolved_requires ent. this enables
+               [prepare_update_resolved_requires], called by [prepare_update_file],
+               to determine whether [resolved_requires_opt_opt] have changed. *)
+            let requires_ent = get_resolved_requires parse in
+            clear_leader ();
+            (requires_ent, leader_ent, sig_hash_ent)
+          in
           let (size, update_file) =
             prepare_update_file size file_key file parse_ent module_name resolved_requires_opt_opt
           in
-          let parse_ents _ = (get_resolved_requires parse, get_leader parse, get_sig_hash parse) in
-          Either.Right (size, parse_ents, update_file))
+          Either.Right (size, update_parse_ents, update_file))
   in
   let (size, add_file_maybe) =
     match unchanged_or_fresh_parse with
@@ -936,6 +960,11 @@ let rollback_resolved_requires file ent =
     Heap.entity_rollback ent
   )
 
+let rollback_leader parse =
+  let open Heap in
+  entity_rollback (get_leader parse);
+  entity_rollback (get_sig_hash parse)
+
 (* Rolling back a transaction requires that we undo changes we made to the file
  * as well as changes we made to modules affected by the file changes. Rolling
  * back changes to all_providers in particular is kind of tricky...
@@ -1024,11 +1053,19 @@ let rollback_file =
         let (size, update_revdeps) = prepare_update_revdeps new_resolved_requires None in
         alloc size (fun chunk -> update_revdeps chunk file)
       | (Some _, Some new_parse) ->
-        (* the resolved_requires ent is copied from the old parse to the
-           new parse, so we can just roll back the new_parse's copy. this
-           also updates the revdeps. *)
-        let ent = get_resolved_requires new_parse in
-        rollback_resolved_requires file ent
+        (* these ents are copied from the old parse to the new parse, so we can
+           just roll back the new_parse's copy. *)
+
+        (* this also updates the revdeps *)
+        let requires_ent = get_resolved_requires new_parse in
+        rollback_resolved_requires file requires_ent;
+
+        (* this undoes the clear_leader mutation. although clear_leader only
+           changes the leader during a saved state reinit, it's safe to
+           unconditionally roll back here because rolling back is a no-op if
+           it hasn't been advanced (or is already rolled back, if the
+           merge mutator also advanced the leader and then rolled back). *)
+        rollback_leader new_parse
     in
     (* Remove new providers and process deferred deletions for old providers
      * before rolling back this file's parse and haste entities. *)
@@ -1651,9 +1688,7 @@ module Merge_context_mutator = struct
     in
     match parse with
     | None -> ()
-    | Some parse ->
-      entity_rollback (get_leader parse);
-      entity_rollback (get_sig_hash parse)
+    | Some parse -> rollback_leader parse
 
   let commit () =
     Hh_logger.info "Committing merge";
@@ -1676,7 +1711,7 @@ module Merge_context_mutator = struct
     let open Heap in
     let ent = get_sig_hash parse in
     let old_sig_hash =
-      let* addr = entity_read_latest ent in
+      let* addr = entity_read_committed ent in
       Some (read_int64 addr)
     in
     match old_sig_hash with
