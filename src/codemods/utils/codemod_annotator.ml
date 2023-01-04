@@ -106,7 +106,7 @@ let validate_ty cctx ~max_type_size ty =
 
 (* Used to infer the type for an annotation from an error loc *)
 let get_ty cctx ~preserve_literals loc =
-  let preserve_inferred_literal_types =
+  let lits =
     Codemod_hardcoded_ty_fixes.PreserveLiterals.(
       match preserve_literals with
       | Always
@@ -116,17 +116,7 @@ let get_ty cctx ~preserve_literals loc =
     )
   in
   let norm_opts =
-    {
-      Ty_normalizer_env.expand_internal_types = false;
-      flag_shadowed_type_params = false;
-      preserve_inferred_literal_types;
-      evaluate_type_destructors = false;
-      optimize_types = false;
-      omit_targ_defaults = true;
-      merge_bot_and_any_kinds = false;
-      verbose_normalizer = false;
-      max_depth = None;
-    }
+    Ty_normalizer_env.{ default_codemod_options with preserve_inferred_literal_types = lits }
   in
   match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
   | Ok (Ty.Type ty) -> Ok ty
