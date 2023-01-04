@@ -17,7 +17,7 @@ type autocomplete_type =
   | Ac_binding  (** binding identifiers introduce new names *)
   | Ac_comment  (** inside a comment *)
   | Ac_id of ac_id  (** identifier references *)
-  | Ac_class_key  (** class method name or property name *)
+  | Ac_class_key of { enclosing_class_t: Type.t option }  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
   | Ac_import_specifier of {
       module_type: Type.t;
@@ -96,15 +96,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method covers_target loc = covers_target cursor loc
 
+    method private get_enclosing_class = Base.List.hd enclosing_classes
+
     method default_ac_id type_ =
       {
         include_super = false;
         include_this = false;
         type_;
-        enclosing_class_t =
-          (match enclosing_classes with
-          | h :: _ -> Some h
-          | [] -> None);
+        enclosing_class_t = this#get_enclosing_class;
       }
 
     method find : 'a. ALoc.t -> string -> autocomplete_type -> 'a =
@@ -375,9 +374,9 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | Identifier ((loc, _), { Flow_ast.Identifier.name; _ })
       | Literal ((loc, _), Flow_ast.Literal.{ raw = name; _ })
         when this#covers_target loc ->
-        this#find loc name Ac_class_key
+        this#find loc name (Ac_class_key { enclosing_class_t = this#get_enclosing_class })
       | PrivateName (loc, { Flow_ast.PrivateName.name; _ }) when this#covers_target loc ->
-        this#find loc ("#" ^ name) Ac_class_key
+        this#find loc ("#" ^ name) (Ac_class_key { enclosing_class_t = this#get_enclosing_class })
       | _ -> super#class_key key
 
     method! object_key key =

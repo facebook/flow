@@ -13426,3 +13426,20 @@ Flags: --pretty
   ]
 }
 
+method_signature.js:22:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"(s: string) => void"},
+    {"name":"foo","type":"() => number"},
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"i","type":"(x: number) => string"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"qux","type":"() => void"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+
