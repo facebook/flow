@@ -71,7 +71,7 @@ let skip_list_test workers _ctxt =
   let files_per_worker = 1000 in
   let mk_filename par_id seq_id = Printf.sprintf "s%dp%d" seq_id par_id in
 
-  let file_set = alloc_prep prepare_write_sklist in
+  let file_set = alloc prepare_write_sklist in
 
   let create_files () par_id =
     let filenames = Array.init files_per_worker (mk_filename par_id) in
@@ -83,7 +83,7 @@ let skip_list_test workers _ctxt =
       let file = file filename (parse None) (haste None) None in
       assert (file == Files.add key file)
     in
-    alloc_prep (prepare_iter prepare_create_file filenames)
+    alloc (prepare_iter prepare_create_file filenames)
   in
 
   let add_files () par_id =
@@ -97,7 +97,7 @@ let skip_list_test workers _ctxt =
       assert (file_set_add file_set node);
       assert (file_set_mem file_set file)
     in
-    alloc_prep (prepare_iter prepare_add_file files)
+    alloc (prepare_iter prepare_add_file files)
   in
 
   let remove_files () par_id =
@@ -207,7 +207,7 @@ let collect_test _ctxt =
     assert (foo = H1.add foo_key foo);
     assert (tbl2 = H3.add tbl2_key tbl2)
   in
-  alloc_prep prepare;
+  alloc prepare;
   assert_heap_size size;
 
   (* all objects reachable via live roots foo, tbl2 *)
@@ -240,7 +240,7 @@ let entities_test _ctxt =
       and+ ent = prepare_write_entity in
       (foo, bar, ent (Some foo))
     in
-    alloc_prep prepare
+    alloc prepare
   in
 
   (* uncommitted *)
@@ -272,7 +272,7 @@ let entities_compact_test _ctxt =
     let+ foo = prepare_foo and+ bar = prepare_write_string "bar" and+ ent = prepare_write_entity in
     (bar, ent (Some foo))
   in
-  let (bar, ent) = alloc_prep prepare in
+  let (bar, ent) = alloc prepare in
 
   (* keep ent alive *)
   let key = "ent_key" in
@@ -311,7 +311,7 @@ let entities_rollback_test _ctxt =
       and+ ent = prepare_write_entity in
       (foo, bar, ent (Some foo))
     in
-    alloc_prep prepare
+    alloc prepare
   in
   assert_latest Fun.id ent foo;
 
@@ -347,7 +347,7 @@ let slot_taken_test _ =
       H1.remove key;
       assert (bar = H1.add key bar)
     in
-    alloc_prep prepare
+    alloc prepare
   in
   (* clean up *)
   H1.remove key;
@@ -381,7 +381,7 @@ let add_provider_barrier_test _ =
       add_haste_provider foo_m foo_f haste_info;
       assert (HasteModules.add key foo_m == foo_m)
     in
-    alloc_prep prepare
+    alloc prepare
   in
 
   (* Start a GC. With a work budget of 1, this mark slice will certainly not
@@ -412,7 +412,7 @@ let add_provider_barrier_test _ =
       let bar_f = bar_f bar (parse_ent None) (haste_ent (Some haste_info)) None in
       add_haste_provider foo_m bar_f haste_info
     in
-    alloc_prep prepare
+    alloc prepare
   in
 
   (* Finish the current GC pass. *)
@@ -437,7 +437,7 @@ let entity_barrier_test _ =
       let+ foo = prepare_write_string "foo" and+ ent = prepare_write_entity in
       ent (Some foo)
     in
-    let ent = alloc_prep prepare in
+    let ent = alloc prepare in
     assert (ent = Ent.add ent_key ent)
   in
 
@@ -459,7 +459,7 @@ let entity_barrier_test _ =
   let () =
     let ent = Option.get (Ent.get ent_key) in
     let addr = Option.get (entity_read_latest ent) in
-    let tbl = alloc_prep (prepare_write_addr_tbl [| prepare_const addr |]) in
+    let tbl = alloc (prepare_write_addr_tbl [| prepare_const addr |]) in
     assert (tbl = H2.add tbl_key tbl);
     entity_advance ent None
   in
@@ -489,7 +489,7 @@ let compare_string_test _ =
       and+ quux = prepare_write_string "quux" in
       (empty1, empty2, foo1, foo2, foot, quux)
     in
-    alloc_prep prepare
+    alloc prepare
   in
 
   assert (compare_string empty1 empty1 = 0);

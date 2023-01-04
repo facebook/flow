@@ -831,17 +831,15 @@ module NewAPI = struct
 
   external alloc : size -> _ addr = "hh_ml_alloc"
 
-  let alloc size f =
+  let alloc (size, write) =
     let addr = alloc size in
     let chunk = { heap = get_heap (); next_addr = addr; remaining_size = size } in
-    let x = f chunk in
+    let x = write chunk in
     (* Ensure allocated space was initialized. *)
     if chunk.remaining_size <> 0 then
       Printf.ksprintf failwith "alloc: %d requested, %d remaining" size chunk.remaining_size;
     assert (chunk.next_addr = addr_offset addr size);
     x
-
-  let alloc_prep (size, write) = alloc size write
 
   (** Prepare *)
 
@@ -972,8 +970,6 @@ module NewAPI = struct
 
   let header_size = 1
 
-  let with_header_size f x = header_size + f x
-
   (* Write a header at a specified address in the heap. The caller must ensure
    * the given destination has already been allocated.
    *
@@ -1085,12 +1081,14 @@ module NewAPI = struct
     unsafe_write_string_at chunk.next_addr s;
     chunk.next_addr <- addr_offset chunk.next_addr (string_size s)
 
-  let write_string chunk s =
-    let heap_string = write_header chunk String_tag (string_size s) in
-    unsafe_write_string chunk s;
-    heap_string
-
-  let prepare_write_string s = (header_size + string_size s, (fun chunk -> write_string chunk s))
+  let prepare_write_string s =
+    let size = string_size s in
+    let write chunk =
+      let heap_string = write_header chunk String_tag (string_size s) in
+      unsafe_write_string chunk s;
+      heap_string
+    in
+    (header_size + size, write)
 
   let read_string_generic tag addr offset =
     let hd = read_header_checked (get_heap ()) tag addr in
@@ -1112,12 +1110,13 @@ module NewAPI = struct
     buf_write_int64 chunk.heap chunk.next_addr n;
     chunk.next_addr <- addr_offset chunk.next_addr int64_size
 
-  let write_int64 chunk n =
-    let addr = write_header chunk Int64_tag int64_size in
-    unsafe_write_int64 chunk n;
-    addr
-
-  let prepare_write_int64 n = (header_size + int64_size, (fun chunk -> write_int64 chunk n))
+  let prepare_write_int64 n =
+    let write chunk =
+      let addr = write_header chunk Int64_tag int64_size in
+      unsafe_write_int64 chunk n;
+      addr
+    in
+    (int64_size + header_size, write)
 
   let read_int64 addr =
     let heap = get_heap () in
@@ -1228,15 +1227,16 @@ module NewAPI = struct
   (* The skip list stores a max search level, which is the highest level of any
    * node in the set. We start searches at this level instead of the highest
    * possible level as an optimization. *)
-  let write_sklist chunk =
-    let addr = write_header chunk Sklist_tag sklist_size in
-    unsafe_write_tagged_int chunk 0;
-    for i = 1 to sklist_num_levels do
-      unsafe_write_addr chunk null_addr
-    done;
-    addr
-
-  let prepare_write_sklist = (header_size + sklist_size, write_sklist)
+  let prepare_write_sklist =
+    let write chunk =
+      let addr = write_header chunk Sklist_tag sklist_size in
+      unsafe_write_tagged_int chunk 0;
+      for i = 1 to sklist_num_levels do
+        unsafe_write_addr chunk null_addr
+      done;
+      addr
+    in
+    (header_size + sklist_size, write)
 
   let prepare_write_sknode () =
     let level = sklist_random_level () in
@@ -1489,19 +1489,20 @@ module NewAPI = struct
 
   let version_addr entity = addr_offset entity 3
 
-  let write_entity chunk data =
-    (* The global version is always even. It starts at 0 and increments by 2.
-     * The new entity has the global version and will be committed when the
-     * current transaction commits, so we can always write data to slot 0. *)
-    let data = Option.value data ~default:null_addr in
-    let version = get_next_version () in
-    let addr = write_header chunk Entity_tag entity_size in
-    unsafe_write_addr chunk data (* write to slot 0 *);
-    unsafe_write_addr chunk null_addr;
-    unsafe_write_int64 chunk (i64 version);
-    addr
-
-  let prepare_write_entity = (header_size + entity_size, write_entity)
+  let prepare_write_entity =
+    let write chunk data =
+      (* The global version is always even. It starts at 0 and increments by 2.
+       * The new entity has the global version and will be committed when the
+       * current transaction commits, so we can always write data to slot 0. *)
+      let data = Option.value data ~default:null_addr in
+      let version = get_next_version () in
+      let addr = write_header chunk Entity_tag entity_size in
+      unsafe_write_addr chunk data (* write to slot 0 *);
+      unsafe_write_addr chunk null_addr;
+      unsafe_write_int64 chunk (i64 version);
+      addr
+    in
+    (header_size + entity_size, write)
 
   let get_entity_version heap entity = Int64.to_int (buf_read_int64 heap (version_addr entity))
 
@@ -1630,25 +1631,27 @@ module NewAPI = struct
 
   let read_docblock addr = read_string_generic Docblock_tag addr 0
 
-  let write_docblock chunk docblock =
-    let addr = write_header chunk Docblock_tag (docblock_size docblock) in
-    unsafe_write_string chunk docblock;
-    addr
-
   let prepare_write_docblock docblock =
-    (header_size + docblock_size docblock, (fun chunk -> write_docblock chunk docblock))
+    let size = docblock_size docblock in
+    let write chunk =
+      let addr = write_header chunk Docblock_tag size in
+      unsafe_write_string chunk docblock;
+      addr
+    in
+    (header_size + size, write)
 
   (** ALoc tables *)
 
   let aloc_table_size = string_size
 
-  let write_aloc_table chunk tbl =
-    let addr = write_header chunk ALoc_table_tag (aloc_table_size tbl) in
-    unsafe_write_string chunk tbl;
-    addr
-
   let prepare_write_aloc_table tbl =
-    (header_size + aloc_table_size tbl, (fun chunk -> write_aloc_table chunk tbl))
+    let size = aloc_table_size tbl in
+    let write chunk =
+      let addr = write_header chunk ALoc_table_tag size in
+      unsafe_write_string chunk tbl;
+      addr
+    in
+    (header_size + size, write)
 
   let read_aloc_table addr = read_string_generic ALoc_table_tag addr 0
 
@@ -1662,18 +1665,18 @@ module NewAPI = struct
    * final byte. *)
   let type_sig_size bsize = (bsize + 8) lsr 3
 
-  let write_type_sig chunk bsize f =
-    let size = type_sig_size bsize in
-    let addr = write_header chunk Type_sig_tag size in
-    let offset_index = bsize_wsize size - 1 in
-    buf_write_int8 chunk.heap (addr_offset addr header_size + offset_index) (offset_index - bsize);
-    let buf = Bigarray.Array1.sub chunk.heap (addr_offset addr header_size) bsize in
-    f buf;
-    chunk.next_addr <- addr_offset chunk.next_addr size;
-    addr
-
   let prepare_write_type_sig bsize f =
-    (header_size + type_sig_size bsize, (fun chunk -> write_type_sig chunk bsize f))
+    let size = type_sig_size bsize in
+    let write chunk =
+      let addr = write_header chunk Type_sig_tag size in
+      let offset_index = bsize_wsize size - 1 in
+      buf_write_int8 chunk.heap (addr_offset addr header_size + offset_index) (offset_index - bsize);
+      let buf = Bigarray.Array1.sub chunk.heap (addr_offset addr header_size) bsize in
+      f buf;
+      chunk.next_addr <- addr_offset chunk.next_addr size;
+      addr
+    in
+    (header_size + size, write)
 
   let type_sig_buf addr =
     let heap = get_heap () in
@@ -1760,40 +1763,43 @@ module NewAPI = struct
 
   let package_parse_size = 2 * addr_size
 
-  let write_untyped_parse chunk hash =
-    let addr = write_header chunk Untyped_tag untyped_parse_size in
-    unsafe_write_addr chunk hash;
-    addr
+  let prepare_write_untyped_parse =
+    let write chunk hash =
+      let addr = write_header chunk Untyped_tag untyped_parse_size in
+      unsafe_write_addr chunk hash;
+      addr
+    in
+    (header_size + untyped_parse_size, write)
 
-  let write_typed_parse chunk hash exports resolved_requires imports leader sig_hash cas_digest =
-    let addr = write_header chunk Typed_tag typed_parse_size in
-    unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk null_addr;
-    unsafe_write_addr chunk null_addr;
-    unsafe_write_addr chunk null_addr;
-    unsafe_write_addr chunk null_addr;
-    unsafe_write_addr chunk null_addr;
-    unsafe_write_addr chunk exports;
-    unsafe_write_addr chunk resolved_requires;
-    unsafe_write_addr chunk imports;
-    unsafe_write_addr chunk leader;
-    unsafe_write_addr chunk sig_hash;
-    (match cas_digest with
-    | None -> unsafe_write_addr chunk null_addr
-    | Some cas_digest_addr -> unsafe_write_addr chunk cas_digest_addr);
-    addr
+  let prepare_write_typed_parse =
+    let write chunk hash exports resolved_requires imports leader sig_hash cas_digest =
+      let addr = write_header chunk Typed_tag typed_parse_size in
+      unsafe_write_addr chunk hash;
+      unsafe_write_addr chunk null_addr;
+      unsafe_write_addr chunk null_addr;
+      unsafe_write_addr chunk null_addr;
+      unsafe_write_addr chunk null_addr;
+      unsafe_write_addr chunk null_addr;
+      unsafe_write_addr chunk exports;
+      unsafe_write_addr chunk resolved_requires;
+      unsafe_write_addr chunk imports;
+      unsafe_write_addr chunk leader;
+      unsafe_write_addr chunk sig_hash;
+      (match cas_digest with
+      | None -> unsafe_write_addr chunk null_addr
+      | Some cas_digest_addr -> unsafe_write_addr chunk cas_digest_addr);
+      addr
+    in
+    (header_size + typed_parse_size, write)
 
-  let write_package_parse chunk hash package_info =
-    let addr = write_header chunk Package_tag package_parse_size in
-    unsafe_write_addr chunk hash;
-    unsafe_write_addr chunk package_info;
-    addr
-
-  let prepare_write_untyped_parse = (header_size + untyped_parse_size, write_untyped_parse)
-
-  let prepare_write_typed_parse = (header_size + typed_parse_size, write_typed_parse)
-
-  let prepare_write_package_parse = (header_size + package_parse_size, write_package_parse)
+  let prepare_write_package_parse =
+    let write chunk hash package_info =
+      let addr = write_header chunk Package_tag package_parse_size in
+      unsafe_write_addr chunk hash;
+      unsafe_write_addr chunk package_info;
+      addr
+    in
+    (header_size + package_parse_size, write)
 
   let is_typed parse =
     let hd = read_header (get_heap ()) parse in
@@ -1879,13 +1885,14 @@ module NewAPI = struct
 
   let haste_info_size = 2 * addr_size
 
-  let write_haste_info chunk haste_module =
-    let addr = write_header chunk Haste_info_tag haste_info_size in
-    unsafe_write_addr chunk haste_module;
-    unsafe_write_addr chunk null_addr (* next haste provider *);
-    addr
-
-  let prepare_write_haste_info = (header_size + haste_info_size, write_haste_info)
+  let prepare_write_haste_info =
+    let write chunk haste_module =
+      let addr = write_header chunk Haste_info_tag haste_info_size in
+      unsafe_write_addr chunk haste_module;
+      unsafe_write_addr chunk null_addr (* next haste provider *);
+      addr
+    in
+    (header_size + haste_info_size, write)
 
   let haste_module_addr parse = addr_offset parse 1
 
@@ -1911,16 +1918,17 @@ module NewAPI = struct
 
   let file_size = 4 * addr_size
 
-  let write_file chunk kind file_name parse haste_info dependents =
-    let dependents = Option.value dependents ~default:opt_none in
-    let addr = write_header chunk (file_tag kind) file_size in
-    unsafe_write_addr chunk file_name;
-    unsafe_write_addr chunk parse;
-    unsafe_write_addr chunk haste_info;
-    unsafe_write_addr chunk dependents;
-    addr
-
-  let prepare_write_file kind = (header_size + file_size, (fun chunk -> write_file chunk kind))
+  let prepare_write_file kind =
+    let write chunk file_name parse haste_info dependents =
+      let dependents = Option.value dependents ~default:opt_none in
+      let addr = write_header chunk (file_tag kind) file_size in
+      unsafe_write_addr chunk file_name;
+      unsafe_write_addr chunk parse;
+      unsafe_write_addr chunk haste_info;
+      unsafe_write_addr chunk dependents;
+      addr
+    in
+    (header_size + file_size, write)
 
   let file_name_addr file = addr_offset file 1
 
@@ -1973,15 +1981,16 @@ module NewAPI = struct
 
   let haste_module_size = 4 * addr_size
 
-  let write_haste_module chunk name provider dependents =
-    let addr = write_header chunk Haste_module_tag haste_module_size in
-    unsafe_write_addr chunk name;
-    unsafe_write_addr chunk provider;
-    unsafe_write_addr chunk null_addr (* all providers *);
-    unsafe_write_addr chunk dependents;
-    addr
-
-  let prepare_write_haste_module = (header_size + haste_module_size, write_haste_module)
+  let prepare_write_haste_module =
+    let write chunk name provider dependents =
+      let addr = write_header chunk Haste_module_tag haste_module_size in
+      unsafe_write_addr chunk name;
+      unsafe_write_addr chunk provider;
+      unsafe_write_addr chunk null_addr (* all providers *);
+      unsafe_write_addr chunk dependents;
+      addr
+    in
+    (header_size + haste_module_size, write)
 
   let haste_modules_equal = Int.equal
 
