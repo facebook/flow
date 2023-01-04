@@ -1252,9 +1252,17 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Tuple { T.Tuple.elements; _ } ->
       let elems_rev =
         List.rev_map
-          (fun (_, { T.Tuple.Element.annot = t; name; variance }) ->
-            let name = Base.Option.map ~f:id_name name in
-            TupleElement { name; t = annot opts scope tbls xs t; polarity = polarity variance })
+          (function
+            | (_, T.Tuple.UnlabeledElement t) ->
+              TupleElement
+                { name = None; t = annot opts scope tbls xs t; polarity = Polarity.Neutral }
+            | (_, T.Tuple.LabeledElement { T.Tuple.LabeledElement.annot = t; name; variance }) ->
+              TupleElement
+                {
+                  name = Some (id_name name);
+                  t = annot opts scope tbls xs t;
+                  polarity = polarity variance;
+                })
           elements
       in
       Annot (Tuple { loc; elems_rev })

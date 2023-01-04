@@ -1753,15 +1753,23 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (t, List.rev rev_prop_asts)
 
-  and convert_tuple_element cx tparams_map (loc, { Ast.Type.Tuple.Element.name; annot; variance }) =
-    let (((_, t), _) as annot) = convert cx tparams_map annot in
-    let (id_name, str_name) =
-      match name with
-      | None -> (None, None)
-      | Some (loc, ({ Ast.Identifier.name; _ } as id_name)) -> (Some ((loc, t), id_name), Some name)
-    in
-    let element_ast = (loc, { Ast.Type.Tuple.Element.name = id_name; annot; variance }) in
-    (t, TupleElement { name = str_name; t; polarity = polarity variance }, element_ast)
+  and convert_tuple_element cx tparams_map (loc, el) =
+    match el with
+    | Ast.Type.Tuple.UnlabeledElement annot ->
+      let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
+      let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
+      (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast)
+    | Ast.Type.Tuple.LabeledElement { Ast.Type.Tuple.LabeledElement.name; annot; variance } ->
+      let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
+      let (name_loc, ({ Ast.Identifier.name = str_name; _ } as name_ast)) = name in
+      let id_name = ((name_loc, t), name_ast) in
+      let element_ast =
+        ( loc,
+          Ast.Type.Tuple.LabeledElement
+            { Ast.Type.Tuple.LabeledElement.name = id_name; annot = annot_ast; variance }
+        )
+      in
+      (t, TupleElement { name = Some str_name; t; polarity = polarity variance }, element_ast)
 
   and mk_func_sig =
     let open Ast.Type.Function in

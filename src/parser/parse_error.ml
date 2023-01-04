@@ -95,6 +95,7 @@ type t =
   | InvalidRegExp
   | InvalidRegExpFlags of string
   | InvalidSciBigInt
+  | InvalidTupleVariance
   | InvalidTypeof
   | JSXAttributeValueEmptyExpression
   | LiteralShorthandProperty
@@ -367,6 +368,8 @@ module PP = struct
       Printf.sprintf "Invalid flags supplied to RegExp constructor '%s'" flags
     | InvalidSciBigInt -> "A bigint literal cannot use exponential notation"
     | InvalidTypeof -> "`typeof` can only be used to get the type of variables."
+    | InvalidTupleVariance ->
+      "Tuple variance annotations can only be used with labeled tuple elements, e.g. `[+foo: number]`"
     | JSXAttributeValueEmptyExpression ->
       "JSX attributes must only be assigned a non-empty expression"
     | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."

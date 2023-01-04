@@ -1361,15 +1361,9 @@
         "range":[1517,1522],
         "types":[
           {
-            "type":"TupleTypeElement",
+            "type":"AnyTypeAnnotation",
             "loc":{"source":null,"start":{"line":52,"column":24},"end":{"line":52,"column":27}},
-            "range":[1518,1521],
-            "label":null,
-            "elementType":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":52,"column":24},"end":{"line":52,"column":27}},
-              "range":[1518,1521]
-            }
+            "range":[1518,1521]
           }
         ]
       }

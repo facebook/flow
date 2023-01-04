@@ -2635,12 +2635,21 @@ let program
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [elements_diff; comments_diff]
   and tuple_element
-      (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.Element.t) (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.Element.t)
-      : node change list option =
-    let open Ast.Type.Tuple.Element in
-    let (_loc1, { name = name1; annot = annot1; variance = var1 }) = t1 in
-    let (_loc2, { name = name2; annot = annot2; variance = var2 }) = t2 in
-    let name_diff = diff_if_changed_nonopt_fn identifier name1 name2 in
+      (e1 : (Loc.t, Loc.t) Ast.Type.Tuple.element) (e2 : (Loc.t, Loc.t) Ast.Type.Tuple.element) :
+      node change list option =
+    let open Ast.Type.Tuple in
+    match (e1, e2) with
+    | ((_, UnlabeledElement annot1), (_, UnlabeledElement annot2)) ->
+      Some (diff_if_changed type_ annot1 annot2)
+    | ((_, LabeledElement e1), (_, LabeledElement e2)) -> tuple_labeled_element e1 e2
+    | _ -> None
+  and tuple_labeled_element
+      (t1 : (Loc.t, Loc.t) Ast.Type.Tuple.LabeledElement.t)
+      (t2 : (Loc.t, Loc.t) Ast.Type.Tuple.LabeledElement.t) : node change list option =
+    let open Ast.Type.Tuple.LabeledElement in
+    let { name = name1; annot = annot1; variance = var1 } = t1 in
+    let { name = name2; annot = annot2; variance = var2 } = t2 in
+    let name_diff = Some (diff_if_changed identifier name1 name2) in
     let annot_diff = Some (diff_if_changed type_ annot1 annot2) in
     let variance_diff = diff_if_changed_ret_opt variance var1 var2 in
     join_diff_list [name_diff; annot_diff; variance_diff]

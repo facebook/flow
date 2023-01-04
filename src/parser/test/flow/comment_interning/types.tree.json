@@ -354,40 +354,34 @@
         "range":[475,520],
         "types":[
           {
-            "type":"TupleTypeElement",
+            "type":"GenericTypeAnnotation",
             "loc":{"source":null,"start":{"line":9,"column":53},"end":{"line":9,"column":54}},
             "range":[497,498],
-            "label":null,
-            "elementType":{
-              "type":"GenericTypeAnnotation",
+            "id":{
+              "type":"Identifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":9,"column":55},"end":{"line":9,"column":74}},
+                  "range":[499,518],
+                  "value":" 5.3 T generic "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":9,"column":33},"end":{"line":9,"column":52}},
+                  "range":[477,496],
+                  "value":" 5.2 L generic "
+                }
+              ],
               "loc":{"source":null,"start":{"line":9,"column":53},"end":{"line":9,"column":54}},
               "range":[497,498],
-              "id":{
-                "type":"Identifier",
-                "trailingComments":[
-                  {
-                    "type":"Block",
-                    "loc":{"source":null,"start":{"line":9,"column":55},"end":{"line":9,"column":74}},
-                    "range":[499,518],
-                    "value":" 5.3 T generic "
-                  }
-                ],
-                "leadingComments":[
-                  {
-                    "type":"Block",
-                    "loc":{"source":null,"start":{"line":9,"column":33},"end":{"line":9,"column":52}},
-                    "range":[477,496],
-                    "value":" 5.2 L generic "
-                  }
-                ],
-                "loc":{"source":null,"start":{"line":9,"column":53},"end":{"line":9,"column":54}},
-                "range":[497,498],
-                "name":"T",
-                "typeAnnotation":null,
-                "optional":false
-              },
-              "typeParameters":null
-            }
+              "name":"T",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
           }
         ]
       }
