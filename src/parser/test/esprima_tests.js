@@ -3098,7 +3098,18 @@ module.exports = {
         },
       },
       'var a: Array<(number)>',
-      'var a: ([]) = []',
+      {
+        content: 'var a: ([]) = []',
+        explanation: 'Different output for tuples - `elementTypes` is used instead of `types`',
+        expected_differences: {
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types': {
+            type: 'Missing property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementTypes': {
+            type: 'Unexpected property'
+          }
+        }
+      },
       'var a: (A)',
       'var a: (A.B)',
       'var a: (A<T>)',

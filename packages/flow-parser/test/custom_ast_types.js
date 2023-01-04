@@ -29,8 +29,11 @@ function custom_ast_types(fork) {
 
   def('TupleTypeAnnotation')
     .bases('FlowType')
-    .build('types')
-    .field('types', [or(def('FlowType'), def('TupleTypeLabeledElement'))]);
+    .build('elementTypes')
+    .field('elementTypes', [
+      or(def('FlowType'), def('TupleTypeLabeledElement')),
+    ])
+    .field('types', undefined);
 
   def('TypeofTypeAnnotation')
     .bases('FlowType')
