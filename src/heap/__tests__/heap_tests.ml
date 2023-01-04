@@ -10,6 +10,7 @@
 open OUnit2
 open SharedMem
 open NewAPI
+open Prepare_syntax
 
 module H1 =
   NoCacheAddr
@@ -70,47 +71,33 @@ let skip_list_test workers _ctxt =
   let files_per_worker = 1000 in
   let mk_filename par_id seq_id = Printf.sprintf "s%dp%d" seq_id par_id in
 
-  let file_set = alloc (header_size + sklist_size) write_sklist in
+  let file_set = alloc_prep prepare_write_sklist in
 
   let create_files () par_id =
     let filenames = Array.init files_per_worker (mk_filename par_id) in
-    let size =
-      let f acc fn = acc + (4 * header_size) + (2 * entity_size) + string_size fn + file_size in
-      Array.fold_left f 0 filenames
-    in
-    let add_file chunk key =
-      let filename = write_string chunk key in
-      let parse = write_entity chunk None in
-      let haste = write_entity chunk None in
-      let file = write_file chunk Source_file filename parse haste None in
+    let prepare_create_file key =
+      let+ filename = prepare_write_string key
+      and+ parse = prepare_write_entity
+      and+ haste = prepare_write_entity
+      and+ file = prepare_write_file Source_file in
+      let file = file filename (parse None) (haste None) None in
       assert (file == Files.add key file)
     in
-    alloc size (fun chunk -> Array.iter (add_file chunk) filenames)
+    alloc_prep (prepare_iter prepare_create_file filenames)
   in
 
   let add_files () par_id =
+    (* create nodes and add to set *)
     let files =
       Array.init files_per_worker (fun i -> Option.get (Files.get (mk_filename par_id i)))
     in
-
-    (* prepare for writing nodes *)
-    let size_acc = ref 0 in
-    let write_fns =
-      let f file =
-        let (size, write) = prepare_write_sknode () in
-        size_acc := size + !size_acc;
-        (fun chunk -> write chunk file)
-      in
-      Array.map f files
-    in
-
-    (* create nodes and add to set *)
-    let f chunk file write =
-      let node = write chunk in
+    let prepare_add_file file =
+      let+ node = prepare_write_sknode () in
+      let node = node file in
       assert (file_set_add file_set node);
       assert (file_set_mem file_set file)
     in
-    alloc !size_acc (fun chunk -> Array.iter2 (f chunk) files write_fns)
+    alloc_prep (prepare_iter prepare_add_file files)
   in
 
   let remove_files () par_id =
@@ -201,18 +188,6 @@ let skip_list_test workers _ctxt =
   assert_heap_size 0
 
 let collect_test _ctxt =
-  let foo = "foo" in
-  let bar = "bar" in
-  let tbl1 = [| bar |] in
-  let tbl2 = [| tbl1 |] in
-
-  (* calculate size for heap writes *)
-  let foo_size = header_size + string_size foo in
-  let bar_size = header_size + string_size bar in
-  let tbl1_size = header_size + addr_tbl_size tbl1 in
-  let tbl2_size = header_size + addr_tbl_size tbl2 in
-  let size = foo_size + bar_size + tbl1_size + tbl2_size in
-
   (* write four objects into the heap
    * 1. the string "foo"
    * 2. the string "bar"
@@ -223,12 +198,16 @@ let collect_test _ctxt =
    *)
   let foo_key = "foo_key" in
   let tbl2_key = "tbl2_key" in
-  alloc size (fun chunk ->
-      let foo_addr = write_string chunk foo in
-      let tbl2_addr = write_addr_tbl (write_addr_tbl write_string) chunk tbl2 in
-      assert (foo_addr = H1.add foo_key foo_addr);
-      assert (tbl2_addr = H3.add tbl2_key tbl2_addr)
-  );
+  let ((foo_size, _) as prepare_foo) = prepare_write_string "foo" in
+  let ((size, _) as prepare) =
+    let+ foo = prepare_foo
+    and+ tbl2 =
+      prepare_write_addr_tbl [| prepare_write_addr_tbl [| prepare_write_string "bar" |] |]
+    in
+    assert (foo = H1.add foo_key foo);
+    assert (tbl2 = H3.add tbl2_key tbl2)
+  in
+  alloc_prep prepare;
   assert_heap_size size;
 
   (* all objects reachable via live roots foo, tbl2 *)
@@ -242,9 +221,9 @@ let collect_test _ctxt =
 
   (* confirm tbl2 -> tbl1 -> bar pointers still valid *)
   let () =
-    let tbl2_addr = Base.Option.value_exn (H3.get tbl2_key) in
-    let tbl2' = read_addr_tbl (read_addr_tbl read_string) tbl2_addr in
-    assert (tbl2' = tbl2)
+    let tbl2 = Base.Option.value_exn (H3.get tbl2_key) in
+    let tbl2 = read_addr_tbl (read_addr_tbl read_string) tbl2 in
+    assert (tbl2 = [| [| "bar" |] |])
   in
 
   (* tbl2 dead, tbl1, bar no longer reachable *)
@@ -253,18 +232,15 @@ let collect_test _ctxt =
   assert_heap_size 0
 
 let entities_test _ctxt =
-  let foo = "foo" in
-  let bar = "bar" in
-
   (* write foo, bar, and ent=foo to heap *)
-  let size = (3 * header_size) + string_size foo + string_size bar + entity_size in
   let (foo, bar, ent) =
-    alloc size (fun chunk ->
-        let foo = write_string chunk foo in
-        let bar = write_string chunk bar in
-        let ent = write_entity chunk (Some foo) in
-        (foo, bar, ent)
-    )
+    let prepare =
+      let+ foo = prepare_write_string "foo"
+      and+ bar = prepare_write_string "bar"
+      and+ ent = prepare_write_entity in
+      (foo, bar, ent (Some foo))
+    in
+    alloc_prep prepare
   in
 
   (* uncommitted *)
@@ -291,19 +267,12 @@ let entities_test _ctxt =
   assert_heap_size 0
 
 let entities_compact_test _ctxt =
-  let foo = "foo" in
-  let bar = "bar" in
-  let foo_size = header_size + string_size foo in
-  let bar_size = header_size + string_size bar in
-  let size = foo_size + bar_size + header_size + entity_size in
-  let (bar, ent) =
-    alloc size (fun chunk ->
-        let foo = write_string chunk foo in
-        let bar = write_string chunk bar in
-        let ent = write_entity chunk (Some foo) in
-        (bar, ent)
-    )
+  let ((foo_size, _) as prepare_foo) = prepare_write_string "foo" in
+  let ((size, _) as prepare) =
+    let+ foo = prepare_foo and+ bar = prepare_write_string "bar" and+ ent = prepare_write_entity in
+    (bar, ent (Some foo))
   in
+  let (bar, ent) = alloc_prep prepare in
 
   (* keep ent alive *)
   let key = "ent_key" in
@@ -335,18 +304,14 @@ let entities_rollback_test _ctxt =
   (* init *)
   commit_transaction ();
 
-  let foo = "foo" in
-  let bar = "bar" in
-  let foo_size = header_size + string_size foo in
-  let bar_size = header_size + string_size bar in
-  let size = foo_size + bar_size + header_size + entity_size in
   let (foo, bar, ent) =
-    alloc size (fun chunk ->
-        let foo = write_string chunk foo in
-        let bar = write_string chunk bar in
-        let ent = write_entity chunk (Some foo) in
-        (foo, bar, ent)
-    )
+    let prepare =
+      let+ foo = prepare_write_string "foo"
+      and+ bar = prepare_write_string "bar"
+      and+ ent = prepare_write_entity in
+      (foo, bar, ent (Some foo))
+    in
+    alloc_prep prepare
   in
   assert_latest Fun.id ent foo;
 
@@ -371,20 +336,19 @@ let entities_rollback_test _ctxt =
   assert_heap_size 0
 
 let slot_taken_test _ =
-  let foo = "foo" in
-  let bar = "bar" in
   let key = "key" in
-  let size = (2 * header_size) + string_size foo + string_size bar in
-  alloc size (fun chunk ->
-      let foo = write_string chunk foo in
-      let bar = write_string chunk bar in
+  let () =
+    let prepare =
+      let+ foo = prepare_write_string "foo" and+ bar = prepare_write_string "bar" in
       assert (foo = H1.add key foo);
       (* add returns foo, because already taken *)
       assert (foo = H1.add key bar);
       (* add returns bar, because slot was freed via delete *)
       H1.remove key;
       assert (bar = H1.add key bar)
-  );
+    in
+    alloc_prep prepare
+  in
   (* clean up *)
   H1.remove key;
   compact ();
@@ -396,34 +360,29 @@ let add_provider_barrier_test _ =
    *
    * This test ensures that we use a write barrier so the marking pass is able
    * to reach all live objects. *)
-  let foo = "foo" in
-  let bar = "bar" in
   let key = "key" in
 
   (* First, we create a file (foo_f) and a file module (foo_m), and add file_f
    * to the provider list of foo_m. We add foo_m as a root, so foo_m is the only
    * thing keeping foo_f alive. *)
-  let size =
-    (8 * header_size)
-    + (3 * entity_size)
-    + string_size foo
-    + sklist_size
-    + haste_info_size
-    + haste_module_size
-    + file_size
-  in
-  alloc size (fun chunk ->
-      let foo = write_string chunk foo in
-      let foo_provider = write_entity chunk None in
-      let foo_dependents = write_sklist chunk in
-      let foo_m = write_haste_module chunk foo foo_provider foo_dependents in
-      let haste_info = write_haste_info chunk foo_m in
-      let parse_ent = write_entity chunk None in
-      let haste_ent = write_entity chunk (Some haste_info) in
-      let foo_f = write_file chunk Source_file foo parse_ent haste_ent None in
+  let () =
+    let prepare =
+      let+ foo = prepare_write_string "foo"
+      and+ foo_provider = prepare_write_entity
+      and+ foo_dependents = prepare_write_sklist
+      and+ foo_m = prepare_write_haste_module
+      and+ haste_info = prepare_write_haste_info
+      and+ parse_ent = prepare_write_entity
+      and+ haste_ent = prepare_write_entity
+      and+ foo_f = prepare_write_file Source_file in
+      let foo_m = foo_m foo (foo_provider None) foo_dependents in
+      let haste_info = haste_info foo_m in
+      let foo_f = foo_f foo (parse_ent None) (haste_ent (Some haste_info)) None in
       add_haste_provider foo_m foo_f haste_info;
       assert (HasteModules.add key foo_m == foo_m)
-  );
+    in
+    alloc_prep prepare
+  in
 
   (* Start a GC. With a work budget of 1, this mark slice will certainly not
    * visit `foo_m`. *)
@@ -441,18 +400,20 @@ let add_provider_barrier_test _ =
    * We "allocate black" meaning that `bar_f` will not be scanned for pointers.
    * We need a write barrier when we modify the list head pointer, otherwise we
    * would never visit and mark `foo_f`. *)
-  let size =
-    (5 * header_size) + (2 * entity_size) + string_size bar + haste_info_size + file_size
-  in
-  alloc size (fun chunk ->
-      let foo_m = Option.get (HasteModules.get key) in
-      let bar = write_string chunk bar in
-      let haste_info = write_haste_info chunk foo_m in
-      let parse_ent = write_entity chunk None in
-      let haste_ent = write_entity chunk (Some haste_info) in
-      let bar_f = write_file chunk Source_file bar parse_ent haste_ent None in
+  let () =
+    let foo_m = Option.get (HasteModules.get key) in
+    let prepare =
+      let+ bar = prepare_write_string "bar"
+      and+ haste_info = prepare_write_haste_info
+      and+ parse_ent = prepare_write_entity
+      and+ haste_ent = prepare_write_entity
+      and+ bar_f = prepare_write_file Source_file in
+      let haste_info = haste_info foo_m in
+      let bar_f = bar_f bar (parse_ent None) (haste_ent (Some haste_info)) None in
       add_haste_provider foo_m bar_f haste_info
-  );
+    in
+    alloc_prep prepare
+  in
 
   (* Finish the current GC pass. *)
   collect_full ();
@@ -467,17 +428,18 @@ let add_provider_barrier_test _ =
 let entity_barrier_test _ =
   (* Similar to `add_provider_barrier_test`, we also need a write barrier when
    * advancing entities. *)
-  let foo = "foo" in
   let ent_key = "ent" in
   let tbl_key = "tbl" in
 
   (* Add an entity with latest value "foo" *)
-  let size = (2 * header_size) + string_size foo + entity_size in
-  alloc size (fun chunk ->
-      let foo = write_string chunk foo in
-      let ent = write_entity chunk (Some foo) in
-      assert (ent = Ent.add ent_key ent)
-  );
+  let () =
+    let prepare =
+      let+ foo = prepare_write_string "foo" and+ ent = prepare_write_entity in
+      ent (Some foo)
+    in
+    let ent = alloc_prep prepare in
+    assert (ent = Ent.add ent_key ent)
+  in
 
   (* Commit initial transaction. The entity version will be 0, and next version
    * will be 2. *)
@@ -494,14 +456,13 @@ let entity_barrier_test _ =
    * commit.
    *
    * Advancing the entity will update the ent's version from 0 to 3. *)
-  let ent = Option.get (Ent.get ent_key) in
-  let tbl = [| Option.get (entity_read_latest ent) |] in
-  let size = header_size + addr_tbl_size tbl in
-  alloc size (fun chunk ->
-      let tbl = write_addr_tbl (fun _ addr -> addr) chunk tbl in
-      assert (tbl = H2.add tbl_key tbl);
-      entity_advance ent None
-  );
+  let () =
+    let ent = Option.get (Ent.get ent_key) in
+    let addr = Option.get (entity_read_latest ent) in
+    let tbl = alloc_prep (prepare_write_addr_tbl [| prepare_const addr |]) in
+    assert (tbl = H2.add tbl_key tbl);
+    entity_advance ent None
+  in
 
   (* Once we commit the transaction, the global next_version will advance to 4.
    * At this point, `foo` is unreachable from the ent. *)
@@ -518,23 +479,17 @@ let entity_barrier_test _ =
   assert (String.equal "foo" (read_string tbl.(0)))
 
 let compare_string_test _ =
-  let size =
-    (6 * header_size)
-    + (2 * string_size "")
-    + (2 * string_size "foo")
-    + string_size "foot"
-    + string_size "quux"
-  in
   let (empty1, empty2, foo1, foo2, foot, quux) =
-    alloc size (fun chunk ->
-        let empty1 = write_string chunk "" in
-        let empty2 = write_string chunk "" in
-        let foo1 = write_string chunk "foo" in
-        let foo2 = write_string chunk "foo" in
-        let foot = write_string chunk "foot" in
-        let quux = write_string chunk "quux" in
-        (empty1, empty2, foo1, foo2, foot, quux)
-    )
+    let prepare =
+      let+ empty1 = prepare_write_string ""
+      and+ empty2 = prepare_write_string ""
+      and+ foo1 = prepare_write_string "foo"
+      and+ foo2 = prepare_write_string "foo"
+      and+ foot = prepare_write_string "foot"
+      and+ quux = prepare_write_string "quux" in
+      (empty1, empty2, foo1, foo2, foot, quux)
+    in
+    alloc_prep prepare
   in
 
   assert (compare_string empty1 empty1 = 0);
