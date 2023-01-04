@@ -11189,7 +11189,6 @@ upper_bounds_17.js:11:13
 Flags: --pretty
 {
   "result":[
-    {"name":"'bar'","type":"\"bar\""},
     {"name":"'foo'","type":"\"foo\""},
     {"name":"x","type":"T"},
     {"name":"y","type":"A"}

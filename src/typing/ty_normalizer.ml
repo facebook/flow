@@ -289,70 +289,6 @@ end = struct
    *)
 
   module Recursive = struct
-    (* Helper functions *)
-
-    let mk_mu ~definitely_appears i t =
-      if definitely_appears || Ty_utils.tvar_appears_in_type ~is_toplevel:true (Ty.RVar i) t then
-        Ty.Mu (i, t)
-      else
-        t
-
-    (* When inferring recursive types, the top-level appearances of the recursive
-     * variable should be eliminated. This visitor performs the following
-     * transformations:
-     *
-     * (recursive var: X , type: X           ) ==> Bot
-     * (recursive var: X , type: X | t       ) ==> Bot | t
-     * (recursive var: X , type: X & t       ) ==> Top & t
-     * (recursive var: X , type: mu Y . X | t) ==> mu Y . Bot | t
-     *
-     * The visitor only descends down to the first concrete constructor
-     * (e.g. Function, Class) and is applied to the subparts of unions,
-     * intersections and recursive types.
-
-     * It is expected to followed by type minimization, so that the introduced
-     * Bot and Top can be eliminated.
-     *)
-    let remove_toplevel_tvar =
-      Ty.(
-        let o =
-          object (self)
-            inherit [_] endo_ty
-
-            method env_zero =
-              function
-              | `Union -> Bot (NoLowerWithUpper NoUpper)
-              | `Inter -> Top
-
-            method! on_t env t =
-              match (env, t) with
-              | ((v, _), Union (from_bounds, t0, t1, ts)) ->
-                let t0' = self#on_t (v, `Union) t0 in
-                let ts' = self#on_list self#on_t (v, `Union) (t1 :: ts) in
-                if t0 == t0' && ts == ts' then
-                  t
-                else
-                  Ty.mk_union ~from_bounds (t0', ts')
-              | ((v, _), Inter (t0, t1, ts)) ->
-                let t0' = self#on_t (v, `Inter) t0 in
-                let ts' = self#on_list self#on_t (v, `Inter) (t1 :: ts) in
-                if t0 == t0' && ts == ts' then
-                  t
-                else
-                  Ty.mk_inter (t0', ts')
-              | ((v, mode), TVar (Ty.RVar v', _)) when v = v' -> self#env_zero mode
-              | (_, Mu (v, rt)) ->
-                let rt' = self#on_t env rt in
-                if rt == rt' then
-                  t
-                else
-                  mk_mu ~definitely_appears:false v rt'
-              | (_, _) -> t
-          end
-        in
-        (fun v t -> o#on_t (v, `Union) t)
-      )
-
     (* Constructing recursive types.
      *
      * This function is expected to be called after fully normalizing the lower
@@ -372,9 +308,6 @@ end = struct
      *   Mu (v, v | string)
      *
      *   which is not a recursive type. (It is equivalent to string.)
-     *   So, first we simplify the type by performing the "remove_top_level_tvar"
-     *   transformation and some subsequent simplifications. Then if the type
-     *   changed we check again if `v` is in the free variables.
      *
      *   NOTE that we need to recompute free vars since the simplifications might
      *   have eliminated some of them. Here we use the FreeVars module. This is
@@ -382,14 +315,10 @@ end = struct
      *   not a recursive type.
      *)
     let make free_vars i t =
-      if not (VSet.mem i free_vars) then
-        t
+      if VSet.mem i free_vars then
+        Ty.Mu (i, t)
       else
-        (* Recursive, but still might be a degenerate case *)
-        let t' = remove_toplevel_tvar i t in
-        let changed = not (t == t') in
-        (* If not changed then all free_vars are still in, o.w. recompute free vars *)
-        mk_mu ~definitely_appears:(not changed) i t'
+        t
 
     (* Normalize potentially recursive types.
      *
