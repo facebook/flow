@@ -207,6 +207,61 @@ module Functions = struct
       sig_loc = Loc.none;
       comments = None;
     }
+
+  let pattern_of_param param =
+    let (_, { Ast.Type.Function.Param.name; annot; optional }) = param in
+    ( Loc.none,
+      Ast.Pattern.Identifier
+        {
+          Ast.Pattern.Identifier.name = Base.Option.value_exn name;
+          annot = Ast.Type.Available (Loc.none, annot);
+          optional;
+        }
+    )
+
+  let param_of_type param =
+    (Loc.none, { Ast.Function.Param.argument = pattern_of_param param; default = None })
+
+  let rest_param_of_type rest =
+    let (_, { Ast.Type.Function.RestParam.argument; comments }) = rest in
+    (Loc.none, { Ast.Function.RestParam.argument = pattern_of_param argument; comments })
+
+  let this_param_of_type (loc, { Ast.Type.Function.ThisParam.annot; comments }) =
+    (loc, { Ast.Function.ThisParam.annot; comments })
+
+  let params_of_type (loc, { Ast.Type.Function.Params.this_; params; rest; comments }) =
+    ( loc,
+      {
+        Ast.Function.Params.this_ = Base.Option.map ~f:this_param_of_type this_;
+        params = Base.List.map ~f:param_of_type params;
+        rest = Base.Option.map ~f:rest_param_of_type rest;
+        comments;
+      }
+    )
+
+  let of_type
+      ?id
+      ?(generator = false)
+      ?(async = false)
+      ?body:body_
+      { Ast.Type.Function.tparams; params; return; _ } =
+    let body =
+      match body_ with
+      | Some body_ -> body_
+      | None -> body []
+    in
+    {
+      id;
+      params = params_of_type params;
+      body;
+      async;
+      generator;
+      predicate = None;
+      return = Ast.Type.Available (Loc.none, return);
+      tparams;
+      sig_loc = Loc.none;
+      comments = None;
+    }
 end
 
 module Classes = struct
