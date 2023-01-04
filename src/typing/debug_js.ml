@@ -10,11 +10,6 @@ open Type
 open TypeUtil
 open Utils_js
 
-let string_of_polarity = function
-  | Polarity.Negative -> "Negative"
-  | Polarity.Neutral -> "Neutral"
-  | Polarity.Positive -> "Positive"
-
 let string_of_union_enum = function
   | UnionEnum.Str x -> spf "string %s" (display_string_of_name x)
   | UnionEnum.Num (_, x) -> spf "number %s" x
@@ -1035,7 +1030,7 @@ and dump_tvar_ (depth, tvars) cx id =
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth, tvars) cx t in
   match p with
-  | Field (_loc, t, polarity) -> spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
+  | Field (_loc, t, polarity) -> spf "Field (%s) %s" (Polarity.string polarity) (kid t)
   | Get (_loc, t) -> spf "Get %s" (kid t)
   | Set (_loc, t) -> spf "Set %s" (kid t)
   | GetSet (_loc1, t1, _loc2, t2) -> spf "Get %s Set %s" (kid t1) (kid t2)
