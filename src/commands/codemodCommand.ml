@@ -161,6 +161,15 @@ module Annotate_exports_command = struct
   let command = CommandSpec.command spec main
 end
 
+module LtiPerFileErrorsHeap =
+  SharedMem.NoCache
+    (File_key)
+    (struct
+      type t = Loc.t list
+
+      let description = "TransformableErrorsHeap"
+    end)
+
 module Annotate_lti_command = struct
   let doc = "Annotates function and class definitions required for Flow's local type interence."
 
@@ -201,9 +210,9 @@ module Annotate_lti_command = struct
                ~doc:
                  "Skips adding type annotations to class properties without initializers even if necessary"
           |> flag
-               "--errors-json-file"
-               string
-               ~doc:"File containing flow-check json. If -, json is read from the standard input."
+               "--include-lti"
+               truthy
+               ~doc:"Adding missing annotations that are only detected under LTI mode."
         );
     }
 
@@ -215,9 +224,9 @@ module Annotate_lti_command = struct
       skip_normal_params
       skip_this_params
       skip_class_properties
-      errors_json_file
+      include_lti
       () =
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+    let module SimpleRunner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_lti.Acc
 
       type accumulator = Acc.t
@@ -230,15 +239,65 @@ module Annotate_lti_command = struct
         { o with opt_any_propagation = false; opt_inference_mode = ConstrainWrites }
 
       let visit =
-        let provided_error_locs =
-          CommandUtils.get_error_locs_from_input errors_json_file
-          |> Base.Option.value ~default:[]
-          |> List.concat_map (fun (error_codes, error_locs) ->
-                 if List.mem "missing-local-annot" error_codes then
-                   error_locs
-                 else
-                   []
+        let mapper =
+          Annotate_lti.mapper
+            ~preserve_literals
+            ~max_type_size
+            ~default_any
+            ~skip_normal_params
+            ~skip_this_params
+            ~skip_class_properties
+            ~provided_error_locs:[]
+        in
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+    end) in
+    let reader = State_reader.create () in
+    let module LTIRunner = Codemod_runner.MakeTypedRunnerWithPrepass (struct
+      module Acc = Annotate_lti.Acc
+
+      type accumulator = Acc.t
+
+      type prepass_state = unit
+
+      type prepass_result = Loc.t list FilenameMap.t
+
+      let reporter = string_reporter (module Acc)
+
+      let prepass_init () = ()
+
+      let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
+
+      let prepass_run cx () file_key _reader _file_sig _typed_ast =
+        let error_locs =
+          Context.errors cx
+          |> Flow_error.ErrorSet.elements
+          |> List.filter_map (fun error ->
+                 match Flow_error.code_of_error error with
+                 | Some Error_codes.MissingLocalAnnot ->
+                   error
+                   |> Flow_error.msg_of_error
+                   |> Error_message.loc_of_msg
+                   |> Base.Option.map ~f:(fun error_aloc ->
+                          Parsing_heaps.Reader.loc_of_aloc ~reader error_aloc
+                      )
+                 | _ -> None
              )
+        in
+        FilenameMap.singleton file_key error_locs
+
+      let store_precheck_result result =
+        result
+        |> FilenameMap.values
+        |> Base.List.filter_map ~f:Base.Result.ok
+        |> Base.List.fold
+             ~init:FilenameMap.empty
+             ~f:(FilenameMap.union ~combine:(fun _ tes1 tes2 -> Some (tes1 @ tes2)))
+        |> FilenameMap.iter LtiPerFileErrorsHeap.add
+
+      let visit ~options program =
+        let provided_error_locs =
+          LtiPerFileErrorsHeap.get (Base.Option.value_exn (fst program |> Loc.source))
+          |> Base.Option.value ~default:[]
         in
         let mapper =
           Annotate_lti.mapper
@@ -250,9 +309,16 @@ module Annotate_lti_command = struct
             ~skip_class_properties
             ~provided_error_locs
         in
-        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper) ~options program
     end) in
-    main (module Runner) codemod_flags ()
+    main
+      ( if include_lti then
+        (module LTIRunner)
+      else
+        (module SimpleRunner)
+      )
+      codemod_flags
+      ()
 
   let command = CommandSpec.command spec main
 end

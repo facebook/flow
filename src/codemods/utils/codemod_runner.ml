@@ -240,6 +240,8 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
 
   val prepass_init : unit -> prepass_state
 
+  val mod_prepass_options : Options.t -> Options.t
+
   val prepass_run :
     Context.t ->
     prepass_state ->
@@ -327,6 +329,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
 
   let pre_check_job ~reader ~options acc roots =
     let state = C.prepass_init () in
+    let options = C.mod_prepass_options options in
     let check = Merge_service.mk_check options ~reader () in
     List.fold_left
       (fun acc file ->

@@ -1,4 +1,12 @@
->>> file.js (#changes: 1)
+>>> arrayReduce.js (#changes: 1)
+// @flow
+
+[1, 2, 3].reduce((acc: Array<number>, n) => { // ANNOT
+  acc.push(n);
+  return acc;
+}, []);
+
+>>> useCallback.js (#changes: 1)
 // @flow
 
 declare function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(cb: T): T;
@@ -9,10 +17,10 @@ f(3);
 >>> Launching report...
 
 Stats:
-  Files changed:                            1
-  Number of annotations added:              1
-  Total size of annotations:                1
-  Number of LTI errors:                     1
+  Files changed:                            2
+  Number of annotations added:              2
+  Total size of annotations:                3
+  Number of LTI errors:                     2
 
 Errors:
   Missing annot./normalizer error:          0
