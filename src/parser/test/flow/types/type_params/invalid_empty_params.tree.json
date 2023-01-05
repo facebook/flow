@@ -1,30 +1,18 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":8}},
-      "message":"Unexpected token `>`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `>`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `=`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected a type"
+      "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":1,"column":8}},
+      "message":"Expected at least one type parameter."
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-  "range":[0,18],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":17}},
+  "range":[0,17],
   "body":[
     {
       "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-      "range":[0,18],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":17}},
+      "range":[0,17],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":6}},
@@ -35,28 +23,14 @@
       },
       "typeParameters":{
         "type":"TypeParameterDeclaration",
-        "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":2,"column":0}},
-        "range":[6,18],
-        "params":[
-          {
-            "type":"TypeParameter",
-            "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":17}},
-            "range":[7,17],
-            "name":"",
-            "bound":null,
-            "variance":null,
-            "default":{
-              "type":"NumberTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":17}},
-              "range":[11,17]
-            }
-          }
-        ]
+        "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":1,"column":8}},
+        "range":[6,8],
+        "params":[]
       },
       "right":{
-        "type":"AnyTypeAnnotation",
-        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-        "range":[18,18]
+        "type":"NumberTypeAnnotation",
+        "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":17}},
+        "range":[11,17]
       }
     }
   ],
