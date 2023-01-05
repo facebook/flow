@@ -959,24 +959,13 @@ let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_
 let handle_force_recheck ~files ~focus ~missed_changes ~changed_mergebase ~profiling:_ =
   let fileset = SSet.of_list files in
   let metadata = { MonitorProt.missed_changes; changed_mergebase = Some changed_mergebase } in
-  let reason =
-    let file_count = List.length files in
-    if missed_changes then
-      LspProt.File_watcher_missed_changes
-    else if changed_mergebase then
-      LspProt.Rebased { file_count }
-    else
-      match files with
-      | [filename] -> LspProt.Single_file_changed { filename }
-      | _ -> LspProt.Many_files_changed { file_count }
-  in
   (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
    * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
    * focused *)
   if focus then
-    ServerMonitorListenerState.push_files_to_force_focused_and_recheck ~reason fileset
+    ServerMonitorListenerState.push_files_to_force_focused_and_recheck fileset
   else
-    ServerMonitorListenerState.push_files_to_recheck ~metadata ~reason fileset;
+    ServerMonitorListenerState.push_files_to_recheck ~metadata fileset;
   (ServerProt.Response.FORCE_RECHECK, None)
 
 let handle_get_def ~reader ~options ~input ~line ~char ~profiling ~env =

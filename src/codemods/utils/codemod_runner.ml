@@ -456,7 +456,6 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
             ~files_to_force:CheckedSet.empty
             ~changed_mergebase:None
             ~missed_changes:false
-            ~recheck_reasons:[]
             ~will_be_checked_files:(ref CheckedSet.empty)
             env
         in

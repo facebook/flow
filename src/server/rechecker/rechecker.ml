@@ -80,9 +80,9 @@ let get_lazy_stats ~options env =
  * FilenameSet. Updates may be coming in from the root, or an include path.
  *
  * If any update can't be processed incrementally, the Flow server will exit *)
-let process_updates ?skip_incompatible ~options env updates =
+let process_updates ~skip_incompatible ~options env updates =
   match
-    Recheck_updates.process_updates ?skip_incompatible ~options ~libs:env.ServerEnv.libs updates
+    Recheck_updates.process_updates ~skip_incompatible ~options ~libs:env.ServerEnv.libs updates
   with
   | Base.Result.Ok updates -> updates
   | Base.Result.Error { Recheck_updates.msg; exit_status } ->
@@ -98,7 +98,7 @@ let send_start_recheck env =
   Persistent_connection.send_start_recheck env.connections
 
 (** Notify clients that the recheck is done and send finalized errors *)
-let send_end_recheck ~profiling ~options recheck_reasons env =
+let send_end_recheck ~profiling ~options env =
   (* We must send "end_recheck" prior to sending errors+warnings so the client
      knows that this set of errors+warnings are final ones, not incremental. *)
   let lazy_stats = get_lazy_stats ~options env in
@@ -111,10 +111,9 @@ let send_end_recheck ~profiling ~options recheck_reasons env =
     in
     (errors, warnings)
   in
-  let errors_reason = LspProt.End_of_recheck { recheck_reasons } in
   Persistent_connection.update_clients
     ~clients:env.connections
-    ~errors_reason
+    ~errors_reason:LspProt.End_of_recheck
     ~calc_errors_and_warnings;
 
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up
@@ -125,7 +124,6 @@ let recheck
     ?(files_to_force = CheckedSet.empty)
     ~changed_mergebase
     ~missed_changes
-    ~recheck_reasons
     ~will_be_checked_files
     updates =
   let options = genv.ServerEnv.options in
@@ -140,14 +138,13 @@ let recheck
             ~options
             ~workers
             ~updates
-            env
             ~files_to_force
             ~changed_mergebase
             ~missed_changes
-            ~recheck_reasons
             ~will_be_checked_files
+            env
         in
-        send_end_recheck ~profiling ~options recheck_reasons env;
+        send_end_recheck ~profiling ~options env;
         Lwt.return (log_recheck_event, recheck_stats, env)
     )
   in
@@ -164,7 +161,7 @@ let recheck
 (* Runs a function which should be canceled if we are notified about any file changes. After the
  * thread is canceled, post_cancel is called and its result returned *)
 let run_but_cancel_on_file_changes ~options env ~get_forced ~priority ~f ~pre_cancel ~post_cancel =
-  let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
+  let process_updates ~skip_incompatible = process_updates ~skip_incompatible ~options env in
   (* We don't want to start running f until we're in the try block *)
   let (waiter, wakener) = Lwt.task () in
   let run_thread =
@@ -224,7 +221,7 @@ type recheck_outcome =
 let rec recheck_single ~recheck_count genv env =
   let env = ServerMonitorListenerState.update_env env in
   let options = genv.ServerEnv.options in
-  let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
+  let process_updates ~skip_incompatible = process_updates ~skip_incompatible ~options env in
   (* This ref is an estimate of the files which will be checked by the time the recheck is done.
    * As the recheck progresses, the estimate will get better. We use this estimate to prevent
    * canceling the recheck to force a file which we were already going to check
@@ -261,7 +258,6 @@ let rec recheck_single ~recheck_count genv env =
     files_to_recheck;
     files_to_prioritize;
     files_to_force;
-    recheck_reasons_rev;
   } =
     workload
   in
@@ -305,7 +301,6 @@ let rec recheck_single ~recheck_count genv env =
       recheck_single ~recheck_count:(recheck_count + 1) genv env
     in
     let f () =
-      let recheck_reasons = List.rev recheck_reasons_rev in
       let%lwt (profiling, env) =
         try%lwt
           recheck
@@ -314,7 +309,6 @@ let rec recheck_single ~recheck_count genv env =
             ~files_to_force
             ~changed_mergebase
             ~missed_changes
-            ~recheck_reasons
             ~will_be_checked_files
             files_to_recheck
         with

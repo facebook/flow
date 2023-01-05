@@ -7,7 +7,7 @@
 
 (* filter and relativize updated file paths *)
 val process_updates :
-  ?skip_incompatible:bool -> options:Options.t -> ServerEnv.env -> SSet.t -> Utils_js.FilenameSet.t
+  skip_incompatible:bool -> options:Options.t -> ServerEnv.env -> SSet.t -> Utils_js.FilenameSet.t
 
 val recheck_loop :
   ServerEnv.genv -> ServerEnv.env -> (Profiling_js.finished list * ServerEnv.env) Lwt.t
