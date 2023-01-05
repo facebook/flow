@@ -295,50 +295,35 @@ let get_message (queue : queue) =
 
 (* respond: sends either a Response or an Error message, according
    to whether the json has an error-code or not. *)
-let respond
-    (writer : writer)
-    ?(powered_by : string option)
-    (in_response_to : message)
-    (result_or_error : Hh_json.json) : unit =
-  Hh_json.(
-    let is_error =
-      match result_or_error with
-      | JSON_Object _ -> J.try_get_val "code" result_or_error |> Base.Option.is_some
-      | _ -> false
-    in
-    let response =
-      JSON_Object
-        ([("jsonrpc", JSON_String "2.0")]
-        @ [("id", Base.Option.value in_response_to.id ~default:JSON_Null)]
-        @ ( if is_error then
-            [("error", result_or_error)]
-          else
-            [("result", result_or_error)]
-          )
-        @
-        match powered_by with
-        | Some powered_by -> [("powered_by", JSON_String powered_by)]
-        | None -> []
-        )
-    in
-    writer response
-  )
+let respond (writer : writer) (in_response_to : message) (result_or_error : Hh_json.json) : unit =
+  let open Hh_json in
+  let is_error =
+    match result_or_error with
+    | JSON_Object _ -> J.try_get_val "code" result_or_error |> Base.Option.is_some
+    | _ -> false
+  in
+  let response =
+    JSON_Object
+      [
+        ("jsonrpc", JSON_String "2.0");
+        ("id", Base.Option.value in_response_to.id ~default:JSON_Null);
+        ( if is_error then
+          ("error", result_or_error)
+        else
+          ("result", result_or_error)
+        );
+      ]
+  in
+  writer response
 
 (* notify: sends a Notify message *)
-let notify (writer : writer) ?(powered_by : string option) (method_ : string) (params : Hh_json.json)
-    : unit =
-  Hh_json.(
-    let message =
-      JSON_Object
-        ([("jsonrpc", JSON_String "2.0"); ("method", JSON_String method_); ("params", params)]
-        @
-        match powered_by with
-        | Some powered_by -> [("powered_by", JSON_String powered_by)]
-        | None -> []
-        )
-    in
-    writer message
-  )
+let notify (writer : writer) (method_ : string) (params : Hh_json.json) : unit =
+  let open Hh_json in
+  let message =
+    JSON_Object
+      [("jsonrpc", JSON_String "2.0"); ("method", JSON_String method_); ("params", params)]
+  in
+  writer message
 
 (************************************************)
 (* Output functions for request                 *)
