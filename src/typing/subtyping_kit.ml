@@ -1602,7 +1602,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | ( Some (TupleElement { t = t1; polarity = p1; name = _ }),
               Some (TupleElement { t = t2; polarity = p2; name = _ })
             ) ->
-            if not (fresh || Polarity.equal (p1, p2)) then
+            if not (fresh || Polarity.compat (p1, p2)) then
               add_output
                 cx
                 ~trace
@@ -1619,7 +1619,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
             let use_op =
               Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
             in
-            flow_to_mutable_child cx trace use_op fresh t1 t2;
+            (match p2 with
+            | Polarity.Positive -> rec_flow_t cx trace ~use_op (t1, t2)
+            | Polarity.Negative -> rec_flow_t cx trace ~use_op (t2, t1)
+            | Polarity.Neutral -> flow_to_mutable_child cx trace use_op fresh t1 t2);
             n := !n + 1
           | _ -> ())
         (elements1, elements2)
