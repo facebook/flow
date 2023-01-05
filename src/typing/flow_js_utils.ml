@@ -1885,11 +1885,11 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
     | ArrayAT (value, ts) ->
       let ts = Base.Option.map ~f:(Base.List.map ~f:(fun t -> (t, Polarity.Neutral, None))) ts in
       (value, ts, false, false)
-    | TupleAT (value, elements) ->
+    | TupleAT { elem_t; elements } ->
       let ts =
         Base.List.map ~f:(fun (TupleElement { t; polarity; name }) -> (t, polarity, name)) elements
       in
-      (value, Some ts, true, true)
+      (elem_t, Some ts, true, true)
     | ROArrayAT value -> (value, None, true, false)
   in
   let (can_write_tuple, value) =

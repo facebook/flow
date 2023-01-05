@@ -103,7 +103,7 @@ end = struct
         function
         | ArrayAT _ -> Array r
         | ROArrayAT _ -> ROArray r
-        | TupleAT (_, ts) -> Tuple (r, List.length ts)
+        | TupleAT { elements; _ } -> Tuple (r, List.length elements)
 
       method! type_ cx pole acc t =
         match t with

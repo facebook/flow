@@ -1580,7 +1580,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let ts2 = Base.Option.value ~default:[] ts2 in
       array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
-    | (DefT (r1, _, ArrT (TupleAT (_, ts1))), DefT (r2, _, ArrT (TupleAT (_, ts2)))) ->
+    | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1 })),
+        DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2 }))
+      ) ->
       let fresh =
         match desc_of_reason r1 with
         | RArrayLit
@@ -1589,8 +1591,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           true
         | _ -> false
       in
-      let l1 = List.length ts1 in
-      let l2 = List.length ts2 in
+      let l1 = List.length elements1 in
+      let l2 = List.length elements2 in
       if l1 <> l2 then
         add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), l1, l2, use_op));
       let n = ref 0 in
@@ -1620,7 +1622,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             flow_to_mutable_child cx trace use_op fresh t1 t2;
             n := !n + 1
           | _ -> ())
-        (ts1, ts2)
+        (elements1, elements2)
     (* Arrays with known elements can flow to tuples *)
     | (DefT (r1, trust, ArrT (ArrayAT (t1, ts1))), DefT (r2, _, ArrT (TupleAT _))) -> begin
       match ts1 with
@@ -1635,18 +1637,21 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 trust,
                 ArrT
                   (TupleAT
-                     ( t1,
-                       Base.List.map
-                         ~f:(fun t -> TupleElement { name = None; polarity = Polarity.Neutral; t })
-                         ts1
-                     )
+                     {
+                       elem_t = t1;
+                       elements =
+                         Base.List.map
+                           ~f:(fun t ->
+                             TupleElement { name = None; polarity = Polarity.Neutral; t })
+                           ts1;
+                     }
                   )
               ),
             u
           )
     end
     (* Read only arrays are the super type of all tuples and arrays *)
-    | ( DefT (r1, _, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT t1)),
+    | ( DefT (r1, _, ArrT (ArrayAT (t1, _) | TupleAT { elem_t = t1; _ } | ROArrayAT t1)),
         DefT (r2, _, ArrT (ROArrayAT t2))
       ) ->
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in

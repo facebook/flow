@@ -986,13 +986,13 @@ end = struct
       | (T.ROArrayAT t, _) ->
         let%map t = type__ ~env t in
         Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
-      | (T.TupleAT (_, ts), _) ->
+      | (T.TupleAT { elements = elements'; _ }, _) ->
         let%map elements =
           mapM
             (fun (T.TupleElement { name; t; polarity }) ->
               let%map t = type__ ~env t in
               Ty.TupleElement { name; t; polarity = type_polarity polarity })
-            ts
+            elements'
         in
         Ty.Tup elements
 

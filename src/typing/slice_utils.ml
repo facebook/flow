@@ -1244,7 +1244,7 @@ let resolve
           }
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
-  | DefT (r, trust, ArrT (TupleAT (elem_t, elements))) when tool = ReadOnly ->
+  | DefT (r, trust, ArrT (TupleAT { elem_t; elements })) when tool = ReadOnly ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity = _ }) ->
           TupleElement { t; name; polarity = Polarity.Positive }
@@ -1255,7 +1255,7 @@ let resolve
       | RReadOnlyType -> r
       | _ -> reason
     in
-    return cx use_op (DefT (def_reason, trust, ArrT (TupleAT (elem_t, elements))))
+    return cx use_op (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements })))
   (* If we see an empty then propagate empty to tout. *)
   | DefT (r, trust, EmptyT) -> return cx use_op (EmptyT.make r trust)
   (* Propagate any. *)

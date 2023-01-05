@@ -5948,12 +5948,15 @@ module Make
             bogus_trust (),
             ArrT
               (TupleAT
-                 ( elem_t,
-                   [
-                     TupleElement { name = Some "key"; t = keys_t; polarity = Polarity.Neutral };
-                     TupleElement { name = Some "value"; t = values_t; polarity = Polarity.Neutral };
-                   ]
-                 )
+                 {
+                   elem_t;
+                   elements =
+                     [
+                       TupleElement { name = Some "key"; t = keys_t; polarity = Polarity.Neutral };
+                       TupleElement
+                         { name = Some "value"; t = values_t; polarity = Polarity.Neutral };
+                     ];
+                 }
               )
           )
       in

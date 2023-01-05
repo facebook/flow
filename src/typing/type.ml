@@ -1158,7 +1158,10 @@ module rec TypeTerm : sig
      * that they don't need to recompute their general type when you do
      * myTuple[expr]
      *)
-    | TupleAT of t * tuple_element list
+    | TupleAT of {
+        elem_t: t;
+        elements: tuple_element list;
+      }
     (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
      * elemt is a supertype of every element type *)
     | ROArrayAT of t
@@ -3859,10 +3862,10 @@ let extract_getter_type = function
   | _ -> failwith "Getter property with unexpected type"
 
 let elemt_of_arrtype = function
-  | ArrayAT (elemt, _)
-  | ROArrayAT elemt
-  | TupleAT (elemt, _) ->
-    elemt
+  | ArrayAT (elem_t, _)
+  | ROArrayAT elem_t
+  | TupleAT { elem_t; _ } ->
+    elem_t
 
 let ro_of_arrtype = function
   | ArrayAT _ -> Generic.ArraySpread.NonROSpread

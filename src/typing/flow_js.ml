@@ -2183,9 +2183,9 @@ struct
                     let new_arrtype =
                       match arrtype with
                       (* These can get us into constant folding loops *)
-                      | ArrayAT (elemt, Some _)
-                      | TupleAT (elemt, _) ->
-                        ArrayAT (elemt, None)
+                      | ArrayAT (elem_t, Some _)
+                      | TupleAT { elem_t; _ } ->
+                        ArrayAT (elem_t, None)
                       (* These cannot *)
                       | ArrayAT (_, None)
                       | ROArrayAT _ ->
@@ -3849,7 +3849,7 @@ struct
           | ROArrayAT elemt ->
             (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
             rec_flow cx trace (elemt, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
-          | TupleAT (_, elements) ->
+          | TupleAT { elements; _ } ->
             (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
             List.iteri
               (fun n (TupleElement { t = from; polarity; name }) ->
@@ -4211,7 +4211,8 @@ struct
             | ROArrayAT _ ->
               arrtype
             | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Base.List.drop ts i))
-            | TupleAT (elemt, ts) -> TupleAT (elemt, Base.List.drop ts i)
+            | TupleAT { elem_t; elements } ->
+              TupleAT { elem_t; elements = Base.List.drop elements i }
           in
           let a = DefT (reason, trust, ArrT arrtype) in
           rec_flow_t cx trace ~use_op:unknown_use (a, tout)
@@ -4241,14 +4242,16 @@ struct
           let arrtype =
             match arrtype with
             | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Base.Option.map ~f:(Base.List.map ~f) ts)
-            | TupleAT (elem_t, elements) ->
+            | TupleAT { elem_t; elements } ->
               TupleAT
-                ( f elem_t,
-                  Base.List.map
-                    ~f:(fun (TupleElement { name; t; polarity }) ->
-                      TupleElement { name; t = f t; polarity })
-                    elements
-                )
+                {
+                  elem_t = f elem_t;
+                  elements =
+                    Base.List.map
+                      ~f:(fun (TupleElement { name; t; polarity }) ->
+                        TupleElement { name; t = f t; polarity })
+                      elements;
+                }
             | ROArrayAT elemt -> ROArrayAT (f elemt)
           in
           let t =
@@ -5347,10 +5350,10 @@ struct
         (*************************)
         (* Tuple "length" access *)
         (*************************)
-        | ( DefT (reason, trust, ArrT (TupleAT (_, ts))),
+        | ( DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements })),
             GetPropT (_, _, _, Named (_, OrdinaryName "length"), tout)
           ) ->
-          GetPropTKit.on_array_length cx trace reason trust ts (reason_of_use_t u) tout
+          GetPropTKit.on_array_length cx trace reason trust elements (reason_of_use_t u) tout
         | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
@@ -5852,18 +5855,20 @@ struct
     let only_any _ = any in
     match t with
     | DefT (r, trust, ArrT (ArrayAT _)) -> DefT (r, trust, ArrT (ArrayAT (any, None)))
-    | DefT (r, trust, ArrT (TupleAT (_, elements))) ->
+    | DefT (r, trust, ArrT (TupleAT { elements; _ })) ->
       DefT
         ( r,
           trust,
           ArrT
             (TupleAT
-               ( any,
-                 Base.List.map
-                   ~f:(fun (TupleElement { name; t; polarity }) ->
-                     TupleElement { name; t = only_any t; polarity })
-                   elements
-               )
+               {
+                 elem_t = any;
+                 elements =
+                   Base.List.map
+                     ~f:(fun (TupleElement { name; t; polarity }) ->
+                       TupleElement { name; t = only_any t; polarity })
+                     elements;
+               }
             )
         )
     | OpaqueT (r, ({ underlying_t; super_t; opaque_type_args; _ } as opaquetype)) ->
@@ -7782,13 +7787,13 @@ struct
           (* TODO: add test for sentinel test on implements *)
           flow_sentinel sense own_props obj s
         (* tuple.length ===/!== literal value *)
-        | DefT (reason, trust, ArrT (TupleAT (_, ts))) when key = "length" ->
+        | DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements })) when key = "length" ->
           let test =
             let desc = RMatchingProp (key, desc_of_sentinel s) in
             let r = replace_desc_reason desc (fst result) in
             SentinelPropTestT (r, orig_obj, key, sense, s, result)
           in
-          rec_flow cx trace (tuple_length reason trust ts, test)
+          rec_flow cx trace (tuple_length reason trust elements, test)
         | IntersectionT (_, rep) ->
           (* For an intersection of object types, try the test for each object
              type in turn, while recording the original intersection so that we
@@ -8329,9 +8334,11 @@ struct
           let ts1 = Base.Option.value ~default:[] ts1 in
           let ts2 = Base.Option.value ~default:[] ts2 in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
-        | (DefT (r1, _, ArrT (TupleAT (_, ts1))), DefT (r2, _, ArrT (TupleAT (_, ts2)))) ->
-          let l1 = List.length ts1 in
-          let l2 = List.length ts2 in
+        | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1 })),
+            DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2 }))
+          ) ->
+          let l1 = List.length elements1 in
+          let l2 = List.length elements2 in
           if l1 <> l2 then
             add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), l1, l2, use_op));
           let n = ref 0 in
@@ -8358,7 +8365,7 @@ struct
                 rec_unify cx trace ~use_op t1 t2;
                 n := !n + 1
               | _ -> ())
-            (ts1, ts2)
+            (elements1, elements2)
         | ( DefT (lreason, _, ObjT { props_tmap = lflds; flags = lflags; _ }),
             DefT (ureason, _, ObjT { props_tmap = uflds; flags = uflags; _ })
           ) ->
@@ -8834,7 +8841,7 @@ struct
                    ~f:(fun acc elem -> ResolvedArg (elem, generic) :: acc)
                    ~init:acc
                    tuple_types
-               | TupleAT (_, elements) ->
+               | TupleAT { elements; _ } ->
                  Base.List.fold_left
                    ~f:(fun acc (TupleElement { t; _ }) -> ResolvedArg (t, generic) :: acc)
                    ~init:acc
@@ -8959,12 +8966,14 @@ struct
                   bogus_trust (),
                   ArrT
                     (TupleAT
-                       ( elemt,
-                         Base.List.map
-                           ~f:(fun t ->
-                             TupleElement { name = None; t; polarity = Polarity.Neutral })
-                           tuple_types
-                       )
+                       {
+                         elem_t = elemt;
+                         elements =
+                           Base.List.map
+                             ~f:(fun t ->
+                               TupleElement { name = None; t; polarity = Polarity.Neutral })
+                             tuple_types;
+                       }
                     )
                 )
             | (None, `Tuple) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
@@ -8996,7 +9005,7 @@ struct
             | ResolvedSpreadArg (_, ArrayAT (_, Some ts), generic) :: rest ->
               let args = List.rev_append (List.map (fun t -> (t, generic)) ts) args in
               flatten cx r args spread rest
-            | ResolvedSpreadArg (_, TupleAT (_, elements), generic) :: rest ->
+            | ResolvedSpreadArg (_, TupleAT { elements; _ }, generic) :: rest ->
               let args =
                 List.rev_append
                   (List.map

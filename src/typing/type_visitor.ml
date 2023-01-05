@@ -312,14 +312,14 @@ class ['a] t =
         let acc = self#type_ cx P.Neutral acc t in
         let acc = self#list (self#type_ cx P.Neutral) acc ts in
         acc
-      | TupleAT (t, ts) ->
-        let acc = self#type_ cx P.Neutral acc t in
+      | TupleAT { elem_t; elements } ->
+        let acc = self#type_ cx P.Neutral acc elem_t in
         let acc =
           self#list
             (fun acc (TupleElement { t; polarity = p; name = _ }) ->
               self#type_ cx (P.mult (pole, p)) acc t)
             acc
-            ts
+            elements
         in
         acc
       | ROArrayAT t -> self#type_ cx pole acc t

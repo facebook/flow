@@ -214,7 +214,9 @@ let rec merge_type cx =
         bogus_trust (),
         ArrT (ArrayAT (merge_type cx (t1, t2), tuple_types))
       )
-  | (DefT (_, _, ArrT (TupleAT (t1, ts1))), DefT (_, _, ArrT (TupleAT (t2, ts2))))
+  | ( DefT (_, _, ArrT (TupleAT { elem_t = t1; elements = ts1 })),
+      DefT (_, _, ArrT (TupleAT { elem_t = t2; elements = ts2 }))
+    )
     when List.length ts1 = List.length ts2
          && List.for_all2
               (fun (TupleElement { polarity = p1; _ }) (TupleElement { polarity = p2; _ }) ->
@@ -226,22 +228,24 @@ let rec merge_type cx =
         bogus_trust (),
         ArrT
           (TupleAT
-             ( merge_type cx (t1, t2),
-               Base.List.map2_exn
-                 ~f:
-                   (fun (TupleElement { name = name1; t = t1; polarity })
-                        (TupleElement { name = name2; t = t2; polarity = _ }) ->
-                   let name =
-                     if name1 = name2 then
-                       name1
-                     else
-                       None
-                   in
-                   let t = merge_type cx (t1, t2) in
-                   TupleElement { name; t; polarity })
-                 ts1
-                 ts2
-             )
+             {
+               elem_t = merge_type cx (t1, t2);
+               elements =
+                 Base.List.map2_exn
+                   ~f:
+                     (fun (TupleElement { name = name1; t = t1; polarity })
+                          (TupleElement { name = name2; t = t2; polarity = _ }) ->
+                     let name =
+                       if name1 = name2 then
+                         name1
+                       else
+                         None
+                     in
+                     let t = merge_type cx (t1, t2) in
+                     TupleElement { name; t; polarity })
+                   ts1
+                   ts2;
+             }
           )
       )
   | (DefT (_, _, ArrT (ROArrayAT elemt1)), DefT (_, _, ArrT (ROArrayAT elemt2))) ->
@@ -460,15 +464,15 @@ let rec extract_type cx this_t =
   | OpaqueT (_, { super_t = Some t; _ }) ->
     extract_type cx t
   | DefT (reason, _, ArrT arrtype) ->
-    let (builtin, elemt) =
+    let (builtin, elem_t) =
       match arrtype with
-      | ArrayAT (elemt, _) -> (get_builtin cx (OrdinaryName "Array") reason, elemt)
-      | TupleAT (elemt, _)
-      | ROArrayAT elemt ->
-        (get_builtin cx (OrdinaryName "$ReadOnlyArray") reason, elemt)
+      | ArrayAT (elem_t, _) -> (get_builtin cx (OrdinaryName "Array") reason, elem_t)
+      | TupleAT { elem_t; _ }
+      | ROArrayAT elem_t ->
+        (get_builtin cx (OrdinaryName "$ReadOnlyArray") reason, elem_t)
     in
     let array_t = resolve_type cx builtin in
-    Some [elemt] |> instantiate_poly_t cx array_t |> instantiate_type |> extract_type cx
+    Some [elem_t] |> instantiate_poly_t cx array_t |> instantiate_type |> extract_type cx
   | EvalT (t, defer, id) -> eval_evalt cx t defer id |> extract_type cx
   | InternalT (ChoiceKitT (_, _))
   | TypeDestructorTriggerT _
