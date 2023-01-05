@@ -228,8 +228,7 @@ let ensure_checked_dependencies ~options ~reader file file_sig =
         unchecked_deps
         1
     in
-    let reason = LspProt.Unchecked_dependencies { filename = File_key.to_string file } in
-    ServerMonitorListenerState.push_dependencies_to_prioritize ~reason unchecked_deps;
+    ServerMonitorListenerState.push_dependencies_to_prioritize unchecked_deps;
     raise Lwt.Canceled
 
 (** TODO: handle case when file+contents don't agree with file system state **)

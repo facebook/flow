@@ -19,10 +19,10 @@ type trigger =
   | DocumentSymbol of Lsp.lsp_id
   | FindReferences of Lsp.lsp_id
   | Hover of Lsp.lsp_id
-  | PushedErrorsEndOfRecheck of LspProt.recheck_reason
+  | PushedErrorsEndOfRecheck
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
-  | PushedErrorsRecheckStreaming of LspProt.recheck_reason
+  | PushedErrorsRecheckStreaming
   | Rage of Lsp.lsp_id
   | Rename of Lsp.lsp_id
   | ServerConnected

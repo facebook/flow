@@ -156,8 +156,8 @@ let rec serve ~genv ~env =
   (* Kick off a thread to wait for a message from the monitor. *)
   let wait_thread =
     ServerMonitorListenerState.wait_for_anything
-      ~process_updates:(fun ?skip_incompatible ->
-        Rechecker.process_updates ?skip_incompatible ~options env)
+      ~process_updates:(fun ~skip_incompatible ->
+        Rechecker.process_updates ~skip_incompatible ~options env)
       ~get_forced:(fun () -> env.ServerEnv.checked_files)
   in
 

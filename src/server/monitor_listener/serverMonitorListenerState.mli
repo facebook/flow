@@ -18,18 +18,18 @@ val requeue_deferred_parallelizable_workloads : unit -> unit
 
 val push_new_env_update : env_update -> unit
 
-val push_files_to_recheck :
-  ?metadata:MonitorProt.file_watcher_metadata -> reason:LspProt.recheck_reason -> SSet.t -> unit
+val push_lazy_init : ?metadata:MonitorProt.file_watcher_metadata -> SSet.t -> unit
 
-val push_files_to_prioritize : reason:LspProt.recheck_reason -> SSet.t -> unit
+val push_files_to_recheck : ?metadata:MonitorProt.file_watcher_metadata -> SSet.t -> unit
 
-val push_files_to_force_focused_and_recheck : reason:LspProt.recheck_reason -> SSet.t -> unit
+val push_files_to_prioritize : SSet.t -> unit
 
-val push_dependencies_to_prioritize :
-  reason:LspProt.recheck_reason -> Utils_js.FilenameSet.t -> unit
+val push_files_to_force_focused_and_recheck : SSet.t -> unit
+
+val push_dependencies_to_prioritize : Utils_js.FilenameSet.t -> unit
 
 val push_files_to_resync_after_file_watcher_restart :
-  ?metadata:MonitorProt.file_watcher_metadata -> reason:LspProt.recheck_reason -> SSet.t -> unit
+  ?metadata:MonitorProt.file_watcher_metadata -> SSet.t -> unit
 
 val cancellation_requests : Lsp.IdSet.t ref
 
@@ -38,7 +38,6 @@ type recheck_workload = {
   files_to_recheck: Utils_js.FilenameSet.t;
   files_to_force: CheckedSet.t;
   metadata: MonitorProt.file_watcher_metadata;
-  recheck_reasons_rev: LspProt.recheck_reason list;
 }
 
 type workload_changes = {
@@ -53,12 +52,12 @@ type priority =
 
 (* APIs to wait *)
 val wait_for_anything :
-  process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
   unit Lwt.t
 
 val wait_for_updates_for_recheck :
-  process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
   priority:priority ->
   workload_changes Lwt.t
@@ -74,6 +73,6 @@ val update_env : ServerEnv.env -> ServerEnv.env
 val requeue_workload : recheck_workload -> unit
 
 val get_and_clear_recheck_workload :
-  process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
+  process_updates:(skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
   priority * recheck_workload

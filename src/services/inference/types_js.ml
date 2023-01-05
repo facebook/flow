@@ -320,8 +320,7 @@ let run_merge_service
       Lwt.return (suppressions, skipped_count, sig_new_or_changed)
   )
 
-let mk_intermediate_result_callback
-    ~reader ~options ~persistent_connections ~recheck_reasons suppressions =
+let mk_intermediate_result_callback ~reader ~options ~persistent_connections suppressions =
   let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
   let send_errors_over_connection =
     match persistent_connections with
@@ -390,10 +389,9 @@ let mk_intermediate_result_callback
         if
           not (ConcreteLocPrintableErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings)
         then
-          let errors_reason = LspProt.Recheck_streaming { recheck_reasons } in
           Persistent_connection.update_clients
             ~clients
-            ~errors_reason
+            ~errors_reason:LspProt.Recheck_streaming
             ~calc_errors_and_warnings:(fun () -> (new_errors, new_warnings)
           )
   in
@@ -533,7 +531,6 @@ module Check_files : sig
     sig_new_or_changed:Utils_js.FilenameSet.t ->
     dependency_info:Dependency_info.t ->
     persistent_connections:Persistent_connection.t option ->
-    recheck_reasons:LspProt.recheck_reason list ->
     cannot_skip_direct_dependents:bool ->
     ( ServerEnv.errors
     * Coverage_response.file_coverage Utils_js.FilenameMap.t
@@ -560,7 +557,6 @@ end = struct
       ~sig_new_or_changed
       ~dependency_info
       ~persistent_connections
-      ~recheck_reasons
       ~cannot_skip_direct_dependents =
     with_memory_timer_lwt ~options "Check" profiling (fun () ->
         Hh_logger.info "Check prep";
@@ -597,7 +593,6 @@ end = struct
             ~reader
             ~options
             ~persistent_connections
-            ~recheck_reasons
             updated_suppressions
         in
         Hh_logger.info "Checking files";
@@ -653,14 +648,8 @@ let handle_unexpected_file_changes changed_files =
     Nel.fold_left (fun acc file -> SSet.add (File_key.to_string file) acc) SSet.empty changed_files
   in
   let file_count = SSet.cardinal filename_set in
-  let reason =
-    if file_count = 1 then
-      LspProt.Single_file_changed { filename = SSet.choose filename_set }
-    else
-      LspProt.Many_files_changed { file_count }
-  in
   Hh_logger.info "Canceling recheck due to %d unexpected file changes" file_count;
-  ServerMonitorListenerState.push_files_to_prioritize ~reason filename_set;
+  ServerMonitorListenerState.push_files_to_prioritize filename_set;
   raise Lwt.Canceled
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
@@ -882,7 +871,6 @@ module Recheck : sig
     updates:CheckedSet.t ->
     files_to_force:CheckedSet.t ->
     changed_mergebase:bool option ->
-    recheck_reasons:LspProt.recheck_reason list ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
     (ServerEnv.env * recheck_result * ((* record_recheck_time *) unit -> unit Lwt.t) * string option)
@@ -897,7 +885,6 @@ module Recheck : sig
     workers:MultiWorkerLwt.worker list option ->
     updates:CheckedSet.t ->
     files_to_force:CheckedSet.t ->
-    recheck_reasons:LspProt.recheck_reason list ->
     env:ServerEnv.env ->
     ServerEnv.env Lwt.t
 
@@ -943,7 +930,6 @@ end = struct
       ~workers
       ~(updates : CheckedSet.t)
       ~files_to_force
-      ~recheck_reasons
       ~env =
     let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
     let errors = env.ServerEnv.errors in
@@ -1006,8 +992,9 @@ end = struct
         if not (Errors.ConcreteLocPrintableErrorSet.is_empty error_set) then
           Persistent_connection.update_clients
             ~clients:env.ServerEnv.connections
-            ~errors_reason:(LspProt.Recheck_streaming { recheck_reasons })
-            ~calc_errors_and_warnings:(fun () -> (error_set, FilenameMap.empty))
+            ~errors_reason:LspProt.Recheck_streaming
+            ~calc_errors_and_warnings:(fun () -> (error_set, FilenameMap.empty)
+          )
       in
       merge_error_maps new_local_errors local_errors
     in
@@ -1513,7 +1500,6 @@ end = struct
       ~will_be_checked_files
       ~changed_mergebase
       ~intermediate_values
-      ~recheck_reasons
       ~env =
     let ( deleted,
           direct_dependent_files,
@@ -1625,7 +1611,6 @@ end = struct
         ~sig_new_or_changed
         ~dependency_info
         ~persistent_connections:(Some env.ServerEnv.connections)
-        ~recheck_reasons
         ~cannot_skip_direct_dependents
     in
     Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
@@ -1677,7 +1662,6 @@ end = struct
       ~updates
       ~files_to_force
       ~changed_mergebase
-      ~recheck_reasons
       ~will_be_checked_files
       ~env =
     let%lwt (env, intermediate_values) =
@@ -1690,7 +1674,6 @@ end = struct
           ~workers
           ~updates
           ~files_to_force
-          ~recheck_reasons
           ~env
       with
       | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
@@ -1704,19 +1687,10 @@ end = struct
       ~will_be_checked_files
       ~changed_mergebase
       ~intermediate_values
-      ~recheck_reasons
       ~env
 
   let parse_and_update_dependency_info
-      ~profiling
-      ~transaction
-      ~reader
-      ~options
-      ~workers
-      ~updates
-      ~files_to_force
-      ~recheck_reasons
-      ~env =
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env =
     let%lwt (env, intermediate_values) =
       recheck_parse_and_update_dependency_info
         ~profiling
@@ -1726,7 +1700,6 @@ end = struct
         ~workers
         ~updates
         ~files_to_force
-        ~recheck_reasons
         ~env
     in
     let (_, _, errors, _, _, _, _, _, _, _) = intermediate_values in
@@ -1756,7 +1729,6 @@ let recheck_impl
     env
     ~files_to_force
     ~changed_mergebase
-    ~recheck_reasons
     ~will_be_checked_files =
   let%lwt (env, stats, record_recheck_time, first_internal_error) =
     Memory_utils.with_memory_profiling_lwt ~profiling (fun () ->
@@ -1771,7 +1743,6 @@ let recheck_impl
               ~env
               ~files_to_force
               ~changed_mergebase
-              ~recheck_reasons
               ~will_be_checked_files
         )
     )
@@ -1795,7 +1766,6 @@ let recheck_impl
   let log_recheck_event : profiling:Profiling_js.finished -> unit Lwt.t =
    fun ~profiling ->
     FlowEventLogger.recheck
-      ~recheck_reasons:(List.map LspProt.verbose_string_of_recheck_reason recheck_reasons)
       ~modified
       ~deleted
       ~to_merge
@@ -2173,7 +2143,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
        * --saved-state-force-recheck. These users want to force Flow to recheck all the files that
        * have changed since the saved state was generated *)
       let files_to_force = CheckedSet.empty in
-      let recheck_reasons = [LspProt.Lazy_init_typecheck] in
       let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, env)) =
         let should_print_summary = Options.should_profile options in
         Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
@@ -2184,7 +2153,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
               ~updates
               ~files_to_force
               ~changed_mergebase:None
-              ~recheck_reasons
               ~will_be_checked_files:(ref files_to_force)
               env
         )
@@ -2193,9 +2161,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       Lwt.return (env, libs_ok)
   end else
     (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
-       * is to update the dependency graph and stuff like that. We don't actually want to merge
-       * anything yet. *)
-    let recheck_reasons = [LspProt.Lazy_init_update_deps] in
+       is to update the dependency graph and stuff like that. We don't actually want to merge
+       anything yet. *)
     let%lwt env =
       let rec try_update updated_files =
         try%lwt
@@ -2208,7 +2175,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
             ~workers
             ~updates:updated_files
             ~files_to_force:CheckedSet.empty
-            ~recheck_reasons
             ~env
         with
         | Unexpected_file_changes changed_files ->
@@ -2392,15 +2358,7 @@ let init ~profiling ~workers options =
   in
   Lwt.return (libs_ok, env)
 
-let reinit
-    ~profiling
-    ~workers
-    ~options
-    ~updates
-    ~files_to_force
-    ~recheck_reasons
-    ~will_be_checked_files
-    env =
+let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env =
   let%lwt (env, libs_ok) =
     match%lwt
       if Options.saved_state_allow_reinit options then
@@ -2431,7 +2389,6 @@ let reinit
     ~updates
     ~files_to_force
     ~changed_mergebase:None
-    ~recheck_reasons
     ~will_be_checked_files
     env
 
@@ -2443,7 +2400,6 @@ let recheck
     ~files_to_force
     ~changed_mergebase
     ~missed_changes
-    ~recheck_reasons
     ~will_be_checked_files
     env =
   let did_change_mergebase = Base.Option.value ~default:false changed_mergebase in
@@ -2451,15 +2407,7 @@ let recheck
     (* Reinitialize the server. This should be just like starting up a new server,
        except that the existing server stays running and can answer requests
        using committed data until the re-init is complete. *)
-    reinit
-      ~profiling
-      ~workers
-      ~options
-      ~updates
-      ~files_to_force
-      ~recheck_reasons
-      ~will_be_checked_files
-      env
+    reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env
   else
     try%lwt
       recheck_impl
@@ -2469,21 +2417,12 @@ let recheck
         ~updates
         ~files_to_force
         ~changed_mergebase
-        ~recheck_reasons
         ~will_be_checked_files
         env
     with
     | Recheck_too_slow ->
       if Options.saved_state_allow_reinit options then
-        reinit
-          ~profiling
-          ~workers
-          ~options
-          ~updates
-          ~files_to_force
-          ~recheck_reasons
-          ~will_be_checked_files
-          env
+        reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env
       else
         Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
 
@@ -2519,7 +2458,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~reader
           (CheckedSet.all to_merge_or_check)
       in
-      let recheck_reasons = [LspProt.Full_init] in
       let%lwt (updated_suppressions, _, sig_new_or_changed, _, _) =
         merge
           ~transaction
@@ -2550,7 +2488,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~sig_new_or_changed
           ~dependency_info
           ~persistent_connections:None
-          ~recheck_reasons
           ~cannot_skip_direct_dependents:true
       in
       Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");

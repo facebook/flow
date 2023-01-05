@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module List = Base.List
 open LspProt
 
 (* Each interaction gets a unique id. *)
@@ -24,10 +23,10 @@ type trigger =
   | DocumentSymbol of Lsp.lsp_id
   | FindReferences of Lsp.lsp_id
   | Hover of Lsp.lsp_id
-  | PushedErrorsEndOfRecheck of recheck_reason
+  | PushedErrorsEndOfRecheck
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
-  | PushedErrorsRecheckStreaming of recheck_reason
+  | PushedErrorsRecheckStreaming
   | Rage of Lsp.lsp_id
   | Rename of Lsp.lsp_id
   | ServerConnected
@@ -90,10 +89,8 @@ let string_of_trigger = function
   | DocumentSymbol _ -> "documentSymbol"
   | FindReferences _ -> "findReferences"
   | Hover _ -> "hover"
-  | PushedErrorsEndOfRecheck recheck_reason ->
-    Printf.sprintf "endOfRecheck/%s" (normalized_string_of_recheck_reason recheck_reason)
-  | PushedErrorsRecheckStreaming recheck_reason ->
-    Printf.sprintf "recheckStreaming/%s" (normalized_string_of_recheck_reason recheck_reason)
+  | PushedErrorsEndOfRecheck -> "endOfRecheck"
+  | PushedErrorsRecheckStreaming -> "recheckStreaming"
   | PushedErrorsEnvChange -> "envChange"
   | PushedErrorsNewSubscription -> "newSubscription"
   | Rage _ -> "Rage"
@@ -124,8 +121,8 @@ let lsp_id_of_trigger = function
   | DidClose
   | DidOpen
   | DidSave
-  | PushedErrorsEndOfRecheck _
-  | PushedErrorsRecheckStreaming _
+  | PushedErrorsEndOfRecheck
+  | PushedErrorsRecheckStreaming
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
   | ServerConnected
@@ -175,10 +172,10 @@ let source_of_trigger = function
   | TypeCoverage _
   | ExecuteCommand _ ->
     Client
-  | PushedErrorsEndOfRecheck _
+  | PushedErrorsEndOfRecheck
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
-  | PushedErrorsRecheckStreaming _
+  | PushedErrorsRecheckStreaming
   | ServerConnected ->
     Server
   | UnknownTrigger -> UnknownSource
@@ -245,20 +242,20 @@ let log ~ux ~trigger ~start_state ~end_state =
  * Those are logged via start & log. However, when we push errors to the client, we log those using
  * this method. *)
 let log_pushed_errors ~end_state ~errors_reason =
-  let (triggers, start_state) =
+  let (trigger, start_state) =
     match errors_reason with
-    | End_of_recheck { recheck_reasons } ->
-      ( List.map recheck_reasons ~f:(fun reason -> PushedErrorsEndOfRecheck reason),
+    | End_of_recheck ->
+      ( PushedErrorsEndOfRecheck,
         Base.Option.value ~default:end_state internal_state.last_recheck_start_state
       )
-    | Recheck_streaming { recheck_reasons } ->
-      ( List.map recheck_reasons ~f:(fun reason -> PushedErrorsRecheckStreaming reason),
+    | Recheck_streaming ->
+      ( PushedErrorsRecheckStreaming,
         Base.Option.value ~default:end_state internal_state.last_recheck_start_state
       )
-    | Env_change -> ([PushedErrorsEnvChange], end_state)
-    | New_subscription -> ([PushedErrorsNewSubscription], end_state)
+    | Env_change -> (PushedErrorsEnvChange, end_state)
+    | New_subscription -> (PushedErrorsNewSubscription, end_state)
   in
-  List.iter triggers ~f:(fun trigger -> log ~ux:PushedErrors ~trigger ~start_state ~end_state)
+  log ~ux:PushedErrors ~trigger ~start_state ~end_state
 
 let log ~end_state ~ux ~id =
   Base.Option.iter (IMap.find_opt id internal_state.pending_interactions) ~f:(fun interaction ->
