@@ -21,8 +21,17 @@ b[0] = "s"; // OK
 type C = [foo: string];
 (["s"]: C); // OK
 declare var c: C;
-(c: A); // ERROR
-(c: B); // ERROR
+(c: [+foo: string]); // OK
+(c: [-foo: string]); // OK
+
+(c: [foo: string | void]); // ERROR
+(c: [-foo: string | void]); // ERROR
+(c: [+foo: string | void]); // OK
+(["s"]: [foo: string | void]); // OK
+
+declare var d: [string | void];
+(d: [foo: string]); // ERROR
+(d: [-foo: string]); // OK
 
 declare class K<T> {}
 declare var m: K<[+foo: string]>;

@@ -402,216 +402,231 @@ Cannot get `b[0]` because tuple element at index `0` [1] labeled `foo` is not re
         ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:24:2
+Error ------------------------------------------------------------------------------------------------- variance.js:27:2
 
-Cannot cast `c` to `A` because tuple element at index `0` is writable in `C` [1] but read-only in `A` [2].
-[incompatible-variance]
+Cannot cast `c` to tuple type because string [1] is incompatible with undefined [2] in index 0. [incompatible-cast]
 
-   variance.js:24:2
-   24| (c: A); // ERROR
+   variance.js:27:2
+   27| (c: [foo: string | void]); // ERROR
         ^
 
 References:
-   variance.js:23:16
-   23| declare var c: C;
-                      ^ [1]
-   variance.js:24:5
-   24| (c: A); // ERROR
-           ^ [2]
+   variance.js:21:16
+   21| type C = [foo: string];
+                      ^^^^^^ [1]
+   variance.js:27:20
+   27| (c: [foo: string | void]); // ERROR
+                          ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:25:2
+Error ------------------------------------------------------------------------------------------------- variance.js:28:2
 
-Cannot cast `c` to `B` because tuple element at index `0` is readable in `C` [1] but write-only in `B` [2].
-[incompatible-variance]
+Cannot cast `c` to tuple type because undefined [1] is incompatible with string [2] in index 0. [incompatible-cast]
 
-   variance.js:25:2
-   25| (c: B); // ERROR
+   variance.js:28:2
+   28| (c: [-foo: string | void]); // ERROR
         ^
 
 References:
-   variance.js:23:16
-   23| declare var c: C;
-                      ^ [1]
-   variance.js:25:5
-   25| (c: B); // ERROR
-           ^ [2]
+   variance.js:28:21
+   28| (c: [-foo: string | void]); // ERROR
+                           ^^^^ [1]
+   variance.js:21:16
+   21| type C = [foo: string];
+                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:30:2
+Error ------------------------------------------------------------------------------------------------- variance.js:33:2
+
+Cannot cast `d` to tuple type because undefined [1] is incompatible with string [2] in index 0. [incompatible-cast]
+
+   variance.js:33:2
+   33| (d: [foo: string]); // ERROR
+        ^
+
+References:
+   variance.js:32:26
+   32| declare var d: [string | void];
+                                ^^^^ [1]
+   variance.js:33:11
+   33| (d: [foo: string]); // ERROR
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:39:2
 
 Cannot cast `m` to `K` because tuple element at index `0` is read-only in tuple type [1] but writable in tuple type [2]
 in type argument `T` [3]. [incompatible-variance]
 
-   variance.js:30:2
-   30| (m: K<[string]>); // ERROR
+   variance.js:39:2
+   39| (m: K<[string]>); // ERROR
         ^
 
 References:
-   variance.js:28:18
-   28| declare var m: K<[+foo: string]>;
+   variance.js:37:18
+   37| declare var m: K<[+foo: string]>;
                         ^^^^^^^^^^^^^^ [1]
-   variance.js:30:7
-   30| (m: K<[string]>); // ERROR
+   variance.js:39:7
+   39| (m: K<[string]>); // ERROR
              ^^^^^^^^ [2]
-   variance.js:27:17
-   27| declare class K<T> {}
+   variance.js:36:17
+   36| declare class K<T> {}
                        ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ variance.js:35:15
+Error ------------------------------------------------------------------------------------------------ variance.js:44:15
 
 Cannot call `f` with `n` bound to the first parameter because tuple element at index `0` is read-only in tuple type [1]
 but writable in tuple type [2] in array element. [incompatible-variance]
 
-   variance.js:35:15
-   35| const res = f(n); // ERROR
+   variance.js:44:15
+   44| const res = f(n); // ERROR
                      ^
 
 References:
-   variance.js:34:22
-   34| declare var n: Array<[+n: number]>;
+   variance.js:43:22
+   43| declare var n: Array<[+n: number]>;
                             ^^^^^^^^^^^^ [1]
-   variance.js:33:29
-   33| declare function f<K>(Array<[K]>): K;
+   variance.js:42:29
+   42| declare function f<K>(Array<[K]>): K;
                                    ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:37:2
+Error ------------------------------------------------------------------------------------------------- variance.js:46:2
 
 Cannot cast `res` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   variance.js:37:2
-   37| (res: empty); // ERROR
+   variance.js:46:2
+   46| (res: empty); // ERROR
         ^^^
 
 References:
-   variance.js:34:27
-   34| declare var n: Array<[+n: number]>;
+   variance.js:43:27
+   43| declare var n: Array<[+n: number]>;
                                  ^^^^^^ [1]
-   variance.js:37:7
-   37| (res: empty); // ERROR
+   variance.js:46:7
+   46| (res: empty); // ERROR
              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ variance.js:42:26
+Error ------------------------------------------------------------------------------------------------ variance.js:51:26
 
 Incorrect arguments passed to call of method `assign` because tuple element at index `0` [1] labeled `foo` is not
 readable. [cannot-read]
 
-   variance.js:42:26
-   42| Object.assign({a: 1}, ...osw); // ERROR - can't read
+   variance.js:51:26
+   51| Object.assign({a: 1}, ...osw); // ERROR - can't read
                                 ^^^
 
 References:
-   variance.js:41:18
-   41| declare var osw: [-foo: {a: number}];
+   variance.js:50:18
+   50| declare var osw: [-foo: {a: number}];
                         ^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- variance.js:48:2
-
-Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `ROC` [1] but write-only in tuple
-type [2]. [incompatible-variance]
-
-   variance.js:48:2
-   48| (roc: [-foo: string]); // ERROR
-        ^^^
-
-References:
-   variance.js:46:18
-   46| declare var roc: ROC;
-                        ^^^ [1]
-   variance.js:48:7
-   48| (roc: [-foo: string]); // ERROR
-             ^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- variance.js:49:2
-
-Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `ROC` [1] but writable in tuple
-type [2]. [incompatible-variance]
-
-   variance.js:49:2
-   49| (roc: [foo: string]); // ERROR
-        ^^^
-
-References:
-   variance.js:46:18
-   46| declare var roc: ROC;
-                        ^^^ [1]
-   variance.js:49:7
-   49| (roc: [foo: string]); // ERROR
-             ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- variance.js:51:1
-
-Cannot assign `"s"` to `roc[0]` because tuple element at index `0` [1] labeled `foo` is not writable. [cannot-write]
-
-   51| roc[0] = "s"; // ERROR - can't write
-       ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- variance.js:56:2
-
-Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `ROB` [1] but write-only in tuple
-type [2]. [incompatible-variance]
-
-   variance.js:56:2
-   56| (rob: [-foo: string]); // ERROR
-        ^^^
-
-References:
-   variance.js:54:18
-   54| declare var rob: ROB;
-                        ^^^ [1]
-   variance.js:56:7
-   56| (rob: [-foo: string]); // ERROR
-             ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:57:2
 
-Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `ROB` [1] but writable in tuple
+Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `ROC` [1] but write-only in tuple
 type [2]. [incompatible-variance]
 
    variance.js:57:2
-   57| (rob: [foo: string]); // ERROR
+   57| (roc: [-foo: string]); // ERROR
         ^^^
 
 References:
-   variance.js:54:18
-   54| declare var rob: ROB;
+   variance.js:55:18
+   55| declare var roc: ROC;
                         ^^^ [1]
    variance.js:57:7
-   57| (rob: [foo: string]); // ERROR
+   57| (roc: [-foo: string]); // ERROR
+             ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:58:2
+
+Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `ROC` [1] but writable in tuple
+type [2]. [incompatible-variance]
+
+   variance.js:58:2
+   58| (roc: [foo: string]); // ERROR
+        ^^^
+
+References:
+   variance.js:55:18
+   55| declare var roc: ROC;
+                        ^^^ [1]
+   variance.js:58:7
+   58| (roc: [foo: string]); // ERROR
              ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:59:1
+Error ------------------------------------------------------------------------------------------------- variance.js:60:1
 
-Cannot assign `"s"` to `rob[0]` because tuple element at index `0` [1] labeled `foo` is not writable. [cannot-write]
+Cannot assign `"s"` to `roc[0]` because tuple element at index `0` [1] labeled `foo` is not writable. [cannot-write]
 
-   59| rob[0] = "s"; // ERROR - can't write
+   60| roc[0] = "s"; // ERROR - can't write
        ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:63:1
+Error ------------------------------------------------------------------------------------------------- variance.js:65:2
+
+Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `ROB` [1] but write-only in tuple
+type [2]. [incompatible-variance]
+
+   variance.js:65:2
+   65| (rob: [-foo: string]); // ERROR
+        ^^^
+
+References:
+   variance.js:63:18
+   63| declare var rob: ROB;
+                        ^^^ [1]
+   variance.js:65:7
+   65| (rob: [-foo: string]); // ERROR
+             ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:66:2
+
+Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `ROB` [1] but writable in tuple
+type [2]. [incompatible-variance]
+
+   variance.js:66:2
+   66| (rob: [foo: string]); // ERROR
+        ^^^
+
+References:
+   variance.js:63:18
+   63| declare var rob: ROB;
+                        ^^^ [1]
+   variance.js:66:7
+   66| (rob: [foo: string]); // ERROR
+             ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:68:1
+
+Cannot assign `"s"` to `rob[0]` because tuple element at index `0` [1] labeled `foo` is not writable. [cannot-write]
+
+   68| rob[0] = "s"; // ERROR - can't write
+       ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:72:1
 
 Cannot assign `"s"` to `u[0]` because tuple element at index `0` [1] is not writable. [cannot-write]
 
-   63| u[0] = "s"; // ERROR - can't write
+   72| u[0] = "s"; // ERROR - can't write
        ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:69:1
+Error ------------------------------------------------------------------------------------------------- variance.js:78:1
 
 Cannot assign `"s"` to `inter[0]` because tuple element at index `0` [1] is not writable. [cannot-write]
 
-   69| inter[0] = "s"; // ERROR - can't write
+   78| inter[0] = "s"; // ERROR - can't write
        ^^^^^^^^ [1]
 
 
 
-Found 43 errors
+Found 44 errors
