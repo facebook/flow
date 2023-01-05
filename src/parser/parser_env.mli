@@ -176,9 +176,19 @@ val add_label : env -> string -> env
 
 val enter_function : env -> async:bool -> generator:bool -> simple_params:bool -> env
 
+val is_keyword : string -> bool
+
+val token_is_keyword : Token.t -> bool
+
 val is_reserved : string -> bool
 
 val token_is_reserved : Token.t -> bool
+
+val token_is_reserved_type : Token.t -> bool
+
+val token_is_type_identifier : env -> Token.t -> bool
+
+val token_is_variance : Token.t -> bool
 
 val is_future_reserved : string -> bool
 

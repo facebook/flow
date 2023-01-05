@@ -102,6 +102,7 @@ type t =
   | LiteralShorthandProperty
   | MalformedUnicode
   | MethodInDestructuring
+  | MissingTypeParam
   | MissingTypeParamDefault
   | MultipleDefaultsInSwitch
   | NewlineAfterThrow
@@ -376,6 +377,7 @@ module PP = struct
     | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
     | MalformedUnicode -> "Malformed unicode"
     | MethodInDestructuring -> "Object pattern can't contain methods"
+    | MissingTypeParam -> "Expected at least one type parameter."
     | MissingTypeParamDefault ->
       "Type parameter declaration needs a default, since a preceding type parameter declaration has a default."
     | MultipleDefaultsInSwitch -> "More than one default clause in switch statement"

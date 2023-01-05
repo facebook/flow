@@ -1246,47 +1246,96 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       env
 
   and type_params =
+    (* whether we should consume [token] as a type param. a type param can
+       either start with an identifier or a variance sigil; we'll also parse
+       types like `number` to improve error recovery. *)
+    let token_is_maybe_param env token =
+      token_is_type_identifier env token || token_is_variance token || token_is_reserved_type token
+    in
+    (* whether an unexpected [token] should signal the end of the param list.
+       these are tokens that are likely to follow a param list, if the closing
+       > is missing. This improves error recovery when you add type params
+       to an existing node.
+
+       Note that we're in Lex_mode.TYPE here, so the tokens are those produced
+       by [Flow_lexer.type_token]. *)
+    let token_is_maybe_end_of_list env token =
+      match token with
+      (* "normal" keywords are parsed as identifiers in type mode.
+         e.g. `switch` is a valid type name. *)
+      | T_IDENTIFIER { raw; _ } when is_keyword raw -> true
+      (* adding a type above an enum: `type T<U\nenum ....` (`enum` is not an ES keyword) *)
+      | T_IDENTIFIER { raw = "enum"; _ } when (parse_options env).enums -> true
+      (* adding a type above another: `type T<U\ntype V ...` (`type` is not an ES keyword) *)
+      | T_IDENTIFIER { raw = "type"; _ }
+      (* RHS: `type U<T = default = ...` (this only helps if there's a default!) *)
+      | T_ASSIGN
+      (* start of function params: `function f<T|(...)` *)
+      | T_LPAREN
+      (* class heritage: `class C<T| extends ...` *)
+      | T_EXTENDS
+      (* class heritage: `class C<T| implements ...` *)
+      | T_IDENTIFIER { raw = "implements"; _ } ->
+        true
+      | _ -> false
+    in
     let rec params env ~require_default acc =
-      let (param, require_default) =
-        with_loc_extra
-          (fun env ->
-            let variance = maybe_variance env in
-            let (loc, (name, bound)) = bounded_type env in
-            let (default, require_default) =
-              match Peek.token env with
-              | T_ASSIGN ->
-                Eat.token env;
-                (Some (_type env), true)
-              | _ ->
-                if require_default then error_at env (loc, Parse_error.MissingTypeParamDefault);
-                (None, require_default)
-            in
-            ({ Type.TypeParam.name; bound; variance; default }, require_default))
-          env
+      let (acc, require_default) =
+        if token_is_maybe_param env (Peek.token env) then
+          let (param, require_default) =
+            with_loc_extra
+              (fun env ->
+                let variance = maybe_variance env in
+                let (loc, (name, bound)) = bounded_type env in
+                let (default, require_default) =
+                  match Peek.token env with
+                  | T_ASSIGN ->
+                    Eat.token env;
+                    (Some (_type env), true)
+                  | _ ->
+                    if require_default then error_at env (loc, Parse_error.MissingTypeParamDefault);
+                    (None, require_default)
+                in
+                ({ Type.TypeParam.name; bound; variance; default }, require_default))
+              env
+          in
+          (param :: acc, require_default)
+        else
+          (acc, require_default)
       in
-      let acc = param :: acc in
       match Peek.token env with
       | T_EOF
       | T_GREATER_THAN ->
+        (* end of list *)
         List.rev acc
+      | T_COMMA ->
+        (* handle multiple params *)
+        Eat.token env;
+        params env ~require_default acc
+      | token when token_is_maybe_end_of_list env token ->
+        (* error recovery: tokens likely to follow a param list *)
+        Expect.error env T_GREATER_THAN;
+        List.rev acc
+      | token when token_is_maybe_param env token ->
+        (* recover from a missing comma between items by not consuming the token *)
+        Expect.error env T_COMMA;
+        params env ~require_default acc
       | _ ->
+        (* unexpected token. consume it until we hit the end of the list *)
         Expect.token env T_COMMA;
-        if Peek.token env = T_GREATER_THAN then
-          List.rev acc
-        else
-          params env ~require_default acc
+        params env ~require_default acc
     in
     fun env ->
       if Peek.token env = T_LESS_THAN then (
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
-        let result =
+        let ((loc, { Type.TypeParams.params; _ }) as result) =
           with_loc
             (fun env ->
               let leading = Peek.comments env in
               Expect.token env T_LESS_THAN;
               let params = params env ~require_default:false [] in
               let internal = Peek.comments env in
-              Expect.token env T_GREATER_THAN;
+              Expect.token_opt env T_GREATER_THAN;
               let trailing = Eat.trailing_comments env in
               let comments =
                 Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
@@ -1294,6 +1343,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               { Type.TypeParams.params; comments })
             env
         in
+        (match params with
+        | [] -> error_at env (loc, Parse_error.MissingTypeParam)
+        | _ -> ());
         Some result
       ) else
         None
