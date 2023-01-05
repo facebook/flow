@@ -1342,10 +1342,10 @@ struct
                   EnvMap.fold
                     (fun ((_, kl) as k) v acc ->
                       if (not (ALoc.equal kl loc)) && EnvSet.mem k cycle_elts then
-                        let v =
-                          Base.List.filter ~f:(fun l -> not (ALoc.equal l loc)) (Nel.to_list v)
+                        let rev_v =
+                          Base.List.rev_filter ~f:(fun l -> not (ALoc.equal l loc)) (Nel.to_list v)
                         in
-                        v @ acc
+                        Base.List.rev_append rev_v acc
                       else
                         acc)
                     depends
