@@ -516,7 +516,7 @@ and merge_annot tps file = function
         let rep = Type.UnionRep.make t0 t1 ts in
         Type.UnionT (elem_reason, rep)
     in
-    Type.(DefT (reason, trust, ArrT (TupleAT (elem_t, elements))))
+    Type.(DefT (reason, trust, ArrT (TupleAT { elem_t; elements })))
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
     let t = merge tps file t in

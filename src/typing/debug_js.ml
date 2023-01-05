@@ -264,13 +264,13 @@ let rec dump_t_ (depth, tvars) cx t =
              (spf "[%s]" (String.concat "; " (Base.List.map ~f:kid tup)))
           )
         t
-    | DefT (_, trust, ArrT (TupleAT (_, tup))) ->
+    | DefT (_, trust, ArrT (TupleAT { elements; _ })) ->
       p
         ~trust:(Some trust)
         ~extra:
           (spf
              "Tuple [%s]"
-             (String.concat ", " (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) tup))
+             (String.concat ", " (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) elements))
           )
         t
     | DefT (_, trust, ArrT (ROArrayAT elemt)) ->

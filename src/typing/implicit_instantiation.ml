@@ -462,13 +462,13 @@ struct
     let arr_type =
       match rest_param with
       | None ->
-        let general =
+        let elem_t =
           match tuple_ts with
           | [] -> EmptyT.why reason |> with_trust bogus_trust
           | [t] -> t
           | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
         in
-        TupleAT (general, Base.List.rev tuple_elements_rev)
+        TupleAT { elem_t; elements = Base.List.rev tuple_elements_rev }
       | Some (_, _, rest_param_t) ->
         let rest_elem_t =
           Tvar.mk_no_wrap_where cx reason (fun tout ->

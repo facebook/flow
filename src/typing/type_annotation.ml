@@ -315,7 +315,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           *)
           UnionT (element_reason, UnionRep.make t0 t1 ts)
       in
-      ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elem_t, els)))),
+      ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT { elem_t; elements = els }))),
         Tuple { Tuple.elements = els_ast; comments }
       )
     | (loc, Array { Array.argument = t; comments }) ->

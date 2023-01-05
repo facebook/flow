@@ -651,9 +651,9 @@ class virtual ['a] t =
           t
         else
           ArrayAT (t'', tlistopt')
-      | TupleAT (t', tlist) ->
-        let t'' = self#type_ cx map_cx t' in
-        let tlist' =
+      | TupleAT { elem_t; elements } ->
+        let elem_t' = self#type_ cx map_cx elem_t in
+        let elements' =
           ListUtils.ident_map
             (fun (TupleElement { name; t; polarity } as element) ->
               let t' = self#type_ cx map_cx t in
@@ -661,12 +661,12 @@ class virtual ['a] t =
                 element
               else
                 TupleElement { name; t = t'; polarity })
-            tlist
+            elements
         in
-        if t'' == t' && tlist' == tlist then
+        if elem_t' == elem_t && elements' == elements then
           t
         else
-          TupleAT (t'', tlist')
+          TupleAT { elem_t = elem_t'; elements = elements' }
       | ROArrayAT t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

@@ -112,11 +112,11 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       (* This representation signifies a literal, which is not a type. *)
       raise (UnexpectedType (Debug_js.dump_t cx t))
     | DefT (_, _, ArrT (ArrayAT (t, None))) -> check_polarity cx ?trace tparams Polarity.Neutral t
-    | DefT (_, _, ArrT (TupleAT (_, ts))) ->
+    | DefT (_, _, ArrT (TupleAT { elements; _ })) ->
       List.iter
         (fun (TupleElement { t; polarity = p; name = _ }) ->
           check_polarity cx ?trace tparams (Polarity.mult (polarity, p)) t)
-        ts
+        elements
     | DefT (_, _, ArrT (ROArrayAT t)) -> check_polarity cx ?trace tparams polarity t
     | DefT (_, _, ObjT o) ->
       let { flags; props_tmap; proto_t; call_t; reachable_targs = _ } = o in
