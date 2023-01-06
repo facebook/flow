@@ -1199,7 +1199,7 @@ end = struct
        or are new / changed files that are phantom dependents. *)
     let%lwt direct_dependent_files =
       with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
-          Dep_service.calc_incremental_dependents workers ~candidates:unchanged ~changed_modules
+          Dep_service.calc_unchanged_dependents workers changed_modules
       )
     in
     Hh_logger.info "Re-resolving parsed and directly dependent files";

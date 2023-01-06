@@ -7,11 +7,8 @@
 
 open Utils_js
 
-val calc_incremental_dependents :
-  MultiWorkerLwt.worker list option ->
-  candidates:FilenameSet.t ->
-  changed_modules:Modulename.Set.t ->
-  FilenameSet.t Lwt.t
+val calc_unchanged_dependents :
+  MultiWorkerLwt.worker list option -> Modulename.Set.t -> FilenameSet.t Lwt.t
 
 val calc_dependency_info :
   reader:Mutator_state_reader.t ->

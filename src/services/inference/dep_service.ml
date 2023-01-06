@@ -84,7 +84,8 @@ open Utils_js
 
    Return the subset of candidates directly dependent on root_modules / root_files.
 *)
-let calc_incremental_dependents =
+let calc_unchanged_dependents =
+  let module Heap = SharedMem.NewAPI in
   let job acc ms =
     (* The MultiWorker API is weird. All jobs get the `neutral` value as their
      * accumulator argument. We can exploit this to return a set from workers
@@ -92,17 +93,19 @@ let calc_incremental_dependents =
     assert (acc = []);
     let open Parsing_heaps in
     let acc = ref FilenameSet.empty in
-    let iter_f file = acc := FilenameSet.add (read_file_key file) !acc in
+    let iter_f file =
+      (* Skip dependents which have themselves changed, since changed files will
+       * already be part of the recheck set. *)
+      if not (Heap.file_changed file) then acc := FilenameSet.add (read_file_key file) !acc
+    in
     let iter_m = iter_dependents iter_f in
     List.iter iter_m ms;
     !acc
   in
-  fun workers ~candidates ~changed_modules ->
+  fun workers changed_modules ->
     let next = MultiWorkerLwt.next workers (Modulename.Set.elements changed_modules) in
     let%lwt dependent_sets = MultiWorkerLwt.call workers ~job ~merge:List.cons ~neutral:[] ~next in
-    let dependents = List.fold_left FilenameSet.union FilenameSet.empty dependent_sets in
-    (* We are only interested in dependents which are also in `candidates` *)
-    Lwt.return (FilenameSet.inter candidates dependents)
+    Lwt.return (List.fold_left FilenameSet.union FilenameSet.empty dependent_sets)
 
 (* Calculate module dependencies. Since this involves a lot of reading from
    shared memory, it is useful to parallelize this process (leading to big
