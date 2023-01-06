@@ -30,5 +30,5 @@ function inSurrogateRange(codeUnit: number) {
  * @return {number}      Number 1 or 2
  */
 function utf16Length(str: string, pos: number) {
-  return 1 + inSurrogateRange(str.charCodeAt(pos));
+  return 1 + (inSurrogateRange(str.charCodeAt(pos)) ? 1 : 0);
 }

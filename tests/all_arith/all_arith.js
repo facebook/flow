@@ -20,7 +20,7 @@ declare var anEmpty: empty;
 (aNumber + aString : string); // ok
 (aNumber + aBigint); // error
 (aNumber + aDate); // error
-(aNumber + aBoolean : number); // ok
+(aNumber + aBoolean); // error
 (aNumber + aT); // error
 (aNumber + null); // error
 (aNumber + anArray); // error
@@ -116,7 +116,7 @@ declare var anEmpty: empty;
 (aDate * anEmpty : number); // ok
 
 // aBoolean + _
-(aBoolean + aBoolean : number); // ok
+(aBoolean + aBoolean); // error
 (aBoolean + aT); // error
 (aBoolean + null); // error
 (aBoolean + anArray); // error

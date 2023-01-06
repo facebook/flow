@@ -2121,11 +2121,7 @@ let flow_arith use_op reason l r kind add_output rec_flow =
   let loc = aloc_of_reason reason in
   match (kind, l, r) with
   (* num + num *)
-  (* num + bool *)
-  (* bool + num *)
-  (* bool + bool *)
-  | (Plus, DefT (_, _, (NumT _ | BoolT _)), DefT (_, _, (NumT _ | BoolT _))) ->
-    NumT.at loc |> with_trust bogus_trust
+  | (Plus, DefT (_, _, NumT _), DefT (_, _, NumT _)) -> NumT.at loc |> with_trust bogus_trust
   (* str + str *)
   (* num + str *)
   (* str + num *)
@@ -2169,6 +2165,14 @@ let flow_arith use_op reason l r kind add_output rec_flow =
       AnyT.error reason
     ) else
       BigIntT.at loc |> with_trust bogus_trust
+  (* num <> bool *)
+  (* bool <> num *)
+  (* bool <> bool *)
+  | (_, DefT (_, _, NumT _), DefT (reason, _, BoolT _))
+  | (_, DefT (reason, _, BoolT _), DefT (_, _, NumT _))
+  | (_, DefT (reason, _, BoolT _), DefT (_, _, BoolT _)) ->
+    add_output (Error_message.EArithmeticOperand reason);
+    AnyT.error reason
   (* + error cases *)
   | (Plus, DefT (_, _, NumT _), _) ->
     rec_flow (r, UseT (use_op, l));
