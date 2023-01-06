@@ -64,6 +64,8 @@ val read_tolerable_file_sig_unsafe :
 
 val read_file_sig_unsafe : File_key.t -> [ `typed ] parse_addr -> File_sig.With_Loc.t
 
+val read_requires : [ `typed ] parse_addr -> string array
+
 val read_exports : [ `typed ] parse_addr -> Exports.t
 
 val read_imports : [ `typed ] parse_addr -> Imports.t
@@ -253,6 +255,7 @@ module Saved_state_mutator : sig
     Xx.hash ->
     string option ->
     Exports.t ->
+    string array ->
     resolved_requires ->
     Imports.t ->
     Cas_digest.t option ->

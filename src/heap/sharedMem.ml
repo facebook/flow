@@ -48,10 +48,11 @@ type tag =
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
+  | Requires_tag
   | Type_sig_tag
   | Cas_digest_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 18 -- see Serialized_tag in hh_shared.c *)
+  | Serialized_tag (* 19 -- see Serialized_tag in hh_shared.c *)
   | Serialized_resolved_requires_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
@@ -68,7 +69,7 @@ let tag_val : tag -> int = Obj.magic
 let () =
   assert (tag_val Entity_tag = 0);
   assert (tag_val String_tag = 12);
-  assert (tag_val Serialized_tag = 18)
+  assert (tag_val Serialized_tag = 19)
 
 (* Addresses are relative to the hashtbl pointer, so the null address actually
  * points to the hash field of the first hashtbl entry, which is never a
@@ -1699,6 +1700,50 @@ module NewAPI = struct
 
   let read_exports addr = read_compressed Serialized_exports_tag addr
 
+  (** Requires *)
+
+  let prepare_write_requires requires =
+    let len = Array.length requires in
+    if len = 0 then
+      prepare_const null_addr
+    else
+      let buf = Buffer.create 16 in
+      let write_len = Leb128.Unsigned.write (Buffer.add_int8 buf) in
+      write_len len;
+      Array.iter
+        (fun r ->
+          write_len (String.length r);
+          Buffer.add_string buf r)
+        requires;
+      let requires = Buffer.contents buf in
+      let size = string_size requires in
+      let write chunk =
+        let addr = write_header chunk Requires_tag size in
+        unsafe_write_string chunk requires;
+        addr
+      in
+      (header_size + size, write)
+
+  let read_requires addr =
+    if addr = null_addr then
+      [||]
+    else
+      let bytes = read_string_generic Requires_tag addr 0 in
+      let pos = ref 0 in
+      let read_byte () =
+        let byte = bytes.[!pos] in
+        incr pos;
+        Char.code byte
+      in
+      let read_string len =
+        let str = String.sub bytes !pos len in
+        pos := !pos + len;
+        str
+      in
+      let read_len () = Leb128.Unsigned.read read_byte in
+      let len = read_len () in
+      Array.init len (fun _ -> read_string (read_len ()))
+
   (** Resolved requires *)
 
   let prepare_write_serialized_resolved_requires resolved_requires =
@@ -1757,7 +1802,7 @@ module NewAPI = struct
 
   let untyped_parse_size = 1 * addr_size
 
-  let typed_parse_size = 12 * addr_size
+  let typed_parse_size = 13 * addr_size
 
   let package_parse_size = 2 * addr_size
 
@@ -1770,7 +1815,7 @@ module NewAPI = struct
     (header_size + untyped_parse_size, write)
 
   let prepare_write_typed_parse =
-    let write chunk hash exports resolved_requires imports leader sig_hash cas_digest =
+    let write chunk hash exports requires resolved_requires imports leader sig_hash cas_digest =
       let addr = write_header chunk Typed_tag typed_parse_size in
       unsafe_write_addr chunk hash;
       unsafe_write_addr chunk null_addr;
@@ -1779,6 +1824,7 @@ module NewAPI = struct
       unsafe_write_addr chunk null_addr;
       unsafe_write_addr chunk null_addr;
       unsafe_write_addr chunk exports;
+      unsafe_write_addr chunk requires;
       unsafe_write_addr chunk resolved_requires;
       unsafe_write_addr chunk imports;
       unsafe_write_addr chunk leader;
@@ -1833,15 +1879,17 @@ module NewAPI = struct
 
   let exports_addr parse = addr_offset parse 7
 
-  let resolved_requires_addr parse = addr_offset parse 8
+  let requires_addr parse = addr_offset parse 8
 
-  let imports_addr parse = addr_offset parse 9
+  let resolved_requires_addr parse = addr_offset parse 9
 
-  let leader_addr parse = addr_offset parse 10
+  let imports_addr parse = addr_offset parse 10
 
-  let sig_hash_addr parse = addr_offset parse 11
+  let leader_addr parse = addr_offset parse 11
 
-  let cas_digest_addr parse = addr_offset parse 12
+  let sig_hash_addr parse = addr_offset parse 12
+
+  let cas_digest_addr parse = addr_offset parse 13
 
   let get_file_hash = get_generic file_hash_addr
 
@@ -1858,6 +1906,8 @@ module NewAPI = struct
   let get_exports = get_generic exports_addr
 
   let get_imports = get_generic imports_addr
+
+  let get_requires = get_generic requires_addr
 
   let get_resolved_requires = get_generic resolved_requires_addr
 

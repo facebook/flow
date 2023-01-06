@@ -245,6 +245,8 @@ let read_tolerable_file_sig_unsafe file_key parse =
 
 let read_file_sig_unsafe file_key parse = fst (read_tolerable_file_sig_unsafe file_key parse)
 
+let read_requires parse = Heap.get_requires parse |> Heap.read_requires
+
 let read_exports parse : Exports.t =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
@@ -651,6 +653,7 @@ let prepare_add_checked_file
     locs_opt
     type_sig_opt
     file_sig_opt
+    requires
     exports
     imports
     cas_digest
@@ -671,13 +674,16 @@ let prepare_add_checked_file
   in
   let prepare_create_parse_with_ents () =
     let+ hash = prepare_write_int64 hash
+    and+ requires = prepare_write_requires requires
     and+ exports = prepare_write_exports exports
     and+ imports = prepare_write_imports imports
     and+ cas_digest = prepare_opt prepare_write_cas_digest cas_digest
     and+ parse = prepare_write_typed_parse
     and+ set_parse_data = prepare_set_parse_data () in
     fun resolved_requires leader sig_hash ->
-      let parse = parse hash exports resolved_requires imports leader sig_hash cas_digest in
+      let parse =
+        parse hash exports requires resolved_requires imports leader sig_hash cas_digest
+      in
       set_parse_data parse;
       parse
   in
@@ -1054,6 +1060,11 @@ let add_parsed
     locs
     type_sig
     cas_digest : MSet.t =
+  let requires =
+    let open File_sig.With_Loc in
+    let ({ module_sig; _ }, _) = file_sig in
+    require_set module_sig |> SSet.elements |> Array.of_list
+  in
   WorkerCancel.with_no_cancellations (fun () ->
       Heap.alloc
         (prepare_add_checked_file
@@ -1066,6 +1077,7 @@ let add_parsed
            (Some locs)
            (Some type_sig)
            (Some file_sig)
+           requires
            exports
            imports
            cas_digest
@@ -2018,8 +2030,8 @@ module Saved_state_mutator = struct
       these from the shared hash table, so sharedmem GC can collect them. *)
   let not_found_files = ref FilenameSet.empty
 
-  let add_parsed () file_key file_opt hash module_name exports resolved_requires imports cas_digest
-      =
+  let add_parsed
+      () file_key file_opt hash module_name exports requires resolved_requires imports cas_digest =
     Heap.alloc
       (prepare_add_checked_file
          file_key
@@ -2031,6 +2043,7 @@ module Saved_state_mutator = struct
          None
          None
          None
+         requires
          exports
          imports
          cas_digest

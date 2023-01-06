@@ -6,6 +6,7 @@
  *)
 
 type denormalized_file_data = {
+  requires: string array;
   resolved_requires: Parsing_heaps.resolved_requires;
   exports: Exports.t;
   hash: Xx.hash;

@@ -289,6 +289,12 @@ module NewAPI : sig
 
   val read_exports : [ `exports ] addr -> string
 
+  (* requires *)
+
+  val prepare_write_requires : string array -> size * (chunk -> [ `requires ] addr)
+
+  val read_requires : [ `requires ] addr -> string array
+
   (* resolved requires *)
 
   val prepare_write_serialized_resolved_requires : string -> [ `resolved_requires ] addr prep
@@ -340,6 +346,7 @@ module NewAPI : sig
   val prepare_write_typed_parse :
     ([ `int64 ] addr ->
     [ `exports ] addr ->
+    [ `requires ] addr ->
     [ `resolved_requires ] entity addr ->
     [ `imports ] addr ->
     [ `file ] entity addr ->
@@ -373,6 +380,8 @@ module NewAPI : sig
   val get_file_sig : [ `typed ] parse addr -> [ `file_sig ] addr option
 
   val get_exports : [ `typed ] parse addr -> [ `exports ] addr
+
+  val get_requires : [ `typed ] parse addr -> [ `requires ] addr
 
   val get_resolved_requires : [ `typed ] parse addr -> [ `resolved_requires ] entity addr
 

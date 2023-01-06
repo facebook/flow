@@ -8,6 +8,7 @@
 open Utils_js
 
 type denormalized_file_data = {
+  requires: string array;
   resolved_requires: Parsing_heaps.resolved_requires;
   exports: Exports.t;
   hash: Xx.hash;
@@ -204,9 +205,10 @@ end = struct
     in
     { Parsing_heaps.resolved_modules; phantom_dependencies }
 
-  let normalize_file_data ~normalizer { resolved_requires; exports; hash; imports; cas_digest } =
+  let normalize_file_data
+      ~normalizer { requires; resolved_requires; exports; hash; imports; cas_digest } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
-    { resolved_requires; exports; hash; imports; cas_digest }
+    { requires; resolved_requires; exports; hash; imports; cas_digest }
 
   let normalize_parsed_data ~normalizer { module_name; normalized_file_data } =
     let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
@@ -217,12 +219,14 @@ end = struct
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
     let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
     let imports = Parsing_heaps.read_imports parse in
+    let requires = Parsing_heaps.read_requires parse in
     let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
     let file_data =
       {
         module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
         normalized_file_data =
           {
+            requires;
             resolved_requires;
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
@@ -528,9 +532,10 @@ end = struct
     Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
-  let denormalize_file_data ~root { resolved_requires; exports; hash; imports; cas_digest } =
+  let denormalize_file_data
+      ~root { requires; resolved_requires; exports; hash; imports; cas_digest } =
     let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
-    { resolved_requires; exports; hash; imports; cas_digest }
+    { requires; resolved_requires; exports; hash; imports; cas_digest }
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update
