@@ -845,8 +845,8 @@ let get_imports ~options ~reader module_names =
       (match Parsing_heaps.Reader.get_typed_parse ~reader addr with
       | Some parse ->
         let file = Parsing_heaps.read_file_key addr in
-        let { Parsing_heaps.resolved_modules; _ } =
-          Parsing_heaps.Reader.get_resolved_requires_unsafe ~reader file parse
+        let resolved_modules =
+          Parsing_heaps.Reader.get_resolved_modules_unsafe ~reader file parse
         in
         let fsig = Parsing_heaps.read_file_sig_unsafe file parse in
         let requires = File_sig.With_Loc.(require_loc_map fsig.module_sig) in

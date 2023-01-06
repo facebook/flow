@@ -56,11 +56,7 @@ let add_exports ~source ~module_name exports index =
   let names = entries_of_exports ~module_name exports in
   Base.List.fold names ~init:index ~f:(fun acc (name, kind) -> Export_index.add name source kind acc)
 
-let add_imports
-    imports
-    (resolved_modules : Parsing_heaps.resolved_module SMap.t)
-    provider
-    (index : Export_index.t) =
+let add_imports imports resolved_modules provider (index : Export_index.t) =
   Base.List.fold imports ~init:index ~f:(fun acc (import : Imports.import) ->
       let open Imports in
       match import.source with
@@ -156,13 +152,12 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
         | Some parse ->
           let imports = Parsing_heaps.read_imports parse in
           let haste_info = Parsing_heaps.Mutator_reader.get_old_haste_info ~reader file in
-          let resolved_requires =
-            Parsing_heaps.Mutator_reader.get_old_resolved_requires_unsafe ~reader file_key parse
+          let resolved_modules =
+            Parsing_heaps.Mutator_reader.get_old_resolved_modules_unsafe ~reader file_key parse
           in
           let provider module_name =
             Parsing_heaps.Mutator_reader.get_old_provider ~reader module_name
           in
-          let resolved_modules = resolved_requires.Parsing_heaps.resolved_modules in
           ( add_exports_of_checked_file file_key parse haste_info exports_to_remove,
             add_imports imports resolved_modules provider imports_to_remove
           )
@@ -175,13 +170,12 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
         | Some parse ->
           let imports = Parsing_heaps.read_imports parse in
           let haste_info = Parsing_heaps.Mutator_reader.get_haste_info ~reader file in
-          let resolved_requires =
-            Parsing_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader file_key parse
+          let resolved_modules =
+            Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader file_key parse
           in
           let provider module_name =
             Parsing_heaps.Mutator_reader.get_provider ~reader module_name
           in
-          let resolved_modules = resolved_requires.Parsing_heaps.resolved_modules in
           ( add_exports_of_checked_file file_key parse haste_info exports_to_add,
             add_imports imports resolved_modules provider imports_to_add
           )

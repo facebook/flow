@@ -126,20 +126,17 @@ let implementation_file ~reader = function
 let file_dependencies ~reader file =
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in
   let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
-  let file_sig = Parsing_heaps.read_file_sig_unsafe file parse in
-  let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
   let sig_require_set =
     let module Heap = SharedMem.NewAPI in
     let module Bin = Type_sig_bin in
     let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
     Bin.fold_tbl Bin.read_str SSet.add buf (Bin.module_refs buf) SSet.empty
   in
-  let { Parsing_heaps.resolved_modules; _ } =
-    Parsing_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader file parse
+  let resolved_modules =
+    Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader file parse
   in
-  SSet.fold
-    (fun mref (sig_files, all_files) ->
-      let m = SMap.find mref resolved_modules in
+  SMap.fold
+    (fun mref m (sig_files, all_files) ->
       match implementation_file ~reader m with
       | Some f ->
         if SSet.mem mref sig_require_set then
@@ -147,7 +144,7 @@ let file_dependencies ~reader file =
         else
           (sig_files, FilenameSet.add f all_files)
       | None -> (sig_files, all_files))
-    require_set
+    resolved_modules
     (FilenameSet.empty, FilenameSet.empty)
 
 (* Calculates the dependency graph as a map from files to their dependencies.

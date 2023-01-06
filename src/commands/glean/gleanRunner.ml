@@ -718,10 +718,10 @@ let make ~output_dir ~write_root =
       in
       let root = Options.root options in
       let reader = State_reader.create () in
-      let { Parsing_heaps.resolved_modules; _ } =
+      let resolved_modules =
         Parsing_heaps.get_file_addr_unsafe file
         |> Parsing_heaps.Reader.get_typed_parse_unsafe ~reader file
-        |> Parsing_heaps.Reader.get_resolved_requires_unsafe ~reader file
+        |> Parsing_heaps.Reader.get_resolved_modules_unsafe ~reader file
       in
       let scope_info =
         Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast

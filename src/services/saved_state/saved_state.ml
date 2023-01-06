@@ -199,7 +199,7 @@ end = struct
         phantom_dependencies
     in
     let resolved_modules =
-      SMap.map
+      Array.map
         (resolved_module_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
@@ -527,7 +527,7 @@ end = struct
         phantom_dependencies
     in
     let resolved_modules =
-      SMap.map (resolved_module_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
+      Array.map (resolved_module_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
     Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
 

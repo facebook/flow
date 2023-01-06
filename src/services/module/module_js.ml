@@ -548,15 +548,12 @@ let choose_provider ~options m files errmap =
 (** Resolve references to required modules in a file, and record the results.
 
     TODO [perf]: measure size and possibly optimize *)
-let resolved_requires_of ~options ~reader node_modules_containers file require_loc =
+let resolved_requires_of ~options ~reader node_modules_containers file requires =
   let phantom_acc = ref Modulename.Set.empty in
   let resolved_modules =
-    SMap.fold
-      (fun mref _locs acc ->
-        let m = imported_module file mref ~options ~reader ~node_modules_containers ~phantom_acc in
-        SMap.add mref m acc)
-      require_loc
-      SMap.empty
+    Array.map
+      (fun mref -> imported_module file mref ~options ~reader ~node_modules_containers ~phantom_acc)
+      requires
   in
   let phantom_dependencies = !phantom_acc in
   Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
@@ -564,11 +561,10 @@ let resolved_requires_of ~options ~reader node_modules_containers file require_l
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in
   let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
-  let file_sig = Parsing_heaps.read_file_sig_unsafe file parse |> File_sig.abstractify_locs in
-  let require_loc = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
+  let requires = Parsing_heaps.read_requires parse in
   let resolved_requires =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    resolved_requires_of ~options ~reader node_modules_containers file require_loc
+    resolved_requires_of ~options ~reader node_modules_containers file requires
   in
   Parsing_heaps.Resolved_requires_mutator.add_resolved_requires
     mutator

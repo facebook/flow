@@ -238,8 +238,8 @@ let sig_hash ~root =
     let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
 
     let dependencies =
-      let { Parsing_heaps.resolved_modules; _ } =
-        Parsing_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader file_key parse
+      let resolved_modules =
+        Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader file_key parse
       in
       let f buf pos =
         let mref = Bin.read_str buf pos in
@@ -408,8 +408,8 @@ let mk_check_file options ~reader () =
       let aloc_table = lazy (get_aloc_table_unsafe file parse) in
       let requires =
         let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
-        let { Parsing_heaps.resolved_modules; _ } =
-          Parsing_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader file parse
+        let resolved_modules =
+          Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader file parse
         in
         let f mref locs acc =
           let m = SMap.find mref resolved_modules in

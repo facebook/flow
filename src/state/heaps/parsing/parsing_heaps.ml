@@ -81,7 +81,7 @@ type provider_addr = [ `file ] Heap.entity SharedMem.addr
 type resolved_module = (Modulename.t, string) Result.t
 
 type resolved_requires = {
-  resolved_modules: resolved_module SMap.t;
+  resolved_modules: resolved_module array;
   phantom_dependencies: Modulename.Set.t;
 }
 
@@ -246,6 +246,18 @@ let read_tolerable_file_sig_unsafe file_key parse =
 let read_file_sig_unsafe file_key parse = fst (read_tolerable_file_sig_unsafe file_key parse)
 
 let read_requires parse = Heap.get_requires parse |> Heap.read_requires
+
+let read_resolved_modules_map parse resolved_modules =
+  let requires = read_requires parse in
+  let n = Array.length requires in
+  let i = ref 0 in
+  let f () =
+    let mref = requires.(!i) in
+    let m = resolved_modules.(!i) in
+    incr i;
+    (mref, m)
+  in
+  SMap.of_increasing_iterator_unchecked f n
 
 let read_exports parse : Exports.t =
   let open Heap in
@@ -435,12 +447,11 @@ let prepare_update_revdeps =
   let all_dependencies = function
     | None -> []
     | Some { resolved_modules; phantom_dependencies; _ } ->
-      let f _ m acc =
-        match m with
+      let f acc = function
         | Ok m -> MSet.add m acc
         | Error _ -> acc
       in
-      MSet.elements (SMap.fold f resolved_modules phantom_dependencies)
+      MSet.elements (Array.fold_left f phantom_dependencies resolved_modules)
   in
   (* Partition two sorted lists. Elements in both `xs` and `ys` are skipped.
    * Otherwise, elements in `xs` are passed to `f` while elements in `ys` are
@@ -521,7 +532,8 @@ let prepare_update_revdeps =
       (old_dependencies, new_dependencies)
 
 let resolved_requires_equal a b =
-  SMap.equal ( = ) a.resolved_modules b.resolved_modules
+  Int.equal (Array.length a.resolved_modules) (Array.length b.resolved_modules)
+  && Array.for_all2 ( = ) a.resolved_modules b.resolved_modules
   && Modulename.Set.equal a.phantom_dependencies b.phantom_dependencies
 
 (** The writer returns whether the resolved requires changed. *)
@@ -1152,6 +1164,9 @@ module type READER = sig
   val get_resolved_requires_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
 
+  val get_resolved_modules_unsafe :
+    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_module SMap.t
+
   val get_leader_unsafe : reader:reader -> File_key.t -> [ `typed ] parse_addr -> file_addr
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
@@ -1243,6 +1258,10 @@ module Mutator_reader = struct
     match resolved_requires with
     | Some resolved_requires -> read_resolved_requires resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
+
+  let get_old_resolved_modules_unsafe ~reader file parse =
+    let { resolved_modules; _ } = get_old_resolved_requires_unsafe ~reader file parse in
+    read_resolved_modules_map parse resolved_modules
 
   let has_ast ~reader file =
     let parse_opt =
@@ -1355,6 +1374,10 @@ module Mutator_reader = struct
     match read ~reader resolved_requires with
     | Some resolved_requires -> read_resolved_requires resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
+
+  let get_resolved_modules_unsafe ~reader file parse =
+    let { resolved_modules; _ } = get_resolved_requires_unsafe ~reader file parse in
+    read_resolved_modules_map parse resolved_modules
 
   let get_leader_unsafe ~reader file parse =
     match get_leader ~reader parse with
@@ -1765,6 +1788,10 @@ module Reader = struct
     | Some resolved_requires -> read_resolved_requires resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
+  let get_resolved_modules_unsafe ~reader file parse =
+    let { resolved_modules; _ } = get_resolved_requires_unsafe ~reader file parse in
+    read_resolved_modules_map parse resolved_modules
+
   let get_leader_unsafe ~reader file parse =
     match get_leader ~reader parse with
     | Some leader -> leader
@@ -1958,6 +1985,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_resolved_requires_unsafe ~reader
     | State_reader reader -> Reader.get_resolved_requires_unsafe ~reader
+
+  let get_resolved_modules_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_resolved_modules_unsafe ~reader
+    | State_reader reader -> Reader.get_resolved_modules_unsafe ~reader
 
   let get_leader_unsafe ~reader =
     match reader with
