@@ -150,7 +150,7 @@ type error_code =
   | UnnecessaryInvariant
   | UnnecessaryOptionalChain
   | UnreachableCode
-  | UnsafeAddition
+  | UnsafeArith
   | UnsafeGettersSetters
   | UnsupportedSyntax
   | UntypedImport
@@ -336,7 +336,7 @@ let string_of_code : error_code -> string = function
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnreachableCode -> "unreachable-code"
-  | UnsafeAddition -> "unsafe-addition"
+  | UnsafeArith -> "unsafe-arithmetic"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | UnsupportedSyntax -> "unsupported-syntax"
   | UntypedImport -> "untyped-import"

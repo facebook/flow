@@ -93,7 +93,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- instanceof.js:83:5
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    instanceof.js:83:5
    83|     x++; // error

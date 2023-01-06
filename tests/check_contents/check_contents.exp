@@ -93,7 +93,7 @@ not_flow.js with --all
 
 Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    1| 1 * 'foo';
           ^^^^^ [1]

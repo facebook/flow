@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- unary.js:8:11
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    unary.js:8:11
    8|   return -y; // error, we don't allow coercion here
@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unary.js:12:11
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    unary.js:12:11
    12|   return ~y;  // error, we don't allow coercion here
@@ -100,7 +100,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:12:5
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    update.js:12:5
    12|     y++; // error, we don't allow coercion here
@@ -114,7 +114,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:18:5
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    update.js:18:5
    18|     y--; // error, we don't allow coercion here
@@ -128,7 +128,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:22:7
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    update.js:22:7
    22|     ++y; // error, we don't allow coercion here
@@ -142,7 +142,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- update.js:26:7
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    update.js:26:7
    26|     --y; // error, we don't allow coercion here

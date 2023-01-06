@@ -48,7 +48,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:14:25
    14| f2(function(x) { return x * x });
@@ -71,7 +71,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:14:29
    14| f2(function(x) { return x * x });
@@ -94,7 +94,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:19:37
    19| function double(n: string) { return n * 2 }
@@ -185,7 +185,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:14:25
    14| f2(function(x) { return x * x });
@@ -222,7 +222,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:14:29
    14| f2(function(x) { return x * x });
@@ -259,7 +259,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:19:37
    19| function double(n: string) { return n * 2 }
@@ -365,7 +365,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:14:25
    14| f2(function(x) { return x * x });
@@ -412,7 +412,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:14:29
    14| f2(function(x) { return x * x });
@@ -459,7 +459,7 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    Traces.js:19:37
    19| function double(n: string) { return n * 2 }

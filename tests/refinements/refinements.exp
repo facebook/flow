@@ -99,7 +99,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:24:13
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    24|   if (100 * false) {
                    ^^^^^ [1]
@@ -107,7 +107,7 @@ Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:27:7
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    27|   if (false * 100) {
              ^^^^^ [1]
@@ -3498,7 +3498,7 @@ Cannot assign `3` to `x.a` because property `a` is not writable. [cannot-write]
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    not.js:5:5
    5|     x++; // should error for null, void and boolean (false)
@@ -3512,7 +3512,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    not.js:5:5
    5|     x++; // should error for null, void and boolean (false)
@@ -3615,7 +3615,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- null.js:4:13
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    4|   if (100 * null) {
                   ^^^^ [1]
@@ -3623,7 +3623,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ------------------------------------------------------------------------------------------------------ null.js:7:7
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    7|   if (null * 100) {
             ^^^^ [1]
@@ -4680,7 +4680,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:51:15
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    switch.js:51:15
    51|       return (text++) + '';
@@ -5891,7 +5891,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:31:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    undef.js:31:13
    31|     var y = x * 1000;
@@ -5905,7 +5905,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:38:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    undef.js:38:13
    38|     var y = x * 1000;
@@ -5919,7 +5919,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:44:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    undef.js:44:13
    44|     var y = x.x * 1000;
@@ -5933,7 +5933,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:51:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    undef.js:51:13
    51|     var y = x.x * 1000;
@@ -5947,7 +5947,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:69:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    undef.js:69:13
    69|     var b = y * 1000; // error
@@ -5961,7 +5961,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:74:13
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    74|   if (100 * undefined) {
                    ^^^^^^^^^ [1]
@@ -5969,7 +5969,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 Error ---------------------------------------------------------------------------------------------------- undef.js:77:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    77|   if (undefined * 100) {
              ^^^^^^^^^ [1]
@@ -6039,7 +6039,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:31:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    void.js:31:13
    31|     var y = x * 1000;
@@ -6053,7 +6053,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:38:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    void.js:38:13
    38|     var y = x * 1000;
@@ -6067,7 +6067,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:44:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    void.js:44:13
    44|     var y = x.x * 1000;
@@ -6081,7 +6081,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:51:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    void.js:51:13
    51|     var y = x.x * 1000;
@@ -6095,7 +6095,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:56:32
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    void.js:56:32
    56|   if (x !== null && x !== void(x * 1000)) {
@@ -6109,7 +6109,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:62:32
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    void.js:62:32
    62|   if (x === null || x === void(x * 1000)) {
@@ -6123,7 +6123,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:69:36
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    void.js:69:36
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
@@ -6137,7 +6137,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:75:36
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    void.js:75:36
    75|   if (x.x === null || x.x === void(x.x * 1000)) {
@@ -6151,7 +6151,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:82:13
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    82|   if (100 * void(0)) {
                    ^^^^^^^ [1]
@@ -6159,7 +6159,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 Error ----------------------------------------------------------------------------------------------------- void.js:85:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    85|   if (void(0) * 100) {
              ^^^^^^^ [1]

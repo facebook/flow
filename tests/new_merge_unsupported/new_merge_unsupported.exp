@@ -896,7 +896,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:43:21
 
-Cannot perform arithmetic operation because `Props` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `Props` [1] is not a number or bigint. [unsafe-arithmetic]
 
    ops_on_react_config.js:43:21
    43| export const x10 = -t;

@@ -22,7 +22,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:12
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    14| <a:b prop={'string' * 3} />; // Error, can't multiply string by number
                   ^^^^^^^^ [1]

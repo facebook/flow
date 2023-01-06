@@ -97,7 +97,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:46:29
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    array_lib.js:46:29
    46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
@@ -125,7 +125,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:47:34
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    array_lib.js:47:34
    47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number

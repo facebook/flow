@@ -45,7 +45,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:21:7
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    Arith.js:21:7
    21|   num(x + y);
@@ -59,7 +59,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- Arith.js:24:11
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    Arith.js:24:11
    24|   num(x + y);
@@ -73,7 +73,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:29:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    Arith.js:29:7
    29|   num(x + y);
@@ -87,7 +87,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- Arith.js:32:11
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    Arith.js:32:11
    32|   num(x + y);
@@ -101,7 +101,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    Arith.js:37:7
    37|   num(x + y);
@@ -115,7 +115,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    Arith.js:37:7
    37|   num(x + y);
@@ -129,7 +129,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- Arith.js:40:11
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    Arith.js:40:11
    40|   num(x + y);
@@ -143,7 +143,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- Arith.js:40:11
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    Arith.js:40:11
    40|   num(x + y);
@@ -157,7 +157,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:43:5
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    43| num(null + null); // === 0
            ^^^^ [1]
@@ -165,7 +165,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:44:5
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    44| num(undefined + undefined); // === NaN
            ^^^^^^^^^ [1]
@@ -173,7 +173,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:46:5
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    46| num(null + 1); // === 1
            ^^^^ [1]
@@ -181,7 +181,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:47:9
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    47| num(1 + null); // === 1
                ^^^^ [1]
@@ -189,7 +189,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:48:5
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    48| num(undefined + 1); // === NaN
            ^^^^^^^^^ [1]
@@ -197,7 +197,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:49:9
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    49| num(1 + undefined); // === NaN
                ^^^^^^^^^ [1]
@@ -205,7 +205,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:51:5
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    51| num(null + true); // === 1
            ^^^^ [1]
@@ -213,7 +213,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error --------------------------------------------------------------------------------------------------- Arith.js:52:12
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    52| num(true + null); // === 1
                   ^^^^ [1]
@@ -221,7 +221,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:53:5
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    53| num(undefined + true); // === NaN
            ^^^^^^^^^ [1]
@@ -229,7 +229,7 @@ Cannot perform arithmetic operation because undefined [1] is not a number. [unsa
 
 Error --------------------------------------------------------------------------------------------------- Arith.js:54:12
 
-Cannot perform arithmetic operation because undefined [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
 
    54| num(true + undefined); // === NaN
                   ^^^^^^^^^ [1]
@@ -533,7 +533,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    exponent.js:7:1
    7| y **= 2; // error
@@ -634,7 +634,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ mult.js:5:5
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    5| num(null * 1);
           ^^^^ [1]
@@ -642,7 +642,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ------------------------------------------------------------------------------------------------------ mult.js:6:9
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    6| num(1 * null);
               ^^^^ [1]
@@ -650,7 +650,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------------- mult.js:12:1
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    mult.js:12:1
    12| y *= 2; // error

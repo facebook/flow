@@ -3000,7 +3000,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Cannot perform arithmetic operation because ";
         ref reason;
         text " ";
-        text "is not a number.";
+        text "is not a number or bigint.";
       ]
     in
     Normal { features }
@@ -4332,7 +4332,7 @@ let error_code_of_upper_kind = function
 let error_code_of_message err : error_code option =
   match err with
   | EAdditionMixed _ -> Some UnclearAddition
-  | EArithmeticOperand _ -> Some UnsafeAddition
+  | EArithmeticOperand _ -> Some UnsafeArith
   | EAssignConstLikeBinding _ -> Some CannotReassignConstLike
   | EBadExportContext _ -> Some InvalidExport
   | EBadExportPosition _ -> Some InvalidExport

@@ -102,7 +102,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- forof.js:66:15
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    forof.js:66:15
    66|   const x1_ = x1 * 3; // error

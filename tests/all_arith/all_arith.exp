@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:25:12
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    25| (aNumber + null); // error
                   ^^^^ [1]
@@ -108,7 +108,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:34:12
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:34:12
    34| (aNumber * aString); // error
@@ -122,7 +122,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:35:12
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:35:12
    35| (aNumber * aBigint); // error
@@ -136,7 +136,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:37:12
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:37:12
    37| (aNumber * aBoolean); // error
@@ -150,7 +150,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:38:12
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:38:12
    38| (aNumber * aT); // error
@@ -164,7 +164,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:39:12
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    39| (aNumber * null); // error
                   ^^^^ [1]
@@ -172,7 +172,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:40:12
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:40:12
    40| (aNumber * anArray); // error
@@ -186,7 +186,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:41:12
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:41:12
    41| (aNumber * anObject); // error
@@ -200,7 +200,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:42:12
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:42:12
    42| (aNumber * aMixed); // error
@@ -345,7 +345,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:60:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:60:2
    60| (aString * aString); // error
@@ -359,7 +359,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:60:12
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:60:12
    60| (aString * aString); // error
@@ -373,7 +373,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:61:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:61:2
    61| (aString * aBigint); // error
@@ -387,7 +387,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:61:12
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:61:12
    61| (aString * aBigint); // error
@@ -401,7 +401,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:62:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:62:2
    62| (aString * aDate); // error
@@ -415,7 +415,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:63:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:63:2
    63| (aString * aBoolean); // error
@@ -429,7 +429,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:63:12
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:63:12
    63| (aString * aBoolean); // error
@@ -443,7 +443,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:64:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:64:2
    64| (aString * aT); // error
@@ -457,7 +457,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:64:12
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:64:12
    64| (aString * aT); // error
@@ -471,7 +471,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:65:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:65:2
    65| (aString * null); // error
@@ -485,7 +485,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:65:12
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    65| (aString * null); // error
                   ^^^^ [1]
@@ -493,7 +493,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:66:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:66:2
    66| (aString * anArray); // error
@@ -507,7 +507,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:66:12
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:66:12
    66| (aString * anArray); // error
@@ -521,7 +521,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:67:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:67:2
    67| (aString * anObject); // error
@@ -535,7 +535,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:67:12
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:67:12
    67| (aString * anObject); // error
@@ -549,7 +549,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:68:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:68:2
    68| (aString * aMixed); // error
@@ -563,7 +563,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:68:12
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:68:12
    68| (aString * aMixed); // error
@@ -577,7 +577,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:69:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:69:2
    69| (aString * anAny); // error
@@ -591,7 +591,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:70:2
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:70:2
    70| (aString * anEmpty); // error
@@ -707,7 +707,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:77:12
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    77| (aBigint + null); // error
                   ^^^^ [1]
@@ -798,7 +798,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:86:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:86:2
    86| (aBigint * aDate); // error
@@ -812,7 +812,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:87:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:87:2
    87| (aBigint * aBoolean); // error
@@ -826,7 +826,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:87:12
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:87:12
    87| (aBigint * aBoolean); // error
@@ -840,7 +840,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:88:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:88:2
    88| (aBigint * aT); // error
@@ -854,7 +854,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:88:12
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:88:12
    88| (aBigint * aT); // error
@@ -868,7 +868,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:89:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:89:2
    89| (aBigint * null); // error
@@ -882,7 +882,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:89:12
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    89| (aBigint * null); // error
                   ^^^^ [1]
@@ -890,7 +890,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:90:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:90:2
    90| (aBigint * anArray); // error
@@ -904,7 +904,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:90:12
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:90:12
    90| (aBigint * anArray); // error
@@ -918,7 +918,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:91:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:91:2
    91| (aBigint * anObject); // error
@@ -932,7 +932,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:91:12
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:91:12
    91| (aBigint * anObject); // error
@@ -946,7 +946,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:92:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:92:2
    92| (aBigint * aMixed); // error
@@ -960,7 +960,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:92:12
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:92:12
    92| (aBigint * aMixed); // error
@@ -974,7 +974,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:93:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:93:2
    93| (aBigint * anAny); // error
@@ -988,7 +988,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:94:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:94:2
    94| (aBigint * anEmpty); // error
@@ -1104,7 +1104,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:100:10
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    100| (aDate + null); // error
                  ^^^^ [1]
@@ -1194,7 +1194,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:109:10
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:109:10
    109| (aDate * aBoolean); // error
@@ -1208,7 +1208,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:110:10
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:110:10
    110| (aDate * aT); // error
@@ -1222,7 +1222,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:111:10
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    111| (aDate * null); // error
                  ^^^^ [1]
@@ -1230,7 +1230,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:112:10
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:112:10
    112| (aDate * anArray); // error
@@ -1244,7 +1244,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:113:10
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:113:10
    113| (aDate * anObject); // error
@@ -1258,7 +1258,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:114:10
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:114:10
    114| (aDate * aMixed); // error
@@ -1306,7 +1306,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:121:13
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    121| (aBoolean + null); // error
                     ^^^^ [1]
@@ -1397,7 +1397,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:129:2
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:129:2
    129| (aBoolean * aBoolean); // error
@@ -1411,7 +1411,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:129:13
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:129:13
    129| (aBoolean * aBoolean); // error
@@ -1425,7 +1425,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:130:2
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:130:2
    130| (aBoolean * aT); // error
@@ -1439,7 +1439,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:130:13
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:130:13
    130| (aBoolean * aT); // error
@@ -1453,7 +1453,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:131:2
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:131:2
    131| (aBoolean * null); // error
@@ -1467,7 +1467,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:131:13
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    131| (aBoolean * null); // error
                     ^^^^ [1]
@@ -1475,7 +1475,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:132:2
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:132:2
    132| (aBoolean * anArray); // error
@@ -1489,7 +1489,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:132:13
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:132:13
    132| (aBoolean * anArray); // error
@@ -1503,7 +1503,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:133:2
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:133:2
    133| (aBoolean * anObject); // error
@@ -1517,7 +1517,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:133:13
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:133:13
    133| (aBoolean * anObject); // error
@@ -1531,7 +1531,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:134:2
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:134:2
    134| (aBoolean * aMixed); // error
@@ -1545,7 +1545,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:134:13
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:134:13
    134| (aBoolean * aMixed); // error
@@ -1559,7 +1559,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:135:2
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:135:2
    135| (aBoolean * anAny); // error
@@ -1573,7 +1573,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:136:2
 
-Cannot perform arithmetic operation because boolean [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:136:2
    136| (aBoolean * anEmpty); // error
@@ -1621,7 +1621,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:140:7
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    140| (aT + null); // error
               ^^^^ [1]
@@ -1711,7 +1711,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:148:2
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:148:2
    148| (aT * aT); // error
@@ -1725,7 +1725,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:148:7
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:148:7
    148| (aT * aT); // error
@@ -1739,7 +1739,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:149:2
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:149:2
    149| (aT * null); // error
@@ -1753,7 +1753,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:149:7
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    149| (aT * null); // error
               ^^^^ [1]
@@ -1761,7 +1761,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:150:2
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:150:2
    150| (aT * anArray); // error
@@ -1775,7 +1775,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:150:7
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:150:7
    150| (aT * anArray); // error
@@ -1789,7 +1789,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:151:2
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:151:2
    151| (aT * anObject); // error
@@ -1803,7 +1803,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:151:7
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:151:7
    151| (aT * anObject); // error
@@ -1817,7 +1817,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:152:2
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:152:2
    152| (aT * aMixed); // error
@@ -1831,7 +1831,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:152:7
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:152:7
    152| (aT * aMixed); // error
@@ -1845,7 +1845,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:153:2
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:153:2
    153| (aT * anAny); // error
@@ -1859,7 +1859,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:154:2
 
-Cannot perform arithmetic operation because `T` [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because `T` [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:154:2
    154| (aT * anEmpty); // error
@@ -1873,7 +1873,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:157:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    157| (null + null); // error
          ^^^^ [1]
@@ -1881,7 +1881,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:158:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    158| (null + anArray); // error
          ^^^^ [1]
@@ -1889,7 +1889,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:159:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    159| (null + anObject); // error
          ^^^^ [1]
@@ -1911,7 +1911,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:161:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    161| (null + anAny); // error
          ^^^^ [1]
@@ -1919,7 +1919,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:165:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    165| (null * null); // error
          ^^^^ [1]
@@ -1927,7 +1927,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:165:9
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    165| (null * null); // error
                 ^^^^ [1]
@@ -1935,7 +1935,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:166:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    166| (null * anArray); // error
          ^^^^ [1]
@@ -1943,7 +1943,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:166:9
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:166:9
    166| (null * anArray); // error
@@ -1957,7 +1957,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:167:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    167| (null * anObject); // error
          ^^^^ [1]
@@ -1965,7 +1965,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:167:9
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:167:9
    167| (null * anObject); // error
@@ -1979,7 +1979,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:168:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    168| (null * aMixed); // error
          ^^^^ [1]
@@ -1987,7 +1987,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:168:9
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:168:9
    168| (null * aMixed); // error
@@ -2001,7 +2001,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:169:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    169| (null * anAny); // error
          ^^^^ [1]
@@ -2009,7 +2009,7 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:170:2
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    170| (null * anEmpty); // error
          ^^^^ [1]
@@ -2100,7 +2100,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:180:2
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:180:2
    180| (anArray * anArray); // error
@@ -2114,7 +2114,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:180:12
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:180:12
    180| (anArray * anArray); // error
@@ -2128,7 +2128,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:181:2
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:181:2
    181| (anArray * anObject); // error
@@ -2142,7 +2142,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:181:12
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:181:12
    181| (anArray * anObject); // error
@@ -2156,7 +2156,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:182:2
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:182:2
    182| (anArray * aMixed); // error
@@ -2170,7 +2170,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:182:12
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:182:12
    182| (anArray * aMixed); // error
@@ -2184,7 +2184,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:183:2
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:183:2
    183| (anArray * anAny); // error
@@ -2198,7 +2198,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:184:2
 
-Cannot perform arithmetic operation because array type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:184:2
    184| (anArray * anEmpty); // error
@@ -2261,7 +2261,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:193:2
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:193:2
    193| (anObject * anObject); // error
@@ -2275,7 +2275,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:193:13
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:193:13
    193| (anObject * anObject); // error
@@ -2289,7 +2289,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:194:2
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:194:2
    194| (anObject * aMixed); // error
@@ -2303,7 +2303,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:194:13
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:194:13
    194| (anObject * aMixed); // error
@@ -2317,7 +2317,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:195:2
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:195:2
    195| (anObject * anAny); // error
@@ -2331,7 +2331,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:196:2
 
-Cannot perform arithmetic operation because object type [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:196:2
    196| (anObject * anEmpty); // error
@@ -2374,7 +2374,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:204:2
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:204:2
    204| (aMixed * aMixed); // error
@@ -2388,7 +2388,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_arith.js:204:11
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:204:11
    204| (aMixed * aMixed); // error
@@ -2402,7 +2402,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:205:2
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:205:2
    205| (aMixed * anAny); // error
@@ -2416,7 +2416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:206:2
 
-Cannot perform arithmetic operation because mixed [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:206:2
    206| (aMixed * anEmpty); // error
@@ -2439,7 +2439,7 @@ are signed. [bigint-unsigned-right-shift]
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:225:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
 
    all_arith.js:225:2
    225| (aBigint >>> aNumber); // error

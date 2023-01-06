@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- switch.js:28:13
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    switch.js:28:13
    28|         x = x*x;
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:28:15
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    switch.js:28:15
    28|         x = x*x;

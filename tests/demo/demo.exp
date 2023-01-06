@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ 1/f.js:3:33
 
-Cannot perform arithmetic operation because null [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    1/f.js:3:33
    3| function f(x: null) { return 42/x; }

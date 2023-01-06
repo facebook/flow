@@ -295,7 +295,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test20.js:14:26
 
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
+Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    test20.js:14:26
    14| [""].reduce((acc,str) => acc * str.length);
