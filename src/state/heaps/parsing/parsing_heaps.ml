@@ -82,6 +82,8 @@ type resolved_requires_addr = [ `resolved_requires ] SharedMem.addr
 
 type dependency_addr = Heap.dependency SharedMem.addr
 
+type resolved_module_addr = Heap.resolved_module SharedMem.addr
+
 type resolved_module = (Modulename.t, string) Result.t
 
 type resolved_requires = resolved_module array * Modulename.Set.t
@@ -269,15 +271,20 @@ let read_package_info parse : (Package_json.t, unit) result =
   let deserialize x = Marshal.from_string x 0 in
   get_package_info parse |> read_package_info |> deserialize
 
-let read_resolved_modules resolved_requires : resolved_module array =
-  let addr = Heap.get_resolved_modules resolved_requires in
-  Marshal.from_string (Heap.read_resolved_modules addr) 0
-
 let read_dependency =
   let open Heap in
   read_dependency
     (fun addr -> Modulename.String (get_haste_name addr |> read_string))
     (fun addr -> Modulename.Filename (read_file_key addr))
+
+let read_resolved_module addr =
+  match Heap.read_resolved_module addr with
+  | Ok dependency -> Ok (read_dependency dependency)
+  | Error name -> Error (Heap.read_string name)
+
+let read_resolved_modules resolved_requires : resolved_module array =
+  let addr = Heap.get_resolved_modules resolved_requires in
+  Heap.read_addr_tbl read_resolved_module addr
 
 let read_phantom_dependencies resolved_requires : Modulename.Set.t =
   let addr = Heap.get_phantom_dependencies resolved_requires in
@@ -391,6 +398,16 @@ let prepare_write_file_sig (file_sig : File_sig.With_Loc.tolerable_t) =
 let prepare_write_imports (imports : Imports.t) =
   Marshal.to_string imports [] |> Heap.prepare_write_serialized_imports
 
+let prepare_write_resolved_modules resolved_modules =
+  let f = function
+    | Ok (Modulename.String name) ->
+      (prepare_find_or_add_haste_module name :> resolved_module_addr Heap.prep)
+    | Ok (Modulename.Filename key) ->
+      (prepare_find_or_add_phantom_file key :> resolved_module_addr Heap.prep)
+    | Error name -> (Heap.prepare_write_string name :> resolved_module_addr Heap.prep)
+  in
+  Array.map f resolved_modules |> Heap.prepare_write_addr_tbl
+
 let prepare_write_phantom_dependencies phantom_dependencies =
   let f mname acc =
     let prep =
@@ -407,10 +424,9 @@ let prepare_write_phantom_dependencies phantom_dependencies =
   |> Array.of_list
   |> Heap.prepare_write_addr_tbl
 
-let prepare_write_resolved_requires ((resolved_modules, phantom_dependencies) : resolved_requires) =
-  let serialized_resolved_modules = Marshal.to_string resolved_modules [] in
+let prepare_write_resolved_requires (resolved_modules, phantom_dependencies) =
   let+ write_resolved_requires = Heap.prepare_write_resolved_requires
-  and+ resolved_modules = Heap.prepare_write_serialized_resolved_modules serialized_resolved_modules
+  and+ resolved_modules = prepare_write_resolved_modules resolved_modules
   and+ phantom_dependencies = prepare_write_phantom_dependencies phantom_dependencies in
   write_resolved_requires resolved_modules phantom_dependencies
 

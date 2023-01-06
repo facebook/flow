@@ -54,7 +54,6 @@ type tag =
   | Cas_digest_tag
   (* tags defined above this point are serialized+compressed *)
   | Serialized_tag (* 20 -- see Serialized_tag in hh_shared.c *)
-  | Serialized_resolved_modules_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
   | Serialized_exports_tag
@@ -815,6 +814,12 @@ module NewAPI = struct
   type dependency =
     [ `haste_module
     | `file
+    ]
+
+  type resolved_module =
+    [ `haste_module
+    | `file
+    | `string
     ]
 
   type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
@@ -1752,11 +1757,6 @@ module NewAPI = struct
 
   (** Resolved requires *)
 
-  let prepare_write_serialized_resolved_modules resolved_modules =
-    prepare_write_compressed Serialized_resolved_modules_tag resolved_modules
-
-  let read_resolved_modules addr = read_compressed Serialized_resolved_modules_tag addr
-
   let resolved_requires_size = 2 * addr_size
 
   let prepare_write_resolved_requires =
@@ -1790,6 +1790,22 @@ module NewAPI = struct
       on_file addr
     else
       Printf.ksprintf failwith "read_dependency: unexpected tag (%d)" tag
+
+  let read_resolved_module addr =
+    let hd = read_header (get_heap ()) addr in
+    let tag = obj_tag hd in
+    if tag = tag_val String_tag then
+      Error addr
+    else if
+      tag = tag_val Haste_module_tag
+      || tag = tag_val Source_file_tag
+      || tag = tag_val Json_file_tag
+      || tag = tag_val Resource_file_tag
+      || tag = tag_val Lib_file_tag
+    then
+      Ok addr
+    else
+      Printf.ksprintf failwith "read_resolved_module: unexpected tag (%d)" tag
 
   (** Imports *)
 

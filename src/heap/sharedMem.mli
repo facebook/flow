@@ -193,6 +193,12 @@ module NewAPI : sig
     | `file
     ]
 
+  type resolved_module =
+    [ `haste_module
+    | `file
+    | `string
+    ]
+
   type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
 
   (* Before writing to the heap, we first calculate the required size (in words)
@@ -302,21 +308,19 @@ module NewAPI : sig
 
   (* resolved requires *)
 
-  val prepare_write_serialized_resolved_modules : string -> [ `resolved_modules ] addr prep
-
-  val read_resolved_modules : [ `resolved_modules ] addr -> string
-
   val resolved_requires_size : size
 
   val prepare_write_resolved_requires :
-    ([ `resolved_modules ] addr -> dependency tbl addr -> [ `resolved_requires ] addr) prep
+    (resolved_module tbl addr -> dependency tbl addr -> [ `resolved_requires ] addr) prep
 
-  val get_resolved_modules : [ `resolved_requires ] addr -> [ `resolved_modules ] addr
+  val get_resolved_modules : [ `resolved_requires ] addr -> resolved_module tbl addr
 
   val get_phantom_dependencies : [ `resolved_requires ] addr -> dependency tbl addr
 
   val read_dependency :
     ([ `haste_module ] addr -> 'a) -> ([ `file ] addr -> 'a) -> dependency addr -> 'a
+
+  val read_resolved_module : resolved_module addr -> (dependency addr, [ `string ] addr) Result.t
 
   (* imports *)
 
