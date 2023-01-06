@@ -557,22 +557,17 @@ let prepare_update_revdeps =
           (read_file_name file)
           (Modulename.to_string mname)
   in
-  (* Add `file` to the dependents of `mname`. It is possible that a module
-   * object for `mname` does not exist (for phantom dependencies) so we create
-   * the module if necessary. *)
+  (* Add `file` to the dependents of `mname`. *)
   let add_new_dependent acc mname =
-    let+ dependents =
-      match mname with
-      | Modulename.String name ->
-        let+ m = prepare_find_or_add_haste_module name in
-        Heap.get_haste_dependents m
-      | Modulename.Filename key ->
-        let+ m = prepare_find_or_add_phantom_file key in
-        Option.get (Heap.get_file_dependents m)
-    and+ sknode = Heap.prepare_write_sknode ()
-    and+ acc = acc in
+    let+ sknode = Heap.prepare_write_sknode () and+ acc = acc in
     fun file ->
       acc file;
+      let dependents =
+        match mname with
+        | Modulename.String name -> get_haste_module_unsafe name |> Heap.get_haste_dependents
+        | Modulename.Filename key ->
+          get_file_addr_unsafe key |> Heap.get_file_dependents |> Option.get
+      in
       if not (Heap.file_set_add dependents (sknode file)) then
         Printf.ksprintf
           failwith
@@ -612,24 +607,17 @@ let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt 
     when resolved_requires_equal old_resolved_requires new_resolved_requires ->
     Heap.prepare_const (fun _ _ -> ())
   | _ ->
-    let+ update_revdeps = prepare_update_revdeps old_resolved_requires resolved_requires_opt
-    and+ resolved_requires_opt =
+    let+ resolved_requires_opt =
       Heap.prepare_opt prepare_write_resolved_requires resolved_requires_opt
-    in
+    and+ update_revdeps = prepare_update_revdeps old_resolved_requires resolved_requires_opt in
     fun file parse ->
       update_revdeps file;
-
-      (* invariant: if there are resolved_requires, parse must be typed.
-         if this is violated, we'll reserve space to update the resolved
-         requires and then not do it, leading to an error. *)
-      let resolved_requires_ent_opt =
-        let* parse = Heap.coerce_typed parse in
-        Some (Heap.get_resolved_requires parse)
-      in
-      Option.iter
-        (fun resolved_requires_ent ->
-          Heap.entity_advance resolved_requires_ent resolved_requires_opt)
-        resolved_requires_ent_opt
+      (match (Heap.coerce_typed parse, resolved_requires_opt) with
+      | (None, None) -> ()
+      | (None, Some _) -> failwith "update_resolved_requires: unexpected untyped file"
+      | (Some parse, _) ->
+        let ent = Heap.get_resolved_requires parse in
+        Heap.entity_advance ent resolved_requires_opt)
 
 let prepare_create_file file_key module_name resolved_requires_opt =
   let open Heap in
