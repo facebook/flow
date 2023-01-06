@@ -145,7 +145,7 @@ let determine_what_to_recheck
     ~freshparsed
     ~unchanged_checked
     ~unchanged_files_to_force:CheckedSet.empty
-    ~direct_dependent_files:FilenameSet.empty
+    ~dirty_direct_dependents:FilenameSet.empty
 
 let include_dependencies_and_dependents
     ~profiling

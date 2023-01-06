@@ -490,13 +490,6 @@ let merge
     Hh_logger.info "Done";
     Lwt.return (result, time_to_merge)
   in
-  (* It is not clear whether we want or need sig_new_or_changed to include deleted or unparsed
-   * (i.e. failed to parse or non-@flow) files, but for the sake of consistency with previous
-   * logic, we'll add them in here. It may be worth determining whether we can stop including these
-   * files. *)
-  let sig_new_or_changed =
-    sig_new_or_changed |> FilenameSet.union deleted |> FilenameSet.union unparsed_set
-  in
   (* compute the largest cycle, for logging *)
   let top_cycle =
     List.fold_left
@@ -527,11 +520,10 @@ module Check_files : sig
     updated_suppressions:Error_suppressions.t ->
     coverage:Coverage_response.file_coverage Utils_js.FilenameMap.t ->
     to_check:CheckedSet.t ->
-    direct_dependent_files:Utils_js.FilenameSet.t ->
+    dirty_direct_dependents:FilenameSet.t ->
     sig_new_or_changed:Utils_js.FilenameSet.t ->
     dependency_info:Dependency_info.t ->
     persistent_connections:Persistent_connection.t option ->
-    cannot_skip_direct_dependents:bool ->
     ( ServerEnv.errors
     * Coverage_response.file_coverage Utils_js.FilenameMap.t
     * float
@@ -553,11 +545,10 @@ end = struct
       ~updated_suppressions
       ~coverage
       ~to_check
-      ~direct_dependent_files
+      ~dirty_direct_dependents
       ~sig_new_or_changed
       ~dependency_info
-      ~persistent_connections
-      ~cannot_skip_direct_dependents =
+      ~persistent_connections =
     with_memory_timer_lwt ~options "Check" profiling (fun () ->
         Hh_logger.info "Check prep";
         Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
@@ -571,7 +562,7 @@ end = struct
         let dependents_to_check =
           FilenameSet.filter
             (fun f ->
-              (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
+              FilenameSet.mem f dirty_direct_dependents
               || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
                  @@ FilenameGraph.find f implementation_dependency_graph
               ||
@@ -897,7 +888,7 @@ module Recheck : sig
     freshparsed:CheckedSet.t ->
     unchanged_checked:CheckedSet.t ->
     unchanged_files_to_force:CheckedSet.t ->
-    direct_dependent_files:FilenameSet.t ->
+    dirty_direct_dependents:FilenameSet.t ->
     determine_what_to_recheck_result Lwt.t
 end = struct
   type recheck_result = {
@@ -1189,23 +1180,64 @@ end = struct
       CheckedSet.filter files_to_force ~f:(fun fn _ -> FilenameSet.mem fn unchanged)
     in
     MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
+
+    (* changed_modules are modules which have a different provider for this
+     * recheck. This does *not* include modules whose provider file is the same,
+     * even if the file itself is changed. *)
     let%lwt (changed_modules, duplicate_providers) =
       commit_modules ~options ~profiling ~workers ~duplicate_providers dirty_modules
     in
 
     let unparsed_or_deleted = FilenameSet.union unparsed_set deleted in
 
-    (* direct_dependent_files are unchanged files which directly depend on changed modules,
-       or are new / changed files that are phantom dependents. *)
-    let%lwt direct_dependent_files =
+    (* dirty_direct_dependents are unchanged files which directly depend on
+     * changed modules. These files need to be re-resolved and can not be
+     * skipped.
+     *
+     * The dependents included fall into some separate categories:
+     *
+     *   A. Dependents of phantom modules which received initial providers.
+     *   These modules were phantom dependencies, and the dependents' resolved
+     *   requires will now change.
+     *
+     *   B. Dependents of modules which no longer have a provider. These modules
+     *   will now become phantom dependents, and their dependents' resolved
+     *   requires will change.
+     *
+     *   C. Dependents of modules which have different provider file. For
+     *   example, if a haste module used to be provided by foo.js and is now
+     *   provided by bar.js.
+     *
+     *   D. Dependents of modules whose provider is the same file, but the file
+     *   changed from untyped to typed.
+     *
+     *   E. Dependents of modules whose provider is the same file, but the file
+     *   changed from typed to untyped.
+     *
+     * These dependents are used for 3 different purposes:
+     *
+     *   1. Re-resolving requires. For this we only care about (A) and (B),
+     *   because resolved requires are edges from file to module, so even if the
+     *   module's provider changes, the resolved requires will not change.
+     *
+     *   2. Recalculating the server env dependency graph. For this we care
+     *   about the all categories (A-E). This is because the server env
+     *   dependency graph only stores edges between typed files.
+     *
+     *   3. Ensuring dependents are not skipped. For this we only care about
+     *   (B), (C), and (E). To skip a file, we check if any of its typed
+     *   dependencies are in sig_new_or_changed, which only contains typed
+     *   files.
+     *)
+    let%lwt dirty_direct_dependents =
       with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
           Dep_service.calc_unchanged_dependents workers changed_modules
       )
     in
     Hh_logger.info "Re-resolving parsed and directly dependent files";
-    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
+    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader dirty_direct_dependents in
     let%lwt resolved_requires_changed =
-      let parsed_set = FilenameSet.union parsed_set direct_dependent_files in
+      let parsed_set = FilenameSet.union parsed_set dirty_direct_dependents in
       let parsed = FilenameSet.elements parsed_set in
       resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
     in
@@ -1220,7 +1252,7 @@ end = struct
     let%lwt dependency_info =
       with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
           let files_to_update_dependency_info =
-            FilenameSet.union parsed_set direct_dependent_files
+            FilenameSet.union parsed_set dirty_direct_dependents
           in
           let%lwt partial_dependency_graph =
             Dep_service.calc_partial_dependency_graph
@@ -1242,25 +1274,6 @@ end = struct
       let to_remove = FilenameSet.union parsed deleted in
       FilenameSet.diff env.ServerEnv.unparsed to_remove |> FilenameSet.union unparsed_set
     in
-    (* during check, we will try to skip checking dependents whose dependencies haven't changed.
-       if the inputs are the same, the output should be too. however, there are a few cases that
-       require a dependent to be checked, but which aren't reflected in the updated dependency
-       graph:
-       1) resolved requires changed: e.g. foo.js used to depend on a/bar.js but now depends on
-          b/bar.js. even if b/bar.js didn't change, we still need to recheck foo.js
-       2) a file is deleted: if foo.js used to depend on bar.js, and bar.js was deleted, then
-          bar.js doesn't even appear in foo.js's dependencies to consider whether it changed.
-          TODO: shouldn't this be captured by resolved_requires_changed because foo's
-          require('bar') now resolves to nothing instead of bar.js?
-       3) a file changed from @flow to non-@flow: if foo.js depends on bar.js and bar.js removes
-          @flow, then we won't merge bar.js anymore, so it won't be in sig_new_or_changed,
-          so we won't think we need to check foo.js.
-          TODO: we should be able to track the specific files this applies to and avoid
-          skipping all direct dependents, but the win here is probably small... how often
-          do files become skipped? *)
-    let cannot_skip_direct_dependents =
-      resolved_requires_changed || deleted_count > 0 || not (FilenameSet.is_empty unparsed_set)
-    in
 
     Hh_logger.info "Updating index";
     let%lwt exports =
@@ -1281,20 +1294,19 @@ end = struct
     in
     let intermediate_values =
       ( deleted,
-        direct_dependent_files,
+        dirty_direct_dependents,
         errors,
         freshparsed,
         new_or_changed,
         unchanged_checked,
         unchanged_files_to_force,
         unchanged_files_to_upgrade,
-        unparsed_set,
-        cannot_skip_direct_dependents
+        unparsed_set
       )
     in
     Lwt.return (env, intermediate_values)
 
-  (** [direct_dependents_to_recheck ~direct_dependent_files ~focused ~dependencies] computes the
+  (** [direct_dependents_to_recheck ~dirty_direct_dependents ~focused ~dependencies] computes the
       dependent files that directly depend on its inputs. a file directly depends on another if it
       literaly has an [import].
 
@@ -1310,18 +1322,25 @@ end = struct
             D
       ```
 
-      Suppose we're rechecking B and notice that A changed unexpectedly.
+      The dirty_direct_dependents are dependents of modules which have a different provider file, or
+      whose provider file changed between parsed and unparsed.
+
+      Suppose we're rechecking B and notice that A changed unexpectedly such that its dependents are
+      dirty (e.g., A got an initial provider).
 
       focused = {B}
       dependencies = {A}
-      direct_dependent_files = { C, D }
+      dirty_direct_dependents = {C}
+
+      (Note that B is not a dirty dependent because it is also changed. Dirty dependents only
+      contains unchanged files.)
 
       The dependents of the focused updates, {B}, are {D}. These are the dependents we want to
       check. We don't want to check C right now. We want to do it when we receive the file watcher
       update for A. How do we exclude C?
 
-      Instead of using direct_dependent_files at all, we could recompute the direct dependents of
-      {B} using `implementation_dependency_graph` and get {D}. win!
+      We could recompute the direct dependents of {B} using `implementation_dependency_graph` and
+      get {D}. win!
 
       But consider this expanded graph:
 
@@ -1333,59 +1352,42 @@ end = struct
              D
       ```
 
-      What if `E` is deleted (and A is changed, as before)?
+      What if `E` is deleted (and A is changed as before)?
 
       focused = {B}
       dependencies = {A, E}
-      direct_dependent_files = {C, D, F}
+      dirty_direct_dependents = {C, F}
 
       We actually have to recheck F. We won't want to -- it's not required to recheck B -- but as
       soon as the transaction commits, all record of the E <- B and E <- F edges are gone and we
       won't know to recheck F and B when we get the deletion event about E. Maybe we could keep
       track of this, but not today.
 
-      implementation_dependency_graph doesn't contain E. Whereas before, we could recompute the
-      direct dependents of B, we can't compute the direct dependents of E.
+      implementation_dependency_graph doesn't contain E because it was deleted. Whereas before, we
+      could recompute the direct dependents of B, we can't compute the direct dependents of E.
 
-      Who knows what depended on E? direct_dependent_files!
+      Who knows what depended on E? dirty_direct_dependents!
 
-      But recall that we don't want to just use direct_dependent_files, because it includes
-      dependents of changed dependencies (C, because A changed).
+      But recall that we don't want to just use everything from dirty_direct_dependents, because it
+      might includes dependents of changed dependencies (C, because A changed).
 
       The result we're looking for is {D, F}.
 
-      - direct dependents of focused updates = { D }
-      - direct dependents of dependency updates = { B, C }
-      - direct_dependent_files = { C, D, F }
+      - direct dependents of focused updates = {D}
+      - direct dependents of dependency updates = {B, C}
+      - dirty_direct_dependents = {C, F}
 
-      It's tempting to just remove the dependents of dependencies from direct_dependent_files:
-      {C, D, F} - {B, C} = {D, F} -- win!
-
-      Not so fast. If we even further complicate the dependency graph such that D also depends on A,
-      then we get:
-
-      ```
-         E   A
-        / \ /|\
-       F   B | C
-            \|
-             D
-      ```
-
-      - direct dependents of focused updates = { D }
-      - direct dependents of dependency updates = { B, C, D }
-      - `direct_dependent_files` = { C, D, F }
-
-      { C, D, F } - { B, C, D } = { F } -- fail!
+      It's tempting to just remove the dependents of dependencies from dirty_direct_dependents:
+      {C, F} - {B, C} = {F} -- fail!
 
       So we need to add the focused dependents back in:
 
-      { D } + ({ C, D, F } - { B, C, D}) =
-      { D } + { F } =
-      { D, F }
+      {D} + ({C, F} - {B, C}) =
+      {D} + {F} =
+      {D, F}
   *)
   let direct_dependents_to_recheck
-      ~implementation_dependency_graph ~direct_dependent_files ~focused ~dependencies =
+      ~implementation_dependency_graph ~dirty_direct_dependents ~focused ~dependencies =
     (* These are all the files that literally import the files we're focusing. *)
     let focused_direct_dependents =
       Pure_dep_graph_operations.calc_direct_dependents implementation_dependency_graph focused
@@ -1401,14 +1403,14 @@ end = struct
 
        We have to compute it this way because (a) the deleted edges are already removed
        from implementation_dependency_graph, so focused_direct_dependents doesn't include
-       them, and (b) direct_dependent_files doesn't track which files a dependent depended
+       them, and (b) dirty_direct_dependents doesn't track which files a dependent depended
        on, so it doesn't tell us which files are dependents of deleted files.
 
        [1] strictly, we should also diff out focused_direct_dependents to get the orphaned
        dependents, but since we're about to union it with focused_direct_dependents, that's
        a waste. *)
     let orphaned_direct_dependents =
-      FilenameSet.diff direct_dependent_files dependency_direct_dependents
+      FilenameSet.diff dirty_direct_dependents dependency_direct_dependents
     in
     FilenameSet.union focused_direct_dependents orphaned_direct_dependents
 
@@ -1420,7 +1422,7 @@ end = struct
       ~freshparsed
       ~unchanged_checked
       ~unchanged_files_to_force
-      ~direct_dependent_files =
+      ~dirty_direct_dependents =
     let input_focused =
       FilenameSet.union
         (CheckedSet.focused freshparsed)
@@ -1447,7 +1449,7 @@ end = struct
           let implementation_dependents =
             direct_dependents_to_recheck
               ~implementation_dependency_graph
-              ~direct_dependent_files
+              ~dirty_direct_dependents
               ~focused:input_focused
               ~dependencies:input_dependencies
           in
@@ -1502,15 +1504,14 @@ end = struct
       ~intermediate_values
       ~env =
     let ( deleted,
-          direct_dependent_files,
+          dirty_direct_dependents,
           errors,
           freshparsed,
           new_or_changed,
           unchanged_checked,
           unchanged_files_to_force,
           unchanged_files_to_upgrade,
-          unparsed_set,
-          cannot_skip_direct_dependents
+          unparsed_set
         ) =
       intermediate_values
     in
@@ -1541,7 +1542,7 @@ end = struct
         ~freshparsed
         ~unchanged_checked
         ~unchanged_files_to_force
-        ~direct_dependent_files
+        ~dirty_direct_dependents
     in
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
      * include the dependencies and dependents that are being implicitly included in the recheck. *)
@@ -1607,11 +1608,10 @@ end = struct
         ~updated_suppressions
         ~coverage:env.ServerEnv.coverage
         ~to_check
-        ~direct_dependent_files
+        ~dirty_direct_dependents
         ~sig_new_or_changed
         ~dependency_info
         ~persistent_connections:(Some env.ServerEnv.connections)
-        ~cannot_skip_direct_dependents
     in
     Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
@@ -1702,7 +1702,7 @@ end = struct
         ~files_to_force
         ~env
     in
-    let (_, _, errors, _, _, _, _, _, _, _) = intermediate_values in
+    let (_, _, errors, _, _, _, _, _, _) = intermediate_values in
     Lwt.return { env with ServerEnv.errors }
 end
 
@@ -2484,11 +2484,10 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~updated_suppressions
           ~coverage:env.ServerEnv.coverage
           ~to_check
-          ~direct_dependent_files:FilenameSet.empty
+          ~dirty_direct_dependents:FilenameSet.empty
           ~sig_new_or_changed
           ~dependency_info
           ~persistent_connections:None
-          ~cannot_skip_direct_dependents:true
       in
       Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 

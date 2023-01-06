@@ -64,7 +64,7 @@ val debug_determine_what_to_recheck :
   freshparsed:CheckedSet.t ->
   unchanged_checked:CheckedSet.t ->
   unchanged_files_to_force:CheckedSet.t ->
-  direct_dependent_files:FilenameSet.t ->
+  dirty_direct_dependents:FilenameSet.t ->
   determine_what_to_recheck_result Lwt.t
 
 val debug_include_dependencies_and_dependents :

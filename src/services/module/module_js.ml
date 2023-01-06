@@ -638,7 +638,7 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
 let commit_modules ~workers ~options dirty_modules =
   let module Heap = SharedMem.NewAPI in
   let debug = Options.is_debug_mode options in
-  let f (unchanged, errmap) mname name =
+  let commit_haste (unchanged, errmap) mname name =
     let m = Parsing_heaps.get_haste_module_unsafe name in
     let provider_ent = Heap.get_haste_provider m in
     let all_providers =
@@ -679,10 +679,24 @@ let commit_modules ~workers ~options dirty_modules =
         if debug then
           prerr_endlinef "unchanged provider: %s -> %s" name (Parsing_heaps.read_file_name new_p);
         let unchanged =
-          if Heap.file_changed old_p then
+          (* Even if the module has the same provider file, we might need to
+           * treat this module as changed. Remember that we use changed modules
+           * to get the set of dirty direct dependents -- dependents which can
+           * not be found through the server env's dependency graph.
+           *
+           * Specifically, we care about parsed<->unparsed transitions.
+           * 1. Providers which were unparsed, now parsed, which had dependents
+           * 2. Providers which were parsed, now unparsed, which have dependents
+           *
+           * These dependents are not included in the server env dep graph. *)
+          let parse_ent = Heap.get_parse new_p in
+          let old_typed = Option.bind (Heap.entity_read_committed parse_ent) Heap.coerce_typed in
+          let new_typed = Option.bind (Heap.entity_read_latest parse_ent) Heap.coerce_typed in
+          match (old_typed, new_typed) with
+          | (Some _, None)
+          | (None, Some _) ->
             unchanged
-          else
-            Modulename.Set.add mname unchanged
+          | _ -> Modulename.Set.add mname unchanged
         in
         (unchanged, errmap)
       ) else (
@@ -699,10 +713,43 @@ let commit_modules ~workers ~options dirty_modules =
         (unchanged, errmap)
       )
   in
-  let f acc mname =
+  let commit_file unchanged mname file_key =
+    let get_parses key =
+      match Parsing_heaps.get_file_addr key with
+      | None -> (None, None)
+      | Some file ->
+        let ent = Heap.get_parse file in
+        (Heap.entity_read_committed ent, Heap.entity_read_latest ent)
+    in
+    let decl_key = File_key.with_suffix file_key Files.flow_ext in
+    let (old_decl_parse, new_decl_parse) = get_parses decl_key in
+    let (old_impl_parse, new_impl_parse) = get_parses file_key in
+    match (old_decl_parse, new_decl_parse, old_impl_parse, new_impl_parse) with
+    | (None, None, None, None) -> Modulename.Set.add mname unchanged
+    | (None, Some _, _, _)
+    | (Some _, None, _, _)
+    | (None, None, Some _, None)
+    | (None, None, None, Some _) ->
+      (* If the provider file was created or deleted, then we need to track any
+       * dependents, because phantom edges are not in the server env dependency
+       * graph, but any phantom dependents need to be rechecked. *)
+      unchanged
+    | (Some old_parse, Some new_parse, _, _)
+    | (None, None, Some old_parse, Some new_parse) ->
+      (* If the provider file did a parse<->unparsed transition, we need to
+       * track any dependents, because edges involving unparsed files are not in
+       * the server env dependency graph, but any dependents need to be
+       * rechecked. *)
+      (match (Heap.coerce_typed old_parse, Heap.coerce_typed new_parse) with
+      | (Some _, None)
+      | (None, Some _) ->
+        unchanged
+      | _ -> Modulename.Set.add mname unchanged)
+  in
+  let f ((unchanged, errmap) as acc) mname =
     match mname with
-    | Modulename.String name -> f acc mname name
-    | Modulename.Filename _ -> acc
+    | Modulename.String name -> commit_haste acc mname name
+    | Modulename.Filename key -> (commit_file unchanged mname key, errmap)
   in
   let%lwt (unchanged, duplicate_providers) =
     MultiWorkerLwt.call
