@@ -241,7 +241,9 @@ let mk_check_file (module Reader : READER) ~options ~cache () =
    * dependencies, we will create a "sig tvar" with a lazy thunk that evaluates
    * to a ModuleT type. *)
   let rec dep_module_t cx mref = function
-    | Error m -> unknown_module_t cx mref (Modulename.String m)
+    | Error mapped_name ->
+      let m = Option.value mapped_name ~default:mref in
+      unknown_module_t cx mref (Modulename.String m)
     | Ok m ->
       (match Reader.get_provider m with
       | None -> unknown_module_t cx mref m

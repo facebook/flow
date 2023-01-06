@@ -84,7 +84,7 @@ type dependency_addr = Heap.dependency SharedMem.addr
 
 type resolved_module_addr = Heap.resolved_module SharedMem.addr
 
-type resolved_module = (Modulename.t, string) Result.t
+type resolved_module = (Modulename.t, string option) Result.t
 
 type resolved_requires = resolved_module array * Modulename.Set.t
 
@@ -280,7 +280,7 @@ let read_dependency =
 let read_resolved_module addr =
   match Heap.read_resolved_module addr with
   | Ok dependency -> Ok (read_dependency dependency)
-  | Error name -> Error (Heap.read_string name)
+  | Error mapped_name -> Error (Option.map Heap.read_string mapped_name)
 
 let read_resolved_modules resolved_requires : resolved_module array =
   let addr = Heap.get_resolved_modules resolved_requires in
@@ -404,7 +404,8 @@ let prepare_write_resolved_modules resolved_modules =
       (prepare_find_or_add_haste_module name :> resolved_module_addr Heap.prep)
     | Ok (Modulename.Filename key) ->
       (prepare_find_or_add_phantom_file key :> resolved_module_addr Heap.prep)
-    | Error name -> (Heap.prepare_write_string name :> resolved_module_addr Heap.prep)
+    | Error None -> Heap.prepare_const (SharedMem.null_addr :> resolved_module_addr)
+    | Error (Some name) -> (Heap.prepare_write_string name :> resolved_module_addr Heap.prep)
   in
   Array.map f resolved_modules |> Heap.prepare_write_addr_tbl
 

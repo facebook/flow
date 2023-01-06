@@ -21,7 +21,7 @@ type provider_addr = [ `file ] SharedMem.NewAPI.entity SharedMem.addr
 
 type resolved_requires_addr = [ `resolved_requires ] SharedMem.addr
 
-type resolved_module = (Modulename.t, string) Result.t
+type resolved_module = (Modulename.t, string option) Result.t
 
 type resolved_requires = resolved_module array * Modulename.Set.t
 

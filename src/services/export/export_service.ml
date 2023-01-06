@@ -64,8 +64,8 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
         let name = import.export in
         let acc = Export_index.add name Export_index.Global Export_index.NamedType acc in
         Export_index.add name Export_index.Global Export_index.Named acc
-      | Unresolved_source string ->
-        let result = SMap.find_opt string resolved_modules in
+      | Unresolved_source mref ->
+        let result = SMap.find_opt mref resolved_modules in
         (match result with
         | Some (Ok module_name) ->
           let (source, module_name) = (module_name, string_of_modulename module_name) in
@@ -87,16 +87,17 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
               let file_key = File_key (Parsing_heaps.read_file_key file) in
               Export_index.add name file_key kind acc
             | None -> acc))
-        | Some (Error string) ->
+        | Some (Error mapped_name) ->
+          let mref = Option.value mapped_name ~default:mref in
           let (kind, name) =
             match import.Imports.kind with
-            | Imports.Default -> (Export_index.Default, string)
+            | Imports.Default -> (Export_index.Default, mref)
             | Imports.Named -> (Export_index.Named, import.export)
-            | Imports.Namespace -> (Export_index.Namespace, string)
+            | Imports.Namespace -> (Export_index.Namespace, mref)
             | Imports.NamedType -> (Export_index.NamedType, import.export)
             | Imports.Unknown -> failwith "Unknown Kind"
           in
-          Export_index.add name (Builtin string) kind acc
+          Export_index.add name (Builtin mref) kind acc
         | None ->
           (*Could not find resolved_requires key for this unresolved_source*)
           acc)

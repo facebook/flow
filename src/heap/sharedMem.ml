@@ -820,6 +820,7 @@ module NewAPI = struct
     [ `haste_module
     | `file
     | `string
+    | `null
     ]
 
   type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
@@ -1792,20 +1793,23 @@ module NewAPI = struct
       Printf.ksprintf failwith "read_dependency: unexpected tag (%d)" tag
 
   let read_resolved_module addr =
-    let hd = read_header (get_heap ()) addr in
-    let tag = obj_tag hd in
-    if tag = tag_val String_tag then
-      Error addr
-    else if
-      tag = tag_val Haste_module_tag
-      || tag = tag_val Source_file_tag
-      || tag = tag_val Json_file_tag
-      || tag = tag_val Resource_file_tag
-      || tag = tag_val Lib_file_tag
-    then
-      Ok addr
+    if addr == null_addr then
+      Error None
     else
-      Printf.ksprintf failwith "read_resolved_module: unexpected tag (%d)" tag
+      let hd = read_header (get_heap ()) addr in
+      let tag = obj_tag hd in
+      if tag = tag_val String_tag then
+        Error (Some addr)
+      else if
+        tag = tag_val Haste_module_tag
+        || tag = tag_val Source_file_tag
+        || tag = tag_val Json_file_tag
+        || tag = tag_val Resource_file_tag
+        || tag = tag_val Lib_file_tag
+      then
+        Ok addr
+      else
+        Printf.ksprintf failwith "read_resolved_module: unexpected tag (%d)" tag
 
   (** Imports *)
 

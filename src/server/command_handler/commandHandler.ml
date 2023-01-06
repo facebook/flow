@@ -856,7 +856,9 @@ let get_imports ~options ~reader module_names =
               let mname =
                 match SMap.find mref resolved_modules with
                 | Ok m -> m
-                | Error name -> Modulename.String name
+                | Error mapped_name ->
+                  let name = Option.value mapped_name ~default:mref in
+                  Modulename.String name
               in
               Modulename.Map.add mname locs acc)
             requires

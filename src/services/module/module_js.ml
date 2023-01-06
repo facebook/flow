@@ -74,7 +74,7 @@ let module_name_candidates ~options name =
       else
         new_name :: mapped_names
     in
-    let candidates = List.rev (name :: List.fold_left map_name [] mappers) in
+    let candidates = Nel.rev (name, List.fold_left map_name [] mappers) in
     Hashtbl.add module_name_candidates_cache name candidates;
     candidates
 
@@ -341,13 +341,21 @@ module Node = struct
         ]
 
   let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
+    let candidates = module_name_candidates ~options r in
     match
       List.find_map
         (resolve_import ~options ~reader node_modules_containers file ?phantom_acc)
-        (module_name_candidates ~options r)
+        (Nel.to_list candidates)
     with
     | Some m -> Ok m
-    | None -> Error r
+    | None ->
+      (* For the Node module system, we always use the original unmapped name in
+       * error messages, so we never need to store a mapped name.
+       *
+       * TODO: This means that name mappers can not force a mapped module name
+       * to resolve to a libdef, since we try to resolve to libdef modules
+       * during check in the `Error _` case. *)
+      Error None
 
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
@@ -482,10 +490,20 @@ module Haste : MODULE_SYSTEM = struct
     (* For historical reasons, the Haste module system always picks the first
      * matching candidate, unlike the Node module system which picks the first
      * "valid" matching candidate. *)
-    let r = List.hd (module_name_candidates ~options r) in
+    let candidates = module_name_candidates ~options r in
+    let r = Nel.hd candidates in
     match resolve_import ~options ~reader node_modules_containers file ?phantom_acc r with
     | Some m -> Ok m
-    | None -> Error r
+    | None ->
+      (* If the candidates list is a singleton, then no name mappers applied,
+       * and we failed to resolve the unmapped name. Otherwise, `r` is the
+       * chosen mapped name and we store it for error reporting. *)
+      let mapped_name =
+        match Nel.tl candidates with
+        | [] -> None
+        | _ -> Some r
+      in
+      Error mapped_name
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as

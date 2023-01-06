@@ -20,6 +20,8 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
  * passed where a `bar addr` is expected. *)
 type +'k addr [@@immediate]
 
+val null_addr : [ `null ] addr
+
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -197,6 +199,7 @@ module NewAPI : sig
     [ `haste_module
     | `file
     | `string
+    | `null
     ]
 
   type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
@@ -320,7 +323,8 @@ module NewAPI : sig
   val read_dependency :
     ([ `haste_module ] addr -> 'a) -> ([ `file ] addr -> 'a) -> dependency addr -> 'a
 
-  val read_resolved_module : resolved_module addr -> (dependency addr, [ `string ] addr) Result.t
+  val read_resolved_module :
+    resolved_module addr -> (dependency addr, [ `string ] addr option) Result.t
 
   (* imports *)
 
