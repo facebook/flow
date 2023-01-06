@@ -41,7 +41,7 @@ val add_parsed_resolved_requires :
   options:Options.t ->
   node_modules_containers:SSet.t SMap.t ->
   File_key.t ->
-  bool
+  unit
 
 type package_incompatible_reason =
   | New

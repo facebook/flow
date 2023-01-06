@@ -24,7 +24,6 @@ type resolved_module = (Modulename.t, string) Result.t
 type resolved_requires = {
   resolved_modules: resolved_module SMap.t;
   phantom_dependencies: Modulename.Set.t;
-  hash: Xx.hash;
 }
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
@@ -229,7 +228,7 @@ module Resolved_requires_mutator : sig
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> t
 
-  val add_resolved_requires : t -> file_addr -> [ `typed ] parse_addr -> resolved_requires -> bool
+  val add_resolved_requires : t -> file_addr -> [ `typed ] parse_addr -> resolved_requires -> unit
 end
 
 module Merge_context_mutator : sig

@@ -191,7 +191,7 @@ end = struct
     loop 0 saved_state_version_length
 
   let normalize_resolved_requires
-      ~normalizer { Parsing_heaps.resolved_modules; phantom_dependencies; hash } =
+      ~normalizer { Parsing_heaps.resolved_modules; phantom_dependencies } =
     let phantom_dependencies =
       Modulename.Set.map
         (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
@@ -202,7 +202,7 @@ end = struct
         (resolved_module_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
-    { Parsing_heaps.resolved_modules; phantom_dependencies; hash }
+    { Parsing_heaps.resolved_modules; phantom_dependencies }
 
   let normalize_file_data ~normalizer { resolved_requires; exports; hash; imports; cas_digest } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
@@ -515,8 +515,7 @@ end = struct
       else
         Lwt.return (assert_version version)
 
-  let denormalize_resolved_requires
-      ~root { Parsing_heaps.resolved_modules; phantom_dependencies; hash = _ } =
+  let denormalize_resolved_requires ~root { Parsing_heaps.resolved_modules; phantom_dependencies } =
     (* We do our best to avoid reading the file system (which Path.make will do) *)
     let phantom_dependencies =
       Modulename.Set.map

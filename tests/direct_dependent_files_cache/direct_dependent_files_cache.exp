@@ -54,7 +54,6 @@ References:
 
 Found 1 error
 
- Resolved requires are unchanged
 
 == Restore unrelated.js and back to 2 errors ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
@@ -91,7 +90,6 @@ References:
 
 Found 2 errors
 
- Resolved requires changed
 
 == Delete src/node_modules/dependency.js changes an error ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
@@ -128,7 +126,6 @@ References:
 
 Found 2 errors
 
- Resolved requires changed
 
 == Restore src/node_modules/dependency.js change it back ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
@@ -165,7 +162,6 @@ References:
 
 Found 2 errors
 
- Resolved requires changed
 
 == Remove the import from dependent.js ==
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
@@ -185,7 +181,6 @@ References:
 
 Found 1 error
 
- Resolved requires changed
 
 == Add the import back to dependent.js ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
@@ -222,7 +217,6 @@ References:
 
 Found 2 errors
 
- Resolved requires changed
 
 == Adding code that doesn't import has no effect on dep graph ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
@@ -259,4 +253,3 @@ References:
 
 Found 2 errors
 
- Resolved requires are unchanged

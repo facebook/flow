@@ -83,7 +83,6 @@ type resolved_module = (Modulename.t, string) Result.t
 type resolved_requires = {
   resolved_modules: resolved_module SMap.t;
   phantom_dependencies: Modulename.Set.t;
-  hash: Xx.hash;
 }
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
@@ -91,23 +90,7 @@ type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 let ( let* ) = Option.bind
 
 let mk_resolved_requires ~resolved_modules ~phantom_dependencies =
-  let state = Xx.init 0L in
-  SMap.iter
-    (fun mref resolved_module ->
-      Xx.update_int state (String.length mref);
-      Xx.update state mref;
-      match resolved_module with
-      | Ok mname ->
-        Xx.update_int state 0;
-        Xx.update state (Modulename.to_string mname)
-      | Error name ->
-        Xx.update_int state 1;
-        Xx.update state name)
-    resolved_modules;
-  Modulename.Set.iter
-    (fun mname -> Xx.update state (Modulename.to_string mname))
-    phantom_dependencies;
-  { resolved_modules; phantom_dependencies; hash = Xx.digest state }
+  { resolved_modules; phantom_dependencies }
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
@@ -535,6 +518,10 @@ let prepare_update_revdeps =
       (Heap.prepare_const (fun _ -> ()))
       (old_dependencies, new_dependencies)
 
+let resolved_requires_equal a b =
+  SMap.equal ( = ) a.resolved_modules b.resolved_modules
+  && Modulename.Set.equal a.phantom_dependencies b.phantom_dependencies
+
 (** The writer returns whether the resolved requires changed. *)
 let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt =
   let old_resolved_requires =
@@ -545,9 +532,10 @@ let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt 
     Some (read_resolved_requires addr)
   in
   match (old_resolved_requires, resolved_requires_opt) with
-  | (Some { hash = old_hash; _ }, Some { hash = new_hash; _ }) when Int64.equal old_hash new_hash ->
-    Heap.prepare_const (fun _ _ -> false)
-  | (None, None) -> Heap.prepare_const (fun _ _ -> false)
+  | (None, None) -> Heap.prepare_const (fun _ _ -> ())
+  | (Some old_resolved_requires, Some new_resolved_requires)
+    when resolved_requires_equal old_resolved_requires new_resolved_requires ->
+    Heap.prepare_const (fun _ _ -> ())
   | _ ->
     let+ update_revdeps = prepare_update_revdeps old_resolved_requires resolved_requires_opt
     and+ resolved_requires_opt =
@@ -566,9 +554,7 @@ let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt 
       Option.iter
         (fun resolved_requires_ent ->
           Heap.entity_advance resolved_requires_ent resolved_requires_opt)
-        resolved_requires_ent_opt;
-
-      true
+        resolved_requires_ent_opt
 
 let prepare_create_file file_key module_name resolved_requires_opt =
   let open Heap in
@@ -594,7 +580,7 @@ let prepare_create_file file_key module_name resolved_requires_opt =
     let file = file file_name parse_ent haste_ent dependents in
     let file' = FileHeap.add file_key file in
     if file = file' then
-      let _did_change : bool = update_resolved_requires file parse in
+      let () = update_resolved_requires file parse in
       calc_dirty_modules file_key file haste_ent
     else
       let parse_ent' = get_parse file' in
@@ -604,7 +590,7 @@ let prepare_create_file file_key module_name resolved_requires_opt =
         let haste_ent' = get_haste_info file' in
         entity_advance parse_ent' (Some parse);
         entity_advance haste_ent' haste_info;
-        let _did_change : bool = update_resolved_requires file parse in
+        let () = update_resolved_requires file parse in
         calc_dirty_modules file_key file' haste_ent'
       | Some _ ->
         (* Two threads raced to add this file and the other thread won. We don't
@@ -624,14 +610,14 @@ let prepare_update_file file_key file parse_ent module_name resolved_requires_op
   let+ () = prepare_update_haste_info_if_changed haste_ent module_name
   and+ update_resolved_requires =
     match resolved_requires_opt_opt with
-    | None -> prepare_const (fun _ _ -> false)
+    | None -> prepare_const (fun _ _ -> ())
     | Some resolved_requires_opt ->
       let old_parse = entity_read_latest parse_ent in
       prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt
   in
   fun parse ->
     entity_advance parse_ent (Some parse);
-    let _did_change : bool = update_resolved_requires file parse in
+    let () = update_resolved_requires file parse in
     calc_dirty_modules file_key file haste_ent
 
 let prepare_set_opt prepare_write setter opt =
@@ -749,11 +735,11 @@ let prepare_add_checked_file
            have to update them even though this file is unchanged. *)
         let+ update_resolved_requires =
           match resolved_requires_opt_opt with
-          | None -> prepare_const (fun _ _ -> false)
+          | None -> prepare_const (fun _ _ -> ())
           | Some resolved_requires_opt ->
             prepare_update_resolved_requires_if_changed (Some parse) resolved_requires_opt
         and+ set_parse_data = prepare_set_parse_data () in
-        let _did_change : bool = update_resolved_requires file parse in
+        let () = update_resolved_requires file parse in
         let () = set_parse_data parse in
         let () = clear_leader () in
         MSet.empty

@@ -133,21 +133,16 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
   with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
       MultiWorkerLwt.call
         workers
-        ~job:
-          (List.fold_left (fun acc filename ->
-               let changed =
-                 Module_js.add_parsed_resolved_requires
-                   filename
-                   ~mutator
-                   ~reader
-                   ~options
-                   ~node_modules_containers
-               in
-               acc || changed
-           )
-          )
-        ~neutral:false
-        ~merge:( || )
+        ~job:(fun () ->
+          List.iter
+            (Module_js.add_parsed_resolved_requires
+               ~mutator
+               ~reader
+               ~options
+               ~node_modules_containers
+            ))
+        ~neutral:()
+        ~merge:(fun () () -> ())
         ~next:(MultiWorkerLwt.next workers parsed)
   )
 
@@ -1236,16 +1231,11 @@ end = struct
     in
     Hh_logger.info "Re-resolving parsed and directly dependent files";
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader dirty_direct_dependents in
-    let%lwt resolved_requires_changed =
+    let%lwt () =
       let parsed_set = FilenameSet.union parsed_set dirty_direct_dependents in
       let parsed = FilenameSet.elements parsed_set in
       resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
     in
-
-    if resolved_requires_changed then
-      Hh_logger.info "Resolved requires changed"
-    else
-      Hh_logger.info "Resolved requires are unchanged";
 
     Hh_logger.info "Recalculating dependency graph";
     let parsed = FilenameSet.union parsed_set unchanged in
@@ -2245,7 +2235,7 @@ let init_from_scratch ~profiling ~workers options =
   let%lwt (_changed_modules, duplicate_providers) =
     commit_modules ~options ~profiling ~workers ~duplicate_providers:SMap.empty dirty_modules
   in
-  let%lwt _resolved_requires_changed =
+  let%lwt () =
     resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
   in
   let%lwt dependency_info =
