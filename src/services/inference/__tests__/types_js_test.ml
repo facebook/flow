@@ -137,20 +137,6 @@ let determine_what_to_recheck
   let freshparsed = prepare_freshparsed freshparsed in
   let options = make_options () in
   let unchanged_checked = make_unchanged_checked checked_files freshparsed in
-  (* This approximates the behavior of Dep_service.calc_direct_dependents. As of October 2019, it
-   * includes all direct dependents, not just sig direct dependents. If
-   * Dep_service.calc_direct_dependents changes, this should change too so that these tests more
-   * accurately reflect reality. *)
-  let direct_dependent_files =
-    FilenameGraph.fold
-      (fun file deps acc ->
-        if FilenameSet.exists (fun x -> CheckedSet.mem x freshparsed) deps then
-          FilenameSet.add file acc
-        else
-          acc)
-      implementation_dependency_graph
-      FilenameSet.empty
-  in
   Types_js.debug_determine_what_to_recheck
     ~profiling
     ~options
@@ -159,7 +145,7 @@ let determine_what_to_recheck
     ~freshparsed
     ~unchanged_checked
     ~unchanged_files_to_force:CheckedSet.empty
-    ~direct_dependent_files
+    ~direct_dependent_files:FilenameSet.empty
 
 let include_dependencies_and_dependents
     ~profiling
