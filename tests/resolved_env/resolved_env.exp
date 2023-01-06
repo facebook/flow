@@ -35,8 +35,8 @@ Cannot yield `42` because number [1] is incompatible with `$AsyncIterable` [2]. 
                                    ^^ [1]
 
 References:
-   <BUILTINS>/core.js:1695:11
-   1695| interface $AsyncIterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1701:11
+   1701| interface $AsyncIterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^^^^^^ [2]
 
 

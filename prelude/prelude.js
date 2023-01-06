@@ -27,7 +27,9 @@ declare class $ReadOnlyArray<+T> {
   @@iterator(): Iterator<T>;
 }
 
-declare class Array<T> extends $ReadOnlyArray<T> {}
+declare class Array<T> extends $ReadOnlyArray<T> {
+  constructor(arrayLength?: number): void;
+}
 
 type $ArrayLike<T> = {
   [indexer: number]: T,
