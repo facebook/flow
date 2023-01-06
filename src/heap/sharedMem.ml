@@ -55,7 +55,6 @@ type tag =
   (* tags defined above this point are serialized+compressed *)
   | Serialized_tag (* 20 -- see Serialized_tag in hh_shared.c *)
   | Serialized_resolved_modules_tag
-  | Serialized_phantom_dependencies_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
   | Serialized_exports_tag
@@ -812,6 +811,11 @@ module NewAPI = struct
   type 'k sknode = [ `sknode of 'k ]
 
   type 'k tbl = [ `tbl of 'k ]
+
+  type dependency =
+    [ `haste_module
+    | `file
+    ]
 
   type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
 
@@ -1753,11 +1757,6 @@ module NewAPI = struct
 
   let read_resolved_modules addr = read_compressed Serialized_resolved_modules_tag addr
 
-  let prepare_write_serialized_phantom_dependencies phantom_dependencies =
-    prepare_write_compressed Serialized_phantom_dependencies_tag phantom_dependencies
-
-  let read_phantom_dependencies addr = read_compressed Serialized_phantom_dependencies_tag addr
-
   let resolved_requires_size = 2 * addr_size
 
   let prepare_write_resolved_requires =
@@ -1776,6 +1775,21 @@ module NewAPI = struct
   let get_resolved_modules = get_generic resolved_modules_addr
 
   let get_phantom_dependencies = get_generic phantom_dependencies_addr
+
+  let read_dependency on_haste_module on_file addr =
+    let hd = read_header (get_heap ()) addr in
+    let tag = obj_tag hd in
+    if tag = tag_val Haste_module_tag then
+      on_haste_module addr
+    else if
+      tag = tag_val Source_file_tag
+      || tag = tag_val Json_file_tag
+      || tag = tag_val Resource_file_tag
+      || tag = tag_val Lib_file_tag
+    then
+      on_file addr
+    else
+      Printf.ksprintf failwith "read_dependency: unexpected tag (%d)" tag
 
   (** Imports *)
 
@@ -2024,7 +2038,7 @@ module NewAPI = struct
     else if tag = tag_val Lib_file_tag then
       Lib_file
     else
-      failwith "get_file_kind: unexpected tag"
+      Printf.ksprintf failwith "get_file_kind: unexpected tag (%d)" tag
 
   let get_file_name = get_generic file_name_addr
 

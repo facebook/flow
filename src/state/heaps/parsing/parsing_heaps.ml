@@ -80,6 +80,8 @@ type provider_addr = [ `file ] Heap.entity SharedMem.addr
 
 type resolved_requires_addr = [ `resolved_requires ] SharedMem.addr
 
+type dependency_addr = Heap.dependency SharedMem.addr
+
 type resolved_module = (Modulename.t, string) Result.t
 
 type resolved_requires = resolved_module array * Modulename.Set.t
@@ -271,9 +273,24 @@ let read_resolved_modules resolved_requires : resolved_module array =
   let addr = Heap.get_resolved_modules resolved_requires in
   Marshal.from_string (Heap.read_resolved_modules addr) 0
 
+let read_dependency =
+  let open Heap in
+  read_dependency
+    (fun addr -> Modulename.String (get_haste_name addr |> read_string))
+    (fun addr -> Modulename.Filename (read_file_key addr))
+
 let read_phantom_dependencies resolved_requires : Modulename.Set.t =
   let addr = Heap.get_phantom_dependencies resolved_requires in
-  Marshal.from_string (Heap.read_phantom_dependencies addr) 0
+  let init n f =
+    let i = ref 0 in
+    let f () =
+      let addr = f !i in
+      incr i;
+      addr
+    in
+    Modulename.Set.of_increasing_iterator_unchecked f n
+  in
+  Heap.read_addr_tbl_generic read_dependency addr init
 
 let read_resolved_requires resolved_requires =
   (read_resolved_modules resolved_requires, read_phantom_dependencies resolved_requires)
@@ -374,14 +391,27 @@ let prepare_write_file_sig (file_sig : File_sig.With_Loc.tolerable_t) =
 let prepare_write_imports (imports : Imports.t) =
   Marshal.to_string imports [] |> Heap.prepare_write_serialized_imports
 
+let prepare_write_phantom_dependencies phantom_dependencies =
+  let f mname acc =
+    let prep =
+      match mname with
+      | Modulename.String name ->
+        (prepare_find_or_add_haste_module name :> dependency_addr Heap.prep)
+      | Modulename.Filename key ->
+        (prepare_find_or_add_phantom_file key :> dependency_addr Heap.prep)
+    in
+    prep :: acc
+  in
+  Modulename.Set.fold f phantom_dependencies []
+  |> List.rev
+  |> Array.of_list
+  |> Heap.prepare_write_addr_tbl
+
 let prepare_write_resolved_requires ((resolved_modules, phantom_dependencies) : resolved_requires) =
   let serialized_resolved_modules = Marshal.to_string resolved_modules [] in
-  let serialized_phantom_dependencies = Marshal.to_string phantom_dependencies [] in
   let+ write_resolved_requires = Heap.prepare_write_resolved_requires
   and+ resolved_modules = Heap.prepare_write_serialized_resolved_modules serialized_resolved_modules
-  and+ phantom_dependencies =
-    Heap.prepare_write_serialized_phantom_dependencies serialized_phantom_dependencies
-  in
+  and+ phantom_dependencies = prepare_write_phantom_dependencies phantom_dependencies in
   write_resolved_requires resolved_modules phantom_dependencies
 
 let prepare_write_type_sig type_sig =

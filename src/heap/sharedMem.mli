@@ -188,6 +188,11 @@ module NewAPI : sig
 
   type 'k tbl = [ `tbl of 'k ]
 
+  type dependency =
+    [ `haste_module
+    | `file
+    ]
+
   type entity_reader = { read: 'a. 'a entity addr -> 'a addr option } [@@unboxed]
 
   (* Before writing to the heap, we first calculate the required size (in words)
@@ -301,20 +306,17 @@ module NewAPI : sig
 
   val read_resolved_modules : [ `resolved_modules ] addr -> string
 
-  val prepare_write_serialized_phantom_dependencies :
-    string -> size * (chunk -> [ `phantom_dependencies ] addr)
-
-  val read_phantom_dependencies : [ `phantom_dependencies ] addr -> string
-
   val resolved_requires_size : size
 
   val prepare_write_resolved_requires :
-    ([ `resolved_modules ] addr -> [ `phantom_dependencies ] addr -> [ `resolved_requires ] addr)
-    prep
+    ([ `resolved_modules ] addr -> dependency tbl addr -> [ `resolved_requires ] addr) prep
 
   val get_resolved_modules : [ `resolved_requires ] addr -> [ `resolved_modules ] addr
 
-  val get_phantom_dependencies : [ `resolved_requires ] addr -> [ `phantom_dependencies ] addr
+  val get_phantom_dependencies : [ `resolved_requires ] addr -> dependency tbl addr
+
+  val read_dependency :
+    ([ `haste_module ] addr -> 'a) -> ([ `file ] addr -> 'a) -> dependency addr -> 'a
 
   (* imports *)
 
