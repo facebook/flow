@@ -18,7 +18,7 @@ function f<XXX>(): XXX {
     return h;
 }
 
->>> implicit_instantiation.js (#changes: 5)
+>>> implicit_instantiation.js (#changes: 6)
 //@flow
 import type { Opaque } from "./opaque";import {x} from './opaque';
 declare function f<T>(): {x: T}
@@ -47,6 +47,8 @@ e[0] = (0: typeof non_exported_return_type);
 
 declare function useBound<F: () => void>(): F;
 useBound<() => void>(); // () => void
+
+(new Array<string>(1)).fill(""); // Add <string>
 
 >>> partial.js (#changes: 1)
 //@flow
@@ -81,8 +83,8 @@ x.current = 3;
 
 Stats:
   Files changed:                            6
-  Number of annotations added:             10
-  Total size of annotations:               12
+  Number of annotations added:             11
+  Total size of annotations:               13
 
 Errors:
   Missing annot./normalizer error:          0

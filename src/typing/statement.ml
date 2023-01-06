@@ -2564,21 +2564,26 @@ module Make
         let reason = mk_reason (RCustom "new Array(..)") loc in
         let length_reason = replace_desc_reason (RCustom "array length") reason in
         Flow.flow_t cx (arg_t, DefT (length_reason, bogus_trust (), NumT AnyLiteral));
-        let (t, targs) =
+        let (targ_ts, targs_ast) =
           match targ_t with
-          | Some (loc, ast, ExplicitArg t) -> (t, Some (loc, ast))
+          | Some (loc, ast, ExplicitArg t) -> (Some [ExplicitArg t], Some (loc, ast))
           | Some (_, _, ImplicitArg _)
           | None ->
-            let element_reason = replace_desc_reason (RCustom "array element") reason in
-            (Tvar.mk cx element_reason, None)
+            (None, None)
         in
         let id_t = identifier cx name callee_loc in
-        (* TODO - tuple_types could be undefined x N if given a literal *)
-        ( (loc, DefT (reason, bogus_trust (), ArrT (ArrayAT (t, None)))),
+        let reason_call = mk_reason (RConstructorCall (desc_of_t id_t)) loc in
+        let use_op =
+          Op
+            (FunCall
+               { op = reason; fn = reason_of_t id_t; args = [reason_of_t arg_t]; local = true }
+            )
+        in
+        ( (loc, new_call cx loc reason_call ~use_op id_t targ_ts [Arg arg_t]),
           New
             {
               New.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
-              targs;
+              targs = targs_ast;
               arguments = args;
               comments;
             }

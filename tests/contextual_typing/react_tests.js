@@ -10,9 +10,9 @@ function ref_tests() {
 }
 
 function cannot_resolve_name_regression_tests() {
-  <div>{new Array(1)}</div>; // ok
-  <fbs>{new Array(1)}</fbs>; // ok
-  <fbt>{new Array(1)}</fbt>; // ok
+  <div>{new Array<number>(1)}</div>; // ok
+  <fbs>{new Array<number>(1)}</fbs>; // ok
+  <fbt>{new Array<number>(1)}</fbt>; // ok
 }
 
 function react_abstract_component_subtyping() {
