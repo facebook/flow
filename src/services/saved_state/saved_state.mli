@@ -7,7 +7,8 @@
 
 type denormalized_file_data = {
   requires: string array;
-  resolved_requires: Parsing_heaps.resolved_requires;
+  resolved_modules: Parsing_heaps.resolved_module array;
+  phantom_dependencies: Modulename.Set.t;
   exports: Exports.t;
   hash: Xx.hash;
   imports: Imports.t;

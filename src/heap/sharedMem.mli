@@ -297,9 +297,24 @@ module NewAPI : sig
 
   (* resolved requires *)
 
-  val prepare_write_serialized_resolved_requires : string -> [ `resolved_requires ] addr prep
+  val prepare_write_serialized_resolved_modules : string -> [ `resolved_modules ] addr prep
 
-  val read_resolved_requires : [ `resolved_requires ] addr -> string
+  val read_resolved_modules : [ `resolved_modules ] addr -> string
+
+  val prepare_write_serialized_phantom_dependencies :
+    string -> size * (chunk -> [ `phantom_dependencies ] addr)
+
+  val read_phantom_dependencies : [ `phantom_dependencies ] addr -> string
+
+  val resolved_requires_size : size
+
+  val prepare_write_resolved_requires :
+    ([ `resolved_modules ] addr -> [ `phantom_dependencies ] addr -> [ `resolved_requires ] addr)
+    prep
+
+  val get_resolved_modules : [ `resolved_requires ] addr -> [ `resolved_modules ] addr
+
+  val get_phantom_dependencies : [ `resolved_requires ] addr -> [ `phantom_dependencies ] addr
 
   (* imports *)
 

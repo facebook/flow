@@ -43,8 +43,9 @@ type tag =
   | Lib_file_tag
   | Haste_module_tag
   | Sklist_tag
+  | Resolved_requires_tag
   (* tags defined below this point are scanned for pointers *)
-  | String_tag (* 12 -- see Heap_string_tag in hh_shared.c *)
+  | String_tag (* 13 -- see Heap_string_tag in hh_shared.c *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
@@ -52,8 +53,9 @@ type tag =
   | Type_sig_tag
   | Cas_digest_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 19 -- see Serialized_tag in hh_shared.c *)
-  | Serialized_resolved_requires_tag
+  | Serialized_tag (* 20 -- see Serialized_tag in hh_shared.c *)
+  | Serialized_resolved_modules_tag
+  | Serialized_phantom_dependencies_tag
   | Serialized_ast_tag
   | Serialized_file_sig_tag
   | Serialized_exports_tag
@@ -68,8 +70,8 @@ let tag_val : tag -> int = Obj.magic
 (* double-check integer values are consistent with hh_shared.c *)
 let () =
   assert (tag_val Entity_tag = 0);
-  assert (tag_val String_tag = 12);
-  assert (tag_val Serialized_tag = 19)
+  assert (tag_val String_tag = 13);
+  assert (tag_val Serialized_tag = 20)
 
 (* Addresses are relative to the hashtbl pointer, so the null address actually
  * points to the hash field of the first hashtbl entry, which is never a
@@ -1746,10 +1748,34 @@ module NewAPI = struct
 
   (** Resolved requires *)
 
-  let prepare_write_serialized_resolved_requires resolved_requires =
-    prepare_write_compressed Serialized_resolved_requires_tag resolved_requires
+  let prepare_write_serialized_resolved_modules resolved_modules =
+    prepare_write_compressed Serialized_resolved_modules_tag resolved_modules
 
-  let read_resolved_requires addr = read_compressed Serialized_resolved_requires_tag addr
+  let read_resolved_modules addr = read_compressed Serialized_resolved_modules_tag addr
+
+  let prepare_write_serialized_phantom_dependencies phantom_dependencies =
+    prepare_write_compressed Serialized_phantom_dependencies_tag phantom_dependencies
+
+  let read_phantom_dependencies addr = read_compressed Serialized_phantom_dependencies_tag addr
+
+  let resolved_requires_size = 2 * addr_size
+
+  let prepare_write_resolved_requires =
+    let write chunk resolved_modules phantom_dependencies =
+      let addr = write_header chunk Resolved_requires_tag resolved_requires_size in
+      unsafe_write_addr chunk resolved_modules;
+      unsafe_write_addr chunk phantom_dependencies;
+      addr
+    in
+    (header_size + resolved_requires_size, write)
+
+  let resolved_modules_addr resolved_requires = addr_offset resolved_requires 1
+
+  let phantom_dependencies_addr resolved_requires = addr_offset resolved_requires 2
+
+  let get_resolved_modules = get_generic resolved_modules_addr
+
+  let get_phantom_dependencies = get_generic phantom_dependencies_addr
 
   (** Imports *)
 

@@ -545,32 +545,22 @@ let choose_provider ~options m files errmap =
 (***** public *****)
 (******************)
 
-(** Resolve references to required modules in a file, and record the results.
-
-    TODO [perf]: measure size and possibly optimize *)
-let resolved_requires_of ~options ~reader node_modules_containers file requires =
-  let phantom_acc = ref Modulename.Set.empty in
-  let resolved_modules =
-    Array.map
-      (fun mref -> imported_module file mref ~options ~reader ~node_modules_containers ~phantom_acc)
-      requires
-  in
-  let phantom_dependencies = !phantom_acc in
-  Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
-
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in
   let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
   let requires = Parsing_heaps.read_requires parse in
-  let resolved_requires =
+  let phantom_acc = ref Modulename.Set.empty in
+  let resolved_modules =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    resolved_requires_of ~options ~reader node_modules_containers file requires
+    Array.map
+      (fun mref -> imported_module file mref ~options ~reader ~node_modules_containers ~phantom_acc)
+      requires
   in
   Parsing_heaps.Resolved_requires_mutator.add_resolved_requires
     mutator
     file_addr
     parse
-    resolved_requires
+    (resolved_modules, !phantom_acc)
 
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.

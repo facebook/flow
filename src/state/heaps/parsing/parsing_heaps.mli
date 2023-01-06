@@ -19,19 +19,13 @@ type haste_module_addr = [ `haste_module ] SharedMem.addr
 
 type provider_addr = [ `file ] SharedMem.NewAPI.entity SharedMem.addr
 
+type resolved_requires_addr = [ `resolved_requires ] SharedMem.addr
+
 type resolved_module = (Modulename.t, string) Result.t
 
-type resolved_requires = {
-  resolved_modules: resolved_module array;
-  phantom_dependencies: Modulename.Set.t;
-}
+type resolved_requires = resolved_module array * Modulename.Set.t
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
-
-val mk_resolved_requires :
-  resolved_modules:resolved_module array ->
-  phantom_dependencies:Modulename.Set.t ->
-  resolved_requires
 
 val get_file_addr : File_key.t -> file_addr option
 
@@ -73,6 +67,10 @@ val read_imports : [ `typed ] parse_addr -> Imports.t
 val read_cas_digest : [ `typed ] parse_addr -> Cas_digest.t option
 
 val read_package_info : [ `package ] parse_addr -> (Package_json.t, unit) result
+
+val read_resolved_modules : resolved_requires_addr -> resolved_module array
+
+val read_phantom_dependencies : resolved_requires_addr -> Modulename.Set.t
 
 module type READER = sig
   type reader
@@ -127,7 +125,7 @@ module type READER = sig
   val get_package_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `package ] parse_addr
 
   val get_resolved_requires_unsafe :
-    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
+    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires_addr
 
   val get_resolved_modules_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_module SMap.t
@@ -168,7 +166,7 @@ module Mutator_reader : sig
   val get_old_haste_info : reader:reader -> file_addr -> haste_info_addr option
 
   val get_old_resolved_requires_unsafe :
-    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
+    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires_addr
 
   val get_old_resolved_modules_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_module SMap.t

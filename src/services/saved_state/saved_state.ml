@@ -9,7 +9,8 @@ open Utils_js
 
 type denormalized_file_data = {
   requires: string array;
-  resolved_requires: Parsing_heaps.resolved_requires;
+  resolved_modules: Parsing_heaps.resolved_module array;
+  phantom_dependencies: Modulename.Set.t;
   exports: Exports.t;
   hash: Xx.hash;
   imports: Imports.t;
@@ -191,24 +192,26 @@ end = struct
     in
     loop 0 saved_state_version_length
 
-  let normalize_resolved_requires
-      ~normalizer { Parsing_heaps.resolved_modules; phantom_dependencies } =
-    let phantom_dependencies =
-      Modulename.Set.map
-        (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
-        phantom_dependencies
-    in
+  let normalize_resolved_requires ~normalizer resolved_modules phantom_dependencies =
     let resolved_modules =
       Array.map
         (resolved_module_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
-    { Parsing_heaps.resolved_modules; phantom_dependencies }
+    let phantom_dependencies =
+      Modulename.Set.map
+        (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
+        phantom_dependencies
+    in
+    (resolved_modules, phantom_dependencies)
 
   let normalize_file_data
-      ~normalizer { requires; resolved_requires; exports; hash; imports; cas_digest } =
-    let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
-    { requires; resolved_requires; exports; hash; imports; cas_digest }
+      ~normalizer
+      { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest } =
+    let (resolved_modules, phantom_dependencies) =
+      normalize_resolved_requires ~normalizer resolved_modules phantom_dependencies
+    in
+    { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest }
 
   let normalize_parsed_data ~normalizer { module_name; normalized_file_data } =
     let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
@@ -227,7 +230,8 @@ end = struct
         normalized_file_data =
           {
             requires;
-            resolved_requires;
+            resolved_modules = Parsing_heaps.read_resolved_modules resolved_requires;
+            phantom_dependencies = Parsing_heaps.read_phantom_dependencies resolved_requires;
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
             imports;
@@ -519,7 +523,7 @@ end = struct
       else
         Lwt.return (assert_version version)
 
-  let denormalize_resolved_requires ~root { Parsing_heaps.resolved_modules; phantom_dependencies } =
+  let denormalize_resolved_requires ~root resolved_modules phantom_dependencies =
     (* We do our best to avoid reading the file system (which Path.make will do) *)
     let phantom_dependencies =
       Modulename.Set.map
@@ -529,13 +533,16 @@ end = struct
     let resolved_modules =
       Array.map (resolved_module_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
-    Parsing_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependencies
+    (resolved_modules, phantom_dependencies)
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
   let denormalize_file_data
-      ~root { requires; resolved_requires; exports; hash; imports; cas_digest } =
-    let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
-    { requires; resolved_requires; exports; hash; imports; cas_digest }
+      ~root { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest }
+      =
+    let (resolved_modules, phantom_dependencies) =
+      denormalize_resolved_requires ~root resolved_modules phantom_dependencies
+    in
+    { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest }
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update

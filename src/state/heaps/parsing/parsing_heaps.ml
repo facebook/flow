@@ -78,19 +78,15 @@ type haste_module_addr = [ `haste_module ] SharedMem.addr
 
 type provider_addr = [ `file ] Heap.entity SharedMem.addr
 
+type resolved_requires_addr = [ `resolved_requires ] SharedMem.addr
+
 type resolved_module = (Modulename.t, string) Result.t
 
-type resolved_requires = {
-  resolved_modules: resolved_module array;
-  phantom_dependencies: Modulename.Set.t;
-}
+type resolved_requires = resolved_module array * Modulename.Set.t
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 
 let ( let* ) = Option.bind
-
-let mk_resolved_requires ~resolved_modules ~phantom_dependencies =
-  { resolved_modules; phantom_dependencies }
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
@@ -247,18 +243,6 @@ let read_file_sig_unsafe file_key parse = fst (read_tolerable_file_sig_unsafe fi
 
 let read_requires parse = Heap.get_requires parse |> Heap.read_requires
 
-let read_resolved_modules_map parse resolved_modules =
-  let requires = read_requires parse in
-  let n = Array.length requires in
-  let i = ref 0 in
-  let f () =
-    let mref = requires.(!i) in
-    let m = resolved_modules.(!i) in
-    incr i;
-    (mref, m)
-  in
-  SMap.of_increasing_iterator_unchecked f n
-
 let read_exports parse : Exports.t =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
@@ -283,8 +267,29 @@ let read_package_info parse : (Package_json.t, unit) result =
   let deserialize x = Marshal.from_string x 0 in
   get_package_info parse |> read_package_info |> deserialize
 
-let read_resolved_requires addr : resolved_requires =
-  Marshal.from_string (Heap.read_resolved_requires addr) 0
+let read_resolved_modules resolved_requires : resolved_module array =
+  let addr = Heap.get_resolved_modules resolved_requires in
+  Marshal.from_string (Heap.read_resolved_modules addr) 0
+
+let read_phantom_dependencies resolved_requires : Modulename.Set.t =
+  let addr = Heap.get_phantom_dependencies resolved_requires in
+  Marshal.from_string (Heap.read_phantom_dependencies addr) 0
+
+let read_resolved_requires resolved_requires =
+  (read_resolved_modules resolved_requires, read_phantom_dependencies resolved_requires)
+
+let read_resolved_modules_map parse resolved_requires =
+  let requires = read_requires parse in
+  let resolved_modules = read_resolved_modules resolved_requires in
+  let n = Array.length requires in
+  let i = ref 0 in
+  let f () =
+    let mref = requires.(!i) in
+    let m = resolved_modules.(!i) in
+    incr i;
+    (mref, m)
+  in
+  SMap.of_increasing_iterator_unchecked f n
 
 let haste_modulename m = Modulename.String (Heap.read_string (Heap.get_haste_name m))
 
@@ -369,8 +374,15 @@ let prepare_write_file_sig (file_sig : File_sig.With_Loc.tolerable_t) =
 let prepare_write_imports (imports : Imports.t) =
   Marshal.to_string imports [] |> Heap.prepare_write_serialized_imports
 
-let prepare_write_resolved_requires (resolved_requires : resolved_requires) =
-  Marshal.to_string resolved_requires [] |> Heap.prepare_write_serialized_resolved_requires
+let prepare_write_resolved_requires ((resolved_modules, phantom_dependencies) : resolved_requires) =
+  let serialized_resolved_modules = Marshal.to_string resolved_modules [] in
+  let serialized_phantom_dependencies = Marshal.to_string phantom_dependencies [] in
+  let+ write_resolved_requires = Heap.prepare_write_resolved_requires
+  and+ resolved_modules = Heap.prepare_write_serialized_resolved_modules serialized_resolved_modules
+  and+ phantom_dependencies =
+    Heap.prepare_write_serialized_phantom_dependencies serialized_phantom_dependencies
+  in
+  write_resolved_requires resolved_modules phantom_dependencies
 
 let prepare_write_type_sig type_sig =
   let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
@@ -446,7 +458,7 @@ let prepare_update_revdeps =
   (* Combine successfully resolved modules and phantom modules into a sorted list *)
   let all_dependencies = function
     | None -> []
-    | Some { resolved_modules; phantom_dependencies; _ } ->
+    | Some (resolved_modules, phantom_dependencies) ->
       let f acc = function
         | Ok m -> MSet.add m acc
         | Error _ -> acc
@@ -531,10 +543,12 @@ let prepare_update_revdeps =
       (Heap.prepare_const (fun _ -> ()))
       (old_dependencies, new_dependencies)
 
-let resolved_requires_equal a b =
-  Int.equal (Array.length a.resolved_modules) (Array.length b.resolved_modules)
-  && Array.for_all2 ( = ) a.resolved_modules b.resolved_modules
-  && Modulename.Set.equal a.phantom_dependencies b.phantom_dependencies
+let resolved_requires_equal
+    (old_resolved_modules, old_phantom_dependencies) (new_resolved_modules, new_phantom_dependencies)
+    =
+  Int.equal (Array.length old_resolved_modules) (Array.length new_resolved_modules)
+  && Array.for_all2 ( = ) old_resolved_modules new_resolved_modules
+  && Modulename.Set.equal old_phantom_dependencies new_phantom_dependencies
 
 (** The writer returns whether the resolved requires changed. *)
 let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt =
@@ -842,11 +856,11 @@ let rollback_resolved_requires file ent =
   if Heap.entity_changed ent then (
     let old_resolved_requires =
       let* addr = Heap.entity_read_committed ent in
-      Some (read_resolved_requires addr)
+      Some (read_resolved_modules addr, read_phantom_dependencies addr)
     in
     let new_resolved_requires =
       let* addr = Heap.entity_read_latest ent in
-      Some (read_resolved_requires addr)
+      Some (read_resolved_modules addr, read_phantom_dependencies addr)
     in
     Heap.alloc
       (let+ update_revdeps = prepare_update_revdeps new_resolved_requires old_resolved_requires in
@@ -1162,7 +1176,7 @@ module type READER = sig
   val get_package_parse_unsafe : reader:reader -> File_key.t -> file_addr -> [ `package ] parse_addr
 
   val get_resolved_requires_unsafe :
-    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires
+    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires_addr
 
   val get_resolved_modules_unsafe :
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_module SMap.t
@@ -1256,12 +1270,12 @@ module Mutator_reader = struct
   let get_old_resolved_requires_unsafe ~reader file parse =
     let resolved_requires = read_old ~reader (Heap.get_resolved_requires parse) in
     match resolved_requires with
-    | Some resolved_requires -> read_resolved_requires resolved_requires
+    | Some resolved_requires -> resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
   let get_old_resolved_modules_unsafe ~reader file parse =
-    let { resolved_modules; _ } = get_old_resolved_requires_unsafe ~reader file parse in
-    read_resolved_modules_map parse resolved_modules
+    let resolved_requires = get_old_resolved_requires_unsafe ~reader file parse in
+    read_resolved_modules_map parse resolved_requires
 
   let has_ast ~reader file =
     let parse_opt =
@@ -1372,12 +1386,12 @@ module Mutator_reader = struct
   let get_resolved_requires_unsafe ~reader file parse =
     let resolved_requires = Heap.get_resolved_requires parse in
     match read ~reader resolved_requires with
-    | Some resolved_requires -> read_resolved_requires resolved_requires
+    | Some resolved_requires -> resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
   let get_resolved_modules_unsafe ~reader file parse =
-    let { resolved_modules; _ } = get_resolved_requires_unsafe ~reader file parse in
-    read_resolved_modules_map parse resolved_modules
+    let resolved_requires = get_resolved_requires_unsafe ~reader file parse in
+    read_resolved_modules_map parse resolved_requires
 
   let get_leader_unsafe ~reader file parse =
     match get_leader ~reader parse with
@@ -1785,12 +1799,12 @@ module Reader = struct
   let get_resolved_requires_unsafe ~reader file parse =
     let resolved_requires = Heap.get_resolved_requires parse in
     match read ~reader resolved_requires with
-    | Some resolved_requires -> read_resolved_requires resolved_requires
+    | Some resolved_requires -> resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
   let get_resolved_modules_unsafe ~reader file parse =
-    let { resolved_modules; _ } = get_resolved_requires_unsafe ~reader file parse in
-    read_resolved_modules_map parse resolved_modules
+    let resolved_requires = get_resolved_requires_unsafe ~reader file parse in
+    read_resolved_modules_map parse resolved_requires
 
   let get_leader_unsafe ~reader file parse =
     match get_leader ~reader parse with

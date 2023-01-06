@@ -1886,7 +1886,15 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
 
     let restore_parsed (fns, dirty_modules, invalid_hashes) (fn, parsed_file_data) =
       let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
-      let { Saved_state.hash; exports; requires; resolved_requires; imports; cas_digest } =
+      let {
+        Saved_state.hash;
+        exports;
+        requires;
+        resolved_modules;
+        phantom_dependencies;
+        imports;
+        cas_digest;
+      } =
         Saved_state.denormalize_file_data ~root normalized_file_data
       in
 
@@ -1907,7 +1915,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
           module_name
           exports
           requires
-          resolved_requires
+          (resolved_modules, phantom_dependencies)
           imports
           cas_digest
       in
