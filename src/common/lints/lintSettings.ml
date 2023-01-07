@@ -77,8 +77,6 @@ let is_enabled lint_kind settings =
     true
   | Off -> false
 
-let is_suppressed lint_kind settings = is_enabled lint_kind settings |> not
-
 type parse_result =
   | AllSetting of severity t
   | EntryList of lint_kind list * (severity * Loc.t option)

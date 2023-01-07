@@ -246,6 +246,7 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
     Context.t ->
     prepass_state ->
     File_key.t ->
+    Files.options ->
     Mutator_state_reader.t ->
     File_sig.With_ALoc.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
@@ -336,7 +337,9 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         match check file with
         | Ok None -> acc
         | Ok (Some ((cx, _, file_sig, typed_ast), _)) ->
-          let result = C.prepass_run cx state file reader file_sig typed_ast in
+          let result =
+            C.prepass_run cx state file options.Options.opt_file_options reader file_sig typed_ast
+          in
           FilenameMap.add file (Ok result) acc
         | Error e -> FilenameMap.add file (Error e) acc)
       acc

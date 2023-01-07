@@ -61,6 +61,7 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
     Context.t ->
     prepass_state ->
     File_key.t ->
+    Files.options ->
     Mutator_state_reader.t ->
     File_sig.With_ALoc.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->

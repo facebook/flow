@@ -167,6 +167,9 @@ module Hardcoded_Ty_Fixes = Codemod_hardcoded_ty_fixes.Make (ErrorStats)
 module Acc = Insert_type_utils.Acc (ErrorStats)
 
 let mapper
+    ~ignore_suppressed
+    ~file_options
+    ~loc_of_aloc
     ~preserve_literals
     ~max_type_size
     ~default_any
@@ -368,7 +371,19 @@ let mapper
         super#function_ loc { expr with return; params = with_this_param }
 
     method! program prog =
-      let errors = Context.errors @@ Codemod_context.Typed.context cctx in
+      let cx = Codemod_context.Typed.context cctx in
+      let errors = Context.errors cx in
+      let errors =
+        if ignore_suppressed then
+          Error_suppressions.filter_suppressed_error_set
+            ~root:(Context.root cx)
+            ~file_options:(Some file_options)
+            ~loc_of_aloc
+            (Context.error_suppressions cx)
+            errors
+        else
+          errors
+      in
       if LSet.is_empty provided_error_locs then
         loc_error_map <-
           Flow_error.ErrorSet.fold

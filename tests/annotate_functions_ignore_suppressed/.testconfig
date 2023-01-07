@@ -1,0 +1,1 @@
+cmd: codemod annotate-functions-and-classes --strip-root --quiet --ignore-suppressed ./

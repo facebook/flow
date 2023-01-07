@@ -213,6 +213,10 @@ module Annotate_lti_command = struct
                "--include-lti"
                truthy
                ~doc:"Adding missing annotations that are only detected under LTI mode."
+          |> flag
+               "--ignore-suppressed"
+               truthy
+               ~doc:"Do not annotate locations with suppressed missing-local-annot errors"
         );
     }
 
@@ -225,7 +229,10 @@ module Annotate_lti_command = struct
       skip_this_params
       skip_class_properties
       include_lti
+      ignore_suppressed
       () =
+    let reader = State_reader.create () in
+    let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
     let module SimpleRunner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_lti.Acc
 
@@ -238,9 +245,12 @@ module Annotate_lti_command = struct
         let open Options in
         { o with opt_any_propagation = false; opt_inference_mode = ConstrainWrites }
 
-      let visit =
+      let visit ~options =
         let mapper =
           Annotate_lti.mapper
+            ~ignore_suppressed
+            ~file_options:(Options.file_options options)
+            ~loc_of_aloc
             ~preserve_literals
             ~max_type_size
             ~default_any
@@ -249,9 +259,8 @@ module Annotate_lti_command = struct
             ~skip_class_properties
             ~provided_error_locs:[]
         in
-        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper) ~options
     end) in
-    let reader = State_reader.create () in
     let module LTIRunner = Codemod_runner.MakeTypedRunnerWithPrepass (struct
       module Acc = Annotate_lti.Acc
 
@@ -267,8 +276,20 @@ module Annotate_lti_command = struct
 
       let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
 
-      let prepass_run cx () _file_key _reader _file_sig _typed_ast =
-        Context.errors cx
+      let prepass_run cx () _file_key file_options _reader _file_sig _typed_ast =
+        let errors = Context.errors cx in
+        let errors =
+          if ignore_suppressed then
+            Error_suppressions.filter_suppressed_error_set
+              ~root:(Context.root cx)
+              ~file_options:(Some file_options)
+              ~loc_of_aloc
+              (Context.error_suppressions cx)
+              errors
+          else
+            errors
+        in
+        errors
         |> Flow_error.ErrorSet.elements
         |> List.filter_map (fun error ->
                match Flow_error.code_of_error error with
@@ -292,6 +313,9 @@ module Annotate_lti_command = struct
         in
         let mapper =
           Annotate_lti.mapper
+            ~ignore_suppressed
+            ~file_options:(Options.file_options options)
+            ~loc_of_aloc
             ~preserve_literals
             ~max_type_size
             ~default_any

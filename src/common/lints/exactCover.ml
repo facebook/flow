@@ -183,9 +183,6 @@ let default_file_cover source = file_cover source LintSettings.empty_severities
 let get_severity lint_kind loc severity_cover =
   find loc severity_cover |> LintSettings.get_value lint_kind
 
-let is_suppressed lint_kind loc severity_cover =
-  find loc severity_cover |> LintSettings.is_suppressed lint_kind
-
 let is_explicit lint_kind loc severity_cover =
   find loc severity_cover |> LintSettings.is_explicit lint_kind
 

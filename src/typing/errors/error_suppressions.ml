@@ -307,6 +307,20 @@ let filter_suppressed_errors ~root ~file_options suppressions errors ~unused =
     errors
     (Errors.ConcreteLocPrintableErrorSet.empty, [], unused)
 
+let filter_suppressed_error_set ~root ~file_options ~loc_of_aloc suppressions errors =
+  Flow_error.ErrorSet.filter
+    (fun error ->
+      let error =
+        error |> Flow_error.concretize_error loc_of_aloc |> Flow_error.make_error_printable
+      in
+      match check ~root ~file_options error suppressions empty (* unused *) with
+      | None -> false
+      | Some (severity, _, _) ->
+        (match severity with
+        | Off -> false
+        | _ -> true))
+    errors
+
 let update_suppressions current_suppressions new_suppressions =
   FilenameMap.fold
     begin

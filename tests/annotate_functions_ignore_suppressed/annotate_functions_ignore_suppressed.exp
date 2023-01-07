@@ -1,0 +1,43 @@
+>>> file.js (#changes: 2)
+// @flow
+
+const foo = function (x: number) {}; // adds annot
+foo(1);
+
+// $FlowFixMe
+const bar = function (x) {}; // does not add annot
+bar(1);
+
+// $FlowFixMe[missing-local-annot]
+const baz = function (x) {}; // does not add annot
+baz(1);
+
+// $FlowFixMe[prop-missing]
+const bak = function (x: number) {}; // adds annot due to irrelevant code
+bak(1);
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              2
+  Total size of annotations:                2
+  Number of LTI errors:                     2
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
