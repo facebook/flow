@@ -9,7 +9,8 @@ It is not common to annotate your code using `empty`. However, there are a coupl
 
 If you have a function that always throws, you can annotate the return as `empty`, as the function never returns:
 
-```js flow-check
+```js
+// @flow
 function throwIt(msg: string): empty {
   throw new Error(msg);
 }
@@ -17,7 +18,8 @@ function throwIt(msg: string): empty {
 
 You can use a cast to `empty` to assert that you have refined away all members of a union:
 
-```js flow-check
+```js
+// @flow
 function f(x: 'a' | 'b'): number {
   switch (x) {
     case 'a':
@@ -39,7 +41,8 @@ then `x` would no longer be `empty` in the `default`, and Flow would error.
 Since `empty` is the subtype of all types, all operations are permitted on something that has the `empty` type.
 However since no values can be `empty`, this is "safe", unlike with [`any`](../any).
 
-```js flow-check
+```js
+// @flow
 const str = "hello";
 
 if (typeof str === "string") {
