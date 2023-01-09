@@ -60,6 +60,12 @@ let sig_hash ~root =
     Xx.hash file_string 0L
   in
 
+  let get_type_sig_buf_unsafe file_key parse =
+    match Heap.get_type_sig parse with
+    | Some addr -> Heap.type_sig_buf addr
+    | None -> Printf.ksprintf failwith "Expected %s to be parsed" (File_key.to_string file_key)
+  in
+
   (* The module type of a resource dependency only depends on the file
    * extension. See Type_sig_merge.merge_resource_module_t *)
   let resource_dep f =
@@ -117,7 +123,7 @@ let sig_hash ~root =
       ES { filename; type_exports; exports; ns }
     in
     fun dep_key dep_parse ->
-      let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig dep_parse)) in
+      let buf = get_type_sig_buf_unsafe dep_key dep_parse in
       Bin.read_module_kind (cjs_module dep_key) (es_module dep_key) buf (Bin.module_kind buf)
   in
 
@@ -212,7 +218,7 @@ let sig_hash ~root =
       ES { filename; type_exports; exports; ns }
     in
 
-    let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
+    let buf = get_type_sig_buf_unsafe file_key parse in
     Bin.read_module_kind cjs_module es_module buf (Bin.module_kind buf)
   in
 
@@ -235,7 +241,7 @@ let sig_hash ~root =
 
   (* Create a Type_sig_hash.file record for a file in the merged component. *)
   let component_file ~reader component_rec component_map (file_key, _, parse) =
-    let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
+    let buf = get_type_sig_buf_unsafe file_key parse in
 
     let dependencies =
       let resolved_modules =
