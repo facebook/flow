@@ -134,20 +134,6 @@ References:
                             ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- all_arith.js:35:12
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:35:12
-   35| (aNumber * aBigint); // error
-                  ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------- all_arith.js:37:12
 
 Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
@@ -396,20 +382,6 @@ Cannot perform arithmetic operation because string [1] is not a number or bigint
 References:
    all_arith.js:6:22
     6| declare var aString: string;
-                            ^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- all_arith.js:61:12
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:61:12
-   61| (aString * aBigint); // error
-                  ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
                             ^^^^^^ [1]
 
 
@@ -810,34 +782,6 @@ References:
                            ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ all_arith.js:86:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:86:2
-   86| (aBigint * aDate); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ all_arith.js:87:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:87:2
-   87| (aBigint * aBoolean); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------- all_arith.js:87:12
 
 Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
@@ -850,20 +794,6 @@ References:
    all_arith.js:9:23
     9| declare var aBoolean: boolean;
                              ^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ all_arith.js:88:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:88:2
-   88| (aBigint * aT); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:88:12
@@ -880,40 +810,12 @@ References:
                        ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ all_arith.js:89:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:89:2
-   89| (aBigint * null); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------- all_arith.js:89:12
 
 Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
 
    89| (aBigint * null); // error
                   ^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ all_arith.js:90:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:90:2
-   90| (aBigint * anArray); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:90:12
@@ -930,20 +832,6 @@ References:
                             ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ all_arith.js:91:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:91:2
-   91| (aBigint * anObject); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------- all_arith.js:91:12
 
 Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
@@ -958,20 +846,6 @@ References:
                              ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ all_arith.js:92:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:92:2
-   92| (aBigint * aMixed); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------- all_arith.js:92:12
 
 Cannot perform arithmetic operation because mixed [1] is not a number or bigint. [unsafe-arithmetic]
@@ -984,34 +858,6 @@ References:
    all_arith.js:14:21
    14| declare var aMixed: mixed;
                            ^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ all_arith.js:93:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:93:2
-   93| (aBigint * anAny); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ all_arith.js:94:2
-
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:94:2
-   94| (aBigint * anEmpty); // error
-        ^^^^^^^
-
-References:
-   all_arith.js:7:22
-    7| declare var aBigint: bigint;
-                            ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:97:2
@@ -2451,19 +2297,5 @@ are signed. [bigint-unsigned-right-shift]
          ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- all_arith.js:225:2
 
-Cannot perform arithmetic operation because bigint [1] is not a number or bigint. [unsafe-arithmetic]
-
-   all_arith.js:225:2
-   225| (aBigint >>> aNumber); // error
-         ^^^^^^^
-
-References:
-   all_arith.js:7:22
-     7| declare var aBigint: bigint;
-                             ^^^^^^ [1]
-
-
-
-Found 175 errors
+Found 163 errors

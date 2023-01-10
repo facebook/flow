@@ -2111,7 +2111,9 @@ let flow_unary_arith l reason kind add_output =
 let valid_arith_operand t =
   match t with
   | AnyT _
-  | DefT (_, _, EmptyT) ->
+  | DefT (_, _, EmptyT)
+  | DefT (_, _, BigIntT _)
+  | DefT (_, _, SingletonBigIntT _) ->
     true
   | _ -> is_number_or_date t
 
