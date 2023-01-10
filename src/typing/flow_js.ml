@@ -4136,7 +4136,7 @@ struct
           let value = elemt_of_arrtype arrtype in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
         | (l, ElemT (use_op, reason, (DefT (reason_tup, _, ArrT arrtype) as arr), action))
-          when numeric l ->
+          when is_number l ->
           let write_action =
             match action with
             | ReadElem _
@@ -5543,7 +5543,7 @@ struct
       match (l, r) with
       | (DefT (_, _, StrT _), DefT (_, _, StrT _)) -> ()
       | (DefT (_, _, BigIntT _), DefT (_, _, BigIntT _)) -> ()
-      | (_, _) when numberesque l && numberesque r -> ()
+      | (_, _) when is_number_or_date l && is_number_or_date r -> ()
       | (DefT (_, _, EmptyT), _)
       | (_, DefT (_, _, EmptyT)) ->
         ()

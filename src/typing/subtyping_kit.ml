@@ -577,7 +577,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (*******************************)
     (* common implicit conversions *)
     (*******************************)
-    | (_, DefT (_, _, NumT _)) when numeric l -> ()
+    | (_, DefT (_, _, NumT _)) when is_number l -> ()
     | (DefT (_, _, IdxWrapper _), _) -> ()
     | (DefT (r, trust, (NullT | VoidT)), MaybeT (_, tout)) ->
       rec_flow_t cx trace ~use_op (EmptyT.why r trust, tout)

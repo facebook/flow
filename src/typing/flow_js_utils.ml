@@ -130,17 +130,16 @@ let ground_subtype = function
     true
   | _ -> false
 
-let numeric = function
+let is_number = function
   | DefT (_, _, NumT _) -> true
   | DefT (_, _, SingletonNumT _) -> true
   | _ -> false
 
-let dateiform = function
+let is_date = function
   | DefT (reason, _, InstanceT _) -> DescFormat.name_of_instance_reason reason = "Date"
   | _ -> false
 
-let numberesque = function
-  | x -> numeric x || dateiform x
+let is_number_or_date x = is_number x || is_date x
 
 let function_like = function
   | DefT (_, _, ClassT _)
@@ -2114,7 +2113,7 @@ let valid_arith_operand t =
   | AnyT _
   | DefT (_, _, EmptyT) ->
     true
-  | _ -> numberesque t
+  | _ -> is_number_or_date t
 
 let flow_arith use_op reason l r kind add_output rec_flow =
   let open ArithKind in
@@ -2185,17 +2184,21 @@ let flow_arith use_op reason l r kind add_output rec_flow =
     rec_flow (l, UseT (use_op, fake_str));
     rec_flow (r, UseT (use_op, fake_str));
     fake_str
-  (* numberesque <> any *)
-  (* any <> numberesque *)
+  (* number <> any *)
+  (* date <> any *)
+  (* any <> number *)
+  (* any <> date *)
   (* for <> except + *)
-  | ((RShift3 | Other), AnyT _, r) when numberesque r -> NumT.at loc |> with_trust bogus_trust
-  | ((RShift3 | Other), l, AnyT _) when numberesque l -> NumT.at loc |> with_trust bogus_trust
-  (* numberesque <> empty *)
-  (* empty <> numberesque *)
+  | ((RShift3 | Other), AnyT _, r) when is_number_or_date r -> NumT.at loc |> with_trust bogus_trust
+  | ((RShift3 | Other), l, AnyT _) when is_number_or_date l -> NumT.at loc |> with_trust bogus_trust
+  (* number <> empty *)
+  (* date <> empty *)
+  (* empty <> number *)
+  (* empty <> date *)
   (* for <> except + *)
-  | ((RShift3 | Other), DefT (_, _, EmptyT), r) when numberesque r ->
+  | ((RShift3 | Other), DefT (_, _, EmptyT), r) when is_number_or_date r ->
     NumT.at loc |> with_trust bogus_trust
-  | ((RShift3 | Other), l, DefT (_, _, EmptyT)) when numberesque l ->
+  | ((RShift3 | Other), l, DefT (_, _, EmptyT)) when is_number_or_date l ->
     NumT.at loc |> with_trust bogus_trust
   (* any <> any *)
   | ((RShift3 | Other), AnyT (_, src), AnyT _) ->
@@ -2207,9 +2210,12 @@ let flow_arith use_op reason l r kind add_output rec_flow =
   (* for <> except + *)
   | ((RShift3 | Other), (DefT (_, _, EmptyT) | AnyT _), (DefT (_, _, EmptyT) | AnyT _)) ->
     NumT.at loc |> with_trust bogus_trust
-  (* numberesque <> numberesque *)
+  (* number <> number *)
+  (* number <> date *)
+  (* date <> number *)
+  (* date <> date *)
   (* for <> except + *)
-  | ((RShift3 | Other), l, r) when numberesque l && numberesque r ->
+  | ((RShift3 | Other), l, r) when is_number_or_date l && is_number_or_date r ->
     NumT.at loc |> with_trust bogus_trust
   | (_, l, r) ->
     if not (valid_arith_operand l) then add_output (Error_message.EArithmeticOperand (reason_of_t l));

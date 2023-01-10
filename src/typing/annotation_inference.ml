@@ -1007,7 +1007,7 @@ module rec ConsGen : S = struct
       let value = elemt_of_arrtype arrtype in
       reposition cx (aloc_of_reason reason_op) value
     | (l, Annot_ElemT (reason_op, use_op, DefT (reason_tup, _, ArrT arrtype)))
-      when Flow_js_utils.numeric l ->
+      when Flow_js_utils.is_number l ->
       let (value, _) =
         Flow_js_utils.array_elem_check
           ~write_action:false
