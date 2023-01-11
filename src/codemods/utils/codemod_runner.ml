@@ -242,6 +242,8 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
 
   val mod_prepass_options : Options.t -> Options.t
 
+  val include_dependents_in_prepass : bool
+
   val prepass_run :
     Context.t ->
     prepass_state ->
@@ -352,19 +354,22 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         (* Calculate dependencies that need to be merged *)
         let%lwt (sig_dependency_graph, components, files_to_merge, files_to_check) =
           let get_dependent_files sig_dependency_graph implementation_dependency_graph roots =
-            let should_print = Options.should_profile options in
-            Memory_utils.with_memory_timer_lwt
-              ~should_print
-              "AllDependentFiles"
-              profiling
-              (fun () ->
-                Lwt.return
-                  (Pure_dep_graph_operations.calc_all_dependents
-                     ~sig_dependency_graph
-                     ~implementation_dependency_graph
-                     roots
-                  )
-            )
+            if C.include_dependents_in_prepass then
+              let should_print = Options.should_profile options in
+              Memory_utils.with_memory_timer_lwt
+                ~should_print
+                "AllDependentFiles"
+                profiling
+                (fun () ->
+                  Lwt.return
+                    (Pure_dep_graph_operations.calc_all_dependents
+                       ~sig_dependency_graph
+                       ~implementation_dependency_graph
+                       roots
+                    )
+              )
+            else
+              Lwt.return (FilenameSet.empty, FilenameSet.empty)
           in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in

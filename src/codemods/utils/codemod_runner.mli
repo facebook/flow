@@ -57,6 +57,8 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
 
   val mod_prepass_options : Options.t -> Options.t
 
+  val include_dependents_in_prepass : bool
+
   val prepass_run :
     Context.t ->
     prepass_state ->

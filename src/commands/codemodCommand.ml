@@ -276,6 +276,8 @@ module Annotate_lti_command = struct
 
       let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
 
+      let include_dependents_in_prepass = false
+
       let prepass_run cx () _file_key file_options _reader _file_sig _typed_ast =
         let errors = Context.errors cx in
         let errors =
