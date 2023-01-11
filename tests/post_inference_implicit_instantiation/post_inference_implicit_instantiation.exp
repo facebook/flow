@@ -117,6 +117,24 @@ References:
       ^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:18:5
+
+Cannot call `Array` because `T` [1] is underconstrained by new `Array` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   underconstrained_class_constructor.js:18:5
+    18| new Array(1); // Error
+            ^^^^^
+
+References:
+   <BUILTINS>/core.js:891:21
+   891| declare class Array<T> extends $ReadOnlyArray<T> {
+                            ^ [1]
+   underconstrained_class_constructor.js:18:1
+    18| new Array(1); // Error
+        ^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------- underconstrained_fun_call.js:3:1
 
 Cannot call `f` because `T` [1] is underconstrained by call of `f` [2]. Either add explicit type arguments or cast the
@@ -525,4 +543,4 @@ References:
 
 
 
-Found 31 errors
+Found 32 errors

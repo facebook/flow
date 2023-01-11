@@ -14,3 +14,5 @@ declare class C<-T>{
 }
 
 new C(3); // Ok: It will error under Pierce, but we also consider lower bounds here.
+
+new Array(1); // Error

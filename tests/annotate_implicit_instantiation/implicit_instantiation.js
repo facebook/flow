@@ -26,3 +26,5 @@ e[0] = (0: typeof non_exported_return_type);
 
 declare function useBound<F: () => void>(): F;
 useBound(); // () => void
+
+new Array(1).fill(""); // Add <string>
