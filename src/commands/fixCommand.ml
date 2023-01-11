@@ -45,6 +45,8 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
 
   let mod_prepass_options options = options
 
+  let check_options options = options
+
   let include_dependents_in_prepass = false
 
   let prepass_run cx () _file _ _reader _file_sig _typed_ast =

@@ -161,15 +161,6 @@ module Annotate_exports_command = struct
   let command = CommandSpec.command spec main
 end
 
-module LtiPerFileErrorsHeap =
-  SharedMem.NoCache
-    (File_key)
-    (struct
-      type t = Loc.t list
-
-      let description = "TransformableErrorsHeap"
-    end)
-
 module Annotate_lti_command = struct
   let doc = "Annotates function and class definitions required for Flow's local type interence."
 
@@ -219,6 +210,15 @@ module Annotate_lti_command = struct
                ~doc:"Do not annotate locations with suppressed missing-local-annot errors"
         );
     }
+
+  module LtiPerFileMissingLocalAnnotErrorsHeap =
+    SharedMem.NoCache
+      (File_key)
+      (struct
+        type t = Loc.t list
+
+        let description = "TransformableErrorsHeap"
+      end)
 
   let main
       codemod_flags
@@ -276,6 +276,8 @@ module Annotate_lti_command = struct
 
       let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
 
+      let check_options o = o
+
       let include_dependents_in_prepass = false
 
       let prepass_run cx () _file_key file_options _reader _file_sig _typed_ast =
@@ -306,11 +308,14 @@ module Annotate_lti_command = struct
            )
 
       let store_precheck_result result =
-        FilenameMap.iter (fun file -> Base.Result.iter ~f:(LtiPerFileErrorsHeap.add file)) result
+        FilenameMap.iter
+          (fun file -> Base.Result.iter ~f:(LtiPerFileMissingLocalAnnotErrorsHeap.add file))
+          result
 
       let visit ~options program =
         let provided_error_locs =
-          LtiPerFileErrorsHeap.get (Base.Option.value_exn (fst program |> Loc.source))
+          LtiPerFileMissingLocalAnnotErrorsHeap.get
+            (Base.Option.value_exn (fst program |> Loc.source))
           |> Base.Option.value ~default:[]
         in
         let mapper =
@@ -617,9 +622,28 @@ module Annotate_implicit_instantiation = struct
                "--annotate-special-function-return"
                truthy
                ~doc:"Annotate special-cased function return to constrain type arguments"
+          |> flag
+               "--include-lti"
+               truthy
+               ~doc:
+                 "Add type arguments to underconstrained calls that are only detected under LTI mode."
+          |> flag
+               "--ignore-suppressed"
+               truthy
+               ~doc:
+                 "Do not annotate locations with suppressed underconstrained-implicit-instantiation errors"
           |> common_annotate_flags
         );
     }
+
+  module LtiPerFileUnderconstrainedImplicitInstantiationErrorsHeap =
+    SharedMem.NoCache
+      (File_key)
+      (struct
+        type t = Flow_error.ErrorSet.t
+
+        let description = "TransformableErrorsHeap"
+      end)
 
   let main
       codemod_flags
@@ -627,11 +651,13 @@ module Annotate_implicit_instantiation = struct
       generalize_maybe
       include_widened
       annotate_special_fun_return
+      include_lti
+      ignore_suppressed
       max_type_size
       default_any
       () =
     let open Codemod_utils in
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+    let module SimpleRunner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_implicit_instantiation.Acc
 
       type accumulator = Acc.t
@@ -646,18 +672,80 @@ module Annotate_implicit_instantiation = struct
           opt_save_implicit_instantiation_results = true;
         }
 
-      let visit =
+      let visit ~options =
         let mapper =
           Annotate_implicit_instantiation.mapper
+            ~ignore_suppressed
+            ~file_options:(Options.file_options options)
             ~preserve_literals
             ~generalize_maybe
             ~max_type_size
             ~annotate_special_fun_return
             ~default_any
+            ~provided_error_set:Flow_error.ErrorSet.empty
         in
-        Codemod_utils.make_visitor (Mapper mapper)
+        Codemod_utils.make_visitor (Mapper mapper) ~options
     end) in
-    main (module Runner) codemod_flags ()
+    let module LTIRunner = Codemod_runner.MakeTypedRunnerWithPrepass (struct
+      module Acc = Annotate_implicit_instantiation.Acc
+
+      type accumulator = Acc.t
+
+      type prepass_state = unit
+
+      type prepass_result = Flow_error.ErrorSet.t
+
+      let reporter = string_reporter (module Acc)
+
+      let prepass_init () = ()
+
+      let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
+
+      let check_options o =
+        {
+          o with
+          Options.opt_run_post_inference_implicit_instantiation = true;
+          opt_enable_post_inference_targ_widened_check = include_widened;
+          opt_save_implicit_instantiation_results = true;
+        }
+
+      let include_dependents_in_prepass = false
+
+      let prepass_run cx () _file_key _file_options _reader _file_sig _typed_ast = Context.errors cx
+
+      let store_precheck_result result =
+        FilenameMap.iter
+          (fun file ->
+            Base.Result.iter ~f:(LtiPerFileUnderconstrainedImplicitInstantiationErrorsHeap.add file))
+          result
+
+      let visit ~options program =
+        let provided_error_set =
+          LtiPerFileUnderconstrainedImplicitInstantiationErrorsHeap.get
+            (Base.Option.value_exn (fst program |> Loc.source))
+          |> Base.Option.value ~default:Flow_error.ErrorSet.empty
+        in
+        let mapper =
+          Annotate_implicit_instantiation.mapper
+            ~ignore_suppressed
+            ~file_options:(Options.file_options options)
+            ~preserve_literals
+            ~generalize_maybe
+            ~max_type_size
+            ~annotate_special_fun_return
+            ~default_any
+            ~provided_error_set
+        in
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper) ~options program
+    end) in
+    main
+      ( if include_lti then
+        (module LTIRunner)
+      else
+        (module SimpleRunner)
+      )
+      codemod_flags
+      ()
 
   let command = CommandSpec.command spec main
 end

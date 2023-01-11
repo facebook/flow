@@ -242,6 +242,8 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
 
   val mod_prepass_options : Options.t -> Options.t
 
+  val check_options : Options.t -> Options.t
+
   val include_dependents_in_prepass : bool
 
   val prepass_run :
@@ -403,6 +405,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         C.store_precheck_result result;
         Hh_logger.info "Storing pre-checking results Done";
         Hh_logger.info "Checking+Codemodding %d files" (FilenameSet.cardinal roots);
+        let options = C.check_options options in
         let (next, merge) = mk_next ~options ~workers roots in
         let metadata = Context.metadata_of_options options in
         let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in

@@ -1,0 +1,36 @@
+>>> test.js (#changes: 1)
+// @flow
+
+declare function f<T>(): T
+// $FlowFixMe[underconstrained-implicit-instantiation]
+const a = f(); // No annotations should be added
+(a: string);
+
+declare function g<T>(Set<T>): T;
+const b = g(new Set<string>()); // Annotate with string
+(b: string);
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              1
+  Total size of annotations:                1
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     3
+

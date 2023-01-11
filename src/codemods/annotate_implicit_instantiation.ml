@@ -14,17 +14,32 @@ module Acc = Insert_type_utils.Acc (Insert_type_utils.UnitStats)
 open Insert_type_utils
 
 let mapper
+    ~ignore_suppressed
+    ~file_options
     ~preserve_literals
     ~generalize_maybe
     ~annotate_special_fun_return
     ~max_type_size
     ~default_any
+    ~provided_error_set
     (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   let reader = cctx.Codemod_context.Typed.reader in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
-  let errors = Codemod_context.Typed.context cctx |> Context.errors in
+  let cx = Codemod_context.Typed.context cctx in
+  let errors = Flow_error.ErrorSet.union (Context.errors cx) provided_error_set in
+  let errors =
+    if ignore_suppressed then
+      Error_suppressions.filter_suppressed_error_set
+        ~root:(Context.root cx)
+        ~file_options:(Some file_options)
+        ~loc_of_aloc
+        (Context.error_suppressions cx)
+        errors
+    else
+      errors
+  in
   let implicit_instantiation_aloc_results =
     Codemod_context.Typed.context cctx |> Context.implicit_instantiation_ty_results
   in
