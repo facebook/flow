@@ -82,7 +82,10 @@ let autocomplete_result_to_json ~strip_root result =
   let name = result.name in
   Stdlib.ignore strip_root;
   Hh_json.JSON_Object
-    [("name", Hh_json.JSON_String name); ("type", Hh_json.JSON_String result.detail)]
+    [
+      ("name", Hh_json.JSON_String name);
+      ("type", Hh_json.JSON_String (Base.Option.value ~default:"" result.itemDetail));
+    ]
 
 let autocomplete_response_to_json ~strip_root response =
   Hh_json.(
@@ -170,7 +173,9 @@ let main
         List.iter
           (fun res ->
             let name = res.ServerProt.Response.Completion.name in
-            let detail = res.ServerProt.Response.Completion.detail in
+            let detail =
+              Base.Option.value ~default:"" res.ServerProt.Response.Completion.itemDetail
+            in
             print_endline (Printf.sprintf "%s %s" name detail))
           items
     )

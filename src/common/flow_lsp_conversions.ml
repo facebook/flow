@@ -94,16 +94,6 @@ let flow_completion_item_to_lsp
     ~index
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
   let open ServerProt.Response.Completion in
-  let detail =
-    let trunc n s =
-      if String.length s < n then
-        s
-      else
-        String.sub s 0 n ^ "..."
-    in
-    let column_width = 80 in
-    Some (trunc column_width item.detail)
-  in
   let textEdit =
     Base.Option.map
       ~f:(fun { ServerProt.Response.newText; insert; replace } ->
@@ -160,13 +150,22 @@ let flow_completion_item_to_lsp
             ];
       }
   in
-
   let labelDetails =
     if
       is_label_detail_supported
-      && (Base.Option.is_some item.source || Base.Option.is_some item.type_)
+      && (Base.Option.is_some item.labelDetail || Base.Option.is_some item.description)
     then
-      Some { Lsp.CompletionItemLabelDetails.description = item.source; detail = item.type_ }
+      let detail =
+        let trunc n s =
+          if String.length s < n then
+            s
+          else
+            String.sub s 0 n ^ "..."
+        in
+        let column_width = 80 in
+        Base.Option.map ~f:(trunc column_width) item.labelDetail
+      in
+      Some { Lsp.CompletionItemLabelDetails.detail; description = item.description }
     else
       None
   in
@@ -174,7 +173,7 @@ let flow_completion_item_to_lsp
     Lsp.Completion.label = item.name;
     labelDetails;
     kind = item.kind;
-    detail;
+    detail = item.itemDetail;
     documentation;
     tags;
     preselect = is_preselect_supported && item.preselect;

@@ -74,9 +74,8 @@ let text_edit ?insert_text name (insert, replace) =
 
 let detail_of_ty ~exact_by_default ty =
   let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
-  let cli_detail = type_ in
-  let lsp_detail =
-    (* [lsp_detail] is rendered immediately after the name, with no space.
+  let detail =
+    (* [detail] is rendered immediately after the name, with no space.
        for most types, we add a [:] so it renders like an annotation;
        but for functions, no [:] makes it look like a signature.
 
@@ -87,11 +86,11 @@ let detail_of_ty ~exact_by_default ty =
     | Ty.Fun _ -> type_
     | _ -> ": " ^ type_
   in
-  (cli_detail, Some lsp_detail)
+  (Some type_, Some detail)
 
 let detail_of_ty_decl ~exact_by_default d =
-  let cli_detail = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d in
-  let lsp_detail =
+  let type_ = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d in
+  let detail =
     (* this is rendered immediately after the name, with no space.
        for most of these, there's nothing to show because the "kind" icon
        captures whether it's a class, enum, interface, etc. *)
@@ -105,10 +104,10 @@ let detail_of_ty_decl ~exact_by_default d =
          and could include the RHS too like we do for variables. *)
       None
     | Ty.VariableDecl (_, ty) ->
-      let (_, lsp_detail) = detail_of_ty ~exact_by_default ty in
-      lsp_detail
+      let (_, detail) = detail_of_ty ~exact_by_default ty in
+      detail
   in
-  (cli_detail, lsp_detail)
+  (Some type_, detail)
 
 let autocomplete_create_result
     ?insert_text
@@ -121,7 +120,7 @@ let autocomplete_create_result
     ~log_info
     (name, edit_locs)
     ty =
-  let (cli_detail, lsp_detail) = detail_of_ty ~exact_by_default ty in
+  let (itemDetail, labelDetail) = detail_of_ty ~exact_by_default ty in
   let kind = Some (lsp_completion_of_type ty) in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
@@ -134,16 +133,16 @@ let autocomplete_create_result
   {
     ServerProt.Response.Completion.kind;
     name;
+    labelDetail;
+    description = None;
+    itemDetail;
     text_edit;
     additional_text_edits = [];
-    detail = cli_detail;
     sort_text;
     preselect;
     documentation;
     tags;
     log_info;
-    source = None;
-    type_ = lsp_detail;
     insert_text_format;
   }
 
@@ -159,7 +158,7 @@ let autocomplete_create_result_decl
     (name, edit_locs)
     d =
   let kind = Some (lsp_completion_of_decl d) in
-  let (cli_detail, lsp_detail) = detail_of_ty_decl ~exact_by_default d in
+  let (itemDetail, labelDetail) = detail_of_ty_decl ~exact_by_default d in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
   let insert_text_format =
@@ -171,16 +170,16 @@ let autocomplete_create_result_decl
   {
     ServerProt.Response.Completion.kind;
     name;
+    labelDetail;
+    description = None;
+    itemDetail;
     text_edit;
     additional_text_edits = [];
-    detail = cli_detail;
     sort_text;
     preselect;
     documentation;
     tags;
     log_info;
-    source = None;
-    type_ = lsp_detail;
     insert_text_format;
   }
 
@@ -508,7 +507,9 @@ let completion_item_of_autoimport
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
-      detail = "(global)" (* TODO: include the type *);
+      labelDetail = None;
+      description = None;
+      itemDetail = Some "(global)";
       text_edit = Some (text_edit name edit_locs);
       additional_text_edits = [];
       sort_text = sort_text_of_rank rank;
@@ -516,8 +517,6 @@ let completion_item_of_autoimport
       documentation = None;
       tags = None;
       log_info = "global";
-      source = None;
-      type_ = None;
       insert_text_format = Lsp.Completion.PlainText;
     }
   | Some { Code_action_service.title; edits; from } ->
@@ -525,7 +524,9 @@ let completion_item_of_autoimport
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
-      detail = title (* TODO: include the type *);
+      labelDetail = None;
+      description = Some from;
+      itemDetail = Some title;
       text_edit = Some (text_edit name edit_locs);
       additional_text_edits;
       sort_text = sort_text_of_rank rank;
@@ -533,8 +534,6 @@ let completion_item_of_autoimport
       documentation = None;
       tags = None;
       log_info = "autoimport";
-      source = Some from;
-      type_ = None (* TODO: include the type *);
       insert_text_format = Lsp.Completion.PlainText;
     }
 
@@ -719,7 +718,9 @@ let autocomplete_id
       {
         kind = Some Lsp.Completion.Variable;
         name = "this";
-        detail = "this";
+        labelDetail = None;
+        description = Some "this";
+        itemDetail = Some "this";
         text_edit = Some (text_edit "this" edit_locs);
         additional_text_edits = [];
         sort_text = sort_text_of_rank rank;
@@ -727,8 +728,6 @@ let autocomplete_id
         documentation = None;
         tags = None;
         log_info = "this";
-        source = None;
-        type_ = None (* TODO: include the class type *);
         insert_text_format = Lsp.Completion.PlainText;
       }
       :: items_rev
@@ -741,7 +740,9 @@ let autocomplete_id
       {
         kind = Some Lsp.Completion.Variable;
         name = "super";
-        detail = "super";
+        labelDetail = None;
+        description = Some "super";
+        itemDetail = Some "super";
         text_edit = Some (text_edit "super" edit_locs);
         additional_text_edits = [];
         sort_text = sort_text_of_rank rank;
@@ -749,8 +750,6 @@ let autocomplete_id
         documentation = None;
         tags = None;
         log_info = "super";
-        source = None;
-        type_ = None (* TODO: include the parent class type *);
         insert_text_format = Lsp.Completion.PlainText;
       }
       :: items_rev
@@ -963,7 +962,9 @@ let make_builtin_type ~edit_locs name =
   {
     ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
     name;
-    detail = name;
+    labelDetail = None;
+    description = None;
+    itemDetail = Some name;
     text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
     sort_text = sort_text_of_rank 100 (* after local results *);
@@ -971,8 +972,6 @@ let make_builtin_type ~edit_locs name =
     documentation = None;
     tags = None;
     log_info = "builtin type";
-    source = None;
-    type_ = None;
     insert_text_format = Lsp.Completion.PlainText;
   }
 
@@ -996,7 +995,9 @@ let make_utility_type ~edit_locs name =
   {
     ServerProt.Response.Completion.kind = Some Lsp.Completion.Function;
     name;
-    detail = name;
+    labelDetail = None;
+    description = None;
+    itemDetail = Some name;
     text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
     sort_text = sort_text_of_rank 300 (* after autoimports/globals *);
@@ -1004,8 +1005,6 @@ let make_utility_type ~edit_locs name =
     documentation = None;
     tags = None;
     log_info = "builtin type";
-    source = None;
-    type_ = None;
     insert_text_format = Lsp.Completion.PlainText;
   }
 
@@ -1036,7 +1035,9 @@ let make_type_param ~edit_locs { Type.name; _ } =
   {
     ServerProt.Response.Completion.kind = Some Lsp.Completion.TypeParameter;
     name;
-    detail = name;
+    labelDetail = None;
+    description = None;
+    itemDetail = Some name;
     text_edit = Some (text_edit name edit_locs);
     additional_text_edits = [];
     sort_text = sort_text_of_rank 0;
@@ -1044,8 +1045,6 @@ let make_type_param ~edit_locs { Type.name; _ } =
     documentation = None;
     tags = None;
     log_info = "unqualified type parameter";
-    source = None;
-    type_ = None;
     insert_text_format = Lsp.Completion.PlainText;
   }
 

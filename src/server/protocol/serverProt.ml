@@ -207,9 +207,11 @@ module Response = struct
 
   module Completion = struct
     type completion_item = {
-      detail: string;
       kind: Lsp.Completion.completionItemKind option;
       name: string;
+      labelDetail: string option;  (** LSP's CompletionItemLabelDetails.detail *)
+      description: string option;  (** LSP's CompletionItemLabelDetails.description *)
+      itemDetail: string option;  (** LSP's CompletionItem.detail *)
       text_edit: insert_replace_edit option;
       additional_text_edits: textedit list;
       sort_text: string option;
@@ -217,8 +219,6 @@ module Response = struct
       documentation: string option;
       tags: Lsp.CompletionItemTag.t list option;
       log_info: string;
-      source: string option;  (** autoimport source *)
-      type_: string option;
       insert_text_format: Lsp.Completion.insertTextFormat;
     }
 
