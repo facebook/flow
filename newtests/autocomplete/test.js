@@ -137,10 +137,6 @@ module.exports = (suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
-               "name": "length",
-               "type": "number"
-             },
-             {
                "name": "[Symbol.iterator]",
                "type": "() => Iterator<string>"
              },
@@ -187,6 +183,10 @@ module.exports = (suite(({addFile, flowCmd}) => [
              {
                "name": "lastIndexOf",
                "type": "(searchString: string, position?: number) => number"
+             },
+             {
+               "name": "length",
+               "type": "number"
              },
              {
                "name": "link",
@@ -477,24 +477,12 @@ module.exports = (suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
-               "name": "arguments",
-               "type": "any"
-             },
-             {
-               "name": "caller",
-               "type": "any | null"
-             },
-             {
-               "name": "length",
-               "type": "number"
-             },
-             {
-               "name": "name",
-               "type": "string"
-             },
-             {
                "name": "apply",
                "type": "(thisArg: any, argArray?: any) => any"
+             },
+             {
+               "name": "arguments",
+               "type": "any"
              },
              {
                "name": "bind",
@@ -505,12 +493,24 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": "(thisArg: any, ...argArray: Array<any>) => any"
              },
              {
+               "name": "caller",
+               "type": "any | null"
+             },
+             {
                "name": "hasOwnProperty",
                "type": "(prop: mixed) => boolean"
              },
              {
                "name": "isPrototypeOf",
                "type": "(o: mixed) => boolean"
+             },
+             {
+               "name": "length",
+               "type": "number"
+             },
+             {
+               "name": "name",
+               "type": "string"
              },
              {
                "name": "propertyIsEnumerable",

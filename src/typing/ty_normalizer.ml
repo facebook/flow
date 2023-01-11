@@ -2058,7 +2058,7 @@ end = struct
 
     and member_expand_object ~env ~proto super implements inst =
       let { T.own_props; proto_props; _ } = inst in
-      let%bind own_ty_props = TypeConverter.convert_obj_props_t ~env own_props None in
+      let%bind own_ty_props = TypeConverter.convert_obj_props_t ~env ~proto own_props None in
       let%bind proto_ty_props = TypeConverter.convert_obj_props_t ~env ~proto proto_props None in
       let%bind super_props =
         if include_proto_members then

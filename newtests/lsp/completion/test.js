@@ -2269,80 +2269,10 @@ b.te
               isIncomplete: false,
               items: [
                 {
-                  label: 'arguments',
-                  kind: 6,
-                  detail: 'any',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'arguments',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        index: 0,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'arguments',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'caller',
-                  kind: 13,
-                  detail: 'any | null',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'caller',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        index: 1,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'caller',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'childContextTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000002',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2365,7 +2295,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 2,
+                        index: 0,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'childContextTypes',
@@ -2377,7 +2307,7 @@ b.te
                   label: 'contextTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000003',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2400,7 +2330,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 3,
+                        index: 1,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'contextTypes',
@@ -2412,7 +2342,7 @@ b.te
                   label: 'displayName',
                   kind: 13,
                   detail: '(?string) | void',
-                  sortText: '00000000000000000004',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2435,7 +2365,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 4,
+                        index: 2,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'displayName',
@@ -2444,84 +2374,10 @@ b.te
                   },
                 },
                 {
-                  label: 'length',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000005',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'length',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        index: 5,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'length',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'name',
-                  kind: 6,
-                  detail: 'string',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Returns the name of the function.',
-                  },
-                  sortText: '00000000000000000006',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 14,
-                        character: 3,
-                      },
-                      end: {
-                        line: 14,
-                        character: 3,
-                      },
-                    },
-                    newText: 'name',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        index: 6,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'name',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'propTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000007',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2544,7 +2400,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 7,
+                        index: 3,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'propTypes',
@@ -2556,7 +2412,7 @@ b.te
                   label: 'apply',
                   kind: 3,
                   detail: '(thisArg: any, argArray?: any) => any',
-                  sortText: '00000000000000000008',
+                  sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2579,7 +2435,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 8,
+                        index: 4,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'apply',
@@ -2588,10 +2444,45 @@ b.te
                   },
                 },
                 {
+                  label: 'arguments',
+                  kind: 6,
+                  detail: 'any',
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'arguments',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'arguments',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'bind',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  sortText: '00000000000000000009',
+                  sortText: '00000000000000000006',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2614,7 +2505,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 9,
+                        index: 6,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'bind',
@@ -2626,7 +2517,7 @@ b.te
                   label: 'call',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  sortText: '00000000000000000010',
+                  sortText: '00000000000000000007',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2649,10 +2540,45 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 10,
+                        index: 7,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'call',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'caller',
+                  kind: 13,
+                  detail: 'any | null',
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'caller',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 8,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'caller',
                       },
                     ],
                   },
@@ -2666,7 +2592,7 @@ b.te
                     value:
                       'Determines whether an object has a property with the specified name.',
                   },
-                  sortText: '00000000000000000011',
+                  sortText: '00000000000000000009',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2689,7 +2615,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 11,
+                        index: 9,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'hasOwnProperty',
@@ -2706,7 +2632,7 @@ b.te
                     value:
                       "Determines whether an object exists in another object's prototype chain.",
                   },
-                  sortText: '00000000000000000012',
+                  sortText: '00000000000000000010',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -2729,10 +2655,84 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 12,
+                        index: 10,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'isPrototypeOf',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'length',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000011',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'length',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 11,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'length',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'name',
+                  kind: 6,
+                  detail: 'string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns the name of the function.',
+                  },
+                  sortText: '00000000000000000012',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
+                    },
+                    newText: 'name',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 12,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'name',
                       },
                     ],
                   },
@@ -2922,80 +2922,10 @@ b.te
               isIncomplete: false,
               items: [
                 {
-                  label: 'arguments',
-                  kind: 6,
-                  detail: 'any',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'arguments',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        index: 0,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'arguments',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'caller',
-                  kind: 13,
-                  detail: 'any | null',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'caller',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        index: 1,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'caller',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'childContextTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000002',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3018,7 +2948,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 2,
+                        index: 0,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'childContextTypes',
@@ -3030,7 +2960,7 @@ b.te
                   label: 'contextTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000003',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3053,7 +2983,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 3,
+                        index: 1,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'contextTypes',
@@ -3065,7 +2995,7 @@ b.te
                   label: 'displayName',
                   kind: 13,
                   detail: '(?string) | void',
-                  sortText: '00000000000000000004',
+                  sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3088,7 +3018,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 4,
+                        index: 2,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'displayName',
@@ -3097,84 +3027,10 @@ b.te
                   },
                 },
                 {
-                  label: 'length',
-                  kind: 6,
-                  detail: 'number',
-                  sortText: '00000000000000000005',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'length',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        index: 5,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'length',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'name',
-                  kind: 6,
-                  detail: 'string',
-                  documentation: {
-                    kind: 'markdown',
-                    value: 'Returns the name of the function.',
-                  },
-                  sortText: '00000000000000000006',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
-                      end: {
-                        line: 15,
-                        character: 2,
-                      },
-                    },
-                    newText: 'name',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'member',
-                      {
-                        token: 'AUTO332',
-                        index: 6,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'name',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'propTypes',
                   kind: 6,
                   detail: 'any',
-                  sortText: '00000000000000000007',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3197,7 +3053,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 7,
+                        index: 3,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'propTypes',
@@ -3209,7 +3065,7 @@ b.te
                   label: 'apply',
                   kind: 3,
                   detail: '(thisArg: any, argArray?: any) => any',
-                  sortText: '00000000000000000008',
+                  sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3232,7 +3088,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 8,
+                        index: 4,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'apply',
@@ -3241,10 +3097,45 @@ b.te
                   },
                 },
                 {
+                  label: 'arguments',
+                  kind: 6,
+                  detail: 'any',
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'arguments',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 5,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'arguments',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'bind',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  sortText: '00000000000000000009',
+                  sortText: '00000000000000000006',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3267,7 +3158,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 9,
+                        index: 6,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'bind',
@@ -3279,7 +3170,7 @@ b.te
                   label: 'call',
                   kind: 3,
                   detail: '(thisArg: any, ...argArray: Array<any>) => any',
-                  sortText: '00000000000000000010',
+                  sortText: '00000000000000000007',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3302,10 +3193,45 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 10,
+                        index: 7,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'call',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'caller',
+                  kind: 13,
+                  detail: 'any | null',
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'caller',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 8,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'caller',
                       },
                     ],
                   },
@@ -3319,7 +3245,7 @@ b.te
                     value:
                       'Determines whether an object has a property with the specified name.',
                   },
-                  sortText: '00000000000000000011',
+                  sortText: '00000000000000000009',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3342,7 +3268,7 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 11,
+                        index: 9,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'hasOwnProperty',
@@ -3359,7 +3285,7 @@ b.te
                     value:
                       "Determines whether an object exists in another object's prototype chain.",
                   },
-                  sortText: '00000000000000000012',
+                  sortText: '00000000000000000010',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3382,10 +3308,84 @@ b.te
                       'member',
                       {
                         token: 'AUTO332',
-                        index: 12,
+                        index: 10,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'isPrototypeOf',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'length',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000011',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'length',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 11,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'length',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'name',
+                  kind: 6,
+                  detail: 'string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns the name of the function.',
+                  },
+                  sortText: '00000000000000000012',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
+                    },
+                    newText: 'name',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'member',
+                      {
+                        token: 'AUTO332',
+                        index: 12,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'name',
                       },
                     ],
                   },
