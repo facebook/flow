@@ -13,6 +13,7 @@
  *)
 
 open Insert_type_utils
+open Base.Option.Let_syntax
 
 module PreserveLiterals = struct
   type mode =
@@ -58,6 +59,210 @@ module PreserveLiterals = struct
     | _ -> t
 end
 
+(* Given a GraphQL file foo.graphql.js exporting a type
+ *
+ *   export type Foo = {|
+ *     +f?: {|
+ *       +g: {|
+ *         +h: ?$ReadOnlyArray<{|
+ *           +i: {||}
+ *         |}>
+ *       |};
+ *     |}
+ *   |};
+ *
+ * [extract_graphql_fragment cx file_sig typed_ast tgt_aloc] returns the type of
+ * the AST node at location [tgt_aloc] expressed in terms of an exported type alias:
+ *
+ *   $NonMaybeType<Foo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]>
+ *
+ * Note that the solution falls back to optional index chaining as soon as the first
+ * optional type or property is encountered. In that case, we prefix the resulting
+ * type with `$NonMaybeType`.
+ *)
+module GraphQL : sig
+  val extract_graphql_fragment :
+    Context.t ->
+    File_sig.With_ALoc.t ->
+    (ALoc.t, ALoc.t * Type.t) Ast.Program.t ->
+    ALoc.t ->
+    Ty.t option
+end = struct
+  let reader = State_reader.create ()
+
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader
+
+  let abstract_reader = Abstract_state_reader.State_reader reader
+
+  let rec visit_object_property_type defs tgt ~opt_chain ty p =
+    let open Ast.Type.Object.Property in
+    let (_, { key; value; optional; static = _; proto = _; _method = _; variance = _; comments = _ })
+        =
+      p
+    in
+    let open Ast.Expression.Object.Property in
+    match key with
+    | Identifier (_, { Ast.Identifier.name; _ })
+    | Literal (_, { Ast.Literal.value = Ast.Literal.String name; _ }) -> begin
+      match value with
+      | Init t ->
+        let optional = opt_chain || optional in
+        let ty' =
+          Ty.IndexedAccess { _object = ty; index = Ty.StrLit (Reason.OrdinaryName name); optional }
+        in
+        visit_type defs tgt ~opt_chain:optional ty' t
+      | Get _
+      | Set _ ->
+        None
+    end
+    | Literal _
+    | PrivateName _
+    | Computed _ ->
+      None
+
+  and visit_object_type defs tgt ~opt_chain ty ot =
+    let open Ast.Type.Object in
+    let { properties; exact = _; inexact = _; comments = _ } = ot in
+    Base.List.find_map properties ~f:(fun p ->
+        match p with
+        | Property p -> visit_object_property_type defs tgt ~opt_chain ty p
+        | SpreadProperty _
+        | Indexer _
+        | InternalSlot _
+        | CallProperty _ ->
+          None
+    )
+
+  and visit_readonlyarray defs tgt ~opt_chain ty t' =
+    let ty' = Ty.IndexedAccess { _object = ty; index = Ty.NumLit "0"; optional = opt_chain } in
+    visit_type defs tgt ~opt_chain ty' t'
+
+  and visit_type defs tgt ~opt_chain ty t =
+    let open Ast.Type in
+    match t with
+    | (oloc, Object ot) ->
+      if tgt = oloc then
+        Some (ty, opt_chain)
+      else
+        visit_object_type defs tgt ~opt_chain ty ot
+    | (_, Nullable { Nullable.argument = (oloc, Object ot); _ }) ->
+      if tgt = oloc then
+        Some (ty, true)
+      else
+        visit_object_type defs tgt ~opt_chain:true ty ot
+    | ( _,
+        Generic
+          {
+            Generic.id =
+              Generic.Identifier.Unqualified (_, { Ast.Identifier.name = "$ReadOnlyArray"; _ });
+            targs = Some (_, { Ast.Type.TypeArgs.arguments = [t']; _ });
+            _;
+          }
+      ) ->
+      visit_readonlyarray defs tgt ~opt_chain ty t'
+    | ( _,
+        Nullable
+          {
+            Nullable.argument =
+              ( _,
+                Generic
+                  {
+                    Generic.id =
+                      Generic.Identifier.Unqualified
+                        (_, { Ast.Identifier.name = "$ReadOnlyArray"; _ });
+                    targs = Some (_, { Ast.Type.TypeArgs.arguments = [t']; _ });
+                    _;
+                  }
+              );
+            _;
+          }
+      ) ->
+      visit_readonlyarray defs tgt ~opt_chain:true ty t'
+    | _ -> None
+
+  let visit_type_alias defs tgt type_alias =
+    let open Ast.Statement.TypeAlias in
+    match type_alias with
+    | { id; tparams = None; right; comments = _ } ->
+      let (id_loc, { Ast.Identifier.name; _ }) = id in
+      let (name, sym_provenance) =
+        match Loc_collections.LocMap.find_opt id_loc defs with
+        | Some (_, local_name, _) -> (local_name, Ty_symbol.Local)
+        | None -> (name, Ty_symbol.Remote { Ty_symbol.imported_as = None })
+      in
+      let symbol =
+        {
+          Ty_symbol.sym_provenance;
+          sym_def_loc = ALoc.of_loc id_loc;
+          sym_name = Reason.OrdinaryName name;
+          sym_anonymous = false;
+        }
+      in
+      let ty = Ty.Generic (symbol, Ty.TypeAliasKind, None) in
+      let%map (ty, opt_chain) = visit_type defs tgt ~opt_chain:false ty right in
+      if opt_chain then
+        Ty.Utility (Ty.NonMaybeType ty)
+      else
+        ty
+    | _ -> None
+
+  let visit_declaration defs tgt decl =
+    let open Ast.Statement in
+    match decl with
+    | (_loc, TypeAlias type_alias) -> visit_type_alias defs tgt type_alias
+    | _ -> None
+
+  let visit_statement defs tgt stmt =
+    let open Ast.Statement in
+    match stmt with
+    | ( _loc,
+        ExportNamedDeclaration
+          {
+            ExportNamedDeclaration.export_kind = ExportType;
+            source = _;
+            specifiers = _;
+            declaration = Some decl;
+            _;
+          }
+      ) ->
+      visit_declaration defs tgt decl
+    | _ -> None
+
+  let visit_program defs tgt prog =
+    let open Ast.Program in
+    let (_, { statements; _ }) = prog in
+    Base.List.find_map ~f:(visit_statement defs tgt) statements
+
+  let get_imported_ident cx (local_name, loc, import_mode, { Type.TypeScheme.type_; _ }) =
+    let t =
+      match Ty_normalizer.Lookahead.peek cx type_ with
+      | Ty_normalizer.Lookahead.LowerBounds [t] -> t
+      | Ty_normalizer.Lookahead.LowerBounds _
+      | Ty_normalizer.Lookahead.Recursive ->
+        type_
+    in
+    (loc_of_aloc (TypeUtil.def_loc_of_t t), (loc, local_name, import_mode))
+
+  let extract_graphql_fragment cx file_sig typed_ast tgt_aloc =
+    let graphql_file = Base.Option.value_exn (ALoc.source tgt_aloc) in
+    let graphql_ast =
+      Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader:abstract_reader graphql_file
+    in
+    (* Collect information about imports in currect file to accurately compute
+     * wether the base GraphQL type is imported in the current file. *)
+    let defs =
+      Ty_normalizer_imports.extract_imported_idents file_sig
+      |> Ty_normalizer_imports.extract_schemes cx typed_ast
+      |> List.map (get_imported_ident cx)
+      |> Loc_collections.LocMap.of_list
+    in
+    let tgt_loc = loc_of_aloc tgt_aloc in
+    let r = visit_program defs tgt_loc graphql_ast in
+    if Base.Option.is_none r then
+      Hh_logger.info "Failed to extract GraphQL type fragment %s" (Reason.string_of_loc tgt_loc);
+    r
+end
+
 module Make (Extra : BASE_STATS) = struct
   module Acc = Acc (Extra)
 
@@ -70,6 +275,7 @@ module Make (Extra : BASE_STATS) = struct
       ~generalize_maybe
       ~generalize_react_mixed_element
       acc =
+    let { Codemod_context.Typed.full_cx = cx; file_sig; typed_ast; _ } = cctx in
     object (this)
       inherit Insert_type_utils.patch_up_react_mapper ~imports_react () as super
 
@@ -421,6 +627,14 @@ module Make (Extra : BASE_STATS) = struct
                 ))
           when p = b && b = r ->
           this#on_t env t
+        | Ty.Obj { Ty.obj_def_loc = Some aloc; _ } ->
+          let remote_file = Base.Option.value_exn (ALoc.source aloc) in
+          if String.ends_with (File_key.to_string remote_file) ~suffix:"graphql.js" then
+            match GraphQL.extract_graphql_fragment cx file_sig typed_ast aloc with
+            | Some t -> t
+            | None -> super#on_t env t
+          else
+            super#on_t env t
         (* All any's that have reached this point will be serialized. By making them
          * all of the same kind we enable type simplification (which depends on
          * structural equality). *)

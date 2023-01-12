@@ -1,0 +1,47 @@
+>>> file.js (#changes: 3)
+// @flow
+
+import type { Bar as $IMPORTED_TYPE$_Bar } from "./export.graphql";import type {Foo as LocalFoo} from './export.graphql';
+import {foo, bar} from './export.graphql';
+
+/* should annotate x with `$NonMaybeType<LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]>` */
+function m(x: $NonMaybeType<LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]>) {}
+
+const x = foo()?.f?.g?.h?.[0]?.i;
+if (x) {
+  m(x);
+}
+
+const Bar = 1;
+
+/* should annotate x with `$IMPORTED_TYPE$_Bar["f"]["g"]["h"][0]["i"]` */
+function n(x: $IMPORTED_TYPE$_Bar["f"]["g"]["h"][0]["i"]) {}
+
+const y = bar().f.g.h[0].i;
+n(y);
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              2
+  Total size of annotations:               23
+  Number of LTI errors:                     2
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
