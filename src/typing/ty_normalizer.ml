@@ -68,6 +68,41 @@ let error_kind_to_string = function
 
 let error_to_string (kind, msg) = spf "[%s] %s" (error_kind_to_string kind) msg
 
+(* Utility that determines the next immediate concrete constructor, ie. reads
+ * through OpenTs and AnnotTs. This is useful in determining, for example, the
+ * toplevel cosntructor and adjusting the logic accordingly. *)
+module Lookahead = struct
+  type t =
+    | Recursive
+    | LowerBounds of Type.t list
+
+  exception RecursiveExn
+
+  let peek =
+    let rec loop cx acc seen t =
+      match t with
+      | T.OpenT (_, id) ->
+        let (root_id, constraints) = Context.find_constraints cx id in
+        if ISet.mem root_id seen then
+          raise RecursiveExn
+        else
+          let seen = ISet.add root_id seen in
+          (match constraints with
+          | T.Constraint.Resolved (_, t)
+          | T.Constraint.FullyResolved (_, (lazy t)) ->
+            loop cx acc seen t
+          | T.Constraint.Unresolved bounds ->
+            let ts = T.TypeMap.keys bounds.T.Constraint.lower in
+            List.fold_left (fun a t -> loop cx a seen t) acc ts)
+      | T.AnnotT (_, t, _) -> loop cx acc seen t
+      | _ -> List.rev (t :: acc)
+    in
+    fun cx t ->
+      match loop cx [] ISet.empty t with
+      | exception RecursiveExn -> Recursive
+      | ts -> LowerBounds ts
+end
+
 module NormalizerMonad : sig
   module State : sig
     type t
@@ -317,48 +352,6 @@ end = struct
     let%map ts = mapM f ts in
     Ty.mk_union ~from_bounds (t0, t1 :: ts)
 
-  (* Utility that determines the next immediate concrete constructor, ie. reads
-   * through OpenTs and AnnotTs. This is useful in determining, for example, the
-   * toplevel cosntructor and adjusting the logic accordingly. *)
-  module Lookahead : sig
-    type t =
-      | Recursive
-      | LowerBounds of Type.t list
-
-    val peek : env:Env.t -> Type.t -> t
-  end = struct
-    type t =
-      | Recursive
-      | LowerBounds of Type.t list
-
-    exception RecursiveExn
-
-    let peek =
-      let rec loop cx acc seen t =
-        match t with
-        | T.OpenT (_, id) ->
-          let (root_id, constraints) = Context.find_constraints cx id in
-          if ISet.mem root_id seen then
-            raise RecursiveExn
-          else
-            let seen = ISet.add root_id seen in
-            (match constraints with
-            | T.Constraint.Resolved (_, t)
-            | T.Constraint.FullyResolved (_, (lazy t)) ->
-              loop cx acc seen t
-            | T.Constraint.Unresolved bounds ->
-              let ts = T.TypeMap.keys bounds.T.Constraint.lower in
-              List.fold_left (fun a t -> loop cx a seen t) acc ts)
-        | T.AnnotT (_, t, _) -> loop cx acc seen t
-        | _ -> List.rev (t :: acc)
-      in
-      fun ~env t ->
-        let cx = Env.get_cx env in
-        match loop cx [] ISet.empty t with
-        | exception RecursiveExn -> Recursive
-        | ts -> LowerBounds ts
-  end
-
   let should_eval_skip_aliases ~env () =
     match Env.evaluate_type_destructors env with
     | Env.EvaluateNone -> false
@@ -407,7 +400,7 @@ end = struct
         let cx = Env.get_cx env in
         let trace = Trace.dummy_trace in
         let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
-        match Lookahead.peek ~env tout with
+        match Lookahead.peek (Env.get_cx env) tout with
         | Lookahead.LowerBounds [t] -> cont ~env ~id:(EvalKey id) t
         | _ -> default ~env tout
       else
@@ -896,7 +889,7 @@ end = struct
         | _ -> false
       in
       let keep_field ~env t =
-        match Lookahead.peek ~env t with
+        match Lookahead.peek (Env.get_cx env) t with
         | Lookahead.LowerBounds [t] -> not (is_type_alias t)
         | _ -> true
       in
@@ -1242,7 +1235,7 @@ end = struct
           terr ~kind:BadTypeApp ~msg None
       in
       fun ~env t targs ->
-        match Lookahead.peek ~env t with
+        match Lookahead.peek (Env.get_cx env) t with
         | Lookahead.Recursive -> terr ~kind:BadTypeApp ~msg:"recursive" (Some t)
         | Lookahead.LowerBounds [] ->
           (* It's unlikely that an upper bound would be useful here *)
@@ -1788,7 +1781,7 @@ end = struct
           Ty.Type t
       in
       fun ~env t ->
-        match Lookahead.peek ~env t with
+        match Lookahead.peek (Env.get_cx env) t with
         | Lookahead.LowerBounds [l] -> singleton ~env ~orig_t:t l
         | Lookahead.Recursive
         | Lookahead.LowerBounds _ ->
@@ -1800,7 +1793,7 @@ end = struct
       let from_cjs_export ~env = function
         | None -> return None
         | Some exports ->
-          (match Lookahead.peek ~env exports with
+          (match Lookahead.peek (Env.get_cx env) exports with
           | Lookahead.LowerBounds [DefT (r, _, ObjT o)] ->
             let%map (_, _, default) = module_of_object ~env r o in
             default
@@ -1882,100 +1875,42 @@ end = struct
    * whether a located name (symbol) appearing is part of the file's imports or a
    * remote (hidden or non-imported) name.
    *)
-  module Imports = struct
-    open File_sig
 
-    (* Collect the names and locations of types that are available as we scan
-     * the imports. Later we'll match them with some remote defining loc. *)
-    type acc_t = Ty.imported_ident list
-
-    let from_imported_locs_map ~import_mode map (acc : acc_t) =
-      SMap.fold
-        (fun _remote remote_map acc ->
-          SMap.fold
-            (fun local imported_locs_nel acc ->
-              Nel.fold_left
-                (fun acc { local_loc; _ } -> (local_loc, local, import_mode) :: acc)
-                acc
-                imported_locs_nel)
-            remote_map
-            acc)
-        map
-        acc
-
-    let rec from_binding ~import_mode binding (acc : acc_t) =
-      match binding with
-      | BindIdent (loc, name) -> (loc, name, import_mode) :: acc
-      | BindNamed map ->
-        List.fold_left (fun acc (_, binding) -> from_binding ~import_mode binding acc) acc map
-
-    let from_bindings ~import_mode bindings_opt acc =
-      match bindings_opt with
-      | Some bindings -> from_binding ~import_mode bindings acc
-      | None -> acc
-
-    let from_require require (acc : acc_t) =
-      match require with
-      | Require { source = _; require_loc = _; bindings } ->
-        from_bindings ~import_mode:Ty.ValueMode bindings acc
-      | Import { import_loc = _; source = _; named; ns = _; types; typesof; typesof_ns = _ } ->
-        (* TODO import namespaces (`ns`) as modules that might contain imported types *)
-        acc
-        |> from_imported_locs_map ~import_mode:Ty.ValueMode named
-        |> from_imported_locs_map ~import_mode:Ty.TypeMode types
-        |> from_imported_locs_map ~import_mode:Ty.TypeofMode typesof
-      | ImportDynamic _
-      | Import0 _
-      | ExportFrom _ ->
-        acc
-
-    let extract_imported_idents requires =
-      List.fold_left (fun acc require -> from_require require acc) [] requires
-
-    let extract_schemes cx typed_ast (imported_locs : acc_t) =
-      List.fold_left
-        (fun acc (loc, name, import_mode) ->
-          match Typed_ast_utils.find_exact_match_annotation cx typed_ast loc with
-          | Some scheme -> (name, loc, import_mode, scheme) :: acc
-          | None -> acc)
-        []
-        imported_locs
-
-    let extract_ident =
-      let open Ty in
-      let def_loc_of_ty = function
-        | Utility (Class (Generic ({ sym_def_loc; _ }, _, None)))
-        (* This is an acceptable proxy only if the class is not polymorphic *)
-        | TypeOf (TSymbol { sym_def_loc; _ }) ->
-          Some sym_def_loc
-        | _ -> None
-      in
-      let def_loc_of_decl = function
-        | TypeAliasDecl { import = false; name = { sym_def_loc; _ }; _ }
-        | ClassDecl ({ sym_def_loc; _ }, _)
-        | InterfaceDecl ({ sym_def_loc; _ }, _)
-        | EnumDecl { sym_def_loc; _ } ->
-          Some sym_def_loc
-        | TypeAliasDecl { import = true; type_ = Some t; _ } -> def_loc_of_ty t
-        | _ -> None
-      in
-      let def_loc_of_elt = function
-        | Type t -> def_loc_of_ty t
-        | Decl d -> def_loc_of_decl d
-      in
-      fun ~options ~genv scheme ->
-        let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
-        let imported_names = ALocMap.empty in
-        let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
-        let%map ty = ElementConverter.convert_toplevel ~env t in
-        def_loc_of_elt ty
-
-    let normalize_imports ~options ~genv imported_schemes : Ty.imported_ident ALocMap.t =
+  let normalize_imports =
+    let open Ty in
+    let def_loc_of_ty = function
+      | Utility (Class (Generic ({ sym_def_loc; _ }, _, None)))
+      (* This is an acceptable proxy only if the class is not polymorphic *)
+      | TypeOf (TSymbol { sym_def_loc; _ }) ->
+        Some sym_def_loc
+      | _ -> None
+    in
+    let def_loc_of_decl = function
+      | TypeAliasDecl { import = false; name = { sym_def_loc; _ }; _ }
+      | ClassDecl ({ sym_def_loc; _ }, _)
+      | InterfaceDecl ({ sym_def_loc; _ }, _)
+      | EnumDecl { sym_def_loc; _ } ->
+        Some sym_def_loc
+      | TypeAliasDecl { import = true; type_ = Some t; _ } -> def_loc_of_ty t
+      | _ -> None
+    in
+    let def_loc_of_elt = function
+      | Type t -> def_loc_of_ty t
+      | Decl d -> def_loc_of_decl d
+    in
+    let convert ~options ~genv scheme =
+      let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
+      let imported_names = ALocMap.empty in
+      let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
+      let%map ty = ElementConverter.convert_toplevel ~env t in
+      def_loc_of_elt ty
+    in
+    fun ~options ~genv imported_schemes : Ty.imported_ident ALocMap.t ->
       let state = State.empty in
       let (_, result) =
         List.fold_left
           (fun (st, acc) (name, loc, import_mode, scheme) ->
-            match run st (extract_ident ~options ~genv scheme) with
+            match run st (convert ~options ~genv scheme) with
             | (Ok (Some def_loc), st) -> (st, ALocMap.add def_loc (loc, name, import_mode) acc)
             | (Ok None, st) ->
               (* unrecognizable remote type *)
@@ -1987,18 +1922,12 @@ end = struct
           imported_schemes
       in
       result
-  end
 
   let run_imports ~options ~genv =
-    Imports.(
-      let { Env.file_sig = { File_sig.module_sig = { File_sig.requires; _ }; _ }; typed_ast; cx; _ }
-          =
-        genv
-      in
-      extract_imported_idents requires
-      |> extract_schemes cx typed_ast
-      |> normalize_imports ~options ~genv
-    )
+    let { Env.file_sig; typed_ast; cx; _ } = genv in
+    Ty_normalizer_imports.extract_imported_idents file_sig
+    |> Ty_normalizer_imports.extract_schemes cx typed_ast
+    |> normalize_imports ~options ~genv
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val include_proto_members : bool

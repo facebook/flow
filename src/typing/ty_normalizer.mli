@@ -31,6 +31,14 @@ type error = error_kind * string
 
 val error_to_string : error -> string
 
+module Lookahead : sig
+  type t =
+    | Recursive
+    | LowerBounds of Type.t list
+
+  val peek : Context.t -> Type.t -> t
+end
+
 val from_type : options:options -> genv:genv -> Type.t -> (Ty.elt, error) result
 
 val from_scheme : options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.elt, error) result
