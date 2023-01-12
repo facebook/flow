@@ -201,6 +201,10 @@ of properties. For this, Flow supports "exact" object types.
 {| foo: string, bar: number |}
 ```
 
+You can denote exact object types by adding a pair of "vertical bars" or "pipes" to the inside of the curly braces.
+If you want to make them the default when writing object types, you can add [`exact_by_default=true`](../../config/options/#toc-exact-by-default-boolean)
+to your `.flowconfig` options.
+
 Unlike regular object types, it is not valid to pass an object with "extra"
 properties to an exact object type.
 
