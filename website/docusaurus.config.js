@@ -208,6 +208,10 @@ module.exports = {
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
+        googleAnalytics: {
+          trackingID: 'UA-49208336-4',
+          anonymizeIP: true,
+        },
       },
     ],
   ],
