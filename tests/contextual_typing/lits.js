@@ -4,7 +4,7 @@ let h = []; // err
 let x: Array<number> = []
 let y: Array<Array<number>> = [[]];
 let z: { a?: ?Array<number> } = { a: [] }
-let w: { ... } = { a: [] }
+let w: { ... } = { a: [] } // err
 let u: [number] = []; // err
 let v: $ReadOnlyArray<number> = [];
 

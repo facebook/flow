@@ -2315,11 +2315,10 @@ module Make
       end else if not (Context.lti cx) then
         ()
       else
-        let default_init () = if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt) in
         match lazy_hint element_reason with
         | None ->
-          (* If there's a hint, but the hint doesn't provide a type for this array, then this type will never be read from *)
-          default_init ()
+          Flow.add_output cx (Error_message.EEmptyArrayNoProvider { loc });
+          if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
         | Some hint ->
           let elemt' = Tvar.mk cx element_reason in
           if
@@ -2329,7 +2328,9 @@ module Make
           then
             Flow.unify cx elemt (PinTypes.pin_type cx ~use_op:unknown_use element_reason elemt')
           else
-            default_init ()
+            (* If there's a usable hint, but the hint doesn't provide a type for this array,
+               then the element type of the array is likely useless, so we can provide empty here. *)
+            Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
     );
     (reason, elemt)
 
