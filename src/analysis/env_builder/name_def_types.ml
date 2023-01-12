@@ -42,7 +42,7 @@ type hint_node =
   | StringLiteralType of string
   | BuiltinType of string
 
-type ast_hint =
+type ast_hints =
   ( hint_node,
     (ALoc.t, ALoc.t) Ast.Expression.CallTypeArgs.t option,
     (ALoc.t, ALoc.t) Ast.Expression.ArgList.t,
@@ -50,6 +50,7 @@ type ast_hint =
     ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list
   )
   hint
+  list
 
 type function_synth_kind =
   | FunctionSynthesizable
@@ -77,11 +78,11 @@ type root =
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }
   | Value of {
-      hint: ast_hint;
+      hints: ast_hints;
       expr: (ALoc.t, ALoc.t) Ast.Expression.t;
     }
   | FunctionValue of {
-      hint: ast_hint;
+      hints: ast_hints;
       synthesizable_from_annotation: function_synth_kind;
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
@@ -100,7 +101,7 @@ type root =
     }
   | Contextual of {
       reason: Reason.reason;
-      hint: ast_hint;
+      hints: ast_hints;
       optional: bool;
       default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
     }
@@ -160,7 +161,7 @@ type expression_def = {
   cond_context: cond_context;
   chain: bool;
   expr: (ALoc.t, ALoc.t) Ast.Expression.t;
-  hint: ast_hint;
+  hints: ast_hints;
 }
 
 type def =
@@ -182,7 +183,7 @@ type def =
       op: Ast.Expression.Update.operator;
     }
   | Function of {
-      hint: ast_hint;
+      hints: ast_hints;
       synthesizable_from_annotation: function_synth_kind;
       arrow: bool;
       has_this_def: bool;
@@ -265,8 +266,8 @@ module Print = struct
 
   let string_of_source = function
     | Binding b -> string_of_binding b
-    | ExpressionDef { expr = (expr_loc, _); hint; _ } ->
-      spf "exp %s (hint = %s)" (ALoc.debug_to_string expr_loc) (string_of_hint ~on_hint hint)
+    | ExpressionDef { expr = (expr_loc, _); hints; _ } ->
+      spf "exp %s (hint = %s)" (ALoc.debug_to_string expr_loc) (string_of_hints ~on_hint hints)
     | Update _ -> "[in/de]crement"
     | MemberAssign _ -> "member_assign"
     | OpAssign _ -> "opassign"
@@ -311,4 +312,4 @@ end
 
 type env_entries_map = (def * scope_kind * class_stack * ALoc.t virtual_reason) Env_api.EnvMap.t
 
-type hint_map = ast_hint ALocMap.t
+type hint_map = ast_hints ALocMap.t

@@ -199,16 +199,13 @@ let resolve_hint cx loc hint =
     in
     Hint_api.map hint ~map_base_hint ~map_targs ~map_arg_list ~map_jsx
   else
-    match hint with
-    | Hint_t _
-    | Hint_Decomp _
-    | Hint_Placeholder ->
-      Hint_Placeholder
-    | Hint_None -> Hint_None
+    Hint_Placeholder
 
-let lazily_resolve_hint cx loc hint =
-  let has_hint = not @@ Hint_api.is_hint_none hint in
-  let lazy_hint reason = resolve_hint cx loc hint |> Type_hint.evaluate_hint cx reason in
+let resolve_hints cx loc = Base.List.map ~f:(resolve_hint cx loc)
+
+let lazily_resolve_hints cx loc hints =
+  let has_hint = not @@ Base.List.is_empty hints in
+  let lazy_hint reason = resolve_hints cx loc hints |> Type_hint.evaluate_hints cx reason in
   (has_hint, lazy_hint)
 
 let resolve_annotated_function
@@ -291,7 +288,7 @@ let resolve_binding_partial cx reason loc b =
         unknown_use
     in
     (t, use_op)
-  | Root (Value { hint = _; expr }) ->
+  | Root (Value { hints = _; expr }) ->
     let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op)
@@ -427,7 +424,7 @@ let resolve_binding_partial cx reason loc b =
   | Root
       (FunctionValue
         {
-          hint = _;
+          hints = _;
           synthesizable_from_annotation = FunctionSynthesizable;
           function_loc;
           function_;
@@ -474,7 +471,7 @@ let resolve_binding_partial cx reason loc b =
   | Root
       (FunctionValue
         {
-          hint = _;
+          hints = _;
           synthesizable_from_annotation = _;
           function_loc;
           function_;
@@ -585,12 +582,12 @@ let resolve_binding_partial cx reason loc b =
     Node_cache.set_expression cache exp;
     let use_op = Op (AssignVar { var = Some reason; init = mk_reason (RCode "[]") arr_loc }) in
     (t, use_op)
-  | Root (Contextual { reason; hint; optional; default_expression }) ->
+  | Root (Contextual { reason; hints; optional; default_expression }) ->
     let param_loc = Reason.poly_loc_of_reason reason in
     let contextual_typing_enabled = Context.lti cx in
     let t =
       if contextual_typing_enabled then
-        let (has_hint, lazy_hint) = lazily_resolve_hint cx loc hint in
+        let (has_hint, lazy_hint) = lazily_resolve_hints cx loc hints in
         match lazy_hint reason with
         | None ->
           if has_hint then
@@ -605,8 +602,8 @@ let resolve_binding_partial cx reason loc b =
         Tvar.mk cx reason
     in
     let () =
-      match hint with
-      | Hint_api.Hint_None ->
+      match hints with
+      | [] ->
         Flow_js.add_output
           cx
           (Error_message.EMissingLocalAnnotation
@@ -955,9 +952,9 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   let (t, use_op) =
     match def with
     | Binding b -> resolve_binding cx def_reason def_kind id_loc b
-    | ExpressionDef { cond_context = cond; expr; chain = true; hint = _ } ->
+    | ExpressionDef { cond_context = cond; expr; chain = true; hints = _ } ->
       resolve_chain_expression cx ~cond expr
-    | ExpressionDef { cond_context = cond; expr; chain = false; hint = _ } ->
+    | ExpressionDef { cond_context = cond; expr; chain = false; hints = _ } ->
       resolve_write_expression cx ~cond expr
     | Function
         {
@@ -970,7 +967,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           function_loc;
           tparams_map;
           statics;
-          hint = _;
+          hints = _;
         } ->
       resolve_annotated_function
         cx
@@ -990,7 +987,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           function_loc;
           tparams_map = _;
           statics;
-          hint = _;
+          hints = _;
         } ->
       resolve_inferred_function
         cx

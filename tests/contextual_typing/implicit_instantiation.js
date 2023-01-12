@@ -144,3 +144,10 @@ function test11() {
   declare var C2: React$AbstractComponent<{f1: () => void, f2: () => void}, mixed>
   <C2 f1={jest.fn()} f2={jest.fn()} />; // ok
 }
+
+function test12(foo: ?Array<string>) {
+  const a = new Set(foo || []);
+  const b = new Set(foo ?? []);
+  (a: Set<empty>); // error Set<string> ~> Set<empty>
+  (b: Set<empty>); // error Set<string> ~> Set<empty>
+}

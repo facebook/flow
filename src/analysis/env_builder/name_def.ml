@@ -20,7 +20,7 @@ module Destructure : sig
   val fold_pattern :
     record_identifier:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> 'a) ->
     record_destructuring_intermediate:(ALoc.t -> binding -> unit) ->
-    visit_default_expression:(hint:ast_hint -> (ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
+    visit_default_expression:(hints:ast_hints -> (ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
     join:('a -> 'a -> 'a) ->
     default:'a ->
     binding ->
@@ -30,7 +30,7 @@ module Destructure : sig
   val pattern :
     record_identifier:(ALoc.t -> ALoc.t Reason.virtual_reason -> binding -> unit) ->
     record_destructuring_intermediate:(ALoc.t -> binding -> unit) ->
-    visit_default_expression:(hint:ast_hint -> (ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
+    visit_default_expression:(hints:ast_hints -> (ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
     binding ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
     unit
@@ -118,8 +118,8 @@ end = struct
     | Expression _ -> default
 
   and pattern_hint = function
-    | (loc, Ast.Pattern.Identifier _) -> Hint_t (WriteLocHint (Env_api.OrdinaryNameLoc, loc))
-    | (loc, _) -> Hint_t (WriteLocHint (Env_api.PatternLoc, loc))
+    | (loc, Ast.Pattern.Identifier _) -> [Hint_t (WriteLocHint (Env_api.OrdinaryNameLoc, loc))]
+    | (loc, _) -> [Hint_t (WriteLocHint (Env_api.PatternLoc, loc))]
 
   and array_elements
       ~record_identifier
@@ -137,8 +137,8 @@ end = struct
           match elt with
           | Hole _ -> default
           | Element (_, { Element.argument = p; default = d }) ->
-            let hint = pattern_hint p in
-            Base.Option.iter d ~f:(visit_default_expression ~hint);
+            let hints = pattern_hint p in
+            Base.Option.iter d ~f:(visit_default_expression ~hints);
             let acc = array_element (parent_loc, acc) i d in
             fold_pattern
               ~record_identifier
@@ -177,8 +177,8 @@ end = struct
         p =
       match p with
       | Property (_, { Property.key; pattern = p; default = d; shorthand = _ }) ->
-        let hint = pattern_hint p in
-        Base.Option.iter d ~f:(visit_default_expression ~hint);
+        let hints = pattern_hint p in
+        Base.Option.iter d ~f:(visit_default_expression ~hints);
         let (acc, xs, has_computed') = object_property (parent_loc, acc) xs key d in
         ( fold_pattern
             ~record_identifier
@@ -527,10 +527,10 @@ let expression_has_autocomplete ~autocomplete_hooks = function
   | (loc, Ast.Expression.Literal _) -> autocomplete_hooks.Env_api.With_ALoc.literal_hook loc
   | _ -> false
 
-let def_of_function ~tparams_map ~hint ~has_this_def ~function_loc ~statics ~arrow function_ =
+let def_of_function ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~arrow function_ =
   Function
     {
-      hint;
+      hints;
       synthesizable_from_annotation = func_is_synthesizable_from_annotation function_;
       arrow;
       has_this_def;
@@ -576,7 +576,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     val mutable class_stack : class_stack = []
 
-    val mutable return_hint_stack : ast_hint list = []
+    val mutable return_hint_stack : ast_hints list = []
 
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
@@ -698,7 +698,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                                 (ExpressionDef
                                    {
                                      cond_context = NonConditionalContext;
-                                     hint = Hint_None;
+                                     hints = [];
                                      chain = false;
                                      expr = init;
                                    }
@@ -846,7 +846,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
             if Env_api.has_assigning_write (Env_api.OrdinaryNameLoc, id_loc) env_entries then
               let visit statics =
                 this#visit_function_expr
-                  ~func_hint:Hint_None
+                  ~func_hints:[]
                   ~has_this_def:(not arrow)
                   ~var_assigned_to:(Some var_id)
                   ~statics
@@ -876,7 +876,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
     method! variable_declarator ~kind decl =
       let open Ast.Statement.VariableDeclaration.Declarator in
       let (_, { id; init }) = decl in
-      let (source, hint) =
+      let (source, hints) =
         match (Destructure.type_of_pattern id, init, id) with
         | (Some annot, _, _) ->
           ( Some
@@ -889,7 +889,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                    annot;
                  }
               ),
-            Hint_t (AnnotationHint (ALocMap.empty, annot))
+            [Hint_t (AnnotationHint (ALocMap.empty, annot))]
           )
         | ( None,
             Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
@@ -898,7 +898,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           let { Provider_api.array_providers; _ } =
             Base.Option.value_exn (Provider_api.providers_of_def providers name_loc)
           in
-          (Some (EmptyArray { array_providers; arr_loc }), Hint_None)
+          (Some (EmptyArray { array_providers; arr_loc }), [])
         | ( None,
             Some
               ( ( loc,
@@ -910,16 +910,16 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           let this_write_locs = obj_this_write_locs obj in
           begin
             match obj_properties_synthesizable ~this_write_locs obj with
-            | Unsynthesizable -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
-            | synthesizable -> (Some (ObjectValue { obj_loc = loc; obj; synthesizable }), Hint_None)
+            | Unsynthesizable -> (Some (Value { hints = []; expr = init }), [])
+            | synthesizable -> (Some (ObjectValue { obj_loc = loc; obj; synthesizable }), [])
           end
-        | (None, Some init, _) -> (Some (Value { hint = Hint_None; expr = init }), Hint_None)
-        | (None, None, _) -> (None, Hint_None)
+        | (None, Some init, _) -> (Some (Value { hints = []; expr = init }), [])
+        | (None, None, _) -> (None, [])
       in
       Base.Option.iter ~f:(fun acc -> this#add_destructure_bindings acc id) source;
       ignore @@ this#variable_declarator_pattern ~kind id;
       Base.Option.iter init ~f:(fun init ->
-          this#visit_expression ~hint ~cond:NonConditionalContext init
+          this#visit_expression ~hints ~cond:NonConditionalContext init
       );
       decl
 
@@ -958,7 +958,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! function_param (loc, _) = fail loc "Should be visited by visit_function_param"
 
-    method private visit_function_param ~hint (param : ('loc, 'loc) Ast.Function.Param.t) =
+    method private visit_function_param ~hints (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
       let (loc, { argument; default = default_expression }) = param in
       let optional =
@@ -975,7 +975,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
             default_expression
             ~f:
               (this#visit_expression
-                 ~hint:(Hint_t (AnnotationHint (tparams, annot)))
+                 ~hints:[Hint_t (AnnotationHint (tparams, annot))]
                  ~cond:NonConditionalContext
               );
           Annotation
@@ -989,7 +989,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
         | None ->
           Base.Option.iter
             default_expression
-            ~f:(this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext);
+            ~f:(this#visit_expression ~hints:[] ~cond:NonConditionalContext);
           let reason =
             match argument with
             | ( _,
@@ -999,8 +999,8 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
               mk_reason (RParameter (Some name)) param_loc
             | _ -> mk_reason RDestructuring param_loc
           in
-          this#record_hint param_loc hint;
-          Contextual { reason; hint; optional; default_expression }
+          this#record_hint param_loc hints;
+          Contextual { reason; hints; optional; default_expression }
       in
       let record_identifier loc reason binding =
         this#add_ordinary_binding loc reason (Binding binding);
@@ -1026,7 +1026,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           NonBindingParam;
       ignore @@ super#function_param (loc, { argument; default = None })
 
-    method private visit_function_rest_param ~hint (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
+    method private visit_function_rest_param ~hints (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
       let (_, { argument; comments = _ }) = expr in
       let (param_loc, _) = argument in
@@ -1054,8 +1054,8 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                  error in statement.ml. *)
               mk_reason (RCustom "contextual variable") param_loc
           in
-          this#record_hint param_loc hint;
-          Contextual { reason; hint; optional = false; default_expression = None }
+          this#record_hint param_loc hints;
+          Contextual { reason; hints; optional = false; default_expression = None }
       in
       this#add_destructure_bindings source argument;
       ignore @@ super#function_rest_param expr
@@ -1108,7 +1108,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       super#catch_clause_pattern pat
 
     method visit_function_expr
-        ~func_hint ~has_this_def ~var_assigned_to ~statics ~arrow function_loc expr =
+        ~func_hints ~has_this_def ~var_assigned_to ~statics ~arrow function_loc expr =
       let {
         Ast.Function.id;
         async;
@@ -1133,7 +1133,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
         | _ -> ()
       end;
       this#in_new_tparams_env (fun () ->
-          this#visit_function ~scope_kind ~func_hint expr;
+          this#visit_function ~scope_kind ~func_hints expr;
           (match var_assigned_to with
           | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
             this#add_ordinary_binding
@@ -1143,7 +1143,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                  (Root
                     (FunctionValue
                        {
-                         hint = func_hint;
+                         hints = func_hints;
                          synthesizable_from_annotation = func_is_synthesizable_from_annotation expr;
                          function_loc;
                          function_ = expr;
@@ -1169,7 +1169,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
             let def =
               def_of_function
                 ~tparams_map:tparams
-                ~hint:func_hint
+                ~hints:func_hints
                 ~has_this_def
                 ~arrow:false
                 ~function_loc
@@ -1186,7 +1186,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! function_expression loc expr =
       this#visit_function_expr
-        ~func_hint:Hint_None
+        ~func_hints:[]
         ~has_this_def:true
         ~var_assigned_to:None
         ~statics:SMap.empty
@@ -1219,12 +1219,12 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
               this#add_binding (Env_api.FunctionThisLoc, loc) (mk_reason RThis loc) MissingThisAnnot
             | _ -> ()
           end;
-          this#visit_function ~func_hint:Hint_None ~scope_kind expr;
+          this#visit_function ~func_hints:[] ~scope_kind expr;
           let reason = func_reason ~async ~generator sig_loc in
           let def =
             def_of_function
               ~tparams_map:tparams
-              ~hint:Hint_None
+              ~hints:[]
               ~has_this_def:true
               ~function_loc:loc
               ~arrow:false
@@ -1241,10 +1241,10 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! function_ _ expr =
       let scope_kind = func_scope_kind expr in
-      this#in_new_tparams_env (fun () -> this#visit_function ~scope_kind ~func_hint:Hint_None expr);
+      this#in_new_tparams_env (fun () -> this#visit_function ~scope_kind ~func_hints:[] expr);
       expr
 
-    method private visit_function ~scope_kind ~func_hint expr =
+    method private visit_function ~scope_kind ~func_hints expr =
       this#in_scope
         (fun () ->
           let {
@@ -1265,12 +1265,12 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           ignore (Base.Option.map this_ ~f:this#function_this_param : _ option);
           Base.List.iteri
             ~f:(fun i ->
-              this#visit_function_param ~hint:(decompose_hint (Decomp_FuncParam i) func_hint))
+              this#visit_function_param ~hints:(decompose_hints (Decomp_FuncParam i) func_hints))
             params_list;
           Base.Option.iter
             ~f:
               (this#visit_function_rest_param
-                 ~hint:(decompose_hint (Decomp_FuncRest (List.length params_list)) func_hint)
+                 ~hints:(decompose_hints (Decomp_FuncRest (List.length params_list)) func_hints)
               )
             rest;
           ignore @@ this#type_annotation_hint return;
@@ -1284,11 +1284,11 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           let return_hint =
             let base_hint =
               match return with
-              | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
-              | Ast.Type.Missing _ -> decompose_hint Decomp_FuncReturn func_hint
+              | Ast.Type.Available annot -> [Hint_t (AnnotationHint (ALocMap.empty, annot))]
+              | Ast.Type.Missing _ -> decompose_hints Decomp_FuncReturn func_hints
             in
             match scope_kind with
-            | Async -> base_hint |> decompose_hint Decomp_Promise
+            | Async -> base_hint |> decompose_hints Decomp_Promise
             | _ -> base_hint
           in
           this#record_hint return_loc return_hint;
@@ -1300,7 +1300,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
               ignore @@ this#block loc block;
               loc
             | Ast.Function.BodyExpression ((loc, _) as expr) ->
-              this#visit_expression ~hint:return_hint ~cond:NonConditionalContext expr;
+              this#visit_expression ~hints:return_hint ~cond:NonConditionalContext expr;
               loc
           in
           return_hint_stack <- old_stack;
@@ -1321,7 +1321,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
               match kind with
               | Ast.Type.Predicate.Inferred -> ()
               | Ast.Type.Predicate.Declared expr ->
-                this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expr
+                this#visit_expression ~hints:[] ~cond:NonConditionalContext expr
           ))
         scope_kind
         ()
@@ -1431,12 +1431,12 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let { key; value; annot; static = _; variance; comments = _ } = prop in
       ignore @@ this#object_key key;
       ignore @@ this#type_annotation_hint annot;
-      let hint =
+      let hints =
         match annot with
-        | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
-        | Ast.Type.Missing _ -> Hint_None
+        | Ast.Type.Available annot -> [Hint_t (AnnotationHint (ALocMap.empty, annot))]
+        | Ast.Type.Missing _ -> []
       in
-      this#visit_class_property_value ~hint value;
+      this#visit_class_property_value ~hints value;
       ignore @@ this#variance_opt variance;
       prop
 
@@ -1445,21 +1445,21 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let { key; value; annot; static = _; variance; comments = _ } = prop in
       ignore @@ this#private_name key;
       ignore @@ this#type_annotation_hint annot;
-      let hint =
+      let hints =
         match annot with
-        | Ast.Type.Available annot -> Hint_t (AnnotationHint (ALocMap.empty, annot))
-        | Ast.Type.Missing _ -> Hint_None
+        | Ast.Type.Available annot -> [Hint_t (AnnotationHint (ALocMap.empty, annot))]
+        | Ast.Type.Missing _ -> []
       in
-      this#visit_class_property_value ~hint value;
+      this#visit_class_property_value ~hints value;
       ignore @@ this#variance_opt variance;
       prop
 
-    method private visit_class_property_value ~hint value =
+    method private visit_class_property_value ~hints value =
       let open Ast.Class.Property in
       match value with
       | Declared -> ()
       | Uninitialized -> ()
-      | Initialized x -> this#visit_expression ~cond:NonConditionalContext ~hint x
+      | Initialized x -> this#visit_expression ~cond:NonConditionalContext ~hints x
 
     method! class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in
@@ -1468,7 +1468,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let scope_kind = func_scope_kind ~key value in
       let () =
         this#in_new_tparams_env ~keep:true (fun () ->
-            this#visit_function ~scope_kind ~func_hint:Hint_None value
+            this#visit_function ~scope_kind ~func_hints:[] value
         )
       in
       let (_ : _ list) = map_list this#class_decorator decorators in
@@ -1520,9 +1520,9 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           false
           left
       in
-      let hint =
+      let hints =
         if is_provider || is_function_statics_assignment then
-          Hint_None
+          []
         else
           match lhs_node with
           | Ast.Pattern.Identifier _ ->
@@ -1532,25 +1532,25 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                    Reason.aloc_of_reason reason
                )
             |> Nel.of_list
-            |> Base.Option.value_map ~default:Hint_None ~f:(fun providers ->
-                   Hint_t (ProvidersHint providers)
+            |> Base.Option.value_map ~default:[] ~f:(fun providers ->
+                   [Hint_t (ProvidersHint providers)]
                )
           | Ast.Pattern.Expression
               (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
             ->
             (match property with
             | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
-              decompose_hint (Decomp_ObjProp name) (Hint_t (ValueHint _object))
+              decompose_hints (Decomp_ObjProp name) [Hint_t (ValueHint _object)]
             | Ast.Expression.Member.PropertyPrivateName _ ->
               (* TODO create a hint based on the current class. *)
-              Hint_None
+              []
             | Ast.Expression.Member.PropertyExpression expr ->
-              decompose_hint
+              decompose_hints
                 (Decomp_ObjComputed (mk_expression_reason expr))
-                (Hint_t (ValueHint _object)))
+                [Hint_t (ValueHint _object)])
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
-            Hint_Placeholder
+            [Hint_Placeholder]
       in
       let () =
         match (operator, lhs_node) with
@@ -1563,7 +1563,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
             (MemberAssign { member_loc; member; rhs = right })
         | (None, _) ->
           let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
-          this#add_destructure_bindings (Value { hint; expr = right }) left
+          this#add_destructure_bindings (Value { hints; expr = right }) left
         | ( Some operator,
             Ast.Pattern.Identifier
               { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
@@ -1581,7 +1581,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
               OtherConditionalTest
             | _ -> NonConditionalContext
           in
-          this#visit_expression ~cond ~hint:Hint_None e;
+          this#visit_expression ~cond ~hints:[] e;
           this#add_ordinary_binding
             def_loc
             (mk_pattern_reason left)
@@ -1590,7 +1590,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
           ()
       in
-      this#visit_expression ~hint ~cond:NonConditionalContext right
+      this#visit_expression ~hints ~cond:NonConditionalContext right
 
     method! update_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
       let open Ast.Expression.Update in
@@ -1611,7 +1611,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let { argument; comments = _; return_out = _ } = stmt in
       Base.Option.iter argument ~f:(fun argument ->
           this#visit_expression
-            ~hint:(Base.Option.value ~default:Hint_None (Base.List.hd return_hint_stack))
+            ~hints:(Base.Option.value ~default:[] (Base.List.hd return_hint_stack))
             ~cond:NonConditionalContext
             argument
       );
@@ -1687,15 +1687,15 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let open Ast.Statement.For in
       let { init; test; update; body; comments = _ } = stmt in
       Base.Option.iter init ~f:(fun init -> ignore @@ this#for_statement_init init);
-      Base.Option.iter test ~f:(this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest);
-      Base.Option.iter update ~f:(this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest);
+      Base.Option.iter test ~f:(this#visit_expression ~hints:[] ~cond:OtherConditionalTest);
+      Base.Option.iter update ~f:(this#visit_expression ~hints:[] ~cond:OtherConditionalTest);
       ignore @@ this#statement body;
       stmt
 
     method! while_ _loc (stmt : ('loc, 'loc) Ast.Statement.While.t) =
       let open Ast.Statement.While in
       let { test; body; comments = _ } = stmt in
-      this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
+      this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
       ignore @@ this#statement body;
       stmt
 
@@ -1703,13 +1703,13 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let open Ast.Statement.DoWhile in
       let { body; test; comments = _ } = stmt in
       ignore @@ this#statement body;
-      this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
+      this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
       stmt
 
     method! if_statement _ (stmt : ('loc, 'loc) Ast.Statement.If.t) =
       let open Ast.Statement.If in
       let { test; consequent; alternate; comments = _ } = stmt in
-      this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
+      this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
       ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent;
       Base.Option.iter alternate ~f:(fun (loc, alternate) ->
           ignore @@ this#if_alternate_statement loc alternate
@@ -1831,7 +1831,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! call loc _ = fail loc "Should be visited by visit_call_expression"
 
-    method private visit_call_expression ~hint ~cond ~visit_callee loc expr =
+    method private visit_call_expression ~hints ~cond ~visit_callee loc expr =
       let {
         Ast.Expression.Call.callee;
         targs;
@@ -1842,7 +1842,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       in
       (* Provide hint in the very special case of immediate function execution,
        * ie. `(function (){..})()`. *)
-      let callee_hint =
+      let callee_hints =
         match (callee, arguments) with
         | ( ( _,
               ( Ast.Expression.ArrowFunction
@@ -1860,10 +1860,10 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
             ),
             []
           ) ->
-          decompose_hint Comp_ImmediateFuncCall hint
-        | _ -> Hint_None
+          decompose_hints Comp_ImmediateFuncCall hints
+        | _ -> []
       in
-      visit_callee ~hint:callee_hint callee;
+      visit_callee ~hints:callee_hints callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
       if Flow_ast_utils.is_call_to_invariant callee then
         Base.List.iteri arguments ~f:(fun i -> function
@@ -1875,33 +1875,33 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                 NonConditionalContext
             in
             (* In invariant(...) call, the first argument is under conditional context. *)
-            this#visit_expression ~hint:Hint_None ~cond expr
+            this#visit_expression ~hints:[] ~cond expr
           | Ast.Expression.Spread (_, spread) ->
             this#visit_expression
-              ~hint:Hint_None
+              ~hints:[]
               ~cond:NonConditionalContext
               spread.Ast.Expression.SpreadElement.argument
         )
       else
         match arguments with
         | [Ast.Expression.Expression expr] when Flow_ast_utils.is_call_to_is_array callee ->
-          this#visit_expression ~hint:Hint_None ~cond expr
+          this#visit_expression ~hints:[] ~cond expr
         | [Ast.Expression.Expression expr] when Flow_ast_utils.is_call_to_object_dot_freeze callee
           ->
-          this#visit_expression ~hint ~cond:NonConditionalContext expr
+          this#visit_expression ~hints ~cond:NonConditionalContext expr
         | _ when Flow_ast_utils.is_call_to_object_static_method callee ->
           Base.List.iter arguments ~f:(fun arg ->
               match arg with
               | Ast.Expression.Expression expr ->
-                this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expr
+                this#visit_expression ~hints:[] ~cond:NonConditionalContext expr
               | Ast.Expression.Spread (_, spread) ->
                 this#visit_expression
-                  ~hint:Hint_None
+                  ~hints:[]
                   ~cond:NonConditionalContext
                   spread.Ast.Expression.SpreadElement.argument
           )
         | _ ->
-          let call_argumemts_hint =
+          let call_argumemts_hints =
             match callee with
             | (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
             | ( _,
@@ -1913,87 +1913,92 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                     optional = _;
                   }
               ) ->
-              let base_hint = Hint_t (ValueHint _object) in
+              let base_hint = [Hint_t (ValueHint _object)] in
               (match property with
               | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
                 ->
-                decompose_hint (Decomp_MethodName name) base_hint
+                decompose_hints (Decomp_MethodName name) base_hint
               | Ast.Expression.Member.PropertyPrivateName (_, { Ast.PrivateName.name; comments = _ })
                 ->
-                decompose_hint (Decomp_MethodPrivateName (name, class_stack)) base_hint
+                decompose_hints (Decomp_MethodPrivateName (name, class_stack)) base_hint
               | Ast.Expression.Member.PropertyExpression _ ->
-                decompose_hint Decomp_MethodElem base_hint)
-            | _ -> Hint_t (ValueHint callee)
+                decompose_hints Decomp_MethodElem base_hint)
+            | _ -> [Hint_t (ValueHint callee)]
           in
           let call_reason = mk_expression_reason (loc, Ast.Expression.Call expr) in
           this#visit_call_arguments
             ~call_reason
-            ~call_argumemts_hint
-            ~return_hint:hint
+            ~call_argumemts_hints
+            ~return_hints:hints
             arg_list
             targs
 
     method private visit_call_arguments
         ~call_reason
-        ~call_argumemts_hint
-        ~return_hint
+        ~call_argumemts_hints
+        ~return_hints
         ((_, { Ast.Expression.ArgList.arguments; comments = _ }) as arg_list)
         targs =
       Base.List.iteri arguments ~f:(fun i arg ->
-          let hint =
-            call_argumemts_hint
-            |> decompose_hint
+          let hints =
+            call_argumemts_hints
+            |> decompose_hints
                  (Instantiate_Callee
                     {
                       Hint_api.reason = call_reason;
-                      return_hint;
+                      return_hints;
                       targs = lazy targs;
                       arg_list = lazy arg_list;
                       arg_index = i;
                     }
                  )
-            |> decompose_hint (Decomp_FuncParam i)
+            |> decompose_hints (Decomp_FuncParam i)
           in
           match arg with
           | Ast.Expression.Expression expr ->
-            this#visit_expression ~hint ~cond:NonConditionalContext expr
+            this#visit_expression ~hints ~cond:NonConditionalContext expr
           | Ast.Expression.Spread (_, spread) ->
             this#visit_expression
-              ~hint
+              ~hints
               ~cond:NonConditionalContext
               spread.Ast.Expression.SpreadElement.argument
       )
 
     method! optional_call loc _ = fail loc "Should be visited by visit_optional_call_expression"
 
-    method private visit_optional_call_expression ~hint ~cond loc expr =
+    method private visit_optional_call_expression ~hints ~cond loc expr =
       let open Ast.Expression.OptionalCall in
       let { call; optional = _; filtered_out = _ } = expr in
       this#visit_call_expression
         loc
         call
-        ~hint
+        ~hints
         ~cond
         ~visit_callee:(this#visit_expression ~cond:NonConditionalContext)
 
     method! new_ loc _ = fail loc "Should be visited by visit_new_expression"
 
-    method visit_new_expression ~hint loc expr =
+    method visit_new_expression ~hints loc expr =
       let { Ast.Expression.New.callee; targs; arguments; comments = _ } = expr in
-      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext callee;
+      this#visit_expression ~hints:[] ~cond:NonConditionalContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
-      let call_argumemts_hint = decompose_hint Decomp_CallNew (Hint_t (ValueHint callee)) in
+      let call_argumemts_hints = decompose_hints Decomp_CallNew [Hint_t (ValueHint callee)] in
       let arg_list =
         Base.Option.value
           arguments
           ~default:(fst callee, { Ast.Expression.ArgList.arguments = []; comments = None })
       in
       let call_reason = mk_expression_reason (loc, Ast.Expression.New expr) in
-      this#visit_call_arguments ~call_reason ~call_argumemts_hint ~return_hint:hint arg_list targs
+      this#visit_call_arguments
+        ~call_reason
+        ~call_argumemts_hints
+        ~return_hints:hints
+        arg_list
+        targs
 
     method! member loc _ = fail loc "Should be visited by visit_member_expression"
 
-    method private visit_member_expression ~cond ~hint loc mem =
+    method private visit_member_expression ~cond ~hints loc mem =
       begin
         match EnvMap.find_opt_ordinary loc env_entries with
         | Some (Env_api.AssigningWrite reason) ->
@@ -2001,7 +2006,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
             loc
             reason
             (ExpressionDef
-               { cond_context = cond; expr = (loc, Ast.Expression.Member mem); hint; chain = true }
+               { cond_context = cond; expr = (loc, Ast.Expression.Member mem); hints; chain = true }
             )
         | _ -> ()
       end;
@@ -2009,7 +2014,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! optional_member loc _ = fail loc "Should be visited by visit_optional_member_expression"
 
-    method private visit_optional_member_expression ~cond ~hint loc mem =
+    method private visit_optional_member_expression ~cond ~hints loc mem =
       begin
         match EnvMap.find_opt_ordinary loc env_entries with
         | Some (Env_api.AssigningWrite reason) ->
@@ -2020,7 +2025,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                {
                  cond_context = cond;
                  expr = (loc, Ast.Expression.OptionalMember mem);
-                 hint;
+                 hints;
                  chain = true;
                }
             )
@@ -2034,7 +2039,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let open Ast.Expression.TypeCast in
       let { expression; annot; comments = _ } = expr in
       this#visit_expression
-        ~hint:(Hint_t (AnnotationHint (ALocMap.empty, annot)))
+        ~hints:[Hint_t (AnnotationHint (ALocMap.empty, annot))]
         ~cond:NonConditionalContext
         expression;
       ignore @@ this#type_annotation annot;
@@ -2042,16 +2047,16 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! unary_expression loc _ = fail loc "Should be visited by visit_unary_expression"
 
-    method private visit_unary_expression ~hint expr =
+    method private visit_unary_expression ~hints expr =
       let open Flow_ast.Expression.Unary in
       let { argument; operator; comments = _ } = expr in
-      let (hint, cond) =
+      let (hints, cond) =
         match operator with
-        | Not -> (Hint_None, OtherConditionalTest)
-        | Await -> (decompose_hint Decomp_Await hint, NonConditionalContext)
-        | _ -> (Hint_None, NonConditionalContext)
+        | Not -> ([], OtherConditionalTest)
+        | Await -> (decompose_hints Decomp_Await hints, NonConditionalContext)
+        | _ -> ([], NonConditionalContext)
       in
-      this#visit_expression ~hint ~cond argument
+      this#visit_expression ~hints ~cond argument
 
     method! jsx_element loc_element expr =
       let open Ast.JSX in
@@ -2064,17 +2069,19 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       } =
         expr
       in
-      let hint =
+      let hints =
         match opening_name with
         | Ast.JSX.Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
           if name = "fbs" || name = "fbt" then
-            Hint_None
+            []
           else if name = String.capitalize_ascii name then
-            Hint_t
-              (ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })))
+            [
+              Hint_t
+                (ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })));
+            ]
           else
-            Hint_t (StringLiteralType name)
-        | Ast.JSX.NamespacedName _ -> Hint_None
+            [Hint_t (StringLiteralType name)]
+        | Ast.JSX.NamespacedName _ -> []
         | Ast.JSX.MemberExpression member ->
           let rec jsx_title_member_to_expression member =
             let (mloc, member) = member in
@@ -2102,9 +2109,9 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                 }
             )
           in
-          Hint_t (ValueHint (jsx_title_member_to_expression member))
+          [Hint_t (ValueHint (jsx_title_member_to_expression member))]
       in
-      let hint =
+      let hints =
         let rec jsx_title_member_to_string (_, { Ast.JSX.MemberExpression._object; property; _ }) =
           let (_, { Ast.JSX.Identifier.name; comments = _ }) = property in
           match _object with
@@ -2126,7 +2133,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           | Ast.JSX.MemberExpression member -> jsx_title_member_to_string member
           | Ast.JSX.NamespacedName namespace -> jsx_title_namespaced_name_to_string namespace
         in
-        decompose_hint
+        decompose_hints
           (Instantiate_Component
              {
                jsx_reason = mk_reason (RJSXElement (Some jsx_name)) loc_element;
@@ -2134,14 +2141,14 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                jsx_props = opening_attributes;
                jsx_children = children;
                (* TODO: thread hint *)
-               jsx_hint = Hint_None;
+               jsx_hints = [];
              }
           )
-          hint
+          hints
       in
-      let ref_hint = decompose_hint Decomp_JsxRef hint in
-      let hint = decompose_hint Decomp_JsxProps hint in
-      let hint =
+      let ref_hints = decompose_hints Decomp_JsxRef hints in
+      let hints = decompose_hints Decomp_JsxProps hints in
+      let hints =
         let has_autocomplete =
           Base.List.exists opening_attributes ~f:(function
               | Opening.Attribute (_, { Attribute.name = _; value }) ->
@@ -2164,41 +2171,41 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           (* During autocomplete, we are working with ASTs with placeholder values,
              which can make sentinel refinements refine to empty. In these cases, it's better to
              have a coarser set of results instead of nothing. *)
-          hint
+          hints
         else
           let checks = Eq_test.jsx_attributes_possible_sentinel_refinements opening_attributes in
-          decompose_hint (Decomp_SentinelRefinement checks) hint
+          decompose_hints (Decomp_SentinelRefinement checks) hints
       in
       Base.List.iter opening_attributes ~f:(function
           | Opening.Attribute (_, { Attribute.name; value }) ->
-            let hint =
+            let hints =
               match name with
               | Ast.JSX.Attribute.Identifier (_, { Ast.JSX.Identifier.name = "ref"; comments = _ })
                 ->
-                ref_hint
+                ref_hints
               | Ast.JSX.Attribute.Identifier (_, { Ast.JSX.Identifier.name; comments = _ }) ->
-                decompose_hint (Decomp_ObjProp name) hint
-              | Ast.JSX.Attribute.NamespacedName _ -> Hint_None
+                decompose_hints (Decomp_ObjProp name) hints
+              | Ast.JSX.Attribute.NamespacedName _ -> []
             in
             Base.Option.iter value ~f:(fun value ->
                 match value with
-                | Attribute.Literal (loc, _) -> this#record_hint loc hint
-                | Attribute.ExpressionContainer (_, expr) -> this#visit_jsx_expression ~hint expr
+                | Attribute.Literal (loc, _) -> this#record_hint loc hints
+                | Attribute.ExpressionContainer (_, expr) -> this#visit_jsx_expression ~hints expr
             )
           | Opening.SpreadAttribute (_, { SpreadAttribute.argument; comments = _ }) ->
             this#visit_expression
-              ~hint:(decompose_hint Decomp_ObjSpread hint)
+              ~hints:(decompose_hints Decomp_ObjSpread hints)
               ~cond:NonConditionalContext
               argument
           );
-      this#visit_jsx_children ~hint:(decompose_hint (Decomp_ObjProp "children") hint) children;
+      this#visit_jsx_children ~hints:(decompose_hints (Decomp_ObjProp "children") hints) children;
       expr
 
-    method private visit_jsx_expression ~hint expr =
+    method private visit_jsx_expression ~hints expr =
       let open Ast.JSX.ExpressionContainer in
       let { expression; comments = _ } = expr in
       match expression with
-      | Expression expr -> this#visit_expression ~hint ~cond:NonConditionalContext expr
+      | Expression expr -> this#visit_expression ~hints ~cond:NonConditionalContext expr
       | EmptyExpression -> ()
 
     method! jsx_fragment _loc expr =
@@ -2206,15 +2213,15 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let { frag_children; frag_opening_element = _; frag_closing_element = _; frag_comments = _ } =
         expr
       in
-      let hint =
-        decompose_hint
+      let hints =
+        decompose_hints
           (Decomp_ObjProp "children")
-          (decompose_hint (Decomp_FuncParam 0) (Hint_t (BuiltinType "React$FragmentType")))
+          (decompose_hints (Decomp_FuncParam 0) [Hint_t (BuiltinType "React$FragmentType")])
       in
-      this#visit_jsx_children ~hint frag_children;
+      this#visit_jsx_children ~hints frag_children;
       expr
 
-    method private visit_jsx_children ~hint (_, children) =
+    method private visit_jsx_children ~hints (_, children) =
       let children =
         Base.List.filter children ~f:(function
             | (loc, Ast.JSX.Text { Ast.JSX.Text.value; _ }) ->
@@ -2228,41 +2235,41 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
         | _ -> false
       in
       Base.List.iteri children ~f:(fun i (loc, child) ->
-          let hint =
+          let hints =
             if single_child then
-              hint
+              hints
             else
-              decompose_hint (Decomp_ArrElement i) hint
+              decompose_hints (Decomp_ArrElement i) hints
           in
-          this#record_hint loc hint;
+          this#record_hint loc hints;
           match child with
           | Ast.JSX.Element elem -> ignore @@ this#jsx_element loc elem
           | Ast.JSX.Fragment frag -> ignore @@ this#jsx_fragment loc frag
-          | Ast.JSX.ExpressionContainer expr -> this#visit_jsx_expression ~hint expr
+          | Ast.JSX.ExpressionContainer expr -> this#visit_jsx_expression ~hints expr
           | Ast.JSX.SpreadChild _ -> () (* Unsupported syntax *)
           | Ast.JSX.Text _ -> ()
       )
 
     method! expression expr =
-      this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expr;
+      this#visit_expression ~hints:[] ~cond:NonConditionalContext expr;
       expr
 
-    method private visit_expression ~hint ~cond ((loc, expr) as exp) =
-      let hint =
+    method private visit_expression ~hints ~cond ((loc, expr) as exp) =
+      let hints =
         match EnvMap.find_opt (Env_api.ArrayProviderLoc, loc) env_entries with
         | Some (Env_api.AssigningWrite reason) ->
           this#add_binding
             (Env_api.ArrayProviderLoc, loc)
             reason
-            (ExpressionDef { cond_context = cond; expr = exp; hint = Hint_None; chain = false });
-          Hint_None
-        | _ -> hint
+            (ExpressionDef { cond_context = cond; expr = exp; hints = []; chain = false });
+          []
+        | _ -> hints
       in
-      let hint =
+      let hints =
         if expression_is_definitely_synthesizable ~autocomplete_hooks exp then
-          Hint_None
+          []
         else
-          hint
+          hints
       in
       begin
         match EnvMap.find_opt (Env_api.ExpressionLoc, loc) env_entries with
@@ -2270,22 +2277,22 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           this#add_binding
             (Env_api.ExpressionLoc, loc)
             reason
-            (ExpressionDef { cond_context = cond; expr = exp; hint; chain = false })
+            (ExpressionDef { cond_context = cond; expr = exp; hints; chain = false })
         | _ -> ()
       end;
-      this#record_hint loc hint;
+      this#record_hint loc hints;
       match expr with
-      | Ast.Expression.Array expr -> this#visit_array_expression ~array_hint:hint expr
+      | Ast.Expression.Array expr -> this#visit_array_expression ~array_hints:hints expr
       | Ast.Expression.ArrowFunction x ->
         let scope_kind = func_scope_kind x in
         this#in_new_tparams_env (fun () ->
-            this#visit_function ~func_hint:hint ~scope_kind x;
+            this#visit_function ~func_hints:hints ~scope_kind x;
             match EnvMap.find_opt_ordinary loc env_entries with
             | Some (Env_api.AssigningWrite reason) ->
               let def =
                 def_of_function
                   ~tparams_map:tparams
-                  ~hint
+                  ~hints
                   ~has_this_def:false
                   ~arrow:true
                   ~function_loc:loc
@@ -2299,25 +2306,26 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
         this#visit_assignment_expression ~is_function_statics_assignment:false loc expr
       | Ast.Expression.Function x ->
         this#visit_function_expr
-          ~func_hint:hint
+          ~func_hints:hints
           ~has_this_def:true
           ~var_assigned_to:None
           ~statics:SMap.empty
           ~arrow:false
           loc
           x
-      | Ast.Expression.Object expr -> this#visit_object_expression ~object_hint:hint expr
-      | Ast.Expression.Member m -> this#visit_member_expression ~cond ~hint loc m
-      | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond ~hint loc m
+      | Ast.Expression.Object expr -> this#visit_object_expression ~object_hints:hints expr
+      | Ast.Expression.Member m -> this#visit_member_expression ~cond ~hints loc m
+      | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond ~hints loc m
       | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr
-      | Ast.Expression.Logical expr -> this#visit_logical_expression ~hint ~cond expr
+      | Ast.Expression.Logical expr -> this#visit_logical_expression ~hints ~cond expr
       | Ast.Expression.Call expr ->
         let visit_callee = this#visit_expression ~cond:NonConditionalContext in
-        this#visit_call_expression ~hint ~cond ~visit_callee loc expr
-      | Ast.Expression.OptionalCall expr -> this#visit_optional_call_expression ~hint ~cond loc expr
-      | Ast.Expression.New expr -> this#visit_new_expression ~hint loc expr
-      | Ast.Expression.Unary expr -> this#visit_unary_expression ~hint expr
-      | Ast.Expression.Conditional expr -> this#visit_conditional ~hint expr
+        this#visit_call_expression ~hints ~cond ~visit_callee loc expr
+      | Ast.Expression.OptionalCall expr ->
+        this#visit_optional_call_expression ~hints ~cond loc expr
+      | Ast.Expression.New expr -> this#visit_new_expression ~hints loc expr
+      | Ast.Expression.Unary expr -> this#visit_unary_expression ~hints expr
+      | Ast.Expression.Conditional expr -> this#visit_conditional ~hints expr
       | Ast.Expression.Class _
       | Ast.Expression.Comprehension _
       | Ast.Expression.Generator _
@@ -2339,18 +2347,18 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! array loc _ = fail loc "Should be visited by visit_array_expression"
 
-    method private visit_array_expression ~array_hint expr =
+    method private visit_array_expression ~array_hints expr =
       let { Ast.Expression.Array.elements; comments = _ } = expr in
       Base.List.iteri elements ~f:(fun i element ->
           match element with
           | Ast.Expression.Array.Expression expr ->
             this#visit_expression
-              ~hint:(decompose_hint (Decomp_ArrElement i) array_hint)
+              ~hints:(decompose_hints (Decomp_ArrElement i) array_hints)
               ~cond:NonConditionalContext
               expr
           | Ast.Expression.Array.Spread (_, spread) ->
             this#visit_expression
-              ~hint:(decompose_hint (Decomp_ArrSpread i) array_hint)
+              ~hints:(decompose_hints (Decomp_ArrSpread i) array_hints)
               ~cond:NonConditionalContext
               spread.Ast.Expression.SpreadElement.argument
           | Ast.Expression.Array.Hole _ -> ()
@@ -2358,13 +2366,13 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! conditional loc _ = fail loc "Should be visited by visit_conditional"
 
-    method visit_conditional ~hint expr =
+    method visit_conditional ~hints expr =
       let open Ast.Expression.Conditional in
       let { test; consequent; alternate; comments = _ } = expr in
-      this#visit_expression ~hint:Hint_None ~cond:OtherConditionalTest test;
-      this#visit_expression ~hint ~cond:NonConditionalContext consequent;
+      this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
+      this#visit_expression ~hints ~cond:NonConditionalContext consequent;
       this#visit_expression
-        ~hint:(Hint_api.merge_hints hint (Hint_t (ValueHint consequent)))
+        ~hints:(Base.List.append hints [Hint_t (ValueHint consequent)])
         ~cond:NonConditionalContext
         alternate
 
@@ -2375,27 +2383,27 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       let { operator; left; right; comments = _ } = expr in
       match (operator, cond) with
       | (Instanceof, OtherConditionalTest) ->
-        this#visit_expression ~hint:Hint_None ~cond left;
+        this#visit_expression ~hints:[] ~cond left;
         ignore @@ this#expression right
       | ((Equal | NotEqual | StrictEqual | StrictNotEqual), OtherConditionalTest) ->
         Eq_test.visit_eq_test
           ~on_type_of_test:(fun _ expr value _ _ ->
-            this#visit_expression ~hint:Hint_None ~cond expr;
+            this#visit_expression ~hints:[] ~cond expr;
             ignore @@ this#expression value)
           ~on_literal_test:(fun ~strict:_ ~sense:_ _ expr _ value ->
-            this#visit_expression ~hint:Hint_None ~cond expr;
+            this#visit_expression ~hints:[] ~cond expr;
             ignore @@ this#expression value)
           ~on_null_test:(fun ~sense:_ ~strict:_ _ expr value ->
-            this#visit_expression ~hint:Hint_None ~cond expr;
+            this#visit_expression ~hints:[] ~cond expr;
             ignore @@ this#expression value)
           ~on_void_test:(fun ~sense:_ ~strict:_ ~check_for_bound_undefined:_ _ expr value ->
-            this#visit_expression ~hint:Hint_None ~cond expr;
+            this#visit_expression ~hints:[] ~cond expr;
             ignore @@ this#expression value)
           ~on_member_eq_other:(fun expr value ->
-            this#visit_expression ~hint:Hint_None ~cond expr;
+            this#visit_expression ~hints:[] ~cond expr;
             ignore @@ this#expression value)
           ~on_other_eq_member:(fun value expr ->
-            this#visit_expression ~hint:Hint_None ~cond expr;
+            this#visit_expression ~hints:[] ~cond expr;
             ignore @@ this#expression value)
           ~is_switch_cond_context:false
           ~strict:false
@@ -2412,24 +2420,24 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
 
     method! logical loc _ = fail loc "Should be visited by visit_logical_expression"
 
-    method private visit_logical_expression ~hint ~cond expr =
+    method private visit_logical_expression ~hints ~cond expr =
       let open Ast.Expression.Logical in
       let { operator; left; right; comments = _ } = expr in
-      let (left_cond, right_hint) =
+      let (left_cond, right_hints) =
         match operator with
-        | And -> (OtherConditionalTest, hint)
-        | Or -> (OtherConditionalTest, Hint_api.merge_hints hint (Hint_t (ValueHint left)))
-        | NullishCoalesce -> (cond, Hint_api.merge_hints hint (Hint_t (ValueHint left)))
+        | And -> (OtherConditionalTest, hints)
+        | Or -> (OtherConditionalTest, Base.List.append hints [Hint_t (ValueHint left)])
+        | NullishCoalesce -> (cond, Base.List.append hints [Hint_t (ValueHint left)])
       in
-      this#visit_expression ~hint ~cond:left_cond left;
-      this#visit_expression ~hint:right_hint ~cond right
+      this#visit_expression ~hints ~cond:left_cond left;
+      this#visit_expression ~hints:right_hints ~cond right
 
     method! object_ loc _ = fail loc "Should be visited by visit_object_expression"
 
-    method private visit_object_expression ~object_hint expr =
+    method private visit_object_expression ~object_hints expr =
       let open Ast.Expression.Object in
       let { properties; comments = _ } = expr in
-      let object_hint =
+      let object_hints =
         let has_autocomplete =
           Base.List.exists properties ~f:(function
               | Property p ->
@@ -2456,26 +2464,26 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           (* During autocomplete, we are working with ASTs with placeholder values,
              which can make sentinel refinements refine to empty. In these cases, it's better to
              have a coarser set of results instead of nothing. *)
-          object_hint
+          object_hints
         else
           let checks = Eq_test.object_properties_possible_sentinel_refinements properties in
-          decompose_hint (Decomp_SentinelRefinement checks) object_hint
+          decompose_hints (Decomp_SentinelRefinement checks) object_hints
       in
       let visit_object_key_and_compute_hint = function
         | Ast.Expression.Object.Property.Literal
             (_, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
-          decompose_hint (Decomp_ObjProp name) object_hint
-        | Ast.Expression.Object.Property.Literal _ -> Hint_None
+          decompose_hints (Decomp_ObjProp name) object_hints
+        | Ast.Expression.Object.Property.Literal _ -> []
         | Ast.Expression.Object.Property.Identifier
             (_, { Ast.Identifier.name = "__proto__"; comments = _ }) ->
-          Hint_None
+          []
         | Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments = _ }) ->
-          decompose_hint (Decomp_ObjProp name) object_hint
-        | Ast.Expression.Object.Property.PrivateName _ -> Hint_None (* Illegal syntax *)
+          decompose_hints (Decomp_ObjProp name) object_hints
+        | Ast.Expression.Object.Property.PrivateName _ -> [] (* Illegal syntax *)
         | Ast.Expression.Object.Property.Computed computed ->
           let (_, { Ast.ComputedKey.expression; comments = _ }) = computed in
-          this#visit_expression ~hint:Hint_None ~cond:NonConditionalContext expression;
-          decompose_hint (Decomp_ObjComputed (mk_expression_reason expression)) object_hint
+          this#visit_expression ~hints:[] ~cond:NonConditionalContext expression;
+          decompose_hints (Decomp_ObjComputed (mk_expression_reason expression)) object_hints
       in
       Base.List.iter properties ~f:(fun prop ->
           match prop with
@@ -2483,15 +2491,15 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
             let open Ast.Expression.Object.Property in
             (match p with
             | (_, Init { key; value; shorthand = _ }) ->
-              let hint = visit_object_key_and_compute_hint key in
-              this#visit_expression ~hint ~cond:NonConditionalContext value;
+              let hints = visit_object_key_and_compute_hint key in
+              this#visit_expression ~hints ~cond:NonConditionalContext value;
               ()
             | (loc, Method { key; value = (_, fn) })
             | (loc, Get { key; value = (_, fn); comments = _ })
             | (loc, Set { key; value = (_, fn); comments = _ }) ->
-              let func_hint = visit_object_key_and_compute_hint key in
+              let func_hints = visit_object_key_and_compute_hint key in
               this#visit_function_expr
-                ~func_hint
+                ~func_hints
                 ~has_this_def:false
                 ~var_assigned_to:None
                 ~statics:SMap.empty
@@ -2502,7 +2510,7 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
           | SpreadProperty s ->
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in
             this#visit_expression
-              ~hint:(decompose_hint Decomp_ObjSpread object_hint)
+              ~hints:(decompose_hints Decomp_ObjSpread object_hints)
               ~cond:NonConditionalContext
               argument
       )

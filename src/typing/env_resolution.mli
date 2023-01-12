@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val lazily_resolve_hint : Context.t -> ALoc.t -> Name_def.ast_hint -> Type.lazy_hint_t
+val lazily_resolve_hints : Context.t -> ALoc.t -> Name_def.ast_hints -> Type.lazy_hint_t
 
 val resolve_component :
   Context.t ->

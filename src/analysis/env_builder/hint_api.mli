@@ -7,7 +7,7 @@
 
 type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
-  return_hint: ('t, 'targs, 'args, 'props, 'children) hint;
+  return_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
   arg_index: int;
@@ -18,7 +18,7 @@ and ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints = {
   jsx_name: string;
   jsx_props: 'props;
   jsx_children: 'children;
-  jsx_hint: ('t, 'targs, 'args, 'props, 'children) hint;
+  jsx_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
 }
 
 and sentinel_refinement =
@@ -58,26 +58,17 @@ and ('t, 'targs, 'args, 'props, 'children) hint =
   | Hint_t of 't
   | Hint_Decomp of (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't
   | Hint_Placeholder
-  | Hint_None
 
 val string_of_hint_unknown_kind :
   ('t, 'targs, 'args, 'props, 'children) hint_decomposition -> string
 
-val string_of_hint : on_hint:('t -> string) -> ('t, 'targs, 'args, 'props, 'children) hint -> string
+val string_of_hints :
+  on_hint:('t -> string) -> ('t, 'targs, 'args, 'props, 'children) hint list -> string
 
-val decompose_hint :
+val decompose_hints :
   ('t, 'targs, 'args, 'props, 'children) hint_decomposition ->
-  ('t, 'targs, 'args, 'props, 'children) hint ->
-  ('t, 'targs, 'args, 'props, 'children) hint
-
-(** Combine two hints into one, by picking the first one if it contains useful
- *  information; otherwise picking the second hint. *)
-val merge_hints :
-  ('t, 'targs, 'args, 'props, 'children) hint ->
-  ('t, 'targs, 'args, 'props, 'children) hint ->
-  ('t, 'targs, 'args, 'props, 'children) hint
-
-val is_hint_none : ('t, 'targs, 'args, 'props, 'children) hint -> bool
+  ('t, 'targs, 'args, 'props, 'children) hint list ->
+  ('t, 'targs, 'args, 'props, 'children) hint list
 
 val map :
   map_base_hint:('a -> 'b) ->
