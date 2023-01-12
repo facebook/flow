@@ -111,6 +111,9 @@ jobs:
     executor: linux-node
     steps:
       - checkout
+      - persist_to_workspace:
+          root: .
+          paths: .
 
   build_js:
     executor: linux-opam
@@ -623,40 +626,40 @@ jobs:
         name: Deploy flow-bin
         command: .circleci/deploy_flow_bin.sh
 
-  new_website_deploy:
+  website_deploy:
     executor: flow-website
     steps:
     - attach_workspace:
         at: ~/flow
     - restore_cache:
         keys:
-          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
+          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
     - run:
         name: Install yarn deps
-        command: cd new_website && yarn install
+        command: cd website && yarn install
     - save_cache:
-        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/yarn.lock" }}
+        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/yarn.lock" }}
         paths:
-          - new_website/node_modules
+          - website/node_modules
     - run:
         name: Build website
-        command: PATH=~/flow/bin/linux:$PATH .circleci/build_new_website.sh
+        command: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
     - restore_cache:
         keys:
-          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/Gemfile.lock" }}
+          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
     - run:
         name: Install gems
         command: |
-          cd new_website
+          cd website
           bundle config set path 'vendor/bundle'
           bundle install
     - save_cache:
-        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "new_website/Gemfile.lock" }}
+        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
         paths:
-          - new_website/vendor/bundle
+          - website/vendor/bundle
     - run:
         name: Publish website
-        command: cd new_website && bundle exec s3_website push --site build
+        command: cd website && bundle exec s3_website push --site build
 
   # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
@@ -735,7 +738,7 @@ workflows:
       # only deploy the website from the main branch, so that it can include
       # docs/blog posts about an upcoming release, and so the release branch
       # doesn't revert those changes.
-      - new_website_deploy:
+      - website_deploy:
           requires:
             - build_linux
             - build_js
