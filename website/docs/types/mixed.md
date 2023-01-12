@@ -104,3 +104,6 @@ stringify("foo");
 Because of the `typeof value === 'string'` check, Flow knows the `value` can
 only be a `string` inside of the `if` statement. This is known as a
 [refinement](../../lang/refinements/).
+
+## Versus `any`
+`mixed` is safe while [`any`](../any) is not. While both accept all values, but `any` also unsafely allows all operations.
