@@ -13,7 +13,7 @@
 
 type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
-  return_hint: ('t, 'targs, 'args, 'props, 'children) hint;
+  return_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
   arg_index: int;
@@ -24,7 +24,7 @@ and ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints = {
   jsx_name: string;
   jsx_props: 'props;
   jsx_children: 'children;
-  jsx_hint: ('t, 'targs, 'args, 'props, 'children) hint;
+  jsx_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
 }
 
 and sentinel_refinement =
@@ -89,7 +89,6 @@ and ('t, 'targs, 'args, 'props, 'children) hint =
   (* The hint placeholder used in env_resolution to pass to expression type checkers.
      It will eventually be removed once we move all hint decomposition logic into env_resolution. *)
   | Hint_Placeholder
-  | Hint_None
 
 let string_of_hint_unknown_kind = function
   | Decomp_ObjProp _ -> "Decomp_ObjProp"
@@ -114,36 +113,31 @@ let string_of_hint_unknown_kind = function
   | Instantiate_Component _ -> "Instantiate_Component"
   | Decomp_Promise -> "Decomp_Promise"
 
-let string_of_hint ~on_hint = function
-  | Hint_t t -> Utils_js.spf "Hint_t (%s)" (on_hint t)
-  | Hint_Decomp (ops, t) ->
-    Utils_js.spf
-      "Hint_Decomp (%s)(%s)"
-      (Nel.map (fun (_, op) -> string_of_hint_unknown_kind op) ops
-      |> Nel.to_list
-      |> String.concat ", "
+let string_of_hints ~on_hint hints =
+  Utils_js.spf
+    "[%s]"
+    (hints
+    |> Base.List.map ~f:(function
+           | Hint_t t -> Utils_js.spf "Hint_t (%s)" (on_hint t)
+           | Hint_Decomp (ops, t) ->
+             Utils_js.spf
+               "Hint_Decomp (%s)(%s)"
+               (Nel.map (fun (_, op) -> string_of_hint_unknown_kind op) ops
+               |> Nel.to_list
+               |> String.concat ", "
+               )
+               (on_hint t)
+           | Hint_Placeholder -> "Hint_Placeholder"
+           )
+    |> Base.String.concat ~sep:","
+    )
+
+let decompose_hints decomp =
+  Base.List.map ~f:(function
+      | Hint_t t -> Hint_Decomp (Nel.one (Reason.mk_id (), decomp), t)
+      | Hint_Decomp (decomps, t) -> Hint_Decomp (Nel.cons (Reason.mk_id (), decomp) decomps, t)
+      | Hint_Placeholder -> Hint_Placeholder
       )
-      (on_hint t)
-  | Hint_Placeholder -> "Hint_Placeholder"
-  | Hint_None -> "Hint_None"
-
-let decompose_hint decomp = function
-  | Hint_t t -> Hint_Decomp (Nel.one (Reason.mk_id (), decomp), t)
-  | Hint_Decomp (decomps, t) -> Hint_Decomp (Nel.cons (Reason.mk_id (), decomp) decomps, t)
-  | Hint_Placeholder -> Hint_Placeholder
-  | Hint_None -> Hint_None
-
-let merge_hints h1 h2 =
-  match h1 with
-  | Hint_t _
-  | Hint_Decomp _
-  | Hint_Placeholder ->
-    h1
-  | Hint_None -> h2
-
-let is_hint_none = function
-  | Hint_None -> true
-  | _ -> false
 
 let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function
   | Decomp_ObjProp prop -> Decomp_ObjProp prop
@@ -164,19 +158,19 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_JsxProps -> Decomp_JsxProps
   | Decomp_JsxRef -> Decomp_JsxRef
   | Decomp_SentinelRefinement checks -> Decomp_SentinelRefinement checks
-  | Instantiate_Callee { reason; return_hint; targs; arg_list; arg_index } ->
+  | Instantiate_Callee { reason; return_hints; targs; arg_list; arg_index } ->
     Instantiate_Callee
       {
         reason;
-        return_hint = map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx return_hint;
+        return_hints = List.map (map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx) return_hints;
         targs = Lazy.map map_targs targs;
         arg_list = Lazy.map map_arg_list arg_list;
         arg_index;
       }
-  | Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hint } ->
+  | Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hints } ->
     let (jsx_props, jsx_children) = map_jsx jsx_reason jsx_name jsx_props jsx_children in
-    let jsx_hint = map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx jsx_hint in
-    Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hint }
+    let jsx_hints = List.map (map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx) jsx_hints in
+    Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hints }
   | Decomp_Promise -> Decomp_Promise
 
 and map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function
@@ -189,4 +183,3 @@ and map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function
         map_base_hint t
       )
   | Hint_Placeholder -> Hint_Placeholder
-  | Hint_None -> Hint_None

@@ -865,7 +865,7 @@ if (x.y) { x.y }
   |};
   [%expect {|
     [
-      (2, 4) to (2, 7) => exp (2, 4) to (2, 7) (hint = Hint_None)
+      (2, 4) to (2, 7) => exp (2, 4) to (2, 7) (hint = [])
     ] |}]
 
 let%expect_test "destructuring init" =

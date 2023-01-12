@@ -146,7 +146,7 @@ let rec get_t cx ~depth = function
 let get_t = get_t ~depth:3
 
 let rec instantiate_callee cx fn instantiation_hint =
-  let { Hint_api.reason; targs; arg_list; return_hint; arg_index } = instantiation_hint in
+  let { Hint_api.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
   let resolve_overload_and_targs fn =
     let t =
       match get_t cx (simplify_callee cx reason unknown_use fn) with
@@ -184,7 +184,7 @@ let rec instantiate_callee cx fn instantiation_hint =
           loop 0 (Lazy.force arg_list)
         in
         let call_targs = Lazy.force targs in
-        let return_hint = evaluate_hint cx reason return_hint in
+        let return_hint = evaluate_hints cx reason return_hints in
         let check =
           Implicit_instantiation_check.of_call
             t
@@ -226,11 +226,11 @@ and instantiate_component cx component instantiation_hint =
       jsx_name = _;
       jsx_props = config;
       jsx_children = children;
-      jsx_hint;
+      jsx_hints;
     } =
       instantiation_hint
     in
-    let return_hint = evaluate_hint cx reason jsx_hint in
+    let return_hint = evaluate_hints cx reason jsx_hints in
     let check =
       Implicit_instantiation_check.of_jsx
         component
@@ -543,10 +543,17 @@ and evaluate_hint_ops cx reason t ops =
 
 and evaluate_hint cx reason hint =
   match hint with
-  | Hint_None -> None
   | Hint_Placeholder -> Some (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
   | Hint_t t -> fully_resolve_final_result cx t
   | Hint_Decomp (ops, t) -> ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t
+
+and evaluate_hints cx reason hints =
+  match hints with
+  | [] -> None
+  | hint :: rest ->
+    (match evaluate_hint cx reason hint with
+    | Some t -> Some t
+    | None -> evaluate_hints cx reason rest)
 
 let sandbox_flow_succeeds cx (t1, t2) =
   match SpeculationFlow.flow_t cx (TypeUtil.reason_of_t t1) ~upper_unresolved:false (t1, t2) with

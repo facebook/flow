@@ -618,7 +618,6 @@ struct
         | BuiltinType _ -> state
       in
       let rec depends_of_hint state = function
-        | Hint_api.Hint_None -> state
         | Hint_api.Hint_Placeholder -> state
         | Hint_api.Hint_t hint_node -> depends_of_hint_node state hint_node
         | Hint_api.Hint_Decomp (ops, hint_node) ->
@@ -659,7 +658,7 @@ struct
                     );
                     ignore @@ collector#jsx_children jsx_children
                 )
-              | Hint_api.Instantiate_Callee { Hint_api.return_hint; arg_list; arg_index; _ } ->
+              | Hint_api.Instantiate_Callee { Hint_api.return_hints; arg_list; arg_index; _ } ->
                 let rec loop acc i = function
                   | [] -> acc
                   | arg :: rest when i >= arg_index ->
@@ -678,13 +677,13 @@ struct
                     loop acc (i + 1) rest
                 in
                 let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = Lazy.force arg_list in
-                loop (depends_of_hint acc return_hint) 0 arguments
+                loop (depends_of_hints acc return_hints) 0 arguments
               | _ -> acc)
             (depends_of_hint_node state hint_node)
             ops
-      in
+      and depends_of_hints state = Base.List.fold ~init:state ~f:depends_of_hint in
 
-      let depends_of_fun synth tparams_map hint ~statics function_ state =
+      let depends_of_fun synth tparams_map ~hints ~statics function_ state =
         let (fully_annotated, state) =
           match synth with
           | FunctionSynthesizable -> (true, state)
@@ -711,7 +710,7 @@ struct
             (true, state)
           | _ -> (false, state)
         in
-        let state = depends_of_hint state hint in
+        let state = depends_of_hints state hints in
         let state =
           depends_of_node
             (fun visitor -> visitor#function_def ~fully_annotated function_)
@@ -801,7 +800,7 @@ struct
             ())
           EnvMap.empty
       in
-      let depends_of_hinted_expression ~for_expression_writes hint expr state =
+      let depends_of_hinted_expression ~for_expression_writes hints expr state =
         let open Ast.Expression in
         let state = depends_of_expression ~for_expression_writes expr state in
         match expr with
@@ -810,13 +809,13 @@ struct
             | Call _ | New _
             | Object { Object.properties = []; _ } )
           ) ->
-          depends_of_hint state hint
+          depends_of_hints state hints
         | _ -> state
       in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
-        | Value { hint; expr } ->
-          let state = depends_of_hint state hint in
+        | Value { hints; expr } ->
+          let state = depends_of_hints state hints in
           depends_of_expression expr state
         | ObjectValue { obj; synthesizable = ObjectSynthesizable _; _ } ->
           let open Ast.Expression.Object in
@@ -840,7 +839,7 @@ struct
               depends_of_fun
                 FunctionSynthesizable
                 ALocMap.empty
-                Hint_api.Hint_None
+                ~hints:[]
                 ~statics:SMap.empty
                 fn
                 state
@@ -859,7 +858,7 @@ struct
                 depends_of_fun
                   FunctionSynthesizable
                   ALocMap.empty
-                  Hint_api.Hint_None
+                  ~hints:[]
                   ~statics:SMap.empty
                   fn
                   state
@@ -874,7 +873,7 @@ struct
           depends_of_expression (obj_loc, Ast.Expression.Object obj) EnvMap.empty
         | FunctionValue
             {
-              hint;
+              hints;
               synthesizable_from_annotation;
               function_loc = _;
               function_;
@@ -882,7 +881,7 @@ struct
               arrow = _;
               tparams_map;
             } ->
-          depends_of_fun synthesizable_from_annotation tparams_map hint ~statics function_ state
+          depends_of_fun synthesizable_from_annotation tparams_map ~hints ~statics function_ state
         | EmptyArray { array_providers; _ } ->
           ALocSet.fold
             (fun loc acc ->
@@ -895,13 +894,13 @@ struct
             array_providers
             state
         | For (_, exp) -> depends_of_expression exp state
-        | Contextual { reason = _; hint; optional = _; default_expression } ->
+        | Contextual { reason = _; hints; optional = _; default_expression } ->
           let state =
             Base.Option.value_map default_expression ~default:state ~f:(fun e ->
                 depends_of_expression e state
             )
           in
-          depends_of_hint state hint
+          depends_of_hints state hints
         | CatchUnannotated -> state
       in
       let depends_of_selector state = function
@@ -996,8 +995,8 @@ struct
       in
       function
       | Binding binding -> depends_of_binding binding
-      | ExpressionDef { expr; hint; _ } ->
-        depends_of_hinted_expression ~for_expression_writes:true hint expr EnvMap.empty
+      | ExpressionDef { expr; hints; _ } ->
+        depends_of_hinted_expression ~for_expression_writes:true hints expr EnvMap.empty
       | Update _ -> depends_of_update None
       | MemberAssign { member_loc; member; rhs; _ } ->
         depends_of_member_assign member_loc member rhs
@@ -1011,12 +1010,12 @@ struct
             function_loc = _;
             tparams_map;
             statics;
-            hint;
+            hints;
           } ->
         depends_of_fun
           synthesizable_from_annotation
           tparams_map
-          hint
+          ~hints
           ~statics
           function_
           EnvMap.empty
@@ -1072,8 +1071,7 @@ struct
       in
       function
       | Binding bind -> bind_loop bind
-      | ExpressionDef { hint = Hint_api.Hint_None; expr; chain = false; _ } ->
-        expression_resolvable expr
+      | ExpressionDef { hints = []; expr; chain = false; _ } -> expression_resolvable expr
       | GeneratorNext _
       | TypeAlias _
       | OpaqueType _
