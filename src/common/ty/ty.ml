@@ -132,6 +132,7 @@ and obj_kind =
   | IndexedObj of dict
 
 and obj_t = {
+  obj_def_loc: aloc option;
   obj_frozen: bool;
   (* `None` means that this field was not computed, because the normalizer config
      option preserve_inferred_literal_types was set to false. `Some b` means that
@@ -355,6 +356,9 @@ class ['A] comparator_ty =
         (_def_loc_0 : aloc option)
         (_def_loc_1 : aloc option) =
       super#on_NamedProp env name_0 name_1 prop_0 prop_1 from_proto_0 from_proto_1 None None
+
+    method! on_obj_t env obj_1 obj_2 =
+      super#on_obj_t env { obj_1 with obj_def_loc = None } { obj_2 with obj_def_loc = None }
 
     method! on_name env name0 name1 =
       (* TODO consider implementing this without the string conversion. For now, leaving it this
@@ -628,9 +632,6 @@ let mk_field_props prop_list =
           def_loc = None;
         })
     prop_list
-
-let mk_object ?(obj_kind = InexactObj) ?(obj_frozen = false) ?obj_literal obj_props =
-  Obj { obj_kind; obj_frozen; obj_literal; obj_props }
 
 let mk_generic_class symbol targs = Generic (symbol, ClassKind, targs)
 

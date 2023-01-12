@@ -860,6 +860,7 @@ end = struct
       | _ -> return None
 
     and obj_ty ~env reason o =
+      let obj_def_loc = Some (Reason.def_aloc_of_reason reason) in
       let { T.flags; props_tmap; call_t; _ } = o in
       let { T.obj_kind; T.frozen = obj_frozen; _ } = flags in
       let obj_literal =
@@ -880,7 +881,7 @@ end = struct
           return (Ty.IndexedObj { Ty.dict_polarity; dict_name; dict_key; dict_value })
         | T.Inexact -> return Ty.InexactObj
       in
-      { Ty.obj_kind; obj_frozen; obj_literal; obj_props }
+      { Ty.obj_def_loc; obj_kind; obj_frozen; obj_literal; obj_props }
 
     and obj_prop_t =
       (* Value-level object types should not have properties of type type alias. For
@@ -1045,7 +1046,8 @@ end = struct
         let props_obj =
           Ty.Obj
             {
-              Ty.obj_kind = Ty.InexactObj;
+              Ty.obj_def_loc = None;
+              obj_kind = Ty.InexactObj;
               obj_frozen = false;
               obj_literal = None;
               obj_props = static_flds;
@@ -1462,7 +1464,14 @@ end = struct
           else
             Ty.InexactObj
         in
-        Ty.Obj { Ty.obj_props; obj_kind; obj_literal = None; obj_frozen = false (* default *) }
+        Ty.Obj
+          {
+            Ty.obj_def_loc = None;
+            obj_props;
+            obj_kind;
+            obj_literal = None;
+            obj_frozen = false (* default *);
+          }
       in
       let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict; _ } =
         Type.TypeTerm.(
@@ -1486,7 +1495,7 @@ end = struct
                 )
             | None -> return Ty.ExactObj
           in
-          return (Ty.Obj { Ty.obj_kind; obj_frozen; obj_literal; obj_props })
+          return (Ty.Obj { Ty.obj_def_loc = None; obj_kind; obj_frozen; obj_literal; obj_props })
         )
       in
       let spread_operand ~env = function
@@ -2026,7 +2035,17 @@ end = struct
       | IMStatic
       | IMInstance
 
-    let no_members = return (Ty.mk_object ~obj_kind:Ty.ExactObj [])
+    let no_members =
+      Ty.(
+        Obj
+          {
+            obj_def_loc = None;
+            obj_kind = ExactObj;
+            obj_frozen = false;
+            obj_literal = None;
+            obj_props = [];
+          }
+      )
 
     let rec set_proto_prop =
       let open Ty in
@@ -2082,7 +2101,14 @@ end = struct
          the prototype chain (and interface members last), so, for example,
          overriding methods will have priority. *)
       let obj_props = interface_props @ super_props @ proto_ty_props @ own_ty_props in
-      Ty.Obj { Ty.obj_kind = Ty.InexactObj; obj_frozen = false; obj_literal = None; obj_props }
+      Ty.Obj
+        {
+          Ty.obj_def_loc = None;
+          obj_kind = Ty.InexactObj;
+          obj_frozen = false;
+          obj_literal = None;
+          obj_props;
+        }
 
     and enum_t ~env reason trust enum =
       let { T.members; representation_t; _ } = enum in
@@ -2104,7 +2130,14 @@ end = struct
             Ty.NamedProp { name = OrdinaryName name; prop; from_proto = false; def_loc = Some loc })
           (SMap.bindings members)
       in
-      Ty.mk_object (Ty.SpreadProp proto_ty :: members_ty)
+      Ty.Obj
+        {
+          Ty.obj_def_loc = Some (Reason.def_aloc_of_reason reason);
+          obj_kind = Ty.InexactObj;
+          obj_frozen = false;
+          obj_literal = None;
+          obj_props = Ty.SpreadProp proto_ty :: members_ty;
+        }
 
     and obj_t ~env ~proto ~imode reason o =
       let%bind obj = TypeConverter.convert_obj_t ~env reason o in
@@ -2146,7 +2179,7 @@ end = struct
       match opaquetype with
       | { Type.underlying_t = Some t; _ } when same_file -> type__ ~env ~proto ~imode t
       | { Type.super_t = Some t; _ } -> type__ ~env ~proto ~imode t
-      | _ -> no_members
+      | _ -> return no_members
 
     and this_class_t ~env ~proto ~imode t =
       match imode with
@@ -2178,7 +2211,7 @@ end = struct
       | DefT (r, _, (StrT _ | SingletonStrT _)) -> primitive ~env r "String"
       | DefT (r, _, (BoolT _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
       | DefT (r, _, SymbolT) -> primitive ~env r "Symbol"
-      | DefT (_, _, EnumT _) -> no_members
+      | DefT (_, _, EnumT _) -> return no_members
       | ObjProtoT r -> primitive ~env r "Object"
       | FunProtoT r -> primitive ~env r "Function"
       | DefT (r, _, ObjT o) ->

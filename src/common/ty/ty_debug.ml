@@ -461,7 +461,7 @@ let json_of_elt ~strip_root =
     ]
   and json_of_obj_t o =
     Hh_json.(
-      let { obj_kind; obj_props; obj_literal; obj_frozen } = o in
+      let { obj_def_loc; obj_kind; obj_props; obj_literal; obj_frozen } = o in
       let obj_kind =
         match obj_kind with
         | ExactObj -> JSON_String "Exact"
@@ -469,6 +469,11 @@ let json_of_elt ~strip_root =
         | IndexedObj d -> json_of_dict d
       in
       [
+        ( "def_loc",
+          match obj_def_loc with
+          | None -> JSON_Null
+          | Some loc -> JSON_String (Reason.string_of_aloc loc)
+        );
         ("obj_kind", obj_kind);
         ("frozen", JSON_Bool obj_frozen);
         ("literal", Base.Option.value_map obj_literal ~f:(fun t -> JSON_Bool t) ~default:JSON_Null);
