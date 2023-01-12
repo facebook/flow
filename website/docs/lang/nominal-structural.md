@@ -23,6 +23,7 @@ typing and checking against the structure is structural typing.
 Languages like C++, Java, and Swift have primarily nominal type systems.
 
 ```js
+// Pseudo code
 class Foo { method(input: string) { /* ... */ } }
 class Bar { method(input: string) { /* ... */ } }
 
@@ -35,9 +36,10 @@ different names.
 
 ## Structural typing {#toc-structural-typing}
 
-Languages like OCaml, Haskell, and Elm have primarily structural type systems.
+Languages like OCaml and Elm have primarily structural type systems.
 
 ```js
+// Pseudo code
 class Foo { method(input: string) { /* ... */ } }
 class Bar { method(input: string) { /* ... */ } }
 
@@ -51,6 +53,7 @@ exactly the same.
 But as soon as you change the shape it will start to cause errors.
 
 ```js
+// Pseudo code
 class Foo { method(input: string) { /* ... */ } }
 class Bar { method(input: number) { /* ... */ } }
 
