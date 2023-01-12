@@ -43,11 +43,7 @@
   background-color: #2d343a;
 }
 
-.navbar .navbar__link {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.navbar .menu__link {
+.navbar .navbar__link, .navbar .navbar__toggle, .navbar .menu__link {
   color: rgba(255, 255, 255, 0.7);
 }
 
