@@ -6,8 +6,7 @@
  */
 
 // defines window.requirejs
-// $FlowFixMe[cannot-resolve-module]
-import '../../../website/_webpack/js/require_2_3_3';
+import './require_2_3_3';
 
 declare function requirejs(pathList: $ReadOnlyArray<string>, resolve: (any) => void): void;
 

@@ -135,4 +135,4 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 * Stack Overflow: Ask a question with the [flowtype tag](https://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
-Flow is MIT-licensed ([LICENSE](https://github.com/facebook/flow/blob/main/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/main/website/LICENSE-DOCUMENTATION)).
+Flow is MIT-licensed ([LICENSE](https://github.com/facebook/flow/blob/main/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/main/new_website/LICENSE-DOCUMENTATION)).

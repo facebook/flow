@@ -111,15 +111,6 @@ jobs:
     executor: linux-node
     steps:
       - checkout
-      - run:
-          # This job does a lot of setup to be able to access github, so
-          # fetch the list of git tags that Try Flow uses here, instead of
-          # hitting github again later.
-          name: List versions
-          command: .circleci/list_versions.sh
-      - persist_to_workspace:
-          root: .
-          paths: .
 
   build_js:
     executor: linux-opam

@@ -199,7 +199,7 @@ module.exports = {
           ],
         },
         blog: {
-          path: '../website/_posts',
+          path: 'blog',
           postsPerPage: 50,
           showReadingTime: false,
           blogSidebarCount: 'ALL',

@@ -11,8 +11,7 @@ import {INITIAL, Registry, parseRawGrammar} from 'vscode-textmate';
 import {createOnigScanner, createOnigString, loadWASM} from 'vscode-oniguruma';
 import flowGrammar from './flow-grammar.json';
 import flowRegexGrammar from './flow-regex-grammar.json';
-// $FlowFixMe[cannot-resolve-module]
-import THEME from '../../../website/_webpack/js/light_vs';
+import THEME from './light_vs';
 import styles from './TryFlow.module.css';
 
 const grammars = {
