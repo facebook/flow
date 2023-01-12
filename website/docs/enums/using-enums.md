@@ -466,10 +466,9 @@ module.exports = Status;
 To export **only** its type, but not the value, you can do:
 
 ```js
-enum Status_ {}
-export type Status = Status_;
+enum Status {}
+export type {Status};
 ```
-Since `export type` introduces a new binding with that name, the enum and the exported type must have different names.
 Other functions within the file will still have access to the enum implementation.
 
 
