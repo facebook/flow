@@ -1911,6 +1911,14 @@ References:
           ^ [1]
 
 
+Error ---------------------------------------------------------------------------------- useMutationEffect_hook.js:12:37
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   12|   React.useMutationEffect(() => {}, []);
+                                           ^^
+
+
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:13:9
 
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
@@ -2044,6 +2052,14 @@ References:
    453|     ...
    454|   };
           ^ [1]
+
+
+Error ---------------------------------------------------------------------------------- useMutationEffect_hook.js:17:43
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   17|   React.useMutationEffect(() => () => {}, []);
+                                                 ^^
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:18:9
@@ -2413,7 +2429,7 @@ References:
 
 
 
-Found 124 errors
+Found 126 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

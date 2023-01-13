@@ -33,7 +33,7 @@ declare export function useState<S>(
 declare export function useRef<T>(initialValue: T): {|current: T|};
 declare var NUM: number;
 const [state, setState] = useState(1);
-useRef([]).current[state];
+useRef(([]: Array<number>)).current[state];
 setState(st => st === NUM ? st : st);
 
 

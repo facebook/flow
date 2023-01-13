@@ -1005,7 +1005,7 @@ Error --------------------------------------------------------------------------
 Cannot call `myFun.apply` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
    declare_function.js:15:20
-   15| myFun.apply({prop: true}, []); // Error - boolean ~> number
+   15| myFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
                           ^^^^ [1]
 
 References:
@@ -1048,7 +1048,7 @@ Cannot call `myPolyFun.apply` because boolean [1] is incompatible with number [2
 [incompatible-call]
 
    declare_function.js:18:24
-   18| myPolyFun.apply({prop: true}, []); // Error - boolean ~> number
+   18| myPolyFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
                               ^^^^ [1]
 
 References:
