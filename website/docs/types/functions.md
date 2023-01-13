@@ -3,122 +3,105 @@ title: Function Types
 slug: /types/functions
 ---
 
-Functions have two places where types are applied: Parameters (input) and the
-return value (output).
+Functions have two places where types are applied: parameters (input) and the return value (output).
 
 ```js flow-check
-// @flow
 function concat(a: string, b: string): string {
   return a + b;
 }
 
 concat("foo", "bar"); // Works!
-// $ExpectError
 concat(true, false);  // Error!
 ```
 
-Using inference, these types are often optional:
+Using inference, return types are often optional:
 
 ```js flow-check
-// @flow
-function concat(a, b) {
+function concat(a: string, b: string) {
   return a + b;
 }
 
-concat("foo", "bar"); // Works!
-// $ExpectError
-concat(true, false);  // Error!
+const s: string = concat("foo", "bar"); // Works!
 ```
 
-Sometimes Flow's inference will create types that are more permissive than you
-want them to be.
+If defined where we can get the type from the context of the expression, type annotations can be optional:
 
 ```js flow-check
-// @flow
-function concat(a, b) {
-  return a + b;
-}
-
-concat("foo", "bar"); // Works!
-concat(1, 2);         // Works!
+[1, 2, 3].map(x => x * x); // From the context, we know parameter `x` has type `number`
 ```
 
-For that reason (and others), it's useful to write types for important
-functions.
-
-## Syntax of functions {#toc-syntax-of-functions}
+## Syntax of functions
 
 There are three forms of functions that each have their own slightly different syntax.
 
-### Function Declarations {#toc-function-declarations}
-
-Here you can see the syntax for function declarations with and without types
-added.
+### Function Declarations
 
 ```js
-function method(str, bool, ...nums) {
-  // ...
-}
-
-function method(str: string, bool?: boolean, ...nums: Array<number>): void {
+function func(str: string, bool?: boolean, ...nums: Array<number>): void {
   // ...
 }
 ```
 
-### Arrow Functions {#toc-arrow-functions}
-
-Here you can see the syntax for arrow functions with and without types added.
+### Arrow Functions
 
 ```js
-let method = (str, bool, ...nums) => {
-  // ...
-};
-
-let method = (str: string, bool?: boolean, ...nums: Array<number>): void => {
+let func = (str: string, bool?: boolean, ...nums: Array<number>): void => {
   // ...
 };
 ```
 
-### Function Types {#toc-function-types}
-
-Here you can see the syntax for writing types that are functions.
+### Function Types
 
 ```js
-(str: string, bool?: boolean, ...nums: Array<number>) => void
+type T = (str: string, bool?: boolean, ...nums: Array<number>) => void;
 ```
 
 You may also optionally leave out the parameter names.
 
 ```js
-(string, boolean | void, Array<number>) => void
+type T = (string, boolean | void, Array<number>) => void;
 ```
 
 You might use these functions types for something like a callback.
 
 ```js
-function method(callback: (error: Error | null, value: string | null) => void) {
+function func(callback: (error: Error | null, value: string | null) => void) {
   // ...
 }
 ```
 
-## Function Parameters {#toc-function-parameters}
+### Type arguments
+
+Functions can have type arguments:
+
+```js flow-check
+function f<T>(x: T): Array<T> {
+  return [x];
+}
+
+const g = <T>(x: T): Array<T> => [x];
+
+type H = <T>(T) => Array<T>;
+```
+
+## Function Parameters
 
 Function parameters can have types by adding a colon `:` followed by the type
 after the name of the parameter.
 
 ```js
-function method(param1: string, param2: boolean) {
+function func(param1: string, param2: boolean) {
   // ...
 }
 ```
 
-## Optional Parameters {#toc-optional-parameters}
+### Optional Parameters
 
 You can also have optional parameters by adding a question mark `?` after the
 name of the parameter and before the colon `:`.
 
 ```js flow-check
-function method(optionalValue?: string) {
+function func(optionalValue?: string) {
   // ...
 }
 ```
@@ -127,19 +110,18 @@ Optional parameters will accept missing, `undefined`, or matching types. But
 they will not accept `null`.
 
 ```js flow-check
-// @flow
-function method(optionalValue?: string) {
+function func(optionalValue?: string) {
   // ...
 }
 
-method();          // Works.
-method(undefined); // Works.
-method("string");  // Works.
-// $ExpectError
-method(null);      // Error!
+func();          // Works.
+func(undefined); // Works.
+func("string");  // Works.
+
+func(null);      // Error!
 ```
 
-### Rest Parameters {#toc-rest-parameters}
+### Rest Parameters
 
 JavaScript also supports having rest parameters or parameters that collect an
 array of arguments at the end of a list of parameters. These have an ellipsis
@@ -149,7 +131,7 @@ You can also add type annotations for rest parameters using the same syntax but
 with an `Array`.
 
 ```js flow-check
-function method(...args: Array<number>) {
+function func(...args: Array<number>) {
   // ...
 }
 ```
@@ -157,68 +139,32 @@ function method(...args: Array<number>) {
 You can pass as many arguments as you want into a rest parameter.
 
 ```js flow-check
-// @flow
-function method(...args: Array<number>) {
+function func(...args: Array<number>) {
   // ...
 }
 
-method();        // Works.
-method(1);       // Works.
-method(1, 2);    // Works.
-method(1, 2, 3); // Works.
+func();        // Works.
+func(1);       // Works.
+func(1, 2);    // Works.
+func(1, 2, 3); // Works.
 ```
 
 > Note: If you add a type annotation to a rest parameter, it must always
-> explicitly be an `Array` type.
+> explicitly be an `Array` of `$ReadOnlyArray` type.
 
-### Function Returns {#toc-function-returns}
-
-Function returns can also add a type using a colon `:` followed by the type
-after the list of parameters.
-
-```js flow-check
-function method(): number {
-  // ...
-}
-```
-
-Return types ensure that every branch of your function returns the same type.
-This prevents you from accidentally not returning a value under certain
-conditions.
-
-```js flow-check
-// @flow
-// $ExpectError
-function method(): boolean {
-  if (Math.random() > 0.5) {
-    return true;
-  }
-}
-```
-
-Async functions implicitly return a promise, so the return type must always be a `Promise`.
-
-```js flow-check
-// @flow
-async function method(): Promise<number> {
-  return 123;
-}
-```
-
-### Function `this` {#toc-function-this}
+### `this` parameter
 
 Every function in JavaScript can be called with a special context named `this`.
 You can call a function with any context that you want. Flow allows you to annotate
 the type for this context by adding a special parameter at the start of the function's parameter list:
 
 ```js flow-check
-// @flow
-function method<T>(this: { x: T }) : T {
+function func<T>(this: { x: T }) : T {
   return this.x;
 }
 
-var num: number = method.call({x : 42});
-var str: string = method.call({x : 42}); // error
+const num: number = func.call({x : 42});
+const str: string = func.call({x : 42}); // Error!
 ```
 
 This parameter has no effect at runtime, and is erased along with types when Flow is transformed into JavaScript.
@@ -229,71 +175,103 @@ these functions bind their `this` parameter at the definition site, rather than 
 If an explicit `this` parameter is not provided, Flow will attempt to infer one based on usage. If `this` is not mentioned
 in the body of the function, Flow will infer `mixed` for its `this` parameter.
 
-### Predicate Functions {#toc-predicate-functions}
+
+## Function Returns
+
+Function returns can also add a type using a colon `:` followed by the type
+after the list of parameters.
+
+```js
+function func(): number {
+  // ...
+}
+```
+
+Return types ensure that every branch of your function returns the same type.
+This prevents you from accidentally not returning a value under certain
+conditions.
+
+```js flow-check
+function func(): boolean {
+  if (Math.random() > 0.5) {
+    return true;
+  }
+}
+```
+
+Async functions implicitly return a promise, so the return type must always be a `Promise`.
+
+```js flow-check
+async function func(): Promise<number> {
+  return 123;
+}
+```
+
+### Predicate Functions
 
 Sometimes you will want to move the condition from an `if` statement into a function:
 
-```js
+```js flow-check
 function concat(a: ?string, b: ?string): string {
-  if (a && b) {
+  if (a != null && b != null) {
     return a + b;
   }
   return '';
 }
 ```
 
-However, Flow will flag an error in the code below:
+However, Flow will error in the code below:
 
-```js
-function truthy(a, b): boolean {
-  return a && b;
-}
-
-function concat(a: ?string, b: ?string): string {
-  if (truthy(a, b)) {
-    // $ExpectError
-    return a + b;
-  }
-  return '';
-}
-```
-
-You can fix this by making `truthy` a *predicate function*, by using
-the `%checks` annotation like so:
-
-```js
-function truthy(a, b): boolean %checks {
-  return !!a && !!b;
+```js flow-check
+function truthy(a: ?string, b: ?string): boolean {
+  return a != null && b != null;
 }
 
 function concat(a: ?string, b: ?string): string {
   if (truthy(a, b)) {
+    return a + b; // Error!
+  }
+  return '';
+}
+```
+
+This is because the refinement information of `a` and `b` as `string` instead of `?string` is lost when returning from the `truthy` function.
+
+You can fix this by making `truthy` a *predicate function*, by using the `%checks` annotation like so:
+
+```js flow-check
+function truthy(a: ?string, b: ?string): boolean %checks {
+  return a != null && b != null;
+}
+
+function concat(a: ?string, b: ?string): string {
+  if (truthy(a, b)) {
     return a + b;
   }
   return '';
 }
 ```
 
-#### Limitations of predicate functions {#toc-limitations-of-predicate-functions}
+#### Limitations of predicate functions
 
 The body of these predicate functions need to be expressions (i.e. local variable declarations are not supported).
 But it's possible to call other predicate functions inside a predicate function.
 For example:
 
-```js
-function isString(y): %checks {
+```js flow-check
+function isString(y: mixed): %checks {
   return typeof y === "string";
 }
 
-function isNumber(y): %checks {
+function isNumber(y: mixed): %checks {
   return typeof y === "number";
 }
 
-function isNumberOrString(y): %checks {
+function isNumberOrString(y: mixed): %checks {
   return isString(y) || isNumber(y);
 }
 
-function foo(x): string | number {
+function foo(x: string | number | Array<mixed>): string | number {
   if (isNumberOrString(x)) {
     return x + x;
   } else {
@@ -322,23 +300,24 @@ if (obj.n) {
 Here, Flow will let you refine `obj.n` from `?number` to `number`. Note that the
 refinement here is on the property `n` of `obj`, rather than `obj` itself.
 
-If you tried to create a *predicate* function
-```js
-function bar(a): %checks {
-  return a.n;
+If you tried to create a *predicate* function to encode the same condition,
+then the following refinement would fail
+
+```js flow-check
+function bar(a: {n?: number, ...}): %checks {
+  return a.n != null;
 }
-```
-to encode the same condition, then the following refinement would fail
-```js
+
+declare var obj: {n?: number};
+
 if (bar(obj)) {
-  // $ExpectError
-  const n: number = obj.n;
+  const n: number = obj.n; // Error
 }
 ```
 This is because the only refinements supported through `bar` would be on `obj` itself.
 
 
-### Callable Objects {#toc-callable-objects}
+## Callable Objects
 
 Callable objects can be typed, for example:
 
@@ -348,60 +327,50 @@ type CallableObj = {
   bar: string
 };
 
-function add(x, y) {
+function add(x: number, y: number) {
   return x + y;
 }
-
-// $ExpectError
-(add: CallableObj);
 
 add.bar = "hello world";
 
 (add: CallableObj);
 ```
 
-### `Function` Type {#toc-function-type}
+In general, functions can have properties assigned to them if they are function declarations, or
+simple variable declarations of the form `const f = () => ...`. The properties must be assigned in
+the format `f.prop = <expr>;`, in the same statement list as the function definition (i.e. not conditionally).
 
-> NOTE: For new code prefer `any` or `(...args: Array<any>) => any`. `Function` has become an alias to `any` and will be
-> deprecated and removed in a future version of Flow.
+## Any function
 
-Sometimes it is useful to write types that accept arbitrary functions, for
-those you should write `() => mixed` like this:
+If you want to specify you want to allow any function, and do not care what it is, you can use this pattern:
 
-```js
-function method(func: () => mixed) {
-  // ...
+```js flow-check
+function useCallback<T: (...$ReadOnlyArray<empty>) => mixed>(
+  callback: T,
+  inputs: ?$ReadOnlyArray<mixed>,
+): T {
+  return callback;
 }
+useCallback((x: string) => true); // OK
+useCallback((x: number) => [1]); // OK
 ```
 
-However, if you need to opt-out of the type checker, and don't want to go all
-the way to `any`, you can instead use `(...args: Array<any>) => any`. (Note that [`any`](../any) is unsafe and
-should be avoided). For historical reasons, the `Function` keyword is still available.
+You could use type arguments to capture the arguments and return type, to do more complicated transformations:
 
-For example, the following code will not report any errors:
-
-```js
-function method(func: (...args: Array<any>) => any) {
-  func(1, 2);     // Works.
-  func("1", "2"); // Works.
-  func({}, []);   // Works.
+```js flow-check
+function func<TArgs: $ReadOnlyArray<mixed>, TReturn>(
+  callback: (...TArgs) => TReturn,
+): (boolean, ...TArgs) => Array<TReturn> {
+  return (b, ...args) => {
+    if (b) {
+      return [callback(...args)];
+    } else {
+      return [];
+    }
+  };
 }
 
-method(function(a: number, b: number) {
-  // ...
-});
+const f: (boolean, string, number) => Array<string> =
+  func((x: string, y: number) => x.slice(y)); // OK
 ```
 
-Neither will this:
-
-```js
-function method(obj: Function) {
-  obj = 10;
-}
-
-method(function(a: number, b: number) {
-  // ...
-});
-```
-
-> **You should follow [all the same rules](../any) as `any` when using `Function`.**
