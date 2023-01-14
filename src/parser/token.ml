@@ -169,6 +169,7 @@ type t =
   | T_SYMBOL_TYPE
   | T_UNKNOWN_TYPE
   | T_NEVER_TYPE
+  | T_UNDEFINED_TYPE
 
 (* `bool` and `boolean` are equivalent annotations, but we need to track
    which one was used for when it might be an identifier, as in
@@ -341,6 +342,7 @@ let token_to_string = function
   | T_SYMBOL_TYPE -> "T_SYMBOL_TYPE"
   | T_UNKNOWN_TYPE -> "T_UNKNOWN_TYPE"
   | T_NEVER_TYPE -> "T_NEVER_TYPE"
+  | T_UNDEFINED_TYPE -> "T_UNDEFINED_TYPE"
 
 let value_of_token = function
   | T_NUMBER { raw; _ } -> raw
@@ -485,6 +487,7 @@ let value_of_token = function
   | T_SYMBOL_TYPE -> "symbol"
   | T_UNKNOWN_TYPE -> "unknown"
   | T_NEVER_TYPE -> "never"
+  | T_UNDEFINED_TYPE -> "undefined"
 
 let quote_token_value value = Printf.sprintf "token `%s`" value
 

@@ -1218,6 +1218,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Boolean _ -> Annot (Boolean loc)
     | T.Unknown _ -> Annot (Any loc)
     | T.Never _ -> Annot (Any loc)
+    | T.Undefined _ -> Annot (Any loc)
     | T.StringLiteral { Ast.StringLiteral.value; _ } -> Annot (SingletonString (loc, value))
     | T.NumberLiteral { Ast.NumberLiteral.value; raw; _ } ->
       Annot (SingletonNumber (loc, value, raw))

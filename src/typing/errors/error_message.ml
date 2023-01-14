@@ -636,6 +636,7 @@ and 'loc upper_kind =
 and ts_syntax_kind =
   | TSUnknown
   | TSNever
+  | TSUndefined
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -4300,6 +4301,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               text " type in Flow is ";
               code "empty";
               text ".";
+            ];
+        }
+    | TSUndefined ->
+      Normal
+        {
+          features =
+            [
+              text "The equivalent of TypeScript's ";
+              code "undefined";
+              text " type in Flow is ";
+              code "void";
+              text ". ";
+              text "Flow does not have separate ";
+              code "void";
+              text " and ";
+              code "undefined";
+              text " types.";
             ];
         }
   end

@@ -263,6 +263,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, (Never _ as t_ast)) ->
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSNever; loc });
       ((loc, AnyT.at (AnyError None) loc), t_ast)
+    | (loc, (Undefined _ as t_ast)) ->
+      Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSUndefined; loc });
+      ((loc, AnyT.at (AnyError None) loc), t_ast)
     | (loc, Nullable { Nullable.argument = t; comments }) ->
       let (((_, t), _) as t_ast) = convert cx tparams_map t in
       let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in

@@ -267,6 +267,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       let typeof = typeof_arg env in
       Expect.token env T_RPAREN;
       typeof
+    | T_UNDEFINED_TYPE (* people use `typeof undefined` for some reason *)
     | T_IDENTIFIER _ (* `static` is reserved in strict mode, but still an identifier *) ->
       Some (typeof_expr env)
     | _ ->
@@ -380,7 +381,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_VOID_TYPE
     | T_NULL
     | T_UNKNOWN_TYPE
-    | T_NEVER_TYPE ->
+    | T_NEVER_TYPE
+    | T_UNDEFINED_TYPE ->
       true
     | _ -> false
 
@@ -442,6 +444,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       Eat.token env;
       let trailing = Eat.trailing_comments env in
       Some (Type.Never (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_UNDEFINED_TYPE ->
+      Eat.token env;
+      let trailing = Eat.trailing_comments env in
+      Some (Type.Undefined (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | _ -> None
 
   and tuple =
@@ -1465,6 +1471,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | Exists comments -> Exists (merge_comments comments)
       | Unknown comments -> Unknown (merge_comments comments)
       | Never comments -> Never (merge_comments comments)
+      | Undefined comments -> Undefined (merge_comments comments)
       | Nullable ({ Nullable.comments; _ } as t) ->
         Nullable { t with Nullable.comments = merge_comments comments }
       | Function ({ Function.comments; _ } as t) ->

@@ -1415,6 +1415,7 @@ with type t = Impl.t = struct
         | Exists comments -> exists_type loc comments
         | Unknown comments -> unknown_type loc comments
         | Never comments -> never_type loc comments
+        | Undefined comments -> undefined_type loc comments
       )
     and any_type loc comments = node ?comments "AnyTypeAnnotation" loc []
     and mixed_type loc comments = node ?comments "MixedTypeAnnotation" loc []
@@ -1430,6 +1431,7 @@ with type t = Impl.t = struct
       node ?comments "NullableTypeAnnotation" loc [("typeAnnotation", _type argument)]
     and unknown_type loc comments = node ?comments "UnknownTypeAnnotation" loc []
     and never_type loc comments = node ?comments "NeverTypeAnnotation" loc []
+    and undefined_type loc comments = node ?comments "UndefinedTypeAnnotation" loc []
     and function_type
         ( loc,
           {

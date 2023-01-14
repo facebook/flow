@@ -149,6 +149,7 @@ let identifier_name_raw env =
     | T_SYMBOL_TYPE -> "symbol"
     | T_UNKNOWN_TYPE -> "unknown"
     | T_NEVER_TYPE -> "never"
+    | T_UNDEFINED_TYPE -> "undefined"
     (* Contextual stuff *)
     | T_OF -> "of"
     | T_ASYNC -> "async"

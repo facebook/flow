@@ -451,6 +451,7 @@ and Type : sig
     | BooleanLiteral of 'M BooleanLiteral.t
     | Unknown of ('M, unit) Syntax.t option
     | Never of ('M, unit) Syntax.t option
+    | Undefined of ('M, unit) Syntax.t option
 
   (* Type.annotation is a concrete syntax node with a location that starts at
    * the colon and ends after the type. For example, "var a: number", the

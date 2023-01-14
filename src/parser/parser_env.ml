@@ -695,6 +695,7 @@ let token_is_type_identifier env t =
     | T_SYMBOL_TYPE
     | T_UNKNOWN_TYPE
     | T_NEVER_TYPE
+    | T_UNDEFINED_TYPE
     | T_BOOLEAN_TYPE _
     | T_NUMBER_SINGLETON_TYPE _
     | T_BIGINT_SINGLETON_TYPE _
