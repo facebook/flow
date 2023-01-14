@@ -42,7 +42,7 @@ class type_parameter_mapper =
 
     method private make_typeparam tparam =
       let open Ast.Type.TypeParam in
-      let (_, { name = id; bound; variance; default }) = tparam in
+      let (_, { name = id; bound; bound_kind = _; variance; default }) = tparam in
       let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
       let reason = Reason.(mk_annot_reason (RType (OrdinaryName name)) name_loc) in
       let bound =

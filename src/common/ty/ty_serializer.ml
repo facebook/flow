@@ -347,6 +347,7 @@ let type_ options =
           (match bound with
           | Some t -> T.Available t
           | None -> T.Missing Loc.none);
+        bound_kind = T.TypeParam.Colon;
         variance = variance_ tp.tp_polarity;
         default;
       }

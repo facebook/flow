@@ -2177,6 +2177,7 @@ and tparams =
           {
             T.name = (name_loc, { Ast.Identifier.name; comments = _ });
             bound = b;
+            bound_kind = _;
             variance = v;
             default = d;
           }

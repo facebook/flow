@@ -1744,6 +1744,7 @@ with type t = Impl.t = struct
           {
             Type.TypeParam.name = (_, { Identifier.name; comments });
             bound;
+            bound_kind;
             variance = tp_var;
             default;
           }
@@ -1752,14 +1753,19 @@ with type t = Impl.t = struct
         ?comments
         "TypeParameter"
         loc
-        [
-          (* we track the location of the name, but don't expose it here for
-             backwards-compatibility. TODO: change this? *)
-          ("name", string name);
-          ("bound", hint type_annotation bound);
-          ("variance", option variance tp_var);
-          ("default", option _type default);
-        ]
+        ([
+           (* we track the location of the name, but don't expose it here for
+              backwards-compatibility. TODO: change this? *)
+           ("name", string name);
+           ("bound", hint type_annotation bound);
+           ("variance", option variance tp_var);
+           ("default", option _type default);
+         ]
+        @
+        match bound_kind with
+        | Type.TypeParam.Colon -> []
+        | Type.TypeParam.Extends -> [("usesExtendsBound", bool true)]
+        )
     and type_args (loc, { Type.TypeArgs.arguments; comments }) =
       node
         ?comments:(format_internal_comments comments)

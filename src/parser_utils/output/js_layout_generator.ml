@@ -3075,6 +3075,7 @@ and type_param
       {
         Ast.Type.TypeParam.name = (loc, { Ast.Identifier.name; comments });
         bound;
+        bound_kind;
         variance = variance_;
         default;
       }
@@ -3083,7 +3084,14 @@ and type_param
     [
       option variance variance_;
       source_location_with_comments ?comments (loc, Atom name);
-      hint (type_annotation ~opts) bound;
+      hint
+        (fun t ->
+          match bound_kind with
+          | Ast.Type.TypeParam.Colon -> type_annotation ~opts t
+          | Ast.Type.TypeParam.Extends ->
+            let (_, t) = t in
+            fuse [space; Atom "extends"; space; type_ ~opts t])
+        bound;
       begin
         match default with
         | Some t -> fuse [pretty_space; Atom "="; pretty_space; type_ ~opts t]

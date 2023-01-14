@@ -1958,7 +1958,11 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ("type a<\n  a,\n  b,\n> = " ^ String.make 80 'a' ^ ";")
+             ("type a<\n  a,\n  b,\n> = " ^ String.make 80 'a' ^ ";");
+           assert_statement_string ~ctxt "type a<a extends b>=a;";
+           assert_statement_string ~ctxt "type a<+a extends b>=a;";
+           assert_statement_string ~ctxt "type a<a extends b=c>=a;";
+           assert_statement_string ~ctxt "type a<+a extends b=c>=a;"
          );
          ( "type" >:: fun ctxt ->
            assert_output ~ctxt "mixed" (Js_layout_generator.type_ ~opts (Ast_builder.Types.mixed ()));

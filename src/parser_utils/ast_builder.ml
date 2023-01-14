@@ -69,9 +69,22 @@ module Types = struct
   let object_ ?(loc = Loc.none) ?exact ?inexact properties =
     (loc, Ast.Type.Object (Objects.make ?exact ?inexact properties))
 
-  let type_param ?(loc = Loc.none) ?(bound = Flow_ast.Type.Missing Loc.none) ?variance ?default name
-      =
-    (loc, { Ast.Type.TypeParam.name = Identifiers.identifier name; bound; variance; default })
+  let type_param
+      ?(loc = Loc.none)
+      ?(bound = Flow_ast.Type.Missing Loc.none)
+      ?(bound_kind = Ast.Type.TypeParam.Colon)
+      ?variance
+      ?default
+      name =
+    ( loc,
+      {
+        Ast.Type.TypeParam.name = Identifiers.identifier name;
+        bound;
+        bound_kind;
+        variance;
+        default;
+      }
+    )
 
   let type_params ?comments ?(loc = Loc.none) params =
     (loc, { Ast.Type.TypeParams.params; comments })

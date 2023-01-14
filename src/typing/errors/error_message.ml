@@ -638,6 +638,7 @@ and ts_syntax_kind =
   | TSNever
   | TSUndefined
   | TSKeyof
+  | TSTypeParamExtends
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -4332,6 +4333,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               code "$Keys";
               text " utility type, used in the form ";
               code "$Keys<T>";
+              text ".";
+            ];
+        }
+    | TSTypeParamExtends ->
+      Normal
+        {
+          features =
+            [
+              text "While TypeScript uses ";
+              code "extends";
+              text " to specify type parameter bounds, Flow uses ";
+              code ":";
+              text " in the form ";
+              code "type T<A: B> = ...";
               text ".";
             ];
         }

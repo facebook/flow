@@ -1307,7 +1307,7 @@ class ['loc] mapper =
 
     method type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
-      let (loc, { name; bound; variance; default }) = tparam in
+      let (loc, { name; bound; bound_kind; variance; default }) = tparam in
       let bound' = this#type_annotation_hint bound in
       let variance' = this#variance_opt variance in
       let default' = map_opt this#type_ default in
@@ -1315,7 +1315,7 @@ class ['loc] mapper =
       if name' == name && bound' == bound && variance' == variance && default' == default then
         tparam
       else
-        (loc, { name = name'; bound = bound'; variance = variance'; default = default' })
+        (loc, { name = name'; bound = bound'; bound_kind; variance = variance'; default = default' })
 
     method generic_type _loc (gt : ('loc, 'loc) Ast.Type.Generic.t) =
       let open Ast.Type.Generic in

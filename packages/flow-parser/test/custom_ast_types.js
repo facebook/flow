@@ -139,6 +139,7 @@ function custom_ast_types(fork) {
     .bases('FlowType')
     .build('argument')
     .field('argument', def('FlowType'));
+  def('TypeParameter').field('usesExtendsBound', or(undefined, Boolean));
 }
 
 module.exports = custom_ast_types;

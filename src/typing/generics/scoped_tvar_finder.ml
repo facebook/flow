@@ -322,9 +322,7 @@ class finder cx =
       field
 
     method type_param_id tparam =
-      let (_, { Ast.Type.TypeParam.name = (loc, _); bound = _; variance = _; default = _ }) =
-        tparam
-      in
+      let (_, { Ast.Type.TypeParam.name = (loc, _); _ }) = tparam in
       Context.make_aloc_id cx loc
 
     method get_tparams (tparams : (ALoc.t, ALoc.t * Type.t) Ast.Type.TypeParams.t option) =

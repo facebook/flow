@@ -65,6 +65,7 @@ let is_fst = function
                       {
                         T.TypeParam.name = (_, { Id.name = tparam_name; _ });
                         bound = T.Missing _;
+                        bound_kind = T.TypeParam.Colon;
                         variance = None;
                         default = None;
                       }
@@ -127,6 +128,7 @@ let is_mappable = function
                       {
                         T.TypeParam.name = (_, { Id.name = tparam_name; _ });
                         bound = T.Missing _;
+                        bound_kind = T.TypeParam.Colon;
                         variance = None;
                         default = None;
                       }

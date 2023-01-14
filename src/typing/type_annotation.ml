@@ -1972,49 +1972,75 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let {
         Ast.Type.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ }) as id;
         bound;
+        bound_kind;
         variance;
         default;
       } =
         type_param
       in
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
-      let (bound, bound_ast) =
-        match bound with
-        | Ast.Type.Missing loc ->
-          let t = DefT (reason, infer_trust cx, MixedT Mixed_everything) in
-          (t, Ast.Type.Missing (loc, t))
-        | Ast.Type.Available (bound_loc, u) ->
-          let (bound, bound_ast) = mk_type cx tparams_map reason (Some u) in
-          let bound_ast =
-            match bound_ast with
-            | Some ast -> Ast.Type.Available (bound_loc, ast)
-            | None -> Ast.Type.Missing (bound_loc, bound)
-          in
-          (bound, bound_ast)
-      in
-      let (default, default_ast) =
-        match default with
-        | None -> (None, None)
-        | Some default ->
-          let (t, default_ast) = mk_type cx tparams_map reason (Some default) in
-          ConsGen.subtype_check cx t bound;
-          (Some t, default_ast)
-      in
       let polarity = polarity variance in
-      let tparam =
-        { reason; name = Subst_name.Name name; bound; polarity; default; is_this = false }
-      in
-      let t = Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx tparam in
-      let name_ast =
-        let (loc, id_name) = id in
-        (loc, id_name)
-      in
-      let ast =
-        ( loc,
-          { Ast.Type.TypeParam.name = name_ast; bound = bound_ast; variance; default = default_ast }
-        )
-      in
-      (ast, tparam, t)
+      (match bound_kind with
+      | Ast.Type.TypeParam.Extends ->
+        Flow_js_utils.add_output
+          cx
+          (Error_message.ETSSyntax { kind = Error_message.TSTypeParamExtends; loc });
+        let t = AnyT.at (AnyError None) loc in
+        let tparam =
+          {
+            reason;
+            name = Subst_name.Name name;
+            bound = t;
+            polarity;
+            default = None;
+            is_this = false;
+          }
+        in
+        let ast = Tast_utils.error_mapper#type_param (loc, type_param) in
+        (ast, tparam, t)
+      | Ast.Type.TypeParam.Colon ->
+        let (bound, bound_ast) =
+          match bound with
+          | Ast.Type.Missing loc ->
+            let t = DefT (reason, infer_trust cx, MixedT Mixed_everything) in
+            (t, Ast.Type.Missing (loc, t))
+          | Ast.Type.Available (bound_loc, u) ->
+            let (bound, bound_ast) = mk_type cx tparams_map reason (Some u) in
+            let bound_ast =
+              match bound_ast with
+              | Some ast -> Ast.Type.Available (bound_loc, ast)
+              | None -> Ast.Type.Missing (bound_loc, bound)
+            in
+            (bound, bound_ast)
+        in
+        let (default, default_ast) =
+          match default with
+          | None -> (None, None)
+          | Some default ->
+            let (t, default_ast) = mk_type cx tparams_map reason (Some default) in
+            ConsGen.subtype_check cx t bound;
+            (Some t, default_ast)
+        in
+        let tparam =
+          { reason; name = Subst_name.Name name; bound; polarity; default; is_this = false }
+        in
+        let t = Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx tparam in
+        let name_ast =
+          let (loc, id_name) = id in
+          (loc, id_name)
+        in
+        let ast =
+          ( loc,
+            {
+              Ast.Type.TypeParam.name = name_ast;
+              bound = bound_ast;
+              bound_kind;
+              variance;
+              default = default_ast;
+            }
+          )
+        in
+        (ast, tparam, t))
 
   (* take a list of AST type param declarations,
      do semantic checking and create types for them. *)

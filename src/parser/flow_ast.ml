@@ -474,11 +474,17 @@ and Type : sig
   [@@deriving show]
 
   module TypeParam : sig
+    type bound_kind =
+      | Colon
+      | Extends
+    [@@deriving show]
+
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
       name: ('M, 'M) Identifier.t;
       bound: ('M, 'T) Type.annotation_or_hint;
+      bound_kind: bound_kind;
       variance: 'M Variance.t option;
       default: ('M, 'T) Type.t option;
     }

@@ -1262,13 +1262,22 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     with_loc
       (fun env ->
         let name = type_identifier env in
-        let bound =
-          if Peek.token env = T_COLON then
-            Ast.Type.Available (annotation env)
-          else
-            Ast.Type.Missing (Peek.loc_skip_lookahead env)
+        let (bound, bound_kind) =
+          match Peek.token env with
+          | T_COLON -> (Ast.Type.Available (annotation env), Ast.Type.TypeParam.Colon)
+          | T_EXTENDS ->
+            ( Ast.Type.Available
+                (with_loc
+                   (fun env ->
+                     Eat.token env;
+                     _type env)
+                   env
+                ),
+              Ast.Type.TypeParam.Extends
+            )
+          | _ -> (Ast.Type.Missing (Peek.loc_skip_lookahead env), Ast.Type.TypeParam.Colon)
         in
-        (name, bound))
+        (name, bound, bound_kind))
       env
 
   and type_params =
@@ -1298,8 +1307,6 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | T_ASSIGN
       (* start of function params: `function f<T|(...)` *)
       | T_LPAREN
-      (* class heritage: `class C<T| extends ...` *)
-      | T_EXTENDS
       (* class heritage: `class C<T| implements ...` *)
       | T_IDENTIFIER { raw = "implements"; _ } ->
         true
@@ -1312,7 +1319,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             with_loc_extra
               (fun env ->
                 let variance = maybe_variance env in
-                let (loc, (name, bound)) = bounded_type env in
+                let (loc, (name, bound, bound_kind)) = bounded_type env in
                 let (default, require_default) =
                   match Peek.token env with
                   | T_ASSIGN ->
@@ -1322,7 +1329,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                     if require_default then error_at env (loc, Parse_error.MissingTypeParamDefault);
                     (None, require_default)
                 in
-                ({ Type.TypeParam.name; bound; variance; default }, require_default))
+                ({ Type.TypeParam.name; bound; bound_kind; variance; default }, require_default))
               env
           in
           (param :: acc, require_default)

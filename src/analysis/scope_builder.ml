@@ -520,7 +520,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         in
         let rec loop tps =
           match tps with
-          | (loc, { name; bound; variance; default }) :: next ->
+          | (loc, { name; bound; bound_kind = _; variance; default }) :: next ->
             hoist_op (fun () -> ignore @@ this#type_annotation_hint bound);
             ignore @@ this#variance_opt variance;
             hoist_op (fun () -> ignore @@ Base.Option.map ~f:this#type_ default);
