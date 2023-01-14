@@ -33,6 +33,14 @@ class mapper target_loc kind =
       | { bound_kind = Extends; _ } when kind = `TypeParamExtends && this#is_target loc ->
         (Loc.none, { tparam with bound_kind = Colon })
       | _ -> super#type_param (loc, tparam)
+
+    method! variance variance =
+      let open Flow_ast.Variance in
+      let (loc, { kind = variance_kind; comments }) = variance in
+      match variance_kind with
+      | Readonly when kind = `ReadonlyVariance && this#is_target loc ->
+        (Loc.none, { kind = Plus; comments })
+      | _ -> super#variance variance
   end
 
 let convert_unknown_type ast loc =
@@ -53,4 +61,8 @@ let convert_keyof_type ast loc =
 
 let convert_type_param_extends ast loc =
   let mapper = new mapper loc `TypeParamExtends in
+  mapper#program ast
+
+let convert_readonly_variance ast loc =
+  let mapper = new mapper loc `ReadonlyVariance in
   mapper#program ast

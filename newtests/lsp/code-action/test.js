@@ -2701,5 +2701,72 @@ module.exports = (suite(
           ],
         )
     ]),
+    test('provide quickfix for `readonly` variance', [
+      addFile('fix-readonly-variance.js.ignored', 'fix-readonly-variance.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-readonly-variance.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 10,
+          },
+          end: {
+            line: 2,
+            character: 18,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to `+`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-readonly-variance.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 9
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 31
+                            }
+                          },
+                          "newText": "{ +foo: number }"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_readonly_variance",
+                      "Convert to `+`"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
   ],
 ): Suite);

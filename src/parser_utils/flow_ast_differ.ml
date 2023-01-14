@@ -3143,7 +3143,9 @@ let program
       ~default:[replace loc1 (TypeParam (loc1, t_param1)) (TypeParam (loc1, t_param2))]
   and variance (var1 : Loc.t Ast.Variance.t option) (var2 : Loc.t Ast.Variance.t option) :
       node change list option =
+    let open Ast.Variance in
     match (var1, var2) with
+    | (Some (_, { kind = Readonly; _ }), Some _) -> None
     | (Some (loc1, var1), Some (_, var2)) ->
       Some [replace loc1 (Variance (loc1, var1)) (Variance (loc1, var2))]
     | (Some (loc1, var1), None) -> Some [delete loc1 (Variance (loc1, var1))]
