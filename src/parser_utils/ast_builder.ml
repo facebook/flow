@@ -58,7 +58,11 @@ module Types = struct
       Ast.Type.Object.Property prop
   end
 
-  let mixed = (Loc.none, Ast.Type.Mixed None)
+  let mixed ?(loc = Loc.none) ?comments () = (loc, Ast.Type.Mixed comments)
+
+  let empty ?(loc = Loc.none) ?comments () = (loc, Ast.Type.Empty comments)
+
+  let void ?(loc = Loc.none) ?comments () = (loc, Ast.Type.Void comments)
 
   let annotation t = (Loc.none, t)
 

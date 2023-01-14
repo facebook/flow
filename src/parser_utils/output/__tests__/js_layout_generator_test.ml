@@ -1913,7 +1913,7 @@ let tests =
          );
          ( "type_cast_expression" >:: fun ctxt ->
            let layout =
-             Js_layout_generator.expression ~opts (E.typecast (E.identifier "a") Types.mixed)
+             Js_layout_generator.expression ~opts (E.typecast (E.identifier "a") (Types.mixed ()))
            in
            assert_layout
              ~ctxt
@@ -1934,7 +1934,7 @@ let tests =
 
            let a80 = String.make 80 'a' in
            let layout =
-             Js_layout_generator.expression ~opts (E.typecast (E.identifier a80) Types.mixed)
+             Js_layout_generator.expression ~opts (E.typecast (E.identifier a80) (Types.mixed ()))
            in
            assert_output ~ctxt ("(" ^ a80 ^ ":mixed)") layout;
            assert_output ~ctxt ~pretty:true ("(" ^ a80 ^ ": mixed)") layout;
@@ -1961,6 +1961,10 @@ let tests =
              ("type a<\n  a,\n  b,\n> = " ^ String.make 80 'a' ^ ";")
          );
          ( "type" >:: fun ctxt ->
+           assert_output ~ctxt "mixed" (Js_layout_generator.type_ ~opts (Ast_builder.Types.mixed ()));
+           assert_output ~ctxt "empty" (Js_layout_generator.type_ ~opts (Ast_builder.Types.empty ()));
+           assert_output ~ctxt "void" (Js_layout_generator.type_ ~opts (Ast_builder.Types.void ()));
+           assert_statement_string ~ctxt "type a=mixed;";
            assert_statement_string ~ctxt "type a=any;";
            assert_statement_string ~ctxt "type a=mixed;";
            assert_statement_string ~ctxt "type a=empty;";
