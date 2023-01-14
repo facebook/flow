@@ -19,3 +19,8 @@ val convert_undefined_type :
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_keyof_type :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t

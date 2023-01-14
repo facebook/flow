@@ -22,6 +22,9 @@ class mapper target_loc kind =
         Ast_builder.Types.empty ?comments ()
       | (loc, Undefined comments) when kind = `UndefinedType && this#is_target loc ->
         Ast_builder.Types.void ?comments ()
+      | (loc, Keyof { Keyof.argument; comments }) when kind = `KeyofType && this#is_target loc ->
+        let targs = Ast_builder.Types.type_args [super#type_ argument] in
+        Ast_builder.Types.unqualified_generic ?comments ~targs "$Keys"
       | _ -> super#type_ t
   end
 
@@ -35,4 +38,8 @@ let convert_never_type ast loc =
 
 let convert_undefined_type ast loc =
   let mapper = new mapper loc `UndefinedType in
+  mapper#program ast
+
+let convert_keyof_type ast loc =
+  let mapper = new mapper loc `KeyofType in
   mapper#program ast
