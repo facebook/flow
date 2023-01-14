@@ -2634,5 +2634,72 @@ module.exports = (suite(
           ],
         )
     ]),
+    test('provide quickfix for `extends` in type param', [
+      addFile('fix-type-param-extends.js.ignored', 'fix-type-param-extends.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-type-param-extends.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 7,
+          },
+          end: {
+            line: 2,
+            character: 23,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to `: T`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-type-param-extends.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 7
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 23
+                            }
+                          },
+                          "newText": "A: string"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_type_param_extends",
+                      "Convert to `: T`"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
   ],
 ): Suite);

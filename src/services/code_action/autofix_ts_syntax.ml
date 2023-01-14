@@ -26,6 +26,13 @@ class mapper target_loc kind =
         let targs = Ast_builder.Types.type_args [super#type_ argument] in
         Ast_builder.Types.unqualified_generic ?comments ~targs "$Keys"
       | _ -> super#type_ t
+
+    method! type_param (loc, tparam) =
+      let open Flow_ast.Type.TypeParam in
+      match tparam with
+      | { bound_kind = Extends; _ } when kind = `TypeParamExtends && this#is_target loc ->
+        (Loc.none, { tparam with bound_kind = Colon })
+      | _ -> super#type_param (loc, tparam)
   end
 
 let convert_unknown_type ast loc =
@@ -42,4 +49,8 @@ let convert_undefined_type ast loc =
 
 let convert_keyof_type ast loc =
   let mapper = new mapper loc `KeyofType in
+  mapper#program ast
+
+let convert_type_param_extends ast loc =
+  let mapper = new mapper loc `TypeParamExtends in
   mapper#program ast
