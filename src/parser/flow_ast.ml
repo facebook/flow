@@ -111,6 +111,7 @@ and Variance : sig
   and kind =
     | Plus
     | Minus
+    | Readonly
 
   and 'M t' = {
     kind: kind;

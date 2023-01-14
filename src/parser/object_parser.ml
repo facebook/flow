@@ -916,7 +916,10 @@ module Object
           []
       in
       let (generator, leading_generator) = Declaration.generator env in
-      let variance = Declaration.variance env async generator in
+      let parse_readonly =
+        Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET
+      in
+      let variance = Declaration.variance env ~parse_readonly async generator in
       let (generator, leading_generator) =
         match (generator, variance) with
         | (false, Some _) -> Declaration.generator env

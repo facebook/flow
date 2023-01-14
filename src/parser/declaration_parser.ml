@@ -17,7 +17,7 @@ module type DECLARATION = sig
 
   val generator : env -> bool * Loc.t Comment.t list
 
-  val variance : env -> bool -> bool -> Loc.t Variance.t option
+  val variance : env -> parse_readonly:bool -> bool -> bool -> Loc.t Variance.t option
 
   val function_params : await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
 
@@ -241,7 +241,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     let (body_block, contains_use_strict) = Parse.function_block_body env ~expression in
     (Function.BodyBlock body_block, contains_use_strict)
 
-  let variance env is_async is_generator =
+  let variance env ~parse_readonly is_async is_generator =
     let loc = Peek.loc env in
     let variance =
       match Peek.token env with
@@ -259,6 +259,16 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           ( loc,
             {
               Variance.kind = Variance.Minus;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
+          )
+      | T_IDENTIFIER { raw = "readonly"; _ } when parse_readonly ->
+        let leading = Peek.comments env in
+        Eat.token env;
+        Some
+          ( loc,
+            {
+              Variance.kind = Variance.Readonly;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             }
           )

@@ -11,7 +11,8 @@ module ALocMap = Loc_collections.ALocMap
 (* TODO(nmote) come up with a consistent story for abstract/concrete locations in this module *)
 
 let polarity = function
-  | Some (_, { Ast.Variance.kind = Ast.Variance.Plus; comments = _ }) -> Polarity.Positive
+  | Some (_, { Ast.Variance.kind = Ast.Variance.Plus | Ast.Variance.Readonly; comments = _ }) ->
+    Polarity.Positive
   | Some (_, { Ast.Variance.kind = Ast.Variance.Minus; comments = _ }) -> Polarity.Negative
   | None -> Polarity.Neutral
 

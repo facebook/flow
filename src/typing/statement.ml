@@ -6736,7 +6736,7 @@ module Make
                   ) ->
                 Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
                 let reason = mk_reason (RPrivateProperty name) loc in
-                let polarity = Anno.polarity variance in
+                let polarity = Anno.polarity cx variance in
                 let (field, annot_t, annot_ast, get_value) =
                   mk_field cx tparams_map_with_this reason annot value
                 in
@@ -6781,7 +6781,7 @@ module Make
                   ) ->
                 Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
-                let polarity = Anno.polarity variance in
+                let polarity = Anno.polarity cx variance in
                 let (field, annot_t, annot, get_value) =
                   mk_field cx tparams_map_with_this reason annot value
                 in

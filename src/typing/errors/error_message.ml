@@ -639,6 +639,7 @@ and ts_syntax_kind =
   | TSUndefined
   | TSKeyof
   | TSTypeParamExtends
+  | TSReadonlyVariance
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -4348,6 +4349,24 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               text " in the form ";
               code "type T<A: B> = ...";
               text ".";
+            ];
+        }
+    | TSReadonlyVariance ->
+      Normal
+        {
+          features =
+            [
+              text "While TypeScript uses ";
+              code "readonly";
+              text " to specify read only properties, Flow uses ";
+              code "+";
+              text " in the form ";
+              code "type T = {+foo: string}";
+              text " for properties, ";
+              code "type T = {+[string]: mixed}";
+              text " for dictionaries, and ";
+              code "type T = [+foo: string]";
+              text " for tuple elements.";
             ];
         }
   end

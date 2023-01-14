@@ -109,7 +109,7 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Statement.DeclareClass.t ->
     Class_type_sig.Types.t * Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t
 
-  val polarity : 'a Flow_ast.Variance.t option -> Polarity.t
+  val polarity : Context.t -> ALoc.t Flow_ast.Variance.t option -> Polarity.t
 
   val qualified_name : (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t -> string
 

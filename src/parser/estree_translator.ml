@@ -1380,6 +1380,7 @@ with type t = Impl.t = struct
           match kind with
           | Plus -> string "plus"
           | Minus -> string "minus"
+          | Readonly -> string "readonly"
         )
       in
       node ?comments "Variance" loc [("kind", kind)]

@@ -231,7 +231,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       Flow_js_utils.add_output cx (Error_message.EUnclearType loc)
     | _ -> ()
 
-  let polarity = Typed_ast_utils.polarity
+  let polarity cx variance =
+    (match variance with
+    | Some (loc, { Ast.Variance.kind = Ast.Variance.Readonly; _ }) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.ETSSyntax { kind = Error_message.TSReadonlyVariance; loc })
+    | _ -> ());
+    Typed_ast_utils.polarity variance
 
   (**********************************)
   (* Transform annotations to types *)
@@ -1543,7 +1550,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               if _method then
                 Properties.add_method (OrdinaryName name) (Some loc) t
               else
-                Properties.add_field (OrdinaryName name) (polarity variance) (Some loc) t
+                Properties.add_field (OrdinaryName name) (polarity cx variance) (Some loc) t
             in
             (Acc.add_prop prop acc, prop_ast t)
         | Ast.Expression.Object.Property.Literal (loc, _)
@@ -1612,7 +1619,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           Type.dict_name = Base.Option.map ~f:ident_name id;
           key;
           value;
-          dict_polarity = polarity variance;
+          dict_polarity = polarity cx variance;
         },
         { Object.Indexer.id; key = key_ast; value = value_ast; static; variance; comments }
       )
@@ -1792,7 +1799,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             { Ast.Type.Tuple.LabeledElement.name = id_name; annot = annot_ast; variance; optional }
         )
       in
-      (t, TupleElement { name = Some str_name; t; polarity = polarity variance }, element_ast)
+      (t, TupleElement { name = Some str_name; t; polarity = polarity cx variance }, element_ast)
     | Ast.Type.Tuple.SpreadElement spread_el ->
       Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, TupleSpreadElement));
       let t = AnyT.at (AnyError None) loc in
@@ -1979,7 +1986,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         type_param
       in
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
-      let polarity = polarity variance in
+      let polarity = polarity cx variance in
       (match bound_kind with
       | Ast.Type.TypeParam.Extends ->
         Flow_js_utils.add_output
@@ -2113,7 +2120,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let { Indexer.key; value; static; variance; _ } = indexer in
               let (((_, k), _) as key) = convert cx tparams_map key in
               let (((_, v), _) as value) = convert cx tparams_map value in
-              let polarity = polarity variance in
+              let polarity = polarity cx variance in
               ( add_indexer ~static polarity ~key:k ~value:v x,
                 Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
               )
@@ -2125,7 +2132,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 ) ->
               if optional && _method then
                 Flow_js_utils.add_output cx Error_message.(EInternal (loc, OptionalMethod));
-              let polarity = polarity variance in
+              let polarity = polarity cx variance in
               let (x, prop) =
                 Ast.Expression.Object.(
                   match (_method, key, value) with

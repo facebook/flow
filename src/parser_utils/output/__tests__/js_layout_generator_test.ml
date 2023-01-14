@@ -1942,6 +1942,11 @@ let tests =
            (* Arrow function with type params is wrapped in parens *)
            assert_expression_string ~ctxt "((<A>()=>B):C)"
          );
+         ( "readonly_variance" >:: fun ctxt ->
+           assert_statement_string ~ctxt "type a={readonly foo:string};";
+           assert_statement_string ~ctxt "type a={readonly [string]:mixed};";
+           assert_statement_string ~ctxt "type a=[readonly foo:string];"
+         );
          ( "type_parameter" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a<a>=a;";
            assert_statement_string ~ctxt "type a<a,b>=a;";

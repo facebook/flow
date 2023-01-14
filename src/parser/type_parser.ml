@@ -46,7 +46,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | ParamList of (Loc.t, Loc.t) Type.Function.Params.t'
     | Type of (Loc.t, Loc.t) Type.t
 
-  let maybe_variance env =
+  let maybe_variance ?(parse_readonly = false) env =
     let loc = Peek.loc env in
     match Peek.token env with
     | T_PLUS ->
@@ -62,6 +62,16 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       Some
         ( loc,
           { Variance.kind = Variance.Minus; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+        )
+    | T_IDENTIFIER { raw = "readonly"; _ } when parse_readonly ->
+      let leading = Peek.comments env in
+      Eat.token env;
+      Some
+        ( loc,
+          {
+            Variance.kind = Variance.Readonly;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+          }
         )
     | _ -> None
 
@@ -483,6 +493,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           else
             let variance =
               match Peek.token env with
+              | T_IDENTIFIER { raw = "readonly"; _ }
+                when Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET ->
+                maybe_variance ~parse_readonly:true env
               | T_PLUS -> maybe_variance env
               | T_MINUS when Peek.ith_is_identifier ~i:1 env ->
                 (* `-1` is a valid type but not a valid tuple label.
@@ -1099,6 +1112,20 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let proto = Some (Peek.loc env) in
         let leading = leading @ Peek.comments env in
         Eat.token env;
+        property
+          env
+          ~is_class
+          ~allow_static:false
+          ~allow_proto:false
+          ~variance
+          ~static
+          ~proto
+          ~leading
+          start_loc
+      | T_IDENTIFIER { raw = "readonly"; _ }
+        when variance = None
+             && (Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET) ->
+        let variance = maybe_variance ~parse_readonly:true env in
         property
           env
           ~is_class

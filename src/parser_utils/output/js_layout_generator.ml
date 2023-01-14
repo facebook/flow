@@ -3049,6 +3049,7 @@ and variance (loc, { Ast.Variance.kind; comments }) =
       match kind with
       | Ast.Variance.Plus -> Atom "+"
       | Ast.Variance.Minus -> Atom "-"
+      | Ast.Variance.Readonly -> fuse [Atom "readonly"; space]
     )
 
 and switch_case ~opts ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
