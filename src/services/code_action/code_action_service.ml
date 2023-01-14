@@ -498,6 +498,18 @@ let ast_transforms_of_error ?loc = function
       ]
     else
       []
+  | Error_message.ETSSyntax { kind = Error_message.TSUndefined; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `void`";
+          diagnostic_title = "convert_undefined_type";
+          transform = Autofix_ts_syntax.convert_undefined_type;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
