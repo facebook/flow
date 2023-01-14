@@ -2322,9 +2322,11 @@ module Make
         | Some hint ->
           let elemt' = Tvar.mk cx element_reason in
           if
-            Type_hint.sandbox_flow_succeeds
-              cx
-              (DefT (reason, bogus_trust (), ArrT (ArrayAT (elemt', Some []))), hint)
+            Context.run_in_implicit_instantiation_mode cx (fun () ->
+                Type_hint.sandbox_flow_succeeds
+                  cx
+                  (DefT (reason, bogus_trust (), ArrT (ArrayAT (elemt', Some []))), hint)
+            )
           then
             Flow.unify cx elemt (PinTypes.pin_type cx ~use_op:unknown_use element_reason elemt')
           else

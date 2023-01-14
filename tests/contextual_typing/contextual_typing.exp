@@ -111,39 +111,6 @@ References:
                            ^ [3]
 
 
-Error ---------------------------------------------------------------------------------- implicit_instantiation.js:151:4
-
-Cannot cast `a` to `Set` because in type argument `T` [1]: [incompatible-cast]
- - Either `T` [2] is incompatible with empty [3].
- - Or `T` [4] is incompatible with empty [3].
- - Or `T` [5] is incompatible with empty [3].
- - Or `Yield` [6] is incompatible with empty [3].
-
-   implicit_instantiation.js:151:4
-    151|   (a: Set<empty>); // error Set<string> ~> Set<empty>
-            ^
-
-References:
-   <BUILTINS>/core.js:1796:19
-   1796| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [1]
-   <BUILTINS>/core.js:691:31
-    691| declare class $ReadOnlyArray<+T> {
-                                       ^ [2]
-   implicit_instantiation.js:151:11
-    151|   (a: Set<empty>); // error Set<string> ~> Set<empty>
-                   ^^^^^ [3]
-   <BUILTINS>/core.js:891:21
-    891| declare class Array<T> extends $ReadOnlyArray<T> {
-                             ^ [4]
-   <BUILTINS>/core.js:1677:16
-   1677| type Iterator<+T> = $Iterator<T,void,void>;
-                        ^ [5]
-   <BUILTINS>/core.js:1673:22
-   1673| interface $Iterator<+Yield,+Return,-Next> {
-                              ^^^^^ [6]
-
-
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:152:4
 
 Cannot cast `b` to `Set` because string [1] is incompatible with empty [2] in type argument `T` [3]. [incompatible-cast]
@@ -162,39 +129,6 @@ References:
    <BUILTINS>/core.js:1796:19
    1796| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
-
-
-Error ---------------------------------------------------------------------------------- implicit_instantiation.js:152:4
-
-Cannot cast `b` to `Set` because in type argument `T` [1]: [incompatible-cast]
- - Either `T` [2] is incompatible with empty [3].
- - Or `T` [4] is incompatible with empty [3].
- - Or `T` [5] is incompatible with empty [3].
- - Or `Yield` [6] is incompatible with empty [3].
-
-   implicit_instantiation.js:152:4
-    152|   (b: Set<empty>); // error Set<string> ~> Set<empty>
-            ^
-
-References:
-   <BUILTINS>/core.js:1796:19
-   1796| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [1]
-   <BUILTINS>/core.js:691:31
-    691| declare class $ReadOnlyArray<+T> {
-                                       ^ [2]
-   implicit_instantiation.js:152:11
-    152|   (b: Set<empty>); // error Set<string> ~> Set<empty>
-                   ^^^^^ [3]
-   <BUILTINS>/core.js:891:21
-    891| declare class Array<T> extends $ReadOnlyArray<T> {
-                             ^ [4]
-   <BUILTINS>/core.js:1677:16
-   1677| type Iterator<+T> = $Iterator<T,void,void>;
-                        ^ [5]
-   <BUILTINS>/core.js:1673:22
-   1673| interface $Iterator<+Yield,+Return,-Next> {
-                              ^^^^^ [6]
 
 
 Error -------------------------------------------------------------------------------------------- intersections.js:9:24
@@ -526,7 +460,4 @@ References:
 
 
 
-Found 34 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
+Found 32 errors
