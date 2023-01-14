@@ -3764,6 +3764,9 @@ and type_typeof ~opts:_ loc { Ast.Type.Typeof.argument; comments } =
     comments
     (fuse [Atom "typeof"; space; generic_identifier argument])
 
+and type_keyof ~opts loc { Ast.Type.Keyof.argument; comments } =
+  layout_node_with_comments_opt loc comments (fuse [Atom "keyof"; space; type_ ~opts argument])
+
 and type_tuple ~opts loc { Ast.Type.Tuple.elements; comments } =
   layout_node_with_comments_opt
     loc
@@ -3870,6 +3873,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Union t -> type_union ~opts loc t
       | T.Intersection t -> type_intersection ~opts loc t
       | T.Typeof t -> type_typeof ~opts loc t
+      | T.Keyof t -> type_keyof ~opts loc t
       | T.Tuple t -> type_tuple ~opts loc t
       | T.StringLiteral lit -> string_literal_type loc lit
       | T.NumberLiteral lit -> number_literal_type loc lit

@@ -1999,7 +1999,8 @@ let tests =
            assert_statement_string ~ctxt "type a=true;";
            assert_statement_string ~ctxt "type a=unknown;";
            assert_statement_string ~ctxt "type a=never;";
-           assert_statement_string ~ctxt "type a=undefined;"
+           assert_statement_string ~ctxt "type a=undefined;";
+           assert_statement_string ~ctxt "type a=keyof O;"
          );
          ( "type_function" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=()=>c;";

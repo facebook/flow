@@ -753,6 +753,7 @@ let token_is_type_identifier env t =
     (* identifier-ish, but not valid types *)
     | T_STATIC
     | T_TYPEOF
+    | T_KEYOF
     | T_VOID ->
       false
     (* syntax *)

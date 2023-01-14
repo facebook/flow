@@ -1860,6 +1860,7 @@ let type_token env lexbuf =
     | "unknown" -> Token (env, T_UNKNOWN_TYPE)
     | "never" -> Token (env, T_NEVER_TYPE)
     | "undefined" -> Token (env, T_UNDEFINED_TYPE)
+    | "keyof" -> Token (env, T_KEYOF)
     | _ -> Token (env, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw }))
   (* Others *)
   | eof ->

@@ -362,6 +362,16 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Type.BooleanLiteral
           { BooleanLiteral.value; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
       )
+    | T_KEYOF ->
+      with_loc
+        (fun env ->
+          let leading = Peek.comments env in
+          Eat.token env;
+          let trailing = Eat.trailing_comments env in
+          let argument = _type env in
+          Type.Keyof
+            { Type.Keyof.argument; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+        env
     | _ ->
       (match primitive env with
       | Some t -> (loc, t)
@@ -1503,6 +1513,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Intersection { t with Intersection.comments = merge_comments comments }
       | Typeof ({ Typeof.comments; _ } as t) ->
         Typeof { t with Typeof.comments = merge_comments comments }
+      | Keyof ({ Keyof.comments; _ } as t) ->
+        Keyof { t with Keyof.comments = merge_comments comments }
       | Tuple ({ Tuple.comments; _ } as t) ->
         Tuple { t with Tuple.comments = merge_comments comments }
       | StringLiteral ({ StringLiteral.comments; _ } as t) ->

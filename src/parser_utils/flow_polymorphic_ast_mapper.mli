@@ -403,6 +403,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method jsx_spread_attribute :
       ('M, 'T) Ast.JSX.SpreadAttribute.t' -> ('N, 'U) Ast.JSX.SpreadAttribute.t'
 
+    method keyof_type : ('M, 'T) Ast.Type.Keyof.t -> ('N, 'U) Ast.Type.Keyof.t
+
     method label_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 
     method labeled_statement : ('M, 'T) Ast.Statement.Labeled.t -> ('N, 'U) Ast.Statement.Labeled.t

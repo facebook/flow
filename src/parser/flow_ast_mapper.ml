@@ -1424,6 +1424,16 @@ class ['loc] mapper =
       else
         (loc, { qualification = qualification'; id = id' })
 
+    method keyof_type (t : ('loc, 'loc) Ast.Type.Keyof.t) =
+      let open Ast.Type.Keyof in
+      let { argument; comments } = t in
+      let argument' = this#type_ argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        t
+      else
+        { argument = argument'; comments = comments' }
+
     method tuple_type (t : ('loc, 'loc) Ast.Type.Tuple.t) =
       let open Ast.Type.Tuple in
       let { elements; comments } = t in
@@ -1528,6 +1538,7 @@ class ['loc] mapper =
       | (loc, Nullable t') -> id this#nullable_type t' t (fun t' -> (loc, Nullable t'))
       | (loc, Array t') -> id this#array_type t' t (fun t' -> (loc, Array t'))
       | (loc, Typeof t') -> id this#typeof_type t' t (fun t' -> (loc, Typeof t'))
+      | (loc, Keyof t') -> id this#keyof_type t' t (fun t' -> (loc, Keyof t'))
       | (loc, Function ft) -> id_loc this#function_type loc ft t (fun ft -> (loc, Function ft))
       | (loc, Object ot) -> id_loc this#object_type loc ot t (fun ot -> (loc, Object ot))
       | (loc, Interface i) -> id_loc this#interface_type loc i t (fun i -> (loc, Interface i))

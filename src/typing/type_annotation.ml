@@ -293,6 +293,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ( (loc, ConsGen.mk_typeof_annotation cx reason valtype),
         Typeof { Typeof.argument = qualification_ast; comments }
       )
+    | (loc, Keyof keyof) ->
+      Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });
+      let t = AnyT.at (AnyError None) loc in
+      ((loc, t), Keyof (Tast_utils.error_mapper#keyof_type keyof))
     | (loc, Tuple { Tuple.elements; comments }) ->
       let (ts_rev, els_rev, els_ast_rev) =
         Base.List.fold elements ~init:([], [], []) ~f:(fun (ts, els, els_ast) element ->

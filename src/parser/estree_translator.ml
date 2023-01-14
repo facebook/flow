@@ -1407,6 +1407,7 @@ with type t = Impl.t = struct
         | Union t -> union_type (loc, t)
         | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
+        | Keyof t -> keyof_type (loc, t)
         | Tuple t -> tuple_type (loc, t)
         | StringLiteral s -> string_literal_type (loc, s)
         | NumberLiteral n -> number_literal_type (loc, n)
@@ -1665,6 +1666,8 @@ with type t = Impl.t = struct
     and typeof_qualifier (loc, { Type.Typeof.Target.id; qualification }) =
       let qualification = typeof_expr qualification in
       node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
+    and keyof_type (loc, { Type.Keyof.argument; comments }) =
+      node ?comments "KeyofTypeAnnotation" loc [("argument", _type argument)]
     and tuple_type (loc, { Type.Tuple.elements; comments }) =
       node
         ?comments

@@ -170,6 +170,7 @@ type t =
   | T_UNKNOWN_TYPE
   | T_NEVER_TYPE
   | T_UNDEFINED_TYPE
+  | T_KEYOF
 
 (* `bool` and `boolean` are equivalent annotations, but we need to track
    which one was used for when it might be an identifier, as in
@@ -323,6 +324,7 @@ let token_to_string = function
   | T_BIT_NOT -> "T_BIT_NOT"
   | T_INCR -> "T_INCR"
   | T_DECR -> "T_DECR"
+  | T_KEYOF -> "T_KEYOF"
   (* Extra tokens *)
   | T_ERROR _ -> "T_ERROR"
   | T_EOF -> "T_EOF"
@@ -464,6 +466,7 @@ let value_of_token = function
   | T_BIT_NOT -> "~"
   | T_INCR -> "++"
   | T_DECR -> "--"
+  | T_KEYOF -> "keyof"
   (* Extra tokens *)
   | T_ERROR raw -> raw
   | T_EOF -> ""

@@ -135,6 +135,10 @@ function custom_ast_types(fork) {
   def('UnknownTypeAnnotation').bases('FlowType');
   def('NeverTypeAnnotation').bases('FlowType');
   def('UndefinedTypeAnnotation').bases('FlowType');
+  def('KeyofTypeAnnotation')
+    .bases('FlowType')
+    .build('argument')
+    .field('argument', def('FlowType'));
 }
 
 module.exports = custom_ast_types;

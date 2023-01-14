@@ -637,6 +637,7 @@ and ts_syntax_kind =
   | TSUnknown
   | TSNever
   | TSUndefined
+  | TSKeyof
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -4318,6 +4319,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               text " and ";
               code "undefined";
               text " types.";
+            ];
+        }
+    | TSKeyof ->
+      Normal
+        {
+          features =
+            [
+              text "The equivalent of TypeScript's ";
+              code "keyof";
+              text " type operator in Flow is the ";
+              code "$Keys";
+              text " utility type, used in the form ";
+              code "$Keys<T>";
+              text ".";
             ];
         }
   end
