@@ -2433,5 +2433,72 @@ module.exports = (suite(
           ],
       )
     ]),
+    test('provide quickfix for `never` type', [
+      addFile('fix-never-type.js.ignored', 'fix-never-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-never-type.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 9,
+          },
+          end: {
+            line: 2,
+            character: 14,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to `empty`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-never-type.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 9
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 14
+                            }
+                          },
+                          "newText": "empty"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_never_type",
+                      "Convert to `empty`"
+                    ]
+                  }
+                },
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+      )
+    ]),
   ],
 ): Suite);

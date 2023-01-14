@@ -9,3 +9,8 @@ val convert_unknown_type :
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_never_type :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t

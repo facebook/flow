@@ -18,9 +18,15 @@ class mapper target_loc kind =
       match t with
       | (loc, Unknown comments) when kind = `UnknownType && this#is_target loc ->
         Ast_builder.Types.mixed ?comments ()
+      | (loc, Never comments) when kind = `NeverType && this#is_target loc ->
+        Ast_builder.Types.empty ?comments ()
       | _ -> super#type_ t
   end
 
 let convert_unknown_type ast loc =
   let mapper = new mapper loc `UnknownType in
+  mapper#program ast
+
+let convert_never_type ast loc =
+  let mapper = new mapper loc `NeverType in
   mapper#program ast
