@@ -164,6 +164,29 @@ let rec instantiate_callee cx fn instantiation_hint =
           (_, _, (ObjT { call_t = Some id; _ } | InstanceT (_, _, _, { inst_call_t = Some id; _ })))
         ->
         handle_poly (Context.find_call cx id)
+      | DefT (reason, _, ClassT instance) ->
+        let statics = (reason, Tvar.mk_no_wrap cx reason) in
+        Flow_js.flow cx (instance, GetStaticsT statics);
+        handle_poly (get_t cx (OpenT statics))
+      | DefT
+          ( _,
+            _,
+            PolyT { tparams_loc = _; tparams; t_out = ThisClassT (r, i, this, this_name); id = _ }
+          ) ->
+        let subst_map =
+          tparams
+          |> Nel.map (fun tparam -> (tparam.name, tparam.bound))
+          |> Nel.to_list
+          |> Subst_name.Map.of_list
+        in
+        let t =
+          Flow_js.FlowJs.fix_this_class
+            cx
+            Trace.dummy_trace
+            r
+            (r, Flow_js.subst cx subst_map i, this, this_name)
+        in
+        handle_poly (get_t cx t)
       | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
         let call_args_tlist =
           let checked_t t loc =
