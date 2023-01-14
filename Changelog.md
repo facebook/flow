@@ -1,3 +1,40 @@
+### 0.197.0
+
+Local Type Inference:
+
+  We are releasing a new inference mode called [local type inference](https://medium.com/flow-type/introducing-local-type-inference-for-flow-6af65b7830aa). You can enable this new mode in your codebase by adding `inference_mode=lti` to the `[options]` section in the flowconfig. We will describe more details on this inference mode in an upcoming blog post.
+
+Likely to cause new Flow errors:
+* Unannotated class properties initialized with null will now errors.
+* We now require all generic functions to be fully annotated.
+* `bool` is a deprecated alias for `boolean`. Added a `deprecated-type-bool` lint and `flow fix --error-codes deprecated-type` codemod to help migrate to `boolean`. This lint is also included in the `deprecated-type` lint; if `deprecated-type` is enabled, you can opt out with `deprecated-type-bool=off`
+
+New Features:
+* Tuple improvements:
+  * `$ReadOnly` utility makes tuples read-only. E.g. `$ReadOnly<[string, number]>` is the same as `[+a: string, +b: number]`.
+  * Tuple elements can now have their variance annotated, when the element is labeled. E.g. `type T = [+foo: number, +bar: string]` creates a read-only tuple.
+  * You can now label tuple elements (like TypeScript allows). The labels have no type-checking effect, they just help with self documentation (like indexer labels). When a function argument rest element is a tuple type, the labels work like parameter names in signature help.
+  * We now parse tuple spread elements, but type checking of this feature is still unsupported.
+  * These new features are now supported in Flow, but we have not upgraded related tools yet. For example, Prettier won't be able to format your code that uses variance annotations on tuples.
+* Allow `mixed` or `any` as an annotation to a `catch` parameter (but not anything else)
+* When typing in a class body, method signatures from super classes and interfaces will be suggested to make overriding/implementing these methods easier.
+
+Notable bug fixes:
+* Improve the parser's error recovery when in the middle of adding type parameters.
+* Trigger autocomplete in JSX tags, JSX attribute values, and private class fields.
+* Improves performance of bigints in big union checks
+
+Misc:
+* Inferred recursive types are shown as `any` (instead of `V$n`) in hover types.
+
+Parser:
+* `symbol` is now a reserved type
+* `for (async of [])` is now a parse error
+
+Library Definitions:
+* Updated `AbortController` and `AbortSignal` signatures
+* Actually expose `ReactSetStateFunction` type introduced in the last release.
+
 ### 0.196.3
 
 * Fix a bug that could cause IDE commands to fail while a recheck is ongoing
