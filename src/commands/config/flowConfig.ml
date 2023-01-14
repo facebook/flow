@@ -49,6 +49,7 @@ module Opts = struct
     autoimports_ranked_by_usage: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
+    conditional_type: bool option;
     cycle_errors: bool;
     cycle_errors_includes: string list;
     direct_dependent_files_fix: bool option;
@@ -173,6 +174,7 @@ module Opts = struct
       autoimports_ranked_by_usage = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
+      conditional_type = None;
       cycle_errors = false;
       cycle_errors_includes = [];
       direct_dependent_files_fix = None;
@@ -760,6 +762,9 @@ module Opts = struct
       ("experimental.abstract_locations", abstract_locations_parser);
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
+      );
+      ( "experimental.conditional_type",
+        boolean (fun opts v -> Ok { opts with conditional_type = Some v })
       );
       ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ("experimental.cycle_errors.includes", cycle_errors_includes_parser);
@@ -1385,6 +1390,8 @@ let autoimports_ranked_by_usage c = c.options.Opts.autoimports_ranked_by_usage
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
+
+let conditional_type c = c.options.Opts.conditional_type
 
 let cycle_errors c = c.options.Opts.cycle_errors
 

@@ -67,6 +67,7 @@ type t = {
   opt_autoimports_ranked_by_usage: bool;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
+  opt_conditional_type: bool;
   opt_cycle_errors: bool;
   opt_cycle_errors_includes: string list;
   opt_debug: bool;
@@ -162,6 +163,8 @@ let autoimports_ranked_by_usage opts = opts.opt_autoimports_ranked_by_usage
 let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
+
+let conditional_type opts = opts.opt_conditional_type
 
 let cycle_errors opts = opts.opt_cycle_errors
 
