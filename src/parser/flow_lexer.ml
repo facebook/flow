@@ -1857,6 +1857,7 @@ let type_token env lexbuf =
     | "typeof" -> Token (env, T_TYPEOF)
     | "void" -> Token (env, T_VOID_TYPE)
     | "symbol" -> Token (env, T_SYMBOL_TYPE)
+    | "unknown" -> Token (env, T_UNKNOWN_TYPE)
     | _ -> Token (env, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw }))
   (* Others *)
   | eof ->

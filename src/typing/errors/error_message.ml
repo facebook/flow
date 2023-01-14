@@ -483,6 +483,10 @@ and 'loc t' =
   | EBigIntRShift3 of 'loc virtual_reason
   | EBigIntNumCoerce of 'loc virtual_reason
   | EInvalidCatchParameterAnnotation of 'loc
+  | ETSSyntax of {
+      kind: ts_syntax_kind;
+      loc: 'loc;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -628,6 +632,8 @@ and 'loc upper_kind =
   | IncompatibleGetStaticsT
   | IncompatibleBindT
   | IncompatibleUnclassified of string
+
+and ts_syntax_kind = TSUnknown
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -1146,6 +1152,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBigIntRShift3 r -> EBigIntRShift3 (map_reason r)
   | EBigIntNumCoerce r -> EBigIntNumCoerce (map_reason r)
   | EInvalidCatchParameterAnnotation loc -> EInvalidCatchParameterAnnotation (f loc)
+  | ETSSyntax { kind; loc } -> ETSSyntax { kind; loc = f loc }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1393,7 +1400,8 @@ let util_use_op_of_msg nope util = function
   | EUnusedPromise _
   | EBigIntRShift3 _
   | EBigIntNumCoerce _
-  | EInvalidCatchParameterAnnotation _ ->
+  | EInvalidCatchParameterAnnotation _
+  | ETSSyntax _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1543,7 +1551,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidGraphQL (loc, _)
   | EAnnotationInference (loc, _, _, _)
   | EAnnotationInferenceRecursive (loc, _)
-  | EInvalidCatchParameterAnnotation loc ->
+  | EInvalidCatchParameterAnnotation loc
+  | ETSSyntax { loc; _ } ->
     Some loc
   | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (poly_loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
@@ -4265,6 +4274,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " if specified.";
           ];
       }
+  | ETSSyntax { kind; _ } ->
+    (match kind with
+    | TSUnknown ->
+      Normal
+        {
+          features =
+            [
+              text "The equivalent of TypeScript's ";
+              code "unknown";
+              text " type in Flow is ";
+              code "mixed";
+              text ".";
+            ];
+        })
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -4558,3 +4581,4 @@ let error_code_of_message err : error_code option =
     | Errors.LintError kind -> Some (Error_codes.code_of_lint kind)
     | _ -> None
   end
+  | ETSSyntax _ -> Some TSSyntax

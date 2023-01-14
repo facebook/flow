@@ -3855,6 +3855,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
           | `Bool -> "bool"
         in
         layout_node_with_comments_opt loc comments (Atom raw)
+      | T.Unknown comments -> layout_node_with_comments_opt loc comments (Atom "unknown")
       | T.Nullable t -> type_nullable ~opts loc t
       | T.Function func -> type_function ~opts ~sep:(fuse [pretty_space; Atom "=>"]) loc func
       | T.Object obj -> type_object ~opts loc obj

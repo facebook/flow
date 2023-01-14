@@ -378,7 +378,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_STRING_TYPE
     | T_SYMBOL_TYPE
     | T_VOID_TYPE
-    | T_NULL ->
+    | T_NULL
+    | T_UNKNOWN_TYPE ->
       true
     | _ -> false
 
@@ -432,6 +433,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       Eat.token env;
       let trailing = Eat.trailing_comments env in
       Some (Type.Null (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_UNKNOWN_TYPE ->
+      Eat.token env;
+      let trailing = Eat.trailing_comments env in
+      Some (Type.Unknown (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
     | _ -> None
 
   and tuple =
@@ -1453,6 +1458,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | Boolean ({ comments; _ } as t) -> Boolean { t with comments = merge_comments comments }
       | Symbol comments -> Symbol (merge_comments comments)
       | Exists comments -> Exists (merge_comments comments)
+      | Unknown comments -> Unknown (merge_comments comments)
       | Nullable ({ Nullable.comments; _ } as t) ->
         Nullable { t with Nullable.comments = merge_comments comments }
       | Function ({ Function.comments; _ } as t) ->

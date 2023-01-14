@@ -111,7 +111,6 @@ type error_code =
   | MissingExport
   | MissingTypeArg
   | MixedImportAndRequire
-  | ToplevelLibraryImport
   | ModuleTypeConflict
   | NameAlreadyBound
   | NonConstVarExport
@@ -141,7 +140,9 @@ type error_code =
   | SketchyNumberAnd
   | Speculation
   | SpeculationAmbiguous
+  | TSSyntax
   | ThisInExportedFunction
+  | ToplevelLibraryImport
   | TypeAsValue
   | UnclearAddition
   | UnclearType
@@ -326,6 +327,7 @@ let string_of_code : error_code -> string = function
   | SketchyNumberAnd -> "sketchy-number-and"
   | Speculation -> "speculation"
   | SpeculationAmbiguous -> "speculation-ambiguous"
+  | TSSyntax -> "ts-syntax"
   | ThisInExportedFunction -> "this-in-exported-function"
   | ToplevelLibraryImport -> "toplevel-library-import"
   | TypeAsValue -> "type-as-value"

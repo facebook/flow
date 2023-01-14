@@ -1,0 +1,18 @@
+Error -------------------------------------------------------------------------------------------------- unknown.js:1:10
+
+The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
+
+   1| type T = unknown; // ERROR
+               ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- unknown.js:3:10
+
+The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
+
+   3| const x: unknown = 1; // ERROR
+               ^^^^^^^
+
+
+
+Found 2 errors

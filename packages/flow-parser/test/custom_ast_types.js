@@ -128,6 +128,11 @@ function custom_ast_types(fork) {
   def('ClassBody').field('body', [
     or(def('MethodDefinition'), def('PropertyDefinition')),
   ]);
+
+  ////////////
+  // ts syntax
+  ////////////
+  def('UnknownTypeAnnotation').bases('FlowType');
 }
 
 module.exports = custom_ast_types;

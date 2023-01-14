@@ -1828,6 +1828,7 @@ let dump_error_message =
     | EBigIntNumCoerce reason -> spf "EBigIntNumCoerce (%s)" (dump_reason cx reason)
     | EInvalidCatchParameterAnnotation loc ->
       spf "EInvalidCatchParameterAnnotation (%s)" (string_of_aloc loc)
+    | ETSSyntax { loc; _ } -> spf "ETSSyntax (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let verbose_in_file cx verbose =
