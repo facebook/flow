@@ -2365,6 +2365,73 @@ module.exports = (suite(
             "textDocument/publishDiagnostics"
           ],
         )
-    ])
+    ]),
+    test('provide quickfix for `unknown` type', [
+      addFile('fix-unknown-type.js.ignored', 'fix-unknown-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-unknown-type.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 9,
+          },
+          end: {
+            line: 2,
+            character: 16,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to `mixed`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-unknown-type.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 9
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 16
+                            }
+                          },
+                          "newText": "mixed"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_unknown_type",
+                      "Convert to `mixed`"
+                    ]
+                  }
+                },
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+      )
+    ]),
   ],
 ): Suite);
