@@ -1521,6 +1521,8 @@ class ['loc] mapper =
         id this#syntax_opt comments t (fun comments -> (loc, Exists comments))
       | (loc, Unknown comments) ->
         id this#syntax_opt comments t (fun comments -> (loc, Unknown comments))
+      | (loc, Never comments) ->
+        id this#syntax_opt comments t (fun comments -> (loc, Never comments))
       | (loc, Nullable t') -> id this#nullable_type t' t (fun t' -> (loc, Nullable t'))
       | (loc, Array t') -> id this#array_type t' t (fun t' -> (loc, Array t'))
       | (loc, Typeof t') -> id this#typeof_type t' t (fun t' -> (loc, Typeof t'))

@@ -133,6 +133,7 @@ function custom_ast_types(fork) {
   // ts syntax
   ////////////
   def('UnknownTypeAnnotation').bases('FlowType');
+  def('NeverTypeAnnotation').bases('FlowType');
 }
 
 module.exports = custom_ast_types;

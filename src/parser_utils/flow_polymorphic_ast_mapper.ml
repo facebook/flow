@@ -1129,6 +1129,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           Boolean { raw; comments = Option.map ~f:this#syntax comments }
         | Exists comments -> Exists (Option.map ~f:this#syntax comments)
         | Unknown comments -> Unknown (Option.map ~f:this#syntax comments)
+        | Never comments -> Never (Option.map ~f:this#syntax comments)
         | Nullable t' -> Nullable (this#nullable_type t')
         | Array t' -> Array (this#array_type t')
         | Typeof t' -> Typeof (this#typeof_type t')

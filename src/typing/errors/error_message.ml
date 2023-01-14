@@ -633,7 +633,9 @@ and 'loc upper_kind =
   | IncompatibleBindT
   | IncompatibleUnclassified of string
 
-and ts_syntax_kind = TSUnknown
+and ts_syntax_kind =
+  | TSUnknown
+  | TSNever
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -4274,8 +4276,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " if specified.";
           ];
       }
-  | ETSSyntax { kind; _ } ->
-    (match kind with
+  | ETSSyntax { kind; _ } -> begin
+    match kind with
     | TSUnknown ->
       Normal
         {
@@ -4287,7 +4289,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               code "mixed";
               text ".";
             ];
-        })
+        }
+    | TSNever ->
+      Normal
+        {
+          features =
+            [
+              text "The closest equivalent of TypeScript's ";
+              code "never";
+              text " type in Flow is ";
+              code "empty";
+              text ".";
+            ];
+        }
+  end
 
 let is_lint_error = function
   | EUntypedTypeImport _

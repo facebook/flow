@@ -1414,6 +1414,7 @@ with type t = Impl.t = struct
         | BooleanLiteral b -> boolean_literal_type (loc, b)
         | Exists comments -> exists_type loc comments
         | Unknown comments -> unknown_type loc comments
+        | Never comments -> never_type loc comments
       )
     and any_type loc comments = node ?comments "AnyTypeAnnotation" loc []
     and mixed_type loc comments = node ?comments "MixedTypeAnnotation" loc []
@@ -1428,6 +1429,7 @@ with type t = Impl.t = struct
     and nullable_type loc { Type.Nullable.argument; comments } =
       node ?comments "NullableTypeAnnotation" loc [("typeAnnotation", _type argument)]
     and unknown_type loc comments = node ?comments "UnknownTypeAnnotation" loc []
+    and never_type loc comments = node ?comments "NeverTypeAnnotation" loc []
     and function_type
         ( loc,
           {
