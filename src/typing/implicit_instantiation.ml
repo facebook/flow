@@ -1199,7 +1199,14 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
     if Context.lti cx then
-      let return_hint = lazy_hint reason_op in
+      let return_hint =
+        match lazy_hint reason_op with
+        | HintAvailable t -> Some t
+        | NoHint
+        | DecompositionError
+        | EncounteredPlaceholder ->
+          None
+      in
       Context.run_in_implicit_instantiation_mode cx (fun () ->
           run_pierce cx ~return_hint check ?cache trace ~use_op ~reason_op ~reason_tapp
       )

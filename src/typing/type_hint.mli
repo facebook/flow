@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val with_hint_result : ok:(Type.t -> 'a) -> error:(unit -> 'a) -> Type.hint_eval_result -> 'a
+
 val evaluate_hint :
   Context.t ->
   Reason.t ->
@@ -15,7 +17,7 @@ val evaluate_hint :
     Type.t list * Type.t option
   )
   Hint_api.hint ->
-  Type.t option
+  Type.hint_eval_result
 
 val evaluate_hints :
   Context.t ->
@@ -28,6 +30,6 @@ val evaluate_hints :
   )
   Hint_api.hint
   list ->
-  Type.t option
+  Type.hint_eval_result
 
 val sandbox_flow_succeeds : Context.t -> Type.t * Type.t -> bool

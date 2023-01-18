@@ -248,7 +248,13 @@ module rec TypeTerm : sig
     | EnumT of enum_t
     | EnumObjectT of enum_t
 
-  and lazy_hint_t = bool * (reason -> t option)
+  and hint_eval_result =
+    | HintAvailable of t
+    | NoHint
+    | EncounteredPlaceholder
+    | DecompositionError
+
+  and lazy_hint_t = bool * (reason -> hint_eval_result)
 
   and defer_use_t =
     | LatentPredT of reason * predicate
@@ -3378,7 +3384,7 @@ module Locationless = struct
   module NullT = LocationLess (NullT)
 end
 
-let hint_unavailable : lazy_hint_t = (false, (fun _ -> None))
+let hint_unavailable : lazy_hint_t = (false, (fun _ -> NoHint))
 
 (* lift an operation on Type.t to an operation on Type.use_t *)
 let lift_to_use f = function

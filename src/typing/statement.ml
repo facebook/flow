@@ -124,9 +124,7 @@ module Make
           in
           if Context.lti cx then
             let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
-            match lazy_hint reason with
-            | Some t -> t
-            | None -> get_autocomplete_t ()
+            lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:get_autocomplete_t
           else
             get_autocomplete_t ()
         else
@@ -196,9 +194,7 @@ module Make
         Flow.flow cx (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
         if Context.lti cx && obj_key_autocomplete acc then
           let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
-          match lazy_hint reason with
-          | Some t -> t
-          | None -> tout
+          lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> tout)
         else
           tout
   end
@@ -2316,10 +2312,7 @@ module Make
         ()
       else
         match lazy_hint element_reason with
-        | None ->
-          Flow.add_output cx (Error_message.EEmptyArrayNoProvider { loc });
-          if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
-        | Some hint ->
+        | HintAvailable hint ->
           let elemt' = Tvar.mk cx element_reason in
           if
             Context.run_in_implicit_instantiation_mode cx (fun () ->
@@ -2333,6 +2326,11 @@ module Make
             (* If there's a usable hint, but the hint doesn't provide a type for this array,
                then the element type of the array is likely useless, so we can provide empty here. *)
             Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
+        | NoHint
+        | DecompositionError
+        | EncounteredPlaceholder ->
+          Flow.add_output cx (Error_message.EEmptyArrayNoProvider { loc });
+          if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
     );
     (reason, elemt)
 
@@ -4363,7 +4361,10 @@ module Make
     match (Context.lti cx, Type_inference_hooks_js.dispatch_id_hook cx name loc) with
     | (true, true) ->
       let (_, lazy_hint) = Env.get_hint cx loc in
-      Base.Option.value ~default:(EmptyT.at loc |> with_trust bogus_trust) (lazy_hint reason)
+      lazy_hint reason
+      |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
+             EmptyT.at loc |> with_trust bogus_trust
+         )
     | (false, true) -> Tvar.mk cx reason
     | (_, false) -> get_checking_mode_type ()
 
@@ -4406,9 +4407,10 @@ module Make
     match (Context.lti cx, Type_inference_hooks_js.dispatch_literal_hook cx loc) with
     | (true, true) ->
       let (_, lazy_hint) = Env.get_hint cx loc in
-      Base.Option.value
-        ~default:(EmptyT.at loc |> with_trust bogus_trust)
-        (lazy_hint (mk_reason (RCustom "literal") loc))
+      lazy_hint (mk_reason (RCustom "literal") loc)
+      |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
+             EmptyT.at loc |> with_trust bogus_trust
+         )
     | (false, true) -> Tvar.mk cx (mk_reason (RCustom "literal") loc)
     | (_, false) -> get_checking_mode_type ()
 

@@ -263,12 +263,18 @@ let mk_hint base_t ops =
   |> Nel.of_list
   |> Base.Option.value_map ~default:(Hint_t base_t) ~f:(fun l -> Hint_Decomp (l, base_t))
 
+let string_of_hint_eval_result cx = function
+  | Type.HintAvailable t -> Ty_normalizer.debug_string_of_t cx t
+  | Type.NoHint -> "NoHint"
+  | Type.EncounteredPlaceholder -> "EncounteredPlaceholder"
+  | Type.DecompositionError -> "DecompositionError"
+
 let mk_eval_hint_test ~expected base ops ctxt =
   let cx = mk_cx ~verbose:false () in
   let actual =
     mk_hint (TypeParser.parse cx base) ops
     |> Type_hint.evaluate_hint cx dummy_reason
-    |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
+    |> string_of_hint_eval_result cx
   in
   (* DEBUGGING TIP: set [~verbose:true] above to print traces *)
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
@@ -336,7 +342,7 @@ let mk_private_method_eval_hint_test
   let actual =
     mk_hint base [Decomp_MethodPrivateName ("bar", [class_stack_loc])]
     |> Type_hint.evaluate_hint cx dummy_reason
-    |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
+    |> string_of_hint_eval_result cx
   in
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
 
@@ -344,9 +350,7 @@ let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
   let cx = mk_cx ~verbose:false () in
   let (cx, base_t) = TypeLoader.get_type_of_last_expression cx type_setup_code in
   let actual =
-    mk_hint base_t ops
-    |> Type_hint.evaluate_hint cx dummy_reason
-    |> Base.Option.value_map ~default:"None" ~f:(Ty_normalizer.debug_string_of_t cx)
+    mk_hint base_t ops |> Type_hint.evaluate_hint cx dummy_reason |> string_of_hint_eval_result cx
   in
   (* DEBUGGING TIP: set [~verbose:true] above to print traces *)
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
@@ -360,7 +364,7 @@ let eval_hint_tests =
     "array_element_decomp_specific"
     >:: mk_eval_hint_test ~expected:"string" "[number, string]" [Decomp_ArrElement 1];
     "array_element_decomp_specific_nonexistent"
-    >:: mk_eval_hint_test ~expected:"None" "[number, string]" [Decomp_ArrElement 2];
+    >:: mk_eval_hint_test ~expected:"DecompositionError" "[number, string]" [Decomp_ArrElement 2];
     "array_spread_decomp_with_general"
     >:: mk_eval_hint_test ~expected:"Array<number>" "Array<number>" [Decomp_ArrSpread 0];
     "array_spread_decomp_with_tuple_full"
@@ -415,7 +419,10 @@ let eval_hint_tests =
       It should fail because we cannot destruct a type parameter without any bounds.
     *)
     "fun_decomp_cannot_decomp_no_bound_type_parameter"
-    >:: mk_eval_hint_test ~expected:"None" "<T>(T) => void" [Decomp_FuncParam 0; Decomp_FuncParam 0];
+    >:: mk_eval_hint_test
+          ~expected:"DecompositionError"
+          "<T>(T) => void"
+          [Decomp_FuncParam 0; Decomp_FuncParam 0];
     (*
       When we try to extract the hint for the lambda in
       ```
@@ -435,13 +442,16 @@ let eval_hint_tests =
     "obj_prop_from_record_positive_polarity_from_readonly"
     >:: mk_eval_hint_test ~expected:"number" "$ReadOnly<{foo: number}>" [Decomp_ObjProp "foo"];
     "obj_prop_from_record_negative_polarity"
-    >:: mk_eval_hint_test ~expected:"None" "{-foo: number}" [Decomp_ObjProp "foo"];
+    >:: mk_eval_hint_test ~expected:"DecompositionError" "{-foo: number}" [Decomp_ObjProp "foo"];
     "obj_prop_from_dict_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"number" "{[string]: number}" [Decomp_ObjProp "foo"];
     "obj_prop_from_dict_positive_polarity"
     >:: mk_eval_hint_test ~expected:"number" "{+[string]: number}" [Decomp_ObjProp "foo"];
     "obj_prop_from_dict_negative_polarity"
-    >:: mk_eval_hint_test ~expected:"None" "{-[string]: number}" [Decomp_ObjProp "foo"];
+    >:: mk_eval_hint_test
+          ~expected:"DecompositionError"
+          "{-[string]: number}"
+          [Decomp_ObjProp "foo"];
     "obj_prop_union"
     >:: mk_eval_hint_test
           ~expected:"number | string"

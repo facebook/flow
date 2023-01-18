@@ -586,10 +586,13 @@ let resolve_binding_partial cx reason loc b =
     let param_loc = Reason.poly_loc_of_reason reason in
     let contextual_typing_enabled = Context.lti cx in
     let t =
-      if contextual_typing_enabled then
+      if contextual_typing_enabled then (
         let (has_hint, lazy_hint) = lazily_resolve_hints cx loc hints in
         match lazy_hint reason with
-        | None ->
+        | HintAvailable t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
+        | NoHint
+        | DecompositionError
+        | EncounteredPlaceholder ->
           if has_hint then
             Flow_js.add_output
               cx
@@ -597,8 +600,7 @@ let resolve_binding_partial cx reason loc b =
                  { reason; hint_available = true; from_generic_function = false }
               );
           AnyT.error reason
-        | Some t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
-      else
+      ) else
         Tvar.mk cx reason
     in
     let () =

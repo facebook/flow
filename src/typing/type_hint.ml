@@ -11,6 +11,10 @@ open Hint_api
 open Utils_js
 module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 
+let with_hint_result ~ok ~error = function
+  | HintAvailable t -> ok t
+  | _ -> error ()
+
 exception UnconstrainedTvarException
 
 module SpeculationFlow = struct
@@ -207,7 +211,11 @@ let rec instantiate_callee cx fn instantiation_hint =
           loop 0 (Lazy.force arg_list)
         in
         let call_targs = Lazy.force targs in
-        let return_hint = evaluate_hints cx reason return_hints in
+        let return_hint =
+          match evaluate_hints cx reason return_hints with
+          | HintAvailable t -> Some t
+          | _ -> None
+        in
         let check =
           Implicit_instantiation_check.of_call
             t
@@ -253,7 +261,11 @@ and instantiate_component cx component instantiation_hint =
     } =
       instantiation_hint
     in
-    let return_hint = evaluate_hints cx reason jsx_hints in
+    let return_hint =
+      match evaluate_hints cx reason jsx_hints with
+      | HintAvailable t -> Some t
+      | _ -> None
+    in
     let check =
       Implicit_instantiation_check.of_jsx
         component
@@ -534,12 +546,12 @@ and fully_resolve_final_result cx t =
     Debug_js.Verbose.print_if_verbose_lazy
       cx
       (lazy [spf "Encountered placeholder type: %s" (Debug_js.dump_t cx ~depth:3 t)]);
-    None
+    EncounteredPlaceholder
   ) else
     let no_lowers _ = raise UnconstrainedTvarException in
     match Tvar_resolver.resolved_t cx ~no_lowers t with
-    | exception UnconstrainedTvarException -> None
-    | t -> Some t
+    | exception UnconstrainedTvarException -> DecompositionError
+    | t -> HintAvailable t
 
 and evaluate_hint_ops cx reason t ops =
   let rec loop t = function
@@ -561,22 +573,22 @@ and evaluate_hint_ops cx reason t ops =
      checking mode, so that any unresolved tvars in the midddle won't fail the evaluation, but
      unsolved tvars in the final result will fail the evaluation. *)
   match Context.run_in_synthesis_mode cx (fun () -> loop t ops) with
-  | (_, None) -> None
+  | (_, None) -> DecompositionError
   | (_, Some t) -> fully_resolve_final_result cx t
 
 and evaluate_hint cx reason hint =
   match hint with
-  | Hint_Placeholder -> Some (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
+  | Hint_Placeholder -> HintAvailable (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
   | Hint_t t -> fully_resolve_final_result cx t
   | Hint_Decomp (ops, t) -> ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t
 
 and evaluate_hints cx reason hints =
   match hints with
-  | [] -> None
+  | [] -> NoHint
   | hint :: rest ->
     (match evaluate_hint cx reason hint with
-    | Some t -> Some t
-    | None -> evaluate_hints cx reason rest)
+    | HintAvailable t -> HintAvailable t
+    | _ -> evaluate_hints cx reason rest)
 
 let sandbox_flow_succeeds cx (t1, t2) =
   match SpeculationFlow.flow_t cx (TypeUtil.reason_of_t t1) ~upper_unresolved:false (t1, t2) with
