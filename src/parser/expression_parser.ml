@@ -1582,6 +1582,7 @@ module Expression
         | StrictReservedWord
         | ParameterAfterRestParameter
         | NewlineBeforeArrow
+        | AwaitAsIdentifierReference
         | YieldInFormalParameters
         | ThisParamBannedInArrowFunctions ->
           ()
@@ -1609,6 +1610,7 @@ module Expression
         else
           (false, [])
       in
+      let env = with_allow_await async env in
       let (sig_loc, (tparams, params, return, predicate)) =
         with_loc
           (fun env ->

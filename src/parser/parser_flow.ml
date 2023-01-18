@@ -187,7 +187,7 @@ module rec Parse : PARSER = struct
     (* `allow_await` means that `await` is allowed to be a keyword,
        which makes it illegal to use as an identifier.
        https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-    | T_AWAIT when allow_await env -> error env Parse_error.UnexpectedReserved
+    | T_AWAIT when allow_await env -> error env Parse_error.AwaitAsIdentifierReference
     | T_AWAIT -> ()
     (* `allow_yield` means that `yield` is allowed to be a keyword,
        which makes it illegal to use as an identifier.

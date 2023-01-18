@@ -994,14 +994,6 @@ language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-param
   Missing parse error
 language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (default)
   Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-await-in-formals.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-await-in-formals.js (default)
-  Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-duplicate-parameters.js (default)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (strict mode)
@@ -3816,8 +3808,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84623 (97.80%)
-Failed:  1906 (2.20%)
+Passed:  84627 (97.80%)
+Failed:  1902 (2.20%)
 Errored: 2 (0.00%)
 
 Features:
