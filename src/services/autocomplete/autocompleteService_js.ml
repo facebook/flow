@@ -299,6 +299,7 @@ let members_of_type
     if
       (exclude_proto_members && inherited)
       || ((not include_interface_members) && source = Ty.Interface)
+      || source = Ty.PrimitiveProto "Object"
     then
       None
     else
