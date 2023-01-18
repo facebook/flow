@@ -52,11 +52,14 @@ exception Failed_to_read_haste_info of string (* filename *) * Exception.t
 
 let () =
   let printf exn format =
-    Printf.sprintf
-      "%( %s %): %s\n%s"
+    Printf.ksprintf
+      (fun msg ->
+        Printf.sprintf
+          "%s: %s\n%s"
+          msg
+          (Exception.get_ctor_string exn)
+          (Exception.get_backtrace_string exn))
       format
-      (Exception.get_ctor_string exn)
-      (Exception.get_backtrace_string exn)
   in
   Exception.register_printer (function
       | Failed_to_read_haste_info (file, exn) ->
