@@ -583,12 +583,14 @@ and evaluate_hint cx reason hint =
   | Hint_Decomp (ops, t) -> ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t
 
 and evaluate_hints cx reason hints =
-  match hints with
-  | [] -> NoHint
-  | hint :: rest ->
-    (match evaluate_hint cx reason hint with
-    | HintAvailable t -> HintAvailable t
-    | _ -> evaluate_hints cx reason rest)
+  Base.List.fold_until
+    hints
+    ~init:NoHint
+    ~finish:(fun r -> r)
+    ~f:(fun _ hint ->
+      match evaluate_hint cx reason hint with
+      | HintAvailable t -> Base.Continue_or_stop.Stop (HintAvailable t)
+      | r -> Base.Continue_or_stop.Continue r)
 
 let sandbox_flow_succeeds cx (t1, t2) =
   match SpeculationFlow.flow_t cx (TypeUtil.reason_of_t t1) ~upper_unresolved:false (t1, t2) with
