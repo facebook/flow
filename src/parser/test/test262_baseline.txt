@@ -1721,17 +1721,17 @@ language/identifiers/start-unicode-13.0.0-escaped.js (strict mode)
 language/identifiers/start-unicode-13.0.0-escaped.js (default)
   Illegal Unicode escape at (16, 4) to (16, 10)
 language/identifiers/start-unicode-13.0.0.js (strict mode)
-  Uncaught exception: (Failure "unreachable token")
+  Uncaught exception: Failure("unreachable token")
 language/identifiers/start-unicode-13.0.0.js (default)
-  Uncaught exception: (Failure "unreachable token")
+  Uncaught exception: Failure("unreachable token")
 language/identifiers/start-unicode-14.0.0-escaped.js (strict mode)
   Illegal Unicode escape at (16, 4) to (16, 10)
 language/identifiers/start-unicode-14.0.0-escaped.js (default)
   Illegal Unicode escape at (16, 4) to (16, 10)
 language/identifiers/start-unicode-14.0.0.js (strict mode)
-  Unexpected token ILLEGAL at (14, 4) to (14, 5)
+  Unexpected identifier, expected the token `;` at (14, 5) to (14, 6)
 language/identifiers/start-unicode-14.0.0.js (default)
-  Unexpected token ILLEGAL at (14, 4) to (14, 5)
+  Unexpected identifier, expected the token `;` at (14, 5) to (14, 6)
 language/identifiers/start-zwj-escaped.js (strict mode)
   Missing parse error
 language/identifiers/start-zwj-escaped.js (default)
@@ -3476,6 +3476,10 @@ language/statements/for-await-of/escaped-of.js (strict mode)
   Missing parse error
 language/statements/for-await-of/escaped-of.js (default)
   Missing parse error
+language/statements/for-await-of/head-lhs-async.js (strict mode)
+  Invalid left-hand side in for-of at (18, 13) to (18, 18)
+language/statements/for-await-of/head-lhs-async.js (default)
+  Invalid left-hand side in for-of at (18, 13) to (18, 18)
 language/statements/for-in/head-const-bound-names-dup.js (strict mode)
   Missing parse error
 language/statements/for-in/head-const-bound-names-dup.js (default)
@@ -3516,10 +3520,10 @@ language/statements/for-of/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for-of/head-let-bound-names-in-stmt.js (default)
   Missing parse error
-language/statements/for-of/head-lhs-async-invalid.js (strict mode)
-  Missing parse error
-language/statements/for-of/head-lhs-async-invalid.js (default)
-  Missing parse error
+language/statements/for-of/head-lhs-async-escaped.js (strict mode)
+  Invalid left-hand side in for-of at (16, 5) to (16, 15)
+language/statements/for-of/head-lhs-async-escaped.js (default)
+  Invalid left-hand side in for-of at (16, 5) to (16, 15)
 language/statements/for/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for/head-let-bound-names-in-stmt.js (default)
@@ -3828,8 +3832,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84617 (97.79%)
-Failed:  1912 (2.21%)
+Passed:  84615 (97.79%)
+Failed:  1914 (2.21%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3839,7 +3843,7 @@ Features:
   arbitrary-module-namespace-names: 20/32 (62.50%)
   arrow-function: 1477/1496 (98.73%)
   async-functions: 1202/1292 (93.03%)
-  async-iteration: 9608/9728 (98.77%)
+  async-iteration: 9606/9728 (98.75%)
   class: 8981/9241 (97.19%)
   class-fields-private: 1945/2001 (97.20%)
   class-fields-private-in: 16/38 (42.11%)
