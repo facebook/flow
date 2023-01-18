@@ -1590,7 +1590,7 @@ and UnionEnum : sig
   type t =
     (* TODO this should not allow internal names *)
     | Str of name
-    | Num of number_literal
+    | Num of float
     | Bool of bool
     | BigInt of bigint_literal
     | Void
@@ -1603,7 +1603,7 @@ and UnionEnum : sig
 end = struct
   type t =
     | Str of name
-    | Num of number_literal
+    | Num of float
     | Bool of bool
     | BigInt of bigint_literal
     | Void
@@ -2046,8 +2046,8 @@ end = struct
       | DefT (_, _, SingletonStrT lit)
       | DefT (_, _, StrT (Literal (_, lit))) ->
         Some (UnionEnum.Str lit)
-      | DefT (_, _, SingletonNumT lit)
-      | DefT (_, _, NumT (Literal (_, lit))) ->
+      | DefT (_, _, SingletonNumT (lit, _))
+      | DefT (_, _, NumT (Literal (_, (lit, _)))) ->
         Some (UnionEnum.Num lit)
       | DefT (_, _, SingletonBigIntT lit)
       | DefT (_, _, BigIntT (Literal (_, lit))) ->

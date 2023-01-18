@@ -52,3 +52,8 @@ const e1: A = { __type__: a(), arr: [] }; // // err
 const e2: F = { __type__: a(), f: (v) => (v: string) }; // error
 <CompAProp __type__={a()} arr={[]} />; // // err
 <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
+
+function numeric_sentinel() {
+  type T = { n: 1 | 2, fn: (x: number) => void };
+  const t: T = { n: 1, fn: (x) => {} }; // ok, sentinel `1` should match part of above union
+}

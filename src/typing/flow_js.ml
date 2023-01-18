@@ -1717,7 +1717,7 @@ struct
               let def =
                 match enum with
                 | UnionEnum.Str v -> SingletonStrT v
-                | UnionEnum.Num v -> SingletonNumT v
+                | UnionEnum.Num v -> SingletonNumT (v, string_of_float v)
                 | UnionEnum.Bool v -> SingletonBoolT v
                 | UnionEnum.BigInt v -> SingletonBigIntT v
                 | UnionEnum.Void -> VoidT
@@ -1742,7 +1742,7 @@ struct
                     let def =
                       match enum with
                       | UnionEnum.Str v -> SingletonStrT v
-                      | UnionEnum.Num v -> SingletonNumT v
+                      | UnionEnum.Num v -> SingletonNumT (v, string_of_float v)
                       | UnionEnum.Bool v -> SingletonBoolT v
                       | UnionEnum.BigInt v -> SingletonBigIntT v
                       | UnionEnum.Void -> VoidT
@@ -7683,7 +7683,7 @@ struct
     let desc_of_sentinel sentinel =
       match sentinel with
       | UnionEnum.(One (Str s)) -> RStringLit s
-      | UnionEnum.(One (Num (_, n))) -> RNumberLit n
+      | UnionEnum.(One (Num n)) -> RNumberLit (string_of_float n)
       | UnionEnum.(One (Bool b)) -> RBooleanLit b
       | UnionEnum.(One (BigInt (_, n))) -> RBigIntLit n
       | UnionEnum.(One Null) -> RNull
@@ -7758,8 +7758,8 @@ struct
       | DefT (_, _, StrT (Literal (_, value)))
       | DefT (_, _, SingletonStrT value) ->
         Some UnionEnum.(One (Str value))
-      | DefT (_, _, NumT (Literal (_, value)))
-      | DefT (_, _, SingletonNumT value) ->
+      | DefT (_, _, NumT (Literal (_, (value, _))))
+      | DefT (_, _, SingletonNumT (value, _)) ->
         Some UnionEnum.(One (Num value))
       | DefT (_, _, BoolT (Some value))
       | DefT (_, _, SingletonBoolT value) ->
@@ -7824,8 +7824,8 @@ struct
     let enum_match sense = function
       | (DefT (_, _, StrT (Literal (_, value))), Str sentinel) when value = sentinel != sense ->
         true
-      | (DefT (_, _, NumT (Literal (_, (value, _)))), Num (sentinel, _))
-        when value = sentinel != sense ->
+      | (DefT (_, _, NumT (Literal (_, (value, _)))), Num sentinel) when value = sentinel != sense
+        ->
         true
       | (DefT (_, _, BoolT (Some value)), Bool sentinel) when value = sentinel != sense -> true
       | (DefT (_, _, BigIntT (Literal (_, (value, _)))), BigInt (sentinel, _))

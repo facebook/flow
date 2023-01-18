@@ -12,7 +12,7 @@ open Utils_js
 
 let string_of_union_enum = function
   | UnionEnum.Str x -> spf "string %s" (display_string_of_name x)
-  | UnionEnum.Num (_, x) -> spf "number %s" x
+  | UnionEnum.Num x -> spf "number %f" x
   | UnionEnum.Bool x -> spf "boolean %b" x
   | UnionEnum.BigInt (_, x) -> spf "bigint %s" x
   | UnionEnum.Null -> "null"
