@@ -122,10 +122,8 @@ module NormalizerMonad : sig
   val run_imports : options:Env.options -> genv:Env.genv -> Ty.imported_ident ALocMap.t
 
   val run_expand_members :
-    include_proto_members:bool ->
     idx_hook:(unit -> unit) ->
     force_instance:bool ->
-    include_interface_members:bool ->
     options:Env.options ->
     genv:Env.genv ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
@@ -199,7 +197,6 @@ end = struct
     | _ -> return env
 
   (* Update state *)
-
   let add_rec_id id =
     let open State in
     match id with
@@ -578,9 +575,20 @@ end = struct
       env:Env.t -> Type.super -> T.Properties.id -> int option -> (Ty.t, error) t
 
     val convert_obj_props_t :
-      env:Env.t -> ?proto:bool -> T.Properties.id -> int option -> (Ty.prop list, error) t
+      env:Env.t ->
+      ?inherited:bool ->
+      ?source:Ty.prop_source ->
+      T.Properties.id ->
+      int option ->
+      (Ty.prop list, error) t
 
-    val convert_obj_t : env:Env.t -> Reason.reason -> Type.objtype -> (Ty.obj_t, error) t
+    val convert_obj_t :
+      env:Env.t ->
+      ?inherited:bool ->
+      ?source:Ty.prop_source ->
+      Reason.reason ->
+      Type.objtype ->
+      (Ty.obj_t, error) t
 
     val convert_type_destructor_unevaluated : env:Env.t -> Type.t -> T.destructor -> (Ty.t, error) t
   end = struct
@@ -852,7 +860,7 @@ end = struct
         Some (x, t)
       | _ -> return None
 
-    and obj_ty ~env reason o =
+    and obj_ty ~env ?(inherited = false) ?(source = Ty.Other) reason o =
       let obj_def_loc = Some (Reason.def_aloc_of_reason reason) in
       let { T.flags; props_tmap; call_t; _ } = o in
       let { T.obj_kind; T.frozen = obj_frozen; _ } = flags in
@@ -862,7 +870,7 @@ end = struct
         else
           None
       in
-      let%bind obj_props = obj_props_t ~env props_tmap call_t in
+      let%bind obj_props = obj_props_t ~env ~inherited ~source props_tmap call_t in
       let%map obj_kind =
         match obj_kind with
         | T.Exact -> return Ty.ExactObj
@@ -893,7 +901,7 @@ end = struct
         | Lookahead.LowerBounds [t] -> not (is_type_alias t)
         | _ -> true
       in
-      fun ~env ?(proto = false) (x, p) ->
+      fun ~env ?(inherited = false) ?(source = Ty.Other) (x, p) ->
         match p with
         | T.Field (loc_opt, t, polarity) ->
           if keep_field ~env t then
@@ -901,7 +909,7 @@ end = struct
             let polarity = type_polarity polarity in
             let%map (t, optional) = opt_t ~env t in
             let prop = Ty.Field { t; polarity; optional } in
-            [Ty.NamedProp { name = x; prop; from_proto = proto; def_loc }]
+            [Ty.NamedProp { name = x; prop; inherited; source; def_loc }]
           else
             return []
         | T.Method (loc_opt, t) ->
@@ -909,16 +917,16 @@ end = struct
           let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           Base.List.map
             ~f:(fun ty ->
-              Ty.NamedProp { name = x; prop = Ty.Method ty; from_proto = proto; def_loc })
+              Ty.NamedProp { name = x; prop = Ty.Method ty; inherited; source; def_loc })
             tys
         | T.Get (loc_opt, t) ->
           let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           let%map t = type__ ~env t in
-          [Ty.NamedProp { name = x; prop = Ty.Get t; from_proto = proto; def_loc }]
+          [Ty.NamedProp { name = x; prop = Ty.Get t; inherited; source; def_loc }]
         | T.Set (loc_opt, t) ->
           let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
           let%map t = type__ ~env t in
-          [Ty.NamedProp { name = x; prop = Ty.Set t; from_proto = proto; def_loc }]
+          [Ty.NamedProp { name = x; prop = Ty.Set t; inherited; source; def_loc }]
         | T.GetSet (loc1, t1, loc2, t2) ->
           let%bind p1 = obj_prop_t ~env (x, T.Get (loc1, t1)) in
           let%map p2 = obj_prop_t ~env (x, T.Set (loc2, t2)) in
@@ -942,15 +950,17 @@ end = struct
           call_prop_from_t ~env ft
         | None -> return []
       in
-      let do_props ~env ~proto props = concat_fold_m (obj_prop_t ~env ~proto) props in
-      fun ~env ?(proto = false) props_id call_id_opt ->
+      let do_props ~env ~inherited ~source props =
+        concat_fold_m (obj_prop_t ~env ~inherited ~source) props
+      in
+      fun ~env ?(inherited = false) ?(source = Ty.Other) props_id call_id_opt ->
         let cx = Env.get_cx env in
         let props =
           NameUtils.Map.bindings (Context.find_props cx props_id)
           |> Base.List.map ~f:(fun (k, v) -> (k, v))
         in
         let%bind call_props = do_calls ~env call_id_opt in
-        let%map props = do_props ~env ~proto props in
+        let%map props = do_props ~env ~inherited ~source props in
         call_props @ props
 
     and arr_ty ~env reason elt_t =
@@ -1930,13 +1940,9 @@ end = struct
     |> normalize_imports ~options ~genv
 
   module type EXPAND_MEMBERS_CONVERTER = sig
-    val include_proto_members : bool
-
     val idx_hook : unit -> unit
 
     val force_instance : bool
-
-    val include_interface_members : bool
   end
 
   (* Expand the toplevel structure of the input type into an object type. This is
@@ -1976,21 +1982,7 @@ end = struct
           }
       )
 
-    let rec set_proto_prop =
-      let open Ty in
-      function
-      | NamedProp { name; prop; def_loc; from_proto = _ } ->
-        NamedProp { name; prop; def_loc; from_proto = true }
-      | CallProp _ as p -> p
-      | SpreadProp t -> SpreadProp (set_proto_t t)
-
-    and set_proto_t =
-      let open Ty in
-      function
-      | Obj o -> Obj { o with obj_props = Base.List.map ~f:set_proto_prop o.obj_props }
-      | t -> t
-
-    let rec arr_t ~env r a =
+    let rec arr_t ~env ~inherited r a =
       let builtin =
         match a with
         | T.ArrayAT _ -> "Array"
@@ -2000,30 +1992,29 @@ end = struct
       in
       type__
         ~env
-        ~proto:true
+        ~inherited
+        ~source:(Ty.PrimitiveProto builtin)
         ~imode:IMInstance
         (Flow_js.get_builtin (Env.get_cx env) (OrdinaryName builtin) r)
 
-    and member_expand_object ~env ~proto super implements inst =
+    and member_expand_object ~env ~inherited ~source super implements inst =
       let { T.own_props; proto_props; _ } = inst in
-      let%bind own_ty_props = TypeConverter.convert_obj_props_t ~env ~proto own_props None in
-      let%bind proto_ty_props = TypeConverter.convert_obj_props_t ~env ~proto proto_props None in
+      let%bind own_ty_props =
+        TypeConverter.convert_obj_props_t ~env ~inherited ~source own_props None
+      in
+      let%bind proto_ty_props =
+        TypeConverter.convert_obj_props_t ~env ~inherited:true ~source proto_props None
+      in
       let%bind super_props =
-        if include_proto_members then
-          let%map super_ty = type__ ~env ~proto ~imode:IMInstance super in
-          [Ty.SpreadProp super_ty]
-        else
-          return []
+        let%map super_ty = type__ ~env ~inherited:true ~source ~imode:IMInstance super in
+        [Ty.SpreadProp super_ty]
       in
       let%map interface_props =
-        if include_interface_members then
-          mapM
-            (fun t ->
-              let%map ty = type__ ~env ~proto ~imode:IMInstance t in
-              Ty.SpreadProp ty)
-            implements
-        else
-          return []
+        mapM
+          (fun t ->
+            let%map ty = type__ ~env ~inherited:true ~source:Ty.Interface ~imode:IMInstance t in
+            Ty.SpreadProp ty)
+          implements
       in
       (* The order of these props is significant to ty_members which will take the
          last one in case of name conflicts. They are ordered here by distance in
@@ -2039,7 +2030,7 @@ end = struct
           obj_props;
         }
 
-    and enum_t ~env reason trust enum =
+    and enum_t ~env ~inherited reason trust enum =
       let { T.members; representation_t; _ } = enum in
       let enum_t = T.mk_enum_type ~trust reason enum in
       let enum_object_t = T.DefT (reason, trust, T.EnumObjectT enum) in
@@ -2050,13 +2041,16 @@ end = struct
           (OrdinaryName "$EnumProto")
           [enum_object_t; enum_t; representation_t]
       in
-      let%bind proto_ty = type__ ~env ~proto:true ~imode:IMUnset proto_t in
+      let%bind proto_ty =
+        type__ ~env ~inherited:true ~source:(Ty.PrimitiveProto "$EnumProto") ~imode:IMUnset proto_t
+      in
       let%map enum_ty = TypeConverter.convert_t ~env enum_t in
       let members_ty =
         List.map
           (fun (name, loc) ->
             let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
-            Ty.NamedProp { name = OrdinaryName name; prop; from_proto = false; def_loc = Some loc })
+            Ty.NamedProp
+              { name = OrdinaryName name; prop; inherited; source = Ty.Other; def_loc = Some loc })
           (SMap.bindings members)
       in
       Ty.Obj
@@ -2068,54 +2062,45 @@ end = struct
           obj_props = Ty.SpreadProp proto_ty :: members_ty;
         }
 
-    and obj_t ~env ~proto ~imode reason o =
-      let%bind obj = TypeConverter.convert_obj_t ~env reason o in
-      let obj =
-        if include_proto_members && proto then
-          { obj with Ty.obj_props = Base.List.map ~f:set_proto_prop obj.Ty.obj_props }
-        else
-          obj
-      in
+    and obj_t ~env ~inherited ~source ~imode reason o =
+      let%bind obj = TypeConverter.convert_obj_t ~env ~inherited ~source reason o in
       let%map extra_props =
-        if include_proto_members then
-          let%map proto = type__ ~env ~proto:true ~imode o.T.proto_t in
-          [Ty.SpreadProp proto]
-        else
-          return []
+        let%map proto = type__ ~env ~inherited:true ~source ~imode o.T.proto_t in
+        [Ty.SpreadProp proto]
       in
       { obj with Ty.obj_props = obj.Ty.obj_props @ extra_props }
 
     and primitive ~env reason builtin =
       let t = Flow_js.get_builtin_type (Env.get_cx env) reason (OrdinaryName builtin) in
-      type__ ~env ~proto:true ~imode:IMUnset t
+      type__ ~env ~inherited:true ~source:(Ty.PrimitiveProto builtin) ~imode:IMUnset t
 
-    and instance_t ~env ~proto ~imode r static super implements inst =
+    and instance_t ~env ~inherited ~source ~imode r static super implements inst =
       let { T.inst_kind; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc, imode) with
       | (_, Reason.RReactComponent, _) -> TypeConverter.convert_instance_t ~env r super inst
-      | (T.ClassKind, _, IMStatic) -> type__ ~env ~proto:false ~imode static
+      | (T.ClassKind, _, IMStatic) -> type__ ~env ~inherited ~source ~imode static
       | (T.ClassKind, _, (IMUnset | IMInstance))
       | (T.InterfaceKind _, _, _) ->
-        member_expand_object ~env ~proto super implements inst
+        member_expand_object ~env ~inherited ~source super implements inst
 
-    and opaque_t ~env ~proto ~imode r opaquetype =
+    and opaque_t ~env ~inherited ~source ~imode r opaquetype =
       let current_source = Env.current_file env in
       let opaque_source = ALoc.source (def_aloc_of_reason r) in
       (* Compare the current file (of the query) and the file that the opaque
          type is defined. If they differ, then hide the underlying type. *)
       let same_file = Some current_source = opaque_source in
       match opaquetype with
-      | { Type.underlying_t = Some t; _ } when same_file -> type__ ~env ~proto ~imode t
-      | { Type.super_t = Some t; _ } -> type__ ~env ~proto ~imode t
+      | { Type.underlying_t = Some t; _ } when same_file -> type__ ~env ~inherited ~source ~imode t
+      | { Type.super_t = Some t; _ } -> type__ ~env ~inherited ~source ~imode t
       | _ -> return no_members
 
-    and this_class_t ~env ~proto ~imode t =
+    and this_class_t ~env ~inherited ~source ~imode t =
       match imode with
-      | IMUnset when not force_instance -> type__ ~env ~proto ~imode:IMStatic t
-      | _ -> type__ ~env ~proto ~imode t
+      | IMUnset when not force_instance -> type__ ~env ~inherited ~source ~imode:IMStatic t
+      | _ -> type__ ~env ~inherited ~source ~imode t
 
-    and type__ ~env ?id ~proto ~(imode : instance_mode) t =
+    and type__ ~env ?id ~inherited ~source ~(imode : instance_mode) t =
       let open Type in
       match t with
       | OpenT (_, id') ->
@@ -2130,12 +2115,12 @@ end = struct
             Ty.Any Ty.Recursive
           else
             let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
-            type_variable ~env ~cont:(type__ ~proto ~imode) id'
-      | AnnotT (_, t, _) -> type__ ~env ~proto ~imode t
+            type_variable ~env ~cont:(type__ ~inherited ~source ~imode) id'
+      | AnnotT (_, t, _) -> type__ ~env ~inherited ~source ~imode t
       | DefT (_, _, IdxWrapper t) ->
         idx_hook ();
-        type__ ~env ~proto ~imode t
-      | ThisTypeAppT (_, c, _, _) -> type__ ~env ~proto ~imode c
+        type__ ~env ~inherited ~source ~imode t
+      | ThisTypeAppT (_, c, _, _) -> type__ ~env ~inherited ~source ~imode c
       | DefT (r, _, (NumT _ | SingletonNumT _)) -> primitive ~env r "Number"
       | DefT (r, _, (StrT _ | SingletonStrT _)) -> primitive ~env r "String"
       | DefT (r, _, (BoolT _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
@@ -2144,25 +2129,28 @@ end = struct
       | ObjProtoT r -> primitive ~env r "Object"
       | FunProtoT r -> primitive ~env r "Function"
       | DefT (r, _, ObjT o) ->
-        let%map o = obj_t ~env ~proto ~imode r o in
+        let%map o = obj_t ~env ~inherited ~source ~imode r o in
         Ty.Obj o
-      | DefT (_, _, ClassT t) -> type__ ~env ~proto ~imode t
-      | DefT (r, _, ArrT a) -> arr_t ~env r a
-      | DefT (r, tr, EnumObjectT e) -> enum_t ~env r tr e
+      | DefT (_, _, ClassT t) -> type__ ~env ~inherited ~source ~imode t
+      | DefT (r, _, ArrT a) -> arr_t ~env ~inherited r a
+      | DefT (r, tr, EnumObjectT e) -> enum_t ~env ~inherited r tr e
       | DefT (r, _, InstanceT (static, super, implements, inst)) ->
-        instance_t ~env ~proto ~imode r static super implements inst
-      | ThisClassT (_, t, _, _) -> this_class_t ~env ~proto ~imode t
+        instance_t ~env ~inherited ~source ~imode r static super implements inst
+      | ThisClassT (_, t, _, _) -> this_class_t ~env ~inherited ~source ~imode t
       | DefT (_, _, PolyT { tparams; t_out; _ }) ->
         let tparams_rev = List.rev (Nel.to_list tparams) @ env.Env.tparams_rev in
         let env = Env.{ env with tparams_rev } in
-        type__ ~env ~proto ~imode t_out
-      | MaybeT (_, t) -> maybe_t ~env ?id ~cont:(type__ ~proto ~imode) t
-      | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id ~proto ~imode) rep
-      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id ~proto ~imode) rep
-      | DefT (_, _, FunT (static, _)) -> type__ ~env ~proto ~imode static
-      | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~cont:(type__ ~proto ~imode) r use_op t ts
-      | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
-      | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~proto ~imode) t
+        type__ ~env ~inherited ~source ~imode t_out
+      | MaybeT (_, t) -> maybe_t ~env ?id ~cont:(type__ ~inherited ~source ~imode) t
+      | IntersectionT (_, rep) ->
+        app_intersection ~f:(type__ ~env ?id ~inherited ~source ~imode) rep
+      | UnionT (_, rep) ->
+        app_union ~from_bounds:false ~f:(type__ ~env ?id ~inherited ~source ~imode) rep
+      | DefT (_, _, FunT (static, _)) -> type__ ~env ~inherited ~source ~imode static
+      | TypeAppT (r, use_op, t, ts) ->
+        type_app_t ~env ~cont:(type__ ~inherited ~source ~imode) r use_op t ts
+      | DefT (_, _, TypeT (_, t)) -> type__ ~env ~inherited ~source ~imode t
+      | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~inherited ~source ~imode) t
       | EvalT (t, d, id') ->
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
@@ -2178,29 +2166,24 @@ end = struct
             in
             eval_t
               ~env
-              ~cont:(type__ ~proto ~imode)
+              ~cont:(type__ ~inherited ~source ~imode)
               ~default:(fun ~env ?id:_ -> TypeConverter.convert_t ~env ~skip_reason:false)
               ~non_eval:TypeConverter.convert_type_destructor_unevaluated
               ~force_eval:true
               (t, d, id')
-      | ExactT (_, t) -> type__ ~env ~proto ~imode t
-      | GenericT { bound; _ } -> type__ ~env ~proto ~imode bound
-      | OpaqueT (r, o) -> opaque_t ~env ~proto ~imode r o
+      | ExactT (_, t) -> type__ ~env ~inherited ~source ~imode t
+      | GenericT { bound; _ } -> type__ ~env ~inherited ~source ~imode bound
+      | OpaqueT (r, o) -> opaque_t ~env ~inherited ~source ~imode r o
       | t -> TypeConverter.convert_t ~env t
 
-    let convert_t ~env t = type__ ~env ~proto:false ~imode:IMUnset t
+    let convert_t ~env t = type__ ~env ~inherited:false ~source:Ty.Other ~imode:IMUnset t
   end
 
-  let run_expand_members ~include_proto_members ~idx_hook ~force_instance ~include_interface_members
-      =
+  let run_expand_members ~idx_hook ~force_instance =
     let module Converter = ExpandMembersConverter (struct
-      let include_proto_members = include_proto_members
-
       let idx_hook = idx_hook
 
       let force_instance = force_instance
-
-      let include_interface_members = include_interface_members
     end) in
     run_type_aux ~f:Converter.convert_t ~simpl:Ty_utils.simplify_type
 
@@ -2341,14 +2324,7 @@ let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
   in
   result
 
-let expand_members
-    ~include_proto_members
-    ~idx_hook
-    ~force_instance
-    ~include_interface_members
-    ~options
-    ~genv
-    scheme =
+let expand_members ~idx_hook ~force_instance ~options ~genv scheme =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
@@ -2356,10 +2332,8 @@ let expand_members
     run_expand_members
       ~options
       ~genv
-      ~include_proto_members
       ~idx_hook
       ~force_instance
-      ~include_interface_members
       ~imported_names
       ~tparams_rev
       State.empty

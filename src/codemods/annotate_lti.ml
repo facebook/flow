@@ -122,7 +122,8 @@ module Normalize_this_getPropT = struct
             {
               name = Reason.OrdinaryName name;
               prop = Ty.Field { t = Ty.explicit_any; polarity = Ty.Neutral; optional = false };
-              from_proto = false;
+              inherited = false;
+              source = Ty.Other;
               def_loc = None;
             })
         unique_names

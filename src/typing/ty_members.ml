@@ -8,9 +8,12 @@
 type 'a member_info = {
   ty: 'a;
   def_loc: ALoc.t option;
-  from_proto: bool;
-      (** Autocomplete ranks members from primitive prototypes below user-defined members.
-          [from_proto] indicates that the member is from a primitive prototype. *)
+  inherited: bool;
+      (** [inherited] indicates whether the member was inherited either from a super
+          class, higher in the prototype chain, or from an interface. *)
+  source: Ty.prop_source;
+      (** [source] indicates whether the member was defined in a "primitive prototype",
+          an interface, or some other object/class. *)
   from_nullable: bool;
       (** If a member came from a possibly-null/undefined object, autocomplete may suggest
           that the user use optional chaining to access it.
@@ -38,6 +41,25 @@ let membership_behavior =
     Nullish
   | _ -> Normal
 
+let merge_sources src1 src2 =
+  let open Ty in
+  match (src1, src2) with
+  (* Object.prototype has the lowest priority. If a prop comes from anywhere
+     else, take that instead. *)
+  | (src, PrimitiveProto "Object")
+  | (PrimitiveProto "Object", src) ->
+    src
+  (* All other primitive protos have the next lowest priority. *)
+  | (src, PrimitiveProto _)
+  | (PrimitiveProto _, src) ->
+    src
+  (* "Other" has the highest priority. *)
+  | (Other, _)
+  | (_, Other) ->
+    Other
+  (* A prop is treated as from an interface only if both constituent props are. *)
+  | (Interface, Interface) -> Interface
+
 let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   let open Ty in
   let ty_of_named_prop = function
@@ -53,10 +75,10 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     |> Base.List.fold_left ~init:(NameUtils.Map.empty, []) ~f:(fun (mems1, errs1) prop ->
            let (mems2, errs2) =
              match prop with
-             | NamedProp { name; prop; from_proto; def_loc } ->
+             | NamedProp { name; prop; inherited; source; def_loc } ->
                ( NameUtils.Map.singleton
                    name
-                   { ty = ty_of_named_prop prop; from_proto; from_nullable = false; def_loc },
+                   { ty = ty_of_named_prop prop; inherited; source; from_nullable = false; def_loc },
                  []
                )
              | SpreadProp ty -> members_of_ty ty
@@ -71,8 +93,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     |> List.fold_right
          (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
               match (ty_opt, tys_opt) with
-              | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
-                  Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls }
+              | ( Some { ty; inherited = id; source = src; from_nullable = fn; def_loc = dl },
+                  Some
+                    { ty = tys; inherited = ids; source = srcs; from_nullable = fns; def_loc = dls }
                 ) ->
                 (* We say that a member formed by unioning other members should be treated:
                  * - as from a prototype only if all its constituent members are.
@@ -81,7 +104,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                 Some
                   {
                     ty = Nel.cons ty tys;
-                    from_proto = fp && fps;
+                    inherited = id || ids;
+                    source = merge_sources src srcs;
                     from_nullable = fn || fns;
                     def_loc = Base.Option.first_some dl dls;
                   }
@@ -98,8 +122,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     |> List.fold_right
          (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
               match (ty_opt, tys_opt) with
-              | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
-                  Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls }
+              | ( Some { ty; inherited = id; source = src; from_nullable = fn; def_loc = dl },
+                  Some
+                    { ty = tys; inherited = ids; source = srcs; from_nullable = fns; def_loc = dls }
                 ) ->
                 (* We say that a member formed by intersecting other members should be treated:
                  * - as from a prototype only if all its constituent members are.
@@ -108,7 +133,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                 Some
                   {
                     ty = Nel.cons ty tys;
-                    from_proto = fp && fps;
+                    inherited = id || ids;
+                    source = merge_sources src srcs;
                     from_nullable = fn && fns;
                     def_loc = Base.Option.first_some dl dls;
                   }
@@ -157,13 +183,27 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
         match membership_behavior ty with
         | EmptyOrAny ->
           NameUtils.Map.map
-            (Fun.const { ty; from_proto = true; from_nullable = false; def_loc = None })
+            (Fun.const
+               {
+                 ty;
+                 inherited = true;
+                 source = PrimitiveProto "Object";
+                 from_nullable = false;
+                 def_loc = None;
+               }
+            )
             universe
         | Nullish ->
           NameUtils.Map.map
             (* Bot is the identity of type union *)
             (Fun.const
-               { ty = Bot EmptyType; from_proto = true; from_nullable = true; def_loc = None }
+               {
+                 ty = Bot EmptyType;
+                 inherited = true;
+                 source = PrimitiveProto "Object";
+                 from_nullable = true;
+                 def_loc = None;
+               }
             )
             universe
         | Normal -> ty_members
@@ -242,23 +282,14 @@ let ty_normalizer_options =
     max_depth = Some 50;
   }
 
-let extract
-    ~include_proto_members
-    ?(force_instance = false)
-    ?(include_interface_members = false)
-    ~cx
-    ~typed_ast
-    ~file_sig
-    scheme =
+let extract ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme =
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let in_idx_ref = ref false in
   let idx_hook () = in_idx_ref := true in
   match
     Ty_normalizer.expand_members
-      ~include_proto_members
       ~idx_hook
       ~force_instance
-      ~include_interface_members
       ~options:ty_normalizer_options
       ~genv
       scheme

@@ -176,7 +176,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                 Ty.NamedProp
                   {
                     name;
-                    from_proto = false;
+                    inherited = false;
+                    source = Ty.Other;
                     def_loc = None;
                     prop = Ty.Field { t; optional = true; polarity = Ty.Neutral };
                   }

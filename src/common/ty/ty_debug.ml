@@ -509,7 +509,7 @@ let json_of_elt ~strip_root =
     Hh_json.(
       JSON_Object
         (match prop with
-        | NamedProp { name; prop; from_proto; def_loc } ->
+        | NamedProp { name; prop; inherited; source; def_loc } ->
           [
             ("kind", JSON_String "NamedProp");
             ( "prop",
@@ -517,7 +517,8 @@ let json_of_elt ~strip_root =
                 [
                   ("name", JSON_String (Reason.display_string_of_name name));
                   ("prop", json_of_named_prop prop);
-                  ("from_proto", JSON_Bool from_proto);
+                  ("inherited", JSON_Bool inherited);
+                  ("source", JSON_String (string_of_prop_source source));
                   ( "def_loc",
                     match def_loc with
                     | None -> JSON_Null

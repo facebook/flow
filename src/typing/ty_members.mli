@@ -8,9 +8,8 @@
 type 'a member_info = {
   ty: 'a;
   def_loc: ALoc.t option;
-  from_proto: bool;
-      (** Autocomplete ranks members from primitive prototypes below user-defined members.
-          [from_proto] indicates that the member is from a primitive prototype. *)
+  inherited: bool;
+  source: Ty.prop_source;
   from_nullable: bool;
       (** If a member came from a possibly-null/undefined object, autocomplete may suggest
           that the user use optional chaining to access it.
@@ -24,9 +23,7 @@ type ty_members = {
 }
 
 val extract :
-  include_proto_members:bool ->
   ?force_instance:bool ->
-  ?include_interface_members:bool ->
   cx:Context.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   file_sig:File_sig.With_ALoc.t ->

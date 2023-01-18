@@ -289,26 +289,30 @@ let members_of_type
     type_ =
   let ty_members =
     Ty_members.extract
-      ~include_proto_members:(not exclude_proto_members)
       ~force_instance
-      ~include_interface_members
       ~cx
       ~typed_ast
       ~file_sig
       Type.TypeScheme.{ tparams_rev; type_ }
   in
-  let include_valid_member (s, info) =
-    let open Reason in
-    match s with
-    | OrdinaryName "constructor"
-    | InternalName _
-    | InternalModuleName _ ->
+  let include_valid_member (s, (Ty_members.{ inherited; source; _ } as info)) =
+    if
+      (exclude_proto_members && inherited)
+      || ((not include_interface_members) && source = Ty.Interface)
+    then
       None
-    (* TODO consider making the $-prefixed names internal *)
-    | OrdinaryName str when (String.length str >= 1 && str.[0] = '$') || SSet.mem str exclude_keys
-      ->
-      None
-    | OrdinaryName str -> Some (str, info)
+    else
+      let open Reason in
+      match s with
+      | OrdinaryName "constructor"
+      | InternalName _
+      | InternalModuleName _ ->
+        None
+      (* TODO consider making the $-prefixed names internal *)
+      | OrdinaryName str when (String.length str >= 1 && str.[0] = '$') || SSet.mem str exclude_keys
+        ->
+        None
+      | OrdinaryName str -> Some (str, info)
   in
   match ty_members with
   | Error error -> fail error
@@ -1246,14 +1250,10 @@ let autocomplete_member
     ~force_instance =
   let edit_locs = fix_locs_of_string_token token edit_locs in
   let exact_by_default = Context.exact_by_default cx in
-  (* When autocompleting a type annotation, it is extremely unlikely that someone wants the type
-   * of a member from the prototype of the object type. If they really want that they can get the
-   * type from the prototype directly. *)
-  let exclude_proto_members = is_type_annotation in
   match
     members_of_type
       ~reader
-      ~exclude_proto_members
+      ~exclude_proto_members:false
       ~force_instance
       cx
       file_sig
@@ -1266,18 +1266,11 @@ let autocomplete_member
     let items =
       mems
       |> Base.List.map
-           ~f:(fun
-                ( name,
-                  documentation,
-                  tags,
-                  Ty_members.{ ty; from_proto; from_nullable; def_loc = _ }
-                )
-              ->
+           ~f:(fun (name, documentation, tags, Ty_members.{ ty; source; from_nullable; _ }) ->
              let rank =
-               if from_proto then
-                 1
-               else
-                 0
+               match source with
+               | Ty.PrimitiveProto _ -> 1
+               | _ -> 0
              in
              let opt_chain_ty =
                Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (false, Ty.Void, ty, []))

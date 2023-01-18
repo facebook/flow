@@ -16,7 +16,8 @@ let tests =
                {
                  name = Reason.OrdinaryName "foo";
                  prop = Ty.Get (Ty.Str None);
-                 from_proto = false;
+                 inherited = false;
+                 source = Ty.Other;
                  def_loc = None;
                }
            in
@@ -39,7 +40,8 @@ let tests =
                {
                  name = Reason.OrdinaryName "foo";
                  prop = Ty.Set (Ty.Str None);
-                 from_proto = false;
+                 inherited = false;
+                 source = Ty.Other;
                  def_loc = None;
                }
            in

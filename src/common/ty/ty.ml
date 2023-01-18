@@ -170,7 +170,8 @@ and prop =
   | NamedProp of {
       name: Reason.name;
       prop: named_prop;
-      from_proto: bool;
+      inherited: bool;
+      source: prop_source;
       def_loc: aloc option;
     }
   | CallProp of fun_t
@@ -185,6 +186,11 @@ and named_prop =
   | Method of fun_t
   | Get of t
   | Set of t
+
+and prop_source =
+  | Interface
+  | PrimitiveProto of string
+  | Other
 
 and dict = {
   dict_polarity: polarity;
@@ -351,11 +357,24 @@ class ['A] comparator_ty =
         (name_1 : Reason.name)
         (prop_0 : named_prop)
         (prop_1 : named_prop)
-        (from_proto_0 : bool)
-        (from_proto_1 : bool)
+        (inherited_0 : bool)
+        (inherited_1 : bool)
+        (source_0 : prop_source)
+        (source_1 : prop_source)
         (_def_loc_0 : aloc option)
         (_def_loc_1 : aloc option) =
-      super#on_NamedProp env name_0 name_1 prop_0 prop_1 from_proto_0 from_proto_1 None None
+      super#on_NamedProp
+        env
+        name_0
+        name_1
+        prop_0
+        prop_1
+        inherited_0
+        inherited_1
+        source_0
+        source_1
+        None
+        None
 
     method! on_obj_t env obj_1 obj_2 =
       super#on_obj_t env { obj_1 with obj_def_loc = None } { obj_2 with obj_def_loc = None }
@@ -621,18 +640,6 @@ let is_dynamic = function
 
 let mk_maybe ~from_bounds t = mk_union ~from_bounds (Null, [Void; t])
 
-let mk_field_props prop_list =
-  Base.List.map
-    ~f:(fun (id, t, opt) ->
-      NamedProp
-        {
-          name = id;
-          prop = Field { t; polarity = Neutral; optional = opt };
-          from_proto = false;
-          def_loc = None;
-        })
-    prop_list
-
 let mk_generic_class symbol targs = Generic (symbol, ClassKind, targs)
 
 let mk_generic_interface symbol targs = Generic (symbol, InterfaceKind, targs)
@@ -737,3 +744,8 @@ let types_of_utility = function
   | ReactElementRefType t -> Some [t]
   | ReactConfigType (t1, t2) -> Some [t1; t2]
   | IdxUnwrapType t -> Some [t]
+
+let string_of_prop_source = function
+  | Interface -> "interface"
+  | PrimitiveProto s -> s ^ ".prototype"
+  | Other -> "other"

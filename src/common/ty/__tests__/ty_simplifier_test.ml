@@ -34,7 +34,8 @@ module UnionSimplification = struct
                           name = Reason.OrdinaryName "f";
                           prop =
                             Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
-                          from_proto = false;
+                          inherited = false;
+                          source = Ty.Other;
                           def_loc = None;
                         };
                     ];
@@ -52,7 +53,8 @@ module UnionSimplification = struct
                           name = Reason.OrdinaryName "f";
                           prop =
                             Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
-                          from_proto = false;
+                          inherited = false;
+                          source = Ty.Other;
                           def_loc = None;
                         };
                     ];
@@ -74,7 +76,8 @@ module UnionSimplification = struct
                     {
                       name = Reason.OrdinaryName "f";
                       prop = Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
-                      from_proto = false;
+                      inherited = false;
+                      source = Ty.Other;
                       def_loc = None;
                     };
                 ];
@@ -104,7 +107,8 @@ module UnionSimplification = struct
                           name = Reason.OrdinaryName "f";
                           prop =
                             Ty.Field { t = Ty.Num None; polarity = Ty.Positive; optional = false };
-                          from_proto = false;
+                          inherited = false;
+                          source = Ty.Other;
                           def_loc = None;
                         };
                     ];
@@ -122,7 +126,8 @@ module UnionSimplification = struct
                           name = Reason.OrdinaryName "f";
                           prop =
                             Ty.Field { t = Ty.Num None; polarity = Ty.Negative; optional = false };
-                          from_proto = false;
+                          inherited = false;
+                          source = Ty.Other;
                           def_loc = None;
                         };
                     ];
@@ -165,7 +170,8 @@ module BotAndTopSimplification = struct
                           prop =
                             Ty.Field
                               { t = Ty.Bot Ty.EmptyType; polarity = Ty.Neutral; optional = false };
-                          from_proto = false;
+                          inherited = false;
+                          source = Ty.Other;
                           def_loc = None;
                         };
                     ];
@@ -188,7 +194,8 @@ module BotAndTopSimplification = struct
                                 polarity = Ty.Neutral;
                                 optional = false;
                               };
-                          from_proto = false;
+                          inherited = false;
+                          source = Ty.Other;
                           def_loc = None;
                         };
                     ];
@@ -212,7 +219,8 @@ module BotAndTopSimplification = struct
                       prop =
                         Ty.Field
                           { t = Ty.Bot Ty.EmptyType; polarity = Ty.Neutral; optional = false };
-                      from_proto = false;
+                      inherited = false;
+                      source = Ty.Other;
                       def_loc = None;
                     };
                 ];

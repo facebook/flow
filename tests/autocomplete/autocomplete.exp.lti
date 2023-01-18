@@ -11327,6 +11327,189 @@ Flags: --lsp
   }
 }
 {
+  "label":"'hasOwnProperty'",
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
+    "newText":"'hasOwnProperty'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'hasOwnProperty'"
+      }
+    ]
+  }
+}
+{
+  "label":"'isPrototypeOf'",
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
+    "newText":"'isPrototypeOf'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'isPrototypeOf'"
+      }
+    ]
+  }
+}
+{
+  "label":"'propertyIsEnumerable'",
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
+    "newText":"'propertyIsEnumerable'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'propertyIsEnumerable'"
+      }
+    ]
+  }
+}
+{
+  "label":"'toLocaleString'",
+  "labelDetails":{"detail":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
+    "newText":"'toLocaleString'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toLocaleString'"
+      }
+    ]
+  }
+}
+{
+  "label":"'toString'",
+  "labelDetails":{"detail":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
+    "newText":"'toString'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toString'"
+      }
+    ]
+  }
+}
+{
+  "label":"'valueOf'",
+  "labelDetails":{"detail":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
+    "newText":"'valueOf'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'valueOf'"
+      }
+    ]
+  }
+}
+{
   "label":"any",
   "kind":6,
   "detail":"any",
@@ -11344,7 +11527,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":5,
+        "index":11,
         "session_requests":null,
         "typed_length":null,
         "completion":"any"
@@ -11370,7 +11553,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":6,
+        "index":12,
         "session_requests":null,
         "typed_length":null,
         "completion":"bigint"
@@ -11396,7 +11579,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":7,
+        "index":13,
         "session_requests":null,
         "typed_length":null,
         "completion":"boolean"
@@ -11422,7 +11605,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":8,
+        "index":14,
         "session_requests":null,
         "typed_length":null,
         "completion":"empty"
@@ -11448,7 +11631,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":9,
+        "index":15,
         "session_requests":null,
         "typed_length":null,
         "completion":"false"
@@ -11474,7 +11657,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":10,
+        "index":16,
         "session_requests":null,
         "typed_length":null,
         "completion":"mixed"
@@ -11500,7 +11683,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":11,
+        "index":17,
         "session_requests":null,
         "typed_length":null,
         "completion":"null"
@@ -11526,7 +11709,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":12,
+        "index":18,
         "session_requests":null,
         "typed_length":null,
         "completion":"number"
@@ -11552,7 +11735,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":13,
+        "index":19,
         "session_requests":null,
         "typed_length":null,
         "completion":"string"
@@ -11578,7 +11761,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":14,
+        "index":20,
         "session_requests":null,
         "typed_length":null,
         "completion":"symbol"
@@ -11604,7 +11787,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":15,
+        "index":21,
         "session_requests":null,
         "typed_length":null,
         "completion":"true"
@@ -11630,7 +11813,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":16,
+        "index":22,
         "session_requests":null,
         "typed_length":null,
         "completion":"void"
@@ -11656,7 +11839,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":17,
+        "index":23,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Call"
@@ -11682,7 +11865,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":18,
+        "index":24,
         "session_requests":null,
         "typed_length":null,
         "completion":"$CharSet"
@@ -11708,7 +11891,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":19,
+        "index":25,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Diff"
@@ -11734,7 +11917,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":20,
+        "index":26,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ElementType"
@@ -11760,7 +11943,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":21,
+        "index":27,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exact"
@@ -11786,7 +11969,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":22,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exports"
@@ -11812,7 +11995,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":23,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"$KeyMirror"
@@ -11838,7 +12021,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":24,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Keys"
@@ -11864,7 +12047,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":25,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"$NonMaybeType"
@@ -11890,7 +12073,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":26,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ObjMap"
@@ -11916,7 +12099,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":27,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ObjMapi"
@@ -11942,7 +12125,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":28,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"$PropertyType"
@@ -11968,7 +12151,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":29,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ReadOnly"
@@ -11994,7 +12177,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":30,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Rest"
@@ -12020,7 +12203,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":37,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Shape"
@@ -12046,7 +12229,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":38,
         "session_requests":null,
         "typed_length":null,
         "completion":"$TupleMap"
@@ -12072,7 +12255,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":39,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values"
@@ -12098,7 +12281,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":40,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class"
@@ -12159,6 +12342,189 @@ Flags: --lsp
         "session_requests":null,
         "typed_length":null,
         "completion":"\"foo\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"hasOwnProperty\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"isPrototypeOf\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"propertyIsEnumerable\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "labelDetails":{"detail":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"toLocaleString\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "labelDetails":{"detail":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"toString\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "labelDetails":{"detail":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"valueOf\""
       }
     ]
   }
@@ -12299,6 +12665,189 @@ Flags: --lsp
   }
 }
 {
+  "label":"'hasOwnProperty'",
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"'hasOwnProperty'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'hasOwnProperty'"
+      }
+    ]
+  }
+}
+{
+  "label":"'isPrototypeOf'",
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"'isPrototypeOf'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'isPrototypeOf'"
+      }
+    ]
+  }
+}
+{
+  "label":"'propertyIsEnumerable'",
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"'propertyIsEnumerable'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'propertyIsEnumerable'"
+      }
+    ]
+  }
+}
+{
+  "label":"'toLocaleString'",
+  "labelDetails":{"detail":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"'toLocaleString'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toLocaleString'"
+      }
+    ]
+  }
+}
+{
+  "label":"'toString'",
+  "labelDetails":{"detail":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"'toString'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'toString'"
+      }
+    ]
+  }
+}
+{
+  "label":"'valueOf'",
+  "labelDetails":{"detail":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"'valueOf'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'valueOf'"
+      }
+    ]
+  }
+}
+{
   "label":"any",
   "kind":6,
   "detail":"any",
@@ -12316,7 +12865,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":5,
+        "index":11,
         "session_requests":null,
         "typed_length":null,
         "completion":"any"
@@ -12342,7 +12891,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":6,
+        "index":12,
         "session_requests":null,
         "typed_length":null,
         "completion":"bigint"
@@ -12368,7 +12917,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":7,
+        "index":13,
         "session_requests":null,
         "typed_length":null,
         "completion":"boolean"
@@ -12394,7 +12943,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":8,
+        "index":14,
         "session_requests":null,
         "typed_length":null,
         "completion":"empty"
@@ -12420,7 +12969,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":9,
+        "index":15,
         "session_requests":null,
         "typed_length":null,
         "completion":"false"
@@ -12446,7 +12995,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":10,
+        "index":16,
         "session_requests":null,
         "typed_length":null,
         "completion":"mixed"
@@ -12472,7 +13021,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":11,
+        "index":17,
         "session_requests":null,
         "typed_length":null,
         "completion":"null"
@@ -12498,7 +13047,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":12,
+        "index":18,
         "session_requests":null,
         "typed_length":null,
         "completion":"number"
@@ -12524,7 +13073,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":13,
+        "index":19,
         "session_requests":null,
         "typed_length":null,
         "completion":"string"
@@ -12550,7 +13099,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":14,
+        "index":20,
         "session_requests":null,
         "typed_length":null,
         "completion":"symbol"
@@ -12576,7 +13125,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":15,
+        "index":21,
         "session_requests":null,
         "typed_length":null,
         "completion":"true"
@@ -12602,7 +13151,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":16,
+        "index":22,
         "session_requests":null,
         "typed_length":null,
         "completion":"void"
@@ -12628,7 +13177,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":17,
+        "index":23,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Call"
@@ -12654,7 +13203,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":18,
+        "index":24,
         "session_requests":null,
         "typed_length":null,
         "completion":"$CharSet"
@@ -12680,7 +13229,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":19,
+        "index":25,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Diff"
@@ -12706,7 +13255,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":20,
+        "index":26,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ElementType"
@@ -12732,7 +13281,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":21,
+        "index":27,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exact"
@@ -12758,7 +13307,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":22,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exports"
@@ -12784,7 +13333,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":23,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"$KeyMirror"
@@ -12810,7 +13359,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":24,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Keys"
@@ -12836,7 +13385,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":25,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"$NonMaybeType"
@@ -12862,7 +13411,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":26,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ObjMap"
@@ -12888,7 +13437,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":27,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ObjMapi"
@@ -12914,7 +13463,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":28,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"$PropertyType"
@@ -12940,7 +13489,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":29,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ReadOnly"
@@ -12966,7 +13515,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":30,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Rest"
@@ -12992,7 +13541,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":37,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Shape"
@@ -13018,7 +13567,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":38,
         "session_requests":null,
         "typed_length":null,
         "completion":"$TupleMap"
@@ -13044,7 +13593,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":39,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values"
@@ -13070,7 +13619,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":40,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class"
@@ -13131,6 +13680,189 @@ Flags: --lsp
         "session_requests":null,
         "typed_length":null,
         "completion":"\"foo\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"hasOwnProperty\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"isPrototypeOf\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"propertyIsEnumerable\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "labelDetails":{"detail":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"toLocaleString\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "labelDetails":{"detail":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"toString\""
+      }
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "labelDetails":{"detail":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"valueOf\""
       }
     ]
   }
