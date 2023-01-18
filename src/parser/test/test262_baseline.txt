@@ -1152,14 +1152,6 @@ language/expressions/class/elements/private-typeof-init-err-contains-arguments.j
   Missing parse error
 language/expressions/class/elements/private-typeof-init-err-contains-arguments.js (default)
   Missing parse error
-language/expressions/class/elements/static-as-valid-instance-field-assigned.js (strict mode)
-  Unexpected token `=`, expected an identifier at (25, 9) to (25, 10)
-language/expressions/class/elements/static-as-valid-instance-field-assigned.js (default)
-  Unexpected token `=`, expected an identifier at (25, 9) to (25, 10)
-language/expressions/class/elements/static-as-valid-instance-field.js (strict mode)
-  Unexpected token `;`, expected an identifier at (25, 8) to (25, 9)
-language/expressions/class/elements/static-as-valid-instance-field.js (default)
-  Unexpected token `;`, expected an identifier at (25, 8) to (25, 9)
 language/expressions/class/elements/static-comp-name-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/expressions/class/elements/static-comp-name-init-err-contains-arguments.js (default)
@@ -3274,14 +3266,6 @@ language/statements/class/elements/private-typeof-init-err-contains-arguments.js
   Missing parse error
 language/statements/class/elements/private-typeof-init-err-contains-arguments.js (default)
   Missing parse error
-language/statements/class/elements/static-as-valid-instance-field-assigned.js (strict mode)
-  Unexpected token `=`, expected an identifier at (25, 9) to (25, 10)
-language/statements/class/elements/static-as-valid-instance-field-assigned.js (default)
-  Unexpected token `=`, expected an identifier at (25, 9) to (25, 10)
-language/statements/class/elements/static-as-valid-instance-field.js (strict mode)
-  Unexpected token `;`, expected an identifier at (25, 8) to (25, 9)
-language/statements/class/elements/static-as-valid-instance-field.js (default)
-  Unexpected token `;`, expected an identifier at (25, 8) to (25, 9)
 language/statements/class/elements/static-comp-name-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/statements/class/elements/static-comp-name-init-err-contains-arguments.js (default)
@@ -3832,8 +3816,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84615 (97.79%)
-Failed:  1914 (2.21%)
+Passed:  84623 (97.80%)
+Failed:  1906 (2.20%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3844,10 +3828,10 @@ Features:
   arrow-function: 1477/1496 (98.73%)
   async-functions: 1202/1292 (93.03%)
   async-iteration: 9606/9728 (98.75%)
-  class: 8981/9241 (97.19%)
+  class: 8989/9241 (97.27%)
   class-fields-private: 1945/2001 (97.20%)
   class-fields-private-in: 16/38 (42.11%)
-  class-fields-public: 3954/4098 (96.49%)
+  class-fields-public: 3962/4098 (96.68%)
   class-methods-private: 3389/3401 (99.65%)
   class-static-block: 54/126 (42.86%)
   class-static-fields-private: 679/687 (98.84%)

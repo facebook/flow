@@ -889,9 +889,18 @@ module Object
         | _ -> (None, [])
       in
       let static =
-        Peek.ith_token ~i:1 env <> T_LPAREN
-        && Peek.ith_token ~i:1 env <> T_LESS_THAN
-        && Peek.token env = T_STATIC
+        Peek.token env = T_STATIC
+        &&
+        match Peek.ith_token ~i:1 env with
+        | T_ASSIGN (* static = 123 *)
+        | T_COLON (* static: T *)
+        | T_EOF (* incomplete property *)
+        | T_LESS_THAN (* static<T>() {} *)
+        | T_LPAREN (* static() {} *)
+        | T_RCURLY (* end of class *)
+        | T_SEMICOLON (* explicit semicolon *) ->
+          false
+        | _ -> true
       in
       let leading_static =
         if static then (
