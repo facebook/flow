@@ -241,14 +241,6 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
           ^
 
 
-Error ----------------------------------------------------------------------------------------------------- lits.js:7:23
-
-Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
-
-   7| let w: { ... } = { a: [] } // err
-                            ^^
-
-
 Error ----------------------------------------------------------------------------------------------------- lits.js:8:19
 
 Cannot assign array literal to `u` because empty array literal [1] has an arity of 0 but tuple type [2] has an arity of
@@ -262,6 +254,35 @@ References:
    lits.js:8:8
    8| let u: [number] = []; // err
              ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- lits.js:37:22
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   37|   const s1 = new Set([]); // error missing annotation on `[]` -- corresponds to EncounteredPlaceholder
+                            ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- lits.js:43:4
+
+Cannot cast `s2.values()` to `Iterator` because number [1] is incompatible with string [2] in type argument `T` [3].
+[incompatible-cast]
+
+   lits.js:43:4
+     43|   (s2.values(): Iterator<string>); // error number ~> string
+            ^^^^^^^^^^^
+
+References:
+   lits.js:41:17
+     41|   const s2: Set<number> = new Set([]);
+                         ^^^^^^ [1]
+   lits.js:43:26
+     43|   (s2.values(): Iterator<string>); // error number ~> string
+                                  ^^^^^^ [2]
+   <BUILTINS>/core.js:1677:16
+   1677| type Iterator<+T> = $Iterator<T,void,void>;
+                        ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- misplaced_error.js:11:31
@@ -460,4 +481,4 @@ References:
 
 
 
-Found 32 errors
+Found 33 errors

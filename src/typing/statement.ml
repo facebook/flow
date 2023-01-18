@@ -2323,12 +2323,20 @@ module Make
           then
             Flow.unify cx elemt (PinTypes.pin_type cx ~use_op:unknown_use element_reason elemt')
           else
-            (* If there's a usable hint, but the hint doesn't provide a type for this array,
-               then the element type of the array is likely useless, so we can provide empty here. *)
+            (* A hint is available, but cannot be used to provide a type for this
+             * array element. In this case, the element type of the array is likely
+             * useless (does not escape the annotation), so we can use `empty` as
+             * its type. *)
             Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
+        | DecompositionError ->
+          (* Similar to the case above, but the error occured earlier in the
+           * hint decomposition chain. *)
+          Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
         | NoHint
-        | DecompositionError
         | EncounteredPlaceholder ->
+          (* If there is no hint then raise an error. The EncounteredPlaceholder case
+           * corresponds to code like `const set = new Set([]);`. This case will
+           * raise a [missing-empty-array-annot] error on `[]`. *)
           Flow.add_output cx (Error_message.EEmptyArrayNoProvider { loc });
           if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
     );
