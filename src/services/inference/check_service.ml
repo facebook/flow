@@ -198,7 +198,20 @@ let mk_heap_reader reader =
       match Parsing_heaps.Reader_dispatcher.get_provider ~reader m with
       | None -> None
       | Some dep_addr ->
-        let file_key = Parsing_heaps.read_file_key dep_addr in
+        let file_key =
+          try Parsing_heaps.read_file_key dep_addr with
+          | SharedMem.Invalid_header _ as exn ->
+            let exn = Exception.wrap exn in
+            Exception.raise_with_backtrace
+              (Failure
+                 (Printf.sprintf
+                    "Invalid provider for %s: %s"
+                    (Modulename.to_string m)
+                    (Exception.get_ctor_string exn)
+                 )
+              )
+              exn
+        in
         Some (file_key, dep_addr)
 
     let get_file_key (file_key, _) = file_key

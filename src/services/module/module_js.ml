@@ -15,6 +15,27 @@
 
 open Utils_js
 
+exception
+  Failed_to_resolve_module of {
+    name: string;
+    file: File_key.t;
+    exn: Exception.t;
+  }
+
+let () =
+  Exception.register_printer (function
+      | Failed_to_resolve_module { name; file; exn } ->
+        Some
+          (Printf.sprintf
+             "Unexpected exception resolving module %S in %s: %s\n%s"
+             name
+             (File_key.to_string file)
+             (Exception.get_ctor_string exn)
+             (Exception.get_backtrace_string exn)
+          )
+      | _ -> None
+      )
+
 let choose_provider_and_warn_about_duplicates =
   let warn_duplicate_providers m (provider, _) duplicates acc =
     match duplicates with
@@ -493,6 +514,9 @@ module Haste : MODULE_SYSTEM = struct
     let candidates = module_name_candidates ~options r in
     let r = Nel.hd candidates in
     match resolve_import ~options ~reader node_modules_containers file ?phantom_acc r with
+    | exception exn ->
+      let exn = Exception.wrap exn in
+      raise (Failed_to_resolve_module { name = r; file; exn })
     | Some m -> Ok m
     | None ->
       (* If the candidates list is a singleton, then no name mappers applied,

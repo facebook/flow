@@ -50,6 +50,8 @@ exception Leader_not_found of string
 
 exception Failed_to_read_haste_info of string (* filename *) * Exception.t
 
+exception Failed_to_read_haste_modulename of string (* filename *) * Exception.t
+
 let () =
   let printf exn format =
     Printf.ksprintf
@@ -64,6 +66,8 @@ let () =
   Exception.register_printer (function
       | Failed_to_read_haste_info (file, exn) ->
         Some (printf exn "Failed to read haste info for %s" file)
+      | Failed_to_read_haste_modulename (file, exn) ->
+        Some (printf exn "Failed to read haste modulename for %s" file)
       | _ -> None
       )
 
@@ -474,6 +478,13 @@ let calc_dirty_modules file_key file haste_ent =
     | exn ->
       let exn = Exception.wrap exn in
       raise (Failed_to_read_haste_info (File_key.to_string file_key, exn))
+  in
+
+  let haste_modulename m =
+    try haste_modulename m with
+    | exn ->
+      let exn = Exception.wrap exn in
+      raise (Failed_to_read_haste_modulename (File_key.to_string file_key, exn))
   in
 
   let dirty_modules =
