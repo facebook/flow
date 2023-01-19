@@ -174,7 +174,11 @@ val add_label : env -> string -> env
 
 val enter_function : env -> async:bool -> generator:bool -> simple_params:bool -> env
 
+val is_contextually_reserved : string -> bool
+
 val is_reserved : string -> bool
+
+val token_is_contextually_reserved : Token.t -> bool
 
 val token_is_reserved : Token.t -> bool
 

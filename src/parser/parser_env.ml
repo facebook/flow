@@ -484,21 +484,20 @@ let is_strict_reserved = function
 
 (** Tokens which, if parsed as an identifier, are reserved words in strict mode. *)
 let token_is_strict_reserved =
-  Token.(
-    function
-    | T_IDENTIFIER { raw; _ } when is_strict_reserved raw -> true
-    | T_INTERFACE
-    | T_IMPLEMENTS
-    | T_LET
-    | T_PACKAGE
-    | T_PRIVATE
-    | T_PROTECTED
-    | T_PUBLIC
-    | T_STATIC
-    | T_YIELD ->
-      true
-    | _ -> false
-  )
+  let open Token in
+  function
+  | T_IDENTIFIER { raw; _ } -> is_strict_reserved raw
+  | T_INTERFACE
+  | T_IMPLEMENTS
+  | T_LET
+  | T_PACKAGE
+  | T_PRIVATE
+  | T_PROTECTED
+  | T_PUBLIC
+  | T_STATIC
+  | T_YIELD ->
+    true
+  | _ -> false
 
 (* #sec-strict-mode-of-ecmascript *)
 let is_restricted = function
@@ -510,14 +509,39 @@ let is_restricted = function
 let token_is_restricted =
   Token.(
     function
-    | T_IDENTIFIER { raw; _ } when is_restricted raw -> true
+    | T_IDENTIFIER { raw; _ } -> is_restricted raw
     | _ -> false
   )
 
-(* https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
-let is_reserved str_val =
+(** Words that are sometimes reserved, and sometimes allowed as identifiers
+    (namely "await" and "yield")
+
+    https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
+let is_contextually_reserved str_val =
   match str_val with
   | "await"
+  | "yield" ->
+    true
+  | _ -> false
+
+(** Words that are sometimes reserved, and sometimes allowed as identifiers
+    (namely "await" and "yield")
+
+    https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
+let token_is_contextually_reserved t =
+  let open Token in
+  match t with
+  | T_IDENTIFIER { raw; _ } -> is_contextually_reserved raw
+  | T_AWAIT
+  | T_YIELD ->
+    true
+  | _ -> false
+
+(** Words that are always reserved (mostly keywords)
+
+    https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
+let is_reserved str_val =
+  match str_val with
   | "break"
   | "case"
   | "catch"
@@ -553,16 +577,17 @@ let is_reserved str_val =
   | "var"
   | "void"
   | "while"
-  | "with"
-  | "yield" ->
+  | "with" ->
     true
   | _ -> false
 
+(** Words that are always reserved (mostly keywords)
+
+    https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
 let token_is_reserved t =
   let open Token in
   match t with
-  | T_IDENTIFIER { raw; _ } when is_reserved raw -> true
-  | T_AWAIT
+  | T_IDENTIFIER { raw; _ } -> is_reserved raw
   | T_BREAK
   | T_CASE
   | T_CATCH
@@ -598,8 +623,7 @@ let token_is_reserved t =
   | T_VAR
   | T_VOID
   | T_WHILE
-  | T_WITH
-  | T_YIELD ->
+  | T_WITH ->
     true
   | _ -> false
 

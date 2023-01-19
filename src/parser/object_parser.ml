@@ -241,7 +241,7 @@ module Object
           (loc, Ast.Expression.Literal lit)
         | Identifier ((loc, { Identifier.name; comments = _ }) as id) ->
           (* #sec-identifiers-static-semantics-early-errors *)
-          if is_reserved name && name <> "yield" && name <> "await" then
+          if is_reserved name then
             (* it is a syntax error if `name` is a reserved word other than await or yield *)
             error_at env (loc, Parse_error.UnexpectedReserved)
           else if is_strict_reserved name then

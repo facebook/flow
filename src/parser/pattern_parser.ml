@@ -219,7 +219,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
                 ((id_loc, { Identifier.name = string_val; comments = _ }) as name)
             ) ->
             (* #sec-identifiers-static-semantics-early-errors *)
-            if is_reserved string_val && string_val <> "yield" && string_val <> "await" then
+            if is_reserved string_val then
               (* it is a syntax error if `name` is a reserved word other than await or yield *)
               error_at env (id_loc, Parse_error.UnexpectedReserved)
             else if is_strict_reserved string_val then
