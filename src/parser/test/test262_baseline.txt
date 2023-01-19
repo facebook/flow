@@ -2118,6 +2118,10 @@ language/module-code/early-dup-export-as-star-as.js (strict mode)
   Missing parse error
 language/module-code/early-dup-export-as-star-as.js (default)
   Missing parse error
+language/module-code/early-dup-export-star-as-dflt.js (strict mode)
+  Missing parse error
+language/module-code/early-dup-export-star-as-dflt.js (default)
+  Missing parse error
 language/module-code/early-dup-top-function-async-generator.js (strict mode)
   Missing parse error
 language/module-code/early-dup-top-function-async-generator.js (default)
@@ -2164,10 +2168,6 @@ language/module-code/early-lex-and-var.js (default)
   Missing parse error
 language/module-code/early-strict-mode.js (default)
   Missing parse error
-language/module-code/eval-rqstd-once.js (strict mode)
-  Unexpected token `class` at (27, 12) to (27, 17)
-language/module-code/eval-rqstd-once.js (default)
-  Unexpected token `class` at (27, 12) to (27, 17)
 language/module-code/export-default-asyncfunction-declaration-binding-exists.js (strict mode)
   Missing parse error
 language/module-code/export-default-asyncfunction-declaration-binding-exists.js (default)
@@ -2208,10 +2208,6 @@ language/module-code/export-expname-import-string-binding.js (strict mode)
   Unexpected string, expected an identifier at (15, 9) to (15, 12)
 language/module-code/export-expname-import-string-binding.js (default)
   Unexpected string, expected an identifier at (15, 9) to (15, 12)
-language/module-code/export-star-as-dflt.js (strict mode)
-  Unexpected token `default` at (21, 12) to (21, 19)
-language/module-code/export-star-as-dflt.js (default)
-  Unexpected token `default` at (21, 12) to (21, 19)
 language/module-code/import-assertion-empty.js (strict mode)
   Unexpected identifier, expected the token `;` at (25, 48) to (25, 54)
 language/module-code/import-assertion-empty.js (default)
@@ -3808,8 +3804,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84627 (97.80%)
-Failed:  1902 (2.20%)
+Passed:  84629 (97.80%)
+Failed:  1900 (2.20%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3833,7 +3829,7 @@ Features:
   destructuring-assignment: 215/221 (97.29%)
   destructuring-binding: 13135/13137 (99.98%)
   dynamic-import: 997/1128 (88.39%)
-  export-star-as-namespace-from-module: 32/38 (84.21%)
+  export-star-as-namespace-from-module: 34/38 (89.47%)
   generators: 7948/8030 (98.98%)
   globalThis: 127/145 (87.59%)
   import-assertions: 12/169 (7.10%)

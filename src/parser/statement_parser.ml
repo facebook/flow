@@ -1684,7 +1684,7 @@ module Statement
             match Peek.token env with
             | T_IDENTIFIER { raw = "as"; _ } ->
               Eat.token env;
-              Some (Parse.identifier env)
+              Some (identifier_name env)
             | _ -> None
           in
           let specifiers = Some (ExportBatchSpecifier (loc, local_name)) in
