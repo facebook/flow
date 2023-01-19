@@ -114,6 +114,9 @@ val function_params :
   (Loc.t, Loc.t) Flow_ast.Function.Params.t ->
   Layout.layout_node
 
+val function_params_and_return :
+  opts:opts -> Loc.t * (Loc.t, Loc.t) Flow_ast.Function.t -> Layout.layout_node
+
 val better_quote : prefer_single_quotes:bool -> string -> string
 
 val utf8_escape : quote:string -> string -> string
