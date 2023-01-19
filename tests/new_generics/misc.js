@@ -62,7 +62,7 @@ function h<X: [number]>(x: X): $TupleMap<X, (number) => string> {
 
 // ToStringT
 function gn<TType>(jsEnum: {[TType]: string, ...}) {
-  (Object.keys(jsEnum): Array<TType>);
+  (Object.keys(jsEnum): $ReadOnlyArray<TType>);
 }
 
 // KeysT
@@ -74,7 +74,7 @@ function gv<
   validators: TValidators,
 ): $ObjMap<TFormData, (_: mixed) => ?string> {
   return Object.keys(data).reduce(
-    <K: $Keys<TFormData>>(acc, k: K) =>
+    <K: $Keys<TFormData>>(acc: $ObjMap<TFormData, (_: mixed) => ?string>, k: K): $ObjMap<TFormData, (_: mixed) => ?string> =>
       Object.assign(acc, {[k]: validators[k](k, data)}),
     {},
   );
