@@ -562,7 +562,7 @@ let func_own_props = SSet.of_list ["toString"; "arguments"; "caller"; "length"; 
 
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
-class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
+class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_scope =
   let fail loc str = raise Env_api.(Env_invariant (Some loc, ASTStructureOverride str)) in
 
   object (this)
@@ -1903,8 +1903,8 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
         | _ ->
           let call_argumemts_hints =
             match callee with
-            | (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
-            | ( _,
+            | (loc, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
+            | ( loc,
                 Ast.Expression.OptionalMember
                   {
                     Ast.Expression.OptionalMember.member =
@@ -1912,7 +1912,9 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
                     filtered_out = _;
                     optional = _;
                   }
-              ) ->
+              )
+              when (* Use the type of the callee directly as hint if the member access is refined *)
+                   not (Loc_sig.ALocS.LMap.mem loc env_values) ->
               let base_hint = [Hint_t (ValueHint _object)] in
               (match property with
               | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
@@ -2516,6 +2518,6 @@ class def_finder ~autocomplete_hooks env_entries providers toplevel_scope =
       )
   end
 
-let find_defs ~autocomplete_hooks env_entries providers ast =
-  let finder = new def_finder ~autocomplete_hooks env_entries providers Module in
+let find_defs ~autocomplete_hooks env_entries env_values providers ast =
+  let finder = new def_finder ~autocomplete_hooks env_entries env_values providers Module in
   finder#eval finder#program ast

@@ -396,7 +396,7 @@ let infer_core cx statements =
 
 let initialize_env
     ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast toplevel_scope_kind =
-  let (_abrupt_completion, ({ Env_api.env_entries; providers; _ } as info)) =
+  let (_abrupt_completion, ({ Env_api.env_entries; env_values; providers; _ } as info)) =
     NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
   in
   let autocomplete_hooks =
@@ -407,7 +407,7 @@ let initialize_env
     }
   in
   let (name_def_graph, hint_map) =
-    Name_def.find_defs ~autocomplete_hooks env_entries providers aloc_ast
+    Name_def.find_defs ~autocomplete_hooks env_entries env_values providers aloc_ast
   in
   let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hints cx) hint_map in
   let env = Loc_env.with_info Name_def.Global hint_map info in

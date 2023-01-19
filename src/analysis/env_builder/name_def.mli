@@ -18,6 +18,7 @@ val expression_is_definitely_synthesizable :
 val find_defs :
   autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
   Env_api.env_entry Env_api.EnvMap.t ->
+  Env_api.read Loc_sig.ALocS.LMap.t ->
   Provider_api.info ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   env_entries_map * hint_map

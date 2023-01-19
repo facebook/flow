@@ -327,6 +327,118 @@ References:
                                  ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- refinements.js:8:22
+
+Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   refinements.js:8:22
+   8|   x.m && x.m(u => { (u: string); }); // error number ~> string
+                           ^
+
+References:
+   refinements.js:6:33
+   6|   declare var x: { m?: (cb: (n: number) => void) => void };
+                                      ^^^^^^ [1]
+   refinements.js:8:25
+   8|   x.m && x.m(u => { (u: string); }); // error number ~> string
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:12:7
+
+Cannot call `x.m` because undefined [1] is not a function. [not-a-function]
+
+   refinements.js:12:7
+   12|     x.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+             ^
+
+References:
+   refinements.js:6:24
+    6|   declare var x: { m?: (cb: (n: number) => void) => void };
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:12:9
+
+An annotation on `u` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   12|     x.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+               ^
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:20:17
+
+Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   refinements.js:20:17
+   20|     x.m(u => { (u: string); }); // error number ~> string
+                       ^
+
+References:
+   refinements.js:6:33
+    6|   declare var x: { m?: (cb: (n: number) => void) => void };
+                                       ^^^^^^ [1]
+   refinements.js:20:20
+   20|     x.m(u => { (u: string); }); // error number ~> string
+                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:27:24
+
+Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   refinements.js:27:24
+   27|   x?.m && x?.m(u => { (u: string); }); // error number ~> string
+                              ^
+
+References:
+   refinements.js:25:34
+   25|   declare var x: ?{ m?: (cb: (n: number) => void) => void };
+                                        ^^^^^^ [1]
+   refinements.js:27:27
+   27|   x?.m && x?.m(u => { (u: string); }); // error number ~> string
+                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:31:8
+
+Cannot call `x?.m` because undefined [1] is not a function. [not-a-function]
+
+   refinements.js:31:8
+   31|     x?.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+              ^
+
+References:
+   refinements.js:25:25
+   25|   declare var x: ?{ m?: (cb: (n: number) => void) => void };
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:31:10
+
+An annotation on `u` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   31|     x?.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+                ^
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:39:18
+
+Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   refinements.js:39:18
+   39|     x?.m(u => { (u: string); }); // error number ~> string
+                        ^
+
+References:
+   refinements.js:25:34
+   25|   declare var x: ?{ m?: (cb: (n: number) => void) => void };
+                                        ^^^^^^ [1]
+   refinements.js:39:21
+   39|     x?.m(u => { (u: string); }); // error number ~> string
+                           ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:51:37
 
 Cannot assign object literal to `e1` because unknown element of empty array [1] is incompatible with string [2] in array
@@ -481,4 +593,4 @@ References:
 
 
 
-Found 33 errors
+Found 41 errors

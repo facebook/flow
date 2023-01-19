@@ -116,10 +116,10 @@ let print_order lst =
 
 let print_init_test contents =
   let ast = parse_with_alocs contents in
-  let (_, { Name_resolver.Env_api.env_entries; providers; _ }) =
+  let (_, { Name_resolver.Env_api.env_entries; env_values; providers; _ }) =
     Name_resolver.program_with_scope () ast
   in
-  let (inits, _) = Name_def.find_defs ~autocomplete_hooks env_entries providers ast in
+  let (inits, _) = Name_def.find_defs ~autocomplete_hooks env_entries env_values providers ast in
   print_values inits
 
 let print_order_test ?(custom_jsx = None) ?(react_runtime_automatic = false) contents =
@@ -131,10 +131,10 @@ let print_order_test ?(custom_jsx = None) ?(react_runtime_automatic = false) con
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#expression ast in
     jsx_mode := Options.Jsx_pragma (str, aloc_ast));
   let ast = parse_with_alocs contents in
-  let (_, ({ Name_resolver.Env_api.env_entries; providers; _ } as env)) =
+  let (_, ({ Name_resolver.Env_api.env_entries; env_values; providers; _ } as env)) =
     Name_resolver.program_with_scope () ast
   in
-  let (inits, _) = Name_def.find_defs ~autocomplete_hooks env_entries providers ast in
+  let (inits, _) = Name_def.find_defs ~autocomplete_hooks env_entries env_values providers ast in
   let order = Name_def_ordering.build_ordering ~autocomplete_hooks () env inits in
   print_order order;
   react_runtime := Options.ReactRuntimeClassic;
