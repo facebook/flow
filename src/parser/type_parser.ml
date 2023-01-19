@@ -1323,9 +1323,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
        by [Flow_lexer.type_token]. *)
     let token_is_maybe_end_of_list env token =
       match token with
-      (* "normal" keywords are parsed as identifiers in type mode.
-         e.g. `switch` is a valid type name. *)
-      | T_IDENTIFIER { raw; _ } when is_keyword raw -> true
+      (* Reserved words are lexed as identifiers in Lex_env.TYPE mode (if
+         they're not also reserved types). e.g. `switch` is a T_IDENTIFIER.
+         we're not expecting a type identifier, so let's assume it's a
+         NORMAL-mode keyword and end the list. *)
+      | T_IDENTIFIER { raw; _ } when is_reserved raw -> true
       (* adding a type above an enum: `type T<U\nenum ....` (`enum` is not an ES keyword) *)
       | T_IDENTIFIER { raw = "enum"; _ } when (parse_options env).enums -> true
       (* adding a type above another: `type T<U\ntype V ...` (`type` is not an ES keyword) *)

@@ -466,100 +466,6 @@ let enter_function env ~async ~generator ~simple_params =
     allow_yield = generator;
   }
 
-(* https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
-let is_keyword = function
-  | "await"
-  | "break"
-  | "case"
-  | "catch"
-  | "class"
-  | "const"
-  | "continue"
-  | "debugger"
-  | "default"
-  | "delete"
-  | "do"
-  | "else"
-  | "export"
-  | "extends"
-  | "finally"
-  | "for"
-  | "function"
-  | "if"
-  | "import"
-  | "in"
-  | "instanceof"
-  | "new"
-  | "return"
-  | "super"
-  | "switch"
-  | "this"
-  | "throw"
-  | "try"
-  | "typeof"
-  | "var"
-  | "void"
-  | "while"
-  | "with"
-  | "yield" ->
-    true
-  | _ -> false
-
-let token_is_keyword =
-  Token.(
-    function
-    | T_IDENTIFIER { raw; _ } when is_keyword raw -> true
-    | T_AWAIT
-    | T_BREAK
-    | T_CASE
-    | T_CATCH
-    | T_CLASS
-    | T_CONST
-    | T_CONTINUE
-    | T_DEBUGGER
-    | T_DEFAULT
-    | T_DELETE
-    | T_DO
-    | T_ELSE
-    | T_EXPORT
-    | T_EXTENDS
-    | T_FINALLY
-    | T_FOR
-    | T_FUNCTION
-    | T_IF
-    | T_IMPORT
-    | T_IN
-    | T_INSTANCEOF
-    | T_NEW
-    | T_RETURN
-    | T_SUPER
-    | T_SWITCH
-    | T_THIS
-    | T_THROW
-    | T_TRY
-    | T_TYPEOF
-    | T_VAR
-    | T_VOID
-    | T_WHILE
-    | T_WITH
-    | T_YIELD ->
-      true
-    | _ -> false
-  )
-
-(* #sec-future-reserved-words *)
-let is_future_reserved = function
-  | "enum" -> true
-  | _ -> false
-
-let token_is_future_reserved =
-  Token.(
-    function
-    | T_IDENTIFIER { raw; _ } when is_future_reserved raw -> true
-    | T_ENUM -> true
-    | _ -> false
-  )
-
 (** IdentifierNames that can't be used as Identifiers in strict mode.
 
     https://tc39.es/ecma262/#sec-strict-mode-of-ecmascript *)
@@ -608,27 +514,92 @@ let token_is_restricted =
     | _ -> false
   )
 
-(* #sec-reserved-words *)
+(* https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
 let is_reserved str_val =
-  is_keyword str_val
-  || is_future_reserved str_val
-  ||
   match str_val with
+  | "await"
+  | "break"
+  | "case"
+  | "catch"
+  | "class"
+  | "const"
+  | "continue"
+  | "debugger"
+  | "default"
+  | "delete"
+  | "do"
+  | "else"
+  | "enum"
+  | "export"
+  | "extends"
+  | "false"
+  | "finally"
+  | "for"
+  | "function"
+  | "if"
+  | "import"
+  | "in"
+  | "instanceof"
+  | "new"
   | "null"
+  | "return"
+  | "super"
+  | "switch"
+  | "this"
+  | "throw"
   | "true"
-  | "false" ->
+  | "try"
+  | "typeof"
+  | "var"
+  | "void"
+  | "while"
+  | "with"
+  | "yield" ->
     true
   | _ -> false
 
 let token_is_reserved t =
-  token_is_keyword t
-  || token_is_future_reserved t
-  ||
+  let open Token in
   match t with
-  | Token.T_IDENTIFIER { raw = "null" | "true" | "false"; _ }
-  | Token.T_NULL
-  | Token.T_TRUE
-  | Token.T_FALSE ->
+  | T_IDENTIFIER { raw; _ } when is_reserved raw -> true
+  | T_AWAIT
+  | T_BREAK
+  | T_CASE
+  | T_CATCH
+  | T_CLASS
+  | T_CONST
+  | T_CONTINUE
+  | T_DEBUGGER
+  | T_DEFAULT
+  | T_DELETE
+  | T_DO
+  | T_ELSE
+  | T_ENUM
+  | T_EXPORT
+  | T_EXTENDS
+  | T_FALSE
+  | T_FINALLY
+  | T_FOR
+  | T_FUNCTION
+  | T_IF
+  | T_IMPORT
+  | T_IN
+  | T_INSTANCEOF
+  | T_NEW
+  | T_NULL
+  | T_RETURN
+  | T_SUPER
+  | T_SWITCH
+  | T_THIS
+  | T_THROW
+  | T_TRUE
+  | T_TRY
+  | T_TYPEOF
+  | T_VAR
+  | T_VOID
+  | T_WHILE
+  | T_WITH
+  | T_YIELD ->
     true
   | _ -> false
 
@@ -936,7 +907,6 @@ module Peek = struct
   let ith_is_identifier ~i env =
     match ith_token ~i env with
     | t when token_is_strict_reserved t -> true
-    | t when token_is_future_reserved t -> true
     | t when token_is_restricted t -> true
     | T_TYPE
     | T_OPAQUE
@@ -944,6 +914,7 @@ module Peek = struct
     | T_DECLARE
     | T_ASYNC
     | T_AWAIT
+    | T_ENUM
     | T_POUND
     | T_IDENTIFIER _ ->
       true
