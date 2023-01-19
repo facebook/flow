@@ -13,5 +13,5 @@ type E = { kind: 'E', y: boolean }
 
 declare var ab: Array<A|B|C>;
 
-(my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-(my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+(my_filter(ab, (x: A|B|C|D|E): %checks => x.kind === 'A'): Array<B>);    // ERROR
+(my_filter(ab, (x: A|B|C|D|E): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
