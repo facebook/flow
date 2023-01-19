@@ -948,9 +948,7 @@ let token (env : Lex_env.t) lexbuf : result =
     let end_offset = Sedlexing.lexeme_end lexbuf in
     let loc = loc_of_offsets env start_offset end_offset in
     Sedlexing.set_lexeme_start lexbuf start_offset;
-    let raw = Sedlexing.lexeme lexbuf in
-    let (nenv, value) = decode_identifier env raw in
-    (match value with
+    (match lexeme lexbuf with
     | "async" -> Token (env, T_ASYNC)
     | "await" -> Token (env, T_AWAIT)
     | "break" -> Token (env, T_BREAK)
@@ -1002,7 +1000,10 @@ let token (env : Lex_env.t) lexbuf : result =
     | "while" -> Token (env, T_WHILE)
     | "with" -> Token (env, T_WITH)
     | "yield" -> Token (env, T_YIELD)
-    | _ -> Token (nenv, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw }))
+    | _ ->
+      let raw = Sedlexing.lexeme lexbuf in
+      let (nenv, value) = decode_identifier env raw in
+      Token (nenv, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw }))
   | eof ->
     let env =
       if is_in_comment_syntax env then

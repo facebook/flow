@@ -486,7 +486,7 @@ let is_strict_reserved = function
 let token_is_strict_reserved =
   let open Token in
   function
-  | T_IDENTIFIER { raw; _ } -> is_strict_reserved raw
+  | T_IDENTIFIER { value; _ } -> is_strict_reserved value
   | T_INTERFACE
   | T_IMPLEMENTS
   | T_LET

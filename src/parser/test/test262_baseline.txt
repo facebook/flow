@@ -954,10 +954,6 @@ language/block-scope/syntax/redeclaration/var-redeclaration-attempt-after-let.js
   Missing parse error
 language/block-scope/syntax/redeclaration/var-redeclaration-attempt-after-let.js (default)
   Missing parse error
-language/export/escaped-default.js (strict mode)
-  Missing parse error
-language/export/escaped-default.js (default)
-  Missing parse error
 language/expressions/arrow-function/params-duplicate.js (default)
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates.js (default)
@@ -996,17 +992,9 @@ language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplic
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (default)
   Missing parse error
-language/expressions/async-arrow-function/escaped-async.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/escaped-async.js (default)
-  Missing parse error
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (strict mode)
   Missing parse error
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (default)
-  Missing parse error
-language/expressions/async-function/escaped-async.js (strict mode)
-  Missing parse error
-language/expressions/async-function/escaped-async.js (default)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-body-duplicate-const.js (strict mode)
   Missing parse error
@@ -1019,10 +1007,6 @@ language/expressions/async-generator/early-errors-expression-formals-body-duplic
 language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (strict mode)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (default)
-  Missing parse error
-language/expressions/async-generator/escaped-async.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/escaped-async.js (default)
   Missing parse error
 language/expressions/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
@@ -1306,10 +1290,6 @@ language/expressions/dynamic-import/2nd-param-yield-expr.js (default)
   Unexpected token `,`, expected the token `)` at (18, 43) to (18, 44)
 language/expressions/dynamic-import/2nd-param-yield-ident-valid.js (default)
   Unexpected token `,`, expected the token `)` at (17, 31) to (17, 32)
-language/expressions/dynamic-import/escape-sequence-import.js (strict mode)
-  Missing parse error
-language/expressions/dynamic-import/escape-sequence-import.js (default)
-  Missing parse error
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-trailing-comma-first.js (strict mode)
   Unexpected token `,`, expected the token `)` at (30, 41) to (30, 42)
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-trailing-comma-first.js (default)
@@ -1498,10 +1478,6 @@ language/expressions/import.meta/import-meta-is-an-ordinary-object.js (strict mo
   Unexpected token `import` at (37, 8) to (37, 14)
 language/expressions/import.meta/import-meta-is-an-ordinary-object.js (default)
   Unexpected token `import` at (37, 8) to (37, 14)
-language/expressions/import.meta/syntax/escape-sequence-import.js (strict mode)
-  Missing parse error
-language/expressions/import.meta/syntax/escape-sequence-import.js (default)
-  Missing parse error
 language/expressions/import.meta/syntax/goal-script.js (strict mode)
   Missing parse error
 language/expressions/import.meta/syntax/goal-script.js (default)
@@ -1558,10 +1534,6 @@ language/expressions/in/private-field-rhs-yield-present.js (strict mode)
   Unexpected token `#`, expected an identifier at (26, 11) to (26, 12)
 language/expressions/in/private-field-rhs-yield-present.js (default)
   Unexpected token `#`, expected an identifier at (26, 11) to (26, 12)
-language/expressions/new.target/escaped-new.js (strict mode)
-  Missing parse error
-language/expressions/new.target/escaped-new.js (default)
-  Missing parse error
 language/expressions/object/__proto__-duplicate.js (strict mode)
   Missing parse error
 language/expressions/object/__proto__-duplicate.js (default)
@@ -1582,14 +1554,6 @@ language/expressions/object/literal-property-name-bigint.js (strict mode)
   Unexpected bigint, expected an identifier at (31, 10) to (31, 29)
 language/expressions/object/literal-property-name-bigint.js (default)
   Unexpected bigint, expected an identifier at (31, 10) to (31, 29)
-language/expressions/object/method-definition/async-gen-meth-escaped-async.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/async-gen-meth-escaped-async.js (default)
-  Missing parse error
-language/expressions/object/method-definition/async-meth-escaped-async.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/async-meth-escaped-async.js (default)
-  Missing parse error
 language/expressions/object/method-definition/early-errors-object-async-method-duplicate-parameters.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-await-in-formals-default.js (strict mode)
@@ -3104,25 +3068,9 @@ language/statements/async-function/early-errors-declaration-formals-body-duplica
   Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (default)
   Missing parse error
-language/statements/async-function/escaped-async.js (strict mode)
-  Missing parse error
-language/statements/async-function/escaped-async.js (default)
-  Missing parse error
-language/statements/async-generator/escaped-async.js (strict mode)
-  Missing parse error
-language/statements/async-generator/escaped-async.js (default)
-  Missing parse error
 language/statements/block/labeled-continue.js (strict mode)
   Missing parse error
 language/statements/block/labeled-continue.js (default)
-  Missing parse error
-language/statements/class/async-gen-meth-escaped-async.js (strict mode)
-  Missing parse error
-language/statements/class/async-gen-meth-escaped-async.js (default)
-  Missing parse error
-language/statements/class/async-meth-escaped-async.js (strict mode)
-  Missing parse error
-language/statements/class/async-meth-escaped-async.js (default)
   Missing parse error
 language/statements/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
@@ -3428,20 +3376,12 @@ language/statements/class/syntax/early-errors/class-definition-evaluation-script
   Missing parse error
 language/statements/class/syntax/early-errors/class-definition-evaluation-scriptbody-duplicate-binding.js (default)
   Missing parse error
-language/statements/class/syntax/escaped-static.js (strict mode)
-  Missing parse error
-language/statements/class/syntax/escaped-static.js (default)
-  Missing parse error
 language/statements/const/redeclaration-error-from-within-strict-mode-function-const.js (default)
   Missing parse error
 language/statements/const/static-init-await-binding-valid.js (strict mode)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 language/statements/const/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
-language/statements/for-await-of/escaped-of.js (strict mode)
-  Missing parse error
-language/statements/for-await-of/escaped-of.js (default)
-  Missing parse error
 language/statements/for-await-of/head-lhs-async.js (strict mode)
   Invalid left-hand side in for-of at (18, 13) to (18, 18)
 language/statements/for-await-of/head-lhs-async.js (default)
@@ -3462,10 +3402,6 @@ language/statements/for-in/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for-in/head-let-bound-names-in-stmt.js (default)
   Missing parse error
-language/statements/for-of/escaped-of.js (strict mode)
-  Missing parse error
-language/statements/for-of/escaped-of.js (default)
-  Missing parse error
 language/statements/for-of/head-const-bound-names-dup.js (strict mode)
   Missing parse error
 language/statements/for-of/head-const-bound-names-dup.js (default)
@@ -3482,10 +3418,6 @@ language/statements/for-of/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for-of/head-let-bound-names-in-stmt.js (default)
   Missing parse error
-language/statements/for-of/head-lhs-async-escaped.js (strict mode)
-  Invalid left-hand side in for-of at (16, 5) to (16, 15)
-language/statements/for-of/head-lhs-async-escaped.js (default)
-  Invalid left-hand side in for-of at (16, 5) to (16, 15)
 language/statements/for/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for/head-let-bound-names-in-stmt.js (default)
@@ -3794,8 +3726,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84634 (97.81%)
-Failed:  1895 (2.19%)
+Passed:  84668 (97.85%)
+Failed:  1861 (2.15%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3804,8 +3736,8 @@ Features:
   Symbol: 2593/2603 (99.62%)
   arbitrary-module-namespace-names: 20/32 (62.50%)
   arrow-function: 1478/1496 (98.80%)
-  async-functions: 1202/1292 (93.03%)
-  async-iteration: 9606/9728 (98.75%)
+  async-functions: 1212/1292 (93.81%)
+  async-iteration: 9616/9728 (98.85%)
   class: 8989/9241 (97.27%)
   class-fields-private: 1945/2001 (97.20%)
   class-fields-private-in: 16/38 (42.11%)
@@ -3818,12 +3750,12 @@ Features:
   computed-property-names: 931/961 (96.88%)
   destructuring-assignment: 217/221 (98.19%)
   destructuring-binding: 13135/13137 (99.98%)
-  dynamic-import: 997/1128 (88.39%)
+  dynamic-import: 999/1128 (88.56%)
   export-star-as-namespace-from-module: 34/38 (89.47%)
   generators: 7948/8030 (98.98%)
   globalThis: 127/145 (87.59%)
   import-assertions: 12/169 (7.10%)
-  import.meta: 36/46 (78.26%)
+  import.meta: 38/46 (82.61%)
   json-modules: 4/24 (16.67%)
   let: 131/137 (95.62%)
   new.target: 120/122 (98.36%)
