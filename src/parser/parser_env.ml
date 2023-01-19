@@ -506,13 +506,6 @@ let is_restricted = function
     true
   | _ -> false
 
-let token_is_restricted =
-  Token.(
-    function
-    | T_IDENTIFIER { raw; _ } -> is_restricted raw
-    | _ -> false
-  )
-
 (** Words that are sometimes reserved, and sometimes allowed as identifiers
     (namely "await" and "yield")
 
@@ -931,7 +924,6 @@ module Peek = struct
   let ith_is_identifier ~i env =
     match ith_token ~i env with
     | t when token_is_strict_reserved t -> true
-    | t when token_is_restricted t -> true
     | T_TYPE
     | T_OPAQUE
     | T_OF

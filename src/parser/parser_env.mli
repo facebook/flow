@@ -196,8 +196,6 @@ val is_restricted : string -> bool
 
 val is_reserved_type : string -> bool
 
-val token_is_restricted : Token.t -> bool
-
 module Peek : sig
   val token : env -> Token.t
 
