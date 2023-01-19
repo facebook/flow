@@ -157,25 +157,6 @@ class finder cx =
       let (_ : (ml, tl) Ast.Type.annotation_or_hint) =
         this#labeled_type_annotation_hint "return" return
       in
-      (match predicate with
-      | None -> ()
-      | Some _ ->
-        let predicate_expr =
-          let open Ast.Statement in
-          match body with
-          | Ast.Function.BodyBlock
-              ( _,
-                {
-                  Block.body =
-                    [(_, Return { Return.argument = Some expr; comments = _; return_out = _ })];
-                  comments = _;
-                }
-              )
-          | Ast.Function.BodyExpression expr ->
-            Some expr
-          | _ -> None
-        in
-        Base.Option.iter predicate_expr ~f:(fun ((_, ty), _) -> this#mark ty));
       let (_ : (ml, tl) Ast.Type.Predicate.t option) = map_opt this#type_predicate predicate in
       (* Check the function body in a scope that contains both the function's parameters and also any
          class type parameters if we're inside a class toplevel. *)
@@ -265,15 +246,7 @@ class finder cx =
 
     method! declare_class cls = cls
 
-    method! declare_function node =
-      let { Ast.Statement.DeclareFunction.id = _; annot = _; predicate; comments = _ } = node in
-      begin
-        match predicate with
-        | Some (_, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared ((_, ty), _); _ }) ->
-          this#mark ty
-        | _ -> ()
-      end;
-      node
+    method! declare_function node = node
 
     method object_key_label key =
       match key with
