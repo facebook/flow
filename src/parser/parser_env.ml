@@ -560,10 +560,13 @@ let token_is_future_reserved =
     | _ -> false
   )
 
-(* #sec-strict-mode-of-ecmascript *)
+(** IdentifierNames that can't be used as Identifiers in strict mode.
+
+    https://tc39.es/ecma262/#sec-strict-mode-of-ecmascript *)
 let is_strict_reserved = function
-  | "interface"
   | "implements"
+  | "interface"
+  | "let"
   | "package"
   | "private"
   | "protected"
@@ -573,12 +576,14 @@ let is_strict_reserved = function
     true
   | _ -> false
 
+(** Tokens which, if parsed as an identifier, are reserved words in strict mode. *)
 let token_is_strict_reserved =
   Token.(
     function
     | T_IDENTIFIER { raw; _ } when is_strict_reserved raw -> true
     | T_INTERFACE
     | T_IMPLEMENTS
+    | T_LET
     | T_PACKAGE
     | T_PRIVATE
     | T_PROTECTED
@@ -921,7 +926,6 @@ module Peek = struct
     | t when token_is_strict_reserved t -> true
     | t when token_is_future_reserved t -> true
     | t when token_is_restricted t -> true
-    | T_LET
     | T_TYPE
     | T_OPAQUE
     | T_OF

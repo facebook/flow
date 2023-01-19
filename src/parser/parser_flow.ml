@@ -181,9 +181,7 @@ module rec Parse : PARSER = struct
     (match Peek.token env with
     (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
        lists them out. It is always disallowed in strict mode *)
-    | T_LET when in_strict_mode env -> error env Parse_error.StrictReservedWord
     | T_LET when no_let env -> error_unexpected env
-    | T_LET -> ()
     (* `allow_await` means that `await` is allowed to be a keyword,
        which makes it illegal to use as an identifier.
        https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)

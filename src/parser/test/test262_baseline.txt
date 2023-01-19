@@ -958,13 +958,9 @@ language/export/escaped-default.js (strict mode)
   Missing parse error
 language/export/escaped-default.js (default)
   Missing parse error
-language/expressions/arrow-function/dstr/syntax-error-ident-ref-let-escaped.js (strict mode)
-  Missing parse error
 language/expressions/arrow-function/params-duplicate.js (default)
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates.js (default)
-  Missing parse error
-language/expressions/assignment/dstr/syntax-error-ident-ref-let-escaped.js (strict mode)
   Missing parse error
 language/expressions/assignmenttargettype/direct-arrowfunction-1.js (strict mode)
   Missing parse error
@@ -1578,8 +1574,6 @@ language/expressions/object/ident-name-prop-name-literal-await-static-init.js (s
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
 language/expressions/object/ident-name-prop-name-literal-await-static-init.js (default)
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
-language/expressions/object/identifier-shorthand-let-invalid-strict-mode.js (default)
-  Missing parse error
 language/expressions/object/identifier-shorthand-static-init-await-valid.js (strict mode)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 language/expressions/object/identifier-shorthand-static-init-await-valid.js (default)
@@ -3800,8 +3794,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84631 (97.80%)
-Failed:  1898 (2.19%)
+Passed:  84634 (97.81%)
+Failed:  1895 (2.19%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3809,7 +3803,7 @@ Features:
   Proxy: 930/934 (99.57%)
   Symbol: 2593/2603 (99.62%)
   arbitrary-module-namespace-names: 20/32 (62.50%)
-  arrow-function: 1477/1496 (98.73%)
+  arrow-function: 1478/1496 (98.80%)
   async-functions: 1202/1292 (93.03%)
   async-iteration: 9606/9728 (98.75%)
   class: 8989/9241 (97.27%)
@@ -3822,7 +3816,7 @@ Features:
   class-static-fields-public: 388/424 (91.51%)
   class-static-methods-private: 2997/3009 (99.60%)
   computed-property-names: 931/961 (96.88%)
-  destructuring-assignment: 215/221 (97.29%)
+  destructuring-assignment: 217/221 (98.19%)
   destructuring-binding: 13135/13137 (99.98%)
   dynamic-import: 997/1128 (88.39%)
   export-star-as-namespace-from-module: 34/38 (89.47%)

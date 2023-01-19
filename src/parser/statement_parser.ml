@@ -108,13 +108,8 @@ module Statement
   let assert_identifier_name_is_identifier
       ?restricted_error env (loc, { Ast.Identifier.name; comments = _ }) =
     match name with
-    | "let" ->
-      (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
-         lists them out. It is always disallowed in strict mode *)
-      if in_strict_mode env then
-        strict_error_at env (loc, Parse_error.StrictReservedWord)
-      else if no_let env then
-        error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
+    | "let" when no_let env ->
+      error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
     | "await" ->
       (* `allow_await` means that `await` is allowed to be a keyword,
          which makes it illegal to use as an identifier.
