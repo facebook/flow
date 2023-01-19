@@ -103,8 +103,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
       (env, SSet.add name param_names)
     and identifier_no_dupe_check (env, param_names) (loc, { Identifier.name; comments = _ }) =
       if is_restricted name then strict_error_at env (loc, Parse_error.StrictParamName);
-      if is_future_reserved name || is_strict_reserved name then
-        strict_error_at env (loc, Parse_error.StrictReservedWord);
+      if is_strict_reserved name then strict_error_at env (loc, Parse_error.StrictReservedWord);
       (env, param_names)
     in
     pattern
@@ -127,8 +126,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
       (match id with
       | Some (loc, { Identifier.name; comments = _ }) ->
         if is_restricted name then strict_error_at env (loc, Parse_error.StrictFunctionName);
-        if is_future_reserved name || is_strict_reserved name then
-          strict_error_at env (loc, Parse_error.StrictReservedWord)
+        if is_strict_reserved name then strict_error_at env (loc, Parse_error.StrictReservedWord)
       | None -> ());
       let acc =
         List.fold_left
