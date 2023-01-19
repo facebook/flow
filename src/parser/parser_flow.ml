@@ -196,7 +196,7 @@ module rec Parse : PARSER = struct
     | T_YIELD when in_strict_mode env -> error env Parse_error.StrictReservedWord
     | T_YIELD -> ()
     | t when token_is_strict_reserved t -> strict_error env Parse_error.StrictReservedWord
-    | t when token_is_reserved t -> error_unexpected env
+    | t when token_is_reserved t -> error env Parse_error.UnexpectedReserved
     | t ->
       (match restricted_error with
       | Some err when token_is_restricted t -> strict_error env err

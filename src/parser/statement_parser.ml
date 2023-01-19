@@ -129,8 +129,7 @@ module Statement
       else
         strict_error_at env (loc, Parse_error.StrictReservedWord)
     | _ when is_strict_reserved name -> strict_error_at env (loc, Parse_error.StrictReservedWord)
-    | _ when is_reserved name ->
-      error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
+    | _ when is_reserved name -> error_at env (loc, Parse_error.UnexpectedReserved)
     | _ -> begin
       match restricted_error with
       | Some err when is_restricted name -> strict_error_at env (loc, err)

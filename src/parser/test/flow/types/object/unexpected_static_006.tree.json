@@ -2,7 +2,11 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":24}},
-      "message":"Use of reserved word in strict mode"
+      "message":"Unexpected token `static`, expected the token `:`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":24}},
+      "message":"Unexpected token `static`, expected the token `,`"
     }
   ],
   "type":"Program",

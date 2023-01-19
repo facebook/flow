@@ -969,15 +969,10 @@ let error env e =
   error_at env (loc, e)
 
 let get_unexpected_error ?expected token =
-  if token_is_future_reserved token then
-    Parse_error.UnexpectedReserved
-  else if token_is_strict_reserved token then
-    Parse_error.StrictReservedWord
-  else
-    let unexpected = Token.explanation_of_token token in
-    match expected with
-    | Some expected_msg -> Parse_error.UnexpectedWithExpected (unexpected, expected_msg)
-    | None -> Parse_error.Unexpected unexpected
+  let unexpected = Token.explanation_of_token token in
+  match expected with
+  | Some expected_msg -> Parse_error.UnexpectedWithExpected (unexpected, expected_msg)
+  | None -> Parse_error.Unexpected unexpected
 
 let error_unexpected ?expected env =
   (* So normally we consume the lookahead lex result when Eat.token calls

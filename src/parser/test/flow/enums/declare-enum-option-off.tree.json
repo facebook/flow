@@ -2,6 +2,10 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":12}},
+      "message":"Unexpected token `enum`, expected the end of an expression statement (`;`)"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":12}},
       "message":"Unexpected reserved word"
     },
     {
