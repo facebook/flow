@@ -163,6 +163,7 @@ let precedence_of_expression expr =
   | (_, E.Update { E.Update.prefix = true; _ })
   | (_, E.Unary _) ->
     17
+  | (_, E.TSTypeCast _) -> 12
   | (_, E.Binary { E.Binary.operator; _ }) -> begin
     match operator with
     | E.Binary.Exp -> 16
@@ -1250,6 +1251,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.JSXElement el -> jsx_element ~opts loc el
       | E.JSXFragment fr -> jsx_fragment ~opts loc fr
       | E.TypeCast cast -> type_cast ~opts loc cast
+      | E.TSTypeCast cast -> ts_type_cast ~opts loc cast
       | E.Import { E.Import.argument; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse [Atom "import"; wrap_in_parens (expression ~opts argument)]
@@ -1471,6 +1473,18 @@ and type_cast ~opts loc cast =
   in
   layout_node_with_comments_opt loc comments
   @@ wrap_in_parens (fuse [expr_layout; type_annotation ~opts annot])
+
+and ts_type_cast ~opts loc cast =
+  let open Ast.Expression.TSTypeCast in
+  let { expression = expr; kind; comments } = cast in
+  let expr_layout = expression ~opts expr in
+  let rhs =
+    match kind with
+    | AsConst -> [Atom "as"; space; Atom "const"]
+    | As annot -> [Atom "as"; space; type_ ~opts annot]
+    | Satisfies annot -> [Atom "satisfies"; space; type_ ~opts annot]
+  in
+  layout_node_with_comments_opt loc comments @@ fuse [expr_layout; space; fuse rhs]
 
 and pattern_object_property_key ~opts =
   let open Ast.Pattern.Object in

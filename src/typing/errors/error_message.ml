@@ -640,6 +640,7 @@ and ts_syntax_kind =
   | TSKeyof
   | TSTypeParamExtends
   | TSReadonlyVariance
+  | TSTypeCast of [ `AsConst | `As | `Satisfies ]
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -4369,6 +4370,37 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               text " for tuple elements.";
             ];
         }
+    | TSTypeCast kind ->
+      let keyword =
+        match kind with
+        | `AsConst
+        | `As ->
+          "as"
+        | `Satisfies -> "satisfies"
+      in
+      let features =
+        [
+          text "The closest equivalent of TypeScript's ";
+          code keyword;
+          text " cast in Flow has the form ";
+          code "(<expr>: <type>)";
+          text " - using a colon and wrapped in parentheses.";
+        ]
+      in
+      let features =
+        if kind = `AsConst then
+          features
+          @ [
+              text " ";
+              text "Flow does not have an equivalent of ";
+              code "as const";
+              text ". ";
+              text "Try adding an annotation instead.";
+            ]
+        else
+          features
+      in
+      Normal { features }
   end
 
 let is_lint_error = function

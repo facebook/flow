@@ -127,6 +127,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | TemplateLiteral x -> TemplateLiteral (this#template_literal x)
         | This x -> This (this#this_expression x)
         | TypeCast x -> TypeCast (this#type_cast x)
+        | TSTypeCast x -> TSTypeCast (this#ts_type_cast x)
         | Unary x -> Unary (this#unary_expression x)
         | Update x -> Update (this#update_expression x)
         | Yield x -> Yield (this#yield x)
@@ -2017,6 +2018,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#type_annotation annot in
       let comments' = Option.map ~f:this#syntax comments in
       { expression = expression'; annot = annot'; comments = comments' }
+
+    method ts_type_cast (expr : ('M, 'T) Ast.Expression.TSTypeCast.t)
+        : ('N, 'U) Ast.Expression.TSTypeCast.t =
+      let open Ast.Expression.TSTypeCast in
+      let { expression; kind; comments } = expr in
+      let expression' = this#expression expression in
+      let kind' =
+        match kind with
+        | AsConst -> AsConst
+        | As annot -> As (this#type_ annot)
+        | Satisfies annot -> Satisfies (this#type_ annot)
+      in
+      let comments' = Option.map ~f:this#syntax comments in
+      { expression = expression'; kind = kind'; comments = comments' }
 
     method unary_expression (expr : ('M, 'T) Ast.Expression.Unary.t)
         : ('N, 'U) Ast.Expression.Unary.t =

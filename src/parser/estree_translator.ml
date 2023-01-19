@@ -497,6 +497,22 @@ with type t = Impl.t = struct
           "TypeCastExpression"
           loc
           [("expression", expression expr); ("typeAnnotation", type_annotation annot)]
+      | ( loc,
+          TSTypeCast { TSTypeCast.expression = expr; kind = TSTypeCast.Satisfies annot; comments }
+        ) ->
+        node
+          ?comments
+          "SatisfiesExpression"
+          loc
+          [("expression", expression expr); ("typeAnnotation", _type annot)]
+      | (loc, TSTypeCast { TSTypeCast.expression = expr; kind = TSTypeCast.As annot; comments }) ->
+        node
+          ?comments
+          "AsExpression"
+          loc
+          [("expression", expression expr); ("typeAnnotation", _type annot)]
+      | (loc, TSTypeCast { TSTypeCast.expression = expr; kind = TSTypeCast.AsConst; comments }) ->
+        node ?comments "AsConstExpression" loc [("expression", expression expr)]
       | (loc, Assignment { Assignment.left; operator; right; comments }) ->
         let operator =
           match operator with

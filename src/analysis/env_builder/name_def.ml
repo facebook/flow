@@ -515,6 +515,7 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.TemplateLiteral _
     | Ast.Expression.This _
     | Ast.Expression.TypeCast _
+    | Ast.Expression.TSTypeCast _
     | Ast.Expression.Update _
     | Ast.Expression.Yield _ ->
       true
@@ -2343,6 +2344,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       | Ast.Expression.TemplateLiteral _
       | Ast.Expression.This _
       | Ast.Expression.TypeCast _
+      | Ast.Expression.TSTypeCast _
       | Ast.Expression.Update _
       | Ast.Expression.Yield _ ->
         ignore @@ super#expression exp

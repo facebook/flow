@@ -5116,6 +5116,7 @@ module Make
         | TaggedTemplate _
         | TemplateLiteral _
         | TypeCast _
+        | TSTypeCast _
         | This _
         | Update _
         | Yield _ ->

@@ -1,3 +1,111 @@
+Error -------------------------------------------------------------------------------------------------------- as.js:4:1
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   4| m as T; // ERROR
+      ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- as.js:8:6
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   8| b || m as T; // ERROR
+           ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- as.js:9:6
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   9| b && m as T; // ERROR
+           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:10:7
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   10| b === m as T; // ERROR
+             ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:13:5
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   13| x = m as T; // ERROR
+           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:17:1
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   17| new C as T; // ERROR
+       ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:20:1
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   20| n + n as T; // ERROR
+       ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:22:1
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   22| n as T + n; // ERROR
+       ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:23:1
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   23| n as T && n; // ERROR
+       ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:24:1
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   24| n as T || n; // ERROR
+       ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:25:1
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. [ts-syntax]
+
+   25| n as T === n; // ERROR
+       ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- as.js:27:1
+
+The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
+parentheses. Flow does not have an equivalent of `as const`. Try adding an annotation instead. [ts-syntax]
+
+   27| n as const; // ERROR
+       ^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- keyof.js:3:10
 
 The equivalent of TypeScript's `keyof` type operator in Flow is the `$Keys` utility type, used in the form `$Keys<T>`.
@@ -65,6 +173,15 @@ for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+
          ^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- satisfies.js:4:1
+
+The closest equivalent of TypeScript's `satisfies` cast in Flow has the form `(<expr>: <type>)` - using a colon and
+wrapped in parentheses. [ts-syntax]
+
+   4| m satisfies T; // ERROR
+      ^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------- type_param_extends.js:1:8
 
 While TypeScript uses `extends` to specify type parameter bounds, Flow uses `:` in the form `type T<A: B> = ...`.
@@ -127,4 +244,4 @@ The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
 
 
 
-Found 14 errors
+Found 27 errors

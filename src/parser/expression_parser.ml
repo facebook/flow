@@ -108,6 +108,7 @@ module Expression
     | (_, TemplateLiteral _)
     | (_, This _)
     | (_, TypeCast _)
+    | (_, TSTypeCast _)
     | (_, Unary _)
     | (_, Update _)
     | (_, Yield _) ->
@@ -313,6 +314,7 @@ module Expression
     | (_, TemplateLiteral _)
     | (_, This _)
     | (_, TypeCast _)
+    | (_, TSTypeCast _)
     | (_, Unary _)
     | (_, Update _)
     | (_, Yield _) ->
@@ -507,11 +509,48 @@ module Expression
             (is_unary, right))
           env
       in
-      ( if Peek.token env = T_LESS_THAN then
+      let next = Peek.token env in
+      ( if next = T_LESS_THAN then
         match right with
         | Cover_expr (_, Expression.JSXElement _) -> error env Parse_error.AdjacentJSXElements
         | _ -> ()
       );
+      let (stack, right) =
+        match next with
+        | T_IDENTIFIER { raw = ("as" | "satisfies") as keyword; _ } ->
+          Eat.token env;
+          let right = as_expression env right in
+          let (stack, expr) =
+            match stack with
+            | (left, (lop, lpri), lloc) :: rest when is_tighter lpri (Left_assoc 6) ->
+              let expr_loc = Loc.btwn lloc right_loc in
+              let expr = make_binary left right lop expr_loc in
+              (rest, expr)
+            | _ -> (stack, right)
+          in
+          let (expr_loc, _) = expr in
+          let (kind, end_loc) =
+            if keyword = "satisfies" then
+              let ((annot_loc, _) as annot) = Type._type env in
+              (Expression.TSTypeCast.Satisfies annot, annot_loc)
+            else if Peek.token env = T_CONST then (
+              let last_loc = Peek.loc env in
+              Eat.token env;
+              (Expression.TSTypeCast.AsConst, last_loc)
+            ) else
+              let ((annot_loc, _) as annot) = Type._type env in
+              (Expression.TSTypeCast.As annot, annot_loc)
+          in
+          let loc = Loc.btwn expr_loc end_loc in
+          ( stack,
+            Cover_expr
+              ( loc,
+                Expression.TSTypeCast
+                  { Expression.TSTypeCast.expression = expr; kind; comments = None }
+              )
+          )
+        | _ -> (stack, right)
+      in
       match (stack, binary_op env) with
       | ([], None) -> right
       | (_, None) ->

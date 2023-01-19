@@ -227,6 +227,7 @@ class ['loc] mapper =
         id_loc this#template_literal loc x expr (fun x -> (loc, TemplateLiteral x))
       | (loc, This x) -> id_loc this#this_expression loc x expr (fun x -> (loc, This x))
       | (loc, TypeCast x) -> id_loc this#type_cast loc x expr (fun x -> (loc, TypeCast x))
+      | (loc, TSTypeCast x) -> id_loc this#ts_type_cast loc x expr (fun x -> (loc, TSTypeCast x))
       | (loc, Unary x) -> id_loc this#unary_expression loc x expr (fun x -> (loc, Unary x))
       | (loc, Update x) -> id_loc this#update_expression loc x expr (fun x -> (loc, Update x))
       | (loc, Yield x) -> id_loc this#yield loc x expr (fun x -> (loc, Yield x))
@@ -2670,6 +2671,32 @@ class ['loc] mapper =
         expr
       else
         { expression = expression'; annot = annot'; comments = comments' }
+
+    method ts_type_cast _loc (expr : ('loc, 'loc) Ast.Expression.TSTypeCast.t) =
+      let open Ast.Expression.TSTypeCast in
+      let { expression; kind; comments } = expr in
+      let expression' = this#expression expression in
+      let kind' =
+        match kind with
+        | AsConst -> kind
+        | As annot ->
+          let annot' = this#type_ annot in
+          if annot == annot' then
+            kind
+          else
+            As annot'
+        | Satisfies annot ->
+          let annot' = this#type_ annot in
+          if annot == annot' then
+            kind
+          else
+            Satisfies annot'
+      in
+      let comments' = this#syntax_opt comments in
+      if expression' == expression && comments' == comments then
+        expr
+      else
+        { expression = expression'; kind = kind'; comments = comments' }
 
     method unary_expression _loc (expr : ('loc, 'loc) Flow_ast.Expression.Unary.t) =
       let open Flow_ast.Expression.Unary in

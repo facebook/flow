@@ -1454,6 +1454,21 @@ and Expression : sig
     [@@deriving show]
   end
 
+  module TSTypeCast : sig
+    type ('M, 'T) kind =
+      | AsConst
+      | As of ('M, 'T) Type.t
+      | Satisfies of ('M, 'T) Type.t
+    [@@deriving show]
+
+    type ('M, 'T) t = {
+      expression: ('M, 'T) Expression.t;
+      kind: ('M, 'T) kind;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module MetaProperty : sig
     type 'M t = {
       meta: ('M, 'M) Identifier.t;
@@ -1510,6 +1525,7 @@ and Expression : sig
     | TemplateLiteral of ('M, 'T) TemplateLiteral.t
     | This of 'M This.t
     | TypeCast of ('M, 'T) TypeCast.t
+    | TSTypeCast of ('M, 'T) TSTypeCast.t
     | Unary of ('M, 'T) Unary.t
     | Update of ('M, 'T) Update.t
     | Yield of ('M, 'T) Yield.t

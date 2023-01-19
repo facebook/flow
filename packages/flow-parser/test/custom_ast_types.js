@@ -141,6 +141,20 @@ function custom_ast_types(fork) {
     .field('argument', def('FlowType'));
   def('TypeParameter').field('usesExtendsBound', or(undefined, Boolean));
   def('Variance').field('kind', or('plus', 'minus', 'readonly'));
+  def('AsExpression')
+    .bases('Expression')
+    .build('expression', 'typeAnnotation')
+    .field('expression', def('Expression'))
+    .field('typeAnnotation', def('FlowType'));
+  def('SatisfiesExpression')
+    .bases('Expression')
+    .build('expression', 'typeAnnotation')
+    .field('expression', def('Expression'))
+    .field('typeAnnotation', def('FlowType'));
+  def('AsConstExpression')
+    .bases('Expression')
+    .build('expression')
+    .field('expression', def('Expression'));
 }
 
 module.exports = custom_ast_types;
