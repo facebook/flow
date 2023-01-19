@@ -345,6 +345,12 @@ runtest() {
             fi
 
             if [[ "$lti" -eq 1 ]] && \
+              [ "$(awk '$1=="skip_lti:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
+            if [[ "$lti" -eq 1 ]] && \
               [ "$(awk '$1=="TODO_LTI:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
