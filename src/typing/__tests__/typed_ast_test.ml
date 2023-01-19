@@ -22,6 +22,7 @@ let metadata =
     any_propagation = true;
     automatic_require_default = false;
     babel_loose_array_spread = false;
+    conditional_type = false;
     cycle_errors = false;
     cycle_errors_includes = [];
     enable_const_params = false;

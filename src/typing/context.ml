@@ -32,6 +32,7 @@ type metadata = {
   any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
+  conditional_type: bool;
   cycle_errors: bool;
   cycle_errors_includes: string list;
   enable_const_params: bool;
@@ -226,6 +227,7 @@ let metadata_of_options options =
     any_propagation = Options.any_propagation options;
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
+    conditional_type = Options.conditional_type options;
     cycle_errors = Options.cycle_errors options;
     cycle_errors_includes = Options.cycle_errors_includes options;
     enable_const_params = Options.enable_const_params options;
@@ -464,6 +466,8 @@ let evaluated cx = cx.ccx.sig_cx.evaluated
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
+
+let conditional_type cx = cx.metadata.conditional_type
 
 let cycle_errors cx =
   cx.metadata.cycle_errors || lti cx || in_dirlist cx cx.metadata.cycle_errors_includes

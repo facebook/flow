@@ -52,6 +52,7 @@ type metadata = {
   any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
+  conditional_type: bool;
   cycle_errors: bool;
   cycle_errors_includes: string list;
   enable_const_params: bool;
@@ -165,6 +166,8 @@ val goals : t -> Type.t IMap.t
 val exact_by_default : t -> bool
 
 val array_literal_providers : t -> bool
+
+val conditional_type : t -> bool
 
 val cycle_errors : t -> bool
 
