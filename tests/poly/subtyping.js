@@ -10,7 +10,7 @@
 
   function coerce<A, B>(x: A): B {
     const g = (o: <T>() => A): (<S>() => S) => o; // should error
-    return g(<T>() => x)();
+    return g(<T>(): A => x)();
   }
 
   const a: number = coerce('a');
@@ -23,7 +23,7 @@
 
   function coerce<A, B>(x: A): B {
     const g = (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
-    return g(<T>(y: T) => x)();
+    return g(<T>(y: T): A => x)();
   }
 
   (coerce('a'): empty);
