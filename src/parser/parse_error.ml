@@ -416,7 +416,7 @@ module PP = struct
     | StrictParamName -> "Parameter name eval or arguments is not allowed in strict mode"
     | StrictParamNotSimple ->
       "Illegal \"use strict\" directive in function with non-simple parameter list"
-    | StrictReservedWord -> "Use of future reserved word in strict mode"
+    | StrictReservedWord -> "Use of reserved word in strict mode"
     | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
     | SuperPrivate -> "You may not access a private field through the `super` keyword."
     | ThisParamAnnotationRequired -> "A type annotation is required for the `this` parameter."

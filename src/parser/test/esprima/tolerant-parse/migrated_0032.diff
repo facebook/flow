@@ -1,6 +1,7 @@
 {
   "errors": {
     "0": {
+      "message": "Use of reserved word in strict mode",
       "lineNumber": undefined,
       "index": undefined,
       "column": undefined,

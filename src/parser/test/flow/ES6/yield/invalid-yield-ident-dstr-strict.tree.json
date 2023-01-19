@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":14},"end":{"line":2,"column":19}},
-      "message":"Use of future reserved word in strict mode"
+      "message":"Use of reserved word in strict mode"
     }
   ],
   "type":"Program",
