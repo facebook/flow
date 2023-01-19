@@ -2768,5 +2768,139 @@ module.exports = (suite(
           ],
         )
     ]),
+    test('provide quickfix for `as` type cast', [
+      addFile('fix-as-expression.js.ignored', 'fix-as-expression.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-as-expression.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 0,
+          },
+          end: {
+            line: 2,
+            character: 14,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to type cast `(<expr>: <type>)`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-as-expression.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 0
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 14
+                            }
+                          },
+                          "newText": "(\"foo\": mixed)"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_as_expression",
+                      "Convert to type cast `(<expr>: <type>)`",
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
+    test('provide quickfix for `satisfies` type cast', [
+      addFile('fix-satisfies-expression.js.ignored', 'fix-satisfies-expression.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-satisfies-expression.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 0,
+          },
+          end: {
+            line: 2,
+            character: 21,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to type cast `(<expr>: <type>)`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-satisfies-expression.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 0
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 21
+                            }
+                          },
+                          "newText": "(\"foo\": mixed)"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_satisfies_expression",
+                      "Convert to type cast `(<expr>: <type>)`",
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
   ],
 ): Suite);

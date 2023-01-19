@@ -34,3 +34,13 @@ val convert_readonly_variance :
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_as_expression :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_satisfies_expression :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t

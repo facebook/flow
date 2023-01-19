@@ -1,0 +1,3 @@
+// @flow
+
+'foo' satisfies mixed;

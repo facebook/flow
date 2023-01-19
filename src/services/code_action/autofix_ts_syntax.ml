@@ -41,6 +41,21 @@ class mapper target_loc kind =
       | Readonly when kind = `ReadonlyVariance && this#is_target loc ->
         (Loc.none, { kind = Plus; comments })
       | _ -> super#variance variance
+
+    method! expression e =
+      let open Flow_ast.Expression in
+      match e with
+      | (loc, TSTypeCast { TSTypeCast.expression; kind = TSTypeCast.As annot; comments })
+        when kind = `AsExpression && this#is_target loc ->
+        let expression = super#expression expression in
+        let annot = super#type_ annot in
+        Ast_builder.Expressions.typecast ?comments expression annot
+      | (loc, TSTypeCast { TSTypeCast.expression; kind = TSTypeCast.Satisfies annot; comments })
+        when kind = `SatisfiesExpression && this#is_target loc ->
+        let expression = super#expression expression in
+        let annot = super#type_ annot in
+        Ast_builder.Expressions.typecast ?comments expression annot
+      | _ -> super#expression e
   end
 
 let convert_unknown_type ast loc =
@@ -65,4 +80,12 @@ let convert_type_param_extends ast loc =
 
 let convert_readonly_variance ast loc =
   let mapper = new mapper loc `ReadonlyVariance in
+  mapper#program ast
+
+let convert_as_expression ast loc =
+  let mapper = new mapper loc `AsExpression in
+  mapper#program ast
+
+let convert_satisfies_expression ast loc =
+  let mapper = new mapper loc `SatisfiesExpression in
   mapper#program ast
