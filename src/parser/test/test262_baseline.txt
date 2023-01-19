@@ -3468,10 +3468,6 @@ language/statements/for-in/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for-in/head-let-bound-names-in-stmt.js (default)
   Missing parse error
-language/statements/for-in/head-lhs-let.js (default)
-  Unexpected token `in` at (27, 10) to (27, 12)
-language/statements/for-in/identifier-let-allowed-as-lefthandside-expression-not-strict.js (default)
-  Unexpected token `in` at (12, 9) to (12, 11)
 language/statements/for-of/escaped-of.js (strict mode)
   Missing parse error
 language/statements/for-of/escaped-of.js (default)
@@ -3804,8 +3800,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84629 (97.80%)
-Failed:  1900 (2.20%)
+Passed:  84631 (97.80%)
+Failed:  1898 (2.19%)
 Errored: 2 (0.00%)
 
 Features:

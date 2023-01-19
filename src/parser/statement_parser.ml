@@ -376,7 +376,7 @@ module Statement
           let env = env |> with_no_in true in
           match Peek.token env with
           | T_SEMICOLON -> (None, [])
-          | T_LET ->
+          | T_LET when Peek.ith_token env ~i:1 <> T_IN ->
             let (loc, (declarations, leading, errs)) = with_loc Declaration.let_ env in
             ( Some
                 (For_declaration
@@ -419,7 +419,7 @@ module Statement
               errs
             )
           | _ ->
-            let expr = Parse.expression_or_pattern (env |> with_no_let true) in
+            let expr = Parse.expression_or_pattern env in
             (Some (For_expression expr), [])
         in
         match Peek.token env with
