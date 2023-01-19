@@ -93,44 +93,6 @@ References:
                         ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- empty.js:32:11
-
-Cannot assign function to `fn` because parameter `y` of unknown type [1] is incompatible with number [2] (consider
-adding a type annotation to `y` [1]) in the first parameter. All writes to `fn` must be compatible with the type of its
-initializer [3]. Add an annotation to `fn` [3] if a different type is desired. [incompatible-type]
-
-   empty.js:32:11
-   32|     fn = (y => 42); // error in old inference, no error in LTI
-                 ^ [1]
-
-References:
-   empty.js:30:16
-   30|   let fn = (x: number) => 42;
-                      ^^^^^^ [2]
-   empty.js:30:7
-   30|   let fn = (x: number) => 42;
-             ^^ [3]
-
-
-Error --------------------------------------------------------------------------------------------------- empty.js:39:11
-
-Cannot assign function to `fn` because parameter `y` of unknown type [1] is incompatible with number [2] (consider
-adding a type annotation to `y` [1]) in the first parameter. All writes to `fn` must be compatible with the type of its
-initializer [3]. Add an annotation to `fn` [3] if a different type is desired. [incompatible-type]
-
-   empty.js:39:11
-   39|     fn = (y => 42); // error in old inference, no error in LTI
-                 ^ [1]
-
-References:
-   empty.js:37:16
-   37|   let fn = (x: number) => 42;
-                      ^^^^^^ [2]
-   empty.js:37:7
-   37|   let fn = (x: number) => 42;
-             ^^ [3]
-
-
 Error --------------------------------------------------------------------------------------------------- empty.js:47:15
 
 Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
@@ -667,7 +629,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 26 errors
+Found 24 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

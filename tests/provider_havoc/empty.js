@@ -29,14 +29,14 @@ function arr_ok() {
 function fn() {
   let fn = (x: number) => 42;
   function havoc() {
-    fn = (y => 42); // error
+    fn = (y => 42); // error in old inference, no error in LTI
   }
 }
 
 function fn_completely_unannotated() {
   let fn = (x: number) => 42;
   function havoc() {
-    fn = (y => 42); // error, x has number as LB
+    fn = (y => 42); // error in old inference, no error in LTI
   }
   fn(52);
 }
