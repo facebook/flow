@@ -1473,14 +1473,11 @@ module Statement
       export_specifiers ~preceding_comma env (specifier :: specifiers)
 
   and assert_export_specifier_identifiers env specifiers =
-    Statement.ExportNamedDeclaration.ExportSpecifier.(
-      List.iter
-        (function
-          | (_, { local = id; exported = None }) ->
-            assert_identifier_name_is_identifier ~restricted_error:Parse_error.StrictVarName env id
-          | _ -> ())
-        specifiers
-    )
+    List.iter
+      (function
+        | (_, { Statement.ExportNamedDeclaration.ExportSpecifier.local = id; exported = _ }) ->
+          assert_identifier_name_is_identifier ~restricted_error:Parse_error.StrictVarName env id)
+      specifiers
 
   and export_declaration ~decorators env =
     let env = env |> with_strict true |> with_in_export true in
