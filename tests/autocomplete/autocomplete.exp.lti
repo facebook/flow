@@ -2327,7 +2327,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":"(input: ?string) => (void | E)"},
+  "labelDetails":{"detail":": (input: ?string) => (void | E)"},
   "kind":3,
   "detail":"(input: ?string) => (void | E)",
   "sortText":"00000000000000000001",
@@ -2354,7 +2354,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"detail":"(input: E) => string"},
+  "labelDetails":{"detail":": (input: E) => string"},
   "kind":3,
   "detail":"(input: E) => string",
   "sortText":"00000000000000000001",
@@ -2381,7 +2381,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":"(input: ?string) => boolean"},
+  "labelDetails":{"detail":": (input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -2408,7 +2408,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"detail":"() => Iterator<E>"},
+  "labelDetails":{"detail":": () => Iterator<E>"},
   "kind":3,
   "detail":"() => Iterator<E>",
   "sortText":"00000000000000000001",
@@ -2562,7 +2562,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"detail":"() => void"},
+  "labelDetails":{"detail":": () => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"the function foo"},
@@ -2702,7 +2702,7 @@ Flags: --lsp
 }
 {
   "label":"x",
-  "labelDetails":{"detail":"() => void"},
+  "labelDetails":{"detail":": () => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"**@deprecated** \n\na JSDoc in the same file."},
@@ -2873,7 +2873,7 @@ Flags: --lsp
 }
 {
   "label":"f",
-  "labelDetails":{"detail":"() => void"},
+  "labelDetails":{"detail":": () => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"method property of an object literal"},
@@ -2901,7 +2901,7 @@ Flags: --lsp
 }
 {
   "label":"g",
-  "labelDetails":{"detail":"() => Promise<void>"},
+  "labelDetails":{"detail":": () => Promise<void>"},
   "kind":3,
   "detail":"() => Promise<void>",
   "documentation":{"kind":"markdown","value":"async method property of an object literal"},
@@ -3193,7 +3193,7 @@ jsdoc-members-4.js:5:5
 Flags: --lsp
 {
   "label":"staticMethod",
-  "labelDetails":{"detail":"() => void"},
+  "labelDetails":{"detail":": () => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is a static method"},
@@ -3249,7 +3249,7 @@ Flags: --lsp
 }
 {
   "label":"apply",
-  "labelDetails":{"detail":"(thisArg: any, argArray?: any) => any"},
+  "labelDetails":{"detail":": (thisArg: any, argArray?: any) => any"},
   "kind":3,
   "detail":"(thisArg: any, argArray?: any) => any",
   "sortText":"00000000000000000001",
@@ -3303,7 +3303,7 @@ Flags: --lsp
 }
 {
   "label":"bind",
-  "labelDetails":{"detail":"(thisArg: any, ...argArray: Array<any>) => any"},
+  "labelDetails":{"detail":": (thisArg: any, ...argArray: Array<any>) => any"},
   "kind":3,
   "detail":"(thisArg: any, ...argArray: Array<any>) => any",
   "sortText":"00000000000000000001",
@@ -3330,7 +3330,7 @@ Flags: --lsp
 }
 {
   "label":"call",
-  "labelDetails":{"detail":"(thisArg: any, ...argArray: Array<any>) => any"},
+  "labelDetails":{"detail":": (thisArg: any, ...argArray: Array<any>) => any"},
   "kind":3,
   "detail":"(thisArg: any, ...argArray: Array<any>) => any",
   "sortText":"00000000000000000001",
@@ -3439,7 +3439,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"detail":"() => string"},
+  "labelDetails":{"detail":": () => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of a function."},
@@ -3470,7 +3470,7 @@ jsdoc-members-5.js:5:13
 Flags: --lsp
 {
   "label":"instanceMethod",
-  "labelDetails":{"detail":"() => void"},
+  "labelDetails":{"detail":": () => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is an instance method"},
@@ -3845,7 +3845,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":"(input: ?string) => (void | DefaultedStringEnum)"},
+  "labelDetails":{"detail":": (input: ?string) => (void | DefaultedStringEnum)"},
   "kind":3,
   "detail":"(input: ?string) => (void | DefaultedStringEnum)",
   "sortText":"00000000000000000001",
@@ -3873,7 +3873,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"detail":"(input: DefaultedStringEnum) => string"},
+  "labelDetails":{"detail":": (input: DefaultedStringEnum) => string"},
   "kind":3,
   "detail":"(input: DefaultedStringEnum) => string",
   "sortText":"00000000000000000001",
@@ -3901,7 +3901,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":"(input: ?string) => boolean"},
+  "labelDetails":{"detail":": (input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -3929,7 +3929,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"detail":"() => Iterator<DefaultedStringEnum>"},
+  "labelDetails":{"detail":": () => Iterator<DefaultedStringEnum>"},
   "kind":3,
   "detail":"() => Iterator<DefaultedStringEnum>",
   "sortText":"00000000000000000001",
@@ -4018,7 +4018,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":"(input: ?string) => (void | InitializedStringEnum)"},
+  "labelDetails":{"detail":": (input: ?string) => (void | InitializedStringEnum)"},
   "kind":3,
   "detail":"(input: ?string) => (void | InitializedStringEnum)",
   "sortText":"00000000000000000001",
@@ -4046,7 +4046,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"detail":"(input: InitializedStringEnum) => string"},
+  "labelDetails":{"detail":": (input: InitializedStringEnum) => string"},
   "kind":3,
   "detail":"(input: InitializedStringEnum) => string",
   "sortText":"00000000000000000001",
@@ -4074,7 +4074,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":"(input: ?string) => boolean"},
+  "labelDetails":{"detail":": (input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -4102,7 +4102,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"detail":"() => Iterator<InitializedStringEnum>"},
+  "labelDetails":{"detail":": () => Iterator<InitializedStringEnum>"},
   "kind":3,
   "detail":"() => Iterator<InitializedStringEnum>",
   "sortText":"00000000000000000001",
@@ -4191,7 +4191,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":"(input: ?number) => (void | NumberEnum)"},
+  "labelDetails":{"detail":": (input: ?number) => (void | NumberEnum)"},
   "kind":3,
   "detail":"(input: ?number) => (void | NumberEnum)",
   "sortText":"00000000000000000001",
@@ -4219,7 +4219,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"detail":"(input: NumberEnum) => string"},
+  "labelDetails":{"detail":": (input: NumberEnum) => string"},
   "kind":3,
   "detail":"(input: NumberEnum) => string",
   "sortText":"00000000000000000001",
@@ -4247,7 +4247,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":"(input: ?number) => boolean"},
+  "labelDetails":{"detail":": (input: ?number) => boolean"},
   "kind":3,
   "detail":"(input: ?number) => boolean",
   "sortText":"00000000000000000001",
@@ -4275,7 +4275,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"detail":"() => Iterator<NumberEnum>"},
+  "labelDetails":{"detail":": () => Iterator<NumberEnum>"},
   "kind":3,
   "detail":"() => Iterator<NumberEnum>",
   "sortText":"00000000000000000001",
@@ -4364,7 +4364,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":"(input: ?boolean) => (void | BooleanEnum)"},
+  "labelDetails":{"detail":": (input: ?boolean) => (void | BooleanEnum)"},
   "kind":3,
   "detail":"(input: ?boolean) => (void | BooleanEnum)",
   "sortText":"00000000000000000001",
@@ -4392,7 +4392,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"detail":"(input: BooleanEnum) => string"},
+  "labelDetails":{"detail":": (input: BooleanEnum) => string"},
   "kind":3,
   "detail":"(input: BooleanEnum) => string",
   "sortText":"00000000000000000001",
@@ -4420,7 +4420,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":"(input: ?boolean) => boolean"},
+  "labelDetails":{"detail":": (input: ?boolean) => boolean"},
   "kind":3,
   "detail":"(input: ?boolean) => boolean",
   "sortText":"00000000000000000001",
@@ -4448,7 +4448,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"detail":"() => Iterator<BooleanEnum>"},
+  "labelDetails":{"detail":": () => Iterator<BooleanEnum>"},
   "kind":3,
   "detail":"() => Iterator<BooleanEnum>",
   "sortText":"00000000000000000001",
@@ -4537,7 +4537,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"detail":"(input: ?symbol) => (void | SymbolEnum)"},
+  "labelDetails":{"detail":": (input: ?symbol) => (void | SymbolEnum)"},
   "kind":3,
   "detail":"(input: ?symbol) => (void | SymbolEnum)",
   "sortText":"00000000000000000001",
@@ -4565,7 +4565,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"detail":"(input: SymbolEnum) => string"},
+  "labelDetails":{"detail":": (input: SymbolEnum) => string"},
   "kind":3,
   "detail":"(input: SymbolEnum) => string",
   "sortText":"00000000000000000001",
@@ -4593,7 +4593,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"detail":"(input: ?symbol) => boolean"},
+  "labelDetails":{"detail":": (input: ?symbol) => boolean"},
   "kind":3,
   "detail":"(input: ?symbol) => boolean",
   "sortText":"00000000000000000001",
@@ -4621,7 +4621,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"detail":"() => Iterator<SymbolEnum>"},
+  "labelDetails":{"detail":": () => Iterator<SymbolEnum>"},
   "kind":3,
   "detail":"() => Iterator<SymbolEnum>",
   "sortText":"00000000000000000001",
@@ -6724,7 +6724,7 @@ Flags: --lsp
 }
 {
   "label":"f",
-  "labelDetails":{"detail":"(Union) => void"},
+  "labelDetails":{"detail":": (Union) => void"},
   "kind":3,
   "detail":"(Union) => void",
   "sortText":"00000000000000000001",
