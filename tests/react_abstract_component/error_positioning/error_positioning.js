@@ -28,7 +28,7 @@ const Component = fn<[{user: mixed}], _>(({user}) => (
 ));
 
 
-let RefetchContainer = HOC(Component); // Error, mock is not a Component
+let RefetchContainer = HOC<any, _>(Component); // Error, mock is not a Component
 <RefetchContainer />;
 
 // This test makes sure that create element issues always point to callers of the
