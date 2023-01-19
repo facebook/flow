@@ -9114,6 +9114,62 @@ Flags: --lsp
   }
 }
 
+method_signature.js:31:4
+Flags: --lsp
+{
+  "label":"foo",
+  "labelDetails":{"detail":": () => string"},
+  "kind":3,
+  "detail":"() => string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":30,"character":3},"end":{"line":30,"character":3}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "object key",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"detail":"(): string { … }"},
+  "kind":3,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":30,"character":3},"end":{"line":30,"character":3}},
+    "newText":"foo(): string {\n  $0\n}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "class key",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
+    ]
+  }
+}
+
 last_empty_line.js:5:0
 Flags: --pretty
 {"result":[{"name":"foo","type":"string"}]}
