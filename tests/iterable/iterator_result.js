@@ -22,7 +22,7 @@ function makeIterator2(coin_flip: () => boolean ): Iterator<string> {
       if (done) { // Whoops, made a mistake and forgot to negate done
         return { done, value: "still going..." }; // Error string ~> void
       } else {
-        return { done }; // Error void ~> string
+        return { done }; // Error void ~> string, LTI: prop-missing of value
       }
     }
   }
