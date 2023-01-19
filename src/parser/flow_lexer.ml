@@ -1842,28 +1842,30 @@ let type_token env lexbuf =
     Sedlexing.set_lexeme_start lexbuf start_offset;
     let raw = Sedlexing.lexeme lexbuf in
     let (env, value) = decode_identifier env raw in
+    (* keep this list in sync with Parser_env.is_reserved_type
+       and token_is_reserved_type *)
     (match value with
     | "any" -> Token (env, T_ANY_TYPE)
+    | "bigint" -> Token (env, T_BIGINT_TYPE)
     | "bool" -> Token (env, T_BOOLEAN_TYPE BOOL)
     | "boolean" -> Token (env, T_BOOLEAN_TYPE BOOLEAN)
     | "empty" -> Token (env, T_EMPTY_TYPE)
     | "extends" -> Token (env, T_EXTENDS)
     | "false" -> Token (env, T_FALSE)
     | "interface" -> Token (env, T_INTERFACE)
+    | "keyof" -> Token (env, T_KEYOF)
     | "mixed" -> Token (env, T_MIXED_TYPE)
+    | "never" -> Token (env, T_NEVER_TYPE)
     | "null" -> Token (env, T_NULL)
     | "number" -> Token (env, T_NUMBER_TYPE)
-    | "bigint" -> Token (env, T_BIGINT_TYPE)
     | "static" -> Token (env, T_STATIC)
     | "string" -> Token (env, T_STRING_TYPE)
+    | "symbol" -> Token (env, T_SYMBOL_TYPE)
     | "true" -> Token (env, T_TRUE)
     | "typeof" -> Token (env, T_TYPEOF)
-    | "void" -> Token (env, T_VOID_TYPE)
-    | "symbol" -> Token (env, T_SYMBOL_TYPE)
-    | "unknown" -> Token (env, T_UNKNOWN_TYPE)
-    | "never" -> Token (env, T_NEVER_TYPE)
     | "undefined" -> Token (env, T_UNDEFINED_TYPE)
-    | "keyof" -> Token (env, T_KEYOF)
+    | "unknown" -> Token (env, T_UNKNOWN_TYPE)
+    | "void" -> Token (env, T_VOID_TYPE)
     | _ -> Token (env, T_IDENTIFIER { loc; value; raw = Sedlexing.string_of_utf8 raw }))
   (* Others *)
   | eof ->

@@ -466,7 +466,7 @@ let enter_function env ~async ~generator ~simple_params =
     allow_yield = generator;
   }
 
-(* #sec-keywords *)
+(* https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
 let is_keyword = function
   | "await"
   | "break"
@@ -642,7 +642,9 @@ let is_reserved_type str_val =
   | "extends"
   | "false"
   | "interface"
+  | "keyof"
   | "mixed"
+  | "never"
   | "null"
   | "number"
   | "static"
@@ -650,27 +652,37 @@ let is_reserved_type str_val =
   | "symbol"
   | "true"
   | "typeof"
+  | "undefined"
+  | "unknown"
   | "void"
   | "_" ->
     true
   | _ -> false
 
 let token_is_reserved_type t =
+  let open Token in
   match t with
-  | Token.T_IDENTIFIER { raw; _ } when is_reserved_type raw -> true
-  | Token.T_ANY_TYPE
-  | Token.T_BOOLEAN_TYPE _
-  | Token.T_EMPTY_TYPE
-  | Token.T_MIXED_TYPE
-  | Token.T_NULL
-  | Token.T_NUMBER_TYPE
-  | Token.T_BIGINT_TYPE
-  | Token.T_STATIC
-  | Token.T_STRING_TYPE
-  | Token.T_TYPEOF
-  | Token.T_VOID_TYPE
-  | Token.T_INTERFACE
-  | Token.T_EXTENDS ->
+  | T_IDENTIFIER { raw; _ } when is_reserved_type raw -> true
+  | T_ANY_TYPE
+  | T_BIGINT_TYPE
+  | T_BOOLEAN_TYPE _
+  | T_EMPTY_TYPE
+  | T_EXTENDS
+  | T_FALSE
+  | T_INTERFACE
+  | T_KEYOF
+  | T_MIXED_TYPE
+  | T_NEVER_TYPE
+  | T_NULL
+  | T_NUMBER_TYPE
+  | T_STATIC
+  | T_STRING_TYPE
+  | T_SYMBOL_TYPE
+  | T_TRUE
+  | T_TYPEOF
+  | T_UNDEFINED_TYPE
+  | T_UNKNOWN_TYPE
+  | T_VOID_TYPE ->
     true
   | _ -> false
 
