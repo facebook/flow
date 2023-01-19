@@ -1,0 +1,76 @@
+Error ----------------------------------------------------------------------------------------------------- poly.js:3:36
+
+Cannot return `x` because `T` [1] is incompatible with `S` [2]. [incompatible-return]
+
+   poly.js:3:36
+   3| function foo2<T,S>(x:T):S { return x; }
+                                         ^
+
+References:
+   poly.js:3:22
+   3| function foo2<T,S>(x:T):S { return x; }
+                           ^ [1]
+   poly.js:3:25
+   3| function foo2<T,S>(x:T):S { return x; }
+                              ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ poly.js:9:5
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   9| var x = [];
+          ^
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
+
+Cannot return `x` because unknown element of empty array [1] is incompatible with `T` [2] in array element.
+[incompatible-return]
+
+   poly.js:10:38
+   10| function foo5<T>():Array<T> { return x; }
+                                            ^
+
+References:
+   poly.js:9:5
+    9| var x = [];
+           ^ [1]
+   poly.js:10:26
+   10| function foo5<T>():Array<T> { return x; }
+                                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:20:34
+
+Cannot return `foo5()` because array type [1] is incompatible with `R` [2]. [incompatible-return]
+
+   poly.js:20:34
+   20| function foo7<R>(x:R):R { return foo5(); }
+                                        ^^^^^^
+
+References:
+   poly.js:10:20
+   10| function foo5<T>():Array<T> { return x; }
+                          ^^^^^^^^ [1]
+   poly.js:20:23
+   20| function foo7<R>(x:R):R { return foo5(); }
+                             ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:24:3
+
+Cannot call `y` because `U` [1] is not a function. [not-a-function]
+
+   poly.js:24:3
+   24|   y();
+         ^
+
+References:
+   poly.js:22:24
+   22| function foo8<U>(x:U,y:U):U {
+                              ^ [1]
+
+
+
+Found 5 errors
