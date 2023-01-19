@@ -92,6 +92,20 @@ Invalid trivially recursive definition of `x` in an export position.  [invalid-r
                       ^
 
 
+Error ------------------------------------------------------------------------------------------ recursive_types.js:3:21
+
+Cannot assign `0` to `x` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   recursive_types.js:3:21
+   3| export const x: x = 0; // error recursive
+                          ^ [1]
+
+References:
+   recursive_types.js:3:17
+   3| export const x: x = 0; // error recursive
+                      ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ recursive_types.js:5:26
 
 Invalid trivially recursive definition of property `f` in an export position.  [invalid-recursive-exported-annotation]
@@ -100,8 +114,36 @@ Invalid trivially recursive definition of property `f` in an export position.  [
                                ^
 
 
+Error ------------------------------------------------------------------------------------------ recursive_types.js:5:30
 
-Found 9 errors
+Cannot assign `0` to `y` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   recursive_types.js:5:30
+   5| export const y: typeof y.f = 0; // error recursive
+                                   ^ [1]
+
+References:
+   recursive_types.js:5:17
+   5| export const y: typeof y.f = 0; // error recursive
+                      ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ recursive_types.js:7:28
+
+Cannot assign `1` to `z` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   recursive_types.js:7:28
+   7| export const z: typeof z = 1; // TODO error recursive
+                                 ^ [1]
+
+References:
+   recursive_types.js:7:17
+   7| export const z: typeof z = 1; // TODO error recursive
+                      ^^^^^^^^ [2]
+
+
+
+Found 12 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
