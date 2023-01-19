@@ -22,10 +22,19 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:12
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
+   test.js:14:12
+   14| <a:b prop={'string' * 3} />; // Error, can't multiply string by number
+                  ^^^^^^^^^^^^
+
+References:
+   test.js:14:12
    14| <a:b prop={'string' * 3} />; // Error, can't multiply string by number
                   ^^^^^^^^ [1]
+   test.js:14:23
+   14| <a:b prop={'string' * 3} />; // Error, can't multiply string by number
+                             ^ [2]
 
 
 

@@ -816,32 +816,38 @@ It is unsafe to call a property function in the constructor before all class pro
             ^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:664:29
+Error --------------------------------------------------------------------------------------------------- test.js:664:19
 
-Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `+=` with operands number [1] and undefined [2] [unsafe-addition]
 
-   test.js:664:29
+   test.js:664:19
    664|     this.f = x => this.p += x;
-                                    ^
+                          ^^^^^^^^^^^
 
 References:
+   test.js:661:6
+   661|   p: number;
+             ^^^^^^ [1]
    test.js:662:19
    662|   f: (x: number | void) => number;
-                          ^^^^ [1]
+                          ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:664:29
+Error --------------------------------------------------------------------------------------------------- test.js:664:19
 
-Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `+=` with operands number [1] and undefined [2] [unsafe-addition]
 
-   test.js:664:29
+   test.js:664:19
    664|     this.f = x => this.p += x;
-                                    ^
+                          ^^^^^^^^^^^
 
 References:
+   test.js:661:6
+   661|   p: number;
+             ^^^^^^ [1]
    test.js:665:12
    665|     this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
-                   ^^^^^^^^ [1]
+                   ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:665:5
@@ -957,18 +963,21 @@ It is unsafe to call a property function in the constructor before all class pro
             ^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:763:47
+Error --------------------------------------------------------------------------------------------------- test.js:763:37
 
-Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `+=` with operands number [1] and undefined [2] [unsafe-addition]
 
-   test.js:763:47
+   test.js:763:37
    763|   f = (x: number | void): number => this.p += x;
-                                                      ^
+                                            ^^^^^^^^^^^
 
 References:
+   test.js:762:6
+   762|   p: number;
+             ^^^^^^ [1]
    test.js:763:20
    763|   f = (x: number | void): number => this.p += x;
-                           ^^^^ [1]
+                           ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:765:5

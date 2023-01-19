@@ -5518,9 +5518,7 @@ struct
         else
           (l, r)
       in
-      let t =
-        Flow_js_utils.flow_arith use_op reason l r kind (add_output cx ~trace) (rec_flow cx trace)
-      in
+      let t = Flow_js_utils.flow_arith reason l r kind (add_output cx ~trace) in
       rec_flow_t cx trace ~use_op:unknown_use (t, u)
 
   (**

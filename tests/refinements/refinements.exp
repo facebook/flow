@@ -97,20 +97,38 @@ References:
                        ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- bool.js:24:13
+Error ----------------------------------------------------------------------------------------------------- bool.js:24:7
 
-Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands number [1] and boolean [2] [unsafe-arithmetic]
 
+   bool.js:24:7
    24|   if (100 * false) {
-                   ^^^^^ [1]
+             ^^^^^^^^^^^
+
+References:
+   bool.js:24:7
+   24|   if (100 * false) {
+             ^^^ [1]
+   bool.js:24:13
+   24|   if (100 * false) {
+                   ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:27:7
 
-Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands boolean [1] and number [2] [unsafe-arithmetic]
 
+   bool.js:27:7
+   27|   if (false * 100) {
+             ^^^^^^^^^^^
+
+References:
+   bool.js:27:7
    27|   if (false * 100) {
              ^^^^^ [1]
+   bool.js:27:15
+   27|   if (false * 100) {
+                     ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:37:14
@@ -3613,20 +3631,38 @@ References:
                 ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- null.js:4:13
+Error ------------------------------------------------------------------------------------------------------ null.js:4:7
 
-Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands number [1] and null [2] [unsafe-arithmetic]
 
+   null.js:4:7
    4|   if (100 * null) {
-                  ^^^^ [1]
+            ^^^^^^^^^^
+
+References:
+   null.js:4:7
+   4|   if (100 * null) {
+            ^^^ [1]
+   null.js:4:13
+   4|   if (100 * null) {
+                  ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ null.js:7:7
 
-Cannot perform arithmetic operation because null [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null [1] and number [2] [unsafe-arithmetic]
 
+   null.js:7:7
+   7|   if (null * 100) {
+            ^^^^^^^^^^
+
+References:
+   null.js:7:7
    7|   if (null * 100) {
             ^^^^ [1]
+   null.js:7:14
+   7|   if (null * 100) {
+                   ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- number.js:8:8
@@ -5891,88 +5927,121 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:31:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    undef.js:31:13
    31|     var y = x * 1000;
-                   ^
+                   ^^^^^^^^
 
 References:
    undef.js:29:28
    29| function undef_var_fail(x: ?number) {
                                   ^^^^^^^ [1]
+   undef.js:31:17
+   31|     var y = x * 1000;
+                       ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- undef.js:38:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    undef.js:38:13
    38|     var y = x * 1000;
-                   ^
+                   ^^^^^^^^
 
 References:
    undef.js:35:32
    35| function undef_var_fail_rev(x: ?number) {
                                       ^^^^^^^ [1]
+   undef.js:38:17
+   38|     var y = x * 1000;
+                       ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- undef.js:44:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    undef.js:44:13
    44|     var y = x.x * 1000;
-                   ^^^
+                   ^^^^^^^^^^
 
 References:
    undef.js:42:34
    42| function undef_prop_fail(x: { x: ?number }) {
                                         ^^^^^^^ [1]
+   undef.js:44:19
+   44|     var y = x.x * 1000;
+                         ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- undef.js:51:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    undef.js:51:13
    51|     var y = x.x * 1000;
-                   ^^^
+                   ^^^^^^^^^^
 
 References:
    undef.js:48:38
    48| function undef_prop_fail_rev(x: { x: ?number }) {
                                             ^^^^^^^ [1]
+   undef.js:51:19
+   51|     var y = x.x * 1000;
+                         ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- undef.js:69:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    undef.js:69:13
    69|     var b = y * 1000; // error
-                   ^
+                   ^^^^^^^^
 
 References:
    undef.js:64:45
    64| function undef_var_nonstrict(x: ?number, y: ?number) {
                                                    ^^^^^^^ [1]
+   undef.js:69:17
+   69|     var b = y * 1000; // error
+                       ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- undef.js:74:13
+Error ---------------------------------------------------------------------------------------------------- undef.js:74:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands number [1] and undefined [2] [unsafe-arithmetic]
 
+   undef.js:74:7
    74|   if (100 * undefined) {
-                   ^^^^^^^^^ [1]
+             ^^^^^^^^^^^^^^^
+
+References:
+   undef.js:74:7
+   74|   if (100 * undefined) {
+             ^^^ [1]
+   undef.js:74:13
+   74|   if (100 * undefined) {
+                   ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- undef.js:77:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands undefined [1] and number [2] [unsafe-arithmetic]
 
+   undef.js:77:7
+   77|   if (undefined * 100) {
+             ^^^^^^^^^^^^^^^
+
+References:
+   undef.js:77:7
    77|   if (undefined * 100) {
              ^^^^^^^^^ [1]
+   undef.js:77:19
+   77|   if (undefined * 100) {
+                         ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- union.js:7:5
@@ -6039,130 +6108,172 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:31:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    void.js:31:13
    31|     var y = x * 1000;
-                   ^
+                   ^^^^^^^^
 
 References:
    void.js:29:27
    29| function void_var_fail(x: ?number) {
                                  ^^^^^^^ [1]
+   void.js:31:17
+   31|     var y = x * 1000;
+                       ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- void.js:38:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    void.js:38:13
    38|     var y = x * 1000;
-                   ^
+                   ^^^^^^^^
 
 References:
    void.js:35:31
    35| function void_var_fail_rev(x: ?number) {
                                      ^^^^^^^ [1]
+   void.js:38:17
+   38|     var y = x * 1000;
+                       ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- void.js:44:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    void.js:44:13
    44|     var y = x.x * 1000;
-                   ^^^
+                   ^^^^^^^^^^
 
 References:
    void.js:42:32
    42| function void_pro_fail(x: { x: ?number }) {
                                       ^^^^^^^ [1]
+   void.js:44:19
+   44|     var y = x.x * 1000;
+                         ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- void.js:51:13
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    void.js:51:13
    51|     var y = x.x * 1000;
-                   ^^^
+                   ^^^^^^^^^^
 
 References:
    void.js:48:36
    48| function void_pro_fail_rev(x: { x: ?number }) {
                                           ^^^^^^^ [1]
+   void.js:51:19
+   51|     var y = x.x * 1000;
+                         ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- void.js:56:32
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    void.js:56:32
    56|   if (x !== null && x !== void(x * 1000)) {
-                                      ^
+                                      ^^^^^^^^
 
 References:
    void.js:55:34
    55| function void_var_side_effect(x: ?number) {
                                         ^^^^^^^ [1]
+   void.js:56:36
+   56|   if (x !== null && x !== void(x * 1000)) {
+                                          ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- void.js:62:32
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    void.js:62:32
    62|   if (x === null || x === void(x * 1000)) {
-                                      ^
+                                      ^^^^^^^^
 
 References:
    void.js:61:38
    61| function void_var_side_effect_rev(x: ?number) {
                                             ^^^^^^^ [1]
+   void.js:62:36
+   62|   if (x === null || x === void(x * 1000)) {
+                                          ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- void.js:69:36
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    void.js:69:36
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
-                                          ^^^
+                                          ^^^^^^^^^^
 
 References:
    void.js:68:40
    68| function void_prop_side_effect(x: { x: ?number }) {
                                               ^^^^^^^ [1]
+   void.js:69:42
+   69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
+                                                ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- void.js:75:36
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
 
    void.js:75:36
    75|   if (x.x === null || x.x === void(x.x * 1000)) {
-                                          ^^^
+                                          ^^^^^^^^^^
 
 References:
    void.js:74:44
    74| function void_prop_side_effect_rev(x: { x: ?number }) {
                                                   ^^^^^^^ [1]
+   void.js:75:42
+   75|   if (x.x === null || x.x === void(x.x * 1000)) {
+                                                ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- void.js:82:13
+Error ----------------------------------------------------------------------------------------------------- void.js:82:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands number [1] and undefined [2] [unsafe-arithmetic]
 
+   void.js:82:7
    82|   if (100 * void(0)) {
-                   ^^^^^^^ [1]
+             ^^^^^^^^^^^^^
+
+References:
+   void.js:82:7
+   82|   if (100 * void(0)) {
+             ^^^ [1]
+   void.js:82:13
+   82|   if (100 * void(0)) {
+                   ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- void.js:85:7
 
-Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands undefined [1] and number [2] [unsafe-arithmetic]
 
+   void.js:85:7
+   85|   if (void(0) * 100) {
+             ^^^^^^^^^^^^^
+
+References:
+   void.js:85:7
    85|   if (void(0) * 100) {
              ^^^^^^^ [1]
+   void.js:85:17
+   85|   if (void(0) * 100) {
+                       ^^^ [2]
 
 
 

@@ -30,19 +30,11 @@ Cannot call `1` because number [1] is not a function. [not-a-function]
 
 Error ------------------------------------------------------------------------------------- sanity-invalid-calls.js:14:8
 
-Cannot call `pred + 1` because number [1] is not a function. [not-a-function]
-
-   14|   if ((pred + 1)("s")) {
-              ^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- sanity-invalid-calls.js:14:8
-
-Cannot add `pred` and `1` because function type [1] is incompatible with number [2]. [incompatible-type]
+Cannot use operator `+` with operands function type [1] and number [2] [unsafe-addition]
 
    sanity-invalid-calls.js:14:8
    14|   if ((pred + 1)("s")) {
-              ^^^^
+              ^^^^^^^^
 
 References:
    sanity-invalid-calls.js:6:22
@@ -107,7 +99,7 @@ References:
 
 
 
-Found 9 errors
+Found 8 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

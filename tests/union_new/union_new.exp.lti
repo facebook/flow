@@ -190,36 +190,21 @@ Missing an annotation on return because generic functions must be fully annotate
                      
 
 
-Error --------------------------------------------------------------------------------------------------- test20.js:14:6
-
-Cannot call `[...].reduce` because string [1] is incompatible with number [2] in the first parameter.
-[incompatible-call]
-
-   test20.js:14:6
-   14| [""].reduce((acc,str) => acc * str.length);
-            ^^^^^^
-
-References:
-   test20.js:14:2
-   14| [""].reduce((acc,str) => acc * str.length);
-        ^^ [1]
-   test20.js:14:26
-   14| [""].reduce((acc,str) => acc * str.length);
-                                ^^^^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- test20.js:14:26
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    test20.js:14:26
-   14| [""].reduce((acc,str) => acc * str.length);
-                                ^^^
+     14| [""].reduce((acc,str) => acc * str.length);
+                                  ^^^^^^^^^^^^^^^^
 
 References:
    test20.js:14:2
-   14| [""].reduce((acc,str) => acc * str.length);
-        ^^ [1]
+     14| [""].reduce((acc,str) => acc * str.length);
+          ^^ [1]
+   <BUILTINS>/core.js:1288:13
+   1288|     length: number;
+                     ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- test22.js:20:15
@@ -331,7 +316,7 @@ References:
 
 
 
-Found 18 errors
+Found 17 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -48,34 +48,11 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and string [1] [unsafe-arithmetic]
 
    Traces.js:14:25
    14| f2(function(x) { return x * x });
-                               ^
-
-References:
-   Traces.js:13:22
-   13| function f2(xlam: (s:string) => number) { g2(xlam) }
-                            ^^^^^^ [1]
-
-Trace:
-* path 1:
- 14: f2(function(x) { return x * x });
-                                 ^ StrT [string]
- 14: f2(function(x) { return x * x });
-                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
- 14: f2(function(x) { return x * x });
-                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
-
-
-Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
-
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
-
-   Traces.js:14:29
-   14| f2(function(x) { return x * x });
-                                   ^
+                               ^^^^^
 
 References:
    Traces.js:13:22
@@ -94,16 +71,19 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    Traces.js:19:37
    19| function double(n: string) { return n * 2 }
-                                           ^
+                                           ^^^^^
 
 References:
    Traces.js:19:20
    19| function double(n: string) { return n * 2 }
                           ^^^^^^ [1]
+   Traces.js:19:41
+   19| function double(n: string) { return n * 2 }
+                                               ^ [2]
 
 Trace:
 * path 1:
@@ -114,7 +94,7 @@ Trace:
 
 
 
-Found 5 errors
+Found 4 errors
 Error --------------------------------------------------------------------------------------------------- Traces.js:3:29
 
 Cannot call `g0` with `x` bound to `y` because number [1] is incompatible with string [2]. [incompatible-call]
@@ -185,48 +165,11 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and string [1] [unsafe-arithmetic]
 
    Traces.js:14:25
    14| f2(function(x) { return x * x });
-                               ^
-
-References:
-   Traces.js:13:22
-   13| function f2(xlam: (s:string) => number) { g2(xlam) }
-                            ^^^^^^ [1]
-
-Trace:
-* path 1:
- 14: f2(function(x) { return x * x });
-                                 ^ StrT [string]
- 14: f2(function(x) { return x * x });
-                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
- 14: f2(function(x) { return x * x });
-                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
-* path 2:
- 13: function f2(xlam: (s:string) => number) { g2(xlam) }
-                          ^^^^^^ StrT [string]
- 14: f2(function(x) { return x * x });
-                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
- 14: f2(function(x) { return x * x });
-                 ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
-                                 ^ ~> ReposLowerT [`x`]
-* path 3:
- 14: f2(function(x) { return x * x });
-        ^^^^^^^^^^^ FunT [function]
- 13: function f2(xlam: (s:string) => number) { g2(xlam) }
-                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
-
-
-Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
-
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
-
-   Traces.js:14:29
-   14| f2(function(x) { return x * x });
-                                   ^
+                               ^^^^^
 
 References:
    Traces.js:13:22
@@ -259,16 +202,19 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    Traces.js:19:37
    19| function double(n: string) { return n * 2 }
-                                           ^
+                                           ^^^^^
 
 References:
    Traces.js:19:20
    19| function double(n: string) { return n * 2 }
                           ^^^^^^ [1]
+   Traces.js:19:41
+   19| function double(n: string) { return n * 2 }
+                                               ^ [2]
 
 Trace:
 * path 1:
@@ -284,7 +230,7 @@ Trace:
 
 
 
-Found 5 errors
+Found 4 errors
 Error --------------------------------------------------------------------------------------------------- Traces.js:3:29
 
 Cannot call `g0` with `x` bound to `y` because number [1] is incompatible with string [2]. [incompatible-call]
@@ -365,58 +311,11 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and string [1] [unsafe-arithmetic]
 
    Traces.js:14:25
    14| f2(function(x) { return x * x });
-                               ^
-
-References:
-   Traces.js:13:22
-   13| function f2(xlam: (s:string) => number) { g2(xlam) }
-                            ^^^^^^ [1]
-
-Trace:
-* path 1:
- 14: f2(function(x) { return x * x });
-                                 ^ StrT [string]
- 14: f2(function(x) { return x * x });
-                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
- 14: f2(function(x) { return x * x });
-                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
-* path 2:
- 13: function f2(xlam: (s:string) => number) { g2(xlam) }
-                          ^^^^^^ StrT [string]
- 14: f2(function(x) { return x * x });
-                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
- 14: f2(function(x) { return x * x });
-                 ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
-                                 ^ ~> ReposLowerT [`x`]
-* path 3:
- 14: f2(function(x) { return x * x });
-        ^^^^^^^^^^^ FunT [function]
- 13: function f2(xlam: (s:string) => number) { g2(xlam) }
-                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from path 4)
-* path 4:
- 14: f2(function(x) { return x * x });
-     ^^ FunT [function]
- 14: f2(function(x) { return x * x });
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> CallT [call of `f2`] (from path 5)
-* path 5:
- 14: f2(function(x) { return x * x });
-     ^^ OpenT [`f2`]
- 14: f2(function(x) { return x * x });
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> CallT [call of `f2`]
-
-
-Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
-
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
-
-   Traces.js:14:29
-   14| f2(function(x) { return x * x });
-                                   ^
+                               ^^^^^
 
 References:
    Traces.js:13:22
@@ -459,16 +358,19 @@ Trace:
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    Traces.js:19:37
    19| function double(n: string) { return n * 2 }
-                                           ^
+                                           ^^^^^
 
 References:
    Traces.js:19:20
    19| function double(n: string) { return n * 2 }
                           ^^^^^^ [1]
+   Traces.js:19:41
+   19| function double(n: string) { return n * 2 }
+                                               ^ [2]
 
 Trace:
 * path 1:
@@ -484,4 +386,4 @@ Trace:
 
 
 
-Found 5 errors
+Found 4 errors

@@ -1041,14 +1041,7 @@ module rec ConsGen : S = struct
           else
             (lhs_t, rhs_t)
         in
-        Flow_js_utils.flow_arith
-          unknown_use
-          reason
-          lhs_t
-          rhs_t
-          kind
-          (Flow_js_utils.add_output cx)
-          ignore
+        Flow_js_utils.flow_arith reason lhs_t rhs_t kind (Flow_js_utils.add_output cx)
     (*************************)
     (* Unary arith operators *)
     (*************************)

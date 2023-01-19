@@ -188,16 +188,19 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:1:39
 
-Cannot perform arithmetic operation because undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands undefined [1] and number [2] [unsafe-arithmetic]
 
    optional.js:1:39
    1| function bar(x?: number, y?: mixed) { x * 0; }
-                                            ^
+                                            ^^^^^
 
 References:
    optional.js:1:18
    1| function bar(x?: number, y?: mixed) { x * 0; }
                        ^^^^^^ [1]
+   optional.js:1:43
+   1| function bar(x?: number, y?: mixed) { x * 0; }
+                                                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:26

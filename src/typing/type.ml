@@ -2663,31 +2663,45 @@ end =
   React
 
 and ArithKind : sig
-  type t =
+  type t' =
     | Plus
     | RShift3
     | Other
+
+  type t = string * t'
 
   val arith_kind_of_binary_operator : Flow_ast.Expression.Binary.operator -> t
 
   val arith_kind_of_assignment_operator : Flow_ast.Expression.Assignment.operator -> t
+
+  val string_of_arith_kind : t -> string
 end = struct
   open Flow_ast.Expression
 
-  type t =
+  type t' =
     | Plus
     | RShift3
     | Other
 
-  let arith_kind_of_binary_operator = function
-    | Binary.Plus -> Plus
-    | Binary.RShift3 -> RShift3
-    | _ -> Other
+  type t = string * t'
 
-  let arith_kind_of_assignment_operator = function
-    | Assignment.PlusAssign -> Plus
-    | Assignment.RShift3Assign -> RShift3
-    | _ -> Other
+  let arith_kind_of_binary_operator op =
+    ( Flow_ast_utils.string_of_binary_operator op,
+      match op with
+      | Binary.Plus -> Plus
+      | Binary.RShift3 -> RShift3
+      | _ -> Other
+    )
+
+  let arith_kind_of_assignment_operator op =
+    ( Flow_ast_utils.string_of_assignment_operator op,
+      match op with
+      | Assignment.PlusAssign -> Plus
+      | Assignment.RShift3Assign -> RShift3
+      | _ -> Other
+    )
+
+  let string_of_arith_kind (s, _) = s
 end
 
 and UnaryArithKind : sig

@@ -2108,118 +2108,48 @@ let flow_unary_arith l reason kind add_output =
     add_output (Error_message.EArithmeticOperand (reason_of_t l));
     AnyT.error reason
 
-let valid_arith_operand t =
-  match t with
-  | AnyT _
-  | DefT (_, _, EmptyT)
-  | DefT (_, _, BigIntT _)
-  | DefT (_, _, SingletonBigIntT _) ->
-    true
-  | _ -> is_number_or_date t
-
-let flow_arith use_op reason l r kind add_output rec_flow =
+let flow_arith reason l r kind add_output =
   let open ArithKind in
-  let loc = aloc_of_reason reason in
-  match (kind, l, r) with
-  (* num + num *)
-  | (Plus, DefT (_, _, NumT _), DefT (_, _, NumT _)) -> NumT.at loc |> with_trust bogus_trust
-  (* str + str *)
-  (* num + str *)
-  (* str + num *)
-  | (Plus, DefT (_, _, (NumT _ | StrT _)), DefT (_, _, (NumT _ | StrT _))) ->
-    StrT.at loc |> with_trust bogus_trust
-  (* empty + _ *)
-  (* _ + empty *)
-  | (Plus, DefT (_, _, EmptyT), _)
-  | (Plus, _, DefT (_, _, EmptyT)) ->
-    EmptyT.at loc |> with_trust bogus_trust
-  (* mixed + _ *)
-  (* _ + mixed *)
-  | (Plus, DefT (reason, _, MixedT _), _)
-  | (Plus, _, DefT (reason, _, MixedT _)) ->
-    add_output (Error_message.EAdditionMixed (reason, use_op));
-    AnyT.error reason
-  (* str + _ *)
-  (* _ + str *)
-  | (Plus, DefT (_, _, StrT _), _) ->
-    rec_flow (r, UseT (use_op, l));
-    StrT.at loc |> with_trust bogus_trust
-  | (Plus, _, DefT (_, _, StrT _)) ->
-    rec_flow (l, UseT (use_op, r));
-    StrT.at loc |> with_trust bogus_trust
-  (* null + _ *)
-  (* _ + null *)
-  | (Plus, DefT (reason, _, (VoidT | NullT)), _)
-  | (Plus, _, DefT (reason, _, (VoidT | NullT))) ->
-    add_output (Error_message.EArithmeticOperand reason);
-    AnyT.error reason
-  (* any + _ *)
-  (* _ + any *)
-  | (Plus, AnyT (_, src), _)
-  | (Plus, _, AnyT (_, src)) ->
-    let src = any_mod_src_keep_placeholder Untyped src in
+  let (_, op) = kind in
+  match (op, l, r) with
+  (* any <> _ *)
+  (* _ <> any *)
+  | (_, AnyT (_, src), _)
+  | (_, _, AnyT (_, src)) ->
     AnyT.why src reason
+  (* empty <> _ *)
+  (* _ <> empty *)
+  | (_, DefT (_, _, EmptyT), _)
+  | (_, _, DefT (_, _, EmptyT)) ->
+    EmptyT.why reason |> with_trust bogus_trust
+  (* num <> num *)
+  | (_, DefT (_, _, NumT _), DefT (_, _, NumT _)) -> NumT.why reason |> with_trust bogus_trust
+  | (RShift3, DefT (reason, _, BigIntT _), _) ->
+    add_output (Error_message.EBigIntRShift3 reason);
+    AnyT.error reason
   (* bigint <> bigint *)
   | (_, DefT (_, _, BigIntT _), DefT (_, _, BigIntT _)) ->
-    if kind = RShift3 then (
-      add_output (Error_message.EBigIntRShift3 reason);
-      AnyT.error reason
-    ) else
-      BigIntT.at loc |> with_trust bogus_trust
-  (* num <> bool *)
-  (* bool <> num *)
-  (* bool <> bool *)
-  | (_, DefT (_, _, NumT _), DefT (reason, _, BoolT _))
-  | (_, DefT (reason, _, BoolT _), DefT (_, _, NumT _))
-  | (_, DefT (reason, _, BoolT _), DefT (_, _, BoolT _)) ->
-    add_output (Error_message.EArithmeticOperand reason);
-    AnyT.error reason
-  (* + error cases *)
-  | (Plus, DefT (_, _, NumT _), _) ->
-    rec_flow (r, UseT (use_op, l));
-    NumT.at loc |> with_trust bogus_trust
-  | (Plus, _, DefT (_, _, NumT _)) ->
-    rec_flow (l, UseT (use_op, r));
-    NumT.at loc |> with_trust bogus_trust
-  | (Plus, _, _) ->
-    let fake_str = StrT.why reason |> with_trust bogus_trust in
-    rec_flow (l, UseT (use_op, fake_str));
-    rec_flow (r, UseT (use_op, fake_str));
-    fake_str
-  (* number <> any *)
-  (* date <> any *)
-  (* any <> number *)
-  (* any <> date *)
-  (* for <> except + *)
-  | ((RShift3 | Other), AnyT _, r) when is_number_or_date r -> NumT.at loc |> with_trust bogus_trust
-  | ((RShift3 | Other), l, AnyT _) when is_number_or_date l -> NumT.at loc |> with_trust bogus_trust
-  (* number <> empty *)
-  (* date <> empty *)
-  (* empty <> number *)
-  (* empty <> date *)
-  (* for <> except + *)
-  | ((RShift3 | Other), DefT (_, _, EmptyT), r) when is_number_or_date r ->
-    NumT.at loc |> with_trust bogus_trust
-  | ((RShift3 | Other), l, DefT (_, _, EmptyT)) when is_number_or_date l ->
-    NumT.at loc |> with_trust bogus_trust
-  (* any <> any *)
-  | ((RShift3 | Other), AnyT (_, src), AnyT _) ->
-    let src = any_mod_src_keep_placeholder Untyped src in
-    AnyT.why src reason
-  (* any <> empty *)
-  (* empty <> any *)
-  (* empty <> empty *)
-  (* for <> except + *)
-  | ((RShift3 | Other), (DefT (_, _, EmptyT) | AnyT _), (DefT (_, _, EmptyT) | AnyT _)) ->
-    NumT.at loc |> with_trust bogus_trust
-  (* number <> number *)
-  (* number <> date *)
-  (* date <> number *)
+    BigIntT.why reason |> with_trust bogus_trust
+  (* str + str *)
+  (* str + num *)
+  (* num + str *)
+  | (Plus, DefT (_, _, StrT _), DefT (_, _, StrT _))
+  | (Plus, DefT (_, _, StrT _), DefT (_, _, NumT _))
+  | (Plus, DefT (_, _, NumT _), DefT (_, _, StrT _)) ->
+    StrT.why reason |> with_trust bogus_trust
+  (* num <> date *)
+  (* date <> num *)
   (* date <> date *)
   (* for <> except + *)
-  | ((RShift3 | Other), l, r) when is_number_or_date l && is_number_or_date r ->
-    NumT.at loc |> with_trust bogus_trust
-  | (_, l, r) ->
-    if not (valid_arith_operand l) then add_output (Error_message.EArithmeticOperand (reason_of_t l));
-    if not (valid_arith_operand r) then add_output (Error_message.EArithmeticOperand (reason_of_t r));
-    NumT.at loc |> with_trust bogus_trust
+  | (kind, DefT (_, _, NumT _), r) when kind <> Plus && is_date r ->
+    NumT.why reason |> with_trust bogus_trust
+  | (kind, l, DefT (_, _, NumT _)) when kind <> Plus && is_date l ->
+    NumT.why reason |> with_trust bogus_trust
+  | (kind, l, r) when kind <> Plus && is_date l && is_date r ->
+    NumT.why reason |> with_trust bogus_trust
+  | _ ->
+    add_output
+      (Error_message.EInvalidBinaryArith
+         { reason_out = reason; reason_l = reason_of_t l; reason_r = reason_of_t r; kind }
+      );
+    AnyT.error reason

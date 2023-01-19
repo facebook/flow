@@ -1,15 +1,18 @@
 Error ----------------------------------------------------------------------------------------------------- Bad.js:15:11
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    Bad.js:15:11
    15|     buz: (buz * 2).toString(), // Error: string ~> number
-                 ^^^
+                 ^^^^^^^
 
 References:
    Bad.js:14:29
    14|   mapProps(({ buz }: { buz: string }) => ({ // Error: Missing foo
                                    ^^^^^^ [1]
+   Bad.js:15:17
+   15|     buz: (buz * 2).toString(), // Error: string ~> number
+                       ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ Bad.js:17:3

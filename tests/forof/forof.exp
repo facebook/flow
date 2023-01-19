@@ -102,16 +102,19 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- forof.js:66:15
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    forof.js:66:15
    66|   const x1_ = x1 * 3; // error
-                     ^^
+                     ^^^^^^
 
 References:
    forof.js:55:48
    55| declare var funky1 : { @@iterator(): $Iterator<string, number, boolean> };
                                                       ^^^^^^ [1]
+   forof.js:66:20
+   66|   const x1_ = x1 * 3; // error
+                          ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:85:4
