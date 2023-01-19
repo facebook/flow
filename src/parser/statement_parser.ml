@@ -104,33 +104,6 @@ module Statement
     );
     func
 
-  (* https://tc39.es/ecma262/#sec-exports-static-semantics-early-errors *)
-  let assert_identifier_name_is_identifier
-      ?restricted_error env (loc, { Ast.Identifier.name; comments = _ }) =
-    match name with
-    | "let" when no_let env ->
-      error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
-    | "await" ->
-      (* `allow_await` means that `await` is allowed to be a keyword,
-         which makes it illegal to use as an identifier.
-         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-      if allow_await env then error_at env (loc, Parse_error.UnexpectedReserved)
-    | "yield" ->
-      (* `allow_yield` means that `yield` is allowed to be a keyword,
-         which makes it illegal to use as an identifier.
-         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-      if allow_yield env then
-        error_at env (loc, Parse_error.UnexpectedReserved)
-      else
-        strict_error_at env (loc, Parse_error.StrictReservedWord)
-    | _ when is_strict_reserved name -> strict_error_at env (loc, Parse_error.StrictReservedWord)
-    | _ when is_reserved name -> error_at env (loc, Parse_error.UnexpectedReserved)
-    | _ -> begin
-      match restricted_error with
-      | Some err when is_restricted name -> strict_error_at env (loc, err)
-      | _ -> ()
-    end
-
   let string_literal env (loc, value, raw, octal) =
     if octal then strict_error env Parse_error.StrictOctalLiteral;
     let leading = Peek.comments env in

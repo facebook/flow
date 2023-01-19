@@ -213,6 +213,33 @@ let rec is_labelled_function = function
   end
   | _ -> false
 
+(** https://tc39.es/ecma262/#sec-exports-static-semantics-early-errors *)
+let assert_identifier_name_is_identifier
+    ?restricted_error env (loc, { Flow_ast.Identifier.name; comments = _ }) =
+  match name with
+  | "let" when no_let env ->
+    error_at env (loc, Parse_error.Unexpected (Token.quote_token_value name))
+  | "await" ->
+    (* `allow_await` means that `await` is allowed to be a keyword,
+       which makes it illegal to use as an identifier.
+       https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+    if allow_await env then error_at env (loc, Parse_error.AwaitAsIdentifierReference)
+  | "yield" ->
+    (* `allow_yield` means that `yield` is allowed to be a keyword,
+       which makes it illegal to use as an identifier.
+       https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+    if allow_yield env then
+      error_at env (loc, Parse_error.UnexpectedReserved)
+    else
+      strict_error_at env (loc, Parse_error.StrictReservedWord)
+  | _ when is_strict_reserved name -> strict_error_at env (loc, Parse_error.StrictReservedWord)
+  | _ when is_reserved name -> error_at env (loc, Parse_error.UnexpectedReserved)
+  | _ -> begin
+    match restricted_error with
+    | Some err when is_restricted name -> strict_error_at env (loc, err)
+    | _ -> ()
+  end
+
 let with_loc ?start_loc fn env =
   let start_loc =
     match start_loc with
