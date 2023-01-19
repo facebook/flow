@@ -400,7 +400,7 @@ module Statement
             | Some (For_expression expr) ->
               (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
               let patt = Pattern_cover.as_pattern ~err:Parse_error.InvalidLHSInForOf env expr in
-              (match (init_starts_with_async, patt) with
+              (match ((not async) && init_starts_with_async, patt) with
               | ( true,
                   ( _,
                     Pattern.Identifier
