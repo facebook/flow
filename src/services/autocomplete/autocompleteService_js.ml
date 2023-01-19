@@ -100,6 +100,63 @@ let detail_of_ty_decl ~exact_by_default d =
   in
   (Some type_, detail)
 
+let autocomplete_create_result_method
+    ~method_
+    ~options
+    ?(rank = 0)
+    ?(preselect = false)
+    ?documentation
+    ?tags
+    ~log_info
+    (name, edit_locs)
+    ty =
+  let method_ =
+    (* Replace the method's body with just one placeholder statement expression: AUTO332 *)
+    method_
+    |> Ast_builder.Classes.Methods.with_body
+         ~body:
+           (Ast_builder.Functions.body
+              [Ast_builder.Statements.expression (Ast_builder.Expressions.identifier "AUTO332")]
+           )
+    |> Ast_builder.Classes.Methods.with_docs ~docs:None
+  in
+  let insert_text =
+    (* Print the node to a string and replace the AUTO332 expression with an LSP snippet placeholder *)
+    method_
+    |> Js_layout_generator.class_method ~opts:(Code_action_service.layout_options options)
+    |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+    |> Source.contents
+    |> Base.String.substr_replace_first ~pattern:"AUTO332;" ~with_:"$0"
+  in
+  let labelDetail =
+    (* Print just the params and return type to a string and add { ... } *)
+    method_
+    |> (fun (_, { Flow_ast.Class.Method.value; _ }) -> value)
+    |> Js_layout_generator.function_params_and_return
+         ~opts:(Code_action_service.layout_options options)
+    |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+    |> Source.contents
+    |> fun params_and_return -> params_and_return ^ "{ … }"
+  in
+  let kind = Some (lsp_completion_of_type ty) in
+  let text_edit = Some (text_edit ~insert_text name edit_locs) in
+  let sort_text = sort_text_of_rank rank in
+  {
+    ServerProt.Response.Completion.kind;
+    name;
+    labelDetail = Some labelDetail;
+    description = None;
+    itemDetail = None;
+    text_edit;
+    additional_text_edits = [];
+    sort_text;
+    preselect;
+    documentation;
+    tags;
+    log_info;
+    insert_text_format = Lsp.Completion.SnippetFormat;
+  }
+
 let autocomplete_create_result
     ?insert_text
     ?(rank = 0)
@@ -1654,32 +1711,12 @@ let unused_super_methods
     |> Base.List.filter_map ~f:(fun (name, documentation, tags, { Ty_members.ty; def_loc; _ }) ->
            let open Base.Option in
            (* Find the AST node for member we want to override *)
-           def_loc
-           >>| loc_of_aloc ~reader
-           >>= Find_method.find reader
-           (* Replace the method's body with just one placeholder statement expression: AUTO332 *)
-           >>| Ast_builder.Classes.Methods.with_body
-                 ~body:
-                   (Ast_builder.Functions.body
-                      [
-                        Ast_builder.Statements.expression
-                          (Ast_builder.Expressions.identifier "AUTO332");
-                      ]
-                   )
-           >>| Ast_builder.Classes.Methods.with_docs ~docs:None
-           (* Print the node to a string and replace the AUTO332 expression with an LSP snippet placeholder *)
-           >>| Js_layout_generator.class_method ~opts:(Code_action_service.layout_options options)
-           >>| Pretty_printer.print ~source_maps:None ~skip_endline:true
-           >>| Source.contents
-           >>| Base.String.substr_replace_first ~pattern:"AUTO332;" ~with_:"$0"
-           (* Construct the autocomplete result *)
-           >>| fun insert_text ->
-           autocomplete_create_result
-             ~insert_text
+           def_loc >>| loc_of_aloc ~reader >>= Find_method.find reader >>| fun method_ ->
+           autocomplete_create_result_method
+             ~method_
+             ~options
              ?documentation
              ?tags
-             ~snippet:true
-             ~exact_by_default:(Context.exact_by_default cx)
              ~log_info:"class key"
              (name, edit_locs)
              ty

@@ -9008,14 +9008,110 @@ Flags: --pretty
 }
 
 method_signature.js:22:4
-Flags: --pretty
+Flags: --lsp
 {
-  "result":[
-    {"name":"bar","type":"(s: string) => void"},
-    {"name":"foo","type":"() => number"},
-    {"name":"i","type":"(x: number) => string"},
-    {"name":"qux","type":"() => void"}
-  ]
+  "label":"bar",
+  "labelDetails":{"detail":"(s: string) { … }"},
+  "kind":3,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":21,"character":3},"end":{"line":21,"character":3}},
+    "newText":"bar(s: string) {\n  $0\n}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "class key",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar"
+      }
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"detail":"(): number { … }"},
+  "kind":3,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":21,"character":3},"end":{"line":21,"character":3}},
+    "newText":"foo(): number {\n  $0\n}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "class key",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo"
+      }
+    ]
+  }
+}
+{
+  "label":"i",
+  "labelDetails":{"detail":"(x: number): string { … }"},
+  "kind":3,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":21,"character":3},"end":{"line":21,"character":3}},
+    "newText":"i(x: number): string {\n  $0\n}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "class key",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"i"
+      }
+    ]
+  }
+}
+{
+  "label":"qux",
+  "labelDetails":{"detail":"(): void { … }"},
+  "kind":3,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":21,"character":3},"end":{"line":21,"character":3}},
+    "newText":"qux(): void {\n  $0\n}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "class key",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux"
+      }
+    ]
+  }
 }
 
 last_empty_line.js:5:0
