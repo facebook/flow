@@ -17,12 +17,29 @@ let tests =
   >::: [
          "split_nth"
          >::: [
+                ( "basic" >:: fun ctxt ->
+                  assert_equal
+                    ~ctxt
+                    ~printer:split_nth_printer
+                    (Some ("foo\n", "bar\n", "baz"))
+                    (Line.split_nth "foo\nbar\nbaz" 1)
+                );
                 ( "last_line" >:: fun ctxt ->
                   assert_equal
                     ~ctxt
                     ~printer:split_nth_printer
                     (Some ("foo\n", "bar", ""))
                     (Line.split_nth "foo\nbar" 1)
+                );
+                ( "out_of_bounds" >:: fun ctxt ->
+                  assert_equal ~ctxt ~printer:split_nth_printer None (Line.split_nth "foo\n" 5)
+                );
+                ( "empty_last_line" >:: fun ctxt ->
+                  assert_equal
+                    ~ctxt
+                    ~printer:split_nth_printer
+                    (Some ("foo\n", "", ""))
+                    (Line.split_nth "foo\n" 1)
                 );
               ];
        ]

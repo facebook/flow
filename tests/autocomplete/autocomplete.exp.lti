@@ -9018,3 +9018,7 @@ Flags: --pretty
   ]
 }
 
+last_empty_line.js:5:0
+Flags: --pretty
+{"result":[{"name":"foo","type":"string"}]}
+

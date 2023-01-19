@@ -33,14 +33,15 @@ let length_of_line_terminator str len i =
    U+2029 (paragraph separator) as line terminators, per the ECMAscript spec:
    https://tc39.es/ecma262/#sec-line-terminators
 
-   If the line doesn't exist, including if the string ends with a line terminator
-   for the (n-1)th line, then returns [None] (e.g. "foo\n" for n=1, i=0 returns `None`
-   because the index is the end of the string. *)
+   If the line is the last one, and it is empty, then returns [len]. (e.g.
+   "foo\n" for n=1, i=0 returns `4` because the index is the end of the string)
+
+   If the line is out of bounds, then returns [None]. *)
 let rec nth_line_opt n str len i =
-  if i >= len then
-    None
-  else if n = 0 then
+  if n = 0 then
     Some i
+  else if i >= len then
+    None
   else
     let x = length_of_line_terminator str len i in
     if x > 0 then

@@ -19,5 +19,13 @@ let tests =
              let expected = "foo\nAUTO332\nbar" in
              assert_equal ~ctxt ~printer:(fun x -> x) expected broader_context
            );
+           ( "last_line" >:: fun ctxt ->
+             let contents = "// @flow\n" in
+             let expected = "// @flow\nAUTO332" in
+             let (actual, broader_context) = Autocomplete_sigil.add contents 2 0 in
+             assert_equal ~ctxt ~printer:(fun x -> x) expected actual;
+             let expected = "// @flow\nAUTO332" in
+             assert_equal ~ctxt ~printer:(fun x -> x) expected broader_context
+           );
          ];
   ]
