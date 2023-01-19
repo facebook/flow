@@ -322,7 +322,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_TYPEOF -> typeof env
     | T_LBRACKET -> tuple env
     | T_IDENTIFIER _
-    | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
+    | T_EXTENDS (* `extends` is reserved, but recover by treating it as an identifier *)
+    | T_STATIC (* `static` is reserved, but recover by treating it as an identifier *) ->
       let (loc, g) = generic env in
       (loc, Type.Generic g)
     | T_STRING (loc, value, raw, octal) ->
