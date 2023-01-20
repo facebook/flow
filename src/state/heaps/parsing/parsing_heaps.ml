@@ -1050,7 +1050,7 @@ let rollback_file =
   fun file_key ->
     match FileHeap.get file_key with
     | None -> ()
-    | Some file -> if file_changed file then rollback_file file
+    | Some file -> rollback_file file
 
 module Reader_cache : sig
   val get_ast : File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option
