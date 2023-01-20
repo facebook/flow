@@ -270,7 +270,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and raw_typeof_expr_with_identifier =
     let rec identifier env (q_loc, qualification) =
-      if Peek.token env = T_PERIOD && Peek.ith_is_identifier ~i:1 env then
+      if Peek.token env = T_PERIOD && Peek.ith_is_identifier_name ~i:1 env then
         let (loc, q) =
           with_loc
             ~start_loc:q_loc
@@ -290,18 +290,22 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       identifier env (loc, id)
 
   and typeof_arg env =
-    match Peek.token env with
-    | T_LPAREN ->
-      Eat.token env;
-      let typeof = typeof_arg env in
-      Expect.token env T_RPAREN;
-      typeof
-    | T_UNDEFINED_TYPE (* people use `typeof undefined` for some reason *)
-    | T_IDENTIFIER _ (* `static` is reserved in strict mode, but still an identifier *) ->
-      Some (typeof_expr env)
-    | _ ->
-      error env Parse_error.InvalidTypeof;
-      None
+    Eat.push_lex_mode env Lex_mode.NORMAL;
+    let result =
+      if Peek.token env = T_LPAREN then (
+        Eat.token env;
+        let typeof = typeof_arg env in
+        Expect.token env T_RPAREN;
+        typeof
+      ) else if Peek.is_identifier env then
+        Some (typeof_expr env)
+      else (
+        error env Parse_error.InvalidTypeof;
+        None
+      )
+    in
+    Eat.pop_lex_mode env;
+    result
 
   and typeof env =
     with_loc
