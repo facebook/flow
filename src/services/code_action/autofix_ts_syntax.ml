@@ -25,6 +25,14 @@ class mapper target_loc kind =
       | (loc, Keyof { Keyof.argument; comments }) when kind = `KeyofType && this#is_target loc ->
         let targs = Ast_builder.Types.type_args [super#type_ argument] in
         Ast_builder.Types.unqualified_generic ?comments ~targs "$Keys"
+      | (loc, ReadOnly { ReadOnly.argument = (_, Array { Array.argument; _ }); comments })
+        when kind = `ReadOnlyArrayType && this#is_target loc ->
+        let targs = Ast_builder.Types.type_args [super#type_ argument] in
+        Ast_builder.Types.unqualified_generic ?comments ~targs "$ReadOnlyArray"
+      | (loc, ReadOnly { ReadOnly.argument = (_, Tuple _) as argument; comments })
+        when kind = `ReadOnlyTupleType && this#is_target loc ->
+        let targs = Ast_builder.Types.type_args [super#type_ argument] in
+        Ast_builder.Types.unqualified_generic ?comments ~targs "$ReadOnly"
       | _ -> super#type_ t
 
     method! type_param (loc, tparam) =
@@ -105,4 +113,12 @@ let convert_as_expression ast loc =
 
 let convert_satisfies_expression ast loc =
   let mapper = new mapper loc `SatisfiesExpression in
+  mapper#program ast
+
+let convert_readonly_array_type ast loc =
+  let mapper = new mapper loc `ReadOnlyArrayType in
+  mapper#program ast
+
+let convert_readonly_tuple_type ast loc =
+  let mapper = new mapper loc `ReadOnlyTupleType in
   mapper#program ast
