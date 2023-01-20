@@ -1853,7 +1853,7 @@ and function_ ~opts loc func =
     else
       id
   in
-  function_base ~opts ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~comments
+  function_base ~opts ~prefix ~params ~body:(Some body) ~predicate ~return ~tparams ~loc ~comments
 
 and function_base ~opts ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~comments =
   let (params_loc, { Ast.Function.Params.comments = params_comments; _ }) = params in
@@ -1871,11 +1871,11 @@ and function_base ~opts ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~
              function_return ~opts ~arrow:false return predicate;
            ];
          pretty_space;
-         begin
-           match body with
-           | Ast.Function.BodyBlock b -> block ~opts b
-           | Ast.Function.BodyExpression _ -> failwith "Only arrows should have BodyExpressions"
-         end;
+         option
+           (function
+             | Ast.Function.BodyBlock b -> block ~opts b
+             | Ast.Function.BodyExpression _ -> failwith "Only arrows should have BodyExpressions")
+           body;
        ]
 
 and function_param ~ctxt ~opts (loc, { Ast.Function.Param.argument; default }) : Layout.layout_node
@@ -1887,6 +1887,23 @@ and function_param ~ctxt ~opts (loc, { Ast.Function.Param.argument; default }) :
     | None -> node
   in
   source_location_with_comments (loc, node)
+
+and function_params_and_return
+    ~opts (loc, { Ast.Function.params; predicate; return; tparams; comments; _ }) =
+  source_location_with_comments
+    ?comments
+    ( loc,
+      function_base
+        ~opts
+        ~prefix:Empty
+        ~params
+        ~body:None
+        ~predicate
+        ~return
+        ~tparams
+        ~loc
+        ~comments
+    )
 
 and list_add_internal_comments list list_layout comments =
   match internal_comments comments with
@@ -2087,7 +2104,7 @@ and class_method
                 ~opts
                 ~prefix
                 ~params
-                ~body
+                ~body:(Some body)
                 ~predicate
                 ~return
                 ~tparams
@@ -2544,7 +2561,7 @@ and object_property ~opts property =
               ~opts
               ~prefix
               ~params
-              ~body
+              ~body:(Some body)
               ~predicate
               ~return
               ~tparams
@@ -2586,7 +2603,7 @@ and object_property ~opts property =
               ~opts
               ~prefix
               ~params
-              ~body
+              ~body:(Some body)
               ~predicate
               ~return
               ~tparams
@@ -2628,7 +2645,7 @@ and object_property ~opts property =
               ~opts
               ~prefix
               ~params
-              ~body
+              ~body:(Some body)
               ~predicate
               ~return
               ~tparams
