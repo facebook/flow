@@ -100,5 +100,56 @@ References:
             ^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------- under_constrained_speculation.js:3:2
 
-Found 6 errors
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   under_constrained_speculation.js:3:2
+   3| (0: string); // error: intentially left here to ensure that implicit instantiation
+       ^ [1]
+
+References:
+   under_constrained_speculation.js:3:5
+   3| (0: string); // error: intentially left here to ensure that implicit instantiation
+          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:17:1
+
+Cannot call `C` because undefined [1] is incompatible with array type [2]. [incompatible-call]
+
+   under_constrained_speculation.js:17:1
+   17| C(undefined); // error branches are under-constrained for the first overload,
+       ^
+
+References:
+   under_constrained_speculation.js:17:3
+   17| C(undefined); // error branches are under-constrained for the first overload,
+         ^^^^^^^^^ [1]
+   under_constrained_speculation.js:8:23
+    8|   static <K, V>(iter: Array<[K, V]>): C<K, V>;
+                             ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:22:1
+
+Cannot call `foo` because undefined [1] is incompatible with array type [2]. [incompatible-call]
+
+   under_constrained_speculation.js:22:1
+   22| foo(undefined); // error branches are under-constrained for the first overload,
+       ^^^
+
+References:
+   under_constrained_speculation.js:22:5
+   22| foo(undefined); // error branches are under-constrained for the first overload,
+           ^^^^^^^^^ [1]
+   under_constrained_speculation.js:12:34
+   12| declare function foo<K, V>(iter: Array<[K, V]>): C<K, V>;
+                                        ^^^^^^^^^^^^^ [2]
+
+
+
+Found 9 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
