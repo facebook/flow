@@ -44,7 +44,7 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Hint on `{ ...e }` becomes hint on `e` *)
   | Decomp_ObjSpread
   (* Hint on array literal `[e]` becomes hint on `e` *)
-  | Decomp_ArrElement of int
+  | Decomp_ArrElement of int option
   (* Hint on array literal `[...e]` becomes hint on `e` *)
   | Decomp_ArrSpread of int
   (* Type of `await e` becomes hint on `e` *)
@@ -94,7 +94,8 @@ let string_of_hint_unknown_kind = function
   | Decomp_ObjProp _ -> "Decomp_ObjProp"
   | Decomp_ObjComputed _ -> "Decomp_ObjComputed"
   | Decomp_ObjSpread -> "Decomp_ObjSpread"
-  | Decomp_ArrElement i -> Utils_js.spf "Decomp_ArrElement (%d)" i
+  | Decomp_ArrElement None -> "Decomp_ArrElement (no index)"
+  | Decomp_ArrElement (Some i) -> Utils_js.spf "Decomp_ArrElement (%d)" i
   | Decomp_ArrSpread i -> Utils_js.spf "Decomp_ArrSpread (%d)" i
   | Decomp_MethodName _ -> "Decomp_MethodName"
   | Decomp_MethodPrivateName _ -> "Decomp_MethodPrivateName"

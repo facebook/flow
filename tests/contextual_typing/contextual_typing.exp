@@ -30,6 +30,42 @@ References:
                         ^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ arr_rest.js:17:52
+
+Cannot call `arb` because `T` [1] is underconstrained by call of `arb` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   arr_rest.js:17:52
+   17| const w: [number, number, string, number] = [...z, arb(), ...arb()]; // incompat and instantiation errors
+                                                          ^^^
+
+References:
+   arr_rest.js:13:22
+   13| declare function arb<T>(): T;
+                            ^ [1]
+   arr_rest.js:17:52
+   17| const w: [number, number, string, number] = [...z, arb(), ...arb()]; // incompat and instantiation errors
+                                                          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arr_rest.js:17:62
+
+Cannot call `arb` because `T` [1] is underconstrained by call of `arb` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   arr_rest.js:17:62
+   17| const w: [number, number, string, number] = [...z, arb(), ...arb()]; // incompat and instantiation errors
+                                                                    ^^^
+
+References:
+   arr_rest.js:13:22
+   13| declare function arb<T>(): T;
+                            ^ [1]
+   arr_rest.js:17:62
+   17| const w: [number, number, string, number] = [...z, arb(), ...arb()]; // incompat and instantiation errors
+                                                                    ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- async.js:17:16
 
 Cannot call `commit` because property `variables` is missing in `Promise` [1]. [prop-missing]
@@ -625,4 +661,4 @@ References:
 
 
 
-Found 43 errors
+Found 45 errors

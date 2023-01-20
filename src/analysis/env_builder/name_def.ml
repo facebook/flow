@@ -2242,7 +2242,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             if single_child then
               hints
             else
-              decompose_hints (Decomp_ArrElement i) hints
+              decompose_hints (Decomp_ArrElement (Some i)) hints
           in
           this#record_hint loc hints;
           match child with
@@ -2353,20 +2353,43 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     method private visit_array_expression ~array_hints expr =
       let { Ast.Expression.Array.elements; comments = _ } = expr in
-      Base.List.iteri elements ~f:(fun i element ->
-          match element with
-          | Ast.Expression.Array.Expression expr ->
-            this#visit_expression
-              ~hints:(decompose_hints (Decomp_ArrElement i) array_hints)
-              ~cond:NonConditionalContext
-              expr
-          | Ast.Expression.Array.Spread (_, spread) ->
-            this#visit_expression
-              ~hints:(decompose_hints (Decomp_ArrSpread i) array_hints)
-              ~cond:NonConditionalContext
-              spread.Ast.Expression.SpreadElement.argument
-          | Ast.Expression.Array.Hole _ -> ()
-      )
+      let (_ : bool) =
+        Base.List.foldi ~init:false elements ~f:(fun i seen_spread element ->
+            let mk_hints decomp =
+              if seen_spread then
+                []
+              else
+                decompose_hints decomp array_hints
+            in
+            match element with
+            | Ast.Expression.Array.Expression expr ->
+              let index =
+                if seen_spread then
+                  None
+                else
+                  Some i
+              in
+              this#visit_expression
+                ~hints:(mk_hints (Decomp_ArrElement index))
+                ~cond:NonConditionalContext
+                expr;
+              seen_spread
+            | Ast.Expression.Array.Spread (_, spread) ->
+              let hints =
+                if seen_spread then
+                  []
+                else
+                  decompose_hints (Decomp_ArrSpread i) array_hints
+              in
+              this#visit_expression
+                ~hints
+                ~cond:NonConditionalContext
+                spread.Ast.Expression.SpreadElement.argument;
+              true
+            | Ast.Expression.Array.Hole _ -> seen_spread
+        )
+      in
+      ()
 
     method! conditional loc _ = fail loc "Should be visited by visit_conditional"
 

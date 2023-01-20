@@ -364,20 +364,16 @@ and type_of_hint_decomposition cx op reason t =
 
   in_sandbox_cx cx t ~f:(fun t ->
       match op with
-      | Decomp_ArrElement i ->
+      | Decomp_ArrElement index ->
+        let num =
+          match index with
+          | Some i -> Literal (None, (float_of_int i, string_of_int i))
+          | None -> AnyLiteral
+        in
         Tvar.mk_no_wrap_where cx reason (fun element_t ->
             let use_t =
               GetElemT
-                ( unknown_use,
-                  reason,
-                  true,
-                  DefT
-                    ( reason,
-                      bogus_trust (),
-                      NumT (Literal (None, (float_of_int i, string_of_int i)))
-                    ),
-                  element_t
-                )
+                (unknown_use, reason, true, DefT (reason, bogus_trust (), NumT num), element_t)
             in
             SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
         )
