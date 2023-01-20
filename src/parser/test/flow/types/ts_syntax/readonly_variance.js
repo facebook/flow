@@ -5,9 +5,6 @@ type Valid = {
   readonly: string,
 };
 
-type Tuple = [readonly foo: 1];
-type ValidTuple = [readonly: 1];
-
 type Indexer = {
   readonly [string]: mixed;
 };

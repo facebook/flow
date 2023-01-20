@@ -517,9 +517,6 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           else
             let variance =
               match Peek.token env with
-              | T_IDENTIFIER { raw = "readonly"; _ }
-                when Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET ->
-                maybe_variance ~parse_readonly:true env
               | T_PLUS -> maybe_variance env
               | T_MINUS when Peek.ith_is_identifier ~i:1 env ->
                 (* `-1` is a valid type but not a valid tuple label.
