@@ -384,13 +384,14 @@ and type_of_hint_decomposition cx op reason t =
       | Decomp_ArrSpread i ->
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t = ArrRestT (unknown_use, reason, i, OpenT tout) in
-            Flow_js.flow cx (t, use_t)
+            SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
         )
       | Decomp_Await ->
         Tvar.mk_where cx reason (fun tout ->
             Flow_js.flow_t cx (t, tout);
-            Flow_js.flow_t
+            SpeculationFlow.resolved_lower_flow_t
               cx
+              reason
               (Flow_js.get_builtin_typeapp cx reason (OrdinaryName "Promise") [t], tout)
         )
       | Decomp_CallNew ->
@@ -399,7 +400,10 @@ and type_of_hint_decomposition cx op reason t =
            method). *)
         let get_this_t t =
           Tvar.mk_where cx reason (fun t' ->
-              Flow_js.flow_t cx (t, DefT (reason, bogus_trust (), ClassT t'))
+              SpeculationFlow.resolved_lower_flow_t
+                cx
+                reason
+                (t, DefT (reason, bogus_trust (), ClassT t'))
           )
           |> get_t cx
         in
@@ -454,7 +458,10 @@ and type_of_hint_decomposition cx op reason t =
       | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t
       | Decomp_JsxProps ->
         Tvar.mk_no_wrap_where cx reason (fun props_t ->
-            Flow_js.flow cx (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
+            SpeculationFlow.resolved_lower_flow
+              cx
+              reason
+              (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
         )
       | Decomp_JsxRef -> Flow_js.get_builtin_typeapp cx reason (OrdinaryName "React$Ref") [t]
       | Decomp_MethodElem ->
@@ -466,8 +473,9 @@ and type_of_hint_decomposition cx op reason t =
         let class_entries = Env.get_class_entries cx in
         let t =
           Tvar.mk_where cx reason (fun prop_t ->
-              Flow_js.flow
+              SpeculationFlow.resolved_lower_flow
                 cx
+                reason
                 ( t,
                   PrivateMethodT
                     (unknown_use, reason, reason, name, class_entries, false, NoMethodAction, prop_t)
@@ -527,7 +535,7 @@ and type_of_hint_decomposition cx op reason t =
             )
           in
           Tvar.mk_no_wrap_where cx reason (fun tvar ->
-              Flow_js.flow cx (t, PredicateT (predicate, tvar))
+              SpeculationFlow.resolved_lower_flow cx reason (t, PredicateT (predicate, tvar))
           ))
       | Instantiate_Callee instantiation_hint -> instantiate_callee cx t instantiation_hint
       | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint

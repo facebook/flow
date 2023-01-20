@@ -1,3 +1,35 @@
+Error ------------------------------------------------------------------------------------------------ arr_rest.js:11:11
+
+`Set` [1] is not an array. [not-an-array]
+
+   arr_rest.js:11:11
+   11| const [...y] = new Set() // still error
+                 ^
+
+References:
+   arr_rest.js:11:16
+   11| const [...y] = new Set() // still error
+                      ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ arr_rest.js:11:20
+
+Cannot call `Set` because `T` [1] is underconstrained by new `Set` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
+
+   arr_rest.js:11:20
+     11| const [...y] = new Set() // still error
+                            ^^^
+
+References:
+   <BUILTINS>/core.js:1796:19
+   1796| declare class Set<T> extends $ReadOnlySet<T> {
+                           ^ [1]
+   arr_rest.js:11:16
+     11| const [...y] = new Set() // still error
+                        ^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- async.js:17:16
 
 Cannot call `commit` because property `variables` is missing in `Promise` [1]. [prop-missing]
@@ -593,4 +625,4 @@ References:
 
 
 
-Found 41 errors
+Found 43 errors
