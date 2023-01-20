@@ -26,6 +26,7 @@ end
 
 module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
   include Flow
+  module PinTypes = Implicit_instantiation.PinTypes (Flow)
 
   (* Creates the appropriate constraints for the compose() function and its
    * reversed variant. *)
@@ -98,6 +99,14 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       let tin = (reason_op, Tvar.mk_no_wrap cx reason_op) in
       let tvar = (reason_op, Tvar.mk_no_wrap cx reason_op) in
       run_compose cx trace ~use_op reason_op reverse args spread_arg tin tvar;
+      let tin =
+        if Context.lti cx then (
+          let tin' = (reason_op, Tvar.mk_no_wrap cx reason_op) in
+          unify cx (OpenT tin') (PinTypes.pin_type cx ~use_op:unknown_use reason_op (OpenT tin));
+          tin'
+        ) else
+          tin
+      in
       let funt =
         FunT
           ( dummy_static reason_op,
