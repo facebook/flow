@@ -635,6 +635,7 @@ let is_reserved_type str_val =
   | "never"
   | "null"
   | "number"
+  | "readonly"
   | "static"
   | "string"
   | "symbol"
@@ -663,6 +664,7 @@ let token_is_reserved_type t =
   | T_NEVER_TYPE
   | T_NULL
   | T_NUMBER_TYPE
+  | T_READONLY
   | T_STATIC
   | T_STRING_TYPE
   | T_SYMBOL_TYPE
@@ -759,6 +761,7 @@ let token_is_type_identifier env t =
     | T_STATIC
     | T_TYPEOF
     | T_KEYOF
+    | T_READONLY
     | T_VOID ->
       false
     (* syntax *)
@@ -932,7 +935,8 @@ module Peek = struct
     | T_AWAIT
     | T_ENUM
     | T_POUND
-    | T_IDENTIFIER _ ->
+    | T_IDENTIFIER _
+    | T_READONLY ->
       true
     | _ -> false
 

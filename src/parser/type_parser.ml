@@ -63,7 +63,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         ( loc,
           { Variance.kind = Variance.Minus; comments = Flow_ast_utils.mk_comments_opt ~leading () }
         )
-    | T_IDENTIFIER { raw = "readonly"; _ } when parse_readonly ->
+    | T_READONLY when parse_readonly ->
       let leading = Peek.comments env in
       Eat.token env;
       Some
@@ -1139,7 +1139,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           ~proto
           ~leading
           start_loc
-      | T_IDENTIFIER { raw = "readonly"; _ }
+      | T_READONLY
         when variance = None
              && (Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET) ->
         let variance = maybe_variance ~parse_readonly:true env in
