@@ -913,33 +913,44 @@ struct
         in
         Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (tout, hint));
         Context.reset_errors cx Flow_error.ErrorSet.empty;
-        let output =
-          pin_types
+        let restore () =
+          let implicit_instantiation_errors =
+            Context.errors cx
+            |> Flow_error.ErrorSet.filter (fun error ->
+                   match Flow_error.msg_of_error error with
+                   | Error_message.EImplicitInstantiationUnderconstrainedError _
+                   | Error_message.EImplicitInstantiationTemporaryError _
+                   | Error_message.EInternal _ ->
+                     true
+                   | _ -> false
+               )
+          in
+          (* Since we will be performing the same check again using the solution
+           * of the implicit instantiation, we only need to keep errors related
+           * to pinning types, eg. [underconstrained-implicit-instantiation]. *)
+          Context.reset_errors
             cx
-            ~use_op
-            ~has_new_errors
-            ~has_return_hint:(Base.Option.is_some return_hint)
-            inferred_targ_list
-            marked_tparams
-            tparams_map
-            check
+            (Flow_error.ErrorSet.union init_errors implicit_instantiation_errors)
         in
-        let implicit_instantiation_errors =
-          Context.errors cx
-          |> Flow_error.ErrorSet.filter (fun error ->
-                 match Flow_error.msg_of_error error with
-                 | Error_message.EImplicitInstantiationUnderconstrainedError _
-                 | Error_message.EImplicitInstantiationTemporaryError _
-                 | Error_message.EInternal _ ->
-                   true
-                 | _ -> false
-             )
-        in
-        (* Since we will be performing the same check again using the solution
-         * of the implicit instantiation, we only need to keep errors related
-         * to pinning types, eg. [underconstrained-implicit-instantiation]. *)
-        Context.reset_errors cx (Flow_error.ErrorSet.union init_errors implicit_instantiation_errors);
-        output
+        try
+          let output =
+            pin_types
+              cx
+              ~use_op
+              ~has_new_errors
+              ~has_return_hint:(Base.Option.is_some return_hint)
+              inferred_targ_list
+              marked_tparams
+              tparams_map
+              check
+          in
+          restore ();
+          output
+        with
+        | exn ->
+          let exn = Exception.wrap exn in
+          restore ();
+          Exception.reraise exn
     )
 
   let run cx check ~on_completion =

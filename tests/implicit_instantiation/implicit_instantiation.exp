@@ -63,5 +63,19 @@ References:
            ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------- under_constrained_speculation.js:3:2
 
-Found 4 errors
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   under_constrained_speculation.js:3:2
+   3| (0: string); // error: intentially left here to ensure that implicit instantiation
+       ^ [1]
+
+References:
+   under_constrained_speculation.js:3:5
+   3| (0: string); // error: intentially left here to ensure that implicit instantiation
+          ^^^^^^ [2]
+
+
+
+Found 5 errors
