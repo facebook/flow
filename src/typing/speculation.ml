@@ -26,7 +26,6 @@ let action_tvars cx =
     | FlowAction (t1, UseT (_, t2)) -> f cx t1 (f cx t2 IMap.empty)
     | FlowAction (t1, _) -> f cx t1 IMap.empty
     | UnifyAction (_, t1, t2) -> f cx t1 (f cx t2 IMap.empty)
-    | UnsealedObjectProperty _ -> failwith "unsealed object property writes are always benign"
     | ErrorAction _ -> failwith "tvars of error actions don't make sense"
   )
 
@@ -125,9 +124,6 @@ let speculating cx =
 let defer_if_relevant cx branch action =
   let { ignore; speculation_id; case } = branch in
   match action with
-  | UnsealedObjectProperty _ ->
-    case.actions <- case.actions @ [(true, action)];
-    true
   | ErrorAction _ ->
     case.actions <- case.actions @ [(true, action)];
     true

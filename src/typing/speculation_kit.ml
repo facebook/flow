@@ -862,7 +862,5 @@ module Make (Flow : INPUT) : OUTPUT = struct
              | UnionCases (use_op', _, _, _) ->
                rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
            | (_, Speculation_state.ErrorAction msg) -> add_output cx ~trace msg
-           | (_, Speculation_state.UnsealedObjectProperty (flds, s, up)) ->
-             Context.set_prop cx flds s up
            )
 end

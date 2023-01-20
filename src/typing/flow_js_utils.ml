@@ -651,10 +651,6 @@ let poly_minimum_arity =
 
 (** Object Subtyping *)
 
-let speculative_object_write cx flds s up =
-  let action = Speculation_state.UnsealedObjectProperty (flds, s, up) in
-  if not (Speculation.defer_action cx action) then Context.set_prop cx flds s up
-
 let string_key s reason =
   let key_reason = replace_desc_reason (RPropertyIsAString s) reason in
   DefT (key_reason, bogus_trust (), StrT (Literal (None, s)))
