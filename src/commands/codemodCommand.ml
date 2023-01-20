@@ -376,6 +376,15 @@ module KeyMirror_command = struct
 end
 
 module Annotate_empty_array_command = struct
+  module LtiPerFileEmptyArrayErrorsHeap =
+    SharedMem.NoCache
+      (File_key)
+      (struct
+        type t = Flow_error.ErrorSet.t
+
+        let description = "TransformableErrorsHeap"
+      end)
+
   let doc = "Annotates empty array literals, whose type cannot be inferred."
 
   let spec =
@@ -407,6 +416,15 @@ module Annotate_empty_array_command = struct
                "--generalize-react-mixed-element"
                truthy
                ~doc:"Generalize annotations containing react elements to React.MixedElement"
+          |> flag
+               "--include-lti"
+               truthy
+               ~doc:
+                 "Add casts to underconstrained empty arrays that are only detected under LTI mode."
+          |> flag
+               "--ignore-suppressed"
+               truthy
+               ~doc:"Do not annotate locations with suppressed errors"
           |> common_annotate_flags
         );
     }
@@ -416,10 +434,12 @@ module Annotate_empty_array_command = struct
       preserve_literals
       generalize_maybe
       generalize_react_mixed_element
+      include_lti
+      ignore_suppressed
       max_type_size
       default_any
       () =
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+    let module SimpleRunner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_declarations.Acc
 
       type accumulator = Acc.t
@@ -430,18 +450,72 @@ module Annotate_empty_array_command = struct
         let open Options in
         { o with opt_inference_mode = ConstrainWrites; opt_array_literal_providers = true }
 
-      let visit =
+      let visit ~options program =
         let mapper =
           Annotate_empty_array.mapper
+            ~ignore_suppressed
+            ~file_options:(Options.file_options options)
             ~preserve_literals
             ~generalize_maybe
             ~generalize_react_mixed_element
             ~max_type_size
             ~default_any
+            ~provided_error_set:Flow_error.ErrorSet.empty
         in
-        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper) ~options program
     end) in
-    main (module Runner) codemod_flags ()
+    let module LTIRunner = Codemod_runner.MakeTypedRunnerWithPrepass (struct
+      module Acc = Annotate_declarations.Acc
+
+      type accumulator = Acc.t
+
+      type prepass_state = unit
+
+      type prepass_result = Flow_error.ErrorSet.t
+
+      let reporter = string_reporter (module Acc)
+
+      let prepass_init () = ()
+
+      let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
+
+      let check_options o = o
+
+      let include_dependents_in_prepass = false
+
+      let prepass_run cx () _file_key _file_options _reader _file_sig _typed_ast = Context.errors cx
+
+      let store_precheck_result result =
+        FilenameMap.iter
+          (fun file -> Base.Result.iter ~f:(LtiPerFileEmptyArrayErrorsHeap.add file))
+          result
+
+      let visit ~options program =
+        let provided_error_set =
+          LtiPerFileEmptyArrayErrorsHeap.get (Base.Option.value_exn (fst program |> Loc.source))
+          |> Base.Option.value ~default:Flow_error.ErrorSet.empty
+        in
+        let mapper =
+          Annotate_empty_array.mapper
+            ~ignore_suppressed
+            ~file_options:(Options.file_options options)
+            ~preserve_literals
+            ~generalize_maybe
+            ~generalize_react_mixed_element
+            ~max_type_size
+            ~default_any
+            ~provided_error_set
+        in
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper) ~options program
+    end) in
+    main
+      ( if include_lti then
+        (module LTIRunner)
+      else
+        (module SimpleRunner)
+      )
+      codemod_flags
+      ()
 
   let command = CommandSpec.command spec main
 end

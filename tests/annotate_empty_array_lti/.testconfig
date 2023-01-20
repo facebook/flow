@@ -1,0 +1,1 @@
+cmd: codemod annotate-empty-array --strip-root --quiet --ignore-suppressed --include-lti ./

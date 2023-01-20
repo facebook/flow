@@ -9,17 +9,32 @@ module Ast = Flow_ast
 module LSet = Loc_collections.LocSet
 
 let mapper
+    ~ignore_suppressed
+    ~file_options
     ~preserve_literals
     ~max_type_size
     ~default_any
     ~generalize_maybe
     ~generalize_react_mixed_element
+    ~provided_error_set
     (cctx : Codemod_context.Typed.t) =
   let reader = cctx.Codemod_context.Typed.reader in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
-  let errors = Codemod_context.Typed.context cctx |> Context.errors in
+  let cx = Codemod_context.Typed.context cctx in
+  let errors = Flow_error.ErrorSet.union (Context.errors cx) provided_error_set in
+  let errors =
+    if ignore_suppressed then
+      Error_suppressions.filter_suppressed_error_set
+        ~root:(Context.root cx)
+        ~file_options:(Some file_options)
+        ~loc_of_aloc
+        (Context.error_suppressions cx)
+        errors
+    else
+      errors
+  in
   let error ((loc, _) as e) =
     ( loc,
       Ast.Expression.TypeCast

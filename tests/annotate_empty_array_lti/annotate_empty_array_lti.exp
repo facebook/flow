@@ -1,0 +1,37 @@
+>>> test.js (#changes: 2)
+// @flow
+
+// $FlowFixMe[missing-empty-array-annot]
+let z = []; // no annot
+z = [4, 5];
+
+const s = new Set(([]: Array<string>));  // should annot
+(s: Set<string>);
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              1
+  Total size of annotations:                3
+  Number of vars with write errors:         1
+  Number of possibly renamable vars:        0
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     1
+
