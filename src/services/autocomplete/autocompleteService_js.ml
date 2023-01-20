@@ -1678,33 +1678,28 @@ let autocomplete_module_exports
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
 let unused_super_methods
-    ~reader ~options ~cx ~file_sig ~typed_ast ~edit_locs ~tparams_rev enclosing_class_t =
+    ~reader
+    ~options
+    ~cx
+    ~file_sig
+    ~typed_ast
+    ~edit_locs
+    ~tparams_rev
+    ~exclude_keys
+    enclosing_class_t =
   let open Base.Result.Let_syntax in
-  let get_members ~exclude_proto_members ~include_interface_members ~exclude_keys =
+  let%bind (mems, errors_to_log, _) =
     members_of_type
       ~reader
-      ~exclude_proto_members
+      ~exclude_proto_members:false
       ~force_instance:true
-      ~include_interface_members
+      ~include_interface_members:true
       ~exclude_keys
       cx
       file_sig
       typed_ast
       enclosing_class_t
       ~tparams_rev
-  in
-  (* We want to suggest methods from supertypes, except for those which already exist locally *)
-  let%bind (existing_members, _, _) =
-    get_members
-      ~exclude_proto_members:true
-      ~include_interface_members:false
-      ~exclude_keys:SSet.empty
-  in
-  let exclude_keys =
-    existing_members |> Base.List.map ~f:(fun (name, _, _, _) -> name) |> SSet.of_list
-  in
-  let%bind (mems, errors_to_log, _) =
-    get_members ~exclude_proto_members:false ~include_interface_members:true ~exclude_keys
   in
   let items =
     mems
@@ -1729,19 +1724,38 @@ let autocomplete_class_key
   match enclosing_class_t with
   | Some enclosing_class_t -> begin
     match
-      unused_super_methods
-        ~reader
-        ~options
-        ~cx
-        ~file_sig
-        ~typed_ast
-        ~edit_locs
-        ~tparams_rev
-        enclosing_class_t
+      let open Base.Result.Let_syntax in
+      let%bind (existing_members, _, _) =
+        members_of_type
+          ~reader
+          ~exclude_proto_members:true
+          ~force_instance:true
+          cx
+          file_sig
+          typed_ast
+          enclosing_class_t
+          ~tparams_rev
+      in
+      let exclude_keys =
+        existing_members |> Base.List.map ~f:(fun (name, _, _, _) -> name) |> SSet.of_list
+      in
+      let%bind (items, errors_to_log) =
+        unused_super_methods
+          ~reader
+          ~options
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~edit_locs
+          ~tparams_rev
+          ~exclude_keys
+          enclosing_class_t
+      in
+      let items = filter_by_token_and_sort token items in
+      return (items, errors_to_log)
     with
     | Error err -> AcFatalError err
     | Ok (items, errors_to_log) ->
-      let items = filter_by_token_and_sort token items in
       AcResult
         { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
   end
@@ -1796,18 +1810,30 @@ let autocomplete_object_key
   in
   let upper_bound = upper_bound_t_of_t ~cx obj_type in
   match
-    members_of_type
-      ~reader
-      ~exclude_keys
-      ~exclude_proto_members:true
-      cx
-      file_sig
-      typed_ast
-      upper_bound
-      ~tparams_rev
-  with
-  | Error err -> AcFatalError err
-  | Ok (mems, errors_to_log, _in_idx) ->
+    let open Base.Result.Let_syntax in
+    let%bind (methods, methods_errors_to_log) =
+      unused_super_methods
+        ~reader
+        ~options
+        ~cx
+        ~file_sig
+        ~typed_ast
+        ~edit_locs
+        ~tparams_rev
+        ~exclude_keys
+        upper_bound
+    in
+    let%bind (mems, mems_errors_to_log, _) =
+      members_of_type
+        ~reader
+        ~exclude_keys
+        ~exclude_proto_members:true
+        cx
+        file_sig
+        typed_ast
+        upper_bound
+        ~tparams_rev
+    in
     let items =
       mems
       |> Base.List.map ~f:(fun (name, documentation, tags, Ty_members.{ ty; _ }) ->
@@ -1845,9 +1871,13 @@ let autocomplete_object_key
                  ty
          )
     in
+    return (items @ methods, methods_errors_to_log @ mems_errors_to_log)
+  with
+  | Error err -> AcFatalError err
+  | Ok (items, errors_to_log) ->
     let items = filter_by_token_and_sort token items in
-    let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
-    AcResult { result; errors_to_log }
+    AcResult
+      { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
 (** Used for logging to classify the kind of completion request *)
 let string_of_autocomplete_type ac_type =
