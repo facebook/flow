@@ -74,18 +74,9 @@ let text_edit ?insert_text name (insert, replace) =
 
 let detail_of_ty ~exact_by_default ty =
   let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
-  let detail =
-    (* [detail] is rendered immediately after the name, with no space.
-       for most types, we add a [:] so it renders like an annotation;
-       but for functions, no [:] makes it look like a signature.
-
-       TODO: if we know a function property vs a member, we could
-       render the prop with a [:] as a subtle signal that you can
-       unbind it. *)
-    match ty with
-    | Ty.Fun _ -> type_
-    | _ -> ": " ^ type_
-  in
+  let detail = ": " ^ type_ in
+  (* [detail] is rendered immediately after the name, with no space.
+     We add a [:] so it renders like an annotation *)
   (Some type_, Some detail)
 
 let detail_of_ty_decl ~exact_by_default d =
