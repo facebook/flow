@@ -3103,5 +3103,139 @@ module.exports = (suite(
           ],
         )
     ]),
+    test('provide quickfix for `readonly` array type', [
+      addFile('fix-readonly-array-type.js.ignored', 'fix-readonly-array-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-readonly-array-type.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 10,
+          },
+          end: {
+            line: 2,
+            character: 26,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to `$ReadOnlyArray`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-readonly-array-type.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 9
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 26
+                            }
+                          },
+                          "newText": "$ReadOnlyArray<string>"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_readonly_array_type",
+                      "Convert to `$ReadOnlyArray`",
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
+    test('provide quickfix for `readonly` tuple type', [
+      addFile('fix-readonly-tuple-type.js.ignored', 'fix-readonly-tuple-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-readonly-tuple-type.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 10,
+          },
+          end: {
+            line: 2,
+            character: 34,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to `$ReadOnly`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-readonly-tuple-type.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 9
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 34
+                            }
+                          },
+                          "newText": "$ReadOnly<[string, number]>"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_readonly_tuple_type",
+                      "Convert to `$ReadOnly`",
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
   ],
 ): Suite);

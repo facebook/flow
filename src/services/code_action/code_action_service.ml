@@ -606,6 +606,32 @@ let ast_transforms_of_error ?loc = function
       ]
     else
       []
+  | Error_message.ETSSyntax { kind = Error_message.TSReadonlyType (Some `Array); loc = error_loc }
+    ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `$ReadOnlyArray`";
+          diagnostic_title = "convert_readonly_array_type";
+          transform = Autofix_ts_syntax.convert_readonly_array_type;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.ETSSyntax { kind = Error_message.TSReadonlyType (Some `Tuple); loc = error_loc }
+    ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `$ReadOnly`";
+          diagnostic_title = "convert_readonly_tuple_type";
+          transform = Autofix_ts_syntax.convert_readonly_tuple_type;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
