@@ -151,6 +151,7 @@ let identifier_name_raw env =
     | T_NEVER_TYPE -> "never"
     | T_UNDEFINED_TYPE -> "undefined"
     | T_KEYOF -> "keyof"
+    | T_READONLY -> "readonly"
     (* Contextual stuff *)
     | T_OF -> "of"
     | T_ASYNC -> "async"
