@@ -149,12 +149,12 @@ The return type of a predicate function cannot contain a generic type. The funct
                                 ^
 
 
-Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:8:30
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:7:30
 
 The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
 [unsupported-syntax]
 
-   8| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
+   7| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
                                    ^
 
 
