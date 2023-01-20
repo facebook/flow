@@ -46,7 +46,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | ParamList of (Loc.t, Loc.t) Type.Function.Params.t'
     | Type of (Loc.t, Loc.t) Type.t
 
-  let maybe_variance ?(parse_readonly = false) env =
+  let maybe_variance ?(parse_readonly = false) ?(parse_in_out = false) env =
     let loc = Peek.loc env in
     match Peek.token env with
     | T_PLUS ->
@@ -72,6 +72,25 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             Variance.kind = Variance.Readonly;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
           }
+        )
+    | T_IDENTIFIER { raw = "in"; _ } when parse_in_out && Peek.ith_is_type_identifier ~i:1 env ->
+      let leading = Peek.comments env in
+      Eat.token env;
+      let (kind, loc) =
+        match Peek.token env with
+        | T_IDENTIFIER { raw = "out"; _ } ->
+          let end_loc = Peek.loc env in
+          Eat.token env;
+          (Variance.InOut, Loc.btwn loc end_loc)
+        | _ -> (Variance.In, loc)
+      in
+      Some (loc, { Variance.kind; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+    | T_IDENTIFIER { raw = "out"; _ } when parse_in_out && Peek.ith_is_type_identifier ~i:1 env ->
+      let leading = Peek.comments env in
+      Eat.token env;
+      Some
+        ( loc,
+          { Variance.kind = Variance.Out; comments = Flow_ast_utils.mk_comments_opt ~leading () }
         )
     | _ -> None
 
@@ -1348,7 +1367,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let (param, require_default) =
             with_loc_extra
               (fun env ->
-                let variance = maybe_variance env in
+                let variance = maybe_variance ~parse_in_out:true env in
                 let (loc, (name, bound, bound_kind)) = bounded_type env in
                 let (default, require_default) =
                   match Peek.token env with

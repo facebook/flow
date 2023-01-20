@@ -106,6 +106,31 @@ parentheses. Flow does not have an equivalent of `as const`. Try adding an annot
        ^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
+
+The equivalent of TypeScript's `in` variance annotation is `-` in Flow. [ts-syntax]
+
+   1| declare function f<in A>(A): void; // ERROR
+                         ^^
+
+
+Error ------------------------------------------------------------------------------------------ in_out_variance.js:2:20
+
+The equivalent of TypeScript's `out` variance annotation is `+` in Flow. [ts-syntax]
+
+   2| declare function f<out A>(): A; // ERROR
+                         ^^^
+
+
+Error ------------------------------------------------------------------------------------------ in_out_variance.js:3:20
+
+The equivalent of TypeScript's `in out` variance annotation in Flow is to simply leave it out - it's the default if you
+don't have a variance annotation. [ts-syntax]
+
+   3| declare function f<in out A>(A): A; // ERROR
+                         ^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- keyof.js:3:10
 
 The equivalent of TypeScript's `keyof` type operator in Flow is the `$Keys` utility type, used in the form `$Keys<T>`.
@@ -123,7 +148,7 @@ The closest equivalent of TypeScript's `never` type in Flow is `empty`. [ts-synt
                ^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- readonly-variance.js:2:3
+Error ----------------------------------------------------------------------------------------- readonly_variance.js:2:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `type T = {+foo: string}`
 for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+foo: string]` for tuple elements.
@@ -133,7 +158,7 @@ for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+
         ^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- readonly-variance.js:10:15
+Error --------------------------------------------------------------------------------------- readonly_variance.js:10:15
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `type T = {+foo: string}`
 for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+foo: string]` for tuple elements.
@@ -143,7 +168,7 @@ for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+
                      ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- readonly-variance.js:14:3
+Error ---------------------------------------------------------------------------------------- readonly_variance.js:14:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `type T = {+foo: string}`
 for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+foo: string]` for tuple elements.
@@ -153,7 +178,7 @@ for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+
          ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- readonly-variance.js:18:3
+Error ---------------------------------------------------------------------------------------- readonly_variance.js:18:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `type T = {+foo: string}`
 for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+foo: string]` for tuple elements.
@@ -163,7 +188,7 @@ for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+
          ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- readonly-variance.js:22:3
+Error ---------------------------------------------------------------------------------------- readonly_variance.js:22:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `type T = {+foo: string}`
 for properties, `type T = {+[string]: mixed}` for dictionaries, and `type T = [+foo: string]` for tuple elements.
@@ -244,4 +269,4 @@ The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
 
 
 
-Found 27 errors
+Found 30 errors

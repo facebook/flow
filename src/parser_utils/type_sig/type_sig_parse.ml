@@ -336,8 +336,8 @@ let splice tbls id_loc f = Locs.splice id_loc (fun locs -> f { tbls with locs })
 
 let polarity = function
   | None -> Polarity.Neutral
-  | Some (_, { Ast.Variance.kind = Ast.Variance.Plus | Ast.Variance.Readonly; comments = _ }) ->
-    Polarity.Positive
+  | Some (_, Ast.Variance.{ kind = Readonly | In | Out | InOut; comments = _ }) -> Polarity.Neutral
+  | Some (_, { Ast.Variance.kind = Ast.Variance.Plus; comments = _ }) -> Polarity.Positive
   | Some (_, { Ast.Variance.kind = Ast.Variance.Minus; comments = _ }) -> Polarity.Negative
 
 let id_name (_, { Ast.Identifier.name; comments = _ }) = name
