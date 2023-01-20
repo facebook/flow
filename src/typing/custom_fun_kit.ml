@@ -74,59 +74,14 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
     (* If there are no functions and no spread function then we are an identity
      * function. *)
     | (_, [], None) -> rec_flow_t ~use_op:unknown_use cx trace (OpenT tin, OpenT tout)
-    (* Correctly implementing spreads of unknown arity for the compose function
-     * is a little tricky. Let's look at a couple of cases.
-     *
-     *     const fn = (x: number): string => x.toString();
-     *     declare var fns: Array<typeof fn>;
-     *     const x = 42;
-     *     compose(...fns)(x);
-     *
-     * This would be invalid. We could have 0 or 1 fn in our fns array, but 2 fn
-     * would be wrong because string is incompatible with number. It breaks down
-     * as such:
-     *
-     * 1. x = 42
-     * 2. fn(x) = '42'
-     * 3. fn(fn(x)) is an error because '42' is not a number.
-     *
-     * To get an error in this case we would only need to call the spread
-     * argument twice. Now let's look at a case where things get recursive:
-     *
-     *     type Fn = <O>(O) => $PropertyType<O, 'p'>;
-     *     declare var fns: Array<Fn>;
-     *     const x = { p: { p: 42 } };
-     *     compose(...fns)(x);
-     *
-     * 1. x = { p: { p: 42 } }
-     * 2. fn(x) = { p: 42 }
-     * 3. fn(fn(x)) = 42
-     * 4. fn(fn(fn(x))) throws an error because the p property is not in 42.
-     *
-     * Here we would need to call fn 3 times before getting an error. Now
-     * consider:
-     *
-     *     type Fn = <O>(O) => $PropertyType<O, 'p'>;
-     *     declare var fns: Array<Fn>;
-     *     type X = { p: X };
-     *     declare var x: X;
-     *     compose(...fns)(x);
-     *
-     * This is valid.
-     *
-     * To implement spreads in compose functions we first add a constraint based
-     * on tin and tout assuming that the spread is empty. Then we emit recursive
-     * constraints:
-     *
-     *     spread_fn(tin) ~> tout
-     *     spread_fn(tout) ~> tin
-     *
-     * The implementation of Flow should be able to terminate these recursive
-     * constraints. If it doesn't then we have a bug. *)
     | (_, [], Some spread_fn) ->
-      run_compose cx trace ~use_op reason_op reverse [] None tin tout;
-      run_compose cx trace ~use_op reason_op reverse [spread_fn] None tin tout;
-      run_compose cx trace ~use_op reason_op reverse [spread_fn] None tout tin
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EUnsupportedSyntax (spread_fn |> TypeUtil.reason_of_t |> aloc_of_reason, SpreadArgument)
+        );
+      rec_flow_t cx ~use_op:unknown_use trace (AnyT.error reason_op, OpenT tin);
+      rec_flow_t cx ~use_op:unknown_use trace (AnyT.error reason_op, OpenT tout)
 
   let run cx trace ~use_op ~return_hint reason_op kind args spread_arg tout =
     match kind with
