@@ -96,3 +96,12 @@ const j = { p: 1 };
 
 (i.p: string); // error
 (i.p: number);
+
+const boolean = 1;
+(1: typeof boolean); // OK
+
+const type = 'foo';
+('foo': typeof type); // OK
+
+const o = {default: 1};
+(1: typeof o.default); // OK
