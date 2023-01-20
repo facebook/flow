@@ -307,6 +307,12 @@ let docblock_overrides docblock_info metadata =
     else
       metadata
   in
+  let metadata =
+    if Docblock.lti docblock_info then
+      { metadata with inference_mode = Options.LTI }
+    else
+      metadata
+  in
   metadata
 
 let empty_sig_cx =
