@@ -517,7 +517,7 @@ module Expression
       );
       let (stack, right) =
         match next with
-        | T_IDENTIFIER { raw = ("as" | "satisfies") as keyword; _ } ->
+        | T_IDENTIFIER { raw = ("as" | "satisfies") as keyword; _ } when should_parse_types env ->
           Eat.token env;
           let right = as_expression env right in
           let (stack, expr) =
