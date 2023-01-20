@@ -295,30 +295,19 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test20.js:14:26
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    test20.js:14:26
-   14| [""].reduce((acc,str) => acc * str.length);
-                                ^^^
+     14| [""].reduce((acc,str) => acc * str.length);
+                                  ^^^^^^^^^^^^^^^^
 
 References:
    test20.js:14:2
-   14| [""].reduce((acc,str) => acc * str.length);
-        ^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- test20.js:14:36
-
-Cannot get `str.length` because property `length` is missing in `Number` [1]. [prop-missing]
-
-   test20.js:14:36
-   14| [""].reduce((acc,str) => acc * str.length);
-                                          ^^^^^^
-
-References:
-   test20.js:14:26
-   14| [""].reduce((acc,str) => acc * str.length);
-                                ^^^^^^^^^^^^^^^^ [1]
+     14| [""].reduce((acc,str) => acc * str.length);
+          ^^ [1]
+   <BUILTINS>/core.js:1288:13
+   1288|     length: number;
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test21.js:11:2
@@ -475,7 +464,7 @@ References:
 
 
 
-Found 25 errors
+Found 24 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

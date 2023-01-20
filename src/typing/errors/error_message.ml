@@ -487,6 +487,12 @@ and 'loc t' =
       kind: ts_syntax_kind;
       loc: 'loc;
     }
+  | EInvalidBinaryArith of {
+      reason_out: 'loc virtual_reason;
+      reason_l: 'loc virtual_reason;
+      reason_r: 'loc virtual_reason;
+      kind: ArithKind.t;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1161,6 +1167,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBigIntNumCoerce r -> EBigIntNumCoerce (map_reason r)
   | EInvalidCatchParameterAnnotation loc -> EInvalidCatchParameterAnnotation (f loc)
   | ETSSyntax { kind; loc } -> ETSSyntax { kind; loc = f loc }
+  | EInvalidBinaryArith { reason_out; reason_l; reason_r; kind } ->
+    EInvalidBinaryArith
+      {
+        reason_out = map_reason reason_out;
+        reason_l = map_reason reason_l;
+        reason_r = map_reason reason_r;
+        kind;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1409,7 +1423,8 @@ let util_use_op_of_msg nope util = function
   | EBigIntRShift3 _
   | EBigIntNumCoerce _
   | EInvalidCatchParameterAnnotation _
-  | ETSSyntax _ ->
+  | ETSSyntax _
+  | EInvalidBinaryArith _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1474,7 +1489,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidConstructor reason
   | EInvalidDeclaration { declaration = reason; _ }
   | EBigIntRShift3 reason
-  | EBigIntNumCoerce reason ->
+  | EBigIntNumCoerce reason
+  | EInvalidBinaryArith { reason_out = reason; _ } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -4436,6 +4452,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       Normal { features }
   end
+  | EInvalidBinaryArith { reason_out = _; reason_l; reason_r; kind } ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use operator `";
+            text (Type.ArithKind.string_of_arith_kind kind);
+            text "` with operands ";
+            ref reason_l;
+            text " and ";
+            ref reason_r;
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -4504,6 +4533,11 @@ let error_code_of_message err : error_code option =
   match err with
   | EAdditionMixed _ -> Some UnclearAddition
   | EArithmeticOperand _ -> Some UnsafeArith
+  | EInvalidBinaryArith { kind = (_, op); _ } -> begin
+    match op with
+    | Type.ArithKind.Plus -> Some UnsafeAddition
+    | _ -> Some UnsafeArith
+  end
   | EAssignConstLikeBinding _ -> Some CannotReassignConstLike
   | EBadExportContext _ -> Some InvalidExport
   | EBadExportPosition _ -> Some InvalidExport

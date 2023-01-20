@@ -97,58 +97,36 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:46:29
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    array_lib.js:46:29
-   46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                   ^^^
+     46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+                                     ^^^^^^^^^^^^^^^^
 
 References:
    array_lib.js:46:4
-   46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-          ^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- array_lib.js:46:39
-
-Cannot get `str.length` because property `length` is missing in `Number` [1]. [prop-missing]
-
-   array_lib.js:46:39
-   46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                             ^^^^^^
-
-References:
-   array_lib.js:46:29
-   46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                   ^^^^^^^^^^^^^^^^ [1]
+     46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+            ^^ [1]
+   <BUILTINS>/core.js:1288:13
+   1288|     length: number;
+                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:47:34
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
    array_lib.js:47:34
-   47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                        ^^^
+     47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+                                          ^^^^^^^^^^^^^^^^
 
 References:
    array_lib.js:47:4
-   47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-          ^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- array_lib.js:47:44
-
-Cannot get `str.length` because property `length` is missing in `Number` [1]. [prop-missing]
-
-   array_lib.js:47:44
-   47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                                  ^^^^^^
-
-References:
-   array_lib.js:47:34
-   47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                        ^^^^^^^^^^^^^^^^ [1]
+     47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+            ^^ [1]
+   <BUILTINS>/core.js:1288:13
+   1288|     length: number;
+                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:63:57
@@ -449,4 +427,4 @@ Cannot assign `7` to `t.length` because property `length` is not writable. [cann
 
 
 
-Found 29 errors
+Found 27 errors

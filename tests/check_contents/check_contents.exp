@@ -91,12 +91,21 @@ File is not @flow!
 
 not_flow.js with --all
 
-Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:1
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands number [1] and string [2] [unsafe-arithmetic]
 
+   not_flow.js:1:1
    1| 1 * 'foo';
-          ^^^^^ [1]
+      ^^^^^^^^^
+
+References:
+   not_flow.js:1:1
+   1| 1 * 'foo';
+      ^ [1]
+   not_flow.js:1:5
+   1| 1 * 'foo';
+          ^^^^^ [2]
 
 
 

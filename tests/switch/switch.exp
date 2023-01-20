@@ -1,29 +1,83 @@
 Error -------------------------------------------------------------------------------------------------- switch.js:28:13
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands number [1] and string [2] [unsafe-arithmetic]
 
    switch.js:28:13
    28|         x = x*x;
-                   ^
+                   ^^^
 
 References:
+   switch.js:23:16
+   23|     var x = b? 0: "";
+                      ^ [1]
    switch.js:23:19
    23|     var x = b? 0: "";
-                         ^^ [1]
+                         ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- switch.js:28:15
+Error -------------------------------------------------------------------------------------------------- switch.js:28:13
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
-   switch.js:28:15
+   switch.js:28:13
    28|         x = x*x;
-                     ^
+                   ^^^
 
 References:
    switch.js:23:19
    23|     var x = b? 0: "";
                          ^^ [1]
+   switch.js:23:16
+   23|     var x = b? 0: "";
+                      ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- switch.js:28:13
+
+Cannot use operator `*` with operands string [1] and string [1] [unsafe-arithmetic]
+
+   switch.js:28:13
+   28|         x = x*x;
+                   ^^^
+
+References:
+   switch.js:23:19
+   23|     var x = b? 0: "";
+                         ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- switch.js:28:13
+
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+
+   switch.js:28:13
+   28|         x = x*x;
+                   ^^^
+
+References:
+   switch.js:23:19
+   23|     var x = b? 0: "";
+                         ^^ [1]
+   switch.js:26:13
+   26|         x = 0;
+                   ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- switch.js:28:13
+
+Cannot use operator `*` with operands number [1] and string [2] [unsafe-arithmetic]
+
+   switch.js:28:13
+   28|         x = x*x;
+                   ^^^
+
+References:
+   switch.js:26:13
+   26|         x = 0;
+                   ^ [1]
+   switch.js:23:19
+   23|     var x = b? 0: "";
+                         ^^ [2]
 
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:16:6
@@ -195,4 +249,4 @@ References:
 
 
 
-Found 12 errors
+Found 15 errors

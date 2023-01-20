@@ -1829,6 +1829,13 @@ let dump_error_message =
     | EInvalidCatchParameterAnnotation loc ->
       spf "EInvalidCatchParameterAnnotation (%s)" (string_of_aloc loc)
     | ETSSyntax { loc; _ } -> spf "ETSSyntax (%s)" (string_of_aloc loc)
+    | EInvalidBinaryArith { reason_out; reason_l; reason_r; kind } ->
+      spf
+        "EInvalidBinaryArith (%s, %s, %s, %s)"
+        (dump_reason cx reason_out)
+        (dump_reason cx reason_l)
+        (dump_reason cx reason_r)
+        (Type.ArithKind.string_of_arith_kind kind)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

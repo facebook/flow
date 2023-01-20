@@ -71,22 +71,19 @@ let tests = [
     ({} + x); // error
   },
 
-  // when one side is a string or number and the other is invalid, we
-  // assume you are expecting a string or number (respectively), rather than
-  // erroring twice saying number !~> string and obj !~> string.
   function() {
-    ((1 + {}): number); // error: object !~> number
-    (({} + 1): number); // error: object !~> number
-    (("1" + {}): string); // error: object !~> string
-    (({} + "1"): string); // error: object !~> string
+    (1 + {}); // error
+    ({} + 1); // error
+    ("1" + {}); // error
+    ({} + "1"); // error
   },
 
   function(x: any, y: number, z: string) {
     (x + y: string); // ok
     (y + x: string); // ok
 
-    (x + z: empty); // error, string ~> empty
-    (z + x: empty); // error, string ~> empty
+    (x + z: any); // ok
+    (z + x: any); // ok
   },
 
   function(x: number, y: number) {

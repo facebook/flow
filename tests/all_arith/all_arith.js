@@ -9,7 +9,7 @@ declare var aDate: Date;
 declare var aBoolean: boolean;
 declare var aT: T;
 // null
-declare var anArray: Array<anEmpty>
+declare var anArray: Array<empty>
 declare var anObject: {}
 declare var aMixed: mixed;
 declare var anAny: any;
@@ -40,8 +40,8 @@ declare var anEmpty: empty;
 (aNumber * anArray); // error
 (aNumber * anObject); // error
 (aNumber * aMixed); // error
-(aNumber * anAny : number); // ok
-(aNumber * anEmpty : number); // ok
+(aNumber * anAny : any); // ok
+(aNumber * anEmpty : empty); // ok
 
 // aString + _
 (aString + aString : string); // ok
@@ -53,7 +53,7 @@ declare var anEmpty: empty;
 (aString + anArray); // error
 (aString + anObject); // error
 (aString + aMixed); // error
-(aString + anAny : string); // ok
+(aString + anAny : any); // ok
 (aString + anEmpty : empty); // ok
 
 // aString * _
@@ -66,8 +66,8 @@ declare var anEmpty: empty;
 (aString * anArray); // error
 (aString * anObject); // error
 (aString * aMixed); // error
-(aString * anAny); // error
-(aString * anEmpty); // error
+(aString * anAny : any); // ok
+(aString * anEmpty : empty); // ok
 
 // aBigint + _
 (aBigint + aBigint : bigint); // ok
@@ -90,8 +90,8 @@ declare var anEmpty: empty;
 (aBigint * anArray); // error
 (aBigint * anObject); // error
 (aBigint * aMixed); // error
-(aBigint * anAny); // error
-(aBigint * anEmpty); // error
+(aBigint * anAny : any); // ok
+(aBigint * anEmpty : empty); // ok
 
 // aDate + _
 (aDate + aDate); // error
@@ -112,8 +112,8 @@ declare var anEmpty: empty;
 (aDate * anArray); // error
 (aDate * anObject); // error
 (aDate * aMixed); // error
-(aDate * anAny : number); // ok
-(aDate * anEmpty : number); // ok
+(aDate * anAny : any); // ok
+(aDate * anEmpty : empty); // ok
 
 // aBoolean + _
 (aBoolean + aBoolean); // error
@@ -132,8 +132,8 @@ declare var anEmpty: empty;
 (aBoolean * anArray); // error
 (aBoolean * anObject); // error
 (aBoolean * aMixed); // error
-(aBoolean * anAny); // error
-(aBoolean * anEmpty); // error
+(aBoolean * anAny : any); // ok
+(aBoolean * anEmpty : empty); // ok
 
 // t + _
 (aT + aT); // error
@@ -150,15 +150,15 @@ declare var anEmpty: empty;
 (aT * anArray); // error
 (aT * anObject); // error
 (aT * aMixed); // error
-(aT * anAny); // error
-(aT * anEmpty); // error
+(aT * anAny : any); // ok
+(aT * anEmpty : empty); // ok
 
 // null + _
 (null + null); // error
 (null + anArray); // error
 (null + anObject); // error
 (null + aMixed); // error
-(null + anAny); // error
+(null + anAny : any); // ok
 (null + anEmpty : empty); // ok
 
 // null * _
@@ -166,8 +166,8 @@ declare var anEmpty: empty;
 (null * anArray); // error
 (null * anObject); // error
 (null * aMixed); // error
-(null * anAny); // error
-(null * anEmpty); // error
+(null * anAny : any); // ok
+(null * anEmpty : empty); // ok
 
 // anArray + _
 (anArray + anArray); // error
@@ -180,8 +180,8 @@ declare var anEmpty: empty;
 (anArray * anArray); // error
 (anArray * anObject); // error
 (anArray * aMixed); // error
-(anArray * anAny); // error
-(anArray * anEmpty); // error
+(anArray * anAny : any); // ok
+(anArray * anEmpty : empty); // ok
 
 // anObject + _
 (anObject + anObject); // error
@@ -192,18 +192,18 @@ declare var anEmpty: empty;
 // anObject * _
 (anObject * anObject); // error
 (anObject * aMixed); // error
-(anObject * anAny); // error
-(anObject * anEmpty); // error
+(anObject * anAny : any); // ok
+(anObject * anEmpty : empty); // ok
 
 // aMixed + _
 (aMixed + aMixed); // error
-(aMixed + anAny); // error
+(aMixed + anAny : any); // ok
 (aMixed + anEmpty : empty); // ok
 
 // aMixed * _
 (aMixed * aMixed); // error
-(aMixed * anAny); // error
-(aMixed * anEmpty); // error
+(aMixed * anAny : any); // ok
+(aMixed * anEmpty : empty); // ok
 
 // anAny + _
 (anAny + anAny : any); // ok
