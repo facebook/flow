@@ -1947,6 +1947,11 @@ let tests =
            assert_statement_string ~ctxt "type a={readonly [string]:mixed};";
            assert_statement_string ~ctxt "type a=[readonly foo:string];"
          );
+         ( "in_out_variance" >:: fun ctxt ->
+           assert_statement_string ~ctxt "type T<in A>=A;";
+           assert_statement_string ~ctxt "type T<out A>=A;";
+           assert_statement_string ~ctxt "type T<in out A>=A;"
+         );
          ( "ts_type_cast_expression" >:: fun ctxt ->
            assert_expression_string ~ctxt "a as T";
            assert_expression_string ~ctxt "a satisfies T";

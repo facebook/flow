@@ -112,6 +112,9 @@ and Variance : sig
     | Plus
     | Minus
     | Readonly
+    | In
+    | Out
+    | InOut
 
   and 'M t' = {
     kind: kind;

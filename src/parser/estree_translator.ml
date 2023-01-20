@@ -1391,15 +1391,17 @@ with type t = Impl.t = struct
     and variable_declarator (loc, { Statement.VariableDeclaration.Declarator.id; init }) =
       node "VariableDeclarator" loc [("id", pattern id); ("init", option expression init)]
     and variance (loc, { Variance.kind; comments }) =
-      let kind =
-        Variance.(
-          match kind with
-          | Plus -> string "plus"
-          | Minus -> string "minus"
-          | Readonly -> string "readonly"
-        )
+      let open Variance in
+      let kind_str =
+        match kind with
+        | Plus -> "plus"
+        | Minus -> "minus"
+        | Readonly -> "readonly"
+        | In -> "in"
+        | Out -> "out"
+        | InOut -> "in-out"
       in
-      node ?comments "Variance" loc [("kind", kind)]
+      node ?comments "Variance" loc [("kind", string kind_str)]
     and _type (loc, t) =
       Type.(
         match t with

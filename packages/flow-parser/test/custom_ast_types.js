@@ -140,7 +140,10 @@ function custom_ast_types(fork) {
     .build('argument')
     .field('argument', def('FlowType'));
   def('TypeParameter').field('usesExtendsBound', or(undefined, Boolean));
-  def('Variance').field('kind', or('plus', 'minus', 'readonly'));
+  def('Variance').field(
+    'kind',
+    or('plus', 'minus', 'readonly', 'in', 'out', 'in-out'),
+  );
   def('AsExpression')
     .bases('Expression')
     .build('expression', 'typeAnnotation')

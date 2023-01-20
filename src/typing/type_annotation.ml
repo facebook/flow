@@ -237,6 +237,18 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       Flow_js_utils.add_output
         cx
         (Error_message.ETSSyntax { kind = Error_message.TSReadonlyVariance; loc })
+    | Some (loc, { Ast.Variance.kind = Ast.Variance.In; _ }) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `In; loc })
+    | Some (loc, { Ast.Variance.kind = Ast.Variance.Out; _ }) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `Out; loc })
+    | Some (loc, { Ast.Variance.kind = Ast.Variance.InOut; _ }) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `InOut; loc })
     | _ -> ());
     Typed_ast_utils.polarity variance
 

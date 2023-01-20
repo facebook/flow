@@ -646,6 +646,7 @@ and ts_syntax_kind =
   | TSKeyof
   | TSTypeParamExtends
   | TSReadonlyVariance
+  | TSInOutVariance of [ `In | `Out | `InOut ]
   | TSTypeCast of [ `AsConst | `As | `Satisfies ]
 
 let string_of_assigned_const_like_binding_type = function
@@ -4384,6 +4385,41 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               text " for dictionaries, and ";
               code "type T = [+foo: string]";
               text " for tuple elements.";
+            ];
+        }
+    | TSInOutVariance `In ->
+      Normal
+        {
+          features =
+            [
+              text "The equivalent of TypeScript's ";
+              code "in";
+              text " variance annotation is ";
+              code "-";
+              text " in Flow.";
+            ];
+        }
+    | TSInOutVariance `Out ->
+      Normal
+        {
+          features =
+            [
+              text "The equivalent of TypeScript's ";
+              code "out";
+              text " variance annotation is ";
+              code "+";
+              text " in Flow.";
+            ];
+        }
+    | TSInOutVariance `InOut ->
+      Normal
+        {
+          features =
+            [
+              text "The equivalent of TypeScript's ";
+              code "in out";
+              text " variance annotation in Flow is to simply leave it out - ";
+              text "it's the default if you don't have a variance annotation.";
             ];
         }
     | TSTypeCast kind ->
