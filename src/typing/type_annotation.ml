@@ -316,6 +316,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), Keyof (Tast_utils.error_mapper#keyof_type keyof))
+    | (loc, ReadOnly ro) ->
+      let { ReadOnly.argument; _ } = ro in
+      let arg_kind =
+        match argument with
+        | (_, Array _) -> Some `Array
+        | (_, Tuple _) -> Some `Tuple
+        | _ -> None
+      in
+      Flow_js_utils.add_output
+        cx
+        (Error_message.ETSSyntax { kind = Error_message.TSReadonlyType arg_kind; loc });
+      let t = AnyT.at (AnyError None) loc in
+      ((loc, t), ReadOnly (Tast_utils.error_mapper#readonly_type ro))
     | (loc, Tuple { Tuple.elements; comments }) ->
       let (ts_rev, els_rev, els_ast_rev) =
         Base.List.fold elements ~init:([], [], []) ~f:(fun (ts, els, els_ast) element ->

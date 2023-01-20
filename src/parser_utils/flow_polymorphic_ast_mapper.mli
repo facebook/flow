@@ -405,6 +405,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method keyof_type : ('M, 'T) Ast.Type.Keyof.t -> ('N, 'U) Ast.Type.Keyof.t
 
+    method readonly_type : ('M, 'T) Ast.Type.ReadOnly.t -> ('N, 'U) Ast.Type.ReadOnly.t
+
     method label_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 
     method labeled_statement : ('M, 'T) Ast.Statement.Labeled.t -> ('N, 'U) Ast.Statement.Labeled.t

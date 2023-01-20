@@ -1,12 +1,8 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":17}},
-      "message":"Unexpected token `readonly`, expected a type"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":17}},
-      "message":"Unexpected identifier, expected the token `;`"
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "message":"Unexpected end of input, expected a type"
     }
   ],
   "type":"Program",
@@ -15,8 +11,8 @@
   "body":[
     {
       "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":8}},
-      "range":[0,8],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":17}},
+      "range":[0,17],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":6}},
@@ -27,24 +23,15 @@
       },
       "typeParameters":null,
       "right":{
-        "type":"AnyTypeAnnotation",
-        "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":17}},
-        "range":[9,17]
-      }
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":17}},
-      "range":[9,17],
-      "expression":{
-        "type":"Identifier",
+        "type":"ReadOnlyTypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":17}},
         "range":[9,17],
-        "name":"readonly",
-        "typeAnnotation":null,
-        "optional":false
-      },
-      "directive":null
+        "argument":{
+          "type":"AnyTypeAnnotation",
+          "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+          "range":[18,18]
+        }
+      }
     }
   ],
   "comments":[]

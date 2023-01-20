@@ -368,6 +368,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module ReadOnly : sig
+    type ('M, 'T) t = {
+      argument: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Tuple : sig
     module LabeledElement : sig
       type ('M, 'T) t = {
@@ -457,6 +465,7 @@ and Type : sig
     | Intersection of ('M, 'T) Intersection.t
     | Typeof of ('M, 'T) Typeof.t
     | Keyof of ('M, 'T) Keyof.t
+    | ReadOnly of ('M, 'T) ReadOnly.t
     | Tuple of ('M, 'T) Tuple.t
     | StringLiteral of 'M StringLiteral.t
     | NumberLiteral of 'M NumberLiteral.t

@@ -139,6 +139,10 @@ function custom_ast_types(fork) {
     .bases('FlowType')
     .build('argument')
     .field('argument', def('FlowType'));
+  def('ReadOnlyTypeAnnotation')
+    .bases('FlowType')
+    .build('argument')
+    .field('argument', def('FlowType'));
   def('TypeParameter').field('usesExtendsBound', or(undefined, Boolean));
   def('Variance').field(
     'kind',

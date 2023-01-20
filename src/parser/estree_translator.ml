@@ -1427,6 +1427,7 @@ with type t = Impl.t = struct
         | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
         | Keyof t -> keyof_type (loc, t)
+        | ReadOnly t -> read_only_type (loc, t)
         | Tuple t -> tuple_type (loc, t)
         | StringLiteral s -> string_literal_type (loc, s)
         | NumberLiteral n -> number_literal_type (loc, n)
@@ -1687,6 +1688,8 @@ with type t = Impl.t = struct
       node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
     and keyof_type (loc, { Type.Keyof.argument; comments }) =
       node ?comments "KeyofTypeAnnotation" loc [("argument", _type argument)]
+    and read_only_type (loc, { Type.ReadOnly.argument; comments }) =
+      node ?comments "ReadOnlyTypeAnnotation" loc [("argument", _type argument)]
     and tuple_type (loc, { Type.Tuple.elements; comments }) =
       node
         ?comments

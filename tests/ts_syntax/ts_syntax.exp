@@ -148,6 +148,31 @@ The closest equivalent of TypeScript's `never` type in Flow is `empty`. [ts-synt
                ^^^^^
 
 
+Error -------------------------------------------------------------------------------------------- readonly_type.js:1:10
+
+The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `$ReadOnly<[T, S]>`. [ts-syntax]
+
+   1| type A = readonly [string, number]; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- readonly_type.js:2:10
+
+The equivalent of TypeScript's `readonly` type operator applied to an array type is `$ReadOnlyArray<T>`. [ts-syntax]
+
+   2| type B = readonly string[]; // ERROR
+               ^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- readonly_type.js:3:10
+
+TypeScript's `readonly` type operator is not valid in Flow. For array types, you can use `$ReadOnlyArray<T>`. For object
+and tuple types you can use `$ReadOnly<T>`. [ts-syntax]
+
+   3| type C = readonly number; // ERROR
+               ^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------- readonly_variance.js:2:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
@@ -255,4 +280,4 @@ The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
 
 
 
-Found 29 errors
+Found 32 errors
