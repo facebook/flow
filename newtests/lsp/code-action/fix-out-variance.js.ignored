@@ -1,0 +1,3 @@
+// @flow
+
+declare function f<out A>(): A;

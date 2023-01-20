@@ -546,6 +546,42 @@ let ast_transforms_of_error ?loc = function
       ]
     else
       []
+  | Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `In; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `-`";
+          diagnostic_title = "convert_in_variance";
+          transform = Autofix_ts_syntax.convert_in_variance;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `Out; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `+`";
+          diagnostic_title = "convert_out_variance";
+          transform = Autofix_ts_syntax.convert_out_variance;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `InOut; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Remove";
+          diagnostic_title = "remove_in_out_variance";
+          transform = Autofix_ts_syntax.remove_in_out_variance;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | Error_message.ETSSyntax { kind = Error_message.TSTypeCast `As; loc = error_loc } ->
     if loc_opt_intersects ~error_loc ~loc then
       [

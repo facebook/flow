@@ -1,0 +1,3 @@
+// @flow
+
+declare function f<in A>(A): void;

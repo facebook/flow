@@ -32,6 +32,9 @@ class mapper target_loc kind =
       match tparam with
       | { bound_kind = Extends; _ } when kind = `TypeParamExtends && this#is_target loc ->
         (Loc.none, { tparam with bound_kind = Colon })
+      | { variance = Some (v_loc, Flow_ast.Variance.{ kind = InOut; _ }); _ }
+        when kind = `InOutVariance && this#is_target v_loc ->
+        (Loc.none, { tparam with variance = None })
       | _ -> super#type_param (loc, tparam)
 
     method! variance variance =
@@ -40,6 +43,8 @@ class mapper target_loc kind =
       match variance_kind with
       | Readonly when kind = `ReadonlyVariance && this#is_target loc ->
         (Loc.none, { kind = Plus; comments })
+      | In when kind = `InVariance && this#is_target loc -> (Loc.none, { kind = Minus; comments })
+      | Out when kind = `OutVariance && this#is_target loc -> (Loc.none, { kind = Plus; comments })
       | _ -> super#variance variance
 
     method! expression e =
@@ -80,6 +85,18 @@ let convert_type_param_extends ast loc =
 
 let convert_readonly_variance ast loc =
   let mapper = new mapper loc `ReadonlyVariance in
+  mapper#program ast
+
+let convert_in_variance ast loc =
+  let mapper = new mapper loc `InVariance in
+  mapper#program ast
+
+let convert_out_variance ast loc =
+  let mapper = new mapper loc `OutVariance in
+  mapper#program ast
+
+let remove_in_out_variance ast loc =
+  let mapper = new mapper loc `InOutVariance in
   mapper#program ast
 
 let convert_as_expression ast loc =

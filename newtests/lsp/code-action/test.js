@@ -2768,6 +2768,207 @@ module.exports = (suite(
           ],
         )
     ]),
+    test('provide quickfix for `in` variance', [
+      addFile('fix-in-variance.js.ignored', 'fix-in-variance.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-in-variance.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 20,
+          },
+          end: {
+            line: 2,
+            character: 21,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to `-`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-in-variance.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 18
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 33
+                            }
+                          },
+                          "newText": ": (<-A>(A) => void)"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_in_variance",
+                      "Convert to `-`"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
+    test('provide quickfix for `out` variance', [
+      addFile('fix-out-variance.js.ignored', 'fix-out-variance.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-out-variance.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 20,
+          },
+          end: {
+            line: 2,
+            character: 21,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Convert to `+`",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-out-variance.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 18
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 30
+                            }
+                          },
+                          "newText": ": (<+A>() => A)"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "convert_out_variance",
+                      "Convert to `+`"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
+    test('provide quickfix for `in out` variance', [
+      addFile('fix-in-out-variance.js.ignored', 'fix-in-out-variance.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-in-out-variance.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 20,
+          },
+          end: {
+            line: 2,
+            character: 21,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Remove",
+                  "kind": "quickfix",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/fix-in-out-variance.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 2,
+                              "character": 18
+                            },
+                            "end": {
+                              "line": 2,
+                              "character": 34
+                            }
+                          },
+                          "newText": ": (<A>(A) => A)"
+                        }
+                      ]
+                    }
+                  },
+                  "command": {
+                    "title": "",
+                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+                    "arguments": [
+                      "textDocument/codeAction",
+                      "remove_in_out_variance",
+                      "Remove"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        )
+    ]),
     test('provide quickfix for `as` type cast', [
       addFile('fix-as-expression.js.ignored', 'fix-as-expression.js'),
       lspStartAndConnect(),
