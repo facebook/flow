@@ -18,3 +18,5 @@ class C {
 interface I {
   readonly prop: string; // ERROR
 }
+
+const readonly = 1; // OK

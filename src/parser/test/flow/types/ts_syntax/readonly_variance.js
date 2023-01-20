@@ -3,6 +3,9 @@ type Obj = {
 };
 type Valid = {
   readonly: string,
+  readonly?: string,
+  readonly(): string,
+  readonly<T>(): T,
 };
 
 type Indexer = {
@@ -13,7 +16,12 @@ class C {
   readonly prop: string;
 }
 class ValidC {
-  readonly: string;
+  readonly: void;
+  readonly(): void {}
+  readonly<T>(): T {}
+  static readonly: void;
+  static readonly(): void {}
+  static readonly<T>(): T {}
 }
 
 interface I {
@@ -21,4 +29,9 @@ interface I {
 }
 interface ValidI {
   readonly: string;
+  readonly?: string;
+  readonly(): T;
+  readonly<T>(): T;
 }
+
+const readonly = 1;
