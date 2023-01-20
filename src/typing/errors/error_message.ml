@@ -4379,12 +4379,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               text " to specify read only properties, Flow uses ";
               code "+";
               text " in the form ";
-              code "type T = {+foo: string}";
-              text " for properties, ";
-              code "type T = {+[string]: mixed}";
-              text " for dictionaries, and ";
-              code "type T = [+foo: string]";
-              text " for tuple elements.";
+              code "+foo: T";
+              text " for class and object type properties, and ";
+              code "+[string]: T";
+              text " for dictionaries.";
             ];
         }
     | TSInOutVariance `In ->
