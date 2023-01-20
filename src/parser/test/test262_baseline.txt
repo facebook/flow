@@ -3382,10 +3382,6 @@ language/statements/const/static-init-await-binding-valid.js (strict mode)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 language/statements/const/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
-language/statements/for-await-of/head-lhs-async.js (strict mode)
-  Invalid left-hand side in for-of at (18, 13) to (18, 18)
-language/statements/for-await-of/head-lhs-async.js (default)
-  Invalid left-hand side in for-of at (18, 13) to (18, 18)
 language/statements/for-in/head-const-bound-names-dup.js (strict mode)
   Missing parse error
 language/statements/for-in/head-const-bound-names-dup.js (default)
@@ -3726,8 +3722,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84668 (97.85%)
-Failed:  1861 (2.15%)
+Passed:  84670 (97.85%)
+Failed:  1859 (2.15%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3737,7 +3733,7 @@ Features:
   arbitrary-module-namespace-names: 20/32 (62.50%)
   arrow-function: 1478/1496 (98.80%)
   async-functions: 1212/1292 (93.81%)
-  async-iteration: 9616/9728 (98.85%)
+  async-iteration: 9618/9728 (98.87%)
   class: 8989/9241 (97.27%)
   class-fields-private: 1945/2001 (97.20%)
   class-fields-private-in: 16/38 (42.11%)
