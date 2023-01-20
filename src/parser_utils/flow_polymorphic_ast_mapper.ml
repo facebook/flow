@@ -1035,6 +1035,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Option.map ~f:this#syntax comments in
       { argument = argument'; comments = comments' }
 
+    method readonly_type (t : ('M, 'T) Ast.Type.ReadOnly.t) : ('N, 'U) Ast.Type.ReadOnly.t =
+      let open Ast.Type.ReadOnly in
+      let { argument; comments } = t in
+      let argument' = this#type_ argument in
+      let comments' = Option.map ~f:this#syntax comments in
+      { argument = argument'; comments = comments' }
+
     method tuple_element (element : ('M, 'T) Ast.Type.Tuple.element)
         : ('N, 'U) Ast.Type.Tuple.element =
       let open Ast.Type.Tuple in
@@ -1143,6 +1150,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Array t' -> Array (this#array_type t')
         | Typeof t' -> Typeof (this#typeof_type t')
         | Keyof t' -> Keyof (this#keyof_type t')
+        | ReadOnly t' -> ReadOnly (this#readonly_type t')
         | Function ft -> Function (this#function_type ft)
         | Object ot -> Object (this#object_type ot)
         | Interface i -> Interface (this#interface_type i)

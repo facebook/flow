@@ -648,6 +648,7 @@ and ts_syntax_kind =
   | TSReadonlyVariance
   | TSInOutVariance of [ `In | `Out | `InOut ]
   | TSTypeCast of [ `AsConst | `As | `Satisfies ]
+  | TSReadonlyType of [ `Tuple | `Array ] option
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -4449,6 +4450,38 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             ]
         else
           features
+      in
+      Normal { features }
+    | TSReadonlyType (Some arg_kind) ->
+      let (arg_type, example) =
+        match arg_kind with
+        | `Tuple -> ("a tuple", "$ReadOnly<[T, S]>")
+        | `Array -> ("an array", "$ReadOnlyArray<T>")
+      in
+      let features =
+        [
+          text "The equivalent of TypeScript's ";
+          code "readonly";
+          text " type operator applied to ";
+          text arg_type;
+          text " type is ";
+          code example;
+          text ".";
+        ]
+      in
+      Normal { features }
+    | TSReadonlyType None ->
+      let features =
+        [
+          text "TypeScript's ";
+          code "readonly";
+          text " type operator is not valid in Flow. ";
+          text "For array types, you can use ";
+          code "$ReadOnlyArray<T>";
+          text ". For object and tuple types you can use ";
+          code "$ReadOnly<T>";
+          text ".";
+        ]
       in
       Normal { features }
   end
