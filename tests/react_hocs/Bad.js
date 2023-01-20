@@ -14,7 +14,7 @@ export default (compose(
   mapProps(({ buz }: { buz: string }) => ({ // Error: Missing foo
     buz: (buz * 2).toString(), // Error: string ~> number
   })),
-  withProps(({ buz }: { buz: string }) => ({
+  withProps(({ buz }: {| buz: string |}) => ({
     bar: buz,
   })),
 )(Bad): React.ComponentType<any>);
