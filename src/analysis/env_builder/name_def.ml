@@ -280,6 +280,7 @@ let predicate_synthesizable predicate body =
           }
         )
     )
+  | (Some _, Ast.Function.BodyExpression ((ret_loc, _) as expr))
   | (Some (ret_loc, { Ast.Type.Predicate.kind = Ast.Type.Predicate.Declared expr; comments = _ }), _)
     ->
     FunctionPredicateSynthesizable (ret_loc, expr)

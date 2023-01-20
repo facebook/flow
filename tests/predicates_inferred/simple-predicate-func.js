@@ -71,3 +71,6 @@ function two_strings(x: mixed,y: mixed): %checks {
 }
 
 declare function from_two_strings(x: string, y: string): void;
+
+const two_strings_arrow = (x: mixed,y: mixed): %checks =>
+  is_string(x) && is_string(y);
