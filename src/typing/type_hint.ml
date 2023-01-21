@@ -93,6 +93,11 @@ let in_sandbox_cx cx t ~f =
       | (exception UnconstrainedTvarException) ->
         Context.reset_errors cx original_errors;
         None
+      | exception exn ->
+        (* On other exceptions we still need to reset errors *)
+        let exn = Exception.wrap exn in
+        Context.reset_errors cx original_errors;
+        Exception.reraise exn
       | t ->
         let has_new_non_lint_errors =
           Context.errors cx
