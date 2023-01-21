@@ -14,7 +14,7 @@ var d: { (): string } = (x) => "hi"
 // ...but subtyping rules still apply
 var e: { (x: any): void } = () => { } // arity
 var f: { (): mixed } = () => "hi" // return type
-var g: { (x: Date): void } = (x) => { x * 2 } // param type (date < number)
+var g: { (x: empty): void } = (x: number) => { x * 2 } // param type (empty < number)
 
 // A function can be an object
 var y : {} = (x: mixed) => "hi"

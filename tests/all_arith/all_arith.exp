@@ -168,6 +168,23 @@ References:
                             ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ all_arith.js:36:2
+
+Cannot use operator `*` with operands number [1] and `Date` [2] [unsafe-arithmetic]
+
+   all_arith.js:36:2
+   36| (aNumber * aDate); // error
+        ^^^^^^^^^^^^^^^
+
+References:
+   all_arith.js:5:22
+    5| declare var aNumber: number;
+                            ^^^^^^ [1]
+   all_arith.js:8:20
+    8| declare var aDate: Date;
+                          ^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ all_arith.js:37:2
 
 Cannot use operator `*` with operands number [1] and boolean [2] [unsafe-arithmetic]
@@ -908,6 +925,20 @@ References:
    all_arith.js:14:21
     14| declare var aMixed: mixed;
                             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- all_arith.js:108:2
+
+Cannot use operator `*` with operands `Date` [1] and `Date` [1] [unsafe-arithmetic]
+
+   all_arith.js:108:2
+   108| (aDate * aDate); // error
+         ^^^^^^^^^^^^^
+
+References:
+   all_arith.js:8:20
+     8| declare var aDate: Date;
+                           ^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:109:2
@@ -1727,4 +1758,4 @@ References:
 
 
 
-Found 104 errors
+Found 106 errors

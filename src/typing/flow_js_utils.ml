@@ -2133,16 +2133,6 @@ let flow_arith reason l r kind add_output =
   | (Plus, DefT (_, _, StrT _), DefT (_, _, NumT _))
   | (Plus, DefT (_, _, NumT _), DefT (_, _, StrT _)) ->
     StrT.why reason |> with_trust bogus_trust
-  (* num <> date *)
-  (* date <> num *)
-  (* date <> date *)
-  (* for <> except + *)
-  | (kind, DefT (_, _, NumT _), r) when kind <> Plus && is_date r ->
-    NumT.why reason |> with_trust bogus_trust
-  | (kind, l, DefT (_, _, NumT _)) when kind <> Plus && is_date l ->
-    NumT.why reason |> with_trust bogus_trust
-  | (kind, l, r) when kind <> Plus && is_date l && is_date r ->
-    NumT.why reason |> with_trust bogus_trust
   | _ ->
     add_output
       (Error_message.EInvalidBinaryArith

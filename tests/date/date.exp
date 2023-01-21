@@ -199,6 +199,40 @@ References:
                                ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- date.js:29:17
+
+Cannot use operator `-` with operands `Date` [1] and number [2] [unsafe-arithmetic]
+
+   date.js:29:17
+   29| var n1:number = d - 12; // expect error
+                       ^^^^^^
+
+References:
+   date.js:1:9
+    1| var d = new Date(0);
+               ^^^^^^^^^^^ [1]
+   date.js:29:21
+   29| var n1:number = d - 12; // expect error
+                           ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- date.js:30:17
+
+Cannot use operator `&` with operands `Date` [1] and number [2] [unsafe-arithmetic]
+
+   date.js:30:17
+   30| var n2:number = d & 255; // expect error
+                       ^^^^^^^
+
+References:
+   date.js:1:9
+    1| var d = new Date(0);
+               ^^^^^^^^^^^ [1]
+   date.js:30:21
+   30| var n2:number = d & 255; // expect error
+                           ^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- date.js:31:17
 
 Cannot use operator `+` with operands `Date` [1] and number [2] [unsafe-addition]
@@ -216,25 +250,8 @@ References:
                            ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- date.js:32:16
 
-Cannot use operator `+` with operands `Date` [1] and number [2] [unsafe-addition]
-
-   date.js:32:16
-   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
-                      ^^^^^^
-
-References:
-   date.js:1:9
-    1| var d = new Date(0);
-               ^^^^^^^^^^^ [1]
-   date.js:32:20
-   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
-                          ^^ [2]
-
-
-
-Found 13 errors
+Found 14 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

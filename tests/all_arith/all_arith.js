@@ -33,7 +33,7 @@ declare var anEmpty: empty;
 (aNumber * aNumber : number); // ok
 (aNumber * aString); // error
 (aNumber * aBigint); // error
-(aNumber * aDate : number); // ok
+(aNumber * aDate); // error
 (aNumber * aBoolean); // error
 (aNumber * aT); // error
 (aNumber * null); // error
@@ -105,7 +105,7 @@ declare var anEmpty: empty;
 (aDate + anEmpty : empty); // ok
 
 // aDate * _
-(aDate * aDate : number); // ok
+(aDate * aDate); // error
 (aDate * aBoolean); // error
 (aDate * aT); // error
 (aDate * null); // error
