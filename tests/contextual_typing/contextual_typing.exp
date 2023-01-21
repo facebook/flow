@@ -293,6 +293,29 @@ An annotation on destructuring is required because Flow cannot infer its type fr
                                      ^^^
 
 
+Error --------------------------------------------------------------------------- poly_class_static_sanity_test.js:14:25
+
+Cannot resolve name `unbound_type`. [cannot-resolve-name]
+
+   14| declare var unused_var: unbound_type; // sanity check: should surface this error
+                               ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------- poly_class_static_sanity_test.js:16:7
+
+Cannot call `Map` because an index signature declaring the expected key / value type is missing in `$Iterable` [1].
+[incompatible-call]
+
+   poly_class_static_sanity_test.js:16:7
+   16| List([Map({name: "abc"})]); // expected error
+             ^^^
+
+References:
+   poly_class_static_sanity_test.js:5:20
+    5|   static <T>(iter: immutable$JSIterable<T>): List<T>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- react_tests.js:21:6
 
 Cannot cast `props` to empty because props [1] is incompatible with empty [2]. [incompatible-cast]
@@ -593,4 +616,4 @@ References:
 
 
 
-Found 41 errors
+Found 43 errors
