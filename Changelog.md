@@ -1,3 +1,46 @@
+### 0.198.0
+
+Likely to cause new Flow errors:
+* Implicit coercion of booleans to numbers is consistently disallowed. Previously, booleans could be implicitly coerced to numbers in addition expressions. Prefer explicitly converting booleans to numbers.
+* Binary arithmetic errors are now reported on the expression rather than the operands, and use error code `unsafe-arithmetic`.
+* `keyof`, `undefined`, `never`, `unknown`, and `readonly` are now reserved types. If you have a user-defined types of these names, rename them to something else.
+
+New Features:
+* TypeScript syntax helpers. To help people familiar with TypeScript syntax ramp up on similar Flow syntax:
+  * Parse and error on `keyof` type operator, recommending `$Keys<...>` instead.
+  * Parse and error on `undefined` type, recommending `void` instead.
+  * Parse and error on `never` type, recommending `empty` instead.
+  * Parse and error on `unknown` type, recommending `mixed` instead.
+  * Parse and error on `readonly` applied to tuple and array type syntax.
+  * Parse and error on usage of `in`/`out`/`in out` variance annotations.
+  * Parse and error on `as`, `as const`, and `satisfies` cast expressions.
+* Add a codemod to fix underconstrained-implicit-instantiation errors only detectable under LTI. You can run `flow codemod annotate-implicit-instantiations --include-lti --ignore-suppressed --write .`
+
+Notable bug fixes:
+* Fix a bug in LTI mode where some errors were hidden in implicit instantiation calls (e.g. [Try Flow](https://flow.org/try/#0CYUwxgNghgTiAEIAeAHA9jALvAZgVwDsxMBLNA+PAZxAGUQJxMMAeWgGnltoD4AKAFDx4NRsQwAueHyqYomEFNoBKeAF4eXDgOVLaAbgECw5WfBTrKNemOYwZches2z5IAHQpl++AHpf8ACSFAAyACqB8AAGrgpR8CRUCQQ4IDBwwPBQSVEAtiRIIMDxUASZVGjwmAAWiVlgYCBUSVTVaHgQmQBGCKWI6RhAA))
+* Fix unsound behavior of sentinel refinement with unions of numeric types as tags (e.g. [Try Flow](https://flow.org/try/#0CYUwxgNghgTiAEA3W8AeAuAUPeAfeA3gC4CeADiOvAIwB0ADHjbdQDTxlUB2ArgLYAjEDAC+2JsXKV4AJnad4AZyIwAllwDmIgNyZMqgGbwAFKlqkK8ALw3m9ewEpC407QXK1mh9vgB6X0oAFgD2PBDA8MIwwTDwvILC8AB+AHxKKuoamGJAA))
+* No annotation is required in LTI for callback parameters when the callee is a refined object member (e.g. [Try Flow](https://flow.org/try/#0CYUwxgNghgTiAEA3W8AeAueBveBbA-JgBRgBGxAdphQK66kgwCU8AvAHxID2AlsCx2594AXwDcAKFQA6XPABk8tLKI02nHCKZigA))
+
+IDE:
+* When typing in an object literal, entire method signatures from the object type will be suggested.
+* Method signature autocomplete items are now visually distinguished from other kinds of autocomplete items.
+* Fix manually triggering autocomplete on the last empty line of a file giving no results.
+* Members from `Object.prototype` are no longer included in autocomplete results.
+
+Parser:
+* Fix parsing of `for await (async of ...)` (regressed in 0.197.0)
+* Fix parsing of `for (let in x)` in non-strict mode
+* Fix parsing of class fields named `static`
+* Fix missing parse errors on keywords containing escape sequences (regressed in 0.180.0)
+* Fix missing parse error when using `await` as a parameter in an async arrow function
+* Fix missing parse error for `export { ReservedWord as ... }`
+* Fix incorrect parse error on `export * as ReservedWord from ...`, which is now allowed
+* Treat `&&` and `||` as tokens when parsing types to improve error messages
+* Parse the argument of the `typeof` type argument as a value, not a type, as it is a value
+
+Library Definitions:
+* Add `Element.getAttributeNames(): Array<string>`
+
 ### 0.197.0
 
 Local Type Inference:
