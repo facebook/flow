@@ -2560,6 +2560,35 @@ struct
               (tparams_loc, ids, t)
           in
           ReactJs.run cx trace ~use_op reason_op l tool
+        (* We are calling the static callable method of a class. We need to be careful
+         * not to apply the targs at this point, because this PolyT represents the class
+         * and not the static function that's being called. We implicitly instantiate
+         * the instance's tparams using the bounds and then forward the result original call
+         * instead of consuming the method call's type arguments.
+         *
+         * We use the bounds to explicitly instantiate so that we don't create yet another implicit
+         * instantiation here that would be un-annotatable. *)
+        | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = ThisClassT _ as t; _ }),
+            CallT { use_op; reason = reason_op; _ }
+          ) ->
+          let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
+          let t_ =
+            instantiate_poly_call_or_new
+              cx
+              trace
+              (tparams_loc, ids, t)
+              (Nel.to_list targs)
+              ~use_op
+              ~reason_op
+              ~reason_tapp
+          in
+          rec_flow cx trace (t_, u)
+        (* We use the ConcretizeCallee action to simplify types for hint decomposition.
+           After having instantiated polymorphic classes on static calls (case above),
+           we can just return the remaining polymorphic types, since there is not
+           much we can do about them here. These will be handled by the hint
+           decomposition code that has some knowledge of the call arguments.
+        *)
         | (DefT (_, _, PolyT _), CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
         (* Calls to polymorphic functions may cause non-termination, e.g. when the
@@ -2599,81 +2628,56 @@ struct
               calltype.call_args_tlist
           in
           begin
-            match t with
-            (* We are calling the static callable method of a class. We need to be careful
-             * not to apply the targs at this point, because this PolyT represents the class
-             * and not the static function that's being called. We implicitly instantiate
-             * the instance's tparams using the bounds and then forward the result original call
-             * instead of consuming the method call's type arguments.
-             *
-             * We use the bounds to explicitly instantiate so that we don't create yet another implicit
-             * instantiation here that would be un-annotatable. *)
-            | ThisClassT _ ->
-              let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
+            match all_explicit_targs calltype.call_targs with
+            | Some targs ->
               let t_ =
                 instantiate_poly_call_or_new
                   cx
                   trace
                   (tparams_loc, ids, t)
-                  (Nel.to_list targs)
+                  targs
                   ~use_op
                   ~reason_op
                   ~reason_tapp
               in
-              rec_flow cx trace (t_, u)
+              rec_flow
+                cx
+                trace
+                ( t_,
+                  CallT
+                    {
+                      use_op;
+                      reason = reason_op;
+                      call_action = Funcalltype { calltype with call_targs = None };
+                      return_hint;
+                    }
+                )
             | _ ->
-              (match all_explicit_targs calltype.call_targs with
-              | Some targs ->
-                let t_ =
-                  instantiate_poly_call_or_new
-                    cx
-                    trace
-                    (tparams_loc, ids, t)
-                    targs
-                    ~use_op
-                    ~reason_op
-                    ~reason_tapp
-                in
-                rec_flow
+              let poly_t = (tparams_loc, ids, t) in
+              let check = Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype in
+              let t_ =
+                ImplicitInstantiationKit.run
                   cx
+                  check
+                  ~cache:arg_reasons
                   trace
-                  ( t_,
-                    CallT
-                      {
-                        use_op;
-                        reason = reason_op;
-                        call_action = Funcalltype { calltype with call_targs = None };
-                        return_hint;
-                      }
-                  )
-              | _ ->
-                let poly_t = (tparams_loc, ids, t) in
-                let check =
-                  Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype
-                in
-                let t_ =
-                  ImplicitInstantiationKit.run
-                    cx
-                    check
-                    ~cache:arg_reasons
-                    trace
-                    ~use_op
-                    ~reason_op
-                    ~reason_tapp
-                    ~return_hint
-                in
-                rec_flow
-                  cx
-                  trace
-                  ( t_,
-                    CallT
-                      {
-                        use_op;
-                        reason = reason_op;
-                        call_action = Funcalltype { calltype with call_targs = None };
-                        return_hint;
-                      }
-                  ))
+                  ~use_op
+                  ~reason_op
+                  ~reason_tapp
+                  ~return_hint
+              in
+              rec_flow
+                cx
+                trace
+                ( t_,
+                  CallT
+                    {
+                      use_op;
+                      reason = reason_op;
+                      call_action = Funcalltype { calltype with call_targs = None };
+                      return_hint;
+                    }
+                )
           end
         | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
             ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint }
