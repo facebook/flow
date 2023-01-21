@@ -2517,7 +2517,22 @@ struct
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (ThisClassT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        (* This rule is hit when a polymorphic type appears outside a
+        (* Special case for `_ instanceof C` where C is polymorphic *)
+        | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
+            PredicateT ((RightP (InstanceofTest, _) | NotP (RightP (InstanceofTest, _))), _)
+          ) ->
+          let l =
+            instantiate_poly_default_args
+              cx
+              trace
+              ~use_op:unknown_use
+              ~reason_op:(reason_of_use_t u)
+              ~reason_tapp
+              (tparams_loc, ids, t)
+          in
+          rec_flow cx trace (l, u)
+        | (DefT (_, _, PolyT _), PredicateT (p, t)) -> predicate cx trace t l p
+        (* The rules below are hit when a polymorphic type appears outside a
            type application expression - i.e. not followed by a type argument list
            delimited by angle brackets.
            We want to require full expressions in type positions like annotations,
@@ -2525,292 +2540,270 @@ struct
            extends clauses and at function call sites - without explicit type
            arguments, since typically they're easily inferred from context.
         *)
-        | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
-          let reason_op = reason_of_use_t u in
-          let all_explicit_targs = function
-            | None -> None
-            | Some targs ->
-              Base.List.fold_right targs ~init:(Some []) ~f:(fun targ acc ->
-                  match (targ, acc) with
-                  | (ExplicitArg _, Some acc) -> Some (targ :: acc)
-                  | _ -> None
+        (* Special case for React.PropTypes.instanceOf arguments, which are an
+           exception to type arg arity strictness, because it's not possible to
+           provide args and we need to interpret the value as a type. *)
+        | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
+            ReactKitT
+              ( use_op,
+                reason_op,
+                (React.SimplifyPropType (React.SimplifyPropType.InstanceOf, _) as tool)
               )
+          ) ->
+          let l =
+            instantiate_poly_default_args
+              cx
+              trace
+              ~use_op
+              ~reason_op
+              ~reason_tapp
+              (tparams_loc, ids, t)
+          in
+          ReactJs.run cx trace ~use_op reason_op l tool
+        | (DefT (_, _, PolyT _), CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
+        (* Calls to polymorphic functions may cause non-termination, e.g. when the
+           results of the calls feed back as subtle variations of the original
+           arguments. This is similar to how we may have non-termination with
+           method calls on type applications. Thus, it makes sense to replicate
+           the specialization caching mechanism used in TypeAppT ~> MethodT to
+           avoid non-termination in PolyT ~> CallT.
+
+           As it turns out, we need a bit more work here. A call may invoke
+           different cases of an overloaded polymorphic function on different
+           arguments, so we use the reasons of arguments in addition to the reason
+           of the call as keys for caching instantiations.
+
+           On the other hand, even the reasons of arguments may not offer sufficient
+           distinguishing power when the arguments have not been concretized:
+           differently typed arguments could be incorrectly summarized by common
+           type variables they flow to, causing spurious errors. In particular, we
+           don't cache calls involved in the execution of mapped type operations
+           ($TupleMap, $ObjectMap, $ObjectMapi) to avoid this problem.
+
+           NOTE: This is probably not the final word on non-termination with
+           generics. We need to separate the double duty of reasons in the current
+           implementation as error positions and as caching keys. As error
+           positions we should be able to subject reasons to arbitrary tweaking,
+           without fearing regressions in termination guarantees.
+        *)
+        | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
+            CallT { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint }
+          )
+          when not (is_typemap_reason reason_op) ->
+          let arg_reasons =
+            Base.List.map
+              ~f:(function
+                | Arg t -> reason_of_t t
+                | SpreadArg t -> reason_of_t t)
+              calltype.call_args_tlist
           in
           begin
-            match u with
-            (* Special case for `_ instanceof C` where C is polymorphic *)
-            | PredicateT ((RightP (InstanceofTest, _) | NotP (RightP (InstanceofTest, _))), _) ->
-              let l =
-                instantiate_poly_default_args
+            match t with
+            (* We are calling the static callable method of a class. We need to be careful
+             * not to apply the targs at this point, because this PolyT represents the class
+             * and not the static function that's being called. We implicitly instantiate
+             * the instance's tparams using the bounds and then forward the result original call
+             * instead of consuming the method call's type arguments.
+             *
+             * We use the bounds to explicitly instantiate so that we don't create yet another implicit
+             * instantiation here that would be un-annotatable. *)
+            | ThisClassT _ ->
+              let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
+              let t_ =
+                instantiate_poly_call_or_new
                   cx
                   trace
-                  ~use_op:unknown_use
-                  ~reason_op
-                  ~reason_tapp
                   (tparams_loc, ids, t)
-              in
-              rec_flow cx trace (l, u)
-            | PredicateT (p, t) -> predicate cx trace t l p
-            (* Special case for React.PropTypes.instanceOf arguments, which are an
-               exception to type arg arity strictness, because it's not possible to
-               provide args and we need to interpret the value as a type. *)
-            | ReactKitT
-                ( use_op,
-                  reason_op,
-                  (React.SimplifyPropType (React.SimplifyPropType.InstanceOf, _) as tool)
-                ) ->
-              let l =
-                instantiate_poly_default_args
-                  cx
-                  trace
+                  (Nel.to_list targs)
                   ~use_op
                   ~reason_op
                   ~reason_tapp
-                  (tparams_loc, ids, t)
-              in
-              ReactJs.run cx trace ~use_op reason_op l tool
-            (* Calls to polymorphic functions may cause non-termination, e.g. when the
-               results of the calls feed back as subtle variations of the original
-               arguments. This is similar to how we may have non-termination with
-               method calls on type applications. Thus, it makes sense to replicate
-               the specialization caching mechanism used in TypeAppT ~> MethodT to
-               avoid non-termination in PolyT ~> CallT.
-
-               As it turns out, we need a bit more work here. A call may invoke
-               different cases of an overloaded polymorphic function on different
-               arguments, so we use the reasons of arguments in addition to the reason
-               of the call as keys for caching instantiations.
-
-               On the other hand, even the reasons of arguments may not offer sufficient
-               distinguishing power when the arguments have not been concretized:
-               differently typed arguments could be incorrectly summarized by common
-               type variables they flow to, causing spurious errors. In particular, we
-               don't cache calls involved in the execution of mapped type operations
-               ($TupleMap, $ObjectMap, $ObjectMapi) to avoid this problem.
-
-               NOTE: This is probably not the final word on non-termination with
-               generics. We need to separate the double duty of reasons in the current
-               implementation as error positions and as caching keys. As error
-               positions we should be able to subject reasons to arbitrary tweaking,
-               without fearing regressions in termination guarantees.
-            *)
-            | CallT { use_op; call_action = ConcretizeCallee tout; _ } ->
-              rec_flow_t cx trace ~use_op (l, OpenT tout)
-            | CallT { use_op; reason = _; call_action = Funcalltype calltype; return_hint }
-              when not (is_typemap_reason reason_op) ->
-              let arg_reasons =
-                Base.List.map
-                  ~f:(function
-                    | Arg t -> reason_of_t t
-                    | SpreadArg t -> reason_of_t t)
-                  calltype.call_args_tlist
-              in
-              begin
-                match t with
-                (* We are calling the static callable method of a class. We need to be careful
-                 * not to apply the targs at this point, because this PolyT represents the class
-                 * and not the static function that's being called. We implicitly instantiate
-                 * the instance's tparams using the bounds and then forward the result original call
-                 * instead of consuming the method call's type arguments.
-                 *
-                 * We use the bounds to explicitly instantiate so that we don't create yet another implicit
-                 * instantiation here that would be un-annotatable. *)
-                | ThisClassT _ ->
-                  let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
-                  let t_ =
-                    instantiate_poly_call_or_new
-                      cx
-                      trace
-                      (tparams_loc, ids, t)
-                      (Nel.to_list targs)
-                      ~use_op
-                      ~reason_op
-                      ~reason_tapp
-                  in
-                  rec_flow cx trace (t_, u)
-                | _ ->
-                  (match all_explicit_targs calltype.call_targs with
-                  | Some targs ->
-                    let t_ =
-                      instantiate_poly_call_or_new
-                        cx
-                        trace
-                        (tparams_loc, ids, t)
-                        targs
-                        ~use_op
-                        ~reason_op
-                        ~reason_tapp
-                    in
-                    rec_flow
-                      cx
-                      trace
-                      ( t_,
-                        CallT
-                          {
-                            use_op;
-                            reason = reason_op;
-                            call_action = Funcalltype { calltype with call_targs = None };
-                            return_hint;
-                          }
-                      )
-                  | _ ->
-                    let poly_t = (tparams_loc, ids, t) in
-                    let check =
-                      Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype
-                    in
-                    let t_ =
-                      ImplicitInstantiationKit.run
-                        cx
-                        check
-                        ~cache:arg_reasons
-                        trace
-                        ~use_op
-                        ~reason_op
-                        ~reason_tapp
-                        ~return_hint
-                    in
-                    rec_flow
-                      cx
-                      trace
-                      ( t_,
-                        CallT
-                          {
-                            use_op;
-                            reason = reason_op;
-                            call_action = Funcalltype { calltype with call_targs = None };
-                            return_hint;
-                          }
-                      ))
-              end
-            | ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint } ->
-              (match all_explicit_targs targs with
-              | Some targs ->
-                let t_ =
-                  instantiate_poly_call_or_new
-                    cx
-                    trace
-                    (tparams_loc, ids, t)
-                    targs
-                    ~use_op
-                    ~reason_op
-                    ~reason_tapp
-                in
-                rec_flow
-                  cx
-                  trace
-                  ( t_,
-                    ConstructorT
-                      { use_op; reason = reason_op; targs = None; args; tout; return_hint }
-                  )
-              | None ->
-                let poly_t = (tparams_loc, ids, t) in
-                let check =
-                  Implicit_instantiation_check.of_ctor l poly_t use_op reason_op targs args
-                in
-                let t_ =
-                  ImplicitInstantiationKit.run
-                    cx
-                    check
-                    trace
-                    ~use_op
-                    ~reason_op
-                    ~reason_tapp
-                    ~return_hint
-                in
-                rec_flow
-                  cx
-                  trace
-                  ( t_,
-                    ConstructorT
-                      { use_op; reason = reason_op; targs = None; args; tout; return_hint }
-                  ))
-            | ReactKitT
-                ( use_op,
-                  reason_op,
-                  React.CreateElement
-                    { clone; component; config; children; return_hint; targs; tout }
-                ) ->
-              (match all_explicit_targs targs with
-              | Some targs ->
-                let t_ =
-                  instantiate_poly_call_or_new
-                    cx
-                    trace
-                    (tparams_loc, ids, t)
-                    targs
-                    ~use_op
-                    ~reason_op
-                    ~reason_tapp
-                in
-                rec_flow
-                  cx
-                  trace
-                  ( t_,
-                    ReactKitT
-                      ( use_op,
-                        reason_op,
-                        React.CreateElement
-                          { clone; component; config; children; return_hint; targs = None; tout }
-                      )
-                  )
-              | None ->
-                let poly_t = (tparams_loc, ids, t) in
-                let check =
-                  Implicit_instantiation_check.of_jsx
-                    l
-                    poly_t
-                    use_op
-                    reason_op
-                    clone
-                    ~component
-                    ~config
-                    ~targs
-                    children
-                in
-                let t_ =
-                  ImplicitInstantiationKit.run
-                    cx
-                    check
-                    trace
-                    ~use_op
-                    ~reason_op
-                    ~reason_tapp
-                    ~return_hint
-                in
-                rec_flow
-                  cx
-                  trace
-                  ( t_,
-                    ReactKitT
-                      ( use_op,
-                        reason_op,
-                        React.CreateElement
-                          { clone; component; config; children; return_hint; targs = None; tout }
-                      )
-                  ))
-            | _ ->
-              let use_op =
-                match use_op_of_use_t u with
-                | Some use_op -> use_op
-                | None -> unknown_use
-              in
-              let unify_bounds =
-                match u with
-                | MethodT (_, _, _, _, NoMethodAction, _) -> true
-                | _ -> false
-              in
-              let (t_, _) =
-                instantiate_poly
-                  cx
-                  trace
-                  ~use_op
-                  ~reason_op
-                  ~reason_tapp
-                  ~unify_bounds
-                  (tparams_loc, ids, t)
               in
               rec_flow cx trace (t_, u)
+            | _ ->
+              (match all_explicit_targs calltype.call_targs with
+              | Some targs ->
+                let t_ =
+                  instantiate_poly_call_or_new
+                    cx
+                    trace
+                    (tparams_loc, ids, t)
+                    targs
+                    ~use_op
+                    ~reason_op
+                    ~reason_tapp
+                in
+                rec_flow
+                  cx
+                  trace
+                  ( t_,
+                    CallT
+                      {
+                        use_op;
+                        reason = reason_op;
+                        call_action = Funcalltype { calltype with call_targs = None };
+                        return_hint;
+                      }
+                  )
+              | _ ->
+                let poly_t = (tparams_loc, ids, t) in
+                let check =
+                  Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype
+                in
+                let t_ =
+                  ImplicitInstantiationKit.run
+                    cx
+                    check
+                    ~cache:arg_reasons
+                    trace
+                    ~use_op
+                    ~reason_op
+                    ~reason_tapp
+                    ~return_hint
+                in
+                rec_flow
+                  cx
+                  trace
+                  ( t_,
+                    CallT
+                      {
+                        use_op;
+                        reason = reason_op;
+                        call_action = Funcalltype { calltype with call_targs = None };
+                        return_hint;
+                      }
+                  ))
           end
+        | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
+            ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint }
+          ) ->
+          (match all_explicit_targs targs with
+          | Some targs ->
+            let t_ =
+              instantiate_poly_call_or_new
+                cx
+                trace
+                (tparams_loc, ids, t)
+                targs
+                ~use_op
+                ~reason_op
+                ~reason_tapp
+            in
+            rec_flow
+              cx
+              trace
+              ( t_,
+                ConstructorT { use_op; reason = reason_op; targs = None; args; tout; return_hint }
+              )
+          | None ->
+            let poly_t = (tparams_loc, ids, t) in
+            let check = Implicit_instantiation_check.of_ctor l poly_t use_op reason_op targs args in
+            let t_ =
+              ImplicitInstantiationKit.run
+                cx
+                check
+                trace
+                ~use_op
+                ~reason_op
+                ~reason_tapp
+                ~return_hint
+            in
+            rec_flow
+              cx
+              trace
+              ( t_,
+                ConstructorT { use_op; reason = reason_op; targs = None; args; tout; return_hint }
+              ))
+        | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
+            ReactKitT
+              ( use_op,
+                reason_op,
+                React.CreateElement { clone; component; config; children; return_hint; targs; tout }
+              )
+          ) -> begin
+          match all_explicit_targs targs with
+          | Some targs ->
+            let t_ =
+              instantiate_poly_call_or_new
+                cx
+                trace
+                (tparams_loc, ids, t)
+                targs
+                ~use_op
+                ~reason_op
+                ~reason_tapp
+            in
+            rec_flow
+              cx
+              trace
+              ( t_,
+                ReactKitT
+                  ( use_op,
+                    reason_op,
+                    React.CreateElement
+                      { clone; component; config; children; return_hint; targs = None; tout }
+                  )
+              )
+          | None ->
+            let poly_t = (tparams_loc, ids, t) in
+            let check =
+              Implicit_instantiation_check.of_jsx
+                l
+                poly_t
+                use_op
+                reason_op
+                clone
+                ~component
+                ~config
+                ~targs
+                children
+            in
+            let t_ =
+              ImplicitInstantiationKit.run
+                cx
+                check
+                trace
+                ~use_op
+                ~reason_op
+                ~reason_tapp
+                ~return_hint
+            in
+            rec_flow
+              cx
+              trace
+              ( t_,
+                ReactKitT
+                  ( use_op,
+                    reason_op,
+                    React.CreateElement
+                      { clone; component; config; children; return_hint; targs = None; tout }
+                  )
+              )
+        end
+        | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
+          let reason_op = reason_of_use_t u in
+          let use_op =
+            match use_op_of_use_t u with
+            | Some use_op -> use_op
+            | None -> unknown_use
+          in
+          let unify_bounds =
+            match u with
+            | MethodT (_, _, _, _, NoMethodAction, _) -> true
+            | _ -> false
+          in
+          let (t_, _) =
+            instantiate_poly
+              cx
+              trace
+              ~use_op
+              ~reason_op
+              ~reason_tapp
+              ~unify_bounds
+              (tparams_loc, ids, t)
+          in
+          rec_flow cx trace (t_, u)
         (* when a this-abstracted class flows to upper bounds, fix the class *)
         | (ThisClassT (r, i, this, this_name), _) ->
           let reason = reason_of_use_t u in

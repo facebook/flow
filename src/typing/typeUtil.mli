@@ -102,3 +102,5 @@ val union_of_ts : reason -> Type.t list -> Type.t
 val annotated_or_inferred_of_option : default:Type.t -> Type.t option -> Type.annotated_or_inferred
 
 val subtype_this_of_function : Type.funtype -> Type.t
+
+val all_explicit_targs : Type.targ Base.List.t option -> Type.targ list option

@@ -921,3 +921,12 @@ let subtype_this_of_function { this_t = (this, subtyping); _ } =
   match subtyping with
   | This_Function -> this
   | This_Method _ -> reason_of_t this |> implicit_mixed_this
+
+let all_explicit_targs = function
+  | None -> None
+  | Some targs ->
+    Base.List.fold_right targs ~init:(Some []) ~f:(fun targ acc ->
+        match (targ, acc) with
+        | (ExplicitArg _, Some acc) -> Some (targ :: acc)
+        | _ -> None
+    )
