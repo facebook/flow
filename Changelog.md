@@ -1,3 +1,7 @@
+### 0.198.1
+
+* Fix a regression in 0.198.0 that can lead to a crash
+
 ### 0.198.0
 
 Likely to cause new Flow errors:
