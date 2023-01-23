@@ -16,12 +16,12 @@ type aloc = (ALoc.t[@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no
  * variant type. To ensure that all such methods have been overridden, check the
  * file generated with
  *
- *  ocamlfind ppx_tools/rewriter \
- *    -ppx ' \
+ * ocamlfind ocamlopt \
+ *  -ppx '\
  *    `ocamlfind query ppx_deriving`/ppx_deriving \
  *    `ocamlfind query -predicates ppx_driver,byte -format '%d/%a' ppx_deriving.show` \
  *    `ocamlfind query -predicates ppx_driver,byte -format '%d/%a' visitors.ppx`' \
- *    src/common/ty/ty.ml
+ *  -dsource -c src/common/ty/ty.ml
  *
  * and make sure all fail_* methods in the iter_ty class are overridden in
  * comparator_ty.
@@ -157,6 +157,7 @@ and tuple_element =
       t: t;
       polarity: polarity;
     }
+(* caution: be sure to implement fail_tuple_element if >1 constructor! *)
 
 and interface_t = {
   if_extends: generic_t list;
@@ -439,6 +440,8 @@ class ['A] comparator_ty =
 
     method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
 
+    method! private fail_prop_source env x y = fail_gen this#tag_of_prop_source env x y
+
     method! private fail_utility env x y = fail_gen this#tag_of_utility env x y
 
     method! private fail_polarity env x y = fail_gen this#tag_of_polarity env x y
@@ -551,6 +554,12 @@ class ['A] comparator_ty =
       | Method _ -> 1
       | Get _ -> 2
       | Set _ -> 3
+
+    method tag_of_prop_source _env =
+      function
+      | Interface -> 0
+      | PrimitiveProto _ -> 1
+      | Other -> 2
 
     method tag_of_utility _ =
       function
