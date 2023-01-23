@@ -6761,9 +6761,8 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "newText":"'baz'",
-    "insert":{"start":{"line":9,"character":2},"end":{"line":9,"character":3}},
-    "replace":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}}
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'baz'"
   },
   "command":{
     "title":"",
@@ -6790,9 +6789,8 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "newText":"'bar'",
-    "insert":{"start":{"line":9,"character":2},"end":{"line":9,"character":3}},
-    "replace":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}}
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -6819,9 +6817,8 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "newText":"'foo'",
-    "insert":{"start":{"line":9,"character":2},"end":{"line":9,"character":3}},
-    "replace":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}}
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -9173,4 +9170,403 @@ Flags: --lsp
 last_empty_line.js:5:0
 Flags: --pretty
 {"result":[{"name":"foo","type":"string"}]}
+
+string_literal.js:5:16
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
+{
+  "label":"a",
+  "labelDetails":{"detail":": Foo"},
+  "kind":6,
+  "detail":"Foo",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"a"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"a"
+      }
+    ]
+  }
+}
+
+string_literal.js:7:17
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":15},"end":{"line":6,"character":17}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
+
+string_literal.js:9:17
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":15},"end":{"line":8,"character":15}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
+
+string_literal.js:11:17
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":15},"end":{"line":10,"character":16}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
+
+string_literal.js:13:18
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":12,"character":15},"end":{"line":12,"character":18}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
+
+string_literal.js:15:18
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":15},"end":{"line":14,"character":15}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
+
+string_literal.js:17:17
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":16,"character":15},"end":{"line":16,"character":17}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\""
+      }
+    ]
+  }
+}
+
+string_literal.js:19:17
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":15},"end":{"line":18,"character":15}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\""
+      }
+    ]
+  }
+}
+
+string_literal.js:21:18
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":20,"character":15},"end":{"line":20,"character":18}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\""
+      }
+    ]
+  }
+}
+
+string_literal.js:23:18
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":22,"character":15},"end":{"line":22,"character":15}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\""
+      }
+    ]
+  }
+}
+
+string_literal.js:25:18
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":24,"character":15},"end":{"line":24,"character":20}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'"
+      }
+    ]
+  }
+}
+
+string_literal.js:27:18
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":26,"character":15},"end":{"line":26,"character":20}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\""
+      }
+    ]
+  }
+}
 

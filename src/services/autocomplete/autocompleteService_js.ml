@@ -514,17 +514,40 @@ let rec literals_of_ty acc ty =
   | Ty.Bool _ -> Ty.BoolLit true :: Ty.BoolLit false :: acc
   | _ -> acc
 
-let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound =
+let quote_kind token =
+  if token = "" then
+    None
+  else
+    match token.[0] with
+    | '\'' -> Some `Single
+    | '"' -> Some `Double
+    | _ -> None
+
+let autocomplete_literals
+    ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound ~token =
   let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
   let options = ty_normalizer_options in
   let upper_bound_ty =
     Result.value (Ty_normalizer.expand_literal_union ~options ~genv scheme) ~default:Ty.Top
   in
-  (* TODO: since we're inserting values, we shouldn't really be using the Ty_printer *)
   let exact_by_default = Context.exact_by_default cx in
-  (*let literals = Base.List.fold tys ~init:[] ~f:literals_of_ty in*)
   let literals = literals_of_ty [] upper_bound_ty in
   Base.List.map literals ~f:(fun ty ->
+      let prefer_single_quotes =
+        (* If the user already typed a quote, use that kind regardless of the config option *)
+        match quote_kind token with
+        | Some `Single -> true
+        | Some `Double -> false
+        | None -> prefer_single_quotes
+      in
+      let edit_locs =
+        (* When completing a string literal, always replace. Inserting is likely to produce
+           an invalid string which is probably not what the user wnats. *)
+        match quote_kind token with
+        | Some _ -> (snd edit_locs, snd edit_locs)
+        | None -> edit_locs
+      in
+      (* TODO: since we're inserting values, we shouldn't really be using the Ty_printer *)
       let name =
         Ty_printer.string_of_t_single_line
           ~prefer_single_quotes
@@ -722,7 +745,14 @@ let autocomplete_id
   let upper_bound = upper_bound_t_of_t ~cx type_ in
   let prefer_single_quotes = Options.format_single_quotes options in
   let results =
-    autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound
+    autocomplete_literals
+      ~prefer_single_quotes
+      ~cx
+      ~genv
+      ~tparams_rev
+      ~edit_locs
+      ~upper_bound
+      ~token
   in
   let rank =
     if results = [] then
@@ -1250,11 +1280,9 @@ let autocomplete_unqualified_type
 (** If the token is a string literal, then the end of the token may be inaccurate
     due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
 let fix_loc_of_string_token token loc =
-  match token.[0] with
-  | '\''
-  | '"' ->
-    { loc with Loc._end = loc.Loc.start }
-  | _ -> loc
+  match quote_kind token with
+  | Some _ -> { loc with Loc._end = loc.Loc.start }
+  | None -> loc
 
 let fix_locs_of_string_token token (insert_loc, replace_loc) =
   let insert_loc = fix_loc_of_string_token token insert_loc in
@@ -1263,13 +1291,10 @@ let fix_locs_of_string_token token (insert_loc, replace_loc) =
 
 let layout_options options token =
   let opts = Code_action_service.layout_options options in
-  if token = "" then
-    opts
-  else
-    match token.[0] with
-    | '\'' -> { opts with Js_layout_generator.single_quotes = true }
-    | '"' -> { opts with Js_layout_generator.single_quotes = false }
-    | _ -> opts
+  match quote_kind token with
+  | Some `Single -> { opts with Js_layout_generator.single_quotes = true }
+  | Some `Double -> { opts with Js_layout_generator.single_quotes = false }
+  | None -> opts
 
 let print_expression ~options ~token expression =
   expression
@@ -1997,7 +2022,14 @@ let autocomplete_get_results
         let upper_bound = upper_bound_t_of_t ~cx lit_type in
         let prefer_single_quotes = Options.format_single_quotes options in
         let items =
-          autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound
+          autocomplete_literals
+            ~prefer_single_quotes
+            ~cx
+            ~genv
+            ~tparams_rev
+            ~edit_locs
+            ~upper_bound
+            ~token
           |> filter_by_token_and_sort token
         in
         let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
