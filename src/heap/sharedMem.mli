@@ -468,6 +468,10 @@ module NewAPI : sig
 
   val get_parse : [ `file ] addr -> [ `typed | `untyped | `package ] parse entity addr
 
+  val get_alternate_file : [ `file ] addr -> [ `file ] addr option
+
+  val set_alternate_file : [ `file ] addr -> [ `file ] addr -> unit
+
   val files_equal : [ `file ] addr -> [ `file ] addr -> bool
 
   val file_changed : [ `file ] addr -> bool

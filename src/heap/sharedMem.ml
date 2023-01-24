@@ -2024,7 +2024,7 @@ module NewAPI = struct
     | Resource_file -> Resource_file_tag
     | Lib_file -> Lib_file_tag
 
-  let file_size = 4 * addr_size
+  let file_size = 5 * addr_size
 
   let prepare_write_file kind =
     let write chunk file_name parse haste_info dependents =
@@ -2034,6 +2034,7 @@ module NewAPI = struct
       unsafe_write_addr chunk parse;
       unsafe_write_addr chunk haste_info;
       unsafe_write_addr chunk dependents;
+      unsafe_write_addr chunk null_addr (* alternate *);
       addr
     in
     (header_size + file_size, write)
@@ -2045,6 +2046,8 @@ module NewAPI = struct
   let haste_info_addr file = addr_offset file 3
 
   let file_dependents_addr file = addr_offset file 4
+
+  let alternate_file_addr file = addr_offset file 5
 
   let get_file_kind file =
     let hd = read_header (get_heap ()) file in
@@ -2067,6 +2070,10 @@ module NewAPI = struct
   let get_haste_info = get_generic haste_info_addr
 
   let get_parse = get_generic parse_addr
+
+  let get_alternate_file = get_generic_opt alternate_file_addr
+
+  let set_alternate_file = set_generic alternate_file_addr
 
   let files_equal = Int.equal
 

@@ -140,8 +140,7 @@ let get_file_addr_unsafe file =
   | Some addr -> addr
   | None -> raise (File_not_found (File_key.to_string file))
 
-let get_parsed_file_addr reader key =
-  let* file = get_file_addr key in
+let get_parsed_file reader file =
   let* _ = reader.Heap.read (Heap.get_parse file) in
   Some file
 
@@ -158,10 +157,15 @@ let read_provider reader m =
     let* haste_module = get_haste_module name in
     reader.Heap.read (Heap.get_haste_provider haste_module)
   | Modulename.Filename file_key ->
-    let decl_key = File_key.with_suffix file_key Files.flow_ext in
-    (match get_parsed_file_addr reader decl_key with
+    let open Heap in
+    let* file = get_file_addr file_key in
+    let parsed_decl =
+      let* decl = get_alternate_file file in
+      get_parsed_file reader decl
+    in
+    (match parsed_decl with
     | Some _ as decl_provider -> decl_provider
-    | None -> get_parsed_file_addr reader file_key)
+    | None -> get_parsed_file reader file)
 
 let iter_dependents f mname =
   let dependents =
@@ -642,14 +646,14 @@ let prepare_create_file file_key module_name resolved_requires_opt =
   and+ haste_info = prepare_opt prepare_write_haste_info_for_name module_name
   and+ update_resolved_requires =
     prepare_update_resolved_requires_if_changed None resolved_requires_opt
-  and+ dependents =
+  and+ (dependents, set_alternate) =
     if Files.has_flow_ext file_key then
       let impl_key = Files.chop_flow_ext file_key in
-      let+ (_file : file_addr) = prepare_find_or_add_phantom_file impl_key in
-      None
+      let+ impl_file = prepare_find_or_add_phantom_file impl_key in
+      (None, (fun decl_file -> set_alternate_file impl_file decl_file))
     else
-      let+ sklist = prepare_write_sklist in
-      Some sklist
+      let+ dependents = prepare_write_sklist in
+      (Some dependents, Fun.const ())
   and+ file = prepare_write_file file_kind in
   fun parse ->
     let parse_ent = parse_ent (Some parse) in
@@ -657,6 +661,7 @@ let prepare_create_file file_key module_name resolved_requires_opt =
     let file = file file_name parse_ent haste_ent dependents in
     let file' = FileHeap.add file_key file in
     if file = file' then
+      let () = set_alternate file in
       let () = update_resolved_requires file parse in
       calc_dirty_modules file_key file haste_ent
     else
