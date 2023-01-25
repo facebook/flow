@@ -1405,7 +1405,7 @@ module NewAPI = struct
           let succ64 = load_acquire succ_addr in
           if
             sklist_is_marked succ64
-            || compare_exchange_strong succ_addr succ64 (sklist_marked succ64)
+            || compare_modify_addr_strong succ_addr (sklist_unmark succ64) (sklist_marked succ64)
           then
             loop (level - 1)
           else
