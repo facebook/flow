@@ -1,31 +1,31 @@
-/* @flow */
+(`foo`: string); // OK
+(`bar`: 'bar'); // OK
+(`baz`: number); // ERROR
 
-(`foo`: string); // ok
-(`bar`: 'bar'); // ok
-(`baz`: number); // error
+`foo ${123} bar`; // OK: number can be appended to string
+`foo ${{bar: 123}} baz`; // ERROR: object can't be appended
 
-`foo ${123} bar`; // ok, number can be appended to string
-`foo ${{bar: 123}} baz`; // error, object can't be appended
-
-let tests = [
-  function(x: string) {
-    `foo ${x}`; // ok
-    `${x} bar`; // ok
-    `foo ${'bar'} ${x}`; // ok
-  },
-  function(x: number) {
-    `foo ${x}`; // ok
-    `${x} bar`; // ok
-    `foo ${'bar'} ${x}`; // ok
-  },
-  function(x: boolean) {
-    `foo ${x}`; // error
-    `${x} bar`; // error
-    `foo ${'bar'} ${x}`; // error
-  },
-  function(x: mixed) {
-    `foo ${x}`; // error
-    `${x} bar`; // error
-    `foo ${'bar'} ${x}`; // error
-  },
-];
+{
+  declare const x: string;
+  `foo ${x}`; // OK
+  `${x} bar`; // OK
+  `foo ${'bar'} ${x}`; // OK
+}
+{
+  declare const x: number;
+  `foo ${x}`; // OK
+  `${x} bar`; // OK
+  `foo ${'bar'} ${x}`; // OK
+}
+{
+  declare const x: boolean;
+  `foo ${x}`; // ERROR
+  `${x} bar`; // ERROR
+  `foo ${'bar'} ${x}`; // ERROR
+}
+{
+  declare const x: mixed;
+  `foo ${x}`; // ERROR
+  `${x} bar`; // ERROR
+  `foo ${'bar'} ${x}`; // ERROR
+}
