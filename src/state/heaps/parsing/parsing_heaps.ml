@@ -1145,37 +1145,34 @@ let add_parsed
     let ({ module_sig; _ }, _) = file_sig in
     require_set module_sig |> SSet.elements |> Array.of_list
   in
-  WorkerCancel.with_no_cancellations (fun () ->
-      Heap.alloc
-        (prepare_add_checked_file
-           file_key
-           file_opt
-           hash
-           module_name
-           (Some docblock)
-           (Some ast)
-           (Some locs)
-           (Some type_sig)
-           (Some file_sig)
-           requires
-           exports
-           imports
-           cas_digest
-           None
-        )
-  )
+  WorkerCancel.with_no_cancellations @@ fun () ->
+  Heap.alloc
+    (prepare_add_checked_file
+       file_key
+       file_opt
+       hash
+       module_name
+       (Some docblock)
+       (Some ast)
+       (Some locs)
+       (Some type_sig)
+       (Some file_sig)
+       requires
+       exports
+       imports
+       cas_digest
+       None
+    )
 
 let add_unparsed file_key file_opt hash module_name : MSet.t =
-  WorkerCancel.with_no_cancellations (fun () ->
-      Heap.alloc (prepare_add_unparsed_file file_key file_opt hash module_name)
-  )
+  WorkerCancel.with_no_cancellations @@ fun () ->
+  Heap.alloc (prepare_add_unparsed_file file_key file_opt hash module_name)
 
 let add_package file_key file_opt hash module_name package_info : MSet.t =
-  WorkerCancel.with_no_cancellations (fun () ->
-      Heap.alloc (prepare_add_package_file file_key file_opt hash module_name package_info)
-  )
+  WorkerCancel.with_no_cancellations @@ fun () ->
+  Heap.alloc (prepare_add_package_file file_key file_opt hash module_name package_info)
 
-let clear_not_found file_key = WorkerCancel.with_no_cancellations (fun () -> clear_file file_key)
+let clear_not_found file_key = WorkerCancel.with_no_cancellations @@ fun () -> clear_file file_key
 
 module type READER = sig
   type reader
@@ -1654,14 +1651,13 @@ module Resolved_requires_mutator = struct
     Transaction.add ~commit ~rollback transaction
 
   let add_resolved_requires () file parse resolved_requires =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Heap.alloc
-          (let+ update_resolved_requires =
-             prepare_update_resolved_requires_if_changed (Some parse) (Some resolved_requires)
-           in
-           update_resolved_requires file parse
-          )
-    )
+    let prepare =
+      let+ update_resolved_requires =
+        prepare_update_resolved_requires_if_changed (Some parse) (Some resolved_requires)
+      in
+      update_resolved_requires file parse
+    in
+    WorkerCancel.with_no_cancellations @@ fun () -> Heap.alloc prepare
 end
 
 module Merge_context_mutator = struct
@@ -2132,25 +2128,24 @@ module Saved_state_mutator = struct
 
   let add_parsed
       () file_key file_opt hash module_name exports requires resolved_requires imports cas_digest =
-    WorkerCancel.with_no_cancellations (fun () ->
-        Heap.alloc
-          (prepare_add_checked_file
-             file_key
-             file_opt
-             hash
-             module_name
-             None
-             None
-             None
-             None
-             None
-             requires
-             exports
-             imports
-             cas_digest
-             (Some (Some resolved_requires))
-          )
-    )
+    WorkerCancel.with_no_cancellations @@ fun () ->
+    Heap.alloc
+      (prepare_add_checked_file
+         file_key
+         file_opt
+         hash
+         module_name
+         None
+         None
+         None
+         None
+         None
+         requires
+         exports
+         imports
+         cas_digest
+         (Some (Some resolved_requires))
+      )
 
   let add_unparsed () = add_unparsed
 
