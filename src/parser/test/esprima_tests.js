@@ -1586,7 +1586,15 @@ module.exports = {
       ],
     },
     'Declare Statements': [
-      'declare var foo: number;',
+      {
+        content: 'declare var foo: number;',
+        explanation: "Doesn't have 'kind' property",
+        expected_differences: {
+          'root.body.0.kind': {
+            type: 'Unexpected property',
+          }
+        }
+      },
       'declare function foo(): void',
       'declare function foo(): void;',
       'declare function foo<T>(): void;',
@@ -1608,7 +1616,15 @@ module.exports = {
     'Declare Module': [
       'declare module A {}',
       'declare module "./a/b.js" {}',
-      'declare module A { declare var x: number; }',
+      {
+        content: 'declare module A { declare var x: number; }',
+        explanation: "Doesn't have 'kind' property",
+        expected_differences: {
+          'root.body.0.body.body.0.kind': {
+            type: 'Unexpected property',
+          }
+        }
+      },
       'declare module A { declare function foo(): number; }',
     ],
     'Invalid Declare Module': [

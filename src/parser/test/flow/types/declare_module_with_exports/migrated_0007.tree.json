@@ -71,7 +71,8 @@
                   }
                 },
                 "optional":false
-              }
+              },
+              "kind":"var"
             },
             "specifiers":[],
             "source":null

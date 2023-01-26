@@ -22,14 +22,14 @@
             "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":28}},
             "range":[20,28],
             "typeAnnotation":{
-              "type":"NumberTypeAnnotation",
+              "type":"StringTypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":28}},
               "range":[22,28]
             }
           },
           "optional":false
         },
-        "kind":"var"
+        "kind":"let"
       },
       "specifiers":[],
       "source":null

@@ -518,11 +518,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method declare_variable (decl : ('M, 'T) Ast.Statement.DeclareVariable.t)
         : ('N, 'U) Ast.Statement.DeclareVariable.t =
       let open Ast.Statement.DeclareVariable in
-      let { id = ident; annot; comments } = decl in
-      let id' = this#t_pattern_identifier ~kind:Ast.Variable.Var ident in
+      let { id = ident; annot; kind; comments } = decl in
+      let id' = this#t_pattern_identifier ~kind ident in
       let annot' = this#type_annotation annot in
       let comments' = Option.map ~f:this#syntax comments in
-      { id = id'; annot = annot'; comments = comments' }
+      { id = id'; annot = annot'; kind; comments = comments' }
 
     method do_while (stuff : ('M, 'T) Ast.Statement.DoWhile.t) : ('N, 'U) Ast.Statement.DoWhile.t =
       let open Ast.Statement.DoWhile in

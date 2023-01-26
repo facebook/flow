@@ -83,7 +83,8 @@
                 }
               },
               "optional":false
-            }
+            },
+            "kind":"var"
           }
         ]
       },

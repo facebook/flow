@@ -729,14 +729,14 @@ class ['loc] mapper =
 
     method declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id = ident; annot; comments } = decl in
-      let id' = this#pattern_identifier ~kind:Ast.Variable.Var ident in
+      let { id = ident; annot; kind; comments } = decl in
+      let id' = this#pattern_identifier ~kind ident in
       let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
       if id' == ident && annot' == annot && comments' == comments then
         decl
       else
-        { id = id'; annot = annot'; comments = comments' }
+        { id = id'; annot = annot'; kind; comments = comments' }
 
     method do_while _loc (stuff : ('loc, 'loc) Ast.Statement.DoWhile.t) =
       let open Ast.Statement.DoWhile in

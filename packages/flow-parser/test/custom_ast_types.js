@@ -105,6 +105,7 @@ function custom_ast_types(fork) {
       null,
     ),
   );
+  def('DeclareVariable').field('kind', or('var', 'let', 'const'));
 
   /////////
   // es2018

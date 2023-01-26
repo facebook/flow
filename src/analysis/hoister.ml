@@ -231,7 +231,8 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
     (* don't hoist let/const bindings *)
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      this#add_var_binding decl.id;
+      let { id; kind = _ (* TODO *); _ } = decl in
+      this#add_var_binding id;
       super#declare_variable loc decl
 
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
