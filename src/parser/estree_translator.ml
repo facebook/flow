@@ -1376,13 +1376,13 @@ with type t = Impl.t = struct
         "TaggedTemplateExpression"
         loc
         [("tag", expression tag); ("quasi", template_literal quasi)]
+    and variable_kind kind =
+      match kind with
+      | Variable.Var -> "var"
+      | Variable.Let -> "let"
+      | Variable.Const -> "const"
     and variable_declaration (loc, { Statement.VariableDeclaration.kind; declarations; comments }) =
-      let kind =
-        match kind with
-        | Statement.VariableDeclaration.Var -> "var"
-        | Statement.VariableDeclaration.Let -> "let"
-        | Statement.VariableDeclaration.Const -> "const"
-      in
+      let kind = variable_kind kind in
       node
         ?comments
         "VariableDeclaration"

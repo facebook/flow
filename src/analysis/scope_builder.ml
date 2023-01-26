@@ -308,7 +308,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               Some this#binding_type_identifier
             else
               None
-          | _ -> Some (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Const)
+          | _ -> Some (this#pattern_identifier ~kind:Ast.Variable.Const)
         in
         (match specifier with
         | { local = Some ident; remote = _; kind }
@@ -653,7 +653,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! declare_variable _ decl =
         let open Ast.Statement.DeclareVariable in
         let { id = ident; annot; comments = _ } = decl in
-        ignore @@ this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident;
+        ignore @@ this#pattern_identifier ~kind:Ast.Variable.Var ident;
         this#hoist_annotations (fun () -> ignore @@ this#type_annotation annot);
         decl
 

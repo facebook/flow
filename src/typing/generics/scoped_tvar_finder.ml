@@ -321,7 +321,7 @@ class finder cx =
       end;
       node
 
-    method! binding_pattern ?(kind = Ast.Statement.VariableDeclaration.Var) ((_, patt) as expr) =
+    method! binding_pattern ?(kind = Ast.Variable.Var) ((_, patt) as expr) =
       (* We can only suggest annotations for bare variable declarations, not destructurings. *)
       let open Ast.Pattern in
       match patt with

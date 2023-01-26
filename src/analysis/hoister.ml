@@ -93,12 +93,12 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method! pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       match kind with
       | None -> expr
-      | Some (Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const) ->
+      | Some (Ast.Variable.Let | Ast.Variable.Const) ->
         let open Ast.Pattern in
         let add_binding =
           match kind with
-          | Some Ast.Statement.VariableDeclaration.Let -> this#add_let_binding ?kind:None
-          | Some Ast.Statement.VariableDeclaration.Const -> this#add_const_binding ?kind:None
+          | Some Ast.Variable.Let -> this#add_let_binding ?kind:None
+          | Some Ast.Variable.Const -> this#add_const_binding ?kind:None
           | _ -> Utils_js.assert_false "Only lets and consts allowed"
         in
         let (_, patt) = expr in
@@ -111,21 +111,21 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
           | _ -> ()
         end;
         expr
-      | Some Ast.Statement.VariableDeclaration.Var -> expr
+      | Some Ast.Variable.Var -> expr
 
     method base_pattern = super#pattern
 
     method! function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
       let old_lkind = let_kind in
       let_kind <- Bindings.Parameter;
-      let res = this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr in
+      let res = this#binding_pattern ~kind:Ast.Variable.Let expr in
       let_kind <- old_lkind;
       res
 
     method! catch_clause_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
       let old_lkind = let_kind in
       let_kind <- Bindings.CatchParameter;
-      let res = this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr in
+      let res = this#binding_pattern ~kind:Ast.Variable.Let expr in
       let_kind <- old_lkind;
       res
 
@@ -216,7 +216,7 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
       let open Ast.Pattern in
       let (_, patt) = expr in
       match kind with
-      | Some Ast.Statement.VariableDeclaration.Var ->
+      | Some Ast.Variable.Var ->
         begin
           match patt with
           | Identifier { Identifier.name; _ } -> this#add_var_binding name

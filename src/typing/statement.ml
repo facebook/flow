@@ -2149,12 +2149,11 @@ module Make
     (t, List.rev rev_prop_asts)
 
   and variable cx kind ?if_uninitialized id init =
-    let open Ast.Statement in
     let (init_var, declare_var) =
       match kind with
-      | VariableDeclaration.Const -> (Env.init_const, (fun _ _ _ -> ()))
-      | VariableDeclaration.Let -> (Env.init_let, (fun _ _ _ -> ()))
-      | VariableDeclaration.Var -> (Env.init_var, (fun _ _ _ -> ()))
+      | Ast.Variable.Const -> (Env.init_const, (fun _ _ _ -> ()))
+      | Ast.Variable.Let -> (Env.init_let, (fun _ _ _ -> ()))
+      | Ast.Variable.Var -> (Env.init_var, (fun _ _ _ -> ()))
     in
     let annot = Destructuring.type_of_pattern id in
     let has_anno =

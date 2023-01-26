@@ -174,7 +174,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
     method! variable_declarator ~kind decl =
       let open Flow_ast.Statement.VariableDeclaration.Declarator in
       match (kind, decl) with
-      | ( Ast.Statement.VariableDeclaration.Const,
+      | ( Ast.Variable.Const,
           ( dloc,
             {
               id =
@@ -303,12 +303,10 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       (* Annotation is present *)
       | (Identifier { Identifier.annot = Ast.Type.Available _; _ }, _)
       (* In `const x = exp;` the error appears on exp, so it's handled elsewhere. *)
-      | ( Identifier { Identifier.annot = Ast.Type.Missing _; _ },
-          Ast.Statement.VariableDeclaration.Const
-        ) ->
+      | (Identifier { Identifier.annot = Ast.Type.Missing _; _ }, Ast.Variable.Const) ->
         super#variable_declarator_pattern ~kind expr
       | ( Identifier { Identifier.name; annot = Ast.Type.Missing _ as annot; optional },
-          Ast.Statement.VariableDeclaration.(Var | Let)
+          Ast.Variable.(Var | Let)
         ) ->
         let (name_loc, _) = name in
         (match LMap.find_opt name_loc sig_verification_loc_tys with

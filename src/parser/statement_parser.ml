@@ -349,7 +349,7 @@ module Statement
                 (For_declaration
                    ( loc,
                      {
-                       Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Let;
+                       Statement.VariableDeclaration.kind = Variable.Let;
                        declarations;
                        comments = Flow_ast_utils.mk_comments_opt ~leading ();
                      }
@@ -363,7 +363,7 @@ module Statement
                 (For_declaration
                    ( loc,
                      {
-                       Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Const;
+                       Statement.VariableDeclaration.kind = Variable.Const;
                        declarations;
                        comments = Flow_ast_utils.mk_comments_opt ~leading ();
                      }
@@ -377,7 +377,7 @@ module Statement
                 (For_declaration
                    ( loc,
                      {
-                       Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Var;
+                       Statement.VariableDeclaration.kind = Variable.Var;
                        declarations;
                        comments = Flow_ast_utils.mk_comments_opt ~leading ();
                      }
@@ -720,7 +720,7 @@ module Statement
 
   and var =
     with_loc (fun env ->
-        let kind = Statement.VariableDeclaration.Var in
+        let kind = Variable.Var in
         let (declarations, leading, errs) = Declaration.var env in
         let (trailing, declarations) = variable_declaration_end ~kind env declarations in
         errs |> List.iter (error_at env);
@@ -734,7 +734,7 @@ module Statement
 
   and const =
     with_loc (fun env ->
-        let kind = Statement.VariableDeclaration.Const in
+        let kind = Variable.Const in
         let (declarations, leading, errs) = Declaration.const env in
         let (trailing, declarations) = variable_declaration_end ~kind env declarations in
         errs |> List.iter (error_at env);
@@ -748,7 +748,7 @@ module Statement
 
   and let_ =
     with_loc (fun env ->
-        let kind = Statement.VariableDeclaration.Let in
+        let kind = Variable.Let in
         let (declarations, leading, errs) = Declaration.let_ env in
         let (trailing, declarations) = variable_declaration_end ~kind env declarations in
         errs |> List.iter (error_at env);

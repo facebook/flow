@@ -529,7 +529,7 @@ module Scope = struct
       true
 
   let value_binding kind id_loc name def =
-    let open Ast.Statement.VariableDeclaration in
+    let open Ast.Variable in
     match kind with
     | Var -> VarBinding { id_loc; name; def }
     | Let
@@ -3642,7 +3642,7 @@ let variable_decl opts scope tbls kind k decl =
     begin
       match (kind, annot, init) with
       (* const x = ... special cases *)
-      | (V.Const, Ast.Type.Missing _, Some expr) ->
+      | (Ast.Variable.Const, Ast.Type.Missing _, Some expr) ->
         const_var_init_decl opts scope tbls id_loc name k expr
       | _ ->
         let def =
@@ -3674,7 +3674,8 @@ let variable_decl opts scope tbls kind k decl =
          let def =
            splice tbls splice_loc (fun tbls ->
                match (kind, annot, init) with
-               | (V.Const, Ast.Type.Missing _, Some expr) -> expression opts scope tbls expr
+               | (Ast.Variable.Const, Ast.Type.Missing _, Some expr) ->
+                 expression opts scope tbls expr
                | _ ->
                  annot_or_hint
                    ~err_loc:None

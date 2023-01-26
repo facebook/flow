@@ -411,7 +411,7 @@ class ['loc] mapper =
         { expr = expr'; targs = targs'; comments = comments' }
 
     method class_identifier (ident : ('loc, 'loc) Ast.Identifier.t) =
-      this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
+      this#pattern_identifier ~kind:Ast.Variable.Let ident
 
     method class_body (cls_body : ('loc, 'loc) Ast.Class.Body.t) =
       let open Ast.Class.Body in
@@ -730,7 +730,7 @@ class ['loc] mapper =
     method declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
       let { id = ident; annot; comments } = decl in
-      let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
+      let id' = this#pattern_identifier ~kind:Ast.Variable.Var ident in
       let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
       if id' == ident && annot' == annot && comments' == comments then
@@ -761,7 +761,7 @@ class ['loc] mapper =
     method enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id = ident; body; comments } = enum in
-      let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Const ident in
+      let id' = this#pattern_identifier ~kind:Ast.Variable.Const ident in
       let body' = this#enum_body body in
       let comments' = this#syntax_opt comments in
       if ident == id' && body == body' && comments == comments' then
@@ -1691,7 +1691,7 @@ class ['loc] mapper =
       id_loc this#block loc block body (fun block -> (loc, block))
 
     method function_identifier (ident : ('loc, 'loc) Ast.Identifier.t) =
-      this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
+      this#pattern_identifier ~kind:Ast.Variable.Var ident
 
     (* TODO *)
     method generator _loc (expr : ('loc, 'loc) Ast.Expression.Generator.t) = expr
@@ -1865,7 +1865,7 @@ class ['loc] mapper =
           if is_type_remote then
             this#binding_type_identifier remote
           else
-            this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let remote
+            this#pattern_identifier ~kind:Ast.Variable.Let remote
         | Some _ -> this#remote_identifier remote
       in
       let local' =
@@ -1876,7 +1876,7 @@ class ['loc] mapper =
             if is_type_local then
               this#binding_type_identifier
             else
-              this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let
+              this#pattern_identifier ~kind:Ast.Variable.Let
           in
           id local_visitor ident local (fun ident -> Some ident)
       in
@@ -1892,7 +1892,7 @@ class ['loc] mapper =
         | ImportType
         | ImportTypeof ->
           this#binding_type_identifier
-        | _ -> this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let
+        | _ -> this#pattern_identifier ~kind:Ast.Variable.Let
       in
       local_visitor id
 
@@ -1903,7 +1903,7 @@ class ['loc] mapper =
         | ImportType
         | ImportTypeof ->
           this#binding_type_identifier
-        | _ -> this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let
+        | _ -> this#pattern_identifier ~kind:Ast.Variable.Let
       in
       local_visitor id
 
@@ -2325,13 +2325,13 @@ class ['loc] mapper =
         }
 
     method function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
-      this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr
+      this#binding_pattern ~kind:Ast.Variable.Let expr
 
     method variable_declarator_pattern ~kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#binding_pattern ~kind expr
 
     method catch_clause_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
-      this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr
+      this#binding_pattern ~kind:Ast.Variable.Let expr
 
     method for_in_assignment_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#assignment_pattern expr
@@ -2339,8 +2339,7 @@ class ['loc] mapper =
     method for_of_assignment_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#assignment_pattern expr
 
-    method binding_pattern
-        ?(kind = Ast.Statement.VariableDeclaration.Var) (expr : ('loc, 'loc) Ast.Pattern.t) =
+    method binding_pattern ?(kind = Ast.Variable.Var) (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#pattern ~kind expr
 
     method assignment_pattern (expr : ('loc, 'loc) Ast.Pattern.t) = this#pattern expr

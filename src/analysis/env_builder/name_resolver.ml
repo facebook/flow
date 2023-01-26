@@ -898,9 +898,9 @@ module Make
 
   let variable_declaration_binding_kind_to_pattern_write_kind = function
     | None -> AssignmentWrite
-    | Some Flow_ast.Statement.VariableDeclaration.Var -> VarBinding
-    | Some Flow_ast.Statement.VariableDeclaration.Let -> LetBinding
-    | Some Flow_ast.Statement.VariableDeclaration.Const -> ConstBinding
+    | Some Flow_ast.Variable.Var -> VarBinding
+    | Some Flow_ast.Variable.Let -> LetBinding
+    | Some Flow_ast.Variable.Const -> ConstBinding
 
   let error_for_assignment_kind
       cx name assignment_loc def_loc_opt stored_binding_kind pattern_write_kind v =
@@ -2530,7 +2530,7 @@ module Make
       method! variable_declaration loc decl =
         let open Flow_ast in
         let { Statement.VariableDeclaration.declarations; kind; comments = _ } = decl in
-        if kind <> Statement.VariableDeclaration.Const then
+        if kind <> Variable.Const then
           Flow_ast_utils.fold_bindings_of_variable_declarations
             (fun _has_anno () (loc, { Identifier.name; comments = _ }) ->
               valid_declaration_check (OrdinaryName name) loc)
@@ -3798,7 +3798,7 @@ module Make
         let (class_write_loc, class_self_reason) =
           match id with
           | Some ((name_loc, { Ast.Identifier.name; comments = _ }) as id) ->
-            ignore @@ this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id;
+            ignore @@ this#pattern_identifier ~kind:Ast.Variable.Let id;
             (name_loc, mk_reason (RType (OrdinaryName name)) name_loc)
           | None ->
             let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in

@@ -341,7 +341,7 @@ end = struct
   let find_entries_for_new_variable kind env =
     let rec loop env rev_head =
       match (env, kind) with
-      | (({ entries; kind = Lex; _ } as hd) :: tl, Ast.Statement.VariableDeclaration.(Let | Const))
+      | (({ entries; kind = Lex; _ } as hd) :: tl, Ast.Variable.(Let | Const))
       | (({ entries; kind = Var; _ } as hd) :: tl, _) ->
         ( entries,
           fun entries ->
@@ -778,7 +778,7 @@ end = struct
           this#in_context
             ~mod_cx:(fun _cx ->
               { init_state = Annotation { predicate = false; contextual = false } })
-            (fun () -> this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident)
+            (fun () -> this#pattern_identifier ~kind:Ast.Variable.Var ident)
         in
         decl
 
@@ -906,9 +906,9 @@ end = struct
           | Some kind ->
             let binding_kind =
               match kind with
-              | Ast.Statement.VariableDeclaration.Var -> Bindings.Var
-              | Ast.Statement.VariableDeclaration.Let -> Bindings.Let
-              | Ast.Statement.VariableDeclaration.Const -> Bindings.Const
+              | Ast.Variable.Var -> Bindings.Var
+              | Ast.Variable.Let -> Bindings.Let
+              | Ast.Variable.Const -> Bindings.Const
             in
             this#new_entry name binding_kind kind loc
           | _ -> ()
@@ -916,11 +916,11 @@ end = struct
         super#identifier ident
 
       method! function_this_param ((loc, _) as this_) =
-        this#new_entry "this" Bindings.Const Ast.Statement.VariableDeclaration.Const loc;
+        this#new_entry "this" Bindings.Const Ast.Variable.Const loc;
         super#function_this_param this_
 
       method! function_identifier ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
-        this#new_entry name Bindings.Function Flow_ast.Statement.VariableDeclaration.Let loc;
+        this#new_entry name Bindings.Function Flow_ast.Variable.Let loc;
         super#identifier ident
 
       method! declare_function
@@ -929,7 +929,7 @@ end = struct
         this#new_entry
           name
           (Bindings.DeclaredFunction { predicate = Option.is_some predicate })
-          Flow_ast.Statement.VariableDeclaration.Let
+          Flow_ast.Variable.Let
           loc;
         super#declare_function stmt_loc stmt
 

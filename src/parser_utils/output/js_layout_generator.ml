@@ -1651,9 +1651,9 @@ and variable_declaration
     (loc, { Ast.Statement.VariableDeclaration.declarations; kind; comments }) =
   let kind_layout =
     match kind with
-    | Ast.Statement.VariableDeclaration.Var -> Atom "var"
-    | Ast.Statement.VariableDeclaration.Let -> Atom "let"
-    | Ast.Statement.VariableDeclaration.Const -> Atom "const"
+    | Ast.Variable.Var -> Atom "var"
+    | Ast.Variable.Let -> Atom "let"
+    | Ast.Variable.Const -> Atom "const"
   in
   let has_init =
     List.exists

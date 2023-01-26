@@ -170,7 +170,7 @@ end = struct
                             }
                           );
                         ];
-                      kind = Statement.VariableDeclaration.Var;
+                      kind = Variable.Var;
                       _;
                     }
                 );
