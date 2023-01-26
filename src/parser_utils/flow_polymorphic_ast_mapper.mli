@@ -29,9 +29,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method binary : ('M, 'T) Ast.Expression.Binary.t -> ('N, 'U) Ast.Expression.Binary.t
 
     method binding_pattern :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Ast.Pattern.t ->
-      ('N, 'U) Ast.Pattern.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method block : ('M, 'T) Ast.Statement.Block.t -> ('N, 'U) Ast.Statement.Block.t
 
@@ -479,87 +477,70 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Expression.OptionalMember.t -> ('N, 'U) Ast.Expression.OptionalMember.t
 
     method pattern :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Flow_ast.Pattern.t ->
-      ('N, 'U) Ast.Pattern.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method pattern_array_e :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
+      ?kind:Ast.Variable.kind ->
       ('M, 'T) Ast.Pattern.Array.element ->
       ('N, 'U) Ast.Pattern.Array.element
 
     method pattern_array_element :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
+      ?kind:Ast.Variable.kind ->
       ('M, 'T) Ast.Pattern.Array.Element.t' ->
       ('N, 'U) Ast.Pattern.Array.Element.t'
 
     method pattern_array_element_pattern :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Flow_ast.Pattern.t ->
-      ('N, 'U) Ast.Pattern.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method pattern_array_rest_element :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
+      ?kind:Ast.Variable.kind ->
       ('M, 'T) Ast.Pattern.RestElement.t' ->
       ('N, 'U) Ast.Pattern.RestElement.t'
 
     method pattern_array_rest_element_pattern :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Flow_ast.Pattern.t ->
-      ('N, 'U) Ast.Pattern.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method pattern_assignment_pattern :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Ast.Pattern.t ->
-      ('N, 'U) Ast.Pattern.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method pattern_expression : ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
 
-    method pattern_literal :
-      ?kind:Ast.Statement.VariableDeclaration.kind -> 'M Ast.Literal.t -> 'N Ast.Literal.t
+    method pattern_literal : ?kind:Ast.Variable.kind -> 'M Ast.Literal.t -> 'N Ast.Literal.t
 
     method pattern_object_p :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
+      ?kind:Ast.Variable.kind ->
       ('M, 'T) Ast.Pattern.Object.property ->
       ('N, 'U) Ast.Pattern.Object.property
 
     method pattern_object_property :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
+      ?kind:Ast.Variable.kind ->
       ('M, 'T) Ast.Pattern.Object.Property.t' ->
       ('N, 'U) Ast.Pattern.Object.Property.t'
 
     method pattern_object_property_computed_key :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Ast.ComputedKey.t ->
-      ('N, 'U) Ast.ComputedKey.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.ComputedKey.t -> ('N, 'U) Ast.ComputedKey.t
 
     method pattern_object_property_identifier_key :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Ast.Identifier.t ->
-      ('N, 'U) Ast.Identifier.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method pattern_object_property_key :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
+      ?kind:Ast.Variable.kind ->
       ('M, 'T) Ast.Pattern.Object.Property.key ->
       ('N, 'U) Ast.Pattern.Object.Property.key
 
     method pattern_object_property_literal_key :
-      ?kind:Ast.Statement.VariableDeclaration.kind -> 'M Ast.Literal.t -> 'N Ast.Literal.t
+      ?kind:Ast.Variable.kind -> 'M Ast.Literal.t -> 'N Ast.Literal.t
 
     method pattern_object_property_pattern :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Flow_ast.Pattern.t ->
-      ('N, 'U) Ast.Pattern.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method pattern_object_rest_property :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
+      ?kind:Ast.Variable.kind ->
       ('M, 'T) Ast.Pattern.RestElement.t' ->
       ('N, 'U) Ast.Pattern.RestElement.t'
 
     method pattern_object_rest_property_pattern :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Flow_ast.Pattern.t ->
-      ('N, 'U) Ast.Pattern.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method predicate_expression : ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
 
@@ -598,9 +579,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method t_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method t_pattern_identifier :
-      ?kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Ast.Identifier.t ->
-      ('N, 'U) Ast.Identifier.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method tagged_template :
       ('M, 'T) Ast.Expression.TaggedTemplate.t -> ('N, 'U) Ast.Expression.TaggedTemplate.t
@@ -673,14 +652,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.VariableDeclaration.t -> ('N, 'U) Ast.Statement.VariableDeclaration.t
 
     method variable_declarator :
-      kind:Ast.Statement.VariableDeclaration.kind ->
+      kind:Ast.Variable.kind ->
       ('M, 'T) Ast.Statement.VariableDeclaration.Declarator.t ->
       ('N, 'U) Ast.Statement.VariableDeclaration.Declarator.t
 
     method variable_declarator_pattern :
-      kind:Ast.Statement.VariableDeclaration.kind ->
-      ('M, 'T) Ast.Pattern.t ->
-      ('N, 'U) Ast.Pattern.t
+      kind:Ast.Variable.kind -> ('M, 'T) Ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method variance : 'M Ast.Variance.t -> 'N Ast.Variance.t
 

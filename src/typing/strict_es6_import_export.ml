@@ -13,7 +13,7 @@ module Scopes = Scope_api.With_ALoc
 type var_decl_info = {
   decl_loc: ALoc.t;
   name: string;
-  kind: Ast.Statement.VariableDeclaration.kind;
+  kind: Ast.Variable.kind;
 }
 
 type declarations = {
@@ -406,7 +406,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
         | Some
             ( loc,
               VariableDeclaration
-                { VariableDeclaration.kind = VariableDeclaration.Var | VariableDeclaration.Let; _ }
+                { VariableDeclaration.kind = Ast.Variable.Var | Ast.Variable.Let; _ }
             ) ->
           this#add_non_const_var_export_error loc None
         | _ -> ()
@@ -447,9 +447,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
                 (* Also check for non-const variables in list of export specifiers *)
                 begin
                   match ALocMap.find_opt def_loc declarations.var_decls with
-                  | Some
-                      { decl_loc; name; kind = VariableDeclaration.Var | VariableDeclaration.Let }
-                    ->
+                  | Some { decl_loc; name; kind = Ast.Variable.Var | Ast.Variable.Let } ->
                     this#add_non_const_var_export_error
                       id_loc
                       (Some (decl_loc, Reason.OrdinaryName name))

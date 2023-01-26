@@ -301,13 +301,14 @@ class mapper ~strict ~synth_type target =
       | _ -> super#class_element elem
 
     method! variable_declarator ~kind decl =
-      let open Flow_ast.Statement.VariableDeclaration in
       let open Flow_ast.Statement.VariableDeclaration.Declarator in
       let open Flow_ast.Pattern in
       let open Flow_ast.Pattern.Identifier in
       match (kind, decl) with
       (* In `const x = exp;` the error appears on exp *)
-      | (Const, (dloc, ({ id = (iloc, Identifier id); init = Some (type_loc, _) } as decl)))
+      | ( Flow_ast.Variable.Const,
+          (dloc, ({ id = (iloc, Identifier id); init = Some (type_loc, _) } as decl))
+        )
       (* Use is_target of initialization expression location
          because const signature verification errors point to expression *)
         when this#is_target type_loc ->
@@ -319,7 +320,7 @@ class mapper ~strict ~synth_type target =
     method! variable_declarator_pattern ~kind node =
       let open Flow_ast.Pattern in
       let open Flow_ast.Pattern.Identifier in
-      let open Flow_ast.Statement.VariableDeclaration in
+      let open Flow_ast.Variable in
       let (loc, patt) = node in
       if not (this#target_contained_by loc) then
         node

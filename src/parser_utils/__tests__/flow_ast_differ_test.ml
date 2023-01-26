@@ -66,6 +66,7 @@ class useless_mapper =
       | _ -> id
 
     method! variable_declaration loc (decl : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
+      let open Ast.Variable in
       let open Ast.Statement.VariableDeclaration in
       let decl = super#variable_declaration loc decl in
       let { declarations; kind; comments } = decl in

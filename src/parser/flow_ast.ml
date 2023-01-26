@@ -135,6 +135,15 @@ and ComputedKey : sig
 end =
   ComputedKey
 
+and Variable : sig
+  type kind =
+    | Var
+    | Let
+    | Const
+  [@@deriving show]
+end =
+  Variable
+
 and Type : sig
   module Function : sig
     module Param : sig
@@ -700,14 +709,9 @@ and Statement : sig
 
     type ('M, 'T) t = {
       declarations: ('M, 'T) Declarator.t list;
-      kind: kind;
+      kind: Variable.kind;
       comments: ('M, unit) Syntax.t option;
     }
-
-    and kind =
-      | Var
-      | Let
-      | Const
     [@@deriving show]
   end
 

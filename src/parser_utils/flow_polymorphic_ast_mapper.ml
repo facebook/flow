@@ -276,7 +276,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       (annot', { expression = expression'; comments = comments' })
 
     method class_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
-      this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
+      this#t_pattern_identifier ~kind:Ast.Variable.Let ident
 
     method class_body (cls_body : ('M, 'T) Ast.Class.Body.t) : ('N, 'U) Ast.Class.Body.t =
       let open Ast.Class.Body in
@@ -519,7 +519,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.DeclareVariable.t =
       let open Ast.Statement.DeclareVariable in
       let { id = ident; annot; comments } = decl in
-      let id' = this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
+      let id' = this#t_pattern_identifier ~kind:Ast.Variable.Var ident in
       let annot' = this#type_annotation annot in
       let comments' = Option.map ~f:this#syntax comments in
       { id = id'; annot = annot'; comments = comments' }
@@ -1278,7 +1278,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | BodyExpression expr -> BodyExpression (this#expression expr)
 
     method t_function_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
-      this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
+      this#t_pattern_identifier ~kind:Ast.Variable.Var ident
 
     method generator (expr : ('M, 'T) Ast.Expression.Generator.t)
         : ('N, 'U) Ast.Expression.Generator.t =
@@ -1414,14 +1414,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind) (id : ('M, 'T) Ast.Identifier.t)
         : ('N, 'U) Ast.Identifier.t =
       ignore import_kind;
-      this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
+      this#t_pattern_identifier ~kind:Ast.Variable.Let id
 
     method import_namespace_specifier
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
         _loc
         (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       ignore import_kind;
-      this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
+      this#t_pattern_identifier ~kind:Ast.Variable.Let id
 
     method jsx_element (expr : ('M, 'T) Ast.JSX.element) =
       let open Ast.JSX in
@@ -1757,7 +1757,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#binding_pattern ~kind expr
 
     method catch_clause_pattern (expr : ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t =
-      this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr
+      this#binding_pattern ~kind:Ast.Variable.Let expr
 
     method for_in_assignment_pattern (expr : ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t =
       this#assignment_pattern expr
@@ -1765,8 +1765,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method for_of_assignment_pattern (expr : ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t =
       this#assignment_pattern expr
 
-    method binding_pattern
-        ?(kind = Ast.Statement.VariableDeclaration.Var) (expr : ('M, 'T) Ast.Pattern.t)
+    method binding_pattern ?(kind = Ast.Variable.Var) (expr : ('M, 'T) Ast.Pattern.t)
         : ('N, 'U) Ast.Pattern.t =
       this#pattern ~kind expr
 
