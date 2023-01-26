@@ -1,0 +1,132 @@
+Error ----------------------------------------------------------------------------------------------------- const.js:3:2
+
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   const.js:3:2
+   3| (x: empty); // ERROR
+       ^
+
+References:
+   const.js:1:18
+   1| declare const x: string;
+                       ^^^^^^ [1]
+   const.js:3:5
+   3| (x: empty); // ERROR
+          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- const.js:8:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   const.js:8:4
+   8|   (x: string); // ERROR
+         ^
+
+References:
+   const.js:6:20
+   6|   declare const x: number;
+                         ^^^^^^ [1]
+   const.js:8:7
+   8|   (x: string); // ERROR
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- const.js:10:3
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   const.js:10:3
+   10|   x = 1; // ERROR
+         ^
+
+References:
+   const.js:6:17
+    6|   declare const x: number;
+                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- const.js:13:1
+
+Cannot reassign constant `x` [1]. [reassign-const]
+
+   const.js:13:1
+   13| x = "foo"; // ERROR
+       ^
+
+References:
+   const.js:1:15
+    1| declare const x: string;
+                     ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:4:2
+
+Cannot cast `s` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:4:2
+   4| (s: empty); // ERROR
+       ^
+
+References:
+   flow-typed/module.js:2:25
+   2|   declare export let s: string;
+                              ^^^^^^ [1]
+   import.js:4:5
+   4| (s: empty); // ERROR
+          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:7:2
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:7:2
+   7| (n: empty); // ERROR
+       ^
+
+References:
+   flow-typed/module.js:3:27
+   3|   declare export const n: number;
+                                ^^^^^^ [1]
+   import.js:7:5
+   7| (n: empty); // ERROR
+          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- let.js:3:2
+
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   let.js:3:2
+   3| (x: empty); // ERROR
+       ^
+
+References:
+   let.js:1:16
+   1| declare let x: string;
+                     ^^^^^^ [1]
+   let.js:3:5
+   3| (x: empty); // ERROR
+          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- let.js:8:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   let.js:8:4
+   8|   (x: string); // ERROR
+         ^
+
+References:
+   let.js:6:18
+   6|   declare let x: number;
+                       ^^^^^^ [1]
+   let.js:8:7
+   8|   (x: string); // ERROR
+            ^^^^^^ [2]
+
+
+
+Found 8 errors
