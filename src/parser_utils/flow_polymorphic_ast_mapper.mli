@@ -612,6 +612,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method type_alias : ('M, 'T) Ast.Statement.TypeAlias.t -> ('N, 'U) Ast.Statement.TypeAlias.t
 
+    method type_alias_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+
     method type_annotation : ('M, 'T) Flow_ast.Type.annotation -> 'N * ('N, 'U) Flow_ast.Type.t
 
     method type_annotation_hint :

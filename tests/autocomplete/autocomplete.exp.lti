@@ -9570,3 +9570,15 @@ Flags: --lsp
   }
 }
 
+type_binding_id.js:5:7
+Flags: --pretty
+{"result":[]}
+
+type_binding_id.js:8:14
+Flags: --pretty
+{"result":[]}
+
+type_binding_id.js:11:15
+Flags: --pretty
+{"result":[]}
+

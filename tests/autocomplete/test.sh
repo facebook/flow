@@ -136,3 +136,4 @@ queries_in_file autocomplete "class_members.js" --pretty
 queries_in_file autocomplete "method_signature.js" --lsp
 query_at_pos autocomplete "last_empty_line.js" 5 0 --pretty
 queries_in_file autocomplete "string_literal.js" --lsp
+queries_in_file autocomplete "type_binding_id.js" --pretty

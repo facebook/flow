@@ -1731,7 +1731,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.OpaqueType.t =
       let open Ast.Statement.OpaqueType in
       let { id; tparams; impltype; supertype; comments } = otype in
-      let id' = this#t_identifier id in
+      let id' = this#type_alias_identifier id in
       this#type_params_opt tparams (fun tparams' ->
           let impltype' = Option.map ~f:this#type_ impltype in
           let supertype' = Option.map ~f:this#type_ supertype in
@@ -2100,12 +2100,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.TypeAlias.t =
       let open Ast.Statement.TypeAlias in
       let { id; tparams; right; comments } = stuff in
-      let id' = this#t_identifier id in
+      let id' = this#type_alias_identifier id in
       this#type_params_opt tparams (fun tparams' ->
           let right' = this#type_ right in
           let comments' = Option.map ~f:this#syntax comments in
           { id = id'; tparams = tparams'; right = right'; comments = comments' }
       )
+
+    method type_alias_identifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
+      this#t_identifier id
 
     method yield (expr : ('M, 'T) Ast.Expression.Yield.t) : ('N, 'U) Ast.Expression.Yield.t =
       let open Ast.Expression.Yield in
