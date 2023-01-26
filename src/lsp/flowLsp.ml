@@ -1475,14 +1475,22 @@ let do_rage flowconfig_name (state : server_state) : Rage.result =
     items
   )
 
-let parse_json (state : state) (json : Jsonrpc.message) : lsp_message =
+let parse_json (state : state) (msg : Jsonrpc.message) : lsp_message =
+  let json = msg.Jsonrpc.json in
   (* to know how to parse a response, we must provide the corresponding request *)
   let outstanding (id : lsp_id) : lsp_request =
     let ienv =
       match state with
-      | Pre_init _
+      | Pre_init _ ->
+        Printf.ksprintf
+          failwith
+          "Unexpected LSP response before init: %s"
+          (Hh_json.json_to_string json)
       | Post_shutdown ->
-        failwith "Didn't expect an LSP response yet"
+        Printf.ksprintf
+          failwith
+          "Unexpected LSP response after shutdown: %s"
+          (Hh_json.json_to_string json)
       | Initialized server_state -> get_ienv server_state
     in
     match IdMap.find_opt id ienv.i_outstanding_local_requests with
@@ -1501,7 +1509,7 @@ let parse_json (state : state) (json : Jsonrpc.message) : lsp_message =
              }
           ))
   in
-  Lsp_fmt.parse_lsp json.Jsonrpc.json outstanding
+  Lsp_fmt.parse_lsp json outstanding
 
 let with_timer (f : unit -> 'a) : float * 'a =
   let start = Unix.gettimeofday () in
