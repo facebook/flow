@@ -34,6 +34,8 @@
 #include <CoreServices/CoreServices.h>
 #include <libkern/OSAtomic.h>
 
+#define Env_val(v) (*((struct env**)Data_abstract_val(v)))
+
 /**
  * Commands and events are passed back and forth between the main thread and
  * the run loop thread using two lockless linked lists. Each linked list is
@@ -390,17 +392,17 @@ static struct event* read_events(struct env* env) {
 
 CAMLprim value stub_fsevents_init(value unit) {
   CAMLparam1(unit);
-  // We're returning a pointer to ocaml land. This type will be opaque to them
-  // and only be useful when passed back to c. This is a safe way to pass
-  // pointers back to ocaml. See
-  // http://caml.inria.fr/pub/docs/manual-ocaml/intfc.html#sec412
-  CAMLreturn((value)fsevents_init());
+  CAMLlocal1(v);
+  struct env* env = fsevents_init();
+  v = caml_alloc(1, Abstract_tag);
+  *((struct env**)Data_abstract_val(v)) = env;
+  CAMLreturn(v);
 }
 
 CAMLprim value stub_fsevents_add_watch(value env, value path) {
   CAMLparam2(env, path);
   CAMLlocal1(ret);
-  struct env* c_env = (struct env*)env;
+  struct env* c_env = Env_val(env);
   char* rpath = realpath(String_val(path), NULL);
   if (rpath == NULL) {
     uerror("realpath", path);
@@ -417,7 +419,7 @@ CAMLprim value stub_fsevents_add_watch(value env, value path) {
 CAMLprim value stub_fsevents_rm_watch(value env, value path) {
   CAMLparam2(env, path);
   CAMLlocal1(ret);
-  struct env* c_env = (struct env*)env;
+  struct env* c_env = Env_val(env);
   char* rpath = realpath(String_val(path), NULL);
   if (rpath == NULL) {
     uerror("realpath", path);
@@ -430,7 +432,7 @@ CAMLprim value stub_fsevents_rm_watch(value env, value path) {
 
 CAMLprim value stub_fsevents_get_event_fd(value env) {
   CAMLparam1(env);
-  int fd = ((struct env*)env)->read_event_fd;
+  int fd = Env_val(env)->read_event_fd;
   CAMLreturn(Val_int(fd));
 }
 
@@ -438,7 +440,7 @@ CAMLprim value stub_fsevents_read_events(value env) {
   CAMLparam1(env);
   CAMLlocal3(event_list, event, cons);
   struct event* to_free;
-  struct event* events = read_events((struct env*)env);
+  struct event* events = read_events(Env_val(env));
   event_list = Val_emptylist;
   while (events != NULL) {
     // A tuple to store the filed
