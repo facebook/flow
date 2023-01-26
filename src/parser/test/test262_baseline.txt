@@ -970,22 +970,6 @@ language/expressions/assignmenttargettype/parenthesized-primaryexpression-object
   Missing parse error
 language/expressions/assignmenttargettype/parenthesized-primaryexpression-objectliteral.js (default)
   Missing parse error
-language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/await-as-param-nested-arrow-body-position.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/await-as-param-nested-arrow-body-position.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (default)
-  Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-duplicate-parameters.js (default)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (strict mode)
@@ -1003,10 +987,6 @@ language/expressions/async-generator/early-errors-expression-formals-body-duplic
 language/expressions/async-generator/early-errors-expression-formals-body-duplicate-let.js (strict mode)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-body-duplicate-let.js (default)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (default)
   Missing parse error
 language/expressions/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
@@ -1555,14 +1535,6 @@ language/expressions/object/literal-property-name-bigint.js (strict mode)
 language/expressions/object/literal-property-name-bigint.js (default)
   Unexpected bigint, expected an identifier at (31, 10) to (31, 29)
 language/expressions/object/method-definition/early-errors-object-async-method-duplicate-parameters.js (default)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-await-in-formals-default.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-await-in-formals-default.js (default)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-await-in-formals.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-await-in-formals.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js (default)
   Missing parse error
@@ -3096,14 +3068,6 @@ language/statements/class/cpn-class-decl-fields-methods-computed-property-name-f
   Unexpected number, expected the token `]` at (40, 9) to (40, 10)
 language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-await-expression.js (default)
   Unexpected number, expected the token `]` at (40, 9) to (40, 10)
-language/statements/class/definition/early-errors-class-method-await-in-formals-default.js (strict mode)
-  Missing parse error
-language/statements/class/definition/early-errors-class-method-await-in-formals-default.js (default)
-  Missing parse error
-language/statements/class/definition/early-errors-class-method-await-in-formals.js (strict mode)
-  Missing parse error
-language/statements/class/definition/early-errors-class-method-await-in-formals.js (default)
-  Missing parse error
 language/statements/class/elements/arrow-fnc-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/statements/class/elements/arrow-fnc-init-err-contains-arguments.js (default)
@@ -3722,8 +3686,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84670 (97.85%)
-Failed:  1859 (2.15%)
+Passed:  84688 (97.87%)
+Failed:  1841 (2.13%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3733,7 +3697,7 @@ Features:
   arbitrary-module-namespace-names: 20/32 (62.50%)
   arrow-function: 1478/1496 (98.80%)
   async-functions: 1212/1292 (93.81%)
-  async-iteration: 9618/9728 (98.87%)
+  async-iteration: 9620/9728 (98.89%)
   class: 8989/9241 (97.27%)
   class-fields-private: 1945/2001 (97.20%)
   class-fields-private-in: 16/38 (42.11%)
