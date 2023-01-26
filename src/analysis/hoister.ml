@@ -60,6 +60,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       | (_, ClassDeclaration _)
       | (_, DeclareClass _)
       | (_, DeclareExportDeclaration _)
+      | (_, DeclareVariable _)
       | (_, EnumDeclaration _)
       | (_, ExportNamedDeclaration _)
       | (_, ExportDefaultDeclaration _)
@@ -175,6 +176,15 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
         decl
       | None -> super#declare_function loc decl
 
+    method! declare_variable _ (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
+      let open Ast.Statement.DeclareVariable in
+      let { id; kind; _ } = decl in
+      (match kind with
+      | Ast.Variable.Var -> ()
+      | Ast.Variable.Let -> this#add_let_binding ?kind:None id
+      | Ast.Variable.Const -> this#add_const_binding ?kind:None id);
+      decl
+
     method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id; _ } = enum in
@@ -231,8 +241,11 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
     (* don't hoist let/const bindings *)
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id; kind = _ (* TODO *); _ } = decl in
-      this#add_var_binding id;
+      let { id; kind; _ } = decl in
+      (match kind with
+      | Ast.Variable.Var -> this#add_var_binding id
+      | Ast.Variable.Let -> this#add_let_binding ?kind:None id
+      | Ast.Variable.Const -> this#add_const_binding ?kind:None id);
       super#declare_variable loc decl
 
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =

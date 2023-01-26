@@ -669,9 +669,6 @@ module Scope = struct
       name
       (ConstFunBinding { id_loc; name; loc; async; generator; def; statics })
 
-  let bind_declare_var scope tbls id_loc name def =
-    bind_local scope tbls name (VarBinding { id_loc; name; def })
-
   let bind_import scope tbls kind id_loc ~local ~remote mref =
     let mref = push_module_ref tbls mref in
     bind_remote scope tbls local (import_binding kind id_loc local mref ~remote)
@@ -3715,13 +3712,11 @@ let function_decl opts scope tbls decl =
   Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def
 
 let declare_variable_decl opts scope tbls decl =
-  let { Ast.Statement.DeclareVariable.id; annot = (_, t); kind = _ (* TODO *); comments = _ } =
-    decl
-  in
+  let { Ast.Statement.DeclareVariable.id; annot = (_, t); kind; comments = _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
   let id_loc = push_loc tbls id_loc in
   let def = lazy (splice tbls id_loc (fun tbls -> annot opts scope tbls SSet.empty t)) in
-  Scope.bind_declare_var scope tbls id_loc name def
+  Scope.bind_var scope tbls kind id_loc name def
 
 let declare_function_decl opts scope tbls decl =
   let {

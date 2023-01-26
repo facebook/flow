@@ -180,6 +180,19 @@ let tests =
          >:: mk_scope_builder_all_uses_test
                "declare var foo: number; foo"
                [mk_loc (1, 12) (1, 15); mk_loc (1, 25) (1, 28)];
+         "declare_let"
+         >:: mk_scope_builder_all_uses_test
+               "declare let foo: number; foo"
+               [mk_loc (1, 12) (1, 15); mk_loc (1, 25) (1, 28)];
+         "declare_const"
+         >:: mk_scope_builder_all_uses_test
+               "declare const foo: number; foo"
+               [mk_loc (1, 14) (1, 17); mk_loc (1, 27) (1, 30)];
+         "declare_var_let_const_block_scope"
+         >:: mk_scope_builder_toplevel_scopes_test
+               "{ declare var x: 1; declare let y: 2; declare const z: 3 }"
+               (* `y` (let) and `z` (const) not present in top level scope *)
+               ["x"];
          "declare_export_var"
          >:: mk_scope_builder_all_uses_test
                "declare export var bar: number; bar"

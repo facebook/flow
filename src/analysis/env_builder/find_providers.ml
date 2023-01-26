@@ -771,15 +771,13 @@ end = struct
         this#set_acc (env, cx)
 
       method! declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
-        let { Ast.Statement.DeclareVariable.id = ident; annot; kind = _ (* TODO *); comments = _ } =
-          decl
-        in
+        let { Ast.Statement.DeclareVariable.id = ident; annot; kind; comments = _ } = decl in
         let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
         let (_ : ('a, 'b) Ast.Identifier.t) =
           this#in_context
             ~mod_cx:(fun _cx ->
               { init_state = Annotation { predicate = false; contextual = false } })
-            (fun () -> this#pattern_identifier ~kind:Ast.Variable.Var ident)
+            (fun () -> this#pattern_identifier ~kind ident)
         in
         decl
 

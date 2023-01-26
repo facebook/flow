@@ -927,9 +927,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id = (id_loc, { Ast.Identifier.name; _ }); annot; kind = _ (* TODO *); comments = _ } =
-        decl
-      in
+      let { id = (id_loc, { Ast.Identifier.name; _ }); annot; kind = _; comments = _ } = decl in
       this#add_ordinary_binding
         id_loc
         (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
