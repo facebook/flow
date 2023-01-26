@@ -979,7 +979,7 @@ static void mark_stack_overflow() {
 //
 // Note that this operation is idempotent because `memfd_reserve` is idempotent.
 static void mark_stack_try_resize(uintnat mark_ptr) {
-  if (mark_ptr > MARK_STACK_INIT_SIZE &&
+  if (mark_ptr >= MARK_STACK_INIT_SIZE &&
       ((mark_ptr & (-mark_ptr)) == mark_ptr)) {
     if (mark_ptr == MARK_STACK_MAX_SIZE) {
       mark_stack_overflow();
