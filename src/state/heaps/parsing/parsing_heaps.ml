@@ -2132,23 +2132,25 @@ module Saved_state_mutator = struct
 
   let add_parsed
       () file_key file_opt hash module_name exports requires resolved_requires imports cas_digest =
-    Heap.alloc
-      (prepare_add_checked_file
-         file_key
-         file_opt
-         hash
-         module_name
-         None
-         None
-         None
-         None
-         None
-         requires
-         exports
-         imports
-         cas_digest
-         (Some (Some resolved_requires))
-      )
+    WorkerCancel.with_no_cancellations (fun () ->
+        Heap.alloc
+          (prepare_add_checked_file
+             file_key
+             file_opt
+             hash
+             module_name
+             None
+             None
+             None
+             None
+             None
+             requires
+             exports
+             imports
+             cas_digest
+             (Some (Some resolved_requires))
+          )
+    )
 
   let add_unparsed () = add_unparsed
 
