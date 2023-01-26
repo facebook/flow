@@ -14,8 +14,8 @@ References:
    array.js:7:19
       7| (["hi"]: Iterable<number>); // Error string ~> number
                            ^^^^^^ [2]
-   <BUILTINS>/core.js:1673:22
-   1673| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [3]
 
 
@@ -35,8 +35,8 @@ References:
    array.js:8:22
       8| (["hi", 1]: Iterable<string>); // Error number ~> string
                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1673:22
-   1673| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [3]
 
 
@@ -56,8 +56,8 @@ References:
    caching_bug.js:21:62
      21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:1673:22
-   1673| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [3]
 
 
@@ -86,13 +86,13 @@ Cannot return object literal because property `value` is missing in object liter
                         ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1667:5
+   <BUILTINS>/core.js:1665:5
              v
-   1667|   | {
-   1668|     done: false,
-   1669|     +value: Yield,
-   1670|     ...
-   1671| };
+   1665|   | {
+   1666|     done: false,
+   1667|     +value: Yield,
+   1668|     ...
+   1669| };
          ^ [2]
 
 
@@ -106,14 +106,14 @@ value of property `@@iterator`. [incompatible-return]
                   ^^^
 
 References:
-   <BUILTINS>/core.js:1738:28
-   1738|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:1736:28
+   1736|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [1]
    map.js:13:55
      13| function mapTest4(map: Map<number, string>): Iterable<string> {
                                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1673:22
-   1673| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [3]
 
 
@@ -133,8 +133,8 @@ References:
    set.js:13:47
      13| function setTest4(set: Set<string>): Iterable<number> {
                                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:1673:22
-   1673| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [3]
 
 
@@ -148,14 +148,14 @@ return value of property `@@iterator`. [incompatible-cast]
           ^^^^
 
 References:
-   <BUILTINS>/core.js:1103:28
-   1103|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:1107:28
+   1107|     @@iterator(): Iterator<string>;
                                     ^^^^^^ [1]
    string.js:5:17
       5| ("hi": Iterable<number>); // Error - string is a Iterable<string>
                          ^^^^^^ [2]
-   <BUILTINS>/core.js:1673:22
-   1673| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [3]
 
 

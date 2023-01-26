@@ -501,8 +501,8 @@ defined. [method-unbinding]
                                          ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1578:5
-   1578|     constructor (message?: mixed): void;
+   <BUILTINS>/core.js:1576:5
+   1576|     constructor (message?: mixed): void;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

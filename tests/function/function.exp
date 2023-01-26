@@ -41,8 +41,8 @@ Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. 
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:1684:11
-   1684| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1682:11
+   1682| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
    <BUILTINS>/core.js:1085:22
                               v----------
@@ -157,8 +157,8 @@ Cannot call `test.apply` because string [1] is incompatible with number [2]. [in
               ^^^^^
 
 References:
-   <BUILTINS>/core.js:1103:28
-   1103|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:1107:28
+   1107|     @@iterator(): Iterator<string>;
                                     ^^^^^^ [1]
    apply.js:1:52
       1| function test(this: number | string, a: string, b: number): number {

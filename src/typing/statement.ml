@@ -2777,11 +2777,7 @@ module Make
       let call_t =
         let args =
           let quasi_t =
-            DefT
-              ( reason_array,
-                bogus_trust (),
-                ArrT (ArrayAT (StrT.why reason |> with_trust bogus_trust, None))
-              )
+            Flow.get_builtin_type cx reason_array (OrdinaryName "TaggedTemplateLiteralArray")
           in
           let exprs_t = Base.List.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           Arg quasi_t :: exprs_t
