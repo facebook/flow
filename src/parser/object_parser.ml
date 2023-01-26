@@ -263,16 +263,7 @@ module Object
                 (fun env ->
                   let tparams = type_params_remove_trailing env (Type.type_params env) in
                   let params =
-                    let (yield, await) =
-                      match (async, generator) with
-                      | (true, true) ->
-                        (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
-                      | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
-                      | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
-                      | (false, false) -> (false, false)
-                      (* #prod-MethodDefinition *)
-                    in
-                    let params = Declaration.function_params ~await ~yield env in
+                    let params = Declaration.function_params ~await:async ~yield:generator env in
                     if Peek.token env = T_COLON then
                       params
                     else
@@ -799,16 +790,7 @@ module Object
                   (fun env ->
                     let tparams = type_params_remove_trailing env (Type.type_params env) in
                     let params =
-                      let (yield, await) =
-                        match (async, generator) with
-                        | (true, true) ->
-                          (true, true) (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
-                        | (true, false) -> (false, allow_await env) (* #prod-AsyncMethod *)
-                        | (false, true) -> (true, false) (* #prod-GeneratorMethod *)
-                        | (false, false) -> (false, false)
-                        (* #prod-MethodDefinition *)
-                      in
-                      let params = Declaration.function_params ~await ~yield env in
+                      let params = Declaration.function_params ~await:async ~yield:generator env in
                       let params =
                         if Peek.token env = T_COLON then
                           params
