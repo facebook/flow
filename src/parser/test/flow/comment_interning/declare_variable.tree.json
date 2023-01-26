@@ -87,7 +87,8 @@
           }
         },
         "optional":false
-      }
+      },
+      "kind":"var"
     },
     {
       "type":"BlockStatement",
@@ -130,7 +131,8 @@
               }
             },
             "optional":false
-          }
+          },
+          "kind":"var"
         },
         {
           "type":"DeclareVariable",
@@ -168,7 +170,8 @@
               }
             },
             "optional":false
-          }
+          },
+          "kind":"var"
         }
       ]
     },
@@ -228,7 +231,8 @@
               }
             },
             "optional":false
-          }
+          },
+          "kind":"var"
         },
         {
           "type":"ExpressionStatement",

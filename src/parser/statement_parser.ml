@@ -1215,9 +1215,12 @@ module Statement
         Statement.DeclareFunction fn)
       env
 
-  and declare_var env leading =
+  and declare_var ~kind env leading =
     let leading = leading @ Peek.comments env in
-    Expect.token env T_VAR;
+    (match kind with
+    | Ast.Variable.Var -> Expect.token env T_VAR
+    | Ast.Variable.Let -> Expect.token env T_LET
+    | Ast.Variable.Const -> Expect.token env T_CONST);
     let name = Parse.identifier ~restricted_error:Parse_error.StrictVarName env in
     let annot = Type.annotation env in
     let (trailing, name, annot) =
@@ -1232,15 +1235,16 @@ module Statement
     {
       Statement.DeclareVariable.id = name;
       annot;
+      kind;
       comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
     }
 
-  and declare_var_statement env =
+  and declare_var_statement ~kind env =
     with_loc
       (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        let var = declare_var env leading in
+        let var = declare_var ~kind env leading in
         Statement.DeclareVariable var)
       env
 
@@ -1384,7 +1388,9 @@ module Statement
     | T_FUNCTION
     | T_ASYNC ->
       declare_function_statement env
-    | T_VAR -> declare_var_statement env
+    | T_VAR -> declare_var_statement ~kind:Ast.Variable.Var env
+    | T_LET -> declare_var_statement ~kind:Ast.Variable.Let env
+    | T_CONST -> declare_var_statement ~kind:Ast.Variable.Const env
     | T_EXPORT when in_module -> declare_export_declaration ~allow_export_type:in_module env
     | T_IDENTIFIER { raw = "module"; _ } -> declare_module ~in_module env
     | _ when in_module ->
@@ -1395,7 +1401,7 @@ module Statement
       | _ ->
         (* Oh boy, found some bad stuff in a declare module. Let's just
          * pretend it's a declare var (arbitrary choice) *)
-        declare_var_statement env)
+        declare_var_statement ~kind:Ast.Variable.Var env)
     | _ -> Parse.statement env
 
   and export_source env =
@@ -1759,14 +1765,17 @@ module Statement
                 (* declare export class foo { ... } *)
                 let class_ = with_loc (declare_class ~leading:[]) env in
                 Some (Class class_)
-              | (T_LET | T_CONST | T_VAR) as token ->
-                (match token with
-                | T_LET -> error env Parse_error.DeclareExportLet
-                | T_CONST -> error env Parse_error.DeclareExportConst
-                | _ -> ());
-
+              | T_VAR ->
                 (* declare export var foo: ... *)
-                let var = with_loc (fun env -> declare_var env []) env in
+                let var = with_loc (fun env -> declare_var ~kind:Ast.Variable.Var env []) env in
+                Some (Variable var)
+              | T_LET ->
+                (* declare export let foo: ... *)
+                let var = with_loc (fun env -> declare_var ~kind:Ast.Variable.Let env []) env in
+                Some (Variable var)
+              | T_CONST ->
+                (* declare export const foo: ... *)
+                let var = with_loc (fun env -> declare_var ~kind:Ast.Variable.Const env []) env in
                 Some (Variable var)
               | _ -> assert false
             in

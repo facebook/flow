@@ -1644,17 +1644,17 @@ and template_literal ~opts { Ast.Expression.TemplateLiteral.quasis; expressions;
   in
   fuse [Atom "`"; fuse (List.mapi template_element quasis); Atom "`"]
 
+and variable_kind kind =
+  match kind with
+  | Ast.Variable.Var -> Atom "var"
+  | Ast.Variable.Let -> Atom "let"
+  | Ast.Variable.Const -> Atom "const"
+
 and variable_declaration
     ?(ctxt = normal_context)
     ?(semicolon = Empty)
     ~opts
     (loc, { Ast.Statement.VariableDeclaration.declarations; kind; comments }) =
-  let kind_layout =
-    match kind with
-    | Ast.Variable.Var -> Atom "var"
-    | Ast.Variable.Let -> Atom "let"
-    | Ast.Variable.Const -> Atom "const"
-  in
   let has_init =
     List.exists
       (fun var ->
@@ -1681,7 +1681,7 @@ and variable_declaration
   in
   source_location_with_comments
     ?comments
-    (loc, fuse [fuse_with_space [kind_layout; decls_layout]; semicolon])
+    (loc, fuse [fuse_with_space [variable_kind kind; decls_layout]; semicolon])
 
 and variable_declarator ~ctxt ~opts (loc, { Ast.Statement.VariableDeclaration.Declarator.id; init })
     =
@@ -4065,7 +4065,7 @@ and declare_function
        )
 
 and declare_variable
-    ?(s_type = Empty) ~opts loc { Ast.Statement.DeclareVariable.id; annot; comments } =
+    ?(s_type = Empty) ~opts loc { Ast.Statement.DeclareVariable.id; annot; kind; comments } =
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
        (fuse
@@ -4073,7 +4073,7 @@ and declare_variable
             Atom "declare";
             space;
             s_type;
-            Atom "var";
+            variable_kind kind;
             space;
             identifier id;
             type_annotation ~opts annot;

@@ -1134,9 +1134,12 @@ module Make
     | (loc, EnumDeclaration enum) ->
       let enum_ast = enum_declaration cx loc enum in
       (loc, EnumDeclaration enum_ast)
-    | (loc, DeclareVariable { DeclareVariable.id = (id_loc, id); annot; comments }) ->
+    | (loc, DeclareVariable { DeclareVariable.id = (id_loc, id); annot; kind; comments }) ->
       let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-      (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
+      ( loc,
+        DeclareVariable
+          { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; kind; comments }
+      )
     | (loc, DeclareFunction declare_function) ->
       (match declare_function_to_function_declaration cx loc declare_function with
       | Some (FunctionDeclaration func, reconstruct_ast) ->

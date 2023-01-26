@@ -771,8 +771,9 @@ end = struct
         this#set_acc (env, cx)
 
       method! declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
-        let open Ast.Statement.DeclareVariable in
-        let { id = ident; annot; comments = _ } = decl in
+        let { Ast.Statement.DeclareVariable.id = ident; annot; kind = _ (* TODO *); comments = _ } =
+          decl
+        in
         let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
         let (_ : ('a, 'b) Ast.Identifier.t) =
           this#in_context

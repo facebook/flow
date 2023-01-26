@@ -17,9 +17,7 @@ type t =
   | DeclareAsync
   | DeclareClassElement
   | DeclareClassFieldInitializer
-  | DeclareExportConst
   | DeclareExportInterface
-  | DeclareExportLet
   | DeclareExportType
   | DeclareOpaqueTypeInitializer
   | DuplicateConstructor
@@ -197,11 +195,8 @@ module PP = struct
     | DeclareClassElement -> "`declare` modifier can only appear on class fields."
     | DeclareClassFieldInitializer ->
       "Unexpected token `=`. Initializers are not allowed in a `declare`."
-    | DeclareExportConst ->
-      "`declare export const` is not supported. Use `declare export var` instead."
     | DeclareExportInterface ->
       "`declare export interface` is not supported. Use `export interface` instead."
-    | DeclareExportLet -> "`declare export let` is not supported. Use `declare export var` instead."
     | DeclareExportType -> "`declare export type` is not supported. Use `export type` instead."
     | DeclareOpaqueTypeInitializer ->
       "Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
