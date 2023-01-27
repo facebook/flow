@@ -1,7 +1,10 @@
 ---
-name: "Discussion"
+name: Discussion
 about: You want to propose a change to Flow.
-labels: "discussion"
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 <!--

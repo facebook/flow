@@ -1,7 +1,10 @@
 ---
-name: "Question"
+name: Question
 about: Please direct all questions to stackoverflow.com
+title: ''
 labels: question
+assignees: ''
+
 ---
 
 <!-- Please direct your questions to stackoverflow.com and use the flowtype tag.
