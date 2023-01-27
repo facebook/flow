@@ -33,35 +33,17 @@ module PierceImplicitInstantiation : Implicit_instantiation.S with type output =
             );
         Type.AnyT.error tparam_binder_reason
 
-      let on_upper_non_t cx ~use_op name u _ ~tparam_binder_reason ~instantiation_reason =
-        if Build_mode.dev then
-          let msg =
-            Subst_name.string_of_subst_name name
-            ^ " contains a non-Type.t upper bound "
-            ^ Type.string_of_use_ctor u
-            ^ Type.(
-                match u with
-                | UseT (_, TypeDestructorTriggerT (_, _, _, d, _)) ->
-                  " " ^ Debug_js.string_of_destructor d
-                | _ -> ""
-              )
-          in
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EImplicitInstantiationTemporaryError
-               (Reason.aloc_of_reason tparam_binder_reason, msg)
-            )
-        else
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EImplicitInstantiationUnderconstrainedError
-               {
-                 bound = Subst_name.string_of_subst_name name;
-                 reason_call = instantiation_reason;
-                 reason_tparam = tparam_binder_reason;
-                 use_op;
-               }
-            );
+      let on_upper_non_t cx ~use_op name _u _ ~tparam_binder_reason ~instantiation_reason =
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EImplicitInstantiationUnderconstrainedError
+             {
+               bound = Subst_name.string_of_subst_name name;
+               reason_call = instantiation_reason;
+               reason_tparam = tparam_binder_reason;
+               use_op;
+             }
+          );
         Type.AnyT.error tparam_binder_reason
     end)
     (Flow_js.FlowJs)
@@ -499,8 +481,7 @@ let check_implicit_instantiations cx typed_ast file_sig =
                     Error_message.(
                       match Flow_error.msg_of_error error with
                       | EImplicitInstantiationUnderconstrainedError _
-                      | EImplicitInstantiationWidenedError _
-                      | EImplicitInstantiationTemporaryError _ ->
+                      | EImplicitInstantiationWidenedError _ ->
                         Context.add_error cx error
                       | _ -> ()
                     ))

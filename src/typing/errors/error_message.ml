@@ -441,7 +441,6 @@ and 'loc t' =
       blame_reasons: 'loc virtual_reason list;
     }
   | EMalformedCode of 'loc
-  | EImplicitInstantiationTemporaryError of 'loc * string
   | EImportInternalReactServerModule of 'loc
   | EImplicitInstantiationUnderconstrainedError of {
       reason_call: 'loc virtual_reason;
@@ -1097,8 +1096,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         blame_reasons = Base.List.map ~f:map_reason blame_reasons;
       }
   | EMalformedCode loc -> EMalformedCode (f loc)
-  | EImplicitInstantiationTemporaryError (loc, msg) ->
-    EImplicitInstantiationTemporaryError (f loc, msg)
   | EImportInternalReactServerModule loc -> EImportInternalReactServerModule (f loc)
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op } ->
     EImplicitInstantiationUnderconstrainedError
@@ -1406,7 +1403,6 @@ let util_use_op_of_msg nope util = function
   | EEnumMemberUsedAsType _
   | EAssignConstLikeBinding _
   | EMalformedCode _
-  | EImplicitInstantiationTemporaryError _
   | EImportInternalReactServerModule _
   | EImplicitInstantiationWidenedError _
   | EClassToObject _
@@ -1570,7 +1566,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeParamMinArity (loc, _)
   | EAssignConstLikeBinding { loc; _ }
   | EMalformedCode loc
-  | EImplicitInstantiationTemporaryError (loc, _)
   | EObjectThisReference (loc, _)
   | EImportInternalReactServerModule loc
   | EInvalidGraphQL (loc, _)
@@ -4011,7 +4006,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " to disambiguate.";
           ];
       }
-  | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
   | EImportInternalReactServerModule _ ->
     Normal
       {
@@ -4756,7 +4750,6 @@ let error_code_of_message err : error_code option =
   | EObjectThisReference _ -> Some ObjectThisReference
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EMalformedCode _
-  | EImplicitInstantiationTemporaryError _
   | EUnusedSuppression _
   | EImportInternalReactServerModule _ ->
     None

@@ -1791,7 +1791,6 @@ let dump_error_message =
     | EObjectThisReference (loc, r) ->
       spf "EObjectThisReference (%s, %s)" (string_of_aloc loc) (dump_reason cx r)
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
-    | EImplicitInstantiationTemporaryError _ -> "EImplicitInstantiationTemporaryError"
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)
     | EImplicitInstantiationUnderconstrainedError _ -> "EImplicitInstantiationUnderconstrainedError"
