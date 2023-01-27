@@ -298,6 +298,25 @@ module SignatureHelpClientCapabilities : sig
   and parameterInformation = { labelOffsetSupport: bool }
 end
 
+module DiagnosticTag : sig
+  type t =
+    | Unnecessary [@value 1]
+    | Deprecated [@value 2]
+  [@@deriving enum]
+end
+
+module PublishDiagnosticsClientCapabilities : sig
+  type t = {
+    relatedInformation: bool;
+    tagSupport: tagSupport;
+    versionSupport: bool;
+    codeDescriptionSupport: bool;
+    dataSupport: bool;
+  }
+
+  and tagSupport = { valueSet: DiagnosticTag.t list }
+end
+
 module CompletionOptions : sig
   type completionItem = {
     labelDetailsSupport: bool;
@@ -386,6 +405,7 @@ module Initialize : sig
     documentSymbol: DocumentSymbolClientCapabilities.t;
     signatureHelp: SignatureHelpClientCapabilities.t;
     selectionRange: SelectionRangeClientCapabilities.t;
+    publishDiagnostics: PublishDiagnosticsClientCapabilities.t;
   }
 
   and windowClientCapabilities = { status: bool }

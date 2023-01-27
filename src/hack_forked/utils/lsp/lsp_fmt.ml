@@ -1241,6 +1241,30 @@ module SignatureHelpClientCapabilitiesFmt = struct
     }
 end
 
+module PublishDiagnosticsClientCapabilitiesFmt = struct
+  open PublishDiagnosticsClientCapabilities
+
+  let diagnostic_tag_of_json = function
+    | Some (JSON_Number num_string) ->
+      num_string |> int_of_string_opt |> Base.Option.bind ~f:DiagnosticTag.of_enum
+    | _ -> None
+
+  let tagSupport_of_json json =
+    {
+      valueSet =
+        Jget.array_d json "valueSet" ~default:[] |> Base.List.filter_map ~f:diagnostic_tag_of_json;
+    }
+
+  let of_json json =
+    {
+      relatedInformation = Jget.bool_d json "relatedInformation" ~default:false;
+      tagSupport = Jget.obj_opt json "tagSupport" |> tagSupport_of_json;
+      versionSupport = Jget.bool_d json "versionSupport" ~default:false;
+      codeDescriptionSupport = Jget.bool_d json "codeDescriptionSupport" ~default:false;
+      dataSupport = Jget.bool_d json "dataSupport" ~default:false;
+    }
+end
+
 module CompletionOptionsFmt = struct
   open CompletionOptions
 
@@ -1309,6 +1333,8 @@ let parse_initialize (params : json option) : Initialize.params =
           Jget.obj_opt json "selectionRange" |> SelectionRangeClientCapabilitiesFmt.of_json;
         signatureHelp =
           Jget.obj_opt json "signatureHelp" |> SignatureHelpClientCapabilitiesFmt.of_json;
+        publishDiagnostics =
+          Jget.obj_opt json "publishDiagnostics" |> PublishDiagnosticsClientCapabilitiesFmt.of_json;
       }
     and parse_window json = { status = Jget.obj_opt json "status" |> Base.Option.is_some }
     and parse_telemetry json =

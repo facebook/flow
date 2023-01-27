@@ -421,6 +421,25 @@ module SignatureHelpClientCapabilities = struct
   and parameterInformation = { labelOffsetSupport: bool }
 end
 
+module DiagnosticTag = struct
+  type t =
+    | Unnecessary [@value 1]
+    | Deprecated [@value 2]
+  [@@deriving enum]
+end
+
+module PublishDiagnosticsClientCapabilities = struct
+  type t = {
+    relatedInformation: bool;
+    tagSupport: tagSupport;
+    versionSupport: bool;
+    codeDescriptionSupport: bool;
+    dataSupport: bool;
+  }
+
+  and tagSupport = { valueSet: DiagnosticTag.t list }
+end
+
 module CompletionOptions = struct
   type completionItem = {
     labelDetailsSupport: bool;
@@ -516,6 +535,7 @@ module Initialize = struct
     documentSymbol: DocumentSymbolClientCapabilities.t;
     signatureHelp: SignatureHelpClientCapabilities.t;
     selectionRange: SelectionRangeClientCapabilities.t;
+    publishDiagnostics: PublishDiagnosticsClientCapabilities.t;
   }
 
   and windowClientCapabilities = {
