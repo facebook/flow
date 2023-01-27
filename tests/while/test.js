@@ -1,5 +1,6 @@
+// @flow
 class C {
-    m() { return new C; }
+    m(): C { return new C; }
 }
 function blah() {}
 var node: ?C = new C;

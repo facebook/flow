@@ -1,3 +1,4 @@
+// @flow
 const id = require('./id');
 
 export type ObjectType = {
@@ -8,6 +9,6 @@ function methodCaller(x: ObjectType) {
   x.m();
 };
 
-module.exports = id(
+module.exports = (id(
   methodCaller
-);
+): ObjectType => void);
