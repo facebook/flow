@@ -489,6 +489,93 @@ let entity_barrier_test _ =
   compact ();
   assert_heap_size 0
 
+let sklist_barrier_test _ =
+  let prepare_file name =
+    let+ name = prepare_write_string name
+    and+ parse_ent = prepare_write_entity
+    and+ haste_ent = prepare_write_entity
+    and+ file = prepare_write_file Source_file in
+    (fun dependents -> file name (parse_ent None) (haste_ent None) dependents)
+  in
+
+  (* Consider the following sklist: A(w) -> C(w) -> D(w)
+   * (w) means White, (g) means Gray, (b) means Black *)
+  let (set, c) =
+    let prepare =
+      let+ a = prepare_file "a"
+      and+ c = prepare_file "c"
+      and+ d = prepare_file "d"
+      and+ set = prepare_write_sklist
+      and+ a_node = prepare_write_sknode ()
+      and+ c_node = prepare_write_sknode ()
+      and+ d_node = prepare_write_sknode ()
+      and+ root = prepare_file "root" in
+      let a = a None in
+      let c = c None in
+      let d = d None in
+      let root = root (Some set) in
+      assert (file_set_add set (a_node a));
+      assert (file_set_add set (c_node c));
+      assert (file_set_add set (d_node d));
+      assert (Files.add "root" root == root);
+      (set, c)
+    in
+    alloc prepare
+  in
+
+  (* Start the marking pass, but don't mark anything. *)
+  assert (not (collect_slice ~force:true 1));
+
+  (* We add a fresh, allocated-black node B after A. sklist_add changes A's
+   * succ from ->C to ->B and its write barrier grays C.
+   *
+   * A(w) -> B(b) -> C(g) -> D(w)
+   *
+   * We then delete C from the list. Deletion happens in two steps: first, we
+   * mark C's succ pointer by setting the LSB to 1. This makes the pointer look
+   * like a tagged int, so the GC will skip over it. We can denote the marked
+   * pointer as -*>
+   *
+   * A(w) -> B(b) -> C(g) -*> D(g)
+   *
+   * In sklist_remove we also have a write barrier which grays D at this point,
+   * because D becomes unreachable once sklist_find runs.
+   *
+   * In the second step of deletion, sklist_find will remove C from the list by
+   * changing B's succ from ->C to ->D, resulting in this:
+   *
+   * A(w) -> B(b) -> D(g)
+   *
+   * Note that D is no longer reachable through the list and is no longer
+   * reachable through C (because the succ pointer is marked). Without the write
+   * barrier in sklist_remove, D would be erroneously considered free. *)
+  let () =
+    let prepare =
+      let+ b = prepare_file "b" and+ b_node = prepare_write_sknode () in
+      assert (file_set_add set (b_node (b None)));
+      assert (file_set_remove set c)
+    in
+    alloc prepare
+  in
+
+  (* Finish marking and sweeping, which will change the color of unreachable
+   * objects to blue. *)
+  collect_full ();
+
+  (* Reload the set from the root, in case it moved due to compation. *)
+  let set = Option.get (get_file_dependents (Option.get (Files.get "root"))) in
+
+  (* The set should contain "a" "b" and "d" -- the write barrier on
+   * sklist_remove ensured that "d" was still considered reachable. *)
+  let acc = ref [] in
+  sklist_iter (fun f -> acc := read_string (get_file_name f) :: !acc) set;
+  assert (!acc = ["d"; "b"; "a"]);
+
+  (* clean up *)
+  Files.remove "root";
+  compact ();
+  assert_heap_size 0
+
 let compare_string_test _ =
   let (empty1, empty2, foo1, foo2, foot, quux) =
     let prepare =
@@ -529,6 +616,7 @@ let tests workers =
          "skip_list" >:: skip_list_test workers;
          "add_provider_barrier" >:: add_provider_barrier_test;
          "entity_barrier" >:: entity_barrier_test;
+         "sklist_barrier" >:: sklist_barrier_test;
          "compare_string" >:: compare_string_test;
        ]
 
