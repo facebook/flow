@@ -786,7 +786,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       iter_resolve_union ~f:rec_flow cx trace reason rep (UseT (use_op, u))
     (* cases where there is no loss of precision *)
     | (UnionT _, UnionT _)
-      when union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) l u ->
+      when union_optimization_guard
+             cx
+             ~equiv:false
+             (Context.trust_errors cx |> TypeUtil.quick_subtype)
+             l
+             u ->
       if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path"
     (* Optimization to treat maybe and optional types as special unions for subset comparision *)
     | (UnionT (reason, rep), MaybeT (r, maybe)) ->

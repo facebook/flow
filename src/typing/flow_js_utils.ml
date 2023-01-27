@@ -511,13 +511,24 @@ let union_optimization_guard =
   (* Compare l to u. Flatten both unions and then check that each element
      of l is comparable to an element of u. Note that the comparator need not
      be symmetric. *)
-  let union_compare cx comparator lts uts =
+  let union_compare cx ~equiv comparator lts uts =
     if Context.is_verbose cx then prerr_endline "union_compare slow";
     let ts2 = Type_mapper.union_flatten cx uts in
     Type_mapper.union_flatten cx lts
-    |> Base.List.for_all ~f:(fun t1 -> Base.List.exists ~f:(comparator t1) ts2)
+    |> Base.List.for_all ~f:(fun t1 ->
+           if equiv then
+             Base.List.for_all ~f:(comparator t1) ts2
+           else
+             Base.List.exists ~f:(comparator t1) ts2
+       )
   in
-  let rec union_optimization_guard_impl seen cx comparator l u =
+  (* The equiv bool flag customizes the how the comparator is run on the each pair of element (l, u)
+     of two unions (ls, us).
+     - When equiv=true, all pairs must satisfy `l comparator u` in order for the guard to return true.
+     - When equiv=false, all l must have at least one u such that `l comparator u` in order for the
+       guard to return true.
+  *)
+  let rec union_optimization_guard_impl seen cx ~equiv comparator l u =
     match (l, u) with
     | (UnionT (_, rep1), UnionT (_, rep2)) ->
       rep1 = rep2
@@ -545,15 +556,18 @@ let union_optimization_guard =
             (* Check if u contains l after unwrapping annots, tvars and repos types.
                This is faster than the n^2 case below because it avoids flattening both
                unions *)
-            Base.List.exists
-              ~f:(fun u ->
-                (not (TypeSet.mem u seen))
-                && union_optimization_guard_impl (TypeSet.add u seen) cx comparator l u)
-              uts
+            let guard u =
+              (not (TypeSet.mem u seen))
+              && union_optimization_guard_impl (TypeSet.add u seen) cx ~equiv comparator l u
+            in
+            if equiv then
+              Base.List.for_all ~f:guard uts
+            else
+              Base.List.exists ~f:guard uts
           then
             true
           else
-            union_compare cx comparator lts uts
+            union_compare cx ~equiv comparator lts uts
       end
     | _ -> false
   in
