@@ -1,5 +1,3 @@
-// @flow
-
 const keyMirror = require("./keyMirror");
 
 class LayerKey {}

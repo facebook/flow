@@ -1,5 +1,3 @@
-// @flow
-
 type Mode = 0 | 1 | 2;
 
 let tests = [

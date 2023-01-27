@@ -1,5 +1,3 @@
-// @flow
-
 // .zzz comes before .aaa
 import {aaa_vs_zzz__aaa} from './aaa_vs_zzz'; // error
 import {aaa_vs_zzz__zzz} from './aaa_vs_zzz';

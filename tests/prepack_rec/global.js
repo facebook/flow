@@ -1,5 +1,3 @@
-// @flow
-
 import AbstractObjectValue from './AbstractObjectValue.js';
 import ObjectValue from './ObjectValue.js';
 import NativeFunctionValue from './NativeFunctionValue.js';

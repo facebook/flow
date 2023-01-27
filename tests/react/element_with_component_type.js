@@ -1,5 +1,3 @@
-// @flow
-
 const React = require('react');
 
 class Foo extends React.Component<{a: number}> {}

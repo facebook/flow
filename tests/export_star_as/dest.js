@@ -1,5 +1,3 @@
-// @flow
-
 import {source} from "./test";
 
 var a: number = source.num;

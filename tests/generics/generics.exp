@@ -1,42 +1,42 @@
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:17:15
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:15:15
 
 string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
 
-   detect_literal_subtypes.js:17:15
-   17|     if (a === 'b'){ } // error 'b' not compatible with 'a'
+   detect_literal_subtypes.js:15:15
+   15|     if (a === 'b'){ } // error 'b' not compatible with 'a'
                      ^^^ [1]
 
 References:
-   detect_literal_subtypes.js:16:18
-   16|   function a1<A: 'a'>(a: A): void {
+   detect_literal_subtypes.js:14:18
+   14|   function a1<A: 'a'>(a: A): void {
                         ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:21:15
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:19:15
 
 string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
 
-   detect_literal_subtypes.js:21:15
-   21|     if (b === 'b'){ } // error 'b' not compatible with 'a'
+   detect_literal_subtypes.js:19:15
+   19|     if (b === 'b'){ } // error 'b' not compatible with 'a'
                      ^^^ [1]
 
 References:
-   detect_literal_subtypes.js:20:18
-   20|   function b1<A: 'a', B: A>(b: B): void {
+   detect_literal_subtypes.js:18:18
+   18|   function b1<A: 'a', B: A>(b: B): void {
                         ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:39:12
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:37:12
 
 Property `r` is missing in `T` [1]. [prop-missing]
 
-   detect_literal_subtypes.js:39:12
-   39|       case 'r': // error
+   detect_literal_subtypes.js:37:12
+   37|       case 'r': // error
                   ^^^
 
 References:
-   detect_literal_subtypes.js:33:29
-   33|   function c<X: T>(x: $Keys<X>) {
+   detect_literal_subtypes.js:31:29
+   31|   function c<X: T>(x: $Keys<X>) {
                                    ^ [1]
 
 

@@ -1,5 +1,3 @@
-// @flow
-
 const num = 42;
 export type {num};
 

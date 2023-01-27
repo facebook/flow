@@ -217,20 +217,20 @@ Cannot resolve name `x`. [cannot-resolve-name]
            ^
 
 
-Error ---------------------------------------------------------------------------------------------- cond_havoc.js:12:10
+Error ---------------------------------------------------------------------------------------------- cond_havoc.js:10:10
 
 Cannot return `x` because string [1] is incompatible with number [2]. [incompatible-return]
 
-   cond_havoc.js:12:10
-   12|   return x; // error, string ~/~> number (return type anno) TODO
+   cond_havoc.js:10:10
+   10|   return x; // error, string ~/~> number (return type anno) TODO
                 ^
 
 References:
-   cond_havoc.js:7:19
-    7|   var x: number | string = 0;
+   cond_havoc.js:5:19
+    5|   var x: number | string = 0;
                          ^^^^^^ [1]
-   cond_havoc.js:6:31
-    6| function example(b: boolean): number {
+   cond_havoc.js:4:31
+    4| function example(b: boolean): number {
                                      ^^^^^^ [2]
 
 

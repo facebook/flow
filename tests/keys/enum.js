@@ -1,5 +1,3 @@
-// @flow
-
 function foo(r: $Keys<typeof R>): boolean {
   switch (r) {
     case R.A:

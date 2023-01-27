@@ -1,5 +1,3 @@
-// @flow
-
 (0: string); // error: intentially left here to ensure that implicit instantiation
              // below does not reset it
 

@@ -1,5 +1,3 @@
-// @flow
-
 import type {Covariant, Contravariant, Invariant, All} from './test-polarity';
 
 function test1(x: Covariant<number>) : Covariant<number | string> {

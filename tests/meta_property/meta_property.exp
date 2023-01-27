@@ -1,10 +1,10 @@
-Error ----------------------------------------------------------------------------------------------- import_meta.js:7:2
+Error ----------------------------------------------------------------------------------------------- import_meta.js:5:2
 
 Cannot cast `import.meta` to number literal `1` because `Import$Meta` [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   import_meta.js:7:2
-      7| (import.meta: 1); // Error
+   import_meta.js:5:2
+      5| (import.meta: 1); // Error
           ^^^^^^^^^^^
 
 References:
@@ -16,54 +16,54 @@ References:
    2620|   ...
    2621| };
          ^ [1]
-   import_meta.js:7:15
-      7| (import.meta: 1); // Error
+   import_meta.js:5:15
+      5| (import.meta: 1); // Error
                        ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- import_meta.js:8:2
+Error ----------------------------------------------------------------------------------------------- import_meta.js:6:2
 
 Cannot cast `import.meta.XXX` to number literal `1` because mixed [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   import_meta.js:8:2
-      8| (import.meta.XXX: 1); // Error
+   import_meta.js:6:2
+      6| (import.meta.XXX: 1); // Error
           ^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:2618:13
    2618|   [string]: mixed,
                      ^^^^^ [1]
-   import_meta.js:8:19
-      8| (import.meta.XXX: 1); // Error
+   import_meta.js:6:19
+      6| (import.meta.XXX: 1); // Error
                            ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ new_target.js:5:4
+Error ------------------------------------------------------------------------------------------------ new_target.js:3:4
 
 Cannot cast `new.target` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   new_target.js:5:4
-   5|   (new.target: boolean); // Error
+   new_target.js:3:4
+   3|   (new.target: boolean); // Error
          ^^^^^^^^^^ [1]
 
 References:
-   new_target.js:5:16
-   5|   (new.target: boolean); // Error
+   new_target.js:3:16
+   3|   (new.target: boolean); // Error
                      ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- new_target.js:13:6
+Error ----------------------------------------------------------------------------------------------- new_target.js:11:6
 
 Cannot cast `new.target` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   new_target.js:13:6
-   13|     (new.target: boolean); // Error
+   new_target.js:11:6
+   11|     (new.target: boolean); // Error
             ^^^^^^^^^^ [1]
 
 References:
-   new_target.js:13:18
-   13|     (new.target: boolean); // Error
+   new_target.js:11:18
+   11|     (new.target: boolean); // Error
                         ^^^^^^^ [2]
 
 

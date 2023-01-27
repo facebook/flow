@@ -1,5 +1,3 @@
-// @flow
-
 (import.meta: mixed); // OK
 (import.meta.url: ?string); // OK
 (import.meta.XXX: mixed); // OK

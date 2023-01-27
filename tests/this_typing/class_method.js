@@ -1,5 +1,3 @@
-// @flow
-
 class A {
   prop: boolean;
   static prop : boolean;

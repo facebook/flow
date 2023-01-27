@@ -1,5 +1,3 @@
-// @flow
-
 type A = {
   b_c: ?string
 };

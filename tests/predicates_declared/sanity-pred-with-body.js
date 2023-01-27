@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity check:
 // - predicate functions cannot have bodies (can only be declarations)
 

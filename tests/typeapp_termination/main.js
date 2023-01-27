@@ -1,5 +1,3 @@
-// @flow
-
 import type { PromiseLike as RemotePromiseLike } from './export';
 
 // Same definition as in export.js

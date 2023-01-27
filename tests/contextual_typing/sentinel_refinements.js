@@ -1,5 +1,3 @@
-// @flow
-
 import * as React from 'react';
 
 const Enum = Object.freeze({A:'a', B: 'b'});

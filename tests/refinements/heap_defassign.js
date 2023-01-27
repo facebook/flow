@@ -1,5 +1,3 @@
-// @flow
-
 type Obj = { p: number | string }
 
 function f () {}

@@ -1,5 +1,3 @@
-// @flow
-
 declare var key: string;
 declare var obj: { page: ?Object; };
 

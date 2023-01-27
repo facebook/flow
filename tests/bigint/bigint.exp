@@ -1,21 +1,21 @@
-Error --------------------------------------------------------------------------------------------------- bigint.js:13:5
+Error --------------------------------------------------------------------------------------------------- bigint.js:11:5
 
 Cannot assign `x` to `z` because bigint [1] is incompatible with bigint literal `10n` [2]. [incompatible-type]
 
-   bigint.js:13:5
-   13| z = x; // error, bigint </: 10n
+   bigint.js:11:5
+   11| z = x; // error, bigint </: 10n
            ^
 
 References:
-   bigint.js:5:8
-    5| let y: bigint = 10n;
+   bigint.js:3:8
+    3| let y: bigint = 10n;
               ^^^^^^ [1]
-   bigint.js:7:8
-    7| let z: 10n = 10n;
+   bigint.js:5:8
+    5| let z: 10n = 10n;
               ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- bigint.js:22:8
+Error --------------------------------------------------------------------------------------------------- bigint.js:20:8
 
 Cannot call `BigInt` with `null` bound to `value` because: [incompatible-call]
  - Either null [1] is incompatible with boolean [2].
@@ -25,8 +25,8 @@ Cannot call `BigInt` with `null` bound to `value` because: [incompatible-call]
  - Or null [1] is incompatible with interface type [6].
  - Or null [1] is incompatible with read-only array type [7].
 
-   bigint.js:22:8
-     22| BigInt(null); // error
+   bigint.js:20:8
+     20| BigInt(null); // error
                 ^^^^ [1]
 
 References:
@@ -50,52 +50,52 @@ References:
                                                                               ^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
-Error --------------------------------------------------------------------------------------------------- bigint.js:27:6
+Error --------------------------------------------------------------------------------------------------- bigint.js:25:6
 
 Cannot cast `foo` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
 
-   bigint.js:27:6
-   27|     (foo : empty); // error
+   bigint.js:25:6
+   25|     (foo : empty); // error
             ^^^
 
 References:
-   bigint.js:25:5
-   25| if (typeof foo === "bigint") {
+   bigint.js:23:5
+   23| if (typeof foo === "bigint") {
            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   bigint.js:27:12
-   27|     (foo : empty); // error
+   bigint.js:25:12
+   25|     (foo : empty); // error
                   ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- bigint.js:39:2
+Error --------------------------------------------------------------------------------------------------- bigint.js:37:2
 
 Cannot compare bigint [1] to string [2]. [invalid-compare]
 
-   bigint.js:39:2
-   39| (0n > ""); // error
+   bigint.js:37:2
+   37| (0n > ""); // error
         ^^ [1]
 
 References:
-   bigint.js:39:7
-   39| (0n > ""); // error
+   bigint.js:37:7
+   37| (0n > ""); // error
              ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- bigint.js:42:5
+Error --------------------------------------------------------------------------------------------------- bigint.js:40:5
 
 Sketchy null check on bigint [1] which is potentially 0n. Perhaps you meant to check for null or undefined [2]?
 [sketchy-null-bigint]
 
-   bigint.js:42:5
-   42| if (b) {} // error
+   bigint.js:40:5
+   40| if (b) {} // error
            ^
 
 References:
-   bigint.js:41:17
-   41| declare var b: ?bigint;
+   bigint.js:39:17
+   39| declare var b: ?bigint;
                        ^^^^^^ [1]
-   bigint.js:41:16
-   41| declare var b: ?bigint;
+   bigint.js:39:16
+   39| declare var b: ?bigint;
                       ^^^^^^^ [2]
 
 
@@ -230,72 +230,72 @@ Non-string literal property keys not supported. [unsupported-syntax]
          ^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- unions.js:7:10
+Error --------------------------------------------------------------------------------------------------- unions.js:5:10
 
 Cannot return `x` because number literal `1` [1] is incompatible with literal union [2]. [incompatible-return]
 
-   unions.js:7:10
-   7|   return x; // fast path error
+   unions.js:5:10
+   5|   return x; // fast path error
                ^
 
 References:
-   unions.js:6:15
-   6| function f(x: nums): bigints {
+   unions.js:4:15
+   4| function f(x: nums): bigints {
                     ^^^^ [1]
-   unions.js:6:22
-   6| function f(x: nums): bigints {
+   unions.js:4:22
+   4| function f(x: nums): bigints {
                            ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- unions.js:7:10
+Error --------------------------------------------------------------------------------------------------- unions.js:5:10
 
 Cannot return `x` because number literal `2` [1] is incompatible with literal union [2]. [incompatible-return]
 
-   unions.js:7:10
-   7|   return x; // fast path error
+   unions.js:5:10
+   5|   return x; // fast path error
                ^
 
 References:
-   unions.js:6:15
-   6| function f(x: nums): bigints {
+   unions.js:4:15
+   4| function f(x: nums): bigints {
                     ^^^^ [1]
-   unions.js:6:22
-   6| function f(x: nums): bigints {
+   unions.js:4:22
+   4| function f(x: nums): bigints {
                            ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- unions.js:11:10
+Error --------------------------------------------------------------------------------------------------- unions.js:9:10
 
 Cannot return `x` because bigint literal `1n` [1] is incompatible with literal union [2]. [incompatible-return]
 
-   unions.js:11:10
-   11|   return x; // fast path error
-                ^
+   unions.js:9:10
+   9|   return x; // fast path error
+               ^
 
 References:
-   unions.js:10:15
-   10| function g(x: bigints): nums {
-                     ^^^^^^^ [1]
-   unions.js:10:25
-   10| function g(x: bigints): nums {
-                               ^^^^ [2]
+   unions.js:8:15
+   8| function g(x: bigints): nums {
+                    ^^^^^^^ [1]
+   unions.js:8:25
+   8| function g(x: bigints): nums {
+                              ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- unions.js:11:10
+Error --------------------------------------------------------------------------------------------------- unions.js:9:10
 
 Cannot return `x` because bigint literal `2n` [1] is incompatible with literal union [2]. [incompatible-return]
 
-   unions.js:11:10
-   11|   return x; // fast path error
-                ^
+   unions.js:9:10
+   9|   return x; // fast path error
+               ^
 
 References:
-   unions.js:10:15
-   10| function g(x: bigints): nums {
-                     ^^^^^^^ [1]
-   unions.js:10:25
-   10| function g(x: bigints): nums {
-                               ^^^^ [2]
+   unions.js:8:15
+   8| function g(x: bigints): nums {
+                    ^^^^^^^ [1]
+   unions.js:8:25
+   8| function g(x: bigints): nums {
+                              ^^^^ [2]
 
 
 

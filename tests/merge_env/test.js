@@ -1,5 +1,3 @@
-// @flow
-
 function if_tests() {
   function merge_with_general_annotated() {
     const foo: Array<string> = [];

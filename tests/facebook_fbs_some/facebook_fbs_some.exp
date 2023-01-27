@@ -1,17 +1,17 @@
-Error ------------------------------------------------------------------------------------------------------ main.js:4:2
+Error ------------------------------------------------------------------------------------------------------ main.js:2:2
 
 Cannot cast `<fbs />` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   main.js:4:2
-   4| (<fbs />: string); // Error (the libdef in this test marks fbs as number)
+   main.js:2:2
+   2| (<fbs />: string); // Error (the libdef in this test marks fbs as number)
        ^^^^^^^
 
 References:
    flow-typed/fbs.js:1:12
    1| type Fbs = number
                  ^^^^^^ [1]
-   main.js:4:11
-   4| (<fbs />: string); // Error (the libdef in this test marks fbs as number)
+   main.js:2:11
+   2| (<fbs />: string); // Error (the libdef in this test marks fbs as number)
                 ^^^^^^ [2]
 
 

@@ -1,5 +1,3 @@
-// @flow
-
 import {
   x1 as call_x1,
   x2 as call_x2,

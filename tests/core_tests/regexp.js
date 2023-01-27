@@ -1,5 +1,3 @@
-// @flow
-
 let tests = [
   // constructor
   function() {

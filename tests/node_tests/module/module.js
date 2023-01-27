@@ -1,5 +1,3 @@
-// @flow
-
 const Module = require("module");
 
 (Module.Module.Module.Module.Module: typeof Module);

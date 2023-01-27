@@ -1,5 +1,3 @@
-// @flow
-
 // No annotation
 try {
 } catch (e) { // OK

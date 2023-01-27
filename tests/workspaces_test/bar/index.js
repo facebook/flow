@@ -1,4 +1,3 @@
-// @flow
 import type {RootType} from 'root_lib';
 import type {WorkspaceType} from 'workspace_lib';
 export type BarRootType = RootType;

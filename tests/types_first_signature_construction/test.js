@@ -1,5 +1,3 @@
-// @flow
-
 import f1 from './file1';
 (f1(""): string);
 (f1(0): number);

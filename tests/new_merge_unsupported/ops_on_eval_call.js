@@ -1,5 +1,3 @@
-// @flow
-
 type T = $Call<() => any, void>;
 declare var t: T;
 

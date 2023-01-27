@@ -1,5 +1,3 @@
-// @flow
-
 import {l} from './let';
 import {c} from './const';
 

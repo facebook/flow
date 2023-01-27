@@ -1,5 +1,3 @@
-// @flow
-
 const React = require('React');
 
 type Props = {

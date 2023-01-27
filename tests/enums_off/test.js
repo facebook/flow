@@ -1,5 +1,3 @@
-// @flow
-
 enum E { // Error: enums are off
   A,
   B,

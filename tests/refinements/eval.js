@@ -1,5 +1,3 @@
-// @flow
-
 type A = {|
   +f: ?{|
     +id: ?string,

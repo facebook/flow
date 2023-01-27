@@ -1,5 +1,3 @@
-// @flow
-
 // naive unification causes combinatorial explosion here,
 // effectively hangs
 

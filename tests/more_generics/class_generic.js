@@ -1,5 +1,3 @@
-// @flow
-
 class C<T> {
   arr: Array<{value: T}>;
 

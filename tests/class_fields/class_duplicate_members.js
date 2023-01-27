@@ -1,5 +1,3 @@
-// @flow
-
 class Base {
   base_prop = 1; // okay
   base_method() {} // okay

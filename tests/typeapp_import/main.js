@@ -1,5 +1,3 @@
-// @flow
-
 import type {C} from './lib';
 
 (x: C<number> | C<string>) => {

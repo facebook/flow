@@ -1,5 +1,3 @@
-// @flow
-
 // This is a regression test for incorrect new-env cache on this/super.
 
 interface This { p: number }

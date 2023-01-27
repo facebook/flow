@@ -1,5 +1,3 @@
-// @flow
-
 import type {TypeExport} from './foo';
 import {type TypeExport as TypeExportRenamed} from './foo';
 import typeof {ClassExport} from './foo';

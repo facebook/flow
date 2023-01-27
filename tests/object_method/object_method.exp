@@ -26,35 +26,35 @@ References:
            ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- spread.js:4:3
+Error ---------------------------------------------------------------------------------------------------- spread.js:2:3
 
 Cannot assign function to `x.m` because property `m` is not writable. [cannot-write]
 
-   4| x.m = () => {}; // error: m is read-only
+   2| x.m = () => {}; // error: m is read-only
         ^
 
 
-Error ---------------------------------------------------------------------------------------------------- spread.js:7:4
+Error ---------------------------------------------------------------------------------------------------- spread.js:5:4
 
 Cannot assign function to `x2.m` because property `m` is not writable. [cannot-write]
 
-   7| x2.m = () => {}; // error: m is read-only
+   5| x2.m = () => {}; // error: m is read-only
          ^
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:10:3
+Error ---------------------------------------------------------------------------------------------------- spread.js:8:3
 
 Cannot assign function to `y.m` because property `m` is not writable. [cannot-write]
 
-   10| y.m = () => {}; // error: m is read-only
-         ^
+   8| y.m = () => {}; // error: m is read-only
+        ^
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:13:3
+Error --------------------------------------------------------------------------------------------------- spread.js:11:3
 
 Cannot assign function to `z.m` because property `m` is not writable. [cannot-write]
 
-   13| z.m = () => {}; // error: m is read-only
+   11| z.m = () => {}; // error: m is read-only
          ^
 
 

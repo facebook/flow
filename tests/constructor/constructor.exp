@@ -65,18 +65,18 @@ Class constructor may not be async. [invalid-constructor-definition]
                             
 
 
-Error ---------------------------------------------------------------------- exported_nonvoid_return_constructor.js:4:18
+Error ---------------------------------------------------------------------- exported_nonvoid_return_constructor.js:2:18
 
 Cannot return object type because object type [1] is incompatible with constructor void return [2].
 [incompatible-return]
 
-   exported_nonvoid_return_constructor.js:4:18
-   4|   constructor(): {foo: number} { // Error: must return void
+   exported_nonvoid_return_constructor.js:2:18
+   2|   constructor(): {foo: number} { // Error: must return void
                        ^^^^^^^^^^^^^ [1]
 
 References:
-   exported_nonvoid_return_constructor.js:4:16
-   4|   constructor(): {foo: number} { // Error: must return void
+   exported_nonvoid_return_constructor.js:2:16
+   2|   constructor(): {foo: number} { // Error: must return void
                      ^^^^^^^^^^^^^^^ [2]
 
 

@@ -1,5 +1,3 @@
-// @flow
-
 export type SUIButtonUniform = {|
   borderRadius?: string | number
 |};

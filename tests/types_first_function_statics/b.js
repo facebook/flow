@@ -1,5 +1,3 @@
-// @flow
-
 const a = require('./a');
 
 (a: () => void);

@@ -1,5 +1,3 @@
-// @flow
-
 class A {
   static f: number = 1
 }

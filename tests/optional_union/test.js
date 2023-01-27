@@ -1,5 +1,3 @@
-// @flow
-
 type Obj1 = {
   field: {key: ?string | Array<string>},
 };

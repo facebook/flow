@@ -1,5 +1,3 @@
-// @flow
-
 declare var pstr: Promise<string>;
 declare var pnum: Promise<number>;
 

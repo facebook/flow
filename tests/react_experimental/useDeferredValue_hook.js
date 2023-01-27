@@ -1,5 +1,3 @@
-// @flow
-
 import React from 'react';
 
 const deferredValue = React.useDeferredValue(true); // Ok

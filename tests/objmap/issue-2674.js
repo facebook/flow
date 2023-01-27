@@ -1,5 +1,3 @@
-// @flow
-
 type A = $ObjMapi<{ FOO: null }, <K>(k: K) => K>;
 declare var a: A;
 

@@ -1,5 +1,3 @@
-// @flow
-
 declare var bad1: mixed;
 declare var bad2: () => {};
 declare var good1: number;

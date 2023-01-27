@@ -1,5 +1,3 @@
-// @flow
-
 type Foo =
 | 'case0'
 | 'case1'

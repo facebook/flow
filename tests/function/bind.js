@@ -1,5 +1,3 @@
-// @flow
-
 let tests = [
   function(x: (a: string, b: string) => void) {
     let y = x.bind(x, 'foo');

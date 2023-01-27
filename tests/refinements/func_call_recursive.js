@@ -1,5 +1,3 @@
-// @flow
-
 var x: ?number = 0;
 function foo() {
   bar();

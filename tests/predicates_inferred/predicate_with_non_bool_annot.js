@@ -1,5 +1,3 @@
-// @flow
-
 type T = 'a' | 'b';
 
 function validate_1(x: ?string): ?T %checks {

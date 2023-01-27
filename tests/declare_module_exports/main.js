@@ -1,5 +1,3 @@
-// @flow
-
 import declare_module_exports from "declare_module_exports";
 (declare_module_exports: number);
 (declare_module_exports: string); // Error: number ~> string

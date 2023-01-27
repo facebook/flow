@@ -1,16 +1,16 @@
-Error ------------------------------------------------------------------------------------------------ abnormal.js:14:33
+Error ------------------------------------------------------------------------------------------------ abnormal.js:12:33
 
 Unreachable code. [unreachable-code]
 
-   14| const unreachableFunctionDef1 = function named() {} // Only expect unreachable error here
+   12| const unreachableFunctionDef1 = function named() {} // Only expect unreachable error here
                                        ^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ abnormal.js:15:33
+Error ------------------------------------------------------------------------------------------------ abnormal.js:13:33
 
 Unreachable code. [unreachable-code]
 
-   15| const unreachableFunctionDef2 = function () {} // Only expect unreachable error here
+   13| const unreachableFunctionDef2 = function () {} // Only expect unreachable error here
                                        ^^^^^^^^^^^^^^
 
 
@@ -30,83 +30,83 @@ An annotation on `x` is required because Flow cannot infer its type from local c
                                        ^
 
 
-Error ---------------------------------------------------------------------------------------------------- enums.js:4:17
+Error ---------------------------------------------------------------------------------------------------- enums.js:2:17
 
 Enum `A` is not an iterable. You can use `A.members()` to get an iterator for the enum's members. [not-iterable]
 
-   4| for (const x of A) {} // Error: not iterable, but there should be no enforcement errors
+   2| for (const x of A) {} // Error: not iterable, but there should be no enforcement errors
                       ^
 
 
-Error ---------------------------------------------------------------------------------------------------- enums.js:6:10
+Error ---------------------------------------------------------------------------------------------------- enums.js:4:10
 
 Cannot use `Foo` as a type. Enum members are not separate types. Only the enum itself, `A` [1], is a type.
 [enum-value-as-type]
 
-   enums.js:6:10
-   6| const a: A.Foo = A.Foo; // Error: enum-value-as-type
+   enums.js:4:10
+   4| const a: A.Foo = A.Foo; // Error: enum-value-as-type
                ^^^^^
 
 References:
-   enums.js:3:6
-   3| enum A { Foo, Bar }
+   enums.js:1:6
+   1| enum A { Foo, Bar }
            ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- enums.js:9:9
+Error ----------------------------------------------------------------------------------------------------- enums.js:7:9
 
 Cannot use variable `X` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
-   enums.js:9:9
-    9| var y = X;
-               ^
+   enums.js:7:9
+   7| var y = X;
+              ^
 
 References:
-   enums.js:11:13
-   11| export enum X {
-                   ^ [1]
+   enums.js:9:13
+   9| export enum X {
+                  ^ [1]
 
 
-Error --------------------------------------------------------------------------------- illegal_function_binding.js:4:10
+Error --------------------------------------------------------------------------------- illegal_function_binding.js:2:10
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   illegal_function_binding.js:4:10
-   4| function a() {} // error: illegal binding
+   illegal_function_binding.js:2:10
+   2| function a() {} // error: illegal binding
                ^
 
 References:
-   illegal_function_binding.js:3:10
-   3| function a() {}
+   illegal_function_binding.js:1:10
+   1| function a() {}
                ^ [1]
 
 
-Error ---------------------------------------------------------------------------------- illegal_function_binding.js:7:7
+Error ---------------------------------------------------------------------------------- illegal_function_binding.js:5:7
 
 Cannot declare `b` [1] because the name is already bound. [name-already-bound]
 
-   illegal_function_binding.js:7:7
-   7| const b = () => {} // error: illegal binding
+   illegal_function_binding.js:5:7
+   5| const b = () => {} // error: illegal binding
             ^
 
 References:
-   illegal_function_binding.js:6:7
-   6| const b = () => {}
+   illegal_function_binding.js:4:7
+   4| const b = () => {}
             ^ [1]
 
 
-Error --------------------------------------------------------------------------------- illegal_function_binding.js:10:7
+Error ---------------------------------------------------------------------------------- illegal_function_binding.js:8:7
 
 Cannot declare `c` [1] because the name is already bound. [name-already-bound]
 
-   illegal_function_binding.js:10:7
-   10| const c = function () {} // error: illegal binding
-             ^
+   illegal_function_binding.js:8:7
+   8| const c = function () {} // error: illegal binding
+            ^
 
 References:
-   illegal_function_binding.js:9:7
-    9| const c = function () {}
-             ^ [1]
+   illegal_function_binding.js:7:7
+   7| const c = function () {}
+            ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- import.js:3:1
@@ -163,269 +163,269 @@ References:
                              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- regression_tests.js:11:8
+Error ------------------------------------------------------------------------------------------ regression_tests.js:9:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   regression_tests.js:11:8
-   11|   type A = number; // error, but no MissingEnvEntry internal error.
-              ^
+   regression_tests.js:9:8
+   9|   type A = number; // error, but no MissingEnvEntry internal error.
+             ^
 
 References:
-   regression_tests.js:10:8
-   10|   type A = number;
-              ^ [1]
+   regression_tests.js:8:8
+   8|   type A = number;
+             ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:22:12
+Error ---------------------------------------------------------------------------------------- regression_tests.js:20:12
 
 Cannot return `42` because number [1] is incompatible with constructor void return [2]. [incompatible-return]
 
-   regression_tests.js:22:12
-   22|     return 42;
+   regression_tests.js:20:12
+   20|     return 42;
                   ^^ [1]
 
 References:
-   regression_tests.js:21:17
-   21|   constructor () {
+   regression_tests.js:19:17
+   19|   constructor () {
                         [2]
 
 
-Error ----------------------------------------------------------------------------------------- regression_tests.js:24:3
+Error ----------------------------------------------------------------------------------------- regression_tests.js:22:3
 
 Missing an annotation on property `a`. [missing-local-annot]
 
-   24|   a;
+   22|   a;
          ^^
 
 
-Error ----------------------------------------------------------------------------------------- regression_tests.js:27:4
+Error ----------------------------------------------------------------------------------------- regression_tests.js:25:4
 
 Missing an annotation on property `d`. [missing-local-annot]
 
-   27|   d = 42 + 42;
+   25|   d = 42 + 42;
           
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:30:18
+Error ---------------------------------------------------------------------------------------- regression_tests.js:28:18
 
 Missing an annotation on return. [missing-local-annot]
 
-   30|   g = (x: number) => { return 42 }
+   28|   g = (x: number) => { return 42 }
                         
 
 
-Error ----------------------------------------------------------------------------------------- regression_tests.js:33:6
+Error ----------------------------------------------------------------------------------------- regression_tests.js:31:6
 
 Missing an annotation on return. [missing-local-annot]
 
-   33|   j() { return 42 }
+   31|   j() { return 42 }
             
 
 
-Error ----------------------------------------------------------------------------------------- regression_tests.js:35:4
+Error ----------------------------------------------------------------------------------------- regression_tests.js:33:4
 
 Missing an annotation on property `l`. [missing-local-annot]
 
-   35|   l = null; // error
+   33|   l = null; // error
           
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:46:24
+Error ---------------------------------------------------------------------------------------- regression_tests.js:44:24
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   46| function UnannotParams(x, {a, b}, ...y) { }
+   44| function UnannotParams(x, {a, b}, ...y) { }
                               ^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:46:27
+Error ---------------------------------------------------------------------------------------- regression_tests.js:44:27
 
 Missing an annotation on destructuring. [missing-local-annot]
 
-   46| function UnannotParams(x, {a, b}, ...y) { }
+   44| function UnannotParams(x, {a, b}, ...y) { }
                                  ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:46:38
+Error ---------------------------------------------------------------------------------------- regression_tests.js:44:38
 
 Missing an annotation on rest parameter `y`. [missing-local-annot]
 
-   46| function UnannotParams(x, {a, b}, ...y) { }
+   44| function UnannotParams(x, {a, b}, ...y) { }
                                             ^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:56:14
+Error ---------------------------------------------------------------------------------------- regression_tests.js:54:14
 
 Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   regression_tests.js:56:14
-   56| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+   regression_tests.js:54:14
+   54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
                     ^^^^^^^^ [1]
 
 References:
-   regression_tests.js:56:25
-   56| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+   regression_tests.js:54:25
+   54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
                                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:63:30
+Error ---------------------------------------------------------------------------------------- regression_tests.js:61:30
 
 Cannot resolve name `ModScope2`. [cannot-resolve-name]
 
-   63| declare var NonexistentType: ModScope2;
+   61| declare var NonexistentType: ModScope2;
                                     ^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:66:24
+Error ---------------------------------------------------------------------------------------- regression_tests.js:64:24
 
 Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
-   regression_tests.js:66:24
-   66| const ResultOfError = -AString;
+   regression_tests.js:64:24
+   64| const ResultOfError = -AString;
                               ^^^^^^^
 
 References:
-   regression_tests.js:65:22
-   65| declare var AString: string;
+   regression_tests.js:63:22
+   63| declare var AString: string;
                             ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:80:30
+Error ---------------------------------------------------------------------------------------- regression_tests.js:78:30
 
 Cannot call `inexactSpread` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it
 may contain `bar` with a type that conflicts with `bar`'s definition in object type [1]. Try making object type [2]
 exact. [cannot-spread-inexact]
 
-   regression_tests.js:80:30
-   80|   const inexact_spread_err = inexactSpread(inexact);
+   regression_tests.js:78:30
+   78|   const inexact_spread_err = inexactSpread(inexact);
                                     ^^^^^^^^^^^^^
 
 References:
-   regression_tests.js:79:44
-   79|   declare function inexactSpread<T>(x: T): {bar: 3, ...T};
+   regression_tests.js:77:44
+   77|   declare function inexactSpread<T>(x: T): {bar: 3, ...T};
                                                   ^^^^^^^^^^^^^^ [1]
-   regression_tests.js:77:28
-   77|   let inexact = ({foo: 3}: {foo: number, ...});
+   regression_tests.js:75:28
+   75|   let inexact = ({foo: 3}: {foo: number, ...});
                                   ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:92:18
+Error ---------------------------------------------------------------------------------------- regression_tests.js:90:18
 
 Cannot use `MyClass` [1] without 1 type argument. [missing-type-arg]
 
-   regression_tests.js:92:18
-   92|   declare var c: MyClass;
+   regression_tests.js:90:18
+   90|   declare var c: MyClass;
                         ^^^^^^^
 
 References:
-   regression_tests.js:89:16
-   89|   class MyClass<T> {
+   regression_tests.js:87:16
+   87|   class MyClass<T> {
                       ^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:102:23
+Error --------------------------------------------------------------------------------------- regression_tests.js:100:23
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
 
-   102|   let foo3 = function () { this; }; // error: missing annot on this
+   100|   let foo3 = function () { this; }; // error: missing annot on this
                               ^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:110:7
+Error ---------------------------------------------------------------------------------------- regression_tests.js:108:7
 
 Cannot assign `3` to `1.toString` because property `toString` is missing in number [1]. [incompatible-use]
 
-   regression_tests.js:110:7
-   110|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
+   regression_tests.js:108:7
+   108|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
               ^^^^^^^^
 
 References:
-   regression_tests.js:110:4
-   110|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
+   regression_tests.js:108:4
+   108|   (1).toString = 3; // error: toString missing in number, but no missing env entry error
            ^ [1]
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:120:19
+Error --------------------------------------------------------------------------------------- regression_tests.js:118:19
 
 Cannot assign function to `x` because function [1] is incompatible with number [2]. [incompatible-type]
 
-   regression_tests.js:120:19
-   120|   var x: number = (x) => x;
+   regression_tests.js:118:19
+   118|   var x: number = (x) => x;
                           ^^^^^^^^ [1]
 
 References:
-   regression_tests.js:120:10
-   120|   var x: number = (x) => x;
+   regression_tests.js:118:10
+   118|   var x: number = (x) => x;
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:120:20
+Error --------------------------------------------------------------------------------------- regression_tests.js:118:20
 
 An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
 
-   120|   var x: number = (x) => x;
+   118|   var x: number = (x) => x;
                            ^
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:124:19
+Error --------------------------------------------------------------------------------------- regression_tests.js:122:19
 
 Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
-   regression_tests.js:124:19
-   124|   for (const x of x) {} // Error on second x, no underconstrained error on the first one.
+   regression_tests.js:122:19
+   122|   for (const x of x) {} // Error on second x, no underconstrained error on the first one.
                           ^
 
 References:
-   regression_tests.js:124:14
-   124|   for (const x of x) {} // Error on second x, no underconstrained error on the first one.
+   regression_tests.js:122:14
+   122|   for (const x of x) {} // Error on second x, no underconstrained error on the first one.
                      ^ [1]
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:156:31
+Error --------------------------------------------------------------------------------------- regression_tests.js:154:31
 
 Cannot assign function to `defaultValue` because function [1] is incompatible with boolean [2]. [incompatible-type]
 
-   regression_tests.js:156:31
-   156|     B(defaultValue: boolean = (x: A) => 42): void {}
+   regression_tests.js:154:31
+   154|     B(defaultValue: boolean = (x: A) => 42): void {}
                                       ^^^^^^^^^^^^ [1]
 
 References:
-   regression_tests.js:156:21
-   156|     B(defaultValue: boolean = (x: A) => 42): void {}
+   regression_tests.js:154:21
+   154|     B(defaultValue: boolean = (x: A) => 42): void {}
                             ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- regression_tests.js:169:14
+Error --------------------------------------------------------------------------------------- regression_tests.js:167:14
 
 Cannot assign `C` to `foo` because class `C` [1] is incompatible with number [2]. [incompatible-type]
 
-   regression_tests.js:169:14
-   169|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
+   regression_tests.js:167:14
+   167|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
                      ^
 
 References:
-   regression_tests.js:168:9
-   168|   class C {
+   regression_tests.js:166:9
+   166|   class C {
                 ^ [1]
-   regression_tests.js:169:44
-   169|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
+   regression_tests.js:167:44
+   167|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }
                                                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- synthesizable_object.js:4:38
+Error ------------------------------------------------------------------------------------- synthesizable_object.js:2:38
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   synthesizable_object.js:4:38
-   4|   foo() { SynthesizableObject.foo(); this; }, // Illegal this. Methods don't bind this.
+   synthesizable_object.js:2:38
+   2|   foo() { SynthesizableObject.foo(); this; }, // Illegal this. Methods don't bind this.
                                            ^^^^
 
 References:
-   synthesizable_object.js:4:3
-   4|   foo() { SynthesizableObject.foo(); this; }, // Illegal this. Methods don't bind this.
+   synthesizable_object.js:2:3
+   2|   foo() { SynthesizableObject.foo(); this; }, // Illegal this. Methods don't bind this.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 

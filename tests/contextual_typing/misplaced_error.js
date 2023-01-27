@@ -1,5 +1,3 @@
-// @flow
-
 import { type CommitTemplate, wrapCommitTemplateWithState } from "./misplaced_error_exports";
 
 const EMPTY_TEMPLATE: CommitTemplate<{...}> = {

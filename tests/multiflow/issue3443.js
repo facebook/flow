@@ -1,5 +1,3 @@
-// @flow
-
 // Adapted from https://github.com/facebook/flow/issues/3443
 
 class A {

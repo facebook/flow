@@ -1,5 +1,3 @@
-// @flow
-
 function isStringNullOrEmpty(str: ?string): boolean %checks {
   return str == null || str === "";
 }

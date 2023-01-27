@@ -1,5 +1,3 @@
-// @flow
-
 declare var x: ?{f : string};
 
 var y;

@@ -1,4 +1,3 @@
-// @flow
 //
 // Tests for subtyping PolyT ~> PolyT.
 

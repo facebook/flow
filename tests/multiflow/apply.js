@@ -1,5 +1,3 @@
-// @flow
-
 function apply<Args: $ReadOnlyArray<mixed>, Ret>(
   fn: (...Args) => Ret,
   args: Args,

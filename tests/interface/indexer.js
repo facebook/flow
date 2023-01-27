@@ -1,5 +1,3 @@
-// @flow
-
 interface Ok {
   [key: string]: string;
 }

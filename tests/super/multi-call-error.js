@@ -1,5 +1,3 @@
-// @flow
-
 class A {
     constructor(x: any) {}
 }

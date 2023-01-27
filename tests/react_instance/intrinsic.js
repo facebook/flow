@@ -1,5 +1,3 @@
-// @flow
-
 declare var any: any;
 
 (any: React$ElementRef<'foo'>).yep1; // OK

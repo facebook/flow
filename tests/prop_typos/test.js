@@ -1,5 +1,3 @@
-// @flow
-
 let x = {asdf : 3};
 x.asd;
 x.asdfo;

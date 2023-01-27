@@ -1,5 +1,3 @@
-// @flow
-
 function is_string(y: mixed): %checks {
   return typeof y === "string";
 }

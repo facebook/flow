@@ -1,5 +1,3 @@
-// @flow
-
 import type { LayerActionType } from "./Layer";
 const {LayerKey, LayerActions} = require("./Layer");
 

@@ -1,5 +1,3 @@
-// @flow
-
 // misc basic
 
 function test1() {

@@ -1,4 +1,3 @@
-// @flow
 'use strict';
 
 type Dict<K, V> = {

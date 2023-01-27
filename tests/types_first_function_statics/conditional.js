@@ -1,5 +1,3 @@
-// @flow
-
 declare var b: boolean;
 declare var n: number;
 

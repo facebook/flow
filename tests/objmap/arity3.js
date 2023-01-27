@@ -1,5 +1,3 @@
-// @flow
-
 declare function makeEditedColumn(
   a: number,
   b: string,

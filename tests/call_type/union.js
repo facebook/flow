@@ -1,5 +1,3 @@
-// @flow
-
 type A = $Call<(() => number) | (() => string)>;
 declare var a: A;
 (42: A); // OK

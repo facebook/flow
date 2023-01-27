@@ -1,5 +1,3 @@
-// @flow
-
 type T = (this : number) => void;
 
 function foo (this : number) : void {}

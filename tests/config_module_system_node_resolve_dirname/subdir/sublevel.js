@@ -1,5 +1,3 @@
-// @flow
-
 import {name} from "testproj2";
 
 (name: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!

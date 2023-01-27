@@ -1,5 +1,3 @@
-// @flow
-
 type A = T<number>;
 type B = T<string>;
 

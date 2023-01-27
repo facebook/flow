@@ -1,5 +1,3 @@
-// @flow
-
 function fun(x: 'hi', y: 123) {}
 fun(...['hi', 123]); // No error
 fun(...['hi'], ...[123]); // No error

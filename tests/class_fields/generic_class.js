@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * Fields annotated with a generic should assume a type once the type param
  * is instantiated.

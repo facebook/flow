@@ -1,5 +1,3 @@
-// @flow
-
 async function foo1(): Promise<string> {
   return;
 }

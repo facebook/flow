@@ -1,5 +1,3 @@
-// @flow
-
 function _([argArray]: Array<Value>) {
   if (argArray instanceof NullValue || argArray instanceof UndefinedValue) {
   }

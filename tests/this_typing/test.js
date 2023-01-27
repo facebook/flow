@@ -1,5 +1,3 @@
-// @flow
-
 /*************** Basic functions ******************/
 declare var x : { f : number};
 declare var y : { y : string};

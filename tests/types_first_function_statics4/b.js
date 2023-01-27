@@ -1,5 +1,3 @@
-// @flow
-
 const { foo, bar, FooComponent, BarComponent } = require('./a');
 const React = require('react');
 

@@ -226,22 +226,22 @@ Cannot resolve name `x`. [cannot-resolve-name]
            ^
 
 
-Error ----------------------------------------------------------------------------------------------- cond_havoc.js:8:22
+Error ----------------------------------------------------------------------------------------------- cond_havoc.js:6:22
 
 Cannot assign empty string to `x` because string [1] is incompatible with number [2]. All writes to `x` must be
 compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired.
 [incompatible-type]
 
-   cond_havoc.js:8:22
-   8|   function f() { x = "" }
+   cond_havoc.js:6:22
+   6|   function f() { x = "" }
                            ^^ [1]
 
 References:
-   cond_havoc.js:7:11
-   7|   var x = 0;
+   cond_havoc.js:5:11
+   5|   var x = 0;
                 ^ [2]
-   cond_havoc.js:7:7
-   7|   var x = 0;
+   cond_havoc.js:5:7
+   5|   var x = 0;
             ^ [3]
 
 

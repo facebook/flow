@@ -34,45 +34,45 @@ spread in array: [signature-verification-failure]
                        ^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- array-pattern.js:3:19
+Error -------------------------------------------------------------------------------------------- array-pattern.js:1:19
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at array pattern: [signature-verification-failure]
 
-   3| module.exports = ([x, y]) => {};
+   1| module.exports = ([x, y]) => {};
                         ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- class.js:5:3
+Error ----------------------------------------------------------------------------------------------------- class.js:3:3
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at property `x`: [signature-verification-failure]
 
-   5|   x = 1;
+   3|   x = 1;
         ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- class.js:8:3
+Error ----------------------------------------------------------------------------------------------------- class.js:6:3
 
 Literal properties not yet supported. [unsupported-syntax]
 
-   8|   'b' = 5;
+   6|   'b' = 5;
         ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:14:3
+Error ---------------------------------------------------------------------------------------------------- class.js:12:3
 
 Computed property keys not supported. [unsupported-syntax]
 
-   14|   ['a'] = 3;
+   12|   ['a'] = 3;
          ^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:15:3
+Error ---------------------------------------------------------------------------------------------------- class.js:13:3
 
 Computed property keys not supported. [unsupported-syntax]
 
-   15|   ['a' + 'b'] = 4;
+   13|   ['a' + 'b'] = 4;
          ^^^^^^^^^^^^^^^^
 
 
@@ -353,12 +353,12 @@ Error --------------------------------------------------------------------------
                            ^^
 
 
-Error --------------------------------------------------------------------------------------------- variable-decl.js:3:5
+Error --------------------------------------------------------------------------------------------- variable-decl.js:1:5
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at declaration of variable `x`: [signature-verification-failure]
 
-   3| var x = 0;
+   1| var x = 0;
           ^
 
 

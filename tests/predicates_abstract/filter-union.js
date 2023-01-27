@@ -1,5 +1,3 @@
-// @flow
-
 // Filter the contents of an array
 
 

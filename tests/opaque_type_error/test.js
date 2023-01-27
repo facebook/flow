@@ -1,4 +1,3 @@
-// @flow
 export opaque type ID = number;
 
 export function addition(x: ID, y: ID) : ID {

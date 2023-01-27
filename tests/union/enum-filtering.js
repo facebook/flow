@@ -1,5 +1,3 @@
-// @flow
-
 type Enum = 'ONE' | 'TWO';
 type Selection = { x: 'ONE' } | { x: 'TWO' } | { x: 'NONE' }
 

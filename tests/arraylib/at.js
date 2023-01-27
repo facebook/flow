@@ -1,5 +1,3 @@
-// @flow
-
 declare var arr: Array<string>;
 
 (arr.at(0): string | void); // OK

@@ -1,5 +1,3 @@
-// @flow
-
 type Literal = 'foo';
 declare var x: Literal;
 declare var o: {p: Literal}

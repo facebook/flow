@@ -49,11 +49,11 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- indexer.js:9:3
+Error --------------------------------------------------------------------------------------------------- indexer.js:7:3
 
 Multiple indexers are not supported. [unsupported-syntax]
 
-   9|   [k2: number]: number; // error: not supported (yet)
+   7|   [k2: number]: number; // error: not supported (yet)
         ^^^^^^^^^^^^^^^^^^^^
 
 
@@ -851,28 +851,28 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- utility.js:12:3
+Error -------------------------------------------------------------------------------------------------- utility.js:10:3
 
 Cannot assign `3` to `x.foo` because property `foo` is not writable. [cannot-write]
 
-   12| x.foo = 3; // error as expected
+   10| x.foo = 3; // error as expected
          ^^^
 
 
-Error -------------------------------------------------------------------------------------------------- utility.js:35:2
+Error -------------------------------------------------------------------------------------------------- utility.js:33:2
 
 Cannot cast `b` to `$ReadOnly` because property `qux` is missing in `B` [1] but exists in `K` [2]. [prop-missing]
 
-   utility.js:35:2
-   35| (b : $ReadOnly<K>); // error
+   utility.js:33:2
+   33| (b : $ReadOnly<K>); // error
         ^
 
 References:
-   utility.js:21:9
-   21| let b = new B();
+   utility.js:19:9
+   19| let b = new B();
                ^^^^^^^ [1]
-   utility.js:35:16
-   35| (b : $ReadOnly<K>); // error
+   utility.js:33:16
+   33| (b : $ReadOnly<K>); // error
                       ^ [2]
 
 

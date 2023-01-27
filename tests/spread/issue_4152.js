@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * This regression test exercises a bug reported
  * in https://github.com/facebook/flow/issues/4152

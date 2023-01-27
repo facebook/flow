@@ -1,5 +1,3 @@
-// @flow
-
 async function foo(): Promise<number => void> {
   const f: number => void = (n) => {}; // ok
   return (n) => {}; // ok

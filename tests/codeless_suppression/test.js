@@ -1,5 +1,3 @@
-// @flow
-
 // $FlowIssue
 (3: string);
 

@@ -1,5 +1,3 @@
-// @flow
-
 import {type Box, type Container} from './test';
 
 

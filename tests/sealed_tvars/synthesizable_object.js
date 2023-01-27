@@ -1,5 +1,3 @@
-// @flow
-
 const SynthesizableObject = {
   foo() { SynthesizableObject.foo(); this; }, // Illegal this. Methods don't bind this.
   arrow: () => { this; }, // Arrow functions don't bind this.

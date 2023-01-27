@@ -1,4 +1,3 @@
-// @flow
 function hmm1<Z>(array: Z) {
   if (Array.isArray(array)) {
     const problem: Array<Z> = array; // error

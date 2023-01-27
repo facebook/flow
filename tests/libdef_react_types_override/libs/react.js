@@ -1,5 +1,3 @@
-// @flow
-
 declare type React$Node =
   | void
   | null

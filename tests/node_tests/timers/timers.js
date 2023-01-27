@@ -1,5 +1,3 @@
-// @flow
-
 function setImmediateCallback(): number {
   return 0;
 }

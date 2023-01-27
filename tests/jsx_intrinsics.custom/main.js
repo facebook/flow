@@ -1,5 +1,3 @@
-// @flow
-
 var React = require('react');
 
 <div id="asdf" />;

@@ -1,5 +1,3 @@
-// @flow
-
 import type {SUIButtonUniform} from './SUIButtonUniform';
 import type {SUIActionMenuUniform} from './SUIActionMenuUniform';
 

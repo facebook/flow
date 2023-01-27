@@ -1,5 +1,3 @@
-// @flow
-
 interface FooOld {
   m1(): FooOld;
   m2(): FooOld;

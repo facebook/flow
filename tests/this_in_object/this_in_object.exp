@@ -1,394 +1,394 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:5:9
+Error ------------------------------------------------------------------------------------------------------ test.js:3:9
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:5:9
-    5|         this; // error, refer to method on line 4
+   test.js:3:9
+    3|         this; // error, refer to method on line 4
                ^^^^
 
 References:
-   test.js:4:5
+   test.js:2:5
            v----
-    4|     m() {
-    5|         this; // error, refer to method on line 4
+    2|     m() {
+    3|         this; // error, refer to method on line 4
+    4|
+    5|         let b = { m() { this }}; // error, refer to method here
     6|
-    7|         let b = { m() { this }}; // error, refer to method here
-    8|
-    9|         let c = class {
-   10|             m() {
-   11|                 this; // fine
-   12|
-   13|                 let d = { m() { this }}; // error, refer to method here
-   14|             }
-   15|         }
+    7|         let c = class {
+    8|             m() {
+    9|                 this; // fine
+   10|
+   11|                 let d = { m() { this }}; // error, refer to method here
+   12|             }
+   13|         }
+   14|
+   15|         let e = () => { this }; // error, refer to method on line 4
    16|
-   17|         let e = () => { this }; // error, refer to method on line 4
-   18|
-   19|         function f(this: empty) {
-   20|             this; // fine
-   21|
-   22|             let g = { m() { this }}; // error, refer to method here
-   23|         }
-   24|
-   25|         let h = [this]; // error, refer to method on line 4
-   26|     },
+   17|         function f(this: empty) {
+   18|             this; // fine
+   19|
+   20|             let g = { m() { this }}; // error, refer to method here
+   21|         }
+   22|
+   23|         let h = [this]; // error, refer to method on line 4
+   24|     },
            ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:7:25
+Error ----------------------------------------------------------------------------------------------------- test.js:5:25
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:7:25
-   7|         let b = { m() { this }}; // error, refer to method here
+   test.js:5:25
+   5|         let b = { m() { this }}; // error, refer to method here
                               ^^^^
 
 References:
-   test.js:7:19
-   7|         let b = { m() { this }}; // error, refer to method here
+   test.js:5:19
+   5|         let b = { m() { this }}; // error, refer to method here
                         ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:13:33
+Error ---------------------------------------------------------------------------------------------------- test.js:11:33
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:13:33
-   13|                 let d = { m() { this }}; // error, refer to method here
+   test.js:11:33
+   11|                 let d = { m() { this }}; // error, refer to method here
                                        ^^^^
 
 References:
-   test.js:13:27
-   13|                 let d = { m() { this }}; // error, refer to method here
+   test.js:11:27
+   11|                 let d = { m() { this }}; // error, refer to method here
                                  ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:17:25
+Error ---------------------------------------------------------------------------------------------------- test.js:15:25
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:17:25
-   17|         let e = () => { this }; // error, refer to method on line 4
+   test.js:15:25
+   15|         let e = () => { this }; // error, refer to method on line 4
                                ^^^^
 
 References:
-   test.js:4:5
+   test.js:2:5
            v----
-    4|     m() {
-    5|         this; // error, refer to method on line 4
+    2|     m() {
+    3|         this; // error, refer to method on line 4
+    4|
+    5|         let b = { m() { this }}; // error, refer to method here
     6|
-    7|         let b = { m() { this }}; // error, refer to method here
-    8|
-    9|         let c = class {
-   10|             m() {
-   11|                 this; // fine
-   12|
-   13|                 let d = { m() { this }}; // error, refer to method here
-   14|             }
-   15|         }
+    7|         let c = class {
+    8|             m() {
+    9|                 this; // fine
+   10|
+   11|                 let d = { m() { this }}; // error, refer to method here
+   12|             }
+   13|         }
+   14|
+   15|         let e = () => { this }; // error, refer to method on line 4
    16|
-   17|         let e = () => { this }; // error, refer to method on line 4
-   18|
-   19|         function f(this: empty) {
-   20|             this; // fine
-   21|
-   22|             let g = { m() { this }}; // error, refer to method here
-   23|         }
-   24|
-   25|         let h = [this]; // error, refer to method on line 4
-   26|     },
+   17|         function f(this: empty) {
+   18|             this; // fine
+   19|
+   20|             let g = { m() { this }}; // error, refer to method here
+   21|         }
+   22|
+   23|         let h = [this]; // error, refer to method on line 4
+   24|     },
            ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:22:29
+Error ---------------------------------------------------------------------------------------------------- test.js:20:29
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:22:29
-   22|             let g = { m() { this }}; // error, refer to method here
+   test.js:20:29
+   20|             let g = { m() { this }}; // error, refer to method here
                                    ^^^^
 
 References:
-   test.js:22:23
-   22|             let g = { m() { this }}; // error, refer to method here
+   test.js:20:23
+   20|             let g = { m() { this }}; // error, refer to method here
                              ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:25:18
+Error ---------------------------------------------------------------------------------------------------- test.js:23:18
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:25:18
-   25|         let h = [this]; // error, refer to method on line 4
+   test.js:23:18
+   23|         let h = [this]; // error, refer to method on line 4
                         ^^^^
 
 References:
-   test.js:4:5
+   test.js:2:5
            v----
-    4|     m() {
-    5|         this; // error, refer to method on line 4
+    2|     m() {
+    3|         this; // error, refer to method on line 4
+    4|
+    5|         let b = { m() { this }}; // error, refer to method here
     6|
-    7|         let b = { m() { this }}; // error, refer to method here
-    8|
-    9|         let c = class {
-   10|             m() {
-   11|                 this; // fine
-   12|
-   13|                 let d = { m() { this }}; // error, refer to method here
-   14|             }
-   15|         }
+    7|         let c = class {
+    8|             m() {
+    9|                 this; // fine
+   10|
+   11|                 let d = { m() { this }}; // error, refer to method here
+   12|             }
+   13|         }
+   14|
+   15|         let e = () => { this }; // error, refer to method on line 4
    16|
-   17|         let e = () => { this }; // error, refer to method on line 4
-   18|
-   19|         function f(this: empty) {
-   20|             this; // fine
-   21|
-   22|             let g = { m() { this }}; // error, refer to method here
-   23|         }
-   24|
-   25|         let h = [this]; // error, refer to method on line 4
-   26|     },
+   17|         function f(this: empty) {
+   18|             this; // fine
+   19|
+   20|             let g = { m() { this }}; // error, refer to method here
+   21|         }
+   22|
+   23|         let h = [this]; // error, refer to method on line 4
+   24|     },
            ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:31:25
+Error ---------------------------------------------------------------------------------------------------- test.js:29:25
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:31:25
-   31|         let b = { m() { this }}; // error, refer to method here
+   test.js:29:25
+   29|         let b = { m() { this }}; // error, refer to method here
                                ^^^^
 
 References:
-   test.js:31:19
-   31|         let b = { m() { this }}; // error, refer to method here
+   test.js:29:19
+   29|         let b = { m() { this }}; // error, refer to method here
                          ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:37:33
+Error ---------------------------------------------------------------------------------------------------- test.js:35:33
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:37:33
-   37|                 let d = { m() { this }}; // error, refer to method here
+   test.js:35:33
+   35|                 let d = { m() { this }}; // error, refer to method here
                                        ^^^^
 
 References:
-   test.js:37:27
-   37|                 let d = { m() { this }}; // error, refer to method here
+   test.js:35:27
+   35|                 let d = { m() { this }}; // error, refer to method here
                                  ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:46:29
+Error ---------------------------------------------------------------------------------------------------- test.js:44:29
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:46:29
-   46|             let g = { m() { this }}; // error, refer to method here
+   test.js:44:29
+   44|             let g = { m() { this }}; // error, refer to method here
                                    ^^^^
 
 References:
-   test.js:46:23
-   46|             let g = { m() { this }}; // error, refer to method here
+   test.js:44:23
+   44|             let g = { m() { this }}; // error, refer to method here
                              ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:55:25
+Error ---------------------------------------------------------------------------------------------------- test.js:53:25
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:55:25
-   55|         let b = { m() { this }}; // error, refer to method here
+   test.js:53:25
+   53|         let b = { m() { this }}; // error, refer to method here
                                ^^^^
 
 References:
-   test.js:55:19
-   55|         let b = { m() { this }}; // error, refer to method here
+   test.js:53:19
+   53|         let b = { m() { this }}; // error, refer to method here
                          ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:61:33
+Error ---------------------------------------------------------------------------------------------------- test.js:59:33
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:61:33
-   61|                 let d = { m() { this }}; // error, refer to method here
+   test.js:59:33
+   59|                 let d = { m() { this }}; // error, refer to method here
                                        ^^^^
 
 References:
-   test.js:61:27
-   61|                 let d = { m() { this }}; // error, refer to method here
+   test.js:59:27
+   59|                 let d = { m() { this }}; // error, refer to method here
                                  ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:70:29
+Error ---------------------------------------------------------------------------------------------------- test.js:68:29
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:70:29
-   70|             let g = { m() { this }}; // error, refer to method here
+   test.js:68:29
+   68|             let g = { m() { this }}; // error, refer to method here
                                    ^^^^
 
 References:
-   test.js:70:23
-   70|             let g = { m() { this }}; // error, refer to method here
+   test.js:68:23
+   68|             let g = { m() { this }}; // error, refer to method here
                              ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:79:19
+Error ---------------------------------------------------------------------------------------------------- test.js:77:19
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:79:19
-   79|     let x = { f : this }; // error, point to m
+   test.js:77:19
+   77|     let x = { f : this }; // error, point to m
                          ^^^^
 
 References:
-   test.js:78:3
+   test.js:76:3
          v----
-   78|   m() {
-   79|     let x = { f : this }; // error, point to m
-   80|     let y = ({ f() { this }}) // error, point to f
-   81|     let z = ({ f() { let z = { f: this } }}) // error, point to f
-   82|   }
+   76|   m() {
+   77|     let x = { f : this }; // error, point to m
+   78|     let y = ({ f() { this }}) // error, point to f
+   79|     let z = ({ f() { let z = { f: this } }}) // error, point to f
+   80|   }
          ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:80:22
+Error ---------------------------------------------------------------------------------------------------- test.js:78:22
 
 Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:80:22
-   80|     let y = ({ f() { this }}) // error, point to f
+   test.js:78:22
+   78|     let y = ({ f() { this }}) // error, point to f
                             ^^^^
 
 References:
-   test.js:80:16
-   80|     let y = ({ f() { this }}) // error, point to f
+   test.js:78:16
+   78|     let y = ({ f() { this }}) // error, point to f
                       ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:81:35
+Error ---------------------------------------------------------------------------------------------------- test.js:79:35
 
 Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:81:35
-   81|     let z = ({ f() { let z = { f: this } }}) // error, point to f
+   test.js:79:35
+   79|     let z = ({ f() { let z = { f: this } }}) // error, point to f
                                          ^^^^
 
 References:
-   test.js:81:16
-   81|     let z = ({ f() { let z = { f: this } }}) // error, point to f
+   test.js:79:16
+   79|     let z = ({ f() { let z = { f: this } }}) // error, point to f
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:86:17
+Error ---------------------------------------------------------------------------------------------------- test.js:84:17
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:86:17
-   86|     get foo() { this; }, // error
+   test.js:84:17
+   84|     get foo() { this; }, // error
                        ^^^^
 
 References:
-   test.js:86:5
-   86|     get foo() { this; }, // error
+   test.js:84:5
+   84|     get foo() { this; }, // error
            ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:87:25
+Error ---------------------------------------------------------------------------------------------------- test.js:85:25
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:87:25
-   87|     set foo(v: mixed) { this; }, // error
+   test.js:85:25
+   85|     set foo(v: mixed) { this; }, // error
                                ^^^^
 
 References:
-   test.js:87:5
-   87|     set foo(v: mixed) { this; }, // error
+   test.js:85:5
+   85|     set foo(v: mixed) { this; }, // error
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:90:24
+Error ---------------------------------------------------------------------------------------------------- test.js:88:24
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:90:24
-   90| Object.freeze({ foo() {this} }); // error
+   test.js:88:24
+   88| Object.freeze({ foo() {this} }); // error
                               ^^^^
 
 References:
-   test.js:90:17
-   90| Object.freeze({ foo() {this} }); // error
+   test.js:88:17
+   88| Object.freeze({ foo() {this} }); // error
                        ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:91:60
+Error ---------------------------------------------------------------------------------------------------- test.js:89:60
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:91:60
-   91| Object.defineProperties(({}: {foo?: () => void}), { foo() {this} }); // error
+   test.js:89:60
+   89| Object.defineProperties(({}: {foo?: () => void}), { foo() {this} }); // error
                                                                   ^^^^
 
 References:
-   test.js:91:53
-   91| Object.defineProperties(({}: {foo?: () => void}), { foo() {this} }); // error
+   test.js:89:53
+   89| Object.defineProperties(({}: {foo?: () => void}), { foo() {this} }); // error
                                                            ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:92:28
+Error ---------------------------------------------------------------------------------------------------- test.js:90:28
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:92:28
-   92| Object.create({}, { foo() {this} }) // error
+   test.js:90:28
+   90| Object.create({}, { foo() {this} }) // error
                                   ^^^^
 
 References:
-   test.js:92:21
-   92| Object.create({}, { foo() {this} }) // error
+   test.js:90:21
+   90| Object.create({}, { foo() {this} }) // error
                            ^^^^^^^^^^^^ [1]
 
 

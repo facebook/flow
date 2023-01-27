@@ -1,5 +1,3 @@
-// @flow
-
 class C { static f: any; g: any }
 class D { static f: any; g: any }
 

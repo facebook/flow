@@ -1,5 +1,3 @@
-// @flow
-
 import {IndexedSeq} from './mixin';
 
 declare var s: IndexedSeq<string>;

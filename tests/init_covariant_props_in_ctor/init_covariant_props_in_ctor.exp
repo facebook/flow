@@ -1,81 +1,81 @@
-Error -------------------------------------------------------------------------------------------------------- a.js:13:3
+Error -------------------------------------------------------------------------------------------------------- a.js:10:3
 
 Cannot assign `2` to `a.prop` because property `prop` is not writable. [cannot-write]
 
-   13| a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
+   10| a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
          ^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------- a.js:20:17
+Error ------------------------------------------------------------------------------------------------------- a.js:17:17
 
 Cannot assign `prop` to `this.prop` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   a.js:20:17
-   20|     this.prop = prop;         // ERROR: we should not be assigning a string here
+   a.js:17:17
+   17|     this.prop = prop;         // ERROR: we should not be assigning a string here
                        ^^^^
 
 References:
-   a.js:19:21
-   19|   constructor(prop: string) {
+   a.js:16:21
+   16|   constructor(prop: string) {
                            ^^^^^^ [1]
-   a.js:16:10
-   16|   +prop: number;
+   a.js:13:10
+   13|   +prop: number;
                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- a.js:21:10
+Error ------------------------------------------------------------------------------------------------------- a.js:18:10
 
 Cannot assign function to `this.m` because property `m` is not writable. [cannot-write]
 
-   21|     this.m = () => {};        // ERORR: cannot assign method
+   18|     this.m = () => {};        // ERORR: cannot assign method
                 ^
 
 
-Error ------------------------------------------------------------------------------------------------------- a.js:47:12
+Error ------------------------------------------------------------------------------------------------------- a.js:44:12
 
 Cannot assign `prop` to `this.prop` because property `prop` is not writable. [cannot-write]
 
-   47|       this.prop = prop;       // ERROR: the initilized object can only be
+   44|       this.prop = prop;       // ERROR: the initilized object can only be
                   ^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------- a.js:61:10
+Error ------------------------------------------------------------------------------------------------------- a.js:58:10
 
 Cannot assign `1` to `this.prop` because property `prop` is not writable. [cannot-write]
 
-   61|     this.prop = 1;            // ERROR
+   58|     this.prop = 1;            // ERROR
                 ^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------- a.js:70:17
+Error ------------------------------------------------------------------------------------------------------- a.js:67:17
 
 Cannot assign empty string to `this.prop` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   a.js:70:17
-   70|     this.prop = "";           // ERROR
+   a.js:67:17
+   67|     this.prop = "";           // ERROR
                        ^^ [1]
 
 References:
-   a.js:5:10
-    5|   +prop: number;
+   a.js:2:10
+    2|   +prop: number;
                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- a.js:74:7
+Error -------------------------------------------------------------------------------------------------------- a.js:71:7
 
 Cannot extend `F` [1] with `G` because property `prop` is write-only in `G` [2] but read-only in `A` [3].
 [incompatible-variance]
 
-   a.js:74:7
-   74| class G extends F {
+   a.js:71:7
+   71| class G extends F {
              ^ [2]
 
 References:
-   a.js:74:17
-   74| class G extends F {
+   a.js:71:17
+   71| class G extends F {
                        ^ [1]
-   a.js:65:17
-   65| class F extends A {
+   a.js:62:17
+   62| class F extends A {
                        ^ [3]
 
 

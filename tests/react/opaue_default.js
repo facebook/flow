@@ -1,5 +1,3 @@
-// @flow
-
 /* This is a regression test. When the config passed to createElement and the
  * component's defaultProps both define a given property, we do a CondT test to
  * ensure that void-typed config values are replaced with the default value.

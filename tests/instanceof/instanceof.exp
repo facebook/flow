@@ -1,51 +1,51 @@
-Error ------------------------------------------------------------------------------------------------------ any.js:12:6
+Error ------------------------------------------------------------------------------------------------------ any.js:10:6
 
 Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   any.js:12:6
-   12|     (a: empty); // error A ~> empty
+   any.js:10:6
+   10|     (a: empty); // error A ~> empty
             ^
 
 References:
-   any.js:11:18
-   11| if (a instanceof A) {
+   any.js:9:18
+    9| if (a instanceof A) {
                         ^ [1]
-   any.js:12:9
-   12|     (a: empty); // error A ~> empty
+   any.js:10:9
+   10|     (a: empty); // error A ~> empty
                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ any.js:15:6
+Error ------------------------------------------------------------------------------------------------------ any.js:13:6
 
 Cannot cast `a` to empty because `P` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   any.js:15:6
-   15|     (a: empty); // error P ~> empty
+   any.js:13:6
+   13|     (a: empty); // error P ~> empty
             ^
 
 References:
-   any.js:14:18
-   14| if (a instanceof P) {
+   any.js:12:18
+   12| if (a instanceof P) {
                         ^ [1]
-   any.js:15:9
-   15|     (a: empty); // error P ~> empty
+   any.js:13:9
+   13|     (a: empty); // error P ~> empty
                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ any.js:16:6
+Error ------------------------------------------------------------------------------------------------------ any.js:14:6
 
 Cannot cast `a.n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   any.js:16:6
-   16|     (a.n: empty); // error number ~> empty
+   any.js:14:6
+   14|     (a.n: empty); // error number ~> empty
             ^^^
 
 References:
-   any.js:5:6
-    5|   n: number;
+   any.js:3:6
+    3|   n: number;
             ^^^^^^ [1]
-   any.js:16:11
-   16|     (a.n: empty); // error number ~> empty
+   any.js:14:11
+   14|     (a.n: empty); // error number ~> empty
                  ^^^^^ [2]
 
 
@@ -209,49 +209,49 @@ References:
                 ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- mixed.js:6:6
+Error ----------------------------------------------------------------------------------------------------- mixed.js:4:6
 
 Cannot cast `x` to number because `C` [1] is incompatible with number [2]. [incompatible-cast]
 
-   mixed.js:6:6
-   6|     (x: number);
+   mixed.js:4:6
+   4|     (x: number);
            ^
 
 References:
-   mixed.js:5:20
-   5|   if (x instanceof C) {
+   mixed.js:3:20
+   3|   if (x instanceof C) {
                          ^ [1]
-   mixed.js:6:9
-   6|     (x: number);
+   mixed.js:4:9
+   4|     (x: number);
               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- mixed.js:40:7
+Error ---------------------------------------------------------------------------------------------------- mixed.js:38:7
 
 Cannot get `x.p` because property `p` is missing in `Object` [1]. [prop-missing]
 
-   mixed.js:40:7
-   40|     x.p;
+   mixed.js:38:7
+   38|     x.p;
              ^
 
 References:
-   mixed.js:39:20
-   39|   if (x instanceof Object) {
+   mixed.js:37:20
+   37|   if (x instanceof Object) {
                           ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- mixed.js:46:5
+Error ---------------------------------------------------------------------------------------------------- mixed.js:44:5
 
 Cannot call `x` because a call signature declaring the expected parameter / return type is missing in `Function` [1].
 [prop-missing]
 
-   mixed.js:46:5
-   46|     x();
+   mixed.js:44:5
+   44|     x();
            ^
 
 References:
-   mixed.js:45:20
-   45|   if (x instanceof Function) {
+   mixed.js:43:20
+   43|   if (x instanceof Function) {
                           ^^^^^^^^ [1]
 
 

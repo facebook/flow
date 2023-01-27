@@ -1,5 +1,3 @@
-// @flow
-
 import * as Foo from './foo';
 import React from 'react';
 

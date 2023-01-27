@@ -1,5 +1,3 @@
-// @flow
-
 declare function f1(x: mixed): boolean;
 
 declare function f3(x: mixed): boolean %checks (x !== null);

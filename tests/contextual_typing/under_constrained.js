@@ -1,5 +1,3 @@
-// @flow
-
 function test1() {
   declare var x: (mixed) => void;
   x(y => {}); // error missing annot

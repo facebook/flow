@@ -1,5 +1,3 @@
-// @flow
-
 const A = require('./A');
 
 class B extends A<string> {

@@ -1,17 +1,17 @@
-Error ----------------------------------------------------------------------------------------------------- main.js:6:17
+Error ----------------------------------------------------------------------------------------------------- main.js:4:17
 
 Cannot assign `test` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   main.js:6:17
-   6| var b: string = test; // Error: number ~> string
+   main.js:4:17
+   4| var b: string = test; // Error: number ~> string
                       ^^^^
 
 References:
-   src/testmodule.js:3:21
-   3| export const test = 42;
+   src/testmodule.js:1:21
+   1| export const test = 42;
                           ^^ [1]
-   main.js:6:8
-   6| var b: string = test; // Error: number ~> string
+   main.js:4:8
+   4| var b: string = test; // Error: number ~> string
              ^^^^^^ [2]
 
 

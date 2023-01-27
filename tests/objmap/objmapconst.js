@@ -1,5 +1,3 @@
-// @flow
-
 declare var obj: { f: string, g: number };
 
 declare var t: $ObjMapConst<typeof obj, boolean>;

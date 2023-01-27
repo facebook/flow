@@ -1,5 +1,3 @@
-// @flow
-
 // this package has haste_commonjs: true
 import haste_pkg from 'haste_pkg'; // ok
 

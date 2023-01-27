@@ -1,5 +1,3 @@
-// @flow
-
 import React from 'react';
 
 React.useState(); // Error: function requires another argument.

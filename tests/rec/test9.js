@@ -1,5 +1,3 @@
-// @flow
-
 declare var o: {
   x: number,
   y: typeof o,

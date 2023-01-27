@@ -1,3 +1,1 @@
-// @flow
-
 // No value exports

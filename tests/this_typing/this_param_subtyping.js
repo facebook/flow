@@ -1,5 +1,3 @@
-// @flow
-
 class A {
     x : number
     y : number

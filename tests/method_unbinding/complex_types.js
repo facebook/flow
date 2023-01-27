@@ -1,5 +1,3 @@
-// @flow
-
 interface I {
     m() : void
 }

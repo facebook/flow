@@ -1,34 +1,34 @@
-Error ---------------------------------------------------------------------------------- async_void_return-export.js:5:2
+Error ---------------------------------------------------------------------------------- async_void_return-export.js:3:2
 
 Cannot cast `f()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   async_void_return-export.js:5:2
-   5| (f(): empty); // error: Promise ~> empty
+   async_void_return-export.js:3:2
+   3| (f(): empty); // error: Promise ~> empty
        ^^^
 
 References:
-   async_void_return-export.js:3:29
-   3| export const f = async () => {};
+   async_void_return-export.js:1:29
+   1| export const f = async () => {};
                                   ^ [1]
-   async_void_return-export.js:5:7
-   5| (f(): empty); // error: Promise ~> empty
+   async_void_return-export.js:3:7
+   3| (f(): empty); // error: Promise ~> empty
             ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------- async_void_return-import.js:5:2
+Error ---------------------------------------------------------------------------------- async_void_return-import.js:3:2
 
 Cannot cast `f()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   async_void_return-import.js:5:2
-    5| (f(): empty); // error: Promise ~> empty
+   async_void_return-import.js:3:2
+    3| (f(): empty); // error: Promise ~> empty
         ^^^
 
 References:
    <BUILTINS>/prelude.js:46:15
    46| declare class Promise<+R> {}
                      ^^^^^^^ [1]
-   async_void_return-import.js:5:7
-    5| (f(): empty); // error: Promise ~> empty
+   async_void_return-import.js:3:7
+    3| (f(): empty); // error: Promise ~> empty
              ^^^^^ [2]
 
 

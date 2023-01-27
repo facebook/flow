@@ -1,5 +1,3 @@
-// @flow
-
 export opaque type Box<T> = [T];
 export opaque type Container<T> = Box<T>;
 

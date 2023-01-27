@@ -1,4 +1,3 @@
-// @flow
 import type {
   T1,
   T2,

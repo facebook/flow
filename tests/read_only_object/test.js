@@ -1,5 +1,3 @@
-// @flow
-
 // Valid Usage
 type Obj = {p: number};
 declare var obj: $ReadOnly<Obj>;

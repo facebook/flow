@@ -1,5 +1,3 @@
-// @flow
-
 import fn from './fn';
 
 const app = fn((o: {a: number, b: number}) => {});

@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * 1) All "ambiguous" code exists in first/, second/ and node_modules/.
  *    first/ wins

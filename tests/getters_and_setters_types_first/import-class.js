@@ -1,5 +1,3 @@
-// @flow
-
 import {Foo} from './class';
 
 var foo = new Foo();

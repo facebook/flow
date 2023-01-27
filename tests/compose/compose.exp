@@ -1,94 +1,94 @@
-Error ----------------------------------------------------------------------------------------------------- basic.js:6:2
+Error ----------------------------------------------------------------------------------------------------- basic.js:4:2
 
 Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   basic.js:6:2
-     6| (compose((n: number) => n.toString())(42): empty); // Error: string ~> empty
+   basic.js:4:2
+     4| (compose((n: number) => n.toString())(42): empty); // Error: string ~> empty
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:478:31
    478|     toString(radix?: number): string;
                                       ^^^^^^ [1]
-   basic.js:6:44
-     6| (compose((n: number) => n.toString())(42): empty); // Error: string ~> empty
+   basic.js:4:44
+     4| (compose((n: number) => n.toString())(42): empty); // Error: string ~> empty
                                                    ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- basic.js:8:2
+Error ----------------------------------------------------------------------------------------------------- basic.js:6:2
 
 Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   basic.js:8:2
-     8| (composeReverse((n: number) => n.toString())(42): empty); // Error: string ~> empty
+   basic.js:6:2
+     6| (composeReverse((n: number) => n.toString())(42): empty); // Error: string ~> empty
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:478:31
    478|     toString(radix?: number): string;
                                       ^^^^^^ [1]
-   basic.js:8:51
-     8| (composeReverse((n: number) => n.toString())(42): empty); // Error: string ~> empty
+   basic.js:6:51
+     6| (composeReverse((n: number) => n.toString())(42): empty); // Error: string ~> empty
                                                           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- basic.js:10:2
+Error ----------------------------------------------------------------------------------------------------- basic.js:8:2
 
 Cannot cast `compose(...)(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   basic.js:10:2
+   basic.js:8:2
         v-------
-   10| (compose(
-   11|   (n: number) => n * 5, // Error: string cannot be multiplied.
-   12|   (n: number) => n.toString(),
-   13| )(42): empty); // Error: number ~> empty
+    8| (compose(
+    9|   (n: number) => n * 5, // Error: string cannot be multiplied.
+   10|   (n: number) => n.toString(),
+   11| )(42): empty); // Error: number ~> empty
        ----^
 
 References:
-   basic.js:11:18
-   11|   (n: number) => n * 5, // Error: string cannot be multiplied.
+   basic.js:9:18
+    9|   (n: number) => n * 5, // Error: string cannot be multiplied.
                         ^^^^^ [1]
-   basic.js:13:8
-   13| )(42): empty); // Error: number ~> empty
+   basic.js:11:8
+   11| )(42): empty); // Error: number ~> empty
               ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- basic.js:11:3
+Error ----------------------------------------------------------------------------------------------------- basic.js:9:3
 
 Cannot call `compose` with compose intermediate value bound to `n` because string [1] is incompatible with number [2].
 [incompatible-call]
 
-   basic.js:11:3
-    11|   (n: number) => n * 5, // Error: string cannot be multiplied.
+   basic.js:9:3
+     9|   (n: number) => n * 5, // Error: string cannot be multiplied.
           ^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:478:31
    478|     toString(radix?: number): string;
                                       ^^^^^^ [1]
-   basic.js:11:7
-    11|   (n: number) => n * 5, // Error: string cannot be multiplied.
+   basic.js:9:7
+     9|   (n: number) => n * 5, // Error: string cannot be multiplied.
               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- basic.js:15:2
+Error ---------------------------------------------------------------------------------------------------- basic.js:13:2
 
 Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   basic.js:15:2
+   basic.js:13:2
          v--------------
-    15| (composeReverse(
-    16|   (n: number) => n * 5, // OK
-    17|   (n: number) => n.toString(),
-    18| )(42): empty); // Error: string ~> empty
+    13| (composeReverse(
+    14|   (n: number) => n * 5, // OK
+    15|   (n: number) => n.toString(),
+    16| )(42): empty); // Error: string ~> empty
         ----^
 
 References:
    <BUILTINS>/core.js:478:31
    478|     toString(radix?: number): string;
                                       ^^^^^^ [1]
-   basic.js:18:8
-    18| )(42): empty); // Error: string ~> empty
+   basic.js:16:8
+    16| )(42): empty); // Error: string ~> empty
                ^^^^^ [2]
 
 
@@ -110,11 +110,11 @@ References:
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- spread.js:6:2
+Error ---------------------------------------------------------------------------------------------------- spread.js:4:2
 
 A spread argument is unsupported here. [unsupported-syntax]
 
-   6| (compose(...fns)(42): empty); // Error: unsupported
+   4| (compose(...fns)(42): empty); // Error: unsupported
        ^^^^^^^^^^^^^^^
 
 

@@ -1,5 +1,3 @@
-// @flow
-
 const http = require('http');
 const url = 'http://nodejs.org/dist/index.json';
 

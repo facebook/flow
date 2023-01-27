@@ -1,5 +1,3 @@
-// @flow
-
 // Classes
 
 class C {

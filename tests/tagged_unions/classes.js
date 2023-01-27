@@ -1,5 +1,3 @@
-// @flow
-
 class Foo {
   type: 'foo';
   foo: string;

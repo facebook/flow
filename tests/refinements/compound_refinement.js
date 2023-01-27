@@ -1,5 +1,3 @@
-// @flow
-
 type U = {
   type: "a";
   a: U;

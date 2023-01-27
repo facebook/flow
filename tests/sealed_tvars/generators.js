@@ -1,5 +1,3 @@
-// @flow
-
 function *f1() {
     yield;
 }

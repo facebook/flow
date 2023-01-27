@@ -1,4 +1,3 @@
-// @flow
 class C {
     m(): C { return new C; }
 }

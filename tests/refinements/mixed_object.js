@@ -1,4 +1,3 @@
-// @flow
 function bad (x : mixed) {
   if (typeof x === "object" && x !== null) {
     x.a = 3;

@@ -1,17 +1,17 @@
-Error ------------------------------------------------------------------------------------------------ Suspense.js:12:23
+Error ------------------------------------------------------------------------------------------------ Suspense.js:10:23
 
 Cannot create `Suspense` element because in property `fallback`: [incompatible-type]
  - Either inexact function [1] is incompatible with exact `React.Element` [2].
  - Or function [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in function [1] but exists in `$Iterable` [4].
 
-   Suspense.js:12:23
-   12|   <Suspense fallback={Loading} /> // Error: function is incompatible with exact React.Element
+   Suspense.js:10:23
+   10|   <Suspense fallback={Loading} /> // Error: function is incompatible with exact React.Element
                              ^^^^^^^
 
 References:
-   Suspense.js:7:1
-    7| function Loading() {
+   Suspense.js:5:1
+    5| function Loading() {
        ^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:21:5
    21|   | React$Element<any>

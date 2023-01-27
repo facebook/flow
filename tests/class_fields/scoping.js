@@ -1,5 +1,3 @@
-// @flow
-
 var someVar = 42;
 
 class Foo {

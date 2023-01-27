@@ -1,5 +1,3 @@
-// @flow
-
 class Base {}
 class Middle extends Base {}
 class Child extends Middle {}

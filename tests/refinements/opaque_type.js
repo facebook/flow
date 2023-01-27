@@ -1,5 +1,3 @@
-// @flow
-
 export opaque type Opaque = string;
 
 export type Dict = {

@@ -445,12 +445,12 @@ References:
                    ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- object_missing.js:5:12
+Error ------------------------------------------------------------------------------------------- object_missing.js:3:12
 
 Cannot call method `doesNotExist` because property `doesNotExist` is missing in statics of `Object` [1]. [prop-missing]
 
-   object_missing.js:5:12
-    5|     Object.doesNotExist();
+   object_missing.js:3:12
+    3|     Object.doesNotExist();
                   ^^^^^^^^^^^^
 
 References:

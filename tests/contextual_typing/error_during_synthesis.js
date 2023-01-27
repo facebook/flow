@@ -1,5 +1,3 @@
-// @flow
-
 function test1() {
   declare function poly<T>((string) => void, T): T;
   declare function expectString(string): string;

@@ -1,2153 +1,2153 @@
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:52:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:50:2
 
 Cannot cast `cft` to `I_Function_this` because `C_Function_this` [1] is incompatible with `I_Function_this` [2] in the
 `this` parameter of property `x`. [incompatible-cast]
 
-   class_interface_subtyping.js:52:2
-   52| (cft : I_Function_this); // error, contravariant
+   class_interface_subtyping.js:50:2
+   50| (cft : I_Function_this); // error, contravariant
         ^^^
 
 References:
-   class_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   class_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:4:18
-    4|     +x : (this : I_Function_this) => void
+   class_interface_subtyping.js:2:18
+    2|     +x : (this : I_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:53:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:51:2
 
 Cannot cast `cft` to `I_Method_this` because `C_Function_this` [1] is incompatible with `I_Method_this` [2] in the
 `this` parameter of property `x`. [incompatible-cast]
 
-   class_interface_subtyping.js:53:2
-   53| (cft : I_Method_this); // error, contravariant
+   class_interface_subtyping.js:51:2
+   51| (cft : I_Method_this); // error, contravariant
         ^^^
 
 References:
-   class_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   class_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   class_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:54:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:52:2
 
 Cannot cast `cft` to `I_Function_mixed` because `C_Function_this` [1] is incompatible with mixed [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   class_interface_subtyping.js:54:2
-   54| (cft : I_Function_mixed); // error, contravariant
+   class_interface_subtyping.js:52:2
+   52| (cft : I_Function_mixed); // error, contravariant
         ^^^
 
 References:
-   class_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   class_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:12:18
-   12|     +x : (this : mixed) => void
+   class_interface_subtyping.js:10:18
+   10|     +x : (this : mixed) => void
                         ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:55:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:53:2
 
 Cannot cast `cft` to `I_Method_mixed` because `C_Function_this` [1] is incompatible with mixed [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   class_interface_subtyping.js:55:2
-   55| (cft : I_Method_mixed); // error, contravariant
+   class_interface_subtyping.js:53:2
+   53| (cft : I_Method_mixed); // error, contravariant
         ^^^
 
 References:
-   class_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   class_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:16:14
-   16|     x(this : mixed) : void
+   class_interface_subtyping.js:14:14
+   14|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:58:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:56:2
 
 Cannot cast `cmt` to `I_Function_this` because function [1] cannot be unbound from the context [2] where it was defined
 in the `this` parameter of property `x`. [method-unbinding]
 
-   class_interface_subtyping.js:58:2
-   58| (cmt : I_Function_this); // error, unbound method
+   class_interface_subtyping.js:56:2
+   56| (cmt : I_Function_this); // error, unbound method
         ^^^
 
 References:
-   class_interface_subtyping.js:30:5
-   30|     x(this : C_Method_this) : void {}
+   class_interface_subtyping.js:28:5
+   28|     x(this : C_Method_this) : void {}
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void {}
+   class_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void {}
+                    ^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:58:2
+
+Cannot cast `cmt` to `I_Function_mixed` because function [1] cannot be unbound from the context [2] where it was defined
+in the `this` parameter of property `x`. [method-unbinding]
+
+   class_interface_subtyping.js:58:2
+   58| (cmt : I_Function_mixed); // error, unbound method
+        ^^^
+
+References:
+   class_interface_subtyping.js:28:5
+   28|     x(this : C_Method_this) : void {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   class_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void {}
                     ^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:60:2
 
-Cannot cast `cmt` to `I_Function_mixed` because function [1] cannot be unbound from the context [2] where it was defined
-in the `this` parameter of property `x`. [method-unbinding]
-
-   class_interface_subtyping.js:60:2
-   60| (cmt : I_Function_mixed); // error, unbound method
-        ^^^
-
-References:
-   class_interface_subtyping.js:30:5
-   30|     x(this : C_Method_this) : void {}
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void {}
-                    ^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:62:2
-
 Cannot cast `cmt` to `I_Function_empty` because function [1] cannot be unbound from the context [2] where it was defined
 in the `this` parameter of property `x`. [method-unbinding]
 
-   class_interface_subtyping.js:62:2
-   62| (cmt : I_Function_empty); // error, unbound method
+   class_interface_subtyping.js:60:2
+   60| (cmt : I_Function_empty); // error, unbound method
         ^^^
 
 References:
-   class_interface_subtyping.js:30:5
-   30|     x(this : C_Method_this) : void {}
+   class_interface_subtyping.js:28:5
+   28|     x(this : C_Method_this) : void {}
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void {}
+   class_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void {}
                     ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:70:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:68:2
 
 Cannot cast `cmm` to `I_Function_this` because function [1] cannot be unbound from the context [2] where it was defined
 in the `this` parameter of property `x`. [method-unbinding]
 
-   class_interface_subtyping.js:70:2
-   70| (cmm : I_Function_this); // error, unbound method
+   class_interface_subtyping.js:68:2
+   68| (cmm : I_Function_this); // error, unbound method
         ^^^
 
 References:
-   class_interface_subtyping.js:38:5
-   38|     x(this : mixed) : void {}
+   class_interface_subtyping.js:36:5
+   36|     x(this : mixed) : void {}
            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:38:14
-   38|     x(this : mixed) : void {}
+   class_interface_subtyping.js:36:14
+   36|     x(this : mixed) : void {}
+                    ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:70:2
+
+Cannot cast `cmm` to `I_Function_mixed` because function [1] cannot be unbound from the context [2] where it was defined
+in the `this` parameter of property `x`. [method-unbinding]
+
+   class_interface_subtyping.js:70:2
+   70| (cmm : I_Function_mixed); // error, unbound method
+        ^^^
+
+References:
+   class_interface_subtyping.js:36:5
+   36|     x(this : mixed) : void {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   class_interface_subtyping.js:36:14
+   36|     x(this : mixed) : void {}
                     ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:72:2
 
-Cannot cast `cmm` to `I_Function_mixed` because function [1] cannot be unbound from the context [2] where it was defined
+Cannot cast `cmm` to `I_Function_empty` because function [1] cannot be unbound from the context [2] where it was defined
 in the `this` parameter of property `x`. [method-unbinding]
 
    class_interface_subtyping.js:72:2
-   72| (cmm : I_Function_mixed); // error, unbound method
+   72| (cmm : I_Function_empty); // error, unbound method
         ^^^
 
 References:
-   class_interface_subtyping.js:38:5
-   38|     x(this : mixed) : void {}
+   class_interface_subtyping.js:36:5
+   36|     x(this : mixed) : void {}
            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:38:14
-   38|     x(this : mixed) : void {}
+   class_interface_subtyping.js:36:14
+   36|     x(this : mixed) : void {}
                     ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:74:2
 
-Cannot cast `cmm` to `I_Function_empty` because function [1] cannot be unbound from the context [2] where it was defined
-in the `this` parameter of property `x`. [method-unbinding]
-
-   class_interface_subtyping.js:74:2
-   74| (cmm : I_Function_empty); // error, unbound method
-        ^^^
-
-References:
-   class_interface_subtyping.js:38:5
-   38|     x(this : mixed) : void {}
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:38:14
-   38|     x(this : mixed) : void {}
-                    ^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:76:2
-
 Cannot cast `cfe` to `I_Function_this` because empty [1] is incompatible with `I_Function_this` [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   class_interface_subtyping.js:76:2
-   76| (cfe : I_Function_this); // error, contravariant
+   class_interface_subtyping.js:74:2
+   74| (cfe : I_Function_this); // error, contravariant
         ^^^
 
 References:
-   class_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   class_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   class_interface_subtyping.js:4:18
-    4|     +x : (this : I_Function_this) => void
+   class_interface_subtyping.js:2:18
+    2|     +x : (this : I_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:77:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:75:2
 
 Cannot cast `cfe` to `I_Method_this` because empty [1] is incompatible with `I_Method_this` [2] in the `this` parameter
 of property `x`. [incompatible-cast]
 
-   class_interface_subtyping.js:77:2
-   77| (cfe : I_Method_this); // error, contravariant
+   class_interface_subtyping.js:75:2
+   75| (cfe : I_Method_this); // error, contravariant
         ^^^
 
 References:
-   class_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   class_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   class_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   class_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:78:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:76:2
 
 Cannot cast `cfe` to `I_Function_mixed` because empty [1] is incompatible with mixed [2] in the `this` parameter of
 property `x`. [incompatible-cast]
 
-   class_interface_subtyping.js:78:2
-   78| (cfe : I_Function_mixed); // error, contravariant
+   class_interface_subtyping.js:76:2
+   76| (cfe : I_Function_mixed); // error, contravariant
         ^^^
 
 References:
-   class_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   class_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   class_interface_subtyping.js:12:18
-   12|     +x : (this : mixed) => void
+   class_interface_subtyping.js:10:18
+   10|     +x : (this : mixed) => void
                         ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:79:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:77:2
 
 Cannot cast `cfe` to `I_Method_mixed` because empty [1] is incompatible with mixed [2] in the `this` parameter of
 property `x`. [incompatible-cast]
 
-   class_interface_subtyping.js:79:2
-   79| (cfe : I_Method_mixed); // error, contravariant
+   class_interface_subtyping.js:77:2
+   77| (cfe : I_Method_mixed); // error, contravariant
         ^^^
 
 References:
-   class_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   class_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   class_interface_subtyping.js:16:14
-   16|     x(this : mixed) : void
+   class_interface_subtyping.js:14:14
+   14|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- class_method.js:8:12
+Error --------------------------------------------------------------------------------------------- class_method.js:6:12
 
 Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   class_method.js:8:12
-   8|     return this.prop; // Error - number ~> string
+   class_method.js:6:12
+   6|     return this.prop; // Error - number ~> string
                  ^^^^^^^^^
 
 References:
-   class_method.js:7:33
-   7|   method(this: interface {prop: boolean}): string {
+   class_method.js:5:33
+   5|   method(this: interface {prop: boolean}): string {
                                       ^^^^^^^ [1]
-   class_method.js:7:44
-   7|   method(this: interface {prop: boolean}): string {
+   class_method.js:5:44
+   5|   method(this: interface {prop: boolean}): string {
                                                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:12:12
+Error -------------------------------------------------------------------------------------------- class_method.js:10:12
 
 Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   class_method.js:12:12
-   12|     return this.prop; // Error - number ~> string
+   class_method.js:10:12
+   10|     return this.prop; // Error - number ~> string
                   ^^^^^^^^^
 
 References:
-   class_method.js:11:46
-   11|   static staticMethod(this: interface {prop: boolean}): string {
+   class_method.js:9:46
+    9|   static staticMethod(this: interface {prop: boolean}): string {
                                                     ^^^^^^^ [1]
-   class_method.js:11:57
-   11|   static staticMethod(this: interface {prop: boolean}): string {
+   class_method.js:9:57
+    9|   static staticMethod(this: interface {prop: boolean}): string {
                                                                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:16:12
+Error -------------------------------------------------------------------------------------------- class_method.js:14:12
 
 Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   class_method.js:16:12
-   16|     return this.prop; // Error - number ~> string
+   class_method.js:14:12
+   14|     return this.prop; // Error - number ~> string
                   ^^^^^^^^^
 
 References:
-   class_method.js:15:104
-   15|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+   class_method.js:13:104
+   13|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                                                                               ^^^^^^^ [1]
-   class_method.js:15:115
-   15|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+   class_method.js:13:115
+   13|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                                                                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:20:12
+Error -------------------------------------------------------------------------------------------- class_method.js:18:12
 
 Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-return]
 
-   class_method.js:20:12
-   20|     return this.prop; // Error - number ~> string
+   class_method.js:18:12
+   18|     return this.prop; // Error - number ~> string
                   ^^^^^^^^^
 
 References:
-   class_method.js:19:117
-   19|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+   class_method.js:17:117
+   17|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                                                                                            ^^^^^^^ [1]
-   class_method.js:19:128
-   19|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+   class_method.js:17:128
+   17|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                                                                                                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:25:43
+Error -------------------------------------------------------------------------------------------- class_method.js:23:43
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_method.js:25:43
-   25| let _1 = {prop : true, method : (new A()).method }.method();
+   class_method.js:23:43
+   23| let _1 = {prop : true, method : (new A()).method }.method();
                                                  ^^^^^^ [1]
 
 References:
-   class_method.js:7:3
+   class_method.js:5:3
          v------------------------------------------------
-    7|   method(this: interface {prop: boolean}): string {
-    8|     return this.prop; // Error - number ~> string
-    9|   }
+    5|   method(this: interface {prop: boolean}): string {
+    6|     return this.prop; // Error - number ~> string
+    7|   }
          ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:27:18
+Error -------------------------------------------------------------------------------------------- class_method.js:25:18
 
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
 
-   class_method.js:27:18
-   27| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
+   class_method.js:25:18
+   25| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
                         ^^^ [1]
 
 References:
-   class_method.js:7:33
-    7|   method(this: interface {prop: boolean}): string {
+   class_method.js:5:33
+    5|   method(this: interface {prop: boolean}): string {
                                        ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:27:42
+Error -------------------------------------------------------------------------------------------- class_method.js:25:42
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_method.js:27:42
-   27| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
+   class_method.js:25:42
+   25| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
                                                 ^^^^^^ [1]
 
 References:
-   class_method.js:7:3
+   class_method.js:5:3
          v------------------------------------------------
-    7|   method(this: interface {prop: boolean}): string {
-    8|     return this.prop; // Error - number ~> string
-    9|   }
+    5|   method(this: interface {prop: boolean}): string {
+    6|     return this.prop; // Error - number ~> string
+    7|   }
          ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:29:10
+Error -------------------------------------------------------------------------------------------- class_method.js:27:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   class_method.js:29:10
-   29| let _3 = {method : (new A()).method }.method(); // Error prop missing
+   class_method.js:27:10
+   27| let _3 = {method : (new A()).method }.method(); // Error prop missing
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   class_method.js:7:16
-    7|   method(this: interface {prop: boolean}): string {
+   class_method.js:5:16
+    5|   method(this: interface {prop: boolean}): string {
                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:29:30
+Error -------------------------------------------------------------------------------------------- class_method.js:27:30
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_method.js:29:30
-   29| let _3 = {method : (new A()).method }.method(); // Error prop missing
+   class_method.js:27:30
+   27| let _3 = {method : (new A()).method }.method(); // Error prop missing
                                     ^^^^^^ [1]
 
 References:
-   class_method.js:7:3
+   class_method.js:5:3
          v------------------------------------------------
-    7|   method(this: interface {prop: boolean}): string {
-    8|     return this.prop; // Error - number ~> string
-    9|   }
+    5|   method(this: interface {prop: boolean}): string {
+    6|     return this.prop; // Error - number ~> string
+    7|   }
          ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:34:18
+Error -------------------------------------------------------------------------------------------- class_method.js:32:18
 
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
 
-   class_method.js:34:18
-   34| let _5 = {prop : 123, method : A.staticMethod }.method();// Error - boolean ~> number
+   class_method.js:32:18
+   32| let _5 = {prop : 123, method : A.staticMethod }.method();// Error - boolean ~> number
                         ^^^ [1]
 
 References:
-   class_method.js:11:46
-   11|   static staticMethod(this: interface {prop: boolean}): string {
+   class_method.js:9:46
+    9|   static staticMethod(this: interface {prop: boolean}): string {
                                                     ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:36:10
+Error -------------------------------------------------------------------------------------------- class_method.js:34:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   class_method.js:36:10
-   36| let _6 = {method : A.staticMethod }.method(); // error prop missing
+   class_method.js:34:10
+   34| let _6 = {method : A.staticMethod }.method(); // error prop missing
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   class_method.js:11:29
-   11|   static staticMethod(this: interface {prop: boolean}): string {
+   class_method.js:9:29
+    9|   static staticMethod(this: interface {prop: boolean}): string {
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:41:18
+Error -------------------------------------------------------------------------------------------- class_method.js:39:18
 
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
 
-   class_method.js:41:18
-   41| let _8 = {prop : 123, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
+   class_method.js:39:18
+   39| let _8 = {prop : 123, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
                         ^^^ [1]
 
 References:
-   class_method.js:15:50
-   15|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+   class_method.js:13:50
+   13|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                         ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:43:10
+Error -------------------------------------------------------------------------------------------- class_method.js:41:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   class_method.js:43:10
-   43| let _9 = {method : (new A()).propUnboundNonMethod }.method(); // Error prop missing
+   class_method.js:41:10
+   41| let _9 = {method : (new A()).propUnboundNonMethod }.method(); // Error prop missing
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   class_method.js:15:33
-   15|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+   class_method.js:13:33
+   13|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:48:19
+Error -------------------------------------------------------------------------------------------- class_method.js:46:19
 
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
 
-   class_method.js:48:19
-   48| let _11 = {prop : 123, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
+   class_method.js:46:19
+   46| let _11 = {prop : 123, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
                          ^^^ [1]
 
 References:
-   class_method.js:19:63
-   19|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+   class_method.js:17:63
+   17|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                                      ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:50:11
+Error -------------------------------------------------------------------------------------------- class_method.js:48:11
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   class_method.js:50:11
-   50| let _12 = {method : A.staticPropUnboundNonMethod }.method(); // error prop missing
+   class_method.js:48:11
+   48| let _12 = {method : A.staticPropUnboundNonMethod }.method(); // error prop missing
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   class_method.js:19:46
-   19|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+   class_method.js:17:46
+   17|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- class_poly_method.js:20:2
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:19:2
 
 Cannot cast `n.method()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   class_poly_method.js:20:2
-   20| (n.method() : string); // error (number incompatible with string)
+   class_poly_method.js:19:2
+   19| (n.method() : string); // error (number incompatible with string)
+        ^^^^^^^^^^
+
+References:
+   class_poly_method.js:15:15
+   15| let n = new A<number>(3);
+                     ^^^^^^ [1]
+   class_poly_method.js:19:15
+   19| (n.method() : string); // error (number incompatible with string)
+                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:21:2
+
+Cannot cast `s.method()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   class_poly_method.js:21:2
+   21| (s.method() : number); // error (number incompatible with string)
         ^^^^^^^^^^
 
 References:
    class_poly_method.js:16:15
-   16| let n = new A<number>(3);
+   16| let s = new A<string>("");
                      ^^^^^^ [1]
-   class_poly_method.js:20:15
-   20| (n.method() : string); // error (number incompatible with string)
+   class_poly_method.js:21:15
+   21| (s.method() : number); // error (number incompatible with string)
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- class_poly_method.js:22:2
-
-Cannot cast `s.method()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
-
-   class_poly_method.js:22:2
-   22| (s.method() : number); // error (number incompatible with string)
-        ^^^^^^^^^^
-
-References:
-   class_poly_method.js:17:15
-   17| let s = new A<string>("");
-                     ^^^^^^ [1]
-   class_poly_method.js:22:15
-   22| (s.method() : number); // error (number incompatible with string)
-                     ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- class_poly_method.js:24:3
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:23:3
 
 Cannot get `n.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_poly_method.js:24:3
-   24| n.method.bind(s); // TODO: error (number incompatible with string)
+   class_poly_method.js:23:3
+   23| n.method.bind(s); // TODO: error (number incompatible with string)
          ^^^^^^ [1]
 
 References:
-   class_poly_method.js:9:3
+   class_poly_method.js:8:3
          v----------------------
-    9|   method(this: A<N>): N {
-   10|     return this.prop;
-   11|   }
+    8|   method(this: A<N>): N {
+    9|     return this.prop;
+   10|   }
          ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- class_poly_method.js:25:3
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:24:3
 
 Cannot get `s.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_poly_method.js:25:3
-   25| s.method.bind(n); //  TODO: error (number incompatible with string)
+   class_poly_method.js:24:3
+   24| s.method.bind(n); //  TODO: error (number incompatible with string)
          ^^^^^^ [1]
 
 References:
-   class_poly_method.js:9:3
+   class_poly_method.js:8:3
          v----------------------
-    9|   method(this: A<N>): N {
-   10|     return this.prop;
-   11|   }
+    8|   method(this: A<N>): N {
+    9|     return this.prop;
+   10|   }
          ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- class_poly_method.js:29:5
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:28:5
 
 Cannot define method `foo` [1] on `B` because `T` [2] is incompatible with `X` [2] in type argument `T` [2].
 [incompatible-type-arg]
 
-   class_poly_method.js:29:5
-   29|     foo<X>(this: B<X>) : void
+   class_poly_method.js:28:5
+   28|     foo<X>(this: B<X>) : void
            ^^^ [1]
 
 References:
-   class_poly_method.js:28:17
-   28| declare class B<T> {
+   class_poly_method.js:27:17
+   27| declare class B<T> {
                        ^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:56:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:54:2
 
 Cannot cast `cft` to `I_Function_this` because `C_Function_this` [1] is incompatible with `I_Function_this` [2] in the
 `this` parameter of property `x`. [incompatible-cast]
 
-   declare_class_interface_subtyping.js:56:2
-   56| (cft : I_Function_this); // error, contravariant
+   declare_class_interface_subtyping.js:54:2
+   54| (cft : I_Function_this); // error, contravariant
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   declare_class_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:4:18
-    4|     +x : (this : I_Function_this) => void
+   declare_class_interface_subtyping.js:2:18
+    2|     +x : (this : I_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:57:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:55:2
 
 Cannot cast `cft` to `I_Method_this` because `C_Function_this` [1] is incompatible with `I_Method_this` [2] in the
 `this` parameter of property `x`. [incompatible-cast]
 
-   declare_class_interface_subtyping.js:57:2
-   57| (cft : I_Method_this); // error, contravariant
+   declare_class_interface_subtyping.js:55:2
+   55| (cft : I_Method_this); // error, contravariant
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   declare_class_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   declare_class_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:58:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:56:2
 
 Cannot cast `cft` to `I_Function_mixed` because `C_Function_this` [1] is incompatible with mixed [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   declare_class_interface_subtyping.js:58:2
-   58| (cft : I_Function_mixed); // error, contravariant
+   declare_class_interface_subtyping.js:56:2
+   56| (cft : I_Function_mixed); // error, contravariant
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   declare_class_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:12:18
-   12|     +x : (this : mixed) => void
+   declare_class_interface_subtyping.js:10:18
+   10|     +x : (this : mixed) => void
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:59:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:57:2
 
 Cannot cast `cft` to `I_Method_mixed` because `C_Function_this` [1] is incompatible with mixed [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   declare_class_interface_subtyping.js:59:2
-   59| (cft : I_Method_mixed); // error, contravariant
+   declare_class_interface_subtyping.js:57:2
+   57| (cft : I_Method_mixed); // error, contravariant
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   declare_class_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:16:14
-   16|     x(this : mixed) : void
+   declare_class_interface_subtyping.js:14:14
+   14|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:62:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:60:2
 
 Cannot cast `cmt` to `I_Function_this` because function type [1] cannot be unbound from the context [2] where it was
 defined in the `this` parameter of property `x`. [method-unbinding]
 
-   declare_class_interface_subtyping.js:62:2
-   62| (cmt : I_Function_this); // error, unbound method
+   declare_class_interface_subtyping.js:60:2
+   60| (cmt : I_Function_this); // error, unbound method
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:30:5
-   30|     x(this : C_Method_this) : void
+   declare_class_interface_subtyping.js:28:5
+   28|     x(this : C_Method_this) : void
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void
+   declare_class_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void
+                    ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:62:2
+
+Cannot cast `cmt` to `I_Function_mixed` because function type [1] cannot be unbound from the context [2] where it was
+defined in the `this` parameter of property `x`. [method-unbinding]
+
+   declare_class_interface_subtyping.js:62:2
+   62| (cmt : I_Function_mixed); // error, unbound method
+        ^^^
+
+References:
+   declare_class_interface_subtyping.js:28:5
+   28|     x(this : C_Method_this) : void
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   declare_class_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:64:2
 
-Cannot cast `cmt` to `I_Function_mixed` because function type [1] cannot be unbound from the context [2] where it was
-defined in the `this` parameter of property `x`. [method-unbinding]
-
-   declare_class_interface_subtyping.js:64:2
-   64| (cmt : I_Function_mixed); // error, unbound method
-        ^^^
-
-References:
-   declare_class_interface_subtyping.js:30:5
-   30|     x(this : C_Method_this) : void
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void
-                    ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:66:2
-
 Cannot cast `cmt` to `I_Function_empty` because function type [1] cannot be unbound from the context [2] where it was
 defined in the `this` parameter of property `x`. [method-unbinding]
 
-   declare_class_interface_subtyping.js:66:2
-   66| (cmt : I_Function_empty); // error, unbound method
+   declare_class_interface_subtyping.js:64:2
+   64| (cmt : I_Function_empty); // error, unbound method
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:30:5
-   30|     x(this : C_Method_this) : void
+   declare_class_interface_subtyping.js:28:5
+   28|     x(this : C_Method_this) : void
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void
+   declare_class_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:74:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:72:2
 
 Cannot cast `cmm` to `I_Function_this` because function type [1] cannot be unbound from the context [2] where it was
 defined in the `this` parameter of property `x`. [method-unbinding]
 
-   declare_class_interface_subtyping.js:74:2
-   74| (cmm : I_Function_this); // error, unbound method
+   declare_class_interface_subtyping.js:72:2
+   72| (cmm : I_Function_this); // error, unbound method
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:38:5
-   38|     x(this : mixed) : void
+   declare_class_interface_subtyping.js:36:5
+   36|     x(this : mixed) : void
            ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:38:14
-   38|     x(this : mixed) : void
+   declare_class_interface_subtyping.js:36:14
+   36|     x(this : mixed) : void
+                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:74:2
+
+Cannot cast `cmm` to `I_Function_mixed` because function type [1] cannot be unbound from the context [2] where it was
+defined in the `this` parameter of property `x`. [method-unbinding]
+
+   declare_class_interface_subtyping.js:74:2
+   74| (cmm : I_Function_mixed); // error, unbound method
+        ^^^
+
+References:
+   declare_class_interface_subtyping.js:36:5
+   36|     x(this : mixed) : void
+           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   declare_class_interface_subtyping.js:36:14
+   36|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:76:2
 
-Cannot cast `cmm` to `I_Function_mixed` because function type [1] cannot be unbound from the context [2] where it was
+Cannot cast `cmm` to `I_Function_empty` because function type [1] cannot be unbound from the context [2] where it was
 defined in the `this` parameter of property `x`. [method-unbinding]
 
    declare_class_interface_subtyping.js:76:2
-   76| (cmm : I_Function_mixed); // error, unbound method
+   76| (cmm : I_Function_empty); // error, unbound method
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:38:5
-   38|     x(this : mixed) : void
+   declare_class_interface_subtyping.js:36:5
+   36|     x(this : mixed) : void
            ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:38:14
-   38|     x(this : mixed) : void
+   declare_class_interface_subtyping.js:36:14
+   36|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:78:2
 
-Cannot cast `cmm` to `I_Function_empty` because function type [1] cannot be unbound from the context [2] where it was
-defined in the `this` parameter of property `x`. [method-unbinding]
-
-   declare_class_interface_subtyping.js:78:2
-   78| (cmm : I_Function_empty); // error, unbound method
-        ^^^
-
-References:
-   declare_class_interface_subtyping.js:38:5
-   38|     x(this : mixed) : void
-           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:38:14
-   38|     x(this : mixed) : void
-                    ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:80:2
-
 Cannot cast `cfe` to `I_Function_this` because empty [1] is incompatible with `I_Function_this` [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   declare_class_interface_subtyping.js:80:2
-   80| (cfe : I_Function_this); // error, contravariant
+   declare_class_interface_subtyping.js:78:2
+   78| (cfe : I_Function_this); // error, contravariant
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   declare_class_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   declare_class_interface_subtyping.js:4:18
-    4|     +x : (this : I_Function_this) => void
+   declare_class_interface_subtyping.js:2:18
+    2|     +x : (this : I_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:81:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:79:2
 
 Cannot cast `cfe` to `I_Method_this` because empty [1] is incompatible with `I_Method_this` [2] in the `this` parameter
 of property `x`. [incompatible-cast]
 
-   declare_class_interface_subtyping.js:81:2
-   81| (cfe : I_Method_this); // error, contravariant
+   declare_class_interface_subtyping.js:79:2
+   79| (cfe : I_Method_this); // error, contravariant
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   declare_class_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   declare_class_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   declare_class_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:82:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:80:2
 
 Cannot cast `cfe` to `I_Function_mixed` because empty [1] is incompatible with mixed [2] in the `this` parameter of
 property `x`. [incompatible-cast]
 
-   declare_class_interface_subtyping.js:82:2
-   82| (cfe : I_Function_mixed); // error, contravariant
+   declare_class_interface_subtyping.js:80:2
+   80| (cfe : I_Function_mixed); // error, contravariant
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   declare_class_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   declare_class_interface_subtyping.js:12:18
-   12|     +x : (this : mixed) => void
+   declare_class_interface_subtyping.js:10:18
+   10|     +x : (this : mixed) => void
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:83:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:81:2
 
 Cannot cast `cfe` to `I_Method_mixed` because empty [1] is incompatible with mixed [2] in the `this` parameter of
 property `x`. [incompatible-cast]
 
-   declare_class_interface_subtyping.js:83:2
-   83| (cfe : I_Method_mixed); // error, contravariant
+   declare_class_interface_subtyping.js:81:2
+   81| (cfe : I_Method_mixed); // error, contravariant
         ^^^
 
 References:
-   declare_class_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   declare_class_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   declare_class_interface_subtyping.js:16:14
-   16|     x(this : mixed) : void
+   declare_class_interface_subtyping.js:14:14
+   14|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:17:42
+Error ------------------------------------------------------------------------------------ declare_class_method.js:15:42
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   declare_class_method.js:17:42
-   17| let _1 = {prop : 123, method : (new A()).method }.method();
+   declare_class_method.js:15:42
+   15| let _1 = {prop : 123, method : (new A()).method }.method();
                                                 ^^^^^^ [1]
 
 References:
-   declare_class_method.js:7:3
-    7|   method(this: interface {prop: number}): string;
+   declare_class_method.js:5:3
+    5|   method(this: interface {prop: number}): string;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:19:18
+Error ------------------------------------------------------------------------------------ declare_class_method.js:17:18
 
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   declare_class_method.js:19:18
-   19| let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
+   declare_class_method.js:17:18
+   17| let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
                         ^^^^ [1]
 
 References:
-   declare_class_method.js:7:33
-    7|   method(this: interface {prop: number}): string;
+   declare_class_method.js:5:33
+    5|   method(this: interface {prop: number}): string;
                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:19:43
+Error ------------------------------------------------------------------------------------ declare_class_method.js:17:43
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   declare_class_method.js:19:43
-   19| let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
+   declare_class_method.js:17:43
+   17| let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
                                                  ^^^^^^ [1]
 
 References:
-   declare_class_method.js:7:3
-    7|   method(this: interface {prop: number}): string;
+   declare_class_method.js:5:3
+    5|   method(this: interface {prop: number}): string;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:21:10
+Error ------------------------------------------------------------------------------------ declare_class_method.js:19:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   declare_class_method.js:21:10
-   21| let _3 = {method : (new A()).method }.method(); // Error prop missing
+   declare_class_method.js:19:10
+   19| let _3 = {method : (new A()).method }.method(); // Error prop missing
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   declare_class_method.js:7:16
-    7|   method(this: interface {prop: number}): string;
+   declare_class_method.js:5:16
+    5|   method(this: interface {prop: number}): string;
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:21:30
+Error ------------------------------------------------------------------------------------ declare_class_method.js:19:30
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   declare_class_method.js:21:30
-   21| let _3 = {method : (new A()).method }.method(); // Error prop missing
+   declare_class_method.js:19:30
+   19| let _3 = {method : (new A()).method }.method(); // Error prop missing
                                     ^^^^^^ [1]
 
 References:
-   declare_class_method.js:7:3
-    7|   method(this: interface {prop: number}): string;
+   declare_class_method.js:5:3
+    5|   method(this: interface {prop: number}): string;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:26:18
+Error ------------------------------------------------------------------------------------ declare_class_method.js:24:18
 
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   declare_class_method.js:26:18
-   26| let _5 = {prop : true, method : A.staticMethod }.method();// Error - boolean ~> number
+   declare_class_method.js:24:18
+   24| let _5 = {prop : true, method : A.staticMethod }.method();// Error - boolean ~> number
                         ^^^^ [1]
 
 References:
-   declare_class_method.js:9:46
-    9|   static staticMethod(this: interface {prop: number}): string;
+   declare_class_method.js:7:46
+    7|   static staticMethod(this: interface {prop: number}): string;
                                                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:28:10
+Error ------------------------------------------------------------------------------------ declare_class_method.js:26:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   declare_class_method.js:28:10
-   28| let _6 = {method : A.staticMethod }.method(); // error prop missing
+   declare_class_method.js:26:10
+   26| let _6 = {method : A.staticMethod }.method(); // error prop missing
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   declare_class_method.js:9:29
-    9|   static staticMethod(this: interface {prop: number}): string;
+   declare_class_method.js:7:29
+    7|   static staticMethod(this: interface {prop: number}): string;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:33:18
+Error ------------------------------------------------------------------------------------ declare_class_method.js:31:18
 
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   declare_class_method.js:33:18
-   33| let _8 = {prop : true, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
+   declare_class_method.js:31:18
+   31| let _8 = {prop : true, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
                         ^^^^ [1]
 
 References:
-   declare_class_method.js:11:49
-   11|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+   declare_class_method.js:9:49
+    9|   propUnboundNonMethod: (this: interface {prop: number}) => string;
                                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:35:10
+Error ------------------------------------------------------------------------------------ declare_class_method.js:33:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   declare_class_method.js:35:10
-   35| let _9 = {method : (new A()).propUnboundNonMethod }.method(); // Error prop missing
+   declare_class_method.js:33:10
+   33| let _9 = {method : (new A()).propUnboundNonMethod }.method(); // Error prop missing
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   declare_class_method.js:11:32
-   11|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+   declare_class_method.js:9:32
+    9|   propUnboundNonMethod: (this: interface {prop: number}) => string;
                                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:40:19
+Error ------------------------------------------------------------------------------------ declare_class_method.js:38:19
 
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   declare_class_method.js:40:19
-   40| let _11 = {prop : true, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
+   declare_class_method.js:38:19
+   38| let _11 = {prop : true, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
                          ^^^^ [1]
 
 References:
-   declare_class_method.js:13:62
-   13|   static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
+   declare_class_method.js:11:62
+   11|   static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
                                                                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:42:11
+Error ------------------------------------------------------------------------------------ declare_class_method.js:40:11
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   declare_class_method.js:42:11
-   42| let _12 = {method : A.staticPropUnboundNonMethod }.method(); // error prop missing
+   declare_class_method.js:40:11
+   40| let _12 = {method : A.staticPropUnboundNonMethod }.method(); // error prop missing
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   declare_class_method.js:13:45
-   13|   static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
+   declare_class_method.js:11:45
+   11|   static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:12:19
+
+Cannot call `myFun.bind` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_function.js:12:19
+   12| myFun.bind({prop: true}); // Error - boolean ~> number
+                         ^^^^ [1]
+
+References:
+   declare_function.js:1:37
+    1| declare function myFun(this: {prop: number}): string;
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:13:20
+
+Cannot call `myFun.apply` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
+
+   declare_function.js:13:20
+   13| myFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
+                          ^^^^ [1]
+
+References:
+   declare_function.js:1:37
+    1| declare function myFun(this: {prop: number}): string;
+                                           ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- declare_function.js:14:19
 
-Cannot call `myFun.bind` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
-
-   declare_function.js:14:19
-   14| myFun.bind({prop: true}); // Error - boolean ~> number
-                         ^^^^ [1]
-
-References:
-   declare_function.js:3:37
-    3| declare function myFun(this: {prop: number}): string;
-                                           ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- declare_function.js:15:20
-
-Cannot call `myFun.apply` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
-
-   declare_function.js:15:20
-   15| myFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
-                          ^^^^ [1]
-
-References:
-   declare_function.js:3:37
-    3| declare function myFun(this: {prop: number}): string;
-                                           ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- declare_function.js:16:19
-
 Cannot call `myFun.call` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   declare_function.js:16:19
-   16| myFun.call({prop: true}); // Error - boolean ~> number
+   declare_function.js:14:19
+   14| myFun.call({prop: true}); // Error - boolean ~> number
                          ^^^^ [1]
 
 References:
-   declare_function.js:3:37
-    3| declare function myFun(this: {prop: number}): string;
+   declare_function.js:1:37
+    1| declare function myFun(this: {prop: number}): string;
                                            ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- declare_function.js:17:23
+Error ---------------------------------------------------------------------------------------- declare_function.js:15:23
 
 Cannot call `myPolyFun.bind` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   declare_function.js:17:23
-   17| myPolyFun.bind({prop: true}); // Error - boolean ~> number
+   declare_function.js:15:23
+   15| myPolyFun.bind({prop: true}); // Error - boolean ~> number
                              ^^^^ [1]
 
 References:
-   declare_function.js:4:44
-    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+   declare_function.js:2:44
+    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
                                                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- declare_function.js:18:24
+Error ---------------------------------------------------------------------------------------- declare_function.js:16:24
 
 Cannot call `myPolyFun.apply` because boolean [1] is incompatible with number [2] in property `prop`.
 [incompatible-call]
 
-   declare_function.js:18:24
-   18| myPolyFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
+   declare_function.js:16:24
+   16| myPolyFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
                               ^^^^ [1]
 
 References:
-   declare_function.js:4:44
-    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+   declare_function.js:2:44
+    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
                                                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- declare_function.js:19:23
+Error ---------------------------------------------------------------------------------------- declare_function.js:17:23
 
 Cannot call `myPolyFun.call` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   declare_function.js:19:23
-   19| myPolyFun.call({prop: true}); // Error - boolean ~> number
+   declare_function.js:17:23
+   17| myPolyFun.call({prop: true}); // Error - boolean ~> number
                              ^^^^ [1]
 
 References:
-   declare_function.js:4:44
-    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+   declare_function.js:2:44
+    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
                                                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- declare_function.js:21:7
+Error ----------------------------------------------------------------------------------------- declare_function.js:19:7
 
 Cannot call `myFun.bind` because a call signature declaring the expected parameter / return type is missing in function
 type [1]. [prop-missing]
 
+   declare_function.js:19:7
+   19| myFun.bind(); // Error - void ~> number
+             ^^^^
+
+References:
+   declare_function.js:19:1
+   19| myFun.bind(); // Error - void ~> number
+       ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- declare_function.js:20:7
+
+Cannot call `myFun.apply` because undefined [1] is incompatible with object type [2]. [incompatible-call]
+
+   declare_function.js:20:7
+   20| myFun.apply(); // Error - void ~> number
+             ^^^^^
+
+References:
+   declare_function.js:20:1
+   20| myFun.apply(); // Error - void ~> number
+       ^^^^^^^^^^^^^ [1]
+   declare_function.js:1:30
+    1| declare function myFun(this: {prop: number}): string;
+                                    ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- declare_function.js:21:7
+
+Cannot call `myFun.call` because undefined [1] is incompatible with object type [2]. [incompatible-call]
+
    declare_function.js:21:7
-   21| myFun.bind(); // Error - void ~> number
+   21| myFun.call(); // Error - void ~> number
              ^^^^
 
 References:
    declare_function.js:21:1
-   21| myFun.bind(); // Error - void ~> number
-       ^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------- declare_function.js:22:7
-
-Cannot call `myFun.apply` because undefined [1] is incompatible with object type [2]. [incompatible-call]
-
-   declare_function.js:22:7
-   22| myFun.apply(); // Error - void ~> number
-             ^^^^^
-
-References:
-   declare_function.js:22:1
-   22| myFun.apply(); // Error - void ~> number
-       ^^^^^^^^^^^^^ [1]
-   declare_function.js:3:30
-    3| declare function myFun(this: {prop: number}): string;
-                                    ^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- declare_function.js:23:7
-
-Cannot call `myFun.call` because undefined [1] is incompatible with object type [2]. [incompatible-call]
-
-   declare_function.js:23:7
-   23| myFun.call(); // Error - void ~> number
-             ^^^^
-
-References:
-   declare_function.js:23:1
-   23| myFun.call(); // Error - void ~> number
+   21| myFun.call(); // Error - void ~> number
        ^^^^^^^^^^^^ [1]
-   declare_function.js:3:30
-    3| declare function myFun(this: {prop: number}): string;
+   declare_function.js:1:30
+    1| declare function myFun(this: {prop: number}): string;
                                     ^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- declare_function.js:24:11
+Error ---------------------------------------------------------------------------------------- declare_function.js:22:11
 
 Cannot call `myPolyFun.bind` because a call signature declaring the expected parameter / return type is missing in
 function type [1]. [prop-missing]
 
+   declare_function.js:22:11
+   22| myPolyFun.bind(); // Error - void ~> number
+                 ^^^^
+
+References:
+   declare_function.js:22:1
+   22| myPolyFun.bind(); // Error - void ~> number
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:23:11
+
+Cannot call `myPolyFun.apply` because undefined [1] is incompatible with object type [2]. [incompatible-call]
+
+   declare_function.js:23:11
+   23| myPolyFun.apply(); // Error - void ~> number
+                 ^^^^^
+
+References:
+   declare_function.js:23:1
+   23| myPolyFun.apply(); // Error - void ~> number
+       ^^^^^^^^^^^^^^^^^ [1]
+   declare_function.js:2:37
+    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+                                           ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- declare_function.js:24:11
+
+Cannot call `myPolyFun.call` because undefined [1] is incompatible with object type [2]. [incompatible-call]
+
    declare_function.js:24:11
-   24| myPolyFun.bind(); // Error - void ~> number
+   24| myPolyFun.call(); // Error - void ~> number
                  ^^^^
 
 References:
    declare_function.js:24:1
-   24| myPolyFun.bind(); // Error - void ~> number
-       ^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------- declare_function.js:25:11
-
-Cannot call `myPolyFun.apply` because undefined [1] is incompatible with object type [2]. [incompatible-call]
-
-   declare_function.js:25:11
-   25| myPolyFun.apply(); // Error - void ~> number
-                 ^^^^^
-
-References:
-   declare_function.js:25:1
-   25| myPolyFun.apply(); // Error - void ~> number
-       ^^^^^^^^^^^^^^^^^ [1]
-   declare_function.js:4:37
-    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
-                                           ^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- declare_function.js:26:11
-
-Cannot call `myPolyFun.call` because undefined [1] is incompatible with object type [2]. [incompatible-call]
-
-   declare_function.js:26:11
-   26| myPolyFun.call(); // Error - void ~> number
-                 ^^^^
-
-References:
-   declare_function.js:26:1
-   26| myPolyFun.call(); // Error - void ~> number
+   24| myPolyFun.call(); // Error - void ~> number
        ^^^^^^^^^^^^^^^^ [1]
-   declare_function.js:4:37
-    4| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+   declare_function.js:2:37
+    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
                                            ^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- function_type.js:7:9
+Error --------------------------------------------------------------------------------------------- function_type.js:5:9
 
 Cannot call `x.bind` because string [1] is incompatible with number [2]. [incompatible-call]
 
-   function_type.js:7:9
-   7| (x.bind("")()); // error: number incompatible with string
+   function_type.js:5:9
+   5| (x.bind("")()); // error: number incompatible with string
               ^^ [1]
 
 References:
-   function_type.js:4:25
-   4| declare var x : (this : number) => void;
+   function_type.js:2:25
+   2| declare var x : (this : number) => void;
                               ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:14:8
+Error -------------------------------------------------------------------------------------------- function_type.js:12:8
 
 Cannot call `y.bind` because string [1] is incompatible with number [2]. [incompatible-call]
 
-   function_type.js:14:8
-   14| y.bind(""); // error: number incompatible with string
+   function_type.js:12:8
+   12| y.bind(""); // error: number incompatible with string
               ^^ [1]
 
 References:
-   function_type.js:12:19
-   12| declare var y : F<number>;
+   function_type.js:10:19
+   10| declare var y : F<number>;
                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:17:2
+Error -------------------------------------------------------------------------------------------- function_type.js:15:2
 
 Cannot cast `y` to `F` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-cast]
 
-   function_type.js:17:2
-   17| (y : F<string>); // error: number incompatible with string
+   function_type.js:15:2
+   15| (y : F<string>); // error: number incompatible with string
         ^
 
 References:
-   function_type.js:12:19
-   12| declare var y : F<number>;
+   function_type.js:10:19
+   10| declare var y : F<number>;
                          ^^^^^^ [1]
-   function_type.js:17:8
-   17| (y : F<string>); // error: number incompatible with string
+   function_type.js:15:8
+   15| (y : F<string>); // error: number incompatible with string
               ^^^^^^ [2]
-   function_type.js:10:8
-   10| type F<T> = (this : T) => void;
+   function_type.js:8:8
+    8| type F<T> = (this : T) => void;
               ^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:22:2
+Error -------------------------------------------------------------------------------------------- function_type.js:20:2
 
 Cannot cast `z.bind(...)()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   function_type.js:22:2
-   22| (z.bind(3)() : string); // error: number incompatible with string
+   function_type.js:20:2
+   20| (z.bind(3)() : string); // error: number incompatible with string
         ^^^^^^^^^^^
 
 References:
-   function_type.js:22:9
-   22| (z.bind(3)() : string); // error: number incompatible with string
+   function_type.js:20:9
+   20| (z.bind(3)() : string); // error: number incompatible with string
                ^ [1]
-   function_type.js:22:16
-   22| (z.bind(3)() : string); // error: number incompatible with string
+   function_type.js:20:16
+   20| (z.bind(3)() : string); // error: number incompatible with string
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:23:2
+Error -------------------------------------------------------------------------------------------- function_type.js:21:2
 
 Cannot cast `z.bind(...)()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   function_type.js:23:2
-   23| (z.bind("")() : number); // error: number incompatible with string
+   function_type.js:21:2
+   21| (z.bind("")() : number); // error: number incompatible with string
         ^^^^^^^^^^^^
 
 References:
-   function_type.js:23:9
-   23| (z.bind("")() : number); // error: number incompatible with string
+   function_type.js:21:9
+   21| (z.bind("")() : number); // error: number incompatible with string
                ^^ [1]
-   function_type.js:23:17
-   23| (z.bind("")() : number); // error: number incompatible with string
+   function_type.js:21:17
+   21| (z.bind("")() : number); // error: number incompatible with string
                        ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:32:2
+Error -------------------------------------------------------------------------------------------- function_type.js:30:2
 
 Cannot cast `x` to `BotFn` because number [1] is incompatible with mixed [2] in the `this` parameter.
 [incompatible-cast]
 
-   function_type.js:32:2
-   32| (x : BotFn); // error
+   function_type.js:30:2
+   30| (x : BotFn); // error
         ^
 
 References:
-   function_type.js:4:25
-    4| declare var x : (this : number) => void;
+   function_type.js:2:25
+    2| declare var x : (this : number) => void;
                                ^^^^^^ [1]
-   function_type.js:29:22
-   29| type BotFn = (this : mixed) => empty;
+   function_type.js:27:22
+   27| type BotFn = (this : mixed) => empty;
                             ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:32:2
+Error -------------------------------------------------------------------------------------------- function_type.js:30:2
 
 Cannot cast `x` to `BotFn` because undefined [1] is incompatible with empty [2] in the return value. [incompatible-cast]
 
-   function_type.js:32:2
-   32| (x : BotFn); // error
+   function_type.js:30:2
+   30| (x : BotFn); // error
         ^
 
 References:
-   function_type.js:4:36
-    4| declare var x : (this : number) => void;
+   function_type.js:2:36
+    2| declare var x : (this : number) => void;
                                           ^^^^ [1]
-   function_type.js:29:32
-   29| type BotFn = (this : mixed) => empty;
+   function_type.js:27:32
+   27| type BotFn = (this : mixed) => empty;
                                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:3:10
+
+Cannot define method `foo2` [1] on `A` because class `A` [2] is incompatible with number [3]. [incompatible-type]
+
+   incompatible_this_param.js:3:10
+   3|   static foo2(this : number) {} // error
+               ^^^^ [1]
+
+References:
+   incompatible_this_param.js:1:7
+   1| class A {
+            ^ [2]
+   incompatible_this_param.js:3:22
+   3|   static foo2(this : number) {} // error
+                           ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:5:10
 
-Cannot define method `foo2` [1] on `A` because class `A` [2] is incompatible with number [3]. [incompatible-type]
-
-   incompatible_this_param.js:5:10
-   5|   static foo2(this : number) {} // error
-               ^^^^ [1]
-
-References:
-   incompatible_this_param.js:3:7
-   3| class A {
-            ^ [2]
-   incompatible_this_param.js:5:22
-   5|   static foo2(this : number) {} // error
-                           ^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------- incompatible_this_param.js:7:10
-
 Cannot define method `foo4` [1] on `A` because class `A` [2] is incompatible with `A` [3]. [incompatible-type]
 
-   incompatible_this_param.js:7:10
-   7|   static foo4(this : A) {} // error
+   incompatible_this_param.js:5:10
+   5|   static foo4(this : A) {} // error
                ^^^^ [1]
 
 References:
-   incompatible_this_param.js:3:7
-   3| class A {
+   incompatible_this_param.js:1:7
+   1| class A {
             ^ [2]
-   incompatible_this_param.js:7:22
-   7|   static foo4(this : A) {} // error
+   incompatible_this_param.js:5:22
+   5|   static foo4(this : A) {} // error
                            ^ [3]
+
+
+Error ----------------------------------------------------------------------------------- incompatible_this_param.js:7:3
+
+Cannot define method `bar2` [1] on `A` because `A` [2] is incompatible with number [3]. [incompatible-type]
+
+   incompatible_this_param.js:7:3
+   7|   bar2 (this : number) {} // error
+        ^^^^ [1]
+
+References:
+   incompatible_this_param.js:1:7
+   1| class A {
+            ^ [2]
+   incompatible_this_param.js:7:16
+   7|   bar2 (this : number) {} // error
+                     ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------- incompatible_this_param.js:9:3
 
-Cannot define method `bar2` [1] on `A` because `A` [2] is incompatible with number [3]. [incompatible-type]
+Cannot define method `bar4` [1] on `A` because `A` [2] is incompatible with class `A` [3]. [incompatible-type]
 
    incompatible_this_param.js:9:3
-   9|   bar2 (this : number) {} // error
+   9|   bar4 (this : typeof A) {} // error
         ^^^^ [1]
 
 References:
-   incompatible_this_param.js:3:7
-   3| class A {
+   incompatible_this_param.js:1:7
+   1| class A {
             ^ [2]
    incompatible_this_param.js:9:16
-   9|   bar2 (this : number) {} // error
-                     ^^^^^^ [3]
+   9|   bar4 (this : typeof A) {} // error
+                     ^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------- incompatible_this_param.js:11:3
+Error --------------------------------------------------------------------------------- incompatible_this_param.js:14:10
 
-Cannot define method `bar4` [1] on `A` because `A` [2] is incompatible with class `A` [3]. [incompatible-type]
+Cannot define method `foo2` [1] on `B` because class `B` [2] is incompatible with number [3]. [incompatible-type]
 
-   incompatible_this_param.js:11:3
-   11|   bar4 (this : typeof A) {} // error
-         ^^^^ [1]
+   incompatible_this_param.js:14:10
+   14|   static foo2(this : number) : void, // error
+                ^^^^ [1]
 
 References:
-   incompatible_this_param.js:3:7
-    3| class A {
-             ^ [2]
-   incompatible_this_param.js:11:16
-   11|   bar4 (this : typeof A) {} // error
-                      ^^^^^^^^ [3]
+   incompatible_this_param.js:12:15
+   12| declare class B {
+                     ^ [2]
+   incompatible_this_param.js:14:22
+   14|   static foo2(this : number) : void, // error
+                            ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------- incompatible_this_param.js:16:10
 
-Cannot define method `foo2` [1] on `B` because class `B` [2] is incompatible with number [3]. [incompatible-type]
-
-   incompatible_this_param.js:16:10
-   16|   static foo2(this : number) : void, // error
-                ^^^^ [1]
-
-References:
-   incompatible_this_param.js:14:15
-   14| declare class B {
-                     ^ [2]
-   incompatible_this_param.js:16:22
-   16|   static foo2(this : number) : void, // error
-                            ^^^^^^ [3]
-
-
-Error --------------------------------------------------------------------------------- incompatible_this_param.js:18:10
-
 Cannot define method `foo4` [1] on `B` because class `B` [2] is incompatible with `B` [3]. [incompatible-type]
 
-   incompatible_this_param.js:18:10
-   18|   static foo4(this : B) : void, // error
+   incompatible_this_param.js:16:10
+   16|   static foo4(this : B) : void, // error
                 ^^^^ [1]
 
 References:
-   incompatible_this_param.js:14:15
-   14| declare class B {
+   incompatible_this_param.js:12:15
+   12| declare class B {
                      ^ [2]
-   incompatible_this_param.js:18:22
-   18|   static foo4(this : B) : void, // error
+   incompatible_this_param.js:16:22
+   16|   static foo4(this : B) : void, // error
                             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:18:3
+
+Cannot define method `bar2` [1] on `B` because `B` [2] is incompatible with number [3]. [incompatible-type]
+
+   incompatible_this_param.js:18:3
+   18|   bar2 (this : number) : void, // error
+         ^^^^ [1]
+
+References:
+   incompatible_this_param.js:12:15
+   12| declare class B {
+                     ^ [2]
+   incompatible_this_param.js:18:16
+   18|   bar2 (this : number) : void, // error
+                      ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:20:3
 
-Cannot define method `bar2` [1] on `B` because `B` [2] is incompatible with number [3]. [incompatible-type]
-
-   incompatible_this_param.js:20:3
-   20|   bar2 (this : number) : void, // error
-         ^^^^ [1]
-
-References:
-   incompatible_this_param.js:14:15
-   14| declare class B {
-                     ^ [2]
-   incompatible_this_param.js:20:16
-   20|   bar2 (this : number) : void, // error
-                      ^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------- incompatible_this_param.js:22:3
-
 Cannot define method `bar4` [1] on `B` because `B` [2] is incompatible with class `B` [3]. [incompatible-type]
 
-   incompatible_this_param.js:22:3
-   22|   bar4 (this : typeof B) : void // error
+   incompatible_this_param.js:20:3
+   20|   bar4 (this : typeof B) : void // error
          ^^^^ [1]
 
 References:
-   incompatible_this_param.js:14:15
-   14| declare class B {
+   incompatible_this_param.js:12:15
+   12| declare class B {
                      ^ [2]
-   incompatible_this_param.js:22:16
-   22|   bar4 (this : typeof B) : void // error
+   incompatible_this_param.js:20:16
+   20|   bar4 (this : typeof B) : void // error
                       ^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------- incompatible_this_param.js:27:3
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:25:3
 
 Cannot define method `bar2` [1] on `C` because `C` [2] is incompatible with number [3]. [incompatible-type]
 
-   incompatible_this_param.js:27:3
-   27|   bar2 (this : number) : void, // error
+   incompatible_this_param.js:25:3
+   25|   bar2 (this : number) : void, // error
          ^^^^ [1]
 
 References:
-   incompatible_this_param.js:25:11
-   25| interface C {
+   incompatible_this_param.js:23:11
+   23| interface C {
                  ^ [2]
-   incompatible_this_param.js:27:16
-   27|   bar2 (this : number) : void, // error
+   incompatible_this_param.js:25:16
+   25|   bar2 (this : number) : void, // error
                       ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------- incompatible_this_param.js:40:3
+Error ---------------------------------------------------------------------------------- incompatible_this_param.js:38:3
 
 Cannot define method `bar2` [1] on `E` because `E` [2] is incompatible with number [3]. [incompatible-type]
 
-   incompatible_this_param.js:40:3
-   40|   bar2 (this : number) : void, // error
+   incompatible_this_param.js:38:3
+   38|   bar2 (this : number) : void, // error
          ^^^^ [1]
 
 References:
-   incompatible_this_param.js:38:11
-   38| interface E {
+   incompatible_this_param.js:36:11
+   36| interface E {
                  ^ [2]
-   incompatible_this_param.js:40:16
-   40|   bar2 (this : number) : void, // error
+   incompatible_this_param.js:38:16
+   38|   bar2 (this : number) : void, // error
                       ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:14:38
+Error ----------------------------------------------------------------------------------------------- interface.js:12:38
 
 Cannot get `AImpl.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   interface.js:14:38
-   14| let _1 = {prop : 123, method : AImpl.method }.method();
+   interface.js:12:38
+   12| let _1 = {prop : 123, method : AImpl.method }.method();
                                             ^^^^^^ [1]
 
 References:
-   interface.js:6:3
-    6|   method(this: interface {prop: number}): string;
+   interface.js:4:3
+    4|   method(this: interface {prop: number}): string;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:16:18
+Error ----------------------------------------------------------------------------------------------- interface.js:14:18
 
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   interface.js:16:18
-   16| let _2 = {prop : true, method : AImpl.method }.method(); // Error - boolean ~> number
+   interface.js:14:18
+   14| let _2 = {prop : true, method : AImpl.method }.method(); // Error - boolean ~> number
                         ^^^^ [1]
 
 References:
-   interface.js:6:33
-    6|   method(this: interface {prop: number}): string;
+   interface.js:4:33
+    4|   method(this: interface {prop: number}): string;
                                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:16:39
+Error ----------------------------------------------------------------------------------------------- interface.js:14:39
 
 Cannot get `AImpl.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   interface.js:16:39
-   16| let _2 = {prop : true, method : AImpl.method }.method(); // Error - boolean ~> number
+   interface.js:14:39
+   14| let _2 = {prop : true, method : AImpl.method }.method(); // Error - boolean ~> number
                                              ^^^^^^ [1]
 
 References:
-   interface.js:6:3
-    6|   method(this: interface {prop: number}): string;
+   interface.js:4:3
+    4|   method(this: interface {prop: number}): string;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:18:10
+Error ----------------------------------------------------------------------------------------------- interface.js:16:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   interface.js:18:10
-   18| let _3 = {method : AImpl.method }.method(); // Error prop missing
+   interface.js:16:10
+   16| let _3 = {method : AImpl.method }.method(); // Error prop missing
                 ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   interface.js:6:16
-    6|   method(this: interface {prop: number}): string;
+   interface.js:4:16
+    4|   method(this: interface {prop: number}): string;
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:18:26
+Error ----------------------------------------------------------------------------------------------- interface.js:16:26
 
 Cannot get `AImpl.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   interface.js:18:26
-   18| let _3 = {method : AImpl.method }.method(); // Error prop missing
+   interface.js:16:26
+   16| let _3 = {method : AImpl.method }.method(); // Error prop missing
                                 ^^^^^^ [1]
 
 References:
-   interface.js:6:3
-    6|   method(this: interface {prop: number}): string;
+   interface.js:4:3
+    4|   method(this: interface {prop: number}): string;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:23:18
+Error ----------------------------------------------------------------------------------------------- interface.js:21:18
 
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
 
-   interface.js:23:18
-   23| let _5 = {prop : true, method : AImpl.propUnboundNonMethod }.method(); // Error - boolean ~> number
+   interface.js:21:18
+   21| let _5 = {prop : true, method : AImpl.propUnboundNonMethod }.method(); // Error - boolean ~> number
                         ^^^^ [1]
 
 References:
-   interface.js:8:49
-    8|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+   interface.js:6:49
+    6|   propUnboundNonMethod: (this: interface {prop: number}) => string;
                                                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:25:10
+Error ----------------------------------------------------------------------------------------------- interface.js:23:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
-   interface.js:25:10
-   25| let _6 = {method : AImpl.propUnboundNonMethod }.method(); // Error prop missing
+   interface.js:23:10
+   23| let _6 = {method : AImpl.propUnboundNonMethod }.method(); // Error prop missing
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   interface.js:8:32
-    8|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+   interface.js:6:32
+    6|   propUnboundNonMethod: (this: interface {prop: number}) => string;
                                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:38:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:35:2
 
 Cannot cast `foo` to `typeof bar2` because number [1] is incompatible with implicit `this` parameter of function [2] in
 the `this` parameter. [incompatible-cast]
 
-   mixed_inference.js:38:2
-   38| (foo : typeof bar2); // mixed incompatible with number
+   mixed_inference.js:35:2
+   35| (foo : typeof bar2); // mixed incompatible with number
         ^^^
 
 References:
-   mixed_inference.js:30:21
-   30| function foo(this : number) {}
+   mixed_inference.js:27:21
+   27| function foo(this : number) {}
                            ^^^^^^ [1]
-   mixed_inference.js:32:1
-   32| function bar2() {}
+   mixed_inference.js:29:1
+   29| function bar2() {}
        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:39:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:36:2
 
 Cannot cast `foo` to `typeof baz2` because number [1] is incompatible with implicit `this` parameter of function [2] in
 the `this` parameter. [incompatible-cast]
 
-   mixed_inference.js:39:2
-   39| (foo : typeof baz2); // mixed incompatible with number
+   mixed_inference.js:36:2
+   36| (foo : typeof baz2); // mixed incompatible with number
         ^^^
 
 References:
-   mixed_inference.js:30:21
-   30| function foo(this : number) {}
+   mixed_inference.js:27:21
+   27| function foo(this : number) {}
                            ^^^^^^ [1]
-   mixed_inference.js:36:12
-   36| let baz2 = function () {};
+   mixed_inference.js:33:12
+   33| let baz2 = function () {};
                   ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:40:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:37:2
 
 Cannot cast `foo` to `typeof o2.m` because number [1] is incompatible with implicit `this` parameter of function [2] in
 the `this` parameter. [incompatible-cast]
 
-   mixed_inference.js:40:2
-   40| (foo : typeof o2.m); // mixed incompatible with number
+   mixed_inference.js:37:2
+   37| (foo : typeof o2.m); // mixed incompatible with number
         ^^^
 
 References:
-   mixed_inference.js:30:21
-   30| function foo(this : number) {}
+   mixed_inference.js:27:21
+   27| function foo(this : number) {}
                            ^^^^^^ [1]
-   mixed_inference.js:34:12
-   34| let o2 = { m() {}, n : function() {} }
+   mixed_inference.js:31:12
+   31| let o2 = { m() {}, n : function() {} }
                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:41:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:38:2
 
 Cannot cast `foo` to `typeof o2.n` because number [1] is incompatible with implicit `this` parameter of function [2] in
 the `this` parameter. [incompatible-cast]
 
-   mixed_inference.js:41:2
-   41| (foo : typeof o2.n); // mixed incompatible with number
+   mixed_inference.js:38:2
+   38| (foo : typeof o2.n); // mixed incompatible with number
         ^^^
 
 References:
-   mixed_inference.js:30:21
-   30| function foo(this : number) {}
+   mixed_inference.js:27:21
+   27| function foo(this : number) {}
                            ^^^^^^ [1]
-   mixed_inference.js:34:24
-   34| let o2 = { m() {}, n : function() {} }
+   mixed_inference.js:31:24
+   31| let o2 = { m() {}, n : function() {} }
                               ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:56:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:53:2
 
 Cannot cast `foo` to `typeof i.m` because number [1] is incompatible with implicit `this` parameter of function type [2]
 in the `this` parameter. [incompatible-cast]
 
-   mixed_inference.js:56:2
-   56| (foo : typeof i.m); // mixed incompatible with number
+   mixed_inference.js:53:2
+   53| (foo : typeof i.m); // mixed incompatible with number
         ^^^
 
 References:
-   mixed_inference.js:30:21
-   30| function foo(this : number) {}
+   mixed_inference.js:27:21
+   27| function foo(this : number) {}
                            ^^^^^^ [1]
-   mixed_inference.js:50:5
-   50|     m() : void;
+   mixed_inference.js:47:5
+   47|     m() : void;
            ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:57:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:55:2
 
 Cannot cast `cft` to `I_Function_this` because `I_Function_this` [1] is not a subtype of `C_Function_this` [2]. Class
 instances are not subtypes of object types; consider rewriting `C_Function_this` [2] as an interface in the `this`
 parameter of property `x`. [class-object-subtyping]
 
-   object_interface_subtyping.js:57:2
-   57| (cft : I_Function_this); // error, contravariant
+   object_interface_subtyping.js:55:2
+   55| (cft : I_Function_this); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:4:18
-    4|     +x : (this : I_Function_this) => void
+   object_interface_subtyping.js:2:18
+    2|     +x : (this : I_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   object_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:58:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:2
 
 Cannot cast `cft` to `I_Method_this` because `I_Method_this` [1] is not a subtype of `C_Function_this` [2]. Class
 instances are not subtypes of object types; consider rewriting `C_Function_this` [2] as an interface in the `this`
 parameter of property `x`. [class-object-subtyping]
 
-   object_interface_subtyping.js:58:2
-   58| (cft : I_Method_this); // error, contravariant
+   object_interface_subtyping.js:56:2
+   56| (cft : I_Method_this); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   object_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   object_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:58:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:2
 
 Cannot cast `cft` to `I_Method_this` because function type [1] cannot be unbound from the context [2] where it was
 defined in the `this` parameter of property `x` of the `this` parameter of property `x`. [method-unbinding]
 
-   object_interface_subtyping.js:58:2
-   58| (cft : I_Method_this); // error, contravariant
+   object_interface_subtyping.js:56:2
+   56| (cft : I_Method_this); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:8:5
-    8|     x(this : I_Method_this) : void
+   object_interface_subtyping.js:6:5
+    6|     x(this : I_Method_this) : void
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   object_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:59:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:57:2
 
 Cannot cast `cft` to `I_Function_mixed` because `C_Function_this` [1] is incompatible with mixed [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:59:2
-   59| (cft : I_Function_mixed); // error, contravariant
+   object_interface_subtyping.js:57:2
+   57| (cft : I_Function_mixed); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   object_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:12:18
-   12|     +x : (this : mixed) => void
+   object_interface_subtyping.js:10:18
+   10|     +x : (this : mixed) => void
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:60:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:58:2
 
 Cannot cast `cft` to `I_Method_mixed` because `C_Function_this` [1] is incompatible with mixed [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:60:2
-   60| (cft : I_Method_mixed); // error, contravariant
+   object_interface_subtyping.js:58:2
+   58| (cft : I_Method_mixed); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:26:18
-   26|     +x : (this : C_Function_this) => void
+   object_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:16:14
-   16|     x(this : mixed) : void
+   object_interface_subtyping.js:14:14
+   14|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:63:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:61:2
 
 Cannot cast `cmt` to `I_Function_this` because `I_Function_this` [1] is not a subtype of `C_Method_this` [2]. Class
 instances are not subtypes of object types; consider rewriting `C_Method_this` [2] as an interface in the `this`
 parameter of property `x`. [class-object-subtyping]
 
-   object_interface_subtyping.js:63:2
-   63| (cmt : I_Function_this);  // error, contravariant
+   object_interface_subtyping.js:61:2
+   61| (cmt : I_Function_this);  // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:4:18
-    4|     +x : (this : I_Function_this) => void
+   object_interface_subtyping.js:2:18
+    2|     +x : (this : I_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void
+   object_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:64:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:2
 
 Cannot cast `cmt` to `I_Method_this` because `I_Method_this` [1] is not a subtype of `C_Method_this` [2]. Class
 instances are not subtypes of object types; consider rewriting `C_Method_this` [2] as an interface in the `this`
 parameter of property `x`. [class-object-subtyping]
 
-   object_interface_subtyping.js:64:2
-   64| (cmt : I_Method_this);  // error, contravariant
+   object_interface_subtyping.js:62:2
+   62| (cmt : I_Method_this);  // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   object_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void
+   object_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:64:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:2
 
 Cannot cast `cmt` to `I_Method_this` because function type [1] cannot be unbound from the context [2] where it was
 defined in the `this` parameter of property `x` of the `this` parameter of property `x`. [method-unbinding]
 
-   object_interface_subtyping.js:64:2
-   64| (cmt : I_Method_this);  // error, contravariant
+   object_interface_subtyping.js:62:2
+   62| (cmt : I_Method_this);  // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:8:5
-    8|     x(this : I_Method_this) : void
+   object_interface_subtyping.js:6:5
+    6|     x(this : I_Method_this) : void
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   object_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:65:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:63:2
 
 Cannot cast `cmt` to `I_Function_mixed` because `C_Method_this` [1] is incompatible with mixed [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:65:2
-   65| (cmt : I_Function_mixed);  // error, contravariant
+   object_interface_subtyping.js:63:2
+   63| (cmt : I_Function_mixed);  // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void
+   object_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:12:18
-   12|     +x : (this : mixed) => void
+   object_interface_subtyping.js:10:18
+   10|     +x : (this : mixed) => void
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:66:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:64:2
 
 Cannot cast `cmt` to `I_Method_mixed` because `C_Method_this` [1] is incompatible with mixed [2] in the `this` parameter
 of property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:66:2
-   66| (cmt : I_Method_mixed);  // error, contravariant
+   object_interface_subtyping.js:64:2
+   64| (cmt : I_Method_mixed);  // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:30:14
-   30|     x(this : C_Method_this) : void
+   object_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:16:14
-   16|     x(this : mixed) : void
+   object_interface_subtyping.js:14:14
+   14|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:81:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:79:2
 
 Cannot cast `cfe` to `I_Function_this` because empty [1] is incompatible with `I_Function_this` [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:81:2
-   81| (cfe : I_Function_this);  // error, contravariant
+   object_interface_subtyping.js:79:2
+   79| (cfe : I_Function_this);  // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   object_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   object_interface_subtyping.js:4:18
-    4|     +x : (this : I_Function_this) => void
+   object_interface_subtyping.js:2:18
+    2|     +x : (this : I_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:82:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:80:2
 
 Cannot cast `cfe` to `I_Method_this` because empty [1] is incompatible with `I_Method_this` [2] in the `this` parameter
 of property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:82:2
-   82| (cfe : I_Method_this); // error, contravariant
+   object_interface_subtyping.js:80:2
+   80| (cfe : I_Method_this); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   object_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   object_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   object_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:83:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:81:2
 
 Cannot cast `cfe` to `I_Function_mixed` because empty [1] is incompatible with mixed [2] in the `this` parameter of
 property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:83:2
-   83| (cfe : I_Function_mixed); // error, contravariant
+   object_interface_subtyping.js:81:2
+   81| (cfe : I_Function_mixed); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   object_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   object_interface_subtyping.js:12:18
-   12|     +x : (this : mixed) => void
+   object_interface_subtyping.js:10:18
+   10|     +x : (this : mixed) => void
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:84:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:82:2
 
 Cannot cast `cfe` to `I_Method_mixed` because empty [1] is incompatible with mixed [2] in the `this` parameter of
 property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:84:2
-   84| (cfe : I_Method_mixed); // error, contravariant
+   object_interface_subtyping.js:82:2
+   82| (cfe : I_Method_mixed); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:42:18
-   42|     +x : (this : empty) => void
+   object_interface_subtyping.js:40:18
+   40|     +x : (this : empty) => void
                         ^^^^^ [1]
-   object_interface_subtyping.js:16:14
-   16|     x(this : mixed) : void
+   object_interface_subtyping.js:14:14
+   14|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:87:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:85:2
 
 Cannot cast `cme` to `I_Function_this` because empty [1] is incompatible with `I_Function_this` [2] in the `this`
 parameter of property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:87:2
-   87| (cme : I_Function_this); // error, contravariant
+   object_interface_subtyping.js:85:2
+   85| (cme : I_Function_this); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:46:18
-   46|     +x : (this : empty) => void
+   object_interface_subtyping.js:44:18
+   44|     +x : (this : empty) => void
                         ^^^^^ [1]
-   object_interface_subtyping.js:4:18
-    4|     +x : (this : I_Function_this) => void
+   object_interface_subtyping.js:2:18
+    2|     +x : (this : I_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:88:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:86:2
 
 Cannot cast `cme` to `I_Method_this` because empty [1] is incompatible with `I_Method_this` [2] in the `this` parameter
 of property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:88:2
-   88| (cme : I_Method_this); // error, contravariant
+   object_interface_subtyping.js:86:2
+   86| (cme : I_Method_this); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:46:18
-   46|     +x : (this : empty) => void
+   object_interface_subtyping.js:44:18
+   44|     +x : (this : empty) => void
                         ^^^^^ [1]
-   object_interface_subtyping.js:8:14
-    8|     x(this : I_Method_this) : void
+   object_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:89:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:87:2
 
 Cannot cast `cme` to `I_Function_mixed` because empty [1] is incompatible with mixed [2] in the `this` parameter of
 property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:89:2
-   89| (cme : I_Function_mixed); // error, contravariant
+   object_interface_subtyping.js:87:2
+   87| (cme : I_Function_mixed); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:46:18
-   46|     +x : (this : empty) => void
+   object_interface_subtyping.js:44:18
+   44|     +x : (this : empty) => void
                         ^^^^^ [1]
-   object_interface_subtyping.js:12:18
-   12|     +x : (this : mixed) => void
+   object_interface_subtyping.js:10:18
+   10|     +x : (this : mixed) => void
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:90:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:88:2
 
 Cannot cast `cme` to `I_Method_mixed` because empty [1] is incompatible with mixed [2] in the `this` parameter of
 property `x`. [incompatible-cast]
 
-   object_interface_subtyping.js:90:2
-   90| (cme : I_Method_mixed); // error, contravariant
+   object_interface_subtyping.js:88:2
+   88| (cme : I_Method_mixed); // error, contravariant
         ^^^
 
 References:
-   object_interface_subtyping.js:46:18
-   46|     +x : (this : empty) => void
+   object_interface_subtyping.js:44:18
+   44|     +x : (this : empty) => void
                         ^^^^^ [1]
-   object_interface_subtyping.js:16:14
-   16|     x(this : mixed) : void
+   object_interface_subtyping.js:14:14
+   14|     x(this : mixed) : void
                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:8:17
+Error ----------------------------------------------------------------------------------------------------- test.js:6:17
 
 Cannot get `this.x` because property `x` is missing in mixed [1]. [incompatible-use]
 
-   test.js:8:17
-   8|     return this.x; // error: this is mixed
+   test.js:6:17
+   6|     return this.x; // error: this is mixed
                       ^
 
 References:
-   test.js:7:21
-   7| function foo(this : mixed) : void {
+   test.js:5:21
+   5| function foo(this : mixed) : void {
                           ^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:11:5
+Error ------------------------------------------------------------------------------------------------------ test.js:9:5
 
 Cannot call `foo` because no arguments are expected by function [1]. [extra-arg]
 
-   test.js:11:5
-   11| foo(3); // error: foo does not take any arguments
-           ^
+   test.js:9:5
+   9| foo(3); // error: foo does not take any arguments
+          ^
 
 References:
-   test.js:7:1
-    7| function foo(this : mixed) : void {
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:5:1
+   5| function foo(this : mixed) : void {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:15:10
+Error ---------------------------------------------------------------------------------------------------- test.js:13:10
 
 Cannot get `this.y` because property `y` is missing in object type [1]. [prop-missing]
 
-   test.js:15:10
-   15|     this.y; // error no property y
+   test.js:13:10
+   13|     this.y; // error no property y
                 ^
 
 References:
-   test.js:14:22
-   14| function bar (this : {f : number, ...}) : number {
+   test.js:12:22
+   12| function bar (this : {f : number, ...}) : number {
                             ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:19:10
+Error ---------------------------------------------------------------------------------------------------- test.js:17:10
 
 Cannot call `bar.bind` because property `f` is missing in object type [1] but exists in object type [2]. [prop-missing]
 
-   test.js:19:10
-   19| bar.bind(y)(); // error : number incompatible with string
+   test.js:17:10
+   17| bar.bind(y)(); // error : number incompatible with string
                 ^
 
 References:
-   test.js:5:17
-    5| declare var y : { y : string};
+   test.js:3:17
+    3| declare var y : { y : string};
                        ^^^^^^^^^^^^^ [1]
-   test.js:14:22
-   14| function bar (this : {f : number, ...}) : number {
+   test.js:12:22
+   12| function bar (this : {f : number, ...}) : number {
                             ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:27:1
+Error ----------------------------------------------------------------------------------------------------- test.js:25:1
 
 Cannot call `o.foo` because property `y` is missing in object literal [1] but exists in object type [2]. [prop-missing]
 
-   test.js:27:1
-   27| o.foo(); // error o has no field y
+   test.js:25:1
+   25| o.foo(); // error o has no field y
        ^
 
 References:
-   test.js:23:9
+   test.js:21:9
                v
-   23| let o = {
-   24|     foo(this : {y : number, ...}) {}
-   25| }
+   21| let o = {
+   22|     foo(this : {y : number, ...}) {}
+   23| }
        ^ [1]
-   test.js:24:16
-   24|     foo(this : {y : number, ...}) {}
+   test.js:22:16
+   22|     foo(this : {y : number, ...}) {}
                       ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:45:4
+Error ----------------------------------------------------------------------------------------------------- test.js:43:4
 
 Cannot call `o3.foo` because property `foo` is missing in object type [1] but exists in object literal [2].
 [prop-missing]
 
-   test.js:45:4
-   45| o3.foo(); // error, foo is missing in type of this
+   test.js:43:4
+   43| o3.foo(); // error, foo is missing in type of this
           ^^^
 
 References:
-   test.js:41:16
-   41|     foo(this : {|y : number|}) {},
+   test.js:39:16
+   39|     foo(this : {|y : number|}) {},
                       ^^^^^^^^^^^^^^ [1]
-   test.js:40:10
+   test.js:38:10
                 v
-   40| let o3 = {
-   41|     foo(this : {|y : number|}) {},
-   42|     y : 3
-   43| }
+   38| let o3 = {
+   39|     foo(this : {|y : number|}) {},
+   40|     y : 3
+   41| }
        ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:47:8
+Error ----------------------------------------------------------------------------------------------------- test.js:45:8
 
 Cannot call `o3.foo.bind` because property `foo` is missing in object type [1] but exists in object literal [2].
 [prop-missing]
 
-   test.js:47:8
-   47| o3.foo.bind(o2)(); // error, foo is missing in type of o2 this
+   test.js:45:8
+   45| o3.foo.bind(o2)(); // error, foo is missing in type of o2 this
               ^^^^
 
 References:
-   test.js:41:16
-   41|     foo(this : {|y : number|}) {},
+   test.js:39:16
+   39|     foo(this : {|y : number|}) {},
                       ^^^^^^^^^^^^^^ [1]
-   test.js:32:10
+   test.js:30:10
                 v
-   32| let o2 = {
-   33|     foo(this : {y : number , ...}) {},
-   34|     y : 3
-   35| }
+   30| let o2 = {
+   31|     foo(this : {y : number , ...}) {},
+   32|     y : 3
+   33| }
        ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:57:2
+Error ----------------------------------------------------------------------------------------------------- test.js:55:2
 
 Cannot cast `baz.bind(...)()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test.js:57:2
-   57| (baz.bind({f : 3})() : string); // error : number incompatible with string
+   test.js:55:2
+   55| (baz.bind({f : 3})() : string); // error : number incompatible with string
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:57:16
-   57| (baz.bind({f : 3})() : string); // error : number incompatible with string
+   test.js:55:16
+   55| (baz.bind({f : 3})() : string); // error : number incompatible with string
                       ^ [1]
-   test.js:57:24
-   57| (baz.bind({f : 3})() : string); // error : number incompatible with string
+   test.js:55:24
+   55| (baz.bind({f : 3})() : string); // error : number incompatible with string
                               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:58:2
+Error ----------------------------------------------------------------------------------------------------- test.js:56:2
 
 Cannot cast `baz.bind(...)()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   test.js:58:2
-   58| (baz.bind({f : ""})() : number); // error : number incompatible with string
+   test.js:56:2
+   56| (baz.bind({f : ""})() : number); // error : number incompatible with string
         ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:58:16
-   58| (baz.bind({f : ""})() : number); // error : number incompatible with string
+   test.js:56:16
+   56| (baz.bind({f : ""})() : number); // error : number incompatible with string
                       ^^ [1]
-   test.js:58:25
-   58| (baz.bind({f : ""})() : number); // error : number incompatible with string
+   test.js:56:25
+   56| (baz.bind({f : ""})() : number); // error : number incompatible with string
                                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:64:2
+Error ----------------------------------------------------------------------------------------------------- test.js:62:2
 
 Cannot cast `baz2.bind(...)(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test.js:64:2
-   64| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
+   test.js:62:2
+   62| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:64:43
-   64| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
+   test.js:62:43
+   62| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
                                                  ^^^^^^^^ [1]
-   test.js:64:67
-   64| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
+   test.js:62:67
+   62| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
                                                                          ^^^^^^ [2]
 
 

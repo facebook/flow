@@ -1,68 +1,68 @@
-Error ------------------------------------------------------------------------------------------------------- lib.js:4:3
+Error ------------------------------------------------------------------------------------------------------- lib.js:2:3
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
 `.flowconfig`. [illegal-enum]
 
         v-------------------------------------------
-   4|   declare enum G { // ERROR: enums not enabled
-   5|     J,
-   6|     K,
-   7|   }
+   2|   declare enum G { // ERROR: enums not enabled
+   3|     J,
+   4|     K,
+   5|   }
         ^
 
 
-Error ------------------------------------------------------------------------------------------------------ lib.js:8:18
+Error ------------------------------------------------------------------------------------------------------ lib.js:6:18
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
 `.flowconfig`. [illegal-enum]
 
-                        v-----------------------------------
-    8|   declare export enum H { // ERROR: enums not enabled
-    9|     X,
-   10|     Y,
-   11|   }
-         ^
+                       v-----------------------------------
+   6|   declare export enum H { // ERROR: enums not enabled
+   7|     X,
+   8|     Y,
+   9|   }
+        ^
 
 
-Error -------------------------------------------------------------------------------------------------- declared.js:3:1
+Error -------------------------------------------------------------------------------------------------- declared.js:1:1
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
 `.flowconfig`. [illegal-enum]
 
       v---------------------------------------
-   3| declare enum E { // ERROR: enums are off
-   4|   A,
-   5|   B,
-   6| }
+   1| declare enum E { // ERROR: enums are off
+   2|   A,
+   3|   B,
+   4| }
       ^
 
 
-Error ------------------------------------------------------------------------------------------------- declared.js:8:16
+Error ------------------------------------------------------------------------------------------------- declared.js:6:16
 
 Cannot resolve name `E`. [cannot-resolve-name]
 
-   8| declare var e: E; // ERROR: can't resolve name `E`
+   6| declare var e: E; // ERROR: can't resolve name `E`
                      ^
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+Error ------------------------------------------------------------------------------------------------------ test.js:1:1
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
 `.flowconfig`. [illegal-enum]
 
       v-------------------------------
-   3| enum E { // Error: enums are off
-   4|   A,
-   5|   B,
-   6| }
+   1| enum E { // Error: enums are off
+   2|   A,
+   3|   B,
+   4| }
       ^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:8:16
+Error ----------------------------------------------------------------------------------------------------- test.js:6:16
 
 Cannot resolve name `E`. [cannot-resolve-name]
 
-   8| declare var x: E; // Error: can't resolve name `E`
+   6| declare var x: E; // Error: can't resolve name `E`
                      ^
 
 

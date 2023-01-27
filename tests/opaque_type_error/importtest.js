@@ -1,4 +1,3 @@
-// @flow
 import * as Test from './test';
 import type {ID} from './test';
 

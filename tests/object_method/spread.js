@@ -1,5 +1,3 @@
-// @flow
-
 let x = { m() {} };
 x.m = () => {}; // error: m is read-only
 

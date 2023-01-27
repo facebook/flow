@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity check:
 // - we should still be getting an error at the second return statement
 

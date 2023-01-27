@@ -1,5 +1,3 @@
-// @flow
-
 class A {
   foo(this : this) {}
   static (this : this) {}

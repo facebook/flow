@@ -1,111 +1,111 @@
-Error ------------------------------------------------------------------------------------------------------ all.js:13:4
+Error ------------------------------------------------------------------------------------------------------ all.js:11:4
 
 Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   all.js:13:4
-   13|   (a: number);  // Error: string ~> number
+   all.js:11:4
+   11|   (a: number);  // Error: string ~> number
           ^
 
 References:
-   all.js:3:27
-    3| declare var pstr: Promise<string>;
+   all.js:1:27
+    1| declare var pstr: Promise<string>;
                                  ^^^^^^ [1]
-   all.js:13:7
-   13|   (a: number);  // Error: string ~> number
+   all.js:11:7
+   11|   (a: number);  // Error: string ~> number
              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:14:4
+Error ------------------------------------------------------------------------------------------------------ all.js:12:4
 
 Cannot cast `b` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   all.js:14:4
-   14|   (b: boolean); // Error: number ~> boolean
+   all.js:12:4
+   12|   (b: boolean); // Error: number ~> boolean
           ^
 
 References:
-   all.js:4:27
-    4| declare var pnum: Promise<number>;
+   all.js:2:27
+    2| declare var pnum: Promise<number>;
                                  ^^^^^^ [1]
-   all.js:14:7
-   14|   (b: boolean); // Error: number ~> boolean
+   all.js:12:7
+   12|   (b: boolean); // Error: number ~> boolean
              ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:15:4
+Error ------------------------------------------------------------------------------------------------------ all.js:13:4
 
 Cannot cast `c` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
 
-   all.js:15:4
-   15|   (c: string);  // Error: boolean ~> string
+   all.js:13:4
+   13|   (c: string);  // Error: boolean ~> string
           ^
 
 References:
-   all.js:9:3
-    9|   true, // non-Promise values passed through
+   all.js:7:3
+    7|   true, // non-Promise values passed through
          ^^^^ [1]
-   all.js:15:7
-   15|   (c: string);  // Error: boolean ~> string
+   all.js:13:7
+   13|   (c: string);  // Error: boolean ~> string
              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:19:6
+Error ------------------------------------------------------------------------------------------------------ all.js:17:6
 
 Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   all.js:19:6
-   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+   all.js:17:6
+   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
             ^
 
 References:
-   all.js:3:27
-    3| declare var pstr: Promise<string>;
+   all.js:1:27
+    1| declare var pstr: Promise<string>;
                                  ^^^^^^ [1]
-   all.js:19:9
-   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+   all.js:17:9
+   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
                ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:19:6
+Error ------------------------------------------------------------------------------------------------------ all.js:17:6
 
 Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   all.js:19:6
-   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+   all.js:17:6
+   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
             ^
 
 References:
-   all.js:4:27
-    4| declare var pnum: Promise<number>;
+   all.js:2:27
+    2| declare var pnum: Promise<number>;
                                  ^^^^^^ [1]
-   all.js:19:9
-   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+   all.js:17:9
+   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
                ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:19:6
+Error ------------------------------------------------------------------------------------------------------ all.js:17:6
 
 Cannot cast `x` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   all.js:19:6
-   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+   all.js:17:6
+   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
             ^
 
 References:
-   all.js:9:3
-    9|   true, // non-Promise values passed through
+   all.js:7:3
+    7|   true, // non-Promise values passed through
          ^^^^ [1]
-   all.js:19:9
-   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+   all.js:17:9
+   17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
                ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:24:9
+Error ------------------------------------------------------------------------------------------------------ all.js:22:9
 
 Cannot call `Promise.all` because function [1] requires another argument. [incompatible-call]
 
-   all.js:24:9
-     24| Promise.all<Array<mixed>>(); // Error: expected array instead of undefined (too few arguments)
+   all.js:22:9
+     22| Promise.all<Array<mixed>>(); // Error: expected array instead of undefined (too few arguments)
                  ^^^
 
 References:
@@ -114,27 +114,27 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- all.js:27:27
+Error ----------------------------------------------------------------------------------------------------- all.js:25:27
 
 Cannot call `Promise.all` with `0` bound to `promises` because number [1] is incompatible with array type [2].
 [incompatible-call]
 
-   all.js:27:27
-   27| Promise.all<Array<mixed>>(0); // Error: expected array instead of number
+   all.js:25:27
+   25| Promise.all<Array<mixed>>(0); // Error: expected array instead of number
                                  ^ [1]
 
 References:
-   all.js:27:13
-   27| Promise.all<Array<mixed>>(0); // Error: expected array instead of number
+   all.js:25:13
+   25| Promise.all<Array<mixed>>(0); // Error: expected array instead of number
                    ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ allSettled.js:4:9
+Error ------------------------------------------------------------------------------------------------ allSettled.js:2:9
 
 Cannot call `Promise.allSettled` because function [1] requires another argument. [incompatible-call]
 
-   allSettled.js:4:9
-      4| Promise.allSettled<Array<mixed>>(); // Error: expected $Iterable instead of undefined (too few arguments)
+   allSettled.js:2:9
+      2| Promise.allSettled<Array<mixed>>(); // Error: expected $Iterable instead of undefined (too few arguments)
                  ^^^^^^^^^^
 
 References:
@@ -143,68 +143,68 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- allSettled.js:7:34
+Error ----------------------------------------------------------------------------------------------- allSettled.js:5:34
 
 Cannot call `Promise.allSettled` with `0` bound to `promises` because number [1] is incompatible with array type [2].
 [incompatible-call]
 
-   allSettled.js:7:34
-   7| Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
+   allSettled.js:5:34
+   5| Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
                                        ^ [1]
 
 References:
-   allSettled.js:7:20
-   7| Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
+   allSettled.js:5:20
+   5| Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
                          ^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- allSettled.js:36:8
+Error ----------------------------------------------------------------------------------------------- allSettled.js:34:8
 
 Cannot cast `first.status` to empty because string literal `rejected` [1] is incompatible with empty [2].
 [incompatible-cast]
 
-   allSettled.js:36:8
-     36|       (first.status: empty) // Error: 'rejected' case was not covered
+   allSettled.js:34:8
+     34|       (first.status: empty) // Error: 'rejected' case was not covered
                 ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1932:12
    1932|   +status: 'rejected',
                     ^^^^^^^^^^ [1]
-   allSettled.js:36:22
-     36|       (first.status: empty) // Error: 'rejected' case was not covered
+   allSettled.js:34:22
+     34|       (first.status: empty) // Error: 'rejected' case was not covered
                               ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- allSettled.js:42:30
+Error ---------------------------------------------------------------------------------------------- allSettled.js:40:30
 
 Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [prop-missing]
 
-   allSettled.js:42:30
-   42|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
+   allSettled.js:40:30
+   40|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
                                     ^^^
 
 References:
-   allSettled.js:26:31
-   26|   const bar = Promise.resolve(new Bar());
+   allSettled.js:24:31
+   24|   const bar = Promise.resolve(new Bar());
                                      ^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- allSettled.js:46:28
+Error ---------------------------------------------------------------------------------------------- allSettled.js:44:28
 
 `T` [1] is underconstrained by async return [2]. Either add explicit type arguments or cast the expression to your
 expected type. [underconstrained-implicit-instantiation]
 
-   allSettled.js:46:28
-     46|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
+   allSettled.js:44:28
+     44|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
                                     ^^^^^
 
 References:
    <BUILTINS>/core.js:1937:25
    1937| declare function $await<T>(p: Promise<T> | T): T;
                                  ^ [1]
-   allSettled.js:46:5
-     46|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
+   allSettled.js:44:5
+     44|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -576,36 +576,36 @@ References:
              ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- resolve_void.js:3:2
+Error ---------------------------------------------------------------------------------------------- resolve_void.js:1:2
 
 Cannot cast `Promise.resolve()` to `Promise` because undefined [1] is incompatible with number [2] in type argument
 `R` [3]. [incompatible-cast]
 
-   resolve_void.js:3:2
-      3| (Promise.resolve(): Promise<number>); // error
+   resolve_void.js:1:2
+      1| (Promise.resolve(): Promise<number>); // error
           ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   resolve_void.js:3:29
-      3| (Promise.resolve(): Promise<number>); // error
+   resolve_void.js:1:29
+      1| (Promise.resolve(): Promise<number>); // error
                                      ^^^^^^ [2]
    <BUILTINS>/core.js:1836:24
    1836| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- resolve_void.js:5:18
+Error --------------------------------------------------------------------------------------------- resolve_void.js:3:18
 
 Cannot cast `Promise.resolve(...)` to `Promise` because undefined [1] is incompatible with number [2] in type argument
 `R` [3]. [incompatible-cast]
 
-   resolve_void.js:5:18
-      5| (Promise.resolve(undefined): Promise<number>); // error
+   resolve_void.js:3:18
+      3| (Promise.resolve(undefined): Promise<number>); // error
                           ^^^^^^^^^ [1]
 
 References:
-   resolve_void.js:5:38
-      5| (Promise.resolve(undefined): Promise<number>); // error
+   resolve_void.js:3:38
+      3| (Promise.resolve(undefined): Promise<number>); // error
                                               ^^^^^^ [2]
    <BUILTINS>/core.js:1836:24
    1836| declare class Promise<+R = mixed> {

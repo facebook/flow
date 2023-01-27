@@ -1,5 +1,3 @@
-// @flow
-
 type Fn0 = () => number;
 type Fn1 = <T>(T) => T;
 type Fn2 = <A, B>(A, B) => A | B;

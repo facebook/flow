@@ -1,5 +1,3 @@
-// @flow
-
 const React = require('react');
 
 declare var node: React.Node; // OK: This is valid syntax.

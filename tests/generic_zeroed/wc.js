@@ -1,4 +1,3 @@
-// @flow
 function coerce<T, U>(t: T): U {
   type Fruit<T> =
     | {| +type: "APPLE", +value: T |}

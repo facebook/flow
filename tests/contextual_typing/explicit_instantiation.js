@@ -1,5 +1,3 @@
-// @flow
-
 import * as React from "React";
 
 declare function f<T>(T => void): void;

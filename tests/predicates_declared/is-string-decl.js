@@ -1,5 +1,3 @@
-// @flow
-
 declare function is_string(x: mixed): boolean %checks(typeof x === "string");
 declare function is_number(x: mixed): boolean %checks(typeof x === "number");
 

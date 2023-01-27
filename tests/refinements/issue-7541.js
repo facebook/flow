@@ -1,5 +1,3 @@
-// @flow
-
 function myFunc(): string {
   let a = "a string";
 

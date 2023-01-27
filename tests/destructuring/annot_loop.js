@@ -1,5 +1,3 @@
-// @flow
-
 // Destructuring self-referential annotations should terminate.
 
 type T = T;

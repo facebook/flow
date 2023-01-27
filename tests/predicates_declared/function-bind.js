@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity checks:
 //  - use of bind in a position of a function predicate.
 //    (This case should fall through, as method calls

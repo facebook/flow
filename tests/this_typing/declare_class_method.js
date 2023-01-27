@@ -1,5 +1,3 @@
-// @flow
-
 declare class A {
   prop : number,
   static prop : number,

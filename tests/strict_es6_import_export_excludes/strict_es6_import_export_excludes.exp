@@ -1,9 +1,9 @@
-Error --------------------------------------------------------------------------------------------------------- c.js:4:9
+Error --------------------------------------------------------------------------------------------------------- c.js:2:9
 
 The default export of a module cannot be accessed from import destructuring. To use the default export you must import
 it directly. [default-import-access]
 
-   4| import {default as foo} from './foo';
+   2| import {default as foo} from './foo';
               ^^^^^^^
 
 

@@ -13,200 +13,200 @@ References:
                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- importtest.js:7:12
+Error ----------------------------------------------------------------------------------------------- importtest.js:5:12
 
 Cannot return `y` because number [1] is incompatible with `SuperOpaque` [2]. [incompatible-return]
 
-   importtest.js:7:12
-   7|     return y;
+   importtest.js:5:12
+   5|     return y;
                  ^
 
 References:
-   importtest.js:6:20
-   6| function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
+   importtest.js:4:20
+   4| function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
                          ^^^^^^^^^ [1]
-   importtest.js:6:33
-   6| function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
+   importtest.js:4:33
+   4| function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
                                       ^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:15:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:13:12
 
 Cannot return `x` because number [1] is incompatible with `Counter` [2]. [incompatible-return]
 
-   importtest.js:15:12
-   15|     return x;
+   importtest.js:13:12
+   13|     return x;
                   ^
 
 References:
-   importtest.js:14:20
-   14| function test3 (x: number): Counter {// Error: number ~> Counter
+   importtest.js:12:20
+   12| function test3 (x: number): Counter {// Error: number ~> Counter
                           ^^^^^^ [1]
-   importtest.js:14:29
-   14| function test3 (x: number): Counter {// Error: number ~> Counter
+   importtest.js:12:29
+   12| function test3 (x: number): Counter {// Error: number ~> Counter
                                    ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:27:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:25:12
 
 Cannot return `x` because `PolyFoo` [1] is incompatible with `PolyBar` [2]. [incompatible-return]
 
-   importtest.js:27:12
-   27|     return x;
+   importtest.js:25:12
+   25|     return x;
                   ^
 
 References:
-   importtest.js:26:19
-   26| function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
+   importtest.js:24:19
+   24| function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
                          ^^^^^^^^^^^^^^^^ [1]
-   importtest.js:26:38
-   26| function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
+   importtest.js:24:38
+   24| function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
                                             ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:31:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:29:12
 
 Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
 
-   importtest.js:31:12
-   31|     return x;
+   importtest.js:29:12
+   29|     return x;
                   ^
 
 References:
-   importtest.js:30:28
-   30| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+   importtest.js:28:28
+   28| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
                                   ^^^^^^ [1]
-   importtest.js:30:46
-   30| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+   importtest.js:28:46
+   28| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
                                                     ^^^^^^ [2]
-   test.js:14:22
-   14| export class PolyFoo<T> {}
+   test.js:12:22
+   12| export class PolyFoo<T> {}
                             ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:39:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:37:12
 
 Cannot assign update to `x` because number [1] is incompatible with `SuperType` [2]. [incompatible-type]
 
-   importtest.js:39:12
-   39|     return x++; // Error number ~> SuperType
+   importtest.js:37:12
+   37|     return x++; // Error number ~> SuperType
                   ^^^ [1]
 
 References:
-   importtest.js:38:19
-   38| function test9(x: SuperType): SuperType { // Error number ~> SuperType
+   importtest.js:36:19
+   36| function test9(x: SuperType): SuperType { // Error number ~> SuperType
                          ^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:39:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:37:12
 
 Cannot return `x++` because number [1] is incompatible with `SuperType` [2]. [incompatible-return]
 
-   importtest.js:39:12
-   39|     return x++; // Error number ~> SuperType
+   importtest.js:37:12
+   37|     return x++; // Error number ~> SuperType
                   ^^^ [1]
 
 References:
-   importtest.js:38:31
-   38| function test9(x: SuperType): SuperType { // Error number ~> SuperType
+   importtest.js:36:31
+   36| function test9(x: SuperType): SuperType { // Error number ~> SuperType
                                      ^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:52:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:50:12
 
 Cannot return `x + y` because string [1] is incompatible with number [2]. [incompatible-return]
 
-   importtest.js:52:12
-   52|     return x + y;
+   importtest.js:50:12
+   50|     return x + y;
                   ^^^^^ [1]
 
 References:
-   importtest.js:51:32
-   51| function test12(x: ID, y: ID): number { // Error: string ~> number
+   importtest.js:49:32
+   49| function test12(x: ID, y: ID): number { // Error: string ~> number
                                       ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:7:48
+Error ----------------------------------------------------------------------------------------------------- test.js:5:48
 
 number [1] is incompatible with `SuperType` [2]. [incompatible-type]
 
-   test.js:7:48
-   7| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
+   test.js:5:48
+   5| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
                                                      ^^^^^^^ [1]
 
 References:
-   test.js:7:36
-   7| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
+   test.js:5:36
+   5| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
                                          ^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:12:36
+Error ---------------------------------------------------------------------------------------------------- test.js:10:36
 
 `Foo` [1] is incompatible with `Bar` [2]. [incompatible-type]
 
-   test.js:12:36
-   12| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
+   test.js:10:36
+   10| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
                                           ^^^ [1]
 
 References:
-   test.js:12:30
-   12| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
+   test.js:10:30
+   10| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
                                     ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:17:45
+Error ---------------------------------------------------------------------------------------------------- test.js:15:45
 
 `PolyFoo` [1] is incompatible with `PolyBar` [2]. [incompatible-type]
 
-   test.js:17:45
-   17| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
+   test.js:15:45
+   15| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
                                                    ^^^^^^^^^^ [1]
 
 References:
-   test.js:17:32
-   17| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
+   test.js:15:32
+   15| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
                                       ^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:19:27
+Error ---------------------------------------------------------------------------------------------------- test.js:17:27
 
 Cannot use `PolyFoo` [1] with fewer than 1 type argument. [missing-type-arg]
 
-   test.js:19:27
-   19| class PolyBar2<T> extends PolyFoo {}
+   test.js:17:27
+   17| class PolyBar2<T> extends PolyFoo {}
                                  ^^^^^^^
 
 References:
-   test.js:14:21
-   14| export class PolyFoo<T> {}
+   test.js:12:21
+   12| export class PolyFoo<T> {}
                            ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:21:47
+Error ---------------------------------------------------------------------------------------------------- test.js:19:47
 
 `PolyFoo` [1] is incompatible with `PolyBar2` [2]. [incompatible-type]
 
-   test.js:21:47
-   21| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
+   test.js:19:47
+   19| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
                                                      ^^^^^^^^^^ [1]
 
 References:
-   test.js:21:33
-   21| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
+   test.js:19:33
+   19| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
                                        ^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:27:65
+Error ---------------------------------------------------------------------------------------------------- test.js:25:65
 
 string [1] is incompatible with number [2]. [incompatible-type-arg]
 
-   test.js:27:65
-   27| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+   test.js:25:65
+   25| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
                                                                        ^^^^^^ [1]
 
 References:
-   test.js:27:38
-   27| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+   test.js:25:38
+   25| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
                                             ^^^^^^ [2]
 
 

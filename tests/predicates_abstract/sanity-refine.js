@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity check A: the refinment position index is outside of the allowed range
 declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
 

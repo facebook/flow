@@ -1,5 +1,3 @@
-// @flow
-
 const arr1 = [1];
 const result1_0: Array<number> = arr1.flat(); // OK
 const result1_1: Array<string> = arr1.flat(); // Error

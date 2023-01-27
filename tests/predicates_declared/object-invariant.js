@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity check:
 // - preserving `havoc` semantics
 

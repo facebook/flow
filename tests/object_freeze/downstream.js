@@ -1,5 +1,3 @@
-// @flow
-
 const { inexact } = require('./object_freeze');
 
 (inexact: {||}); // error: inexact -> exact

@@ -1,5 +1,3 @@
-// @flow
-
 class Foo {
   f : string
 

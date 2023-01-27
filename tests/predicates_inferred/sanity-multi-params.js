@@ -1,5 +1,3 @@
-// @flow
-
 // Feature: multi params
 function multi_param(w: mixed,x: mixed,y: mixed,z: mixed): %checks {
   return typeof z === "string";

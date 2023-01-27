@@ -1,5 +1,3 @@
-// @flow
-
 let data: Array<{ id: string, name: Array<string>, value: Array<string> }> = [];
 
 function asObjectList(length: number) {

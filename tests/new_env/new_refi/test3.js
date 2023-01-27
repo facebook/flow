@@ -1,4 +1,3 @@
-// @flow
 const x: (?number) => (() => number) = val => {
   if (val == null) {
     return () => 42;

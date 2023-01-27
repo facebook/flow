@@ -1,5 +1,3 @@
-// @flow
-
 declare opaque type T;
 
 declare var aNumber: number;

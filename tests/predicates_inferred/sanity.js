@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity check: shouldn't be allowed to declare a predicate AND use `chekcs`
 
 function check(y: mixed): %checks(typeof y === "string") {

@@ -1,5 +1,3 @@
-// @flow
-
 const React = require('react');
 import type {Element} from 'react';
 

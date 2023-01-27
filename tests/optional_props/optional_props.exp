@@ -60,31 +60,31 @@ References:
                       ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:40:3
+Error ---------------------------------------------------------------------------------------------------- test3.js:38:3
 
 Cannot assign `1` to `x.b` because property `b` is missing in object literal [1]. [prop-missing]
 
-   test3.js:40:3
-   40| x.b = 1;
+   test3.js:38:3
+   38| x.b = 1;
          ^
 
 References:
-   test3.js:37:5
-   37| x = { a: 0 };
+   test3.js:35:5
+   35| x = { a: 0 };
            ^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- test3.js:54:16
+Error --------------------------------------------------------------------------------------------------- test3.js:52:16
 
 Cannot assign `'hello'` to `this.x.b` because property `b` is missing in object literal [1]. [prop-missing]
 
-   test3.js:54:16
-   54|         this.x.b = 'hello';
+   test3.js:52:16
+   52|         this.x.b = 'hello';
                       ^
 
 References:
-   test3.js:53:18
-   53|         this.x = { a: 123 };
+   test3.js:51:18
+   51|         this.x = { a: 123 };
                         ^^^^^^^^^^ [1]
 
 

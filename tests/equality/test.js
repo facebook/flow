@@ -1,5 +1,3 @@
-// @flow
-
 type T = 3 | 4;
 type U = "A" | "B";
 

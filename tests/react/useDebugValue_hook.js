@@ -1,5 +1,3 @@
-// @flow
-
 import React from 'react';
 
 const undefinedValue = React.useDebugValue(123);

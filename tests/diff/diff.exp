@@ -50,48 +50,48 @@ References:
                              ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lower.js:21:4
+Error ---------------------------------------------------------------------------------------------------- lower.js:19:4
 
 Cannot get `y.age` because property `age` is missing in `Person` [1]. [prop-missing]
 
-   lower.js:21:4
-   21| (y.age: number); // Error -- could be void
+   lower.js:19:4
+   19| (y.age: number); // Error -- could be void
           ^^^
 
 References:
-   lower.js:18:16
-   18| declare var y: PersonWithoutAgeActual;
+   lower.js:16:16
+   16| declare var y: PersonWithoutAgeActual;
                       ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- lower.js:22:2
+Error ---------------------------------------------------------------------------------------------------- lower.js:20:2
 
 Cannot cast `y.name` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   lower.js:22:2
-   22| (y.name: number); // Error -- should be string
+   lower.js:20:2
+   20| (y.name: number); // Error -- should be string
         ^^^^^^
 
 References:
-   lower.js:4:9
-    4|   name: string,
+   lower.js:2:9
+    2|   name: string,
                ^^^^^^ [1]
-   lower.js:22:10
-   22| (y.name: number); // Error -- should be string
+   lower.js:20:10
+   20| (y.name: number); // Error -- should be string
                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- lower.js:23:3
+Error ---------------------------------------------------------------------------------------------------- lower.js:21:3
 
 Cannot get `y.bla` because property `bla` is missing in `Person` [1]. [prop-missing]
 
-   lower.js:23:3
-   23| y.bla; // Error -- key not found.
+   lower.js:21:3
+   21| y.bla; // Error -- key not found.
          ^^^
 
 References:
-   lower.js:18:16
-   18| declare var y: PersonWithoutAgeActual;
+   lower.js:16:16
+   16| declare var y: PersonWithoutAgeActual;
                       ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 

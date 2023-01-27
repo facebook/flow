@@ -1,3 +1,1 @@
-// @flow
-
 break; // error, illegal

@@ -308,35 +308,35 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- props4.js:8:11
+Error --------------------------------------------------------------------------------------------------- props4.js:6:11
 
 Cannot create `JDiv` element because number [1] is incompatible with string [2] in property `id`. [incompatible-type]
 
-   props4.js:8:11
-   8| <JDiv id={42} />;
+   props4.js:6:11
+   6| <JDiv id={42} />;
                 ^^ [1]
 
 References:
-   props4.js:5:41
-   5| class JDiv extends React.Component<{id: string}> {}
+   props4.js:3:41
+   3| class JDiv extends React.Component<{id: string}> {}
                                               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- props4.js:16:2
+Error --------------------------------------------------------------------------------------------------- props4.js:14:2
 
 Cannot create `Example` element because property `bar` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   props4.js:16:2
-   16| <Example foo="foo" />;
+   props4.js:14:2
+   14| <Example foo="foo" />;
         ^^^^^^^
 
 References:
-   props4.js:16:1
-   16| <Example foo="foo" />;
+   props4.js:14:1
+   14| <Example foo="foo" />;
        ^^^^^^^^^^^^^^^^^^^^^ [1]
-   props4.js:10:39
-   10| class Example extends React.Component<{ bar: string }> {
+   props4.js:8:39
+    8| class Example extends React.Component<{ bar: string }> {
                                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -354,84 +354,84 @@ References:
                                                     ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- state6.js:29:19
+Error -------------------------------------------------------------------------------------------------- state6.js:27:19
 
 Cannot call `this.setState` with function bound to `partialState` because string [1] is incompatible with number [2] in
 property `bar` of the return value. [incompatible-call]
 
-   state6.js:29:19
+   state6.js:27:19
                          v-------------------------------------------
-   29|     this.setState(() => ({ // Error: `bar` should be a number.
-   30|       bar: '42',
-   31|     }));
+   27|     this.setState(() => ({ // Error: `bar` should be a number.
+   28|       bar: '42',
+   29|     }));
            -^
 
 References:
-   state6.js:30:12
-   30|       bar: '42',
+   state6.js:28:12
+   28|       bar: '42',
                   ^^^^ [1]
-   state6.js:7:33
-    7| type State = {foo: number, bar: number};
+   state6.js:5:33
+    5| type State = {foo: number, bar: number};
                                        ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- state6.js:33:29
+Error -------------------------------------------------------------------------------------------------- state6.js:31:29
 
 Cannot get `prevState.nope` because property `nope` is missing in `State` [1]. [prop-missing]
 
-   state6.js:33:29
-   33|       console.log(prevState.nope); // Error: `nope` does not exist.
+   state6.js:31:29
+   31|       console.log(prevState.nope); // Error: `nope` does not exist.
                                    ^^^^
 
 References:
-   state6.js:13:59
-   13| class MyComponent extends React.Component<{prop: number}, State> {
+   state6.js:11:59
+   11| class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- state6.js:36:25
+Error -------------------------------------------------------------------------------------------------- state6.js:34:25
 
 Cannot get `props.nope` because property `nope` is missing in object type [1]. [prop-missing]
 
-   state6.js:36:25
-   36|       console.log(props.nope); // Error: `nope` does not exist.
+   state6.js:34:25
+   34|       console.log(props.nope); // Error: `nope` does not exist.
                                ^^^^
 
 References:
-   state6.js:13:43
-   13| class MyComponent extends React.Component<{prop: number}, State> {
+   state6.js:11:43
+   11| class MyComponent extends React.Component<{prop: number}, State> {
                                                  ^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- state6.js:41:25
+Error -------------------------------------------------------------------------------------------------- state6.js:39:25
 
 Cannot call `this.setState` with `any` bound to `partialState` because number [1] is incompatible with `State` [2] in
 the first parameter. [incompatible-call]
 
-   state6.js:41:25
-   41|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
+   state6.js:39:25
+   39|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
                                ^^^^^^^^^^^^^
 
 References:
-   state6.js:11:24
-   11| type StateUpdater3 = {(number): number, foo: number, bar: number};
+   state6.js:9:24
+    9| type StateUpdater3 = {(number): number, foo: number, bar: number};
                               ^^^^^^ [1]
-   state6.js:13:59
-   13| class MyComponent extends React.Component<{prop: number}, State> {
+   state6.js:11:59
+   11| class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- state6.js:47:3
+Error --------------------------------------------------------------------------------------------------- state6.js:45:3
 
 Cannot cast function to `State` because function [1] is incompatible with `$Shape` of `State` [2]. [incompatible-shape]
 
-   state6.js:47:3
-   47| ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
+   state6.js:45:3
+   45| ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
          ^^^^^^^^ [1]
 
 References:
-   state6.js:47:21
-   47| ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
+   state6.js:45:21
+   45| ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
                            ^^^^^ [2]
 
 

@@ -70,46 +70,46 @@ References:
                                                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ call.js:4:2
+Error ------------------------------------------------------------------------------------------------------ call.js:2:2
 
 Cannot cast `y` to object type because object type [1] is incompatible with function prototype [2]. [incompatible-cast]
 
-   call.js:4:2
-   4| (y: {(number): string});
+   call.js:2:2
+   2| (y: {(number): string});
        ^
 
 References:
-   call.js:3:16
-   3| declare var y: {[string]: boolean};
+   call.js:1:16
+   1| declare var y: {[string]: boolean};
                      ^^^^^^^^^^^^^^^^^^^ [1]
-   call.js:4:5
-   4| (y: {(number): string});
+   call.js:2:5
+   2| (y: {(number): string});
           ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ call.js:4:2
+Error ------------------------------------------------------------------------------------------------------ call.js:2:2
 
 Cannot cast `y` to object type because a call signature declaring the expected parameter / return type is missing in
 object type [1] but exists in object type [2]. [prop-missing]
 
-   call.js:4:2
-   4| (y: {(number): string});
+   call.js:2:2
+   2| (y: {(number): string});
        ^
 
 References:
-   call.js:3:16
-   3| declare var y: {[string]: boolean};
+   call.js:1:16
+   1| declare var y: {[string]: boolean};
                      ^^^^^^^^^^^^^^^^^^^ [1]
-   call.js:4:5
-   4| (y: {(number): string});
+   call.js:2:5
+   2| (y: {(number): string});
           ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- multiple.js:7:7
+Error -------------------------------------------------------------------------------------------------- multiple.js:5:7
 
 Multiple indexers are not supported. [unsupported-syntax]
 
-   7|       [k2: number]: number, // error: not supported (yet)
+   5|       [k2: number]: number, // error: not supported (yet)
             ^^^^^^^^^^^^^^^^^^^^
 
 

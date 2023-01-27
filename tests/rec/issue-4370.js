@@ -1,4 +1,3 @@
-// @flow
 export const checkComponent = (obj: any[]): Object[] =>
   obj.reduce((acc, x) => {
     if (x === undefined) {

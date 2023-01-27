@@ -461,67 +461,67 @@ Cannot create exact type from `A` [1]. [invalid-exact]
                         ^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- objmap.js:11:36
+Error --------------------------------------------------------------------------------------------------- objmap.js:9:36
 
 Cannot assign object literal to `doesError` because number [1] is incompatible with number literal `2` [2] in property
 `a`. [incompatible-type]
 
-   objmap.js:11:36
-   11| const doesError: MappedThing = {a: 3};
-                                          ^ [1]
+   objmap.js:9:36
+   9| const doesError: MappedThing = {a: 3};
+                                         ^ [1]
 
 References:
-   objmap.js:5:47
-    5| type MappedThing = $ObjMap<ExactThing, (1) => 2>;
-                                                     ^ [2]
+   objmap.js:3:47
+   3| type MappedThing = $ObjMap<ExactThing, (1) => 2>;
+                                                    ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- objmap.js:14:35
+Error -------------------------------------------------------------------------------------------------- objmap.js:12:35
 
 Cannot assign object literal to `shouldntWork` because property `b` is missing in object type [1] but exists in object
 literal [2]. [prop-missing]
 
-   objmap.js:14:35
-   14| const shouldntWork: MappedThing = {a: 2, b: 1};
+   objmap.js:12:35
+   12| const shouldntWork: MappedThing = {a: 2, b: 1};
                                          ^^^^^^^^^^^^ [2]
 
 References:
-   objmap.js:14:21
-   14| const shouldntWork: MappedThing = {a: 2, b: 1};
+   objmap.js:12:21
+   12| const shouldntWork: MappedThing = {a: 2, b: 1};
                            ^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:3:47
+Error ------------------------------------------------------------------------------------------------- optional.js:1:47
 
 Cannot return `x` because property `p` is missing in object type [1] but exists in object type [2]. [prop-missing]
 
-   optional.js:3:47
-   3| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
+   optional.js:1:47
+   1| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
                                                     ^
 
 References:
-   optional.js:3:18
-   3| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
+   optional.js:1:18
+   1| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
                        ^^^^ [1]
-   optional.js:3:25
-   3| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
+   optional.js:1:25
+   1| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
                               ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:5:71
+Error ------------------------------------------------------------------------------------------------- optional.js:3:71
 
 Cannot return `x` because string [1] is incompatible with number [2] in property `p`. [incompatible-return]
 
-   optional.js:5:71
-   5| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
+   optional.js:3:71
+   3| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
                                                                             ^
 
 References:
-   optional.js:5:36
-   5| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
+   optional.js:3:36
+   3| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
                                          ^^^^^^ [1]
-   optional.js:5:54
-   5| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
+   optional.js:3:54
+   3| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
                                                            ^^^^^^ [2]
 
 

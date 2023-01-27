@@ -1,96 +1,96 @@
-Error ------------------------------------------------------------------------------------------------ importtest.js:7:2
+Error ------------------------------------------------------------------------------------------------ importtest.js:6:2
 
 Cannot cast `3` to `ID` because number [1] is incompatible with `ID` [2]. [incompatible-cast]
 
-   importtest.js:7:2
-   7| (3 : ID); // Error: number ~> ID
+   importtest.js:6:2
+   6| (3 : ID); // Error: number ~> ID
        ^ [1]
 
 References:
-   importtest.js:7:6
-   7| (3 : ID); // Error: number ~> ID
+   importtest.js:6:6
+   6| (3 : ID); // Error: number ~> ID
            ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:10:12
+Error ----------------------------------------------------------------------------------------------- importtest.js:9:12
 
 Cannot return `x` because number [1] is incompatible with `ID` [2]. [incompatible-return]
 
-   importtest.js:10:12
-   10|     return x;
-                  ^
+   importtest.js:9:12
+   9|     return x;
+                 ^
 
 References:
-   importtest.js:9:18
-    9| function bad1(x: number) : ID { // Error: number ~> ID
-                        ^^^^^^ [1]
-   importtest.js:9:28
-    9| function bad1(x: number) : ID { // Error: number ~> ID
-                                  ^^ [2]
+   importtest.js:8:18
+   8| function bad1(x: number) : ID { // Error: number ~> ID
+                       ^^^^^^ [1]
+   importtest.js:8:28
+   8| function bad1(x: number) : ID { // Error: number ~> ID
+                                 ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:14:22
+Error ---------------------------------------------------------------------------------------------- importtest.js:13:22
 
 Cannot call `Test.hide` with `x` bound to `x` because `ID` [1] is incompatible with number [2]. [incompatible-call]
 
-   importtest.js:14:22
-   14|     return Test.hide(x); // Error: ID ~> number
+   importtest.js:13:22
+   13|     return Test.hide(x); // Error: ID ~> number
                             ^
 
 References:
-   importtest.js:13:18
-   13| function bad2(x: ID) : ID {
+   importtest.js:12:18
+   12| function bad2(x: ID) : ID {
                         ^^ [1]
-   test.js:12:25
-   12| export function hide(x: number) : ID {
+   test.js:11:25
+   11| export function hide(x: number) : ID {
                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:18:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:17:12
 
 Cannot return `x` because `ID` [1] is incompatible with number [2]. [incompatible-return]
 
-   importtest.js:18:12
-   18|     return x; // Error: ID ~> ID2
+   importtest.js:17:12
+   17|     return x; // Error: ID ~> ID2
                   ^
 
 References:
-   importtest.js:17:18
-   17| function bad3(x: ID) : ID2 {
+   importtest.js:16:18
+   16| function bad3(x: ID) : ID2 {
                         ^^ [1]
-   importtest.js:17:24
-   17| function bad3(x: ID) : ID2 {
+   importtest.js:16:24
+   16| function bad3(x: ID) : ID2 {
                               ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- importtest.js:22:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:21:12
 
 Cannot return `x` because number [1] is incompatible with `ID` [2]. [incompatible-return]
 
-   importtest.js:22:12
-   22|     return x;
+   importtest.js:21:12
+   21|     return x;
                   ^
 
 References:
-   importtest.js:21:18
-   21| function bad4(x: ID2) : ID { // Error: ID2 ~> ID
+   importtest.js:20:18
+   20| function bad4(x: ID2) : ID { // Error: ID2 ~> ID
                         ^^^ [1]
-   importtest.js:21:25
-   21| function bad4(x: ID2) : ID { // Error: ID2 ~> ID
+   importtest.js:20:25
+   20| function bad4(x: ID2) : ID { // Error: ID2 ~> ID
                                ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:17:2
+Error ----------------------------------------------------------------------------------------------------- test.js:16:2
 
 Cannot cast `"hello"` to `MyNum` because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   test.js:17:2
-   17| ("hello": MyNum) // Error: string ~> number
+   test.js:16:2
+   16| ("hello": MyNum) // Error: string ~> number
         ^^^^^^^ [1]
 
 References:
-   test.js:17:11
-   17| ("hello": MyNum) // Error: string ~> number
+   test.js:16:11
+   16| ("hello": MyNum) // Error: string ~> number
                  ^^^^^ [2]
 
 

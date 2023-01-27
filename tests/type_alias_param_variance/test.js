@@ -1,5 +1,3 @@
-// @flow
-
 class Foo<T> {}
 class Bar<+T> {}
 class Baz<-T> {}

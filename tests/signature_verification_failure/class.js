@@ -1,5 +1,3 @@
-// @flow
-
 export class A {
   // Ast.Expression.Object.Property.Identifier
   x = 1;

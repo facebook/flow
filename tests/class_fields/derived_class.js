@@ -1,5 +1,3 @@
-// @flow
-
 class Base {
   base_annotatedField: number;
   base_initializedField = 42;

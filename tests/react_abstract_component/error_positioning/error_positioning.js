@@ -1,4 +1,3 @@
-// @flow
 // Errors should always point to the components. This is a regression test to
 // make sure we don't ruin reason locations that go through EvalTs.
 

@@ -1,5 +1,3 @@
-// @flow
-
 declare class A {}
 
 type AOrString = A | string;

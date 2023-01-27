@@ -1,5 +1,3 @@
-// @flow
-
 let tests = [
   function(x: Object) {
     ({...x}: Object);

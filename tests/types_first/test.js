@@ -1,5 +1,3 @@
-// @flow
-
 const n: string = require('./import-value1'); // error: number ~/~> string
 import { f } from './import-value2';
 const o = require('./import-value3');

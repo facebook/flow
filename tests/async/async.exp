@@ -1,101 +1,101 @@
-Error --------------------------------------------------------------------------------------------------- async.js:12:10
+Error --------------------------------------------------------------------------------------------------- async.js:10:10
 
 Cannot return `1` because number [1] is incompatible with boolean [2] in type argument `R` [3]. [incompatible-return]
 
-   async.js:12:10
-     12|   return 1;  // error, number != boolean
+   async.js:10:10
+     10|   return 1;  // error, number != boolean
                   ^ [1]
 
 References:
-   async.js:11:30
-     11| async function f1(): Promise<boolean> {
+   async.js:9:30
+      9| async function f1(): Promise<boolean> {
                                       ^^^^^^^ [2]
    <BUILTINS>/core.js:1836:24
    1836| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- async.js:31:10
+Error --------------------------------------------------------------------------------------------------- async.js:29:10
 
 Cannot return `await p` because number [1] is incompatible with boolean [2] in type argument `R` [3].
 [incompatible-return]
 
-   async.js:31:10
-     31|   return await p; // error, number != boolean
+   async.js:29:10
+     29|   return await p; // error, number != boolean
                   ^^^^^^^
 
 References:
-   async.js:30:30
-     30| async function f4(p: Promise<number>): Promise<boolean> {
+   async.js:28:30
+     28| async function f4(p: Promise<number>): Promise<boolean> {
                                       ^^^^^^ [1]
-   async.js:30:48
-     30| async function f4(p: Promise<number>): Promise<boolean> {
+   async.js:28:48
+     28| async function f4(p: Promise<number>): Promise<boolean> {
                                                         ^^^^^^^ [2]
    <BUILTINS>/core.js:1836:24
    1836| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- async.js:45:29
+Error --------------------------------------------------------------------------------------------------- async.js:43:29
 
 Cannot expect undefined as the return type of async function because undefined [1] is incompatible with
 implicitly-returned `Promise`. [incompatible-return]
 
-   45|   static async m(a: mixed): void { await a; } // error, void != Promise<void>
+   43|   static async m(a: mixed): void { await a; } // error, void != Promise<void>
                                    ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- async2.js:13:21
+Error -------------------------------------------------------------------------------------------------- async2.js:11:21
 
 Cannot assign `a` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   async2.js:13:21
-   13|     var c: string = a; // Error: number ~> string
+   async2.js:11:21
+   11|     var c: string = a; // Error: number ~> string
                            ^
 
 References:
-   async2.js:7:12
-    7|     return 42;
+   async2.js:5:12
+    5|     return 42;
                   ^^ [1]
-   async2.js:13:12
-   13|     var c: string = a; // Error: number ~> string
+   async2.js:11:12
+   11|     var c: string = a; // Error: number ~> string
                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- async2.js:32:30
+Error -------------------------------------------------------------------------------------------------- async2.js:30:30
 
 Cannot assign `voidoid1` to `voidoid3` because `Promise` [1] is incompatible with undefined [2] in the return value.
 [incompatible-type]
 
-   async2.js:32:30
-   32|   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
+   async2.js:30:30
+   30|   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
                                     ^^^^^^^^
 
 References:
-   async2.js:26:28
-   26|   async function voidoid1() {
+   async2.js:24:28
+   24|   async function voidoid1() {
                                   ^ [1]
-   async2.js:32:23
-   32|   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
+   async2.js:30:23
+   30|   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
                              ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- async2.js:50:30
+Error -------------------------------------------------------------------------------------------------- async2.js:48:30
 
 Cannot expect undefined as the return type of async function because undefined [1] is incompatible with
 implicitly-returned `Promise`. [incompatible-return]
 
-   50|   async function voidoid5(): void { // error, void != Promise<void>
+   48|   async function voidoid5(): void { // error, void != Promise<void>
                                     ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- async2.js:57:13
+Error -------------------------------------------------------------------------------------------------- async2.js:55:13
 
 Cannot expect `Promise` as the return type of async function because number [1] is incompatible with implicitly-returned
 undefined in type argument `R` [2]. [incompatible-return]
 
-   async2.js:57:13
-     57|   : Promise<number> { // error, number != void
+   async2.js:55:13
+     55|   : Promise<number> { // error, number != void
                      ^^^^^^ [1]
 
 References:
@@ -104,20 +104,20 @@ References:
                                 ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- async3.js:31:19
+Error -------------------------------------------------------------------------------------------------- async3.js:29:19
 
 Cannot assign `a` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   async3.js:31:19
-   31|   var c: string = a;
+   async3.js:29:19
+   29|   var c: string = a;
                          ^
 
 References:
-   async3.js:12:10
-   12|   return 42;
+   async3.js:10:10
+   10|   return 42;
                 ^^ [1]
-   async3.js:31:10
-   31|   var c: string = a;
+   async3.js:29:10
+   29|   var c: string = a;
                 ^^^^^^ [2]
 
 
@@ -129,57 +129,57 @@ Cannot use `await P` [1] as a superclass. Only variables and member expressions 
                             ^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- async_return_void.js:4:3
+Error ----------------------------------------------------------------------------------------- async_return_void.js:2:3
 
 Cannot return undefined because undefined [1] is incompatible with string [2] in type argument `R` [3].
 [incompatible-return]
 
-   async_return_void.js:4:3
-      4|   return;
+   async_return_void.js:2:3
+      2|   return;
            ^^^^^^^ [1]
 
 References:
-   async_return_void.js:3:32
-      3| async function foo1(): Promise<string> {
+   async_return_void.js:1:32
+      1| async function foo1(): Promise<string> {
                                         ^^^^^^ [2]
    <BUILTINS>/core.js:1836:24
    1836| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------- async_return_void.js:8:10
+Error ---------------------------------------------------------------------------------------- async_return_void.js:6:10
 
 Cannot return `undefined` because undefined [1] is incompatible with string [2] in type argument `R` [3].
 [incompatible-return]
 
-   async_return_void.js:8:10
-      8|   return undefined;
+   async_return_void.js:6:10
+      6|   return undefined;
                   ^^^^^^^^^ [1]
 
 References:
-   async_return_void.js:7:32
-      7| async function foo2(): Promise<string> {
+   async_return_void.js:5:32
+      5| async function foo2(): Promise<string> {
                                         ^^^^^^ [2]
    <BUILTINS>/core.js:1836:24
    1836| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
-Error --------------------------------------------------------------------------------------- async_return_void.js:13:10
+Error --------------------------------------------------------------------------------------- async_return_void.js:11:10
 
 Cannot return `bar()` because undefined [1] is incompatible with string [2] in type argument `R` [3].
 [incompatible-return]
 
-   async_return_void.js:13:10
-     13|   return bar();
+   async_return_void.js:11:10
+     11|   return bar();
                   ^^^^^
 
 References:
-   async_return_void.js:12:17
-     12|   function bar() { }
+   async_return_void.js:10:17
+     10|   function bar() { }
                          ^ [1]
-   async_return_void.js:11:32
-     11| async function foo3(): Promise<string> {
+   async_return_void.js:9:32
+      9| async function foo3(): Promise<string> {
                                         ^^^^^^ [2]
    <BUILTINS>/core.js:1836:24
    1836| declare class Promise<+R = mixed> {

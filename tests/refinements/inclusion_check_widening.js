@@ -1,5 +1,3 @@
-// @flow
-
 // Flow checks that, in conditional expressions, the refining (sentinel) value is
 // a subtype of the type of the value that is being refined. This check is not
 // necessary for soundness, but it helps prevent some common bugs. These checks

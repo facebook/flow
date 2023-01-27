@@ -1,5 +1,3 @@
-// @flow
-
 declare function myFun(this: {prop: number}): string;
 declare function myPolyFun<T>(this: {prop: number}, x: T): T;
 

@@ -190,38 +190,38 @@ References:
                         [2]
 
 
-Error ------------------------------------------------------------------------------------------ multi-call-error.js:9:9
+Error ------------------------------------------------------------------------------------------ multi-call-error.js:7:9
 
 Cannot declare this [1] because the name is already bound. [name-already-bound]
 
-   multi-call-error.js:9:9
-               v-----
-    9|         super(
-   10|             super(0)
-   11|         );
-               ^
+   multi-call-error.js:7:9
+              v-----
+   7|         super(
+   8|             super(0)
+   9|         );
+              ^
 
 References:
-   multi-call-error.js:7:7
-    7| class B extends A {
-             ^ [1]
+   multi-call-error.js:5:7
+   5| class B extends A {
+            ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ multi-call-error.js:9:9
+Error ------------------------------------------------------------------------------------------ multi-call-error.js:7:9
 
 Cannot declare super [1] because the name is already bound. [name-already-bound]
 
-   multi-call-error.js:9:9
-               v-----
-    9|         super(
-   10|             super(0)
-   11|         );
-               ^
+   multi-call-error.js:7:9
+              v-----
+   7|         super(
+   8|             super(0)
+   9|         );
+              ^
 
 References:
-   multi-call-error.js:7:17
-    7| class B extends A {
-                       ^ [1]
+   multi-call-error.js:5:17
+   5| class B extends A {
+                      ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- super.js:10:11

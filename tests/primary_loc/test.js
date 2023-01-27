@@ -1,5 +1,3 @@
-// @flow
-
 //$FlowFixMe (unused)
 declare function f (number) : string;
 

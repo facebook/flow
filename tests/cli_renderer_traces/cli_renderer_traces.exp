@@ -1,140 +1,140 @@
-Error ------------------------------------------------------------------------------------------------ code_frame.js:2:6
+Error ------------------------------------------------------------------------------------------------ code_frame.js:1:6
 
 Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 [incompatible-cast]
 
-   code_frame.js:2:6
-   2| ({p: 42}: {p: empty});
+   code_frame.js:1:6
+   1| ({p: 42}: {p: empty});
            ^^ [1]
 
 References:
-   code_frame.js:2:15
-   2| ({p: 42}: {p: empty});
+   code_frame.js:1:15
+   1| ({p: 42}: {p: empty});
                     ^^^^^ [2]
 
 Trace:
 * path 1:
-  2: ({p: 42}: {p: empty});
+  1: ({p: 42}: {p: empty});
           ^^ NumT [number]
-  2: ({p: 42}: {p: empty});
+  1: ({p: 42}: {p: empty});
                    ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
 * path 2:
-  2: ({p: 42}: {p: empty});
+  1: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
-  2: ({p: 42}: {p: empty});
+  1: ({p: 42}: {p: empty});
                ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type] (from path 3)
 * path 3:
-  2: ({p: 42}: {p: empty});
+  1: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
-  2: ({p: 42}: {p: empty});
+  1: ({p: 42}: {p: empty});
                ^^^^^^^^^^ ~> TypeCastT [object type]
 
 
-Error ------------------------------------------------------------------------------------------------ code_frame.js:4:6
+Error ------------------------------------------------------------------------------------------------ code_frame.js:3:6
 
 Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 [incompatible-cast]
 
-   code_frame.js:4:6
-   4| ({p: 42}: {p: empty});
+   code_frame.js:3:6
+   3| ({p: 42}: {p: empty});
            ^^ [1]
 
 References:
-   code_frame.js:4:15
-   4| ({p: 42}: {p: empty});
+   code_frame.js:3:15
+   3| ({p: 42}: {p: empty});
                     ^^^^^ [2]
 
 Trace:
 * path 1:
-  4: ({p: 42}: {p: empty});
+  3: ({p: 42}: {p: empty});
           ^^ NumT [number]
-  4: ({p: 42}: {p: empty});
+  3: ({p: 42}: {p: empty});
                    ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
 * path 2:
-  4: ({p: 42}: {p: empty});
+  3: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
-  4: ({p: 42}: {p: empty});
+  3: ({p: 42}: {p: empty});
                ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type] (from path 3)
 * path 3:
-  4: ({p: 42}: {p: empty});
+  3: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
-  4: ({p: 42}: {p: empty});
+  3: ({p: 42}: {p: empty});
                ^^^^^^^^^^ ~> TypeCastT [object type]
 
 
-Error ------------------------------------------------------------------------------------------------ code_frame.js:7:6
+Error ------------------------------------------------------------------------------------------------ code_frame.js:6:6
 
 Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 [incompatible-cast]
 
-   code_frame.js:7:6
-   7|   p: 42,
+   code_frame.js:6:6
+   6|   p: 42,
            ^^ [1]
 
 References:
-   code_frame.js:9:6
-   9|   p: empty,
+   code_frame.js:8:6
+   8|   p: empty,
            ^^^^^ [2]
 
 Trace:
 * path 1:
-  7:   p: 42,
+  6:   p: 42,
           ^^ NumT [number]
-  9:   p: empty,
+  8:   p: empty,
           ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
 * path 2:
       v
-  6: ({
-  7:   p: 42,
-  8: }: {
+  5: ({
+  6:   p: 42,
+  7: }: {
      ^ ObjT [object literal]
         v
-  8: }: {
-  9:   p: empty,
- 10: });
+  7: }: {
+  8:   p: empty,
+  9: });
      ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
 * path 3:
       v
-  6: ({
-  7:   p: 42,
-  8: }: {
+  5: ({
+  6:   p: 42,
+  7: }: {
      ^ ObjT [object literal]
         v
-  8: }: {
-  9:   p: empty,
- 10: });
+  7: }: {
+  8:   p: empty,
+  9: });
      ^ ~> TypeCastT [object type]
 
 
-Error ----------------------------------------------------------------------------------------------- code_frame.js:12:6
+Error ----------------------------------------------------------------------------------------------- code_frame.js:11:6
 
 Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 [incompatible-cast]
 
-   code_frame.js:12:6
-   12| ({p: 42}: {p: empty});
+   code_frame.js:11:6
+   11| ({p: 42}: {p: empty});
             ^^ [1]
 
 References:
-   code_frame.js:12:15
-   12| ({p: 42}: {p: empty});
+   code_frame.js:11:15
+   11| ({p: 42}: {p: empty});
                      ^^^^^ [2]
 
 Trace:
 * path 1:
- 12: ({p: 42}: {p: empty});
+ 11: ({p: 42}: {p: empty});
           ^^ NumT [number]
- 12: ({p: 42}: {p: empty});
+ 11: ({p: 42}: {p: empty});
                    ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from path 2)
 * path 2:
- 12: ({p: 42}: {p: empty});
+ 11: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
- 12: ({p: 42}: {p: empty});
+ 11: ({p: 42}: {p: empty});
                ^^^^^^^^^^ ~> UseT(Cast, ObjT) [object type] (from path 3)
 * path 3:
- 12: ({p: 42}: {p: empty});
+ 11: ({p: 42}: {p: empty});
       ^^^^^^^ ObjT [object literal]
- 12: ({p: 42}: {p: empty});
+ 11: ({p: 42}: {p: empty});
                ^^^^^^^^^^ ~> TypeCastT [object type]
 
 

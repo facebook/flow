@@ -1,5 +1,3 @@
-// @flow
-
 const React = require('react');
 
 function connect<A>(): void { }

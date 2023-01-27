@@ -1,5 +1,3 @@
-// @flow
-
 import {num1, str1} from "CJS_Named";
 import CJS_Named from "CJS_Named";
 (num1: number);

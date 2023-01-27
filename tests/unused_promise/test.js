@@ -1,5 +1,3 @@
-// @flow
-
 declare function foo(): Promise<void>;
 
 class MyPromise extends Promise<void> {}

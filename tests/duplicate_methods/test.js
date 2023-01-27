@@ -1,4 +1,3 @@
-// @flow
 class C1 {
   m() { }
   m() { }

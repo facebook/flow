@@ -1,4 +1,3 @@
-// @flow
 // Test that an invalidated refinement stays invalidated.
 // In particular issues #8251, #8777, #8778, and #8779.
 
