@@ -106,7 +106,9 @@ export default function TryFlowEditor({
                 // `c` property.
                 const typeAtPos =
                   typeof result === 'string' ? result : result.c;
-                return {contents: [{value: typeAtPos}]};
+                return {
+                  contents: [{value: `\`\`\`flow\n${typeAtPos}\n\`\`\``}],
+                };
               });
           },
         });
