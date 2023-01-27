@@ -269,10 +269,13 @@ struct
 
   let gettertype ({ T.return_t; _ } : T.t) = TypeUtil.type_t_of_annotated_or_inferred return_t
 
-  let settertype { T.fparams; _ } =
+  let settertype { T.reason; fparams; _ } =
     match F.value fparams with
-    | [(_, param_t)] -> param_t
-    | _ -> failwith "Setter property with unexpected type"
+    | (_, param_t) :: _ ->
+      (* setters must have exactly one param. more than one is a syntax error,
+         so ignore any extras *)
+      param_t
+    | [] -> AnyT.error reason
 
   let toplevels cx x =
     let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
