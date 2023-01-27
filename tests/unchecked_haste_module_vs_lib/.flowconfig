@@ -1,4 +1,6 @@
 [options]
+all=false
 module.system=haste
+
 [libs]
 lib.js

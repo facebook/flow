@@ -5,6 +5,7 @@
 [libs]
 
 [options]
+all=false
 no_flowlib=false
 enums=true
 format.single_quotes=true

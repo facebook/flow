@@ -1,4 +1,5 @@
 [options]
+all=false
 module.system=haste
 
 suppress_type=$FlowIssue
