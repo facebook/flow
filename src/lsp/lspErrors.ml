@@ -111,6 +111,7 @@ let limit_errors errors =
           severity = Some PublishDiagnostics.Information;
           code = PublishDiagnostics.NoCode;
           source = Some "Flow";
+          tags = [];
           message;
           relatedInformation = [];
           relatedLocations = [];

@@ -25,6 +25,7 @@ let mk_diagnostic { uri = _; kind; msg } =
     code = StringCode kind;
     source = Some "Flow";
     message = msg;
+    tags = [];
     relatedInformation = [];
     relatedLocations = [];
   }

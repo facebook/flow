@@ -278,6 +278,7 @@ let diagnostics_of_flow_errors =
             code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
             source = Some "Flow";
             message = error.Errors.Lsp_output.message;
+            tags = [];
             relatedInformation;
             relatedLocations = relatedInformation (* legacy fb extension *);
           }

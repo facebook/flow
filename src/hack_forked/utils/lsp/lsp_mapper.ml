@@ -233,6 +233,7 @@ let default_mapper =
              code;
              source;
              message;
+             tags;
              relatedInformation;
              relatedLocations;
            } ->
@@ -249,6 +250,7 @@ let default_mapper =
           code;
           source;
           message;
+          tags;
           relatedInformation;
           relatedLocations;
         });

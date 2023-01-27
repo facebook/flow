@@ -668,6 +668,7 @@ module PublishDiagnostics = struct
     code: diagnosticCode;  (** the diagnostic's code. *)
     source: string option;  (** human-readable string, eg. typescript/lint *)
     message: string;  (** the diagnostic's message *)
+    tags: DiagnosticTag.t list;
     relatedInformation: diagnosticRelatedInformation list;
     relatedLocations: relatedLocation list;  (** legacy FB extension *)
   }

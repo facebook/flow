@@ -506,6 +506,13 @@ end
 (* textDocument/publishDiagnostics notification                         *)
 (************************************************************************)
 
+module DiagnosticTagFmt = struct
+  let of_json = function
+    | Some (JSON_Number num_string) ->
+      num_string |> int_of_string_opt |> Base.Option.bind ~f:DiagnosticTag.of_enum
+    | _ -> None
+end
+
 let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
   PublishDiagnostics.(
     let print_diagnosticSeverity x = int_ (diagnosticSeverity_to_enum x) in
@@ -591,6 +598,7 @@ let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
       code = Jget.val_opt j "code" |> parse_code;
       source = Jget.string_opt j "source";
       message = Jget.string_exn j "message";
+      tags = Jget.array_d j "tags" ~default:[] |> Base.List.filter_map ~f:DiagnosticTagFmt.of_json;
       relatedInformation =
         Jget.array_d j "relatedInformation" ~default:[] |> Base.List.map ~f:parse_info;
       relatedLocations =
@@ -1244,15 +1252,10 @@ end
 module PublishDiagnosticsClientCapabilitiesFmt = struct
   open PublishDiagnosticsClientCapabilities
 
-  let diagnostic_tag_of_json = function
-    | Some (JSON_Number num_string) ->
-      num_string |> int_of_string_opt |> Base.Option.bind ~f:DiagnosticTag.of_enum
-    | _ -> None
-
   let tagSupport_of_json json =
     {
       valueSet =
-        Jget.array_d json "valueSet" ~default:[] |> Base.List.filter_map ~f:diagnostic_tag_of_json;
+        Jget.array_d json "valueSet" ~default:[] |> Base.List.filter_map ~f:DiagnosticTagFmt.of_json;
     }
 
   let of_json json =

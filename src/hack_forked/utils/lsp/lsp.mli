@@ -531,6 +531,7 @@ module PublishDiagnostics : sig
     code: diagnosticCode;
     source: string option;
     message: string;
+    tags: DiagnosticTag.t list;
     relatedInformation: diagnosticRelatedInformation list;
     relatedLocations: relatedLocation list;
   }
