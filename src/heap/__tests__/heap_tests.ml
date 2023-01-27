@@ -423,7 +423,12 @@ let add_provider_barrier_test _ =
    * call in `get_file_kind` will assert. *)
   let foo_m = Option.get (HasteModules.get key) in
   let foo_providers = get_haste_all_providers_exclusive foo_m in
-  List.iter (fun f -> ignore (get_file_kind f)) foo_providers
+  List.iter (fun f -> ignore (get_file_kind f)) foo_providers;
+
+  (* clean up *)
+  HasteModules.remove key;
+  compact ();
+  assert_heap_size 0
 
 let entity_barrier_test _ =
   (* Similar to `add_provider_barrier_test`, we also need a write barrier when
@@ -476,7 +481,13 @@ let entity_barrier_test _ =
    * succeed and the string should be considered live. If we failed to mark foo,
    * this would fail. *)
   let tbl = read_addr_tbl Fun.id (Option.get (H2.get tbl_key)) in
-  assert (String.equal "foo" (read_string tbl.(0)))
+  assert (String.equal "foo" (read_string tbl.(0)));
+
+  (* clean up *)
+  Ent.remove ent_key;
+  H2.remove tbl_key;
+  compact ();
+  assert_heap_size 0
 
 let compare_string_test _ =
   let (empty1, empty2, foo1, foo2, foot, quux) =
