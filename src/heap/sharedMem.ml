@@ -1405,7 +1405,7 @@ module NewAPI = struct
           let succ64 = load_acquire succ_addr in
           if
             sklist_is_marked succ64
-            || compare_modify_addr_strong succ_addr (sklist_unmark succ64) (sklist_marked succ64)
+            || compare_exchange_strong succ_addr succ64 (sklist_marked succ64)
           then
             loop (level - 1)
           else
@@ -1420,7 +1420,7 @@ module NewAPI = struct
         if sklist_is_marked succ then
           (* Someone else beat us to it. *)
           false
-        else if compare_exchange_strong succ_addr succ (sklist_marked succ) then
+        else if compare_modify_addr_strong succ_addr (sklist_unmark succ) (sklist_marked succ) then
           (* The node logically deleted. `sklist_find` will physically remove
            * links to the target node. *)
           let (_ : bool) = sklist_find cmp sklist data preds succs in
