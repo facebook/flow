@@ -3583,7 +3583,12 @@ let string_of_def_ctor = function
 
 let string_of_ctor = function
   | OpenT _ -> "OpenT"
-  | AnyT _ -> "AnyT"
+  | AnyT (_, CatchAny) -> "AnyT (catch)"
+  | AnyT (_, AnnotatedAny) -> "AnyT (annotated)"
+  | AnyT (_, AnyError _) -> "AnyT (error)"
+  | AnyT (_, Unsound _) -> "AnyT (unsound)"
+  | AnyT (_, Untyped) -> "AnyT (untyped)"
+  | AnyT (_, Placeholder) -> "AnyT (placeholder)"
   | AnnotT _ -> "AnnotT"
   | InternalT (ChoiceKitT (_, tool)) ->
     spf
