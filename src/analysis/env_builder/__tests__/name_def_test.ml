@@ -1410,3 +1410,22 @@ declare function foo(): void;
       (3, 17) to (3, 20) =>
       (4, 17) to (4, 20) =>
       (2, 5) to (2, 6) |}]
+
+let%expect_test "order synthesizable obj read" =
+  print_order_test {|
+declare var pair: { values: Array<string> };
+
+if (pair.values.length !== 0) {
+  const obj = {
+    an_object_prop: pair.values,
+  }
+}
+
+|};
+    [%expect {|
+      (2, 12) to (2, 16) =>
+      (4, 4) to (4, 15) =>
+      (4, 4) to (4, 22) =>
+      (4, 27) to (4, 28) =>
+      (5, 8) to (5, 11) =>
+      (6, 20) to (6, 31) |}]

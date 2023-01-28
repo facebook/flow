@@ -821,7 +821,7 @@ struct
           let open Ast.Expression.Object in
           let open Ast.Expression.Object.Property in
           let open Ast.Expression.Object.SpreadProperty in
-          let rec depends_of_synthesizable_expression state ((_, exp) as expression) =
+          let rec depends_of_synthesizable_expression state ((exp_loc, exp) as expression) =
             match exp with
             | Ast.Expression.Object obj -> loop state obj
             | Ast.Expression.TypeCast { Ast.Expression.TypeCast.annot; _ } ->
@@ -849,6 +849,19 @@ struct
                   property = Ast.Expression.Member.PropertyIdentifier _;
                   _;
                 } ->
+              let state =
+                let visitor =
+                  new use_visitor
+                    cx
+                    ~named_only_for_synthesis:false
+                    this_super_dep_loc_map
+                    env
+                    state
+                in
+                let writes = visitor#find_writes ~for_type:false ~allow_missing:true exp_loc in
+                Base.List.iter ~f:(visitor#add ~why:exp_loc) writes;
+                visitor#acc
+              in
               depends_of_synthesizable_expression state _object
             | _ -> depends_of_expression expression state
           and loop state { Ast.Expression.Object.properties; _ } =
