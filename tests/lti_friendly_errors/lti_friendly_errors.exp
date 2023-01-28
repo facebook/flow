@@ -1,0 +1,88 @@
+Error ---------------------------------------------------------------------------------- reason_of_inferred_targs.js:2:2
+
+Cannot cast `p` to `Promise` because mixed (inferred from type parameter's default) [1] is incompatible with string [2]
+in type argument `R` [3]. [incompatible-cast]
+
+   reason_of_inferred_targs.js:2:2
+      2| (p: Promise<string>); // error
+          ^
+
+References:
+   <BUILTINS>/core.js:1836:28
+   1836| declare class Promise<+R = mixed> {
+                                    ^^^^^ [1]
+   reason_of_inferred_targs.js:2:13
+      2| (p: Promise<string>); // error
+                     ^^^^^^ [2]
+   <BUILTINS>/core.js:1836:24
+   1836| declare class Promise<+R = mixed> {
+                                ^ [3]
+
+
+Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:7:18
+
+Cannot cast `s` to string because `T` (inferred from type parameter's bound) [1] is incompatible with string [2].
+[incompatible-cast]
+
+   reason_of_inferred_targs.js:7:18
+   7| magicCall1(s => (s: string)); // error
+                       ^
+
+References:
+   reason_of_inferred_targs.js:4:29
+   4| declare function magicCall1<T>(T => mixed): void;
+                                  ^ [1]
+   reason_of_inferred_targs.js:7:21
+   7| magicCall1(s => (s: string)); // error
+                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:8:18
+
+Cannot cast `s` to string because number (inferred from type parameter's default) [1] is incompatible with string [2].
+[incompatible-cast]
+
+   reason_of_inferred_targs.js:8:18
+   8| magicCall2(s => (s: string)); // error
+                       ^
+
+References:
+   reason_of_inferred_targs.js:5:33
+   5| declare function magicCall2<T = number>(T => mixed): T;
+                                      ^^^^^^ [1]
+   reason_of_inferred_targs.js:8:21
+   8| magicCall2(s => (s: string)); // error
+                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:9:19
+
+Cannot get `s.abcd` because property `abcd` is missing in `T` (inferred from type parameter's bound) [1].
+[incompatible-use]
+
+   reason_of_inferred_targs.js:9:19
+   9| magicCall1(s => s.abcd); // error
+                        ^^^^
+
+References:
+   reason_of_inferred_targs.js:4:29
+   4| declare function magicCall1<T>(T => mixed): void;
+                                  ^ [1]
+
+
+Error -------------------------------------------------------------------------------- reason_of_inferred_targs.js:10:19
+
+Cannot get `s.abcd` because property `abcd` is missing in `Number` [1]. [prop-missing]
+
+   reason_of_inferred_targs.js:10:19
+   10| magicCall2(s => s.abcd); // error
+                         ^^^^
+
+References:
+   reason_of_inferred_targs.js:5:33
+    5| declare function magicCall2<T = number>(T => mixed): T;
+                                       ^^^^^^ [1]
+
+
+
+Found 5 errors

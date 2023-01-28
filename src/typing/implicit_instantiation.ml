@@ -1023,11 +1023,17 @@ module Observer : OBSERVER with type output = inferred_targ = struct
 
   let any_error = AnyT.why (AnyError None)
 
+  let mod_inferred_bound =
+    TypeUtil.mod_reason_of_t (Reason.update_desc_reason (fun desc -> RTypeParamBound desc))
+
+  let mod_inferred_default =
+    TypeUtil.mod_reason_of_t (Reason.update_desc_reason (fun desc -> RTypeParamDefault desc))
+
   let on_constant_tparam_missing_bounds _cx _name tparam =
     let inferred =
       match tparam.default with
-      | None -> tparam.Type.bound
-      | Some t -> t
+      | None -> mod_inferred_bound tparam.Type.bound
+      | Some t -> mod_inferred_default t
     in
     { tparam; inferred }
 
@@ -1035,7 +1041,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
 
   let on_missing_bounds cx ~use_op name tparam ~tparam_binder_reason ~instantiation_reason =
     match tparam.default with
-    | Some inferred -> { tparam; inferred }
+    | Some inferred -> { tparam; inferred = mod_inferred_default inferred }
     | None ->
       if Context.in_synthesis_mode cx then
         { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }

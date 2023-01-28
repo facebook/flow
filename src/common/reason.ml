@@ -153,6 +153,8 @@ type 'loc virtual_reason_desc =
       * (*reason op *)
       ('loc virtual_reason_desc * 'loc)
     (* reason tapp *)
+  | RTypeParamDefault of 'loc virtual_reason_desc
+  | RTypeParamBound of 'loc virtual_reason_desc
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option
@@ -284,6 +286,8 @@ let rec map_desc_locs f = function
   | RTypeAlias (s, Some b, d) -> RTypeAlias (s, Some (f b), map_desc_locs f d)
   | RTypeParam (s, (d1, l1), (d2, l2)) ->
     RTypeParam (s, (map_desc_locs f d1, f l1), (map_desc_locs f d2, f l2))
+  | RTypeParamBound r -> RTypeParamBound (map_desc_locs f r)
+  | RTypeParamDefault r -> RTypeParamDefault (map_desc_locs f r)
   | RPropertyOf (s, d) -> RPropertyOf (s, map_desc_locs f d)
   | RNameProperty desc -> RNameProperty (map_desc_locs f desc)
   | RMissingAbstract desc -> RMissingAbstract (map_desc_locs f desc)
@@ -625,6 +629,8 @@ let rec string_of_desc = function
   | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
   | RTypeParam (x, _, _) -> spf "`%s`" (Subst_name.string_of_subst_name x)
+  | RTypeParamDefault r -> spf "%s (inferred from type parameter's default)" (string_of_desc r)
+  | RTypeParamBound r -> spf "%s (inferred from type parameter's bound)" (string_of_desc r)
   | RTypeof x -> spf "`typeof %s`" x
   | RMethod (Some x) -> spf "method `%s`" x
   | RMethod None -> "computed method"
@@ -1415,6 +1421,8 @@ let classification_of_reason r =
   | RTypeAlias _
   | ROpaqueType _
   | RTypeParam _
+  | RTypeParamBound _
+  | RTypeParamDefault _
   | RTypeof _
   | RMethod _
   | RMethodCall _
