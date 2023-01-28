@@ -5480,32 +5480,15 @@ struct
     )
 
   (**
-   * Addition
+   * Binary arithmetic operations
    *
-   * According to the spec, given l + r:
-   *  - if l or r is a string, or a Date, or an object whose
-   *    valueOf() returns an object, returns a string.
-   *  - otherwise, returns a number
+   * - number <> number = number
+   * - bigint <> bigint = bigint
+   * - string + string = string
+   * - If one of the operands is any/empty, then the result is any/empty.
    *
-   * Since we don't consider valueOf() right now, Date is no different than
-   * any other object. The only things that are neither objects nor strings
-   * are numbers, booleans, null, undefined and symbols. Since we can more
-   * easily enumerate those things, this implementation inverts the check:
-   * anything that is a number, boolean, null or undefined is treated as a
-   * number; everything else is a string.
-   *
-   * However, if l or r is a number and the other side is invalid, then we assume
-   * you were going for a number; generate an error on the invalid side; and flow
-   * `number` out as the result of the addition, even though at runtime it will be
-   * a string. Fixing the error will make the result type correct. The alternative
-   * is that we would error on both l and r, saying neither is compatible with
-   * `string`.
-   *
-   * We are less permissive than the spec when it comes to string coersion:
-   * only numbers can be coerced, to allow things like `num + '%'`.
-   *
-   * TODO: handle symbols (which raise a TypeError, so should be banned)
-   *
+   * We are _much_ less permissive than the spec with regard to coercion:
+   * Numbers are allowed to coerce to strings for string concat (e.g., `num + '%'`)
    **)
   and flow_arith cx trace use_op reason flip l r u kind =
     if needs_resolution r || is_generic r then
