@@ -551,7 +551,7 @@ val eval_repos_cache : t -> Type.t Type.EvalReposCacheMap.t ref
 
 val fix_cache : t -> Type.t Type.FixCacheMap.t ref
 
-val spread_cache : t -> Spread_cache.t
+val spread_cache : t -> Spread_cache.t ref
 
 val exhaustive_check : t -> ALoc.t -> ALoc.t list * bool
 
@@ -566,3 +566,9 @@ val find_avar : t -> int -> Type.ident * Type.AConstraint.root
 val find_avar_exn : t -> int -> Type.ident * Type.AConstraint.root
 
 val iter_annot_dependent_set : t -> (int -> Type.AConstraint.op -> unit) -> ISet.t -> unit
+
+type cache_snapshot
+
+val take_cache_snapshot : t -> cache_snapshot
+
+val restore_cache_snapshot : t -> cache_snapshot -> unit

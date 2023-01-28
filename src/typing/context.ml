@@ -152,7 +152,7 @@ type component_t = {
   eval_id_cache: Type.t Type.EvalIdCacheMap.t ref * Type.Eval.id Type.IdCacheMap.t ref;
   eval_repos_cache: Type.t Type.EvalReposCacheMap.t ref;
   fix_cache: Type.t Type.FixCacheMap.t ref;
-  spread_cache: Spread_cache.t;
+  spread_cache: Spread_cache.t ref;
   speculation_state: Speculation_state.t;
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
@@ -839,24 +839,54 @@ let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excus
 
 let set_environment cx env = cx.environment <- env
 
-let run_and_rolled_back_cache cx f =
-  let saved_constraint_cache = !(cx.ccx.constraint_cache) in
-  let saved_subst_cache = !(cx.ccx.subst_cache) in
-  let saved_repos_cache = !(cx.ccx.repos_cache) in
+type cache_snapshot = {
+  snapshot_constraint_cache: Type.FlowSet.t;
+  snapshot_subst_cache: (subst_cache_err list * Type.t) Type.SubstCacheMap.t;
+  snapshot_repos_cache: Repos_cache.t;
+  snapshot_eval_id_cache: Type.t Type.EvalIdCacheMap.t * Type.Eval.id Type.IdCacheMap.t;
+  snapshot_eval_repos_cache: Type.t Type.EvalReposCacheMap.t;
+  snapshot_fix_cache: Type.t Type.FixCacheMap.t;
+  snapshot_spread_cache: Spread_cache.t;
+}
+
+let take_cache_snapshot cx =
   let (eval_id_cache, id_cache) = cx.ccx.eval_id_cache in
-  let (saved_eval_id_cache, saved_id_cache) = (!eval_id_cache, !id_cache) in
-  let saved_eval_repos_cache = !(cx.ccx.eval_repos_cache) in
-  let saved_fix_cache = !(cx.ccx.fix_cache) in
-  let saved_spread_cache = !(cx.ccx.spread_cache) in
+  {
+    snapshot_constraint_cache = !(cx.ccx.constraint_cache);
+    snapshot_subst_cache = !(cx.ccx.subst_cache);
+    snapshot_repos_cache = !(cx.ccx.repos_cache);
+    snapshot_eval_id_cache = (!eval_id_cache, !id_cache);
+    snapshot_eval_repos_cache = !(cx.ccx.eval_repos_cache);
+    snapshot_fix_cache = !(cx.ccx.fix_cache);
+    snapshot_spread_cache = !(cx.ccx.spread_cache);
+  }
+
+let restore_cache_snapshot cx snapshot =
+  let {
+    snapshot_constraint_cache;
+    snapshot_subst_cache;
+    snapshot_repos_cache;
+    snapshot_eval_id_cache = (snapshot_eval_id_cache, snapshot_id_cache);
+    snapshot_eval_repos_cache;
+    snapshot_fix_cache;
+    snapshot_spread_cache;
+  } =
+    snapshot
+  in
+  let (eval_id_cache, id_cache) = cx.ccx.eval_id_cache in
+  cx.ccx.constraint_cache := snapshot_constraint_cache;
+  cx.ccx.subst_cache := snapshot_subst_cache;
+  cx.ccx.repos_cache := snapshot_repos_cache;
+  eval_id_cache := snapshot_eval_id_cache;
+  id_cache := snapshot_id_cache;
+  cx.ccx.eval_repos_cache := snapshot_eval_repos_cache;
+  cx.ccx.fix_cache := snapshot_fix_cache;
+  cx.ccx.spread_cache := snapshot_spread_cache
+
+let run_and_rolled_back_cache cx f =
+  let cache_snapshot = take_cache_snapshot cx in
   let result = Base.Result.try_with f in
-  cx.ccx.constraint_cache := saved_constraint_cache;
-  cx.ccx.subst_cache := saved_subst_cache;
-  cx.ccx.repos_cache := saved_repos_cache;
-  eval_id_cache := saved_eval_id_cache;
-  id_cache := saved_id_cache;
-  cx.ccx.eval_repos_cache := saved_eval_repos_cache;
-  cx.ccx.fix_cache := saved_fix_cache;
-  cx.ccx.spread_cache := saved_spread_cache;
+  restore_cache_snapshot cx cache_snapshot;
   Base.Result.ok_exn result
 
 let run_in_synthesis_mode cx f =
