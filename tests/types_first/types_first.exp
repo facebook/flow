@@ -1,3 +1,12 @@
+Error ------------------------------------------------------------------------------------------------- function.js:1:22
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: [signature-verification-failure]
+
+   1| export function foo() { return 1; } // missing annotation
+                           
+
+
 Error -------------------------------------------------------------------------------------------- import-value2.js:2:10
 
 Cannot return `x` because number [1] is incompatible with string [2]. [incompatible-return]
@@ -182,4 +191,4 @@ References:
 
 
 
-Found 11 errors
+Found 12 errors
