@@ -150,3 +150,12 @@ function test12(foo: ?Array<string>) {
   (a: Set<empty>); // error Set<string> ~> Set<empty>
   (b: Set<empty>); // error Set<string> ~> Set<empty>
 }
+
+function test13() {
+  declare function foo<V>(v: V, f: (V) => void): void;
+
+  foo(
+    { elements: [] },
+    (value: { elements: Array<string> }) => { (value: empty); }, // error
+  )
+}

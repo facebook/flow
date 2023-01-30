@@ -332,6 +332,16 @@ let error_mapper =
     method on_type_annot loc = (loc, Type.AnyT.at (Type.AnyError None) loc)
   end
 
+(* Used in skipped body due to placeholder function types. *)
+let placeholder_mapper cx =
+  object
+    inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+
+    method on_loc_annot loc = loc
+
+    method on_type_annot loc = (loc, Context.mk_placeholder cx Reason.(mk_reason RAnyImplicit loc))
+  end
+
 (* Used in unimplemented cases or unsupported nodes *)
 let unimplemented_mapper =
   object

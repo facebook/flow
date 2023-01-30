@@ -7283,8 +7283,9 @@ module Make
     let fun_type = Func_stmt_sig.functiontype cx ~arrow fun_loc default_this func_sig in
     if Context.in_synthesis_mode cx then
       let { Ast.Function.params; body; _ } = func in
-      let params_ast = Typed_ast_utils.error_mapper#function_params params in
-      let body_ast = Typed_ast_utils.error_mapper#function_body body in
+      let mapper = Typed_ast_utils.placeholder_mapper cx in
+      let params_ast = mapper#function_params params in
+      let body_ast = mapper#function_body body in
       (fun_type, reconstruct_func params_ast body_ast)
     else
       let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx func_sig in

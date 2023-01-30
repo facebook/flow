@@ -199,6 +199,23 @@ References:
                            ^ [3]
 
 
+Error --------------------------------------------------------------------------------- implicit_instantiation.js:159:48
+
+Cannot cast `value` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   implicit_instantiation.js:159:48
+   159|     (value: { elements: Array<string> }) => { (value: empty); }, // error
+                                                       ^^^^^
+
+References:
+   implicit_instantiation.js:159:13
+   159|     (value: { elements: Array<string> }) => { (value: empty); }, // error
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   implicit_instantiation.js:159:55
+   159|     (value: { elements: Array<string> }) => { (value: empty); }, // error
+                                                              ^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- intersections.js:7:24
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -684,4 +701,4 @@ References:
 
 
 
-Found 47 errors
+Found 48 errors
