@@ -269,6 +269,48 @@ Missing an annotation on return. [missing-local-annot]
                              
 
 
+Error --------------------------------------------------------------------------------------------------- class.js:51:18
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at property `a`: [signature-verification-failure]
+
+   51| export class D { a; } // error
+                        ^^
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:51:18
+
+Missing an annotation on property `a`. [missing-local-annot]
+
+   51| export class D { a; } // error
+                        ^^
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:54:18
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at property `a`: [signature-verification-failure]
+
+   54| export class G { a = (p) => 42; } // error
+                        ^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:54:23
+
+Missing an annotation on `p`. [missing-local-annot]
+
+   54| export class G { a = (p) => 42; } // error
+                             ^
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:54:25
+
+Missing an annotation on return. [missing-local-annot]
+
+   54| export class G { a = (p) => 42; } // error
+                               
+
+
 Error ----------------------------------------------------------------------------------------- class_expression.js:3:10
 
 Missing an annotation on `param`. [missing-local-annot]
@@ -918,4 +960,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 101 errors
+Found 106 errors

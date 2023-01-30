@@ -48,6 +48,11 @@ class C{
   nonthrowingInvariant() { invariant(this.prop1) } // ok
 }
 
+export class D { a; } // error
+export class E { a: number; } // ok
+export class F { a: number = 42; } // ok
+export class G { a = (p) => 42; } // error
+
 function sanity_check_that_we_dont_error_on_non_method_functions() {
   return 42;
 }
