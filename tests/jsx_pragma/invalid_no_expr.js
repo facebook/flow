@@ -1,0 +1,2 @@
+// @jsx
+// should error

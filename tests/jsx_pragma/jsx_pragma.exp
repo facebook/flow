@@ -1,3 +1,53 @@
+Error ----------------------------------------------------------------- block_comment_unknown_id_points_to_pragma.js:2:9
+
+Cannot resolve name `Foo`. [cannot-resolve-name]
+
+   2|  * @jsx Foo['Bar']
+              ^^^
+
+
+Error ----------------------------------------------------------------------------------- invalid_jsx_unsupported.js:1:9
+
+Invalid `@jsx` declaration. Should have the form `@jsx LeftHandSideExpression` with no spaces. Parse error: Unexpected
+token `=>`, expected the end of input. [invalid-jsx-decl]
+
+   1| // @jsx (x)=>x
+              ^^^^^^
+
+
+Error --------------------------------------------------------------------------- invalid_jsx_unsupported_newline.js:2:5
+
+Invalid `@jsx` declaration. Should have the form `@jsx LeftHandSideExpression` with no spaces. Parse error: Unexpected
+token `=>`, expected the end of input. [invalid-jsx-decl]
+
+   2|     (x)=>x
+          ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- invalid_no_expr.js:1:4
+
+Invalid `@jsx` declaration. Should have the form `@jsx LeftHandSideExpression` with no spaces. [invalid-jsx-decl]
+
+   1| // @jsx
+         ^^^^
+
+
+Error ---------------------------------------------------------------- line_comment_unknown_id_points_to_pragma_1.js:1:9
+
+Cannot resolve name `Foo`. [cannot-resolve-name]
+
+   1| // @jsx Foo['Bar']
+              ^^^
+
+
+Error ---------------------------------------------------------------- line_comment_unknown_id_points_to_pragma_2.js:1:9
+
+Cannot resolve name `Foo`. [cannot-resolve-name]
+
+   1| // @jsx Foo.baz
+              ^^^
+
+
 Error --------------------------------------------------------------------------------- member-expression-pragma.js:8:18
 
 Cannot assign `<Component />` to `a` because undefined [1] is incompatible with empty [2]. [incompatible-type]
@@ -15,5 +65,293 @@ References:
                ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- respect_local_scope.js:4:2
 
-Found 1 error
+Cannot create `Bar` element because number [1] is incompatible with string [2]. [incompatible-type]
+
+   respect_local_scope.js:4:2
+   4| <Bar />; // error: number ~> string
+       ^^^
+
+References:
+   respect_local_scope.js:2:13
+   2| const Bar = 123;
+                  ^^^ [1]
+   respect_local_scope.js:3:17
+   3| function Foo(x: string) {}
+                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- respect_local_scope.js:8:4
+
+Cannot create `Bar` element because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   respect_local_scope.js:8:4
+   8|   <Bar />; // error: number ~> boolean
+         ^^^
+
+References:
+   respect_local_scope.js:2:13
+   2| const Bar = 123;
+                  ^^^ [1]
+   respect_local_scope.js:7:19
+   7|   const Foo = (y: boolean) => {};
+                        ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- respect_local_scope.js:14:11
+
+Cannot create `Bar` element because number [1] is incompatible with string [2] in property `x`. [incompatible-type]
+
+   respect_local_scope.js:14:11
+   14|   <Bar x={123} />; // error: number ~> string
+                 ^^^ [1]
+
+References:
+   respect_local_scope.js:12:42
+   12|   function Foo(elem: number, props: { x: string }) {}
+                                                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- respect_local_scope.js:20:4
+
+Cannot create `Bar` element because null [1] is incompatible with object type [2]. [incompatible-type]
+
+   respect_local_scope.js:20:4
+   20|   <Bar />; // error: null ~> object type
+          ^^^
+
+References:
+   respect_local_scope.js:20:3
+   20|   <Bar />; // error: null ~> object type
+         ^^^^^^^ [1]
+   respect_local_scope.js:18:37
+   18|   function Foo(elem: number, props: { x: string }) {}
+                                           ^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- respect_local_scope.js:26:9
+
+Cannot create `Bar` element because boolean [1] is incompatible with number [2]. [incompatible-type]
+
+   respect_local_scope.js:26:9
+   26|   <Bar>{true}{null}</Bar> // error
+               ^^^^ [1]
+
+References:
+   respect_local_scope.js:24:51
+   24|   function Foo(elem: number, props: null, child1: number, child2: string) {}
+                                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- respect_local_scope.js:26:15
+
+Cannot create `Bar` element because null [1] is incompatible with string [2]. [incompatible-type]
+
+   respect_local_scope.js:26:15
+   26|   <Bar>{true}{null}</Bar> // error
+                     ^^^^ [1]
+
+References:
+   respect_local_scope.js:24:67
+   24|   function Foo(elem: number, props: null, child1: number, child2: string) {}
+                                                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- respect_local_scope.js:32:12
+
+Cannot create `Bar` element because string [1] is incompatible with boolean [2] in property `key`. [incompatible-type]
+
+   respect_local_scope.js:32:12
+   32|   <Bar key="hi" ref="bye" />; // error: string ~> boolean, string ~> number
+                  ^^^^ [1]
+
+References:
+   respect_local_scope.js:30:43
+   30|   function Foo(elem: number, props: {key: boolean, ref: number}) {}
+                                                 ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- respect_local_scope.js:32:21
+
+Cannot create `Bar` element because string [1] is incompatible with number [2] in property `ref`. [incompatible-type]
+
+   respect_local_scope.js:32:21
+   32|   <Bar key="hi" ref="bye" />; // error: string ~> boolean, string ~> number
+                           ^^^^^ [1]
+
+References:
+   respect_local_scope.js:30:57
+   30|   function Foo(elem: number, props: {key: boolean, ref: number}) {}
+                                                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- respect_local_scope.js:38:4
+
+Cannot create `baz` element because `baz` [1] is incompatible with string literal `bar` [2]. [incompatible-type]
+
+   respect_local_scope.js:38:4
+   38|   <baz />; // error 'baz' ~> 'bar'
+          ^^^ [1]
+
+References:
+   respect_local_scope.js:36:22
+   36|   function Foo(elem: "bar") {}
+                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- respect_local_scope.js:44:4
+
+Cannot create `Bar` element because property `x` is missing in props [1] but exists in object type [2]. [prop-missing]
+
+   respect_local_scope.js:44:4
+   44|   <Bar y="hi" />; // error: missing x
+          ^^^
+
+References:
+   respect_local_scope.js:44:3
+   44|   <Bar y="hi" />; // error: missing x
+         ^^^^^^^^^^^^^^ [1]
+   respect_local_scope.js:42:37
+   42|   function Foo(elem: number, props: {x: string}) {}
+                                           ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- respect_local_scope.js:49:4
+
+Cannot resolve name `Baz`. [cannot-resolve-name]
+
+   49|   <Baz y="hi" />; // error: Cannot resolve Baz
+          ^^^
+
+
+Error -------------------------------------------------------------------------------- simple_id_better_error_loc.js:3:1
+
+Cannot resolve name `Foo`. [cannot-resolve-name]
+
+   3| <Bar />; // error
+      ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- text_trimming.js:18:3
+
+Cannot create `Bar` element because JSX text [1] is incompatible with string literal `hello` [2]. [incompatible-type]
+
+   text_trimming.js:18:3
+   18|   hi
+         ^^ [1]
+
+References:
+   text_trimming.js:8:13
+    8|     child1: 'hello',
+                   ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- text_trimming.js:20:3
+
+Cannot create `Bar` element because JSX text [1] is incompatible with string literal `bye` [2]. [incompatible-type]
+
+   text_trimming.js:20:3
+         v--
+   20|   bye
+   21|   there
+         ----^ [1]
+
+References:
+   text_trimming.js:10:13
+   10|     child3: 'bye',
+                   ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- text_trimming.js:39:8
+
+Cannot create `Bar` element because JSX text [1] is incompatible with string literal `should be single space` [2].
+[incompatible-type]
+
+   text_trimming.js:39:8
+   39|   <Bar> {true}
+              ^ [1]
+
+References:
+   text_trimming.js:30:13
+   30|     child1: "should be single space",
+                   ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- text_trimming.js:39:10
+
+Cannot create `Bar` element because boolean [1] is incompatible with string literal `should be true` [2].
+[incompatible-type]
+
+   text_trimming.js:39:10
+   39|   <Bar> {true}
+                ^^^^ [1]
+
+References:
+   text_trimming.js:31:13
+   31|     child2: "should be true",
+                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- text_trimming.js:40:4
+
+Cannot create `Bar` element because string [1] is incompatible with string literal `should be empty string` [2].
+[incompatible-type]
+
+   text_trimming.js:40:4
+   40|   {''} </Bar>;
+          ^^ [1]
+
+References:
+   text_trimming.js:32:13
+   32|     child3: "should be empty string",
+                   ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- text_trimming.js:40:7
+
+Cannot create `Bar` element because JSX text [1] is incompatible with string literal `should be single space` [2].
+[incompatible-type]
+
+   text_trimming.js:40:7
+   40|   {''} </Bar>;
+             ^ [1]
+
+References:
+   text_trimming.js:33:13
+   33|     child4: "should be single space",
+                   ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- text_trimming.js:47:9
+
+Cannot create `Bar` element because JSX text [1] is incompatible with string literal `First Middle Last` [2].
+[incompatible-type]
+
+   text_trimming.js:47:9
+   47|   (<Bar>    First${"     "}
+               ^^^^^^^^^^ [1]
+
+References:
+   text_trimming.js:45:41
+   45|   let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
+                                               ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- text_trimming.js:62:9
+
+Cannot create `Bar` element because JSX text [1] is incompatible with string literal `First Middle Last` [2].
+[incompatible-type]
+
+   text_trimming.js:62:9
+   62|   (<Bar>First    Middle	 	 Last</Bar>); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   text_trimming.js:45:41
+   45|   let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
+                                               ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 27 errors
