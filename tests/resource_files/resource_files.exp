@@ -1,0 +1,60 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:2:8
+
+Cannot resolve module `./foo`. [cannot-resolve-module]
+
+   2| import './foo'; // error, .css extension cannot be omitted
+             ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:8
+
+Cannot resolve module `./bar`. [cannot-resolve-module]
+
+   13| import './bar'; // error, .png extension cannot be omitted
+              ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:2
+
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:15:2
+   15| (require('./bar.png'): number); // error, string ~> number
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:15:10
+   15| (require('./bar.png'): number); // error, string ~> number
+                ^^^^^^^^^^^ [1]
+   test.js:15:24
+   15| (require('./bar.png'): number); // error, string ~> number
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:8
+
+Cannot resolve module `./qux`. [cannot-resolve-module]
+
+   18| import './qux'; // error, .webp extension cannot be omitted
+              ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:2
+
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:19:2
+   19| (require('./qux.webp'): number);  // error, string ~> number
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:19:10
+   19| (require('./qux.webp'): number);  // error, string ~> number
+                ^^^^^^^^^^^^ [1]
+   test.js:19:25
+   19| (require('./qux.webp'): number);  // error, string ~> number
+                               ^^^^^^ [2]
+
+
+
+Found 5 errors
