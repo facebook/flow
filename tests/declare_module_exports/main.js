@@ -27,3 +27,34 @@ import { foo } from "declare_overloaded_function";
 (foo(0): string); // Error: number ~> string
 (foo(""): string);
 (foo(""): number); // Error: string ~> number
+
+import type {BT} from "B";
+(42: BT); // ok
+("str": BT); // Error: string ~> number
+
+import type BDefault from "B";
+import BDefaultValue from "B";
+(new BDefaultValue(): BDefault); // ok
+(42: BDefault); // Error: number ~> Def
+
+// import between libdef files
+import type {CT} from "C";
+import type {DT} from "D"
+{
+  declare var cVal: CT;
+  const dVal = {C: cVal};
+  (cVal: CT); // ok
+  (cVal.D: DT); // ok
+  (dVal: DT); // ok
+  (dVal.C: CT); // ok
+}
+
+/**
+ * TODO: At the moment it isn't possible to import a non-libdef module from a
+ *       libdef. There's no good reason to ban this, it's just a limitation of
+ *       the way Flow handles libdefs at the moment. We should fix this test
+ *       to pass at some point.
+ */
+// import {T} from "DependsOnRealModule";
+// (42: T);
+// ("str": T);
