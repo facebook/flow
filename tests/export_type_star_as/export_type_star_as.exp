@@ -1,0 +1,68 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
+
+Cannot cast `42` to `aType0` because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:3:2
+   3| (42: aType0); // error
+       ^^ [1]
+
+References:
+   test.js:3:6
+   3| (42: aType0); // error
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:14
+
+Cannot import `nope` because there is no `nope` export in `./forward_only`. [missing-export]
+
+   5| import type {nope} from "./forward_only"; // error
+                   ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:9
+
+Cannot import `aNum` because there is no `aNum` export in `./forward_only`. [missing-export]
+
+   6| import {aNum} from "./forward_only"; // error
+              ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:9
+
+Cannot import `aNum` because there is no `aNum` export in `./forward_with_exports`. [missing-export]
+
+   13| import {aNum as ignore} from "./forward_with_exports"; // error
+               ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:2
+
+Cannot cast `"asdf"` to `aType1` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:18:2
+   18| ("asdf": aType1); // error
+        ^^^^^^ [1]
+
+References:
+   test.js:18:10
+   18| ("asdf": aType1); // error
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+
+Cannot cast `"asdf"` to `aType2` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:23:2
+   23| ("asdf": aType2); // error
+        ^^^^^^ [1]
+
+References:
+   test.js:23:10
+   23| ("asdf": aType2); // error
+                ^^^^^^ [2]
+
+
+
+Found 6 errors
