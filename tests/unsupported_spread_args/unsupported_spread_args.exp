@@ -1,0 +1,163 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:4:16
+
+Cannot instantiate React ref because number [1] is incompatible with string [2] in type argument `ElementType`.
+[incompatible-type-arg]
+
+   test.js:4:16
+     4| const arr = [1,2,3];  // badly-positioned error
+                       ^
+
+References:
+   test.js:4:14
+     4| const arr = [1,2,3];  // badly-positioned error
+                     ^ [1]
+   <BUILTINS>/react.js:162:5
+   162|   | string
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:7
+
+Cannot call `React.createElement` because number [1] is not a React component. [not-a-component]
+
+   test.js:8:7
+   8| React.createElement(...arr, {}); // error
+            ^^^^^^^^^^^^^
+
+References:
+   test.js:4:14
+   4| const arr = [1,2,3];  // badly-positioned error
+                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:7
+
+Cannot call `React.createElement` because number [1] is not an object. [not-an-object]
+
+   test.js:8:7
+   8| React.createElement(...arr, {}); // error
+            ^^^^^^^^^^^^^
+
+References:
+   test.js:4:16
+   4| const arr = [1,2,3];  // badly-positioned error
+                     ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:7
+
+Cannot call `React.createElement` because number [1] is not an object. [not-an-object]
+
+   test.js:9:7
+   9| React.createElement(({}: any), ...arr); // error
+            ^^^^^^^^^^^^^
+
+References:
+   test.js:4:14
+   4| const arr = [1,2,3];  // badly-positioned error
+                   ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:7
+
+Cannot call `React.createElement` because number [1] is not a React component. [not-a-component]
+
+   test.js:10:7
+   10| React.createElement(...arr, ...arr); // error
+             ^^^^^^^^^^^^^
+
+References:
+   test.js:4:14
+    4| const arr = [1,2,3];  // badly-positioned error
+                    ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:7
+
+Cannot call `React.createElement` because number [1] is not an object. [not-an-object]
+
+   test.js:10:7
+   10| React.createElement(...arr, ...arr); // error
+             ^^^^^^^^^^^^^
+
+References:
+   test.js:4:16
+    4| const arr = [1,2,3];  // badly-positioned error
+                      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:13:67
+
+A spread argument is unsupported here. [unsupported-syntax]
+
+   13| (function (this: any, ...args: any) { return this.bar; }).call(...arr); // error
+                                                                         ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:54
+
+A spread argument is unsupported here. [unsupported-syntax]
+
+   16| (function (this: any) { return this.bar; }).apply(...arr); // error
+                                                            ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:65
+
+A spread argument is unsupported here. [unsupported-syntax]
+
+   17| (function (this: any) { return this.bar; }).apply(({}: any), ...arr); // error
+                                                                       ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:54
+
+A spread argument is unsupported here. [unsupported-syntax]
+
+   18| (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error
+                                                            ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:62
+
+A spread argument is unsupported here. [unsupported-syntax]
+
+   18| (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error
+                                                                    ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:26
+
+A spread argument is unsupported here. [unsupported-syntax]
+
+   21| Object.getPrototypeOf(...arr); // error
+                                ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:25:29
+
+A spread argument is unsupported here. [unsupported-syntax]
+
+   25| const o1 = Object.assign(...objArr); // error
+                                   ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:31:1
+
+Incorrect arguments passed to call of method `assign` because number [1] is not an object. [not-an-object]
+
+   test.js:31:1
+   31| Object.assign({}, ...[1]); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:31:23
+   31| Object.assign({}, ...[1]); // error
+                             ^ [1]
+
+
+
+Found 14 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
