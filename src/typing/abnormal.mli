@@ -14,12 +14,8 @@ type t =
 type payload =
   | Expr of ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
   | Stmt of (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t
-  | Stmts of (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
 
 val throw_stmt_control_flow_exception : (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t -> t -> 'a
-
-val throw_stmts_control_flow_exception :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list -> t -> 'a
 
 val throw_expr_control_flow_exception :
   ALoc.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t -> t -> 'a
@@ -31,10 +27,6 @@ val check_stmt_control_flow_exception :
 val catch_stmt_control_flow_exception :
   (unit -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t) ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t * t option
-
-val catch_stmts_control_flow_exception :
-  (unit -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list) ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list * t option
 
 val catch_expr_control_flow_exception :
   (unit -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->

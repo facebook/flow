@@ -329,11 +329,7 @@ module Make
         { declarations; kind; comments }
       )
     in
-    let check cx b =
-      Abnormal.catch_stmts_control_flow_exception (fun () ->
-          Toplevels.toplevels statement cx b.Block.body
-      )
-    in
+    let check cx b = Toplevels.toplevels statement cx b.Block.body in
     let catch_clause cx catch_clause =
       let { Try.CatchClause.param; body = (b_loc, b); comments } = catch_clause in
       let open Ast.Pattern in
@@ -400,9 +396,7 @@ module Make
     function
     | (_, Empty _) as stmt -> stmt
     | (loc, Block { Block.body; comments }) ->
-      let (body, abnormal_opt) =
-        Abnormal.catch_stmts_control_flow_exception (fun () -> Toplevels.toplevels statement cx body)
-      in
+      let (body, abnormal_opt) = Toplevels.toplevels statement cx body in
       Abnormal.check_stmt_control_flow_exception
         ((loc, Block { Block.body; comments }), abnormal_opt)
     | (loc, Expression { Expression.expression = e; directive; comments }) ->
@@ -589,11 +583,7 @@ module Make
 
                (* process statements, track control flow exits: exit will be an
                   unconditional exit. *)
-               let (consequent_ast, exit) =
-                 Abnormal.catch_stmts_control_flow_exception (fun () ->
-                     Toplevels.toplevels statement cx consequent
-                 )
-               in
+               let (consequent_ast, exit) = Toplevels.toplevels statement cx consequent in
                (* track fallthrough to next case and/or break to switch end *)
                let falls_through =
                  match exit with
@@ -797,11 +787,7 @@ module Make
      *)
     (***************************************************************************)
     | (loc, Try { Try.block = (b_loc, b); handler; finalizer; comments }) ->
-      let (try_block_ast, try_abnormal) =
-        Abnormal.catch_stmts_control_flow_exception (fun () ->
-            Toplevels.toplevels statement cx b.Block.body
-        )
-      in
+      let (try_block_ast, try_abnormal) = Toplevels.toplevels statement cx b.Block.body in
       (* traverse catch block, save exceptions *)
       let (catch_ast, catch_abnormal) =
         match handler with
@@ -816,11 +802,7 @@ module Make
         match finalizer with
         | None -> (None, None)
         | Some (f_loc, { Block.body; comments }) ->
-          let (finally_block_ast, finally_abnormal) =
-            Abnormal.catch_stmts_control_flow_exception (fun () ->
-                Toplevels.toplevels statement cx body
-            )
-          in
+          let (finally_block_ast, finally_abnormal) = Toplevels.toplevels statement cx body in
           (Some (f_loc, { Block.body = finally_block_ast; comments }), finally_abnormal)
       in
 
@@ -1833,11 +1815,7 @@ module Make
       let prev_scope_kind = Env.set_scope_kind cx Name_def.Ordinary in
       Context.push_declare_module cx (Module_info.empty_cjs_module ());
 
-      let (elements_ast, elements_abnormal) =
-        Abnormal.catch_stmts_control_flow_exception (fun () ->
-            Toplevels.toplevels statement cx elements
-        )
-      in
+      let (elements_ast, elements_abnormal) = Toplevels.toplevels statement cx elements in
       let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
       Env.init_declare_module_synthetic_module_exports
         cx

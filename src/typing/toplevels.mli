@@ -12,4 +12,4 @@ val toplevels :
   ) ->
   Context.t ->
   (ALoc.t, ALoc.t) Flow_ast.Statement.t list ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list * Abnormal.t option

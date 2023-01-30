@@ -53,5 +53,5 @@ let toplevels statement cx stmts =
           | (loc, _) when i > n -> warn_unreachable loc
           | _ -> ())
       stmts;
-    Abnormal.throw_stmts_control_flow_exception stmts abnormal
-  | None -> stmts
+    (stmts, Some abnormal)
+  | None -> (stmts, None)

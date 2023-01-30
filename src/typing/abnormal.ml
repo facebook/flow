@@ -17,7 +17,6 @@ type t =
 type payload =
   | Expr of ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
   | Stmt of (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t
-  | Stmts of (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
 
 exception Exn of payload * t
 
@@ -25,8 +24,6 @@ open Utils_js
 
 (* called from traversal. abnormal indicates control flow directive encountered *)
 let throw_stmt_control_flow_exception stmt abnormal = raise (Exn (Stmt stmt, abnormal))
-
-let throw_stmts_control_flow_exception stmts abnormal = raise (Exn (Stmts stmts, abnormal))
 
 let throw_expr_control_flow_exception loc expr abnormal = raise (Exn (Expr (loc, expr), abnormal))
 
@@ -50,10 +47,7 @@ let check_stmt_control_flow_exception = function
      Otherwise, if it raises with some AST payload and an abnormal flow,
        then we return the payload AST and Some <abnormal flow>.
 *)
-let ( catch_stmt_control_flow_exception,
-      catch_stmts_control_flow_exception,
-      catch_expr_control_flow_exception
-    ) =
+let (catch_stmt_control_flow_exception, catch_expr_control_flow_exception) =
   let catch_control_flow_exception p f =
     try
       let res = f () in
@@ -72,19 +66,10 @@ let ( catch_stmt_control_flow_exception,
             Flow_ast.Statement.Expression
               { Flow_ast.Statement.Expression.expression = exp; directive = None; comments = None }
           )
-        | Stmts _ -> assert_false "Statement expected"
-        ),
-    catch_control_flow_exception (function
-        | Stmts stmts -> stmts
-        | Stmt _
-        | Expr _ ->
-          assert_false "Statement list expected"
         ),
     catch_control_flow_exception (function
         | Expr (_, exp) -> exp
-        | Stmt _
-        | Stmts _ ->
-          assert_false "Expression expected"
+        | Stmt _ -> assert_false "Expression expected"
         )
   )
 

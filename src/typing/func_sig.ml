@@ -425,9 +425,7 @@ struct
 
     (* statement visit pass *)
     let (statements_ast, statements_abnormal) =
-      Abnormal.catch_stmts_control_flow_exception (fun () ->
-          Toplevels.toplevels Statement.statement cx statements
-      )
+      Toplevels.toplevels Statement.statement cx statements
     in
 
     let maybe_void =
