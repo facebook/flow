@@ -1,3 +1,55 @@
+Error ---------------------------------------------------------------------------------------------------- arity.js:2:40
+
+Cannot return `x` because tuple type [1] has an arity of 2 but tuple type [2] has an arity of 1. [invalid-tuple-arity]
+
+   arity.js:2:40
+   2| function foo4(x: [1, 2]): [1] { return x; } // error
+                                             ^
+
+References:
+   arity.js:2:18
+   2| function foo4(x: [1, 2]): [1] { return x; } // error
+                       ^^^^^^ [1]
+   arity.js:2:27
+   2| function foo4(x: [1, 2]): [1] { return x; } // error
+                                ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- arity.js:3:40
+
+Cannot return `x` because tuple type [1] has an arity of 1 but tuple type [2] has an arity of 2. [invalid-tuple-arity]
+
+   arity.js:3:40
+   3| function foo5(x: [1]): [1, 2] { return x; } // error
+                                             ^
+
+References:
+   arity.js:3:18
+   3| function foo5(x: [1]): [1, 2] { return x; } // error
+                       ^^^ [1]
+   arity.js:3:24
+   3| function foo5(x: [1]): [1, 2] { return x; } // error
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- arity.js:7:2
+
+Cannot cast `foo` to tuple type because tuple type [1] has an arity of 0 but tuple type [2] has an arity of 1.
+[invalid-tuple-arity]
+
+   arity.js:7:2
+   7| (foo: [1]); // error
+       ^^^
+
+References:
+   arity.js:6:12
+   6| const foo: [] = [];
+                 ^^ [1]
+   arity.js:7:7
+   7| (foo: [1]); // error
+            ^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- array.js:2:10
 
 Cannot return `x` because array type [1] has an unknown number of elements, so is incompatible with tuple type [2].
@@ -14,6 +66,145 @@ References:
    array.js:1:34
    1| function foo1(x: Array<number>): [number, ?number] {
                                        ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:13:4
+
+Cannot cast `arr` to tuple type because array literal [1] has an arity of 3 but tuple type [2] has an arity of 2.
+[invalid-tuple-arity]
+
+   array.js:13:4
+   13|   (arr: [1,2]); // error
+          ^^^
+
+References:
+   array.js:11:15
+   11|   const arr = [1,2,3];
+                     ^^^^^^^ [1]
+   array.js:13:9
+   13|   (arr: [1,2]); // error
+               ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:14:4
+
+Cannot cast `arr` to tuple type because array literal [1] has an arity of 3 but tuple type [2] has an arity of 4.
+[invalid-tuple-arity]
+
+   array.js:14:4
+   14|   (arr: [1,2,3,4]); // error
+          ^^^
+
+References:
+   array.js:11:15
+   11|   const arr = [1,2,3];
+                     ^^^^^^^ [1]
+   array.js:14:9
+   14|   (arr: [1,2,3,4]); // error
+               ^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- array.js:21:62
+
+Cannot return `arr` because array type [1] has an unknown number of elements, so is incompatible with tuple type [2].
+[invalid-tuple-arity]
+
+   array.js:21:62
+   21| function foo3(arr: Array<number>): [number, number] { return arr; } // error
+                                                                    ^^^
+
+References:
+   array.js:21:20
+   21| function foo3(arr: Array<number>): [number, number] { return arr; } // error
+                          ^^^^^^^^^^^^^ [1]
+   array.js:21:36
+   21| function foo3(arr: Array<number>): [number, number] { return arr; } // error
+                                          ^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- array.js:24:51
+
+Cannot return `arr` because tuple type [1] is incompatible with array type [2]. [incompatible-return]
+
+   array.js:24:51
+   24| function foo4(arr: [1,2]): Array<number> { return arr; } // error
+                                                         ^^^
+
+References:
+   array.js:24:20
+   24| function foo4(arr: [1,2]): Array<number> { return arr; } // error
+                          ^^^^^ [1]
+   array.js:24:28
+   24| function foo4(arr: [1,2]): Array<number> { return arr; } // error
+                                  ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:30:4
+
+Cannot cast `a` to number literal `10` because number literal `1` [1] is incompatible with number literal `10` [2].
+[incompatible-cast]
+
+   array.js:30:4
+   30|   (a: 10); // error
+          ^
+
+References:
+   array.js:28:15
+   28|   const tup: [1,2,3,4] = [1,2,3,4];
+                     ^ [1]
+   array.js:30:7
+   30|   (a: 10); // error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:31:4
+
+Cannot cast `b` to number literal `20` because number literal `2` [1] is incompatible with number literal `20` [2].
+[incompatible-cast]
+
+   array.js:31:4
+   31|   (b: 20); // error
+          ^
+
+References:
+   array.js:28:17
+   28|   const tup: [1,2,3,4] = [1,2,3,4];
+                       ^ [1]
+   array.js:31:7
+   31|   (b: 20); // error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:32:4
+
+Cannot cast `rest` to tuple type because number literal `4` [1] is incompatible with number literal `40` [2] in index 1.
+[incompatible-cast]
+
+   array.js:32:4
+   32|   (rest: [3,40]); // error
+          ^^^^
+
+References:
+   array.js:28:21
+   28|   const tup: [1,2,3,4] = [1,2,3,4];
+                           ^ [1]
+   array.js:32:13
+   32|   (rest: [3,40]); // error
+                   ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- array.js:38:12
+
+Cannot get `tup[3]` because tuple type [1] only has 2 elements, so index 3 is out of bounds. [invalid-tuple-index]
+
+   array.js:38:12
+   38|     return tup[3]; // error
+                  ^^^^^^
+
+References:
+   array.js:36:21
+   36| function foo5(tup: ?[number, number]): number {
+                           ^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- labeled.js:5:3
@@ -49,8 +240,53 @@ Error --------------------------------------------------------------------------
 Cannot assign `123` to `tup[0]` because the index must be statically known to write a tuple element.
 [invalid-tuple-index]
 
-   7| tup[(0: number)] = 123;
+   7| tup[(0: number)] = 123; // error
       ^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- number-index.js:10:3
+
+Cannot get `x[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+
+   number-index.js:10:3
+   10|   x[2]; // error
+         ^^^^
+
+References:
+   number-index.js:9:17
+    9| function foo(x: [1, 2]) {
+                       ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- number-index.js:11:3
+
+Cannot get `x[-1]` because tuple type [1] only has 2 elements, so index -1 is out of bounds. [invalid-tuple-index]
+
+   number-index.js:11:3
+   11|   x[-1]; // error
+         ^^^^^
+
+References:
+   number-index.js:9:17
+    9| function foo(x: [1, 2]) {
+                       ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- number-index.js:16:10
+
+Cannot return `x[y]` because number literal `1` [1] is incompatible with string [2]. [incompatible-return]
+
+   number-index.js:16:10
+   16|   return x[y]; // error: number ~> string
+                ^^^^
+
+References:
+   number-index.js:15:18
+   15| function bar(x: [1], y: number): string {
+                        ^ [1]
+   number-index.js:15:34
+   15| function bar(x: [1], y: number): string {
+                                        ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- optional.js:2:2
@@ -91,6 +327,117 @@ Optional tuple elements are not supported. [unsupported-syntax]
                              ^^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------ readonly-array.js:16:76
+
+Cannot return `tup` because number [1] is incompatible with string [2] in array element. [incompatible-return]
+
+   readonly-array.js:16:76
+   16| const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
+                                                                                  ^^^
+
+References:
+   readonly-array.js:16:40
+   16| const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
+                                              ^^^^^^ [1]
+   readonly-array.js:16:65
+   16| const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
+                                                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ readonly-array.js:17:70
+
+Cannot return `tup` because read-only array type [1] is incompatible with array type [2]. [incompatible-return]
+
+   readonly-array.js:17:70
+   17| const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup; // error
+                                                                            ^^^
+
+References:
+   readonly-array.js:17:28
+   17| const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup; // error
+                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   readonly-array.js:17:53
+   17| const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup; // error
+                                                           ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ readonly-array.js:18:65
+
+Cannot call `tup.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   readonly-array.js:18:65
+   18| const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123); // error
+                                                                       ^^^^
+
+References:
+   readonly-array.js:18:28
+   18| const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123); // error
+                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ readonly-array.js:21:42
+
+Cannot return `x.length` because length `2` (number) of tuple [1] is incompatible with string [2]. [incompatible-return]
+
+   readonly-array.js:21:42
+   21| function foo1(x: [1,2]): string { return x.length; } // error
+                                                ^^^^^^^^
+
+References:
+   readonly-array.js:21:18
+   21| function foo1(x: [1,2]): string { return x.length; } // error
+                        ^^^^^ [1]
+   readonly-array.js:21:26
+   21| function foo1(x: [1,2]): string { return x.length; } // error
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ readonly-array.js:26:17
+
+Cannot call `readOnlyRef.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   readonly-array.js:26:17
+    26|     readOnlyRef.push(123); // error
+                        ^^^^
+
+References:
+   <BUILTINS>/core.js:767:77
+   767|     forEach<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): void;
+                                                                                    ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- readonly-array.js:27:6
+
+Cannot cast `readOnlyRef[0]` to number literal `1` because number literal `2` [1] is incompatible with number literal
+`1` [2]. [incompatible-cast]
+
+   readonly-array.js:27:6
+   27|     (readOnlyRef[0]: 1); // error
+            ^^^^^^^^^^^^^^
+
+References:
+   readonly-array.js:24:23
+   24| function foo2(tup: [1,2], arr: Array<number>): void {
+                             ^ [1]
+   readonly-array.js:27:22
+   27|     (readOnlyRef[0]: 1); // error
+                            ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ readonly-array.js:36:44
+
+Cannot call `x.unshift` because property `unshift` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   readonly-array.js:36:44
+   36| function foo3(x: [1,2]): number { return x.unshift(); } // error
+                                                  ^^^^^^^
+
+References:
+   readonly-array.js:36:18
+   36| function foo3(x: [1,2]): number { return x.unshift(); } // error
+                        ^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- spread.js:3:11
 
 Tuple spread is not supported. [unsupported-syntax]
@@ -120,6 +467,74 @@ References:
    too-few.js:3:17
    3| function foo(a: [Object, Object]) {}
                       ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ tuple-map.js:3:10
+
+Cannot return `arr` because string [1] is incompatible with number literal `1` [2] in index 0. [incompatible-return]
+
+   tuple-map.js:3:10
+   3|   return arr; // error
+               ^^^
+
+References:
+   tuple-map.js:2:58
+   2| function foo1(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                               ^^^^^^ [1]
+   tuple-map.js:2:69
+   2| function foo1(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                          ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ tuple-map.js:3:10
+
+Cannot return `arr` because string [1] is incompatible with number literal `2` [2] in index 1. [incompatible-return]
+
+   tuple-map.js:3:10
+   3|   return arr; // error
+               ^^^
+
+References:
+   tuple-map.js:2:58
+   2| function foo1(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                               ^^^^^^ [1]
+   tuple-map.js:2:72
+   2| function foo1(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                                                             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ tuple-map.js:7:10
+
+Cannot return `arr` because number [1] is incompatible with string [2] in index 0. [incompatible-return]
+
+   tuple-map.js:7:10
+   7|   return arr; // error
+               ^^^
+
+References:
+   tuple-map.js:6:21
+   6| function foo2(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                          ^^^^^^ [1]
+   tuple-map.js:6:77
+   6| function foo2(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ tuple-map.js:7:10
+
+Cannot return `arr` because number [1] is incompatible with string [2] in index 1. [incompatible-return]
+
+   tuple-map.js:7:10
+   7|   return arr; // error
+               ^^^
+
+References:
+   tuple-map.js:6:29
+   6| function foo2(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                  ^^^^^^ [1]
+   tuple-map.js:6:77
+   6| function foo2(arr: [number, number]): $TupleMap<[number, number], number => string> {
+                                                                                  ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:2:13
@@ -628,5 +1043,35 @@ Cannot assign `"s"` to `inter[0]` because tuple element at index `0` [1] is not 
        ^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ variance.js:80:12
 
-Found 44 errors
+Cannot cast array literal to tuple type because number literal `1` [1] is incompatible with number [2] in index 0.
+[incompatible-cast]
+
+   variance.js:80:12
+   80| (([1, 2]: [1, 2]): [number, number]); // ERROR
+                  ^ [1]
+
+References:
+   variance.js:80:21
+   80| (([1, 2]: [1, 2]): [number, number]); // ERROR
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ variance.js:80:15
+
+Cannot cast array literal to tuple type because number literal `2` [1] is incompatible with number [2] in index 1.
+[incompatible-cast]
+
+   variance.js:80:15
+   80| (([1, 2]: [1, 2]): [number, number]); // ERROR
+                     ^ [1]
+
+References:
+   variance.js:80:29
+   80| (([1, 2]: [1, 2]): [number, number]); // ERROR
+                                   ^^^^^^ [2]
+
+
+
+Found 71 errors

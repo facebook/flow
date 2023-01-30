@@ -75,3 +75,6 @@ type Intersection = $ReadOnly<[string, number] & [string, boolean]>;
 declare var inter: Intersection;
 inter[0] = "s"; // ERROR - can't write
 (inter[0]: string); // OK
+
+// Tuple elements cannot be subtyped
+(([1, 2]: [1, 2]): [number, number]); // ERROR
