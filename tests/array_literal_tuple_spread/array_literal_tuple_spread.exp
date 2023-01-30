@@ -1,0 +1,211 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:29:31
+
+Cannot assign array literal to `x` because number [1] is incompatible with number literal `20` [2] in index 1.
+[incompatible-type]
+
+   test.js:29:31
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                                     ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:27:14
+   27|   const a = [2];
+                    ^ [1]
+   test.js:29:15
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                     ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:29:41
+
+Cannot assign array literal to `x` because number [1] is incompatible with number literal `30` [2] in index 2.
+[incompatible-type]
+
+   test.js:29:41
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                                               ^ [1]
+
+References:
+   test.js:29:18
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                        ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:29:50
+
+Cannot assign array literal to `x` because number [1] is incompatible with number literal `60` [2] in index 5.
+[incompatible-type]
+
+   test.js:29:50
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                                                        ^ [1]
+
+References:
+   test.js:29:25
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                               ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:44:4
+
+Cannot cast `ret1[0]` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+[incompatible-cast]
+
+   test.js:44:4
+   44|   (ret1[0]: 2); // error
+          ^^^^^^^
+
+References:
+   test.js:39:27
+   39|   function foo(arr: Array<number>) {
+                                 ^^^^^^ [1]
+   test.js:44:13
+   44|   (ret1[0]: 2); // error
+                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:44:4
+
+Cannot cast `ret1[0]` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+[incompatible-cast]
+
+   test.js:44:4
+   44|   (ret1[0]: 2); // error
+          ^^^^^^^
+
+References:
+   test.js:40:21
+   40|     return [...arr, 1];
+                           ^ [1]
+   test.js:44:13
+   44|   (ret1[0]: 2); // error
+                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:4
+
+Cannot cast `ret2[0]` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+[incompatible-cast]
+
+   test.js:45:4
+   45|   (ret2[0]: 3); // error
+          ^^^^^^^
+
+References:
+   test.js:39:27
+   39|   function foo(arr: Array<number>) {
+                                 ^^^^^^ [1]
+   test.js:45:13
+   45|   (ret2[0]: 3); // error
+                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:4
+
+Cannot cast `ret2[0]` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+[incompatible-cast]
+
+   test.js:45:4
+   45|   (ret2[0]: 3); // error
+          ^^^^^^^
+
+References:
+   test.js:40:21
+   40|     return [...arr, 1];
+                           ^ [1]
+   test.js:45:13
+   45|   (ret2[0]: 3); // error
+                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:52:4
+
+Cannot cast `nonTup` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
+tuple type [2]. [invalid-tuple-arity]
+
+   test.js:52:4
+   52|   (nonTup: [1,2,3]); // error
+          ^^^^^^
+
+References:
+   test.js:51:18
+   51|   const nonTup = [...tup];
+                        ^^^^^^^^ [1]
+   test.js:52:12
+   52|   (nonTup: [1,2,3]); // error
+                  ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:59:4
+
+Cannot cast `nonTup` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
+tuple type [2]. [invalid-tuple-arity]
+
+   test.js:59:4
+   59|   (nonTup: [1,2,3]); // error
+          ^^^^^^
+
+References:
+   test.js:58:18
+   58|   const nonTup = [...tup];
+                        ^^^^^^^^ [1]
+   test.js:59:12
+   59|   (nonTup: [1,2,3]); // error
+                  ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:63:2
+
+Cannot cast array literal to array type because string [1] is incompatible with number [2] in array element.
+[incompatible-cast]
+
+   test.js:63:2
+   63| ([..."hello"]: Array<number>); // error: String is an Iterable<string>
+        ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/prelude.js:21:26
+   21|   @@iterator(): Iterator<string>;
+                                ^^^^^^ [1]
+   test.js:63:22
+   63| ([..."hello"]: Array<number>); // error: String is an Iterable<string>
+                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:70:30
+
+Cannot assign array literal to `arr` because string [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   test.js:70:30
+   70|   const arr: Array<number> = [...foo()]; // error: Generators are iterables too!
+                                    ^^^^^^^^^^
+
+References:
+   test.js:67:30
+   67|   function *foo(): Generator<string, void, void> {
+                                    ^^^^^^ [1]
+   test.js:70:20
+   70|   const arr: Array<number> = [...foo()]; // error: Generators are iterables too!
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:76:12
+
+Cannot return array literal because string [1] is incompatible with number [2] in array element. [incompatible-return]
+
+   test.js:76:12
+   76|     return [...iter]; // error: Spec says you can spread iterables
+                  ^^^^^^^^^
+
+References:
+   test.js:75:32
+   75|   function test(iter: Iterable<string>): Array<number> {
+                                      ^^^^^^ [1]
+   test.js:75:48
+   75|   function test(iter: Iterable<string>): Array<number> {
+                                                      ^^^^^^ [2]
+
+
+
+Found 12 errors
