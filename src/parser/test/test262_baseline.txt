@@ -1570,18 +1570,10 @@ language/expressions/object/method-definition/static-init-await-reference-normal
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
 language/expressions/object/method-definition/static-init-await-reference-normal.js (default)
   Unexpected token `{`, expected an identifier at (18, 9) to (18, 10)
-language/expressions/optional-chaining/call-expression.js (strict mode)
-  An optional chain may not be used in a `new` expression. at (31, 39) to (31, 41)
-language/expressions/optional-chaining/call-expression.js (default)
-  An optional chain may not be used in a `new` expression. at (31, 39) to (31, 41)
-language/expressions/optional-chaining/member-expression.js (strict mode)
-  An optional chain may not be used in a `new` expression. at (63, 36) to (63, 38)
-language/expressions/optional-chaining/member-expression.js (default)
-  An optional chain may not be used in a `new` expression. at (63, 36) to (63, 38)
-language/expressions/optional-chaining/super-property-optional-call.js (strict mode)
-  An optional chain may not be used in a `new` expression. at (24, 18) to (24, 20)
-language/expressions/optional-chaining/super-property-optional-call.js (default)
-  An optional chain may not be used in a `new` expression. at (24, 18) to (24, 20)
+language/expressions/optional-chaining/call-expression-super-no-base.js (strict mode)
+  Missing parse error
+language/expressions/optional-chaining/call-expression-super-no-base.js (default)
+  Missing parse error
 language/expressions/tagged-template/invalid-escape-sequences.js (strict mode)
   Unexpected token ILLEGAL at (31, 4) to (31, 5)
 language/expressions/tagged-template/invalid-escape-sequences.js (default)
@@ -3682,8 +3674,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84690 (97.87%)
-Failed:  1839 (2.13%)
+Passed:  84694 (97.88%)
+Failed:  1835 (2.12%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3716,7 +3708,7 @@ Features:
   new.target: 120/122 (98.36%)
   numeric-separator-literal: 316/318 (99.37%)
   object-rest: 706/708 (99.72%)
-  optional-chaining: 106/112 (94.64%)
+  optional-chaining: 110/112 (98.21%)
   regexp-named-groups: 92/200 (46.00%)
   regexp-unicode-property-escapes: 828/1112 (74.46%)
   top-level-await: 64/506 (12.65%)
