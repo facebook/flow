@@ -1,0 +1,10 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:1:9
+
+Cannot import `a` because there is no `a` export in `./exporter`. Did you mean `import a from "..."`? [missing-export]
+
+   1| import {a} from "./exporter" // error
+              ^
+
+
+
+Found 1 error
