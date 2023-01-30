@@ -1,13 +1,5 @@
-[ignore]
-
-[include]
-
-[libs]
-
 [options]
 all=true
-
-[lints]
 
 [strict]
 sketchy-null

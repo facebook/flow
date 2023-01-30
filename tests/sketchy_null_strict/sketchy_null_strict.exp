@@ -1,0 +1,47 @@
+Error ---------------------------------------------------------------------------------------------------- strict.js:6:7
+
+Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-bool]
+
+   strict.js:6:7
+   6|   if (sketch.nullableBool); // error because the file is strict
+            ^^^^^^^^^^^^^^^^^^^
+
+References:
+   type.js:6:18
+   6|   nullableBool?: boolean,
+                       ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- strict.js:7:7
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-number]
+
+   strict.js:7:7
+   7|   if (sketch.nullableNum); // error because the file is strict
+            ^^^^^^^^^^^^^^^^^^
+
+References:
+   type.js:5:17
+   5|   nullableNum?: number,
+                      ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- strict.js:8:7
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [1]? [sketchy-null-string]
+
+   strict.js:8:7
+   8|   if (sketch.nullableStr); // error because the file is strict
+            ^^^^^^^^^^^^^^^^^^
+
+References:
+   type.js:4:17
+   4|   nullableStr?: string,
+                      ^^^^^^ [1]
+
+
+
+Found 3 errors
