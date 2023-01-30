@@ -145,3 +145,21 @@ var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
 
 import typeof E from './empty';
 ({a: 1}: E); // Error
+
+///////////////////////////////////
+// == Unaliased typeof import == //
+///////////////////////////////////
+
+import {typeof C, C as CImpl1} from "./ExportClassAndType";
+new CImpl1(); // ok
+(CImpl1: C); // ok
+("str": C); // Error
+
+/////////////////////////////////
+// == Aliased typeof import == //
+/////////////////////////////////
+
+import {typeof C as CPrime, C as CImpl2} from "./ExportClassAndType";
+new CImpl2(); // ok
+(CImpl2: CPrime); // ok
+("str": CPrime); // Error

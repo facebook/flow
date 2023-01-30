@@ -98,3 +98,20 @@ import type ExactObj from './ExportExactObject';
 ////////////////////////////////////////////////////
 
 import type x from './ExportDefaultNonType';
+
+/////////////////////////////////
+// == Unaliased type import == //
+/////////////////////////////////
+
+import {type T, C} from "./ExportClassAndType";
+new C(); // ok
+(42: T); // ok
+("str": T); // error
+
+///////////////////////////////
+// == Aliased type import == //
+///////////////////////////////
+
+import {type T as U} from "./ExportClassAndType";
+(42: U); // ok
+("str": U); // error

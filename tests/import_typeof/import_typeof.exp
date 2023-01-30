@@ -245,5 +245,33 @@ References:
                  ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- import_typeof.js:156:2
 
-Found 17 errors
+Cannot cast `"str"` to `C` because string [1] is incompatible with class `C` [2]. [incompatible-cast]
+
+   import_typeof.js:156:2
+   156| ("str": C); // Error
+         ^^^^^ [1]
+
+References:
+   import_typeof.js:156:9
+   156| ("str": C); // Error
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- import_typeof.js:165:2
+
+Cannot cast `"str"` to `CPrime` because string [1] is incompatible with class `C` [2]. [incompatible-cast]
+
+   import_typeof.js:165:2
+   165| ("str": CPrime); // Error
+         ^^^^^ [1]
+
+References:
+   import_typeof.js:165:9
+   165| ("str": CPrime); // Error
+                ^^^^^^ [2]
+
+
+
+Found 19 errors

@@ -196,5 +196,33 @@ classes. If you intended to import the type of a value use `import typeof` inste
                     ^
 
 
+Error --------------------------------------------------------------------------------------------- import_type.js:109:2
 
-Found 13 errors
+Cannot cast `"str"` to `T` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   import_type.js:109:2
+   109| ("str": T); // error
+         ^^^^^ [1]
+
+References:
+   import_type.js:109:9
+   109| ("str": T); // error
+                ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import_type.js:117:2
+
+Cannot cast `"str"` to `U` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   import_type.js:117:2
+   117| ("str": U); // error
+         ^^^^^ [1]
+
+References:
+   import_type.js:117:9
+   117| ("str": U); // error
+                ^ [2]
+
+
+
+Found 15 errors
