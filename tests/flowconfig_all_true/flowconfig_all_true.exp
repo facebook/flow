@@ -1,0 +1,16 @@
+Error ------------------------------------------------------------------------------------------------------ bad.js:1:19
+
+Cannot assign empty string to `a` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   bad.js:1:19
+   1| const a: number = "";
+                        ^^ [1]
+
+References:
+   bad.js:1:10
+   1| const a: number = "";
+               ^^^^^^ [2]
+
+
+
+Found 1 error
