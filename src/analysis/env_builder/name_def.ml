@@ -1286,7 +1286,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           let return_hint =
             let base_hint =
               match return with
-              | Ast.Type.Available annot -> [Hint_t (AnnotationHint (ALocMap.empty, annot))]
+              | Ast.Type.Available annot -> [Hint_t (AnnotationHint (tparams, annot))]
               | Ast.Type.Missing _ -> decompose_hints Decomp_FuncReturn func_hints
             in
             match scope_kind with
