@@ -1,0 +1,910 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:49:4
+
+Cannot cast `roA` to `RWA` because property `p` is read-only in `ROA` [1] but writable in `RWA` [2].
+[incompatible-variance]
+
+   test.js:49:4
+   49|   (roA: RWA); // error
+          ^^^
+
+References:
+   test.js:14:18
+   14| declare var roA: ROA;
+                        ^^^ [1]
+   test.js:49:9
+   49|   (roA: RWA); // error
+               ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:50:4
+
+Cannot cast `droA` to `dRWA` because an index signature declaring the expected key / value type is read-only in
+`dROA` [1] but writable in `dRWA` [2]. [incompatible-variance]
+
+   test.js:50:4
+   50|   (droA: dRWA); // error
+          ^^^^
+
+References:
+   test.js:31:19
+   31| declare var droA: dROA;
+                         ^^^^ [1]
+   test.js:50:10
+   50|   (droA: dRWA); // error
+                ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:53:4
+
+Cannot cast `woA` to `RWA` because property `p` is write-only in `WOA` [1] but readable in `RWA` [2].
+[incompatible-variance]
+
+   test.js:53:4
+   53|   (woA: RWA); // error
+          ^^^
+
+References:
+   test.js:15:18
+   15| declare var woA: WOA;
+                        ^^^ [1]
+   test.js:53:9
+   53|   (woA: RWA); // error
+               ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:54:4
+
+Cannot cast `dwoA` to `dRWA` because an index signature declaring the expected key / value type is write-only in
+`dWOA` [1] but readable in `dRWA` [2]. [incompatible-variance]
+
+   test.js:54:4
+   54|   (dwoA: dRWA); // error
+          ^^^^
+
+References:
+   test.js:32:19
+   32| declare var dwoA: dWOA;
+                         ^^^^ [1]
+   test.js:54:10
+   54|   (dwoA: dRWA); // error
+                ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:61:4
+
+Cannot cast `rwB` to `RWA` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-cast]
+
+   test.js:61:4
+   61|   (rwB: RWA); // error
+          ^^^
+
+References:
+   test.js:9:17
+    9| type RWB = {|p: B|}
+                       ^ [1]
+   test.js:6:17
+    6| type RWA = {|p: A|}
+                       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:62:4
+
+Cannot cast `drwB` to `dRWA` because `B` [1] is incompatible with `A` [2] in the indexer property. [incompatible-cast]
+
+   test.js:62:4
+   62|   (drwB: dRWA); // error
+          ^^^^
+
+References:
+   test.js:26:24
+   26| type dRWB = {[string]: B};
+                              ^ [1]
+   test.js:23:24
+   23| type dRWA = {[string]: A};
+                              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:65:4
+
+Cannot cast `roB` to `RWA` because property `p` is read-only in `ROB` [1] but writable in `RWA` [2].
+[incompatible-variance]
+
+   test.js:65:4
+   65|   (roB: RWA); // error
+          ^^^
+
+References:
+   test.js:18:18
+   18| declare var roB: ROB;
+                        ^^^ [1]
+   test.js:65:9
+   65|   (roB: RWA); // error
+               ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:66:4
+
+Cannot cast `droB` to `dRWA` because an index signature declaring the expected key / value type is read-only in
+`dROB` [1] but writable in `dRWA` [2]. [incompatible-variance]
+
+   test.js:66:4
+   66|   (droB: dRWA); // error
+          ^^^^
+
+References:
+   test.js:35:19
+   35| declare var droB: dROB;
+                         ^^^^ [1]
+   test.js:66:10
+   66|   (droB: dRWA); // error
+                ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:69:4
+
+Cannot cast `woB` to `RWA` because property `p` is write-only in `WOB` [1] but readable in `RWA` [2].
+[incompatible-variance]
+
+   test.js:69:4
+   69|   (woB: RWA); // error
+          ^^^
+
+References:
+   test.js:19:18
+   19| declare var woB: WOB;
+                        ^^^ [1]
+   test.js:69:9
+   69|   (woB: RWA); // error
+               ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:69:4
+
+Cannot cast `woB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:69:4
+   69|   (woB: RWA); // error
+          ^^^
+
+References:
+   test.js:6:17
+    6| type RWA = {|p: A|}
+                       ^ [1]
+   test.js:11:18
+   11| type WOB = {|-p: B|}
+                        ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:70:4
+
+Cannot cast `dwoB` to `dRWA` because an index signature declaring the expected key / value type is write-only in
+`dWOB` [1] but readable in `dRWA` [2]. [incompatible-variance]
+
+   test.js:70:4
+   70|   (dwoB: dRWA); // error
+          ^^^^
+
+References:
+   test.js:36:19
+   36| declare var dwoB: dWOB;
+                         ^^^^ [1]
+   test.js:70:10
+   70|   (dwoB: dRWA); // error
+                ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:70:4
+
+Cannot cast `dwoB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+
+   test.js:70:4
+   70|   (dwoB: dRWA); // error
+          ^^^^
+
+References:
+   test.js:23:24
+   23| type dRWA = {[string]: A};
+                              ^ [1]
+   test.js:28:25
+   28| type dWOB = {-[string]: B};
+                               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:88:4
+
+Cannot cast `woA` to `ROA` because property `p` is write-only in `WOA` [1] but read-only in `ROA` [2].
+[incompatible-variance]
+
+   test.js:88:4
+   88|   (woA: ROA); // error
+          ^^^
+
+References:
+   test.js:15:18
+   15| declare var woA: WOA;
+                        ^^^ [1]
+   test.js:88:9
+   88|   (woA: ROA); // error
+               ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:4
+
+Cannot cast `dwoA` to `dROA` because an index signature declaring the expected key / value type is write-only in
+`dWOA` [1] but read-only in `dROA` [2]. [incompatible-variance]
+
+   test.js:89:4
+   89|   (dwoA: dROA); // error
+          ^^^^
+
+References:
+   test.js:32:19
+   32| declare var dwoA: dWOA;
+                         ^^^^ [1]
+   test.js:89:10
+   89|   (dwoA: dROA); // error
+                ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:104:4
+
+Cannot cast `woB` to `ROA` because property `p` is write-only in `WOB` [1] but read-only in `ROA` [2].
+[incompatible-variance]
+
+   test.js:104:4
+   104|   (woB: ROA); // error
+           ^^^
+
+References:
+   test.js:19:18
+    19| declare var woB: WOB;
+                         ^^^ [1]
+   test.js:104:9
+   104|   (woB: ROA); // error
+                ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:105:4
+
+Cannot cast `dwoB` to `dROA` because an index signature declaring the expected key / value type is write-only in
+`dWOB` [1] but read-only in `dROA` [2]. [incompatible-variance]
+
+   test.js:105:4
+   105|   (dwoB: dROA); // error
+           ^^^^
+
+References:
+   test.js:36:19
+    36| declare var dwoB: dWOB;
+                          ^^^^ [1]
+   test.js:105:10
+   105|   (dwoB: dROA); // error
+                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:119:4
+
+Cannot cast `roA` to `WOA` because property `p` is read-only in `ROA` [1] but write-only in `WOA` [2].
+[incompatible-variance]
+
+   test.js:119:4
+   119|   (roA: WOA); // error
+           ^^^
+
+References:
+   test.js:14:18
+    14| declare var roA: ROA;
+                         ^^^ [1]
+   test.js:119:9
+   119|   (roA: WOA); // error
+                ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:120:4
+
+Cannot cast `droA` to `dWOA` because an index signature declaring the expected key / value type is read-only in
+`dROA` [1] but write-only in `dWOA` [2]. [incompatible-variance]
+
+   test.js:120:4
+   120|   (droA: dWOA); // error
+           ^^^^
+
+References:
+   test.js:31:19
+    31| declare var droA: dROA;
+                          ^^^^ [1]
+   test.js:120:10
+   120|   (droA: dWOA); // error
+                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:131:4
+
+Cannot cast `rwB` to `WOA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:131:4
+   131|   (rwB: WOA); // error
+           ^^^
+
+References:
+   test.js:8:18
+     8| type WOA = {|-p: A|}
+                         ^ [1]
+   test.js:9:17
+     9| type RWB = {|p: B|}
+                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:132:4
+
+Cannot cast `drwB` to `dWOA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+
+   test.js:132:4
+   132|   (drwB: dWOA); // error
+           ^^^^
+
+References:
+   test.js:25:25
+    25| type dWOA = {-[string]: A};
+                                ^ [1]
+   test.js:26:24
+    26| type dRWB = {[string]: B};
+                               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:135:4
+
+Cannot cast `roB` to `WOA` because property `p` is read-only in `ROB` [1] but write-only in `WOA` [2].
+[incompatible-variance]
+
+   test.js:135:4
+   135|   (roB: WOA); // error
+           ^^^
+
+References:
+   test.js:18:18
+    18| declare var roB: ROB;
+                         ^^^ [1]
+   test.js:135:9
+   135|   (roB: WOA); // error
+                ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:136:4
+
+Cannot cast `droB` to `dWOA` because an index signature declaring the expected key / value type is read-only in
+`dROB` [1] but write-only in `dWOA` [2]. [incompatible-variance]
+
+   test.js:136:4
+   136|   (droB: dWOA); // error
+           ^^^^
+
+References:
+   test.js:35:19
+    35| declare var droB: dROB;
+                          ^^^^ [1]
+   test.js:136:10
+   136|   (droB: dWOA); // error
+                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:139:4
+
+Cannot cast `woB` to `WOA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:139:4
+   139|   (woB: WOA); // error
+           ^^^
+
+References:
+   test.js:8:18
+     8| type WOA = {|-p: A|}
+                         ^ [1]
+   test.js:11:18
+    11| type WOB = {|-p: B|}
+                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:140:4
+
+Cannot cast `dwoB` to `dWOA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+
+   test.js:140:4
+   140|   (dwoB: dWOA); // error
+           ^^^^
+
+References:
+   test.js:25:25
+    25| type dWOA = {-[string]: A};
+                                ^ [1]
+   test.js:28:25
+    28| type dWOB = {-[string]: B};
+                                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:146:8
+
+Cannot cast object literal to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:146:8
+   146|   ({p: new A}: RWB); // error
+               ^^^^^ [1]
+
+References:
+   test.js:9:17
+     9| type RWB = {|p: B|}
+                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:147:8
+
+Cannot cast object literal to `dRWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:147:8
+   147|   ({p: new A}: dRWB); // error
+               ^^^^^ [1]
+
+References:
+   test.js:26:24
+    26| type dRWB = {[string]: B};
+                               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:150:4
+
+Cannot cast `rwA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:150:4
+   150|   (rwA: RWB); // error
+           ^^^
+
+References:
+   test.js:6:17
+     6| type RWA = {|p: A|}
+                        ^ [1]
+   test.js:9:17
+     9| type RWB = {|p: B|}
+                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:151:4
+
+Cannot cast `drwA` to `dRWB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+
+   test.js:151:4
+   151|   (drwA: dRWB); // error
+           ^^^^
+
+References:
+   test.js:23:24
+    23| type dRWA = {[string]: A};
+                               ^ [1]
+   test.js:26:24
+    26| type dRWB = {[string]: B};
+                               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:154:4
+
+Cannot cast `roA` to `RWB` because property `p` is read-only in `ROA` [1] but writable in `RWB` [2].
+[incompatible-variance]
+
+   test.js:154:4
+   154|   (roA: RWB); // error
+           ^^^
+
+References:
+   test.js:14:18
+    14| declare var roA: ROA;
+                         ^^^ [1]
+   test.js:154:9
+   154|   (roA: RWB); // error
+                ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:154:4
+
+Cannot cast `roA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:154:4
+   154|   (roA: RWB); // error
+           ^^^
+
+References:
+   test.js:7:18
+     7| type ROA = {|+p: A|}
+                         ^ [1]
+   test.js:9:17
+     9| type RWB = {|p: B|}
+                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:155:4
+
+Cannot cast `droA` to `dRWB` because an index signature declaring the expected key / value type is read-only in
+`dROA` [1] but writable in `dRWB` [2]. [incompatible-variance]
+
+   test.js:155:4
+   155|   (droA: dRWB); // error
+           ^^^^
+
+References:
+   test.js:31:19
+    31| declare var droA: dROA;
+                          ^^^^ [1]
+   test.js:155:10
+   155|   (droA: dRWB); // error
+                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:155:4
+
+Cannot cast `droA` to `dRWB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+
+   test.js:155:4
+   155|   (droA: dRWB); // error
+           ^^^^
+
+References:
+   test.js:24:25
+    24| type dROA = {+[string]: A};
+                                ^ [1]
+   test.js:26:24
+    26| type dRWB = {[string]: B};
+                               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:158:4
+
+Cannot cast `woA` to `RWB` because property `p` is write-only in `WOA` [1] but readable in `RWB` [2].
+[incompatible-variance]
+
+   test.js:158:4
+   158|   (woA: RWB); // error
+           ^^^
+
+References:
+   test.js:15:18
+    15| declare var woA: WOA;
+                         ^^^ [1]
+   test.js:158:9
+   158|   (woA: RWB); // error
+                ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:159:4
+
+Cannot cast `dwoA` to `dRWB` because an index signature declaring the expected key / value type is write-only in
+`dWOA` [1] but readable in `dRWB` [2]. [incompatible-variance]
+
+   test.js:159:4
+   159|   (dwoA: dRWB); // error
+           ^^^^
+
+References:
+   test.js:32:19
+    32| declare var dwoA: dWOA;
+                          ^^^^ [1]
+   test.js:159:10
+   159|   (dwoA: dRWB); // error
+                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:165:8
+
+Cannot cast object literal to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:165:8
+   165|   ({p: new A}: ROB); // error
+               ^^^^^ [1]
+
+References:
+   test.js:10:18
+    10| type ROB = {|+p: B|}
+                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:166:8
+
+Cannot cast object literal to `dROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:166:8
+   166|   ({p: new A}: dROB); // error
+               ^^^^^ [1]
+
+References:
+   test.js:27:25
+    27| type dROB = {+[string]: B};
+                                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:169:4
+
+Cannot cast `rwA` to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:169:4
+   169|   (rwA: ROB); // error
+           ^^^
+
+References:
+   test.js:6:17
+     6| type RWA = {|p: A|}
+                        ^ [1]
+   test.js:10:18
+    10| type ROB = {|+p: B|}
+                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:170:4
+
+Cannot cast `drwA` to `dROB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+
+   test.js:170:4
+   170|   (drwA: dROB); // error
+           ^^^^
+
+References:
+   test.js:23:24
+    23| type dRWA = {[string]: A};
+                               ^ [1]
+   test.js:27:25
+    27| type dROB = {+[string]: B};
+                                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:173:4
+
+Cannot cast `roA` to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:173:4
+   173|   (roA: ROB); // error
+           ^^^
+
+References:
+   test.js:7:18
+     7| type ROA = {|+p: A|}
+                         ^ [1]
+   test.js:10:18
+    10| type ROB = {|+p: B|}
+                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:174:4
+
+Cannot cast `droA` to `dROB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+
+   test.js:174:4
+   174|   (droA: dROB); // error
+           ^^^^
+
+References:
+   test.js:24:25
+    24| type dROA = {+[string]: A};
+                                ^ [1]
+   test.js:27:25
+    27| type dROB = {+[string]: B};
+                                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:177:4
+
+Cannot cast `woA` to `ROB` because property `p` is write-only in `WOA` [1] but read-only in `ROB` [2].
+[incompatible-variance]
+
+   test.js:177:4
+   177|   (woA: ROB); // error
+           ^^^
+
+References:
+   test.js:15:18
+    15| declare var woA: WOA;
+                         ^^^ [1]
+   test.js:177:9
+   177|   (woA: ROB); // error
+                ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:178:4
+
+Cannot cast `dwoA` to `dROB` because an index signature declaring the expected key / value type is write-only in
+`dWOA` [1] but read-only in `dROB` [2]. [incompatible-variance]
+
+   test.js:178:4
+   178|   (dwoA: dROB); // error
+           ^^^^
+
+References:
+   test.js:32:19
+    32| declare var dwoA: dWOA;
+                          ^^^^ [1]
+   test.js:178:10
+   178|   (dwoA: dROB); // error
+                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:192:4
+
+Cannot cast `roA` to `WOB` because property `p` is read-only in `ROA` [1] but write-only in `WOB` [2].
+[incompatible-variance]
+
+   test.js:192:4
+   192|   (roA: WOB); // error
+           ^^^
+
+References:
+   test.js:14:18
+    14| declare var roA: ROA;
+                         ^^^ [1]
+   test.js:192:9
+   192|   (roA: WOB); // error
+                ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:193:4
+
+Cannot cast `droA` to `dWOB` because an index signature declaring the expected key / value type is read-only in
+`dROA` [1] but write-only in `dWOB` [2]. [incompatible-variance]
+
+   test.js:193:4
+   193|   (droA: dWOB); // error
+           ^^^^
+
+References:
+   test.js:31:19
+    31| declare var droA: dROA;
+                          ^^^^ [1]
+   test.js:193:10
+   193|   (droA: dWOB); // error
+                 ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:207:18
+
+Cannot cast array literal to array type because property `p` is read-only in object type [1] but writable in object
+type [2] in array element. [incompatible-variance]
+
+   test.js:207:18
+   207|   (([roA]: Array<{+p:A}>): Array<{p:A}>); // error
+                         ^^^^^^ [1]
+
+References:
+   test.js:207:34
+   207|   (([roA]: Array<{+p:A}>): Array<{p:A}>); // error
+                                         ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:209:18
+
+Cannot cast array literal to array type because property `p` is write-only in object type [1] but readable in object
+type [2] in array element. [incompatible-variance]
+
+   test.js:209:18
+   209|   (([woA]: Array<{-p:A}>): Array<{p:A}>); // error
+                         ^^^^^^ [1]
+
+References:
+   test.js:209:34
+   209|   (([woA]: Array<{-p:A}>): Array<{p:A}>); // error
+                                         ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:211:18
+
+Cannot cast array literal to array type because property `p` is writable in object type [1] but read-only in object
+type [2] in array element. [incompatible-variance]
+
+   test.js:211:18
+   211|   (([rwA]: Array<{p:A}>): Array<{+p:A}>); // error
+                         ^^^^^ [1]
+
+References:
+   test.js:211:33
+   211|   (([rwA]: Array<{p:A}>): Array<{+p:A}>); // error
+                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:215:18
+
+Cannot cast array literal to array type because property `p` is write-only in object type [1] but read-only in object
+type [2] in array element. [incompatible-variance]
+
+   test.js:215:18
+   215|   (([woA]: Array<{-p:A}>): Array<{+p:A}>); // error
+                         ^^^^^^ [1]
+
+References:
+   test.js:215:34
+   215|   (([woA]: Array<{-p:A}>): Array<{+p:A}>); // error
+                                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:217:18
+
+Cannot cast array literal to array type because property `p` is readable in object type [1] but write-only in object
+type [2] in array element. [incompatible-variance]
+
+   test.js:217:18
+   217|   (([rwA]: Array<{p:A}>): Array<{-p:A}>); // error
+                         ^^^^^ [1]
+
+References:
+   test.js:217:33
+   217|   (([rwA]: Array<{p:A}>): Array<{-p:A}>); // error
+                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:219:18
+
+Cannot cast array literal to array type because property `p` is read-only in object type [1] but write-only in object
+type [2] in array element. [incompatible-variance]
+
+   test.js:219:18
+   219|   (([roA]: Array<{+p:A}>): Array<{-p:A}>); // error
+                         ^^^^^^ [1]
+
+References:
+   test.js:219:34
+   219|   (([roA]: Array<{+p:A}>): Array<{-p:A}>); // error
+                                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:234:4
+
+Cannot cast `woA` to `RWA` because property `p` is not readable. [cannot-read]
+
+   234|   (woA: $Shape<RWA>); // error
+           ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:243:4
+
+Cannot cast `woB` to `RWA` because property `p` is not readable. [cannot-read]
+
+   243|   (woB: $Shape<RWA>); // error
+           ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:246:4
+
+Cannot cast `rwA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:246:4
+   246|   (rwA: $Shape<RWB>); // error
+           ^^^
+
+References:
+   test.js:6:17
+     6| type RWA = {|p: A|}
+                        ^ [1]
+   test.js:9:17
+     9| type RWB = {|p: B|}
+                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:249:4
+
+Cannot cast `roA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+
+   test.js:249:4
+   249|   (roA: $Shape<RWB>); // error
+           ^^^
+
+References:
+   test.js:7:18
+     7| type ROA = {|+p: A|}
+                         ^ [1]
+   test.js:9:17
+     9| type RWB = {|p: B|}
+                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:252:4
+
+Cannot cast `woA` to `RWB` because property `p` is not readable. [cannot-read]
+
+   252|   (woA: $Shape<RWB>); // error
+           ^^^
+
+
+
+Found 55 errors
