@@ -3663,6 +3663,14 @@ References:
                          ^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- super_call.js:4:13
+
+An optional chain may not be used in a `new` expression.
+
+   4|     (super()?.a: empty); // error
+                  ^^
+
+
 Error --------------------------------------------------------------------------------------------------- typeof.js:6:25
 
 read-only array type [1] is incompatible with undefined [2]. [incompatible-type]
@@ -3681,7 +3689,7 @@ References:
 
 
 
-Found 231 errors
+Found 232 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
