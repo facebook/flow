@@ -1,0 +1,52 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:11:2
+
+Cannot cast `Any3` to number because module `any` [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:11:2
+   11| (Any3: number); // error
+        ^^^^
+
+References:
+   flow-typed/lib.js:1:16
+    1| declare module 'any' {
+                      ^^^^^ [1]
+   test.js:11:8
+   11| (Any3: number); // error
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:24:2
+
+Cannot cast `Any6` to number because module `object` [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:24:2
+   24| (Any6: number); // error
+        ^^^^
+
+References:
+   flow-typed/lib.js:5:16
+    5| declare module 'object' {
+                      ^^^^^^^^ [1]
+   test.js:24:8
+   24| (Any6: number); // error
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:9
+
+Cannot import `x` because there is no `x` export in `string`. Did you mean `import x from "..."`? [missing-export]
+
+   28| import {x as str_x, y as str_y} from "string"; // error
+               ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:28:21
+
+Cannot import `y` because there is no `y` export in `string`. Did you mean `import y from "..."`? [missing-export]
+
+   28| import {x as str_x, y as str_y} from "string"; // error
+                           ^
+
+
+
+Found 4 errors
