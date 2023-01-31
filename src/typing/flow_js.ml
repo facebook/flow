@@ -5508,9 +5508,13 @@ struct
   (**
    * relational comparisons like <, >, <=, >=
    *
-   * typecheck iff either of the following hold:
-   *   number <> number = number
-   *   string <> string = string
+   * The following comparisons are allowed:
+   * - str <> str
+   * - num <> num
+   * - bigint <> bigint
+   * - date <> date
+   * - _ <> empty
+   * - empty <> _
    **)
   and flow_comparator cx trace reason flip l r =
     if needs_resolution r || is_generic r then
@@ -5529,8 +5533,6 @@ struct
       | (DefT (_, _, EmptyT), _)
       | (_, DefT (_, _, EmptyT)) ->
         ()
-      | (DefT (_, _, NumT _), r) when is_date r -> ()
-      | (l, DefT (_, _, NumT _)) when is_date l -> ()
       | (l, r) when is_date l && is_date r -> ()
       | _ ->
         let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in

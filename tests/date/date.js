@@ -25,7 +25,8 @@ new Date(2015, 6, 18, 11, 55, 42, '999');
 new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
 new Date('2015', 6);
 
-var b:boolean = d > 0;
+var b:boolean = d > 0; // expect error
 var n1:number = d - 12; // expect error
 var n2:number = d & 255; // expect error
 var n3:number = d + 12; // expect error
+var b1:boolean = d > d; // ok

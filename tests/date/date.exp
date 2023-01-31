@@ -199,6 +199,23 @@ References:
                                ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- date.js:28:17
+
+Cannot compare `Date` [1] to number [2]. [invalid-compare]
+
+   date.js:28:17
+   28| var b:boolean = d > 0; // expect error
+                       ^
+
+References:
+   date.js:1:9
+    1| var d = new Date(0);
+               ^^^^^^^^^^^ [1]
+   date.js:28:21
+   28| var b:boolean = d > 0; // expect error
+                           ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- date.js:29:17
 
 Cannot use operator `-` with operands `Date` [1] and number [2] [unsafe-arithmetic]
@@ -251,7 +268,7 @@ References:
 
 
 
-Found 14 errors
+Found 15 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
