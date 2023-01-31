@@ -1,7 +1,10 @@
 ---
-name: "Library Definitions"
+name: Library Definitions
 about: You want to report an issue with Flow's library definitions.
-labels: "Library definitions"
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 <!--
