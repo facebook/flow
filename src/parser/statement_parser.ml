@@ -188,8 +188,11 @@ module Statement
             if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env then
               None
             else
-              let ((_, { Identifier.name; comments = _ }) as label) = Parse.identifier env in
-              if not (SSet.mem name (labels env)) then error env (Parse_error.UnknownLabel name);
+              let ((label_loc, { Identifier.name; comments = _ }) as label) =
+                Parse.identifier env
+              in
+              if not (SSet.mem name (labels env)) then
+                error_at env (label_loc, Parse_error.UnknownLabel name);
               Some label
           in
           let (trailing, label) =
@@ -218,8 +221,11 @@ module Statement
             if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env then
               None
             else
-              let ((_, { Identifier.name; comments = _ }) as label) = Parse.identifier env in
-              if not (SSet.mem name (labels env)) then error env (Parse_error.UnknownLabel name);
+              let ((label_loc, { Identifier.name; comments = _ }) as label) =
+                Parse.identifier env
+              in
+              if not (SSet.mem name (labels env)) then
+                error_at env (label_loc, Parse_error.UnknownLabel name);
               Some label
           in
           let (trailing, label) =
