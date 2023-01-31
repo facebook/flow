@@ -992,9 +992,9 @@ struct
             (DefT (idx_reason, trust, IdxWrapper prop_type), OpenT t_out)
         | (DefT (_, _, IdxWrapper _), _) ->
           add_output cx ~trace (Error_message.EIdxUse (reason_of_use_t u))
-        (*********************)
-        (* optional chaining *)
-        (*********************)
+        (******************************)
+        (* optional chaining - part A *)
+        (******************************)
         | (DefT (_, _, VoidT), OptionalChainT { reason; lhs_reason; voided_out; _ }) ->
           Context.mark_optional_chain cx (aloc_of_reason reason) lhs_reason ~useful:true;
           rec_flow_t ~use_op:unknown_use cx trace (l, voided_out)
@@ -1010,28 +1010,6 @@ struct
           in
           Context.mark_optional_chain cx (aloc_of_reason reason) lhs_reason ~useful:true;
           rec_flow_t ~use_op:unknown_use cx trace (void, voided_out)
-        | (_, OptionalChainT { reason; lhs_reason; this_t; t_out; voided_out = _ })
-          when match l with
-               | MaybeT _
-               | OptionalT _
-               | UnionT _
-               | IntersectionT _
-               | TypeAppT _ ->
-                 false
-               | _ -> true ->
-          Context.mark_optional_chain
-            cx
-            (aloc_of_reason reason)
-            lhs_reason
-            ~useful:
-              (match l with
-              | AnyT (_, AnyError _) -> false
-              | DefT (_, _, MixedT _)
-              | AnyT _ ->
-                true
-              | _ -> false);
-          rec_flow_t ~use_op:unknown_use cx trace (l, this_t);
-          rec_flow cx trace (l, t_out)
         (***************************)
         (* optional indexed access *)
         (***************************)
@@ -1959,6 +1937,25 @@ struct
         | (IntersectionT (r, rep), u) ->
           let unresolved = parts_to_replace cx u in
           SpeculationKit.prep_try_intersection cx trace (reason_of_use_t u) unresolved [] u r rep
+        (******************************)
+        (* optional chaining - part B *)
+        (******************************)
+        (* The remaining cases of OptionalChainT will be handled after union-like,
+         * intersections and type applications have been resolved *)
+        | (_, OptionalChainT { reason; lhs_reason; this_t; t_out; voided_out = _ }) ->
+          Context.mark_optional_chain
+            cx
+            (aloc_of_reason reason)
+            lhs_reason
+            ~useful:
+              (match l with
+              | AnyT (_, AnyError _) -> false
+              | DefT (_, _, MixedT _)
+              | AnyT _ ->
+                true
+              | _ -> false);
+          rec_flow_t ~use_op:unknown_use cx trace (l, this_t);
+          rec_flow cx trace (l, t_out)
         (**************************)
         (* logical types - part B *)
         (**************************)
