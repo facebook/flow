@@ -263,6 +263,29 @@ end = struct
   let pattern = fold_pattern ~default:() ~join:(fun _ _ -> ())
 end
 
+let predicate_function_invalid_param_reasons params =
+  let open Flow_ast in
+  let open Reason in
+  let (_, { Function.Params.params; rest; this_ = _; comments = _ }) = params in
+  let reasons =
+    List.filter_map
+      (fun (_, param) ->
+        let open Function.Param in
+        match param.argument with
+        | (ploc, Pattern.Object _)
+        | (ploc, Pattern.Array _)
+        | (ploc, Pattern.Expression _) ->
+          Some (mk_reason RDestructuring ploc)
+        | (_, Pattern.Identifier _) -> None)
+      params
+  in
+  match rest with
+  | Some (rloc, { Function.RestParam.argument; comments = _ }) ->
+    let desc = Reason.code_desc_of_pattern argument in
+    let reason = mk_reason (RRestParameter (Some desc)) rloc in
+    reason :: reasons
+  | None -> reasons
+
 let predicate_synthesizable predicate body =
   match (predicate, body) with
   | ( Some _,
@@ -287,16 +310,20 @@ let predicate_synthesizable predicate body =
   | _ -> (* Invalid predicate definition *) FunctionSynthesizable
 
 let func_is_synthesizable_from_annotation
-    ({ Ast.Function.predicate; return; generator; body; _ } as f) =
+    ({ Ast.Function.predicate; return; generator; body; params; _ } as f) =
   match return with
   | Ast.Type.Available _ ->
-    if Base.Option.is_some predicate then
+    if
+      Base.Option.is_some predicate
+      && Base.List.is_empty (predicate_function_invalid_param_reasons params)
+    then
       predicate_synthesizable predicate body
     else
       FunctionSynthesizable
   | Ast.Type.Missing loc ->
     if
       Base.Option.is_some predicate
+      && Base.List.is_empty (predicate_function_invalid_param_reasons params)
       || Nonvoid_return.might_have_nonvoid_return ALoc.none f
       || generator
     then
@@ -542,7 +569,7 @@ let def_of_function ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~ar
       statics;
     }
 
-let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
+let func_scope_kind ?key { Ast.Function.async; generator; predicate; params; _ } =
   match (async, generator, predicate, key) with
   | ( false,
       false,
@@ -554,7 +581,9 @@ let func_scope_kind ?key { Ast.Function.async; generator; predicate; _ } =
   | (true, true, None, _) -> AsyncGenerator
   | (true, false, None, _) -> Async
   | (false, true, None, _) -> Generator
-  | (false, false, Some _, _) -> Predicate
+  | (false, false, Some _, _)
+    when Base.List.is_empty (predicate_function_invalid_param_reasons params) ->
+    Predicate
   | (false, false, None, _) -> Ordinary
   | _ -> (* Invalid, default to ordinary and hopefully error elsewhere *) Ordinary
 
@@ -1251,7 +1280,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         (fun () ->
           let {
             Ast.Function.id = _;
-            params = (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ });
+            params =
+              (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ }) as params;
             body;
             async;
             generator;
@@ -1321,9 +1351,10 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
           Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
               match kind with
-              | Ast.Type.Predicate.Inferred -> ()
-              | Ast.Type.Predicate.Declared expr ->
+              | Ast.Type.Predicate.Declared expr
+                when Base.List.is_empty (predicate_function_invalid_param_reasons params) ->
                 this#visit_expression ~hints:[] ~cond:NonConditionalContext expr
+              | _ -> ()
           ))
         scope_kind
         ()

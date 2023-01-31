@@ -7,6 +7,9 @@
 
 include module type of Name_def_types
 
+val predicate_function_invalid_param_reasons :
+  ('a, 'a) Flow_ast.Function.Params.t -> 'a Reason.virtual_reason list
+
 val function_params_all_annotated :
   (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> (ALoc.t, ALoc.t) Flow_ast.Function.body -> bool
 
