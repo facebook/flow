@@ -1,5 +1,5 @@
 # Flow
-<p align="center">
+ <p align="center">
   <a href="https://circleci.com/gh/facebook/flow/tree/main">
     <img src="https://circleci.com/gh/facebook/flow/tree/main.svg?style=shield" alt="CircleCI" />
   </a>
