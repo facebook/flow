@@ -1006,14 +1006,13 @@ module rec ConsGen : S = struct
     | (AnyT _, Annot_ElemT (reason_op, _, DefT (_, _, ArrT arrtype))) ->
       let value = elemt_of_arrtype arrtype in
       reposition cx (aloc_of_reason reason_op) value
-    | (l, Annot_ElemT (reason_op, use_op, DefT (reason_tup, _, ArrT arrtype)))
-      when Flow_js_utils.is_number l ->
+    | (DefT (_, _, NumT _), Annot_ElemT (reason_op, use_op, DefT (reason_tup, _, ArrT arrtype))) ->
       let (value, _) =
         Flow_js_utils.array_elem_check
           ~write_action:false
           cx
           dummy_trace
-          l
+          t
           use_op
           reason_op
           reason_tup

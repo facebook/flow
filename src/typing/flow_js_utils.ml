@@ -130,16 +130,9 @@ let ground_subtype = function
     true
   | _ -> false
 
-let is_number = function
-  | DefT (_, _, NumT _) -> true
-  | DefT (_, _, SingletonNumT _) -> true
-  | _ -> false
-
 let is_date = function
   | DefT (reason, _, InstanceT _) -> DescFormat.name_of_instance_reason reason = "Date"
   | _ -> false
-
-let is_number_or_date x = is_number x || is_date x
 
 let function_like = function
   | DefT (_, _, ClassT _)
