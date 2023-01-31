@@ -56,7 +56,12 @@ module type S = sig
     output
 
   val solve_targs :
-    Context.t -> use_op:Type.use_op -> ?return_hint:Type.t -> Check.t -> output Subst_name.Map.t
+    Context.t ->
+    use_op:Type.use_op ->
+    ?allow_underconstrained:bool ->
+    ?return_hint:Type.t ->
+    Check.t ->
+    output Subst_name.Map.t
 
   val run :
     Context.t ->
@@ -790,7 +795,7 @@ struct
       cx
       ~use_op
       ~has_new_errors
-      ~has_return_hint
+      ~allow_underconstrained
       inferred_targ_list
       marked_tparams
       tparams_map
@@ -806,7 +811,7 @@ struct
       (fun (name, t, bound, is_inferred) acc ->
         let tparam = Subst_name.Map.find name tparams_map in
         let polarity =
-          if has_return_hint then
+          if allow_underconstrained then
             None
           else
             Marked.get name marked_tparams
@@ -901,7 +906,7 @@ struct
     in
     (inferred_targ_list, marked_tparams, tparams_map, tout)
 
-  let solve_targs cx ~use_op ?return_hint check =
+  let solve_targs cx ~use_op ?(allow_underconstrained = false) ?return_hint check =
     Context.run_and_rolled_back_cache cx (fun () ->
         let init_errors = Context.errors cx in
         let (inferred_targ_list, marked_tparams, tparams_map, tout) =
@@ -937,7 +942,7 @@ struct
               cx
               ~use_op
               ~has_new_errors
-              ~has_return_hint:(Base.Option.is_some return_hint)
+              ~allow_underconstrained
               inferred_targ_list
               marked_tparams
               tparams_map
@@ -1129,9 +1134,10 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
        );
     reposition cx ~trace (aloc_of_reason reason_tapp) (Subst.subst cx ~use_op subst_map poly_t)
 
-  let run_pierce cx check ?cache trace ~use_op ~reason_op ~reason_tapp ~return_hint =
+  let run_pierce
+      cx check ?cache trace ~use_op ~reason_op ~reason_tapp ~allow_underconstrained ~return_hint =
     let (_, _, t) = check.Implicit_instantiation_check.poly_t in
-    let targs_map = Pierce.solve_targs cx ~use_op ?return_hint check in
+    let targs_map = Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check in
     instantiate_poly_with_subst_map cx ?cache trace t targs_map ~use_op ~reason_op ~reason_tapp
 
   let run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp =
@@ -1197,16 +1203,25 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
     if Context.lti cx then
-      let return_hint =
+      let (allow_underconstrained, return_hint) =
         match lazy_hint reason_op with
-        | HintAvailable t -> Some t
+        | HintAvailable t -> (true, Some t)
+        | DecompositionError -> (true, None)
         | NoHint
-        | DecompositionError
         | EncounteredPlaceholder ->
-          None
+          (false, None)
       in
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          run_pierce cx ~return_hint check ?cache trace ~use_op ~reason_op ~reason_tapp
+          run_pierce
+            cx
+            ~allow_underconstrained
+            ~return_hint
+            check
+            ?cache
+            trace
+            ~use_op
+            ~reason_op
+            ~reason_tapp
       )
     else
       run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
