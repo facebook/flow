@@ -1015,7 +1015,8 @@ struct
                | MaybeT _
                | OptionalT _
                | UnionT _
-               | IntersectionT _ ->
+               | IntersectionT _
+               | TypeAppT _ ->
                  false
                | _ -> true ->
           Context.mark_optional_chain
