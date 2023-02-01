@@ -847,6 +847,7 @@ type cache_snapshot = {
   snapshot_eval_repos_cache: Type.t Type.EvalReposCacheMap.t;
   snapshot_fix_cache: Type.t Type.FixCacheMap.t;
   snapshot_spread_cache: Spread_cache.t;
+  snapshot_evaluated: Type.t Type.Eval.Map.t;
 }
 
 let take_cache_snapshot cx =
@@ -859,6 +860,7 @@ let take_cache_snapshot cx =
     snapshot_eval_repos_cache = !(cx.ccx.eval_repos_cache);
     snapshot_fix_cache = !(cx.ccx.fix_cache);
     snapshot_spread_cache = !(cx.ccx.spread_cache);
+    snapshot_evaluated = cx.ccx.sig_cx.evaluated;
   }
 
 let restore_cache_snapshot cx snapshot =
@@ -870,6 +872,7 @@ let restore_cache_snapshot cx snapshot =
     snapshot_eval_repos_cache;
     snapshot_fix_cache;
     snapshot_spread_cache;
+    snapshot_evaluated;
   } =
     snapshot
   in
@@ -881,7 +884,8 @@ let restore_cache_snapshot cx snapshot =
   id_cache := snapshot_id_cache;
   cx.ccx.eval_repos_cache := snapshot_eval_repos_cache;
   cx.ccx.fix_cache := snapshot_fix_cache;
-  cx.ccx.spread_cache := snapshot_spread_cache
+  cx.ccx.spread_cache := snapshot_spread_cache;
+  set_evaluated cx snapshot_evaluated
 
 let run_and_rolled_back_cache cx f =
   let cache_snapshot = take_cache_snapshot cx in
