@@ -1,10 +1,4 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":12}},
-      "message":"An optional chain may not be used in a `new` expression."
-    }
-  ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":13}},
   "range":[0,31],

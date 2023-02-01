@@ -732,7 +732,7 @@ module Expression
         ) else
           super
       in
-      call ~allow_optional_chain:false env loc super
+      call env loc super
     | T_LPAREN ->
       let super =
         if not call_allowed then (
@@ -741,7 +741,7 @@ module Expression
         ) else
           super
       in
-      call ~allow_optional_chain:false env loc super
+      call env loc super
     | _ ->
       if not allowed then
         error_at env (loc, Parse_error.UnexpectedSuper)
@@ -1099,7 +1099,7 @@ module Expression
         if in_optional_chain then error env Parse_error.OptionalChainTemplate;
 
         let expr = tagged_template env start_loc (as_expression env left) part in
-        call_cover ~allow_optional_chain:false env start_loc (Cover_expr expr)
+        call_cover ~allow_optional_chain:true env start_loc (Cover_expr expr)
       | _ -> left
 
   and member ?(allow_optional_chain = true) env start_loc left =
