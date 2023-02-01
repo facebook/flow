@@ -24,7 +24,6 @@ typedef struct matcher_options {
   size_t num_threads;
   size_t max_results;
   size_t max_gap;
-  bool record_match_indexes;
   const char *root_path;
 } matcher_options_t;
 
@@ -33,8 +32,6 @@ typedef struct match_result {
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.
   const char *value;
-  // Only computed if `record_match_indexes` was set to true.
-  int *matchIndexes;
   int score_based_root_path;
 } match_result_t;
 

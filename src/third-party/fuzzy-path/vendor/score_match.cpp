@@ -7,15 +7,12 @@
  */
 
 #include <algorithm>
-#include <string>
 #include <cstring>
 
 // memrchr is a non-standard extension only available in glibc.
 #if defined(__APPLE__) || defined(_WIN32) || defined(_WIN64)
 #include "memrchr.h"
 #endif
-
-using namespace std;
 
 // Initial multiplier when a gap is used.
 const float BASE_DISTANCE_PENALTY = 0.6;
@@ -39,7 +36,6 @@ struct MatchInfo {
   size_t needle_len;
   int* last_match;
   float *memo;
-  size_t *best_match;
   bool smart_case;
   size_t max_gap;
   float min_score;
@@ -80,7 +76,6 @@ float recursive_match(const MatchInfo &m,
   }
 
   float score = 0;
-  size_t best_match = 0;
   char c = m.needle_case[needle_idx];
 
   size_t lim = m.last_match[needle_idx];
@@ -114,7 +109,7 @@ float recursive_match(const MatchInfo &m,
         } else if (needle_idx == 0) {
           char_score = BASE_DISTANCE_PENALTY;
         } else {
-          char_score = max(
+          char_score = std::max(
             MIN_DISTANCE_PENALTY,
             BASE_DISTANCE_PENALTY -
               (j - haystack_idx - 1) * ADDITIONAL_DISTANCE_PENALTY
@@ -151,7 +146,6 @@ float recursive_match(const MatchInfo &m,
         multiplier * recursive_match(m, j + 1, needle_idx + 1, next_score);
       if (new_score > score) {
         score = new_score;
-        best_match = j;
         // Optimization: can't score better than 1.
         if (new_score == 1) {
           break;
@@ -160,9 +154,6 @@ float recursive_match(const MatchInfo &m,
     }
   }
 
-  if (m.best_match != nullptr) {
-    m.best_match[needle_idx * m.haystack_len + haystack_idx] = best_match;
-  }
   return memoized = score;
 }
 
@@ -171,8 +162,7 @@ float score_match(const char *haystack,
                   const char *needle,
                   const char *needle_lower,
                   const MatchOptions &options,
-                  const float min_score,
-                  vector<int> *match_indexes) {
+                  const float min_score) {
   if (!*needle) {
     return 1.0;
   }
@@ -216,22 +206,13 @@ float score_match(const char *haystack,
     for (size_t i = 1; i < m.needle_len; i++) {
       int gap = last_match[i] - last_match[i - 1];
       if (gap > 1) {
-        penalty *= max(
+        penalty *= std::max(
           MIN_DISTANCE_PENALTY,
           BASE_DISTANCE_PENALTY - (gap - 1) * ADDITIONAL_DISTANCE_PENALTY
         );
       }
     }
-    if (match_indexes != nullptr) {
-      *match_indexes = vector<int>(last_match, last_match + m.needle_len);
-    }
     return penalty * m.needle_len / m.haystack_len;
-  }
-
-  if (match_indexes != nullptr) {
-    m.best_match = new size_t[memo_size];
-  } else {
-    m.best_match = nullptr;
   }
 
 #ifdef _WIN32
@@ -248,16 +229,6 @@ float score_match(const char *haystack,
   float score = m.needle_len * recursive_match(m, 0, 0, m.needle_len);
   if (score <= 0) {
     return 0.0;
-  }
-
-  if (match_indexes != nullptr) {
-    match_indexes->resize(m.needle_len);
-    size_t curr_start = 0;
-    for (size_t i = 0; i < m.needle_len; i++) {
-      match_indexes->at(i) = m.best_match[i * m.haystack_len + curr_start];
-      curr_start = match_indexes->at(i) + 1;
-    }
-    delete[] m.best_match;
   }
 
   return score;

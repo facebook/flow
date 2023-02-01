@@ -51,7 +51,6 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
   cpp_options.num_threads = options.num_threads;
   cpp_options.max_results = options.max_results;
   cpp_options.max_gap = options.max_gap;
-  cpp_options.record_match_indexes = options.record_match_indexes;
   std::string root_path_str(options.root_path);
   cpp_options.root_path = root_path_str;
 
@@ -63,7 +62,6 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
     results[i] = {
       matches[i].score,
       matches[i].value->c_str(),
-      matches[i].matchIndexes != NULL ? matches[i].matchIndexes->data() : 0,
       matches[i].score_based_root_path
     };
   }

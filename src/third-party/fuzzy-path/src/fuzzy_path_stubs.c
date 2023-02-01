@@ -100,7 +100,6 @@ value fuzzy_match(value matcher_val, value query_val, value options) {
     Int_val(Field(options, 2)), // num_threads
     Int_val(Field(options, 3)), // max_results
     Int_val(Field(options, 4)), // max_gap
-    false, // record_match_indexes
     String_val(Field(options, 5)) // root_path
   };
 

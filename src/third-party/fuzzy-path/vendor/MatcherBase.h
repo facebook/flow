@@ -11,7 +11,6 @@ struct MatcherOptions {
   size_t num_threads = 0;
   size_t max_results = 0;
   size_t max_gap = 0;
-  bool record_match_indexes = false;
   std::string root_path;
 };
 
@@ -20,8 +19,6 @@ struct MatchResult {
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.
   const std::string *value;
-  // Only computed if `record_match_indexes` was set to true.
-  mutable std::shared_ptr<std::vector<int>> matchIndexes = nullptr;
   int score_based_root_path;
 
   MatchResult(float score,

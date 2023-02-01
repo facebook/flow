@@ -106,24 +106,10 @@ void push_heap(ResultHeap &heap,
 vector<MatchResult> finalize(const string &query,
                              const string &query_case,
                              const MatchOptions &options,
-                             bool record_match_indexes,
                              ResultHeap &&heap) {
   vector<MatchResult> vec;
   while (heap.size()) {
     const MatchResult &result = heap.top();
-    if (record_match_indexes) {
-      result.matchIndexes.reset(new vector<int>(query.size()));
-      string lower = str_to_lower(*result.value);
-      score_match(
-        result.value->c_str(),
-        lower.c_str(),
-        query.c_str(),
-        query_case.c_str(),
-        options,
-        0.0,
-        result.matchIndexes.get()
-      );
-    }
     vec.push_back(result);
     heap.pop();
   }
@@ -272,7 +258,6 @@ vector<MatchResult> MatcherBase::findMatches(const std::string &query,
     new_query,
     query_case,
     matchOptions,
-    options.record_match_indexes,
     std::move(combined)
   );
 }
