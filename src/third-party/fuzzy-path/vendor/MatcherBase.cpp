@@ -8,9 +8,7 @@
 #include <queue>
 #include <thread>
 
-using namespace std;
-
-typedef priority_queue<MatchResult> ResultHeap;
+typedef std::priority_queue<MatchResult> ResultHeap;
 
 inline uint64_t letter_bitmask(const std::string &str) {
   uint64_t result = 0;
@@ -35,8 +33,8 @@ inline uint64_t letter_bitmask(const std::string &str) {
   return result;
 }
 
-inline string str_to_lower(const std::string &s) {
-  string lower(s);
+inline std::string str_to_lower(const std::string &s) {
+  std::string lower(s);
   for (auto& c : lower) {
     if (c >= 'A' && c <= 'Z') {
       c += 'a' - 'A';
@@ -59,11 +57,11 @@ void push_heap(ResultHeap &heap,
   }
 }
 
-vector<MatchResult> finalize(const string &query,
-                             const string &query_case,
+std::vector<MatchResult> finalize(const std::string &query,
+                             const std::string &query_case,
                              const MatchOptions &options,
                              ResultHeap &&heap) {
-  vector<MatchResult> vec;
+  std::vector<MatchResult> vec;
   while (heap.size()) {
     const MatchResult &result = heap.top();
     vec.push_back(result);
@@ -74,13 +72,13 @@ vector<MatchResult> finalize(const string &query,
 }
 
 void thread_worker(
-  const string &query,
-  const string &query_case,
+  const std::string &query,
+  const std::string &query_case,
   const MatchOptions &options,
   bool use_last_match,
   std::atomic<float>* min_score,
   size_t max_results,
-  vector<MatcherBase::CandidateData> &candidates,
+  std::vector<MatcherBase::CandidateData> &candidates,
   size_t start,
   size_t end,
   ResultHeap &result
@@ -126,19 +124,19 @@ void thread_worker(
   }
 }
 
-vector<MatchResult> MatcherBase::findMatches(const std::string &query,
+std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
                                              const MatcherOptions &options) {
   size_t max_results = options.max_results;
   size_t num_threads = options.num_threads;
   if (max_results == 0) {
-    max_results = numeric_limits<size_t>::max();
+    max_results = std::numeric_limits<size_t>::max();
   }
   MatchOptions matchOptions;
   matchOptions.case_sensitive = options.case_sensitive;
   matchOptions.smart_case = false;
   matchOptions.max_gap = options.max_gap;
 
-  string new_query;
+  std::string new_query;
   // Ignore all whitespace in the query.
   for (auto c : query) {
     if (!isspace(c)) {
@@ -149,7 +147,7 @@ vector<MatchResult> MatcherBase::findMatches(const std::string &query,
     }
   }
 
-  string query_case;
+  std::string query_case;
   if (!options.case_sensitive) {
     query_case = str_to_lower(new_query);
   } else {
@@ -167,8 +165,8 @@ vector<MatchResult> MatcherBase::findMatches(const std::string &query,
     thread_worker(new_query, query_case, matchOptions, use_last_match, &min_score,
                   max_results, candidates_, 0, candidates_.size(), combined);
   } else {
-    vector<ResultHeap> thread_results(num_threads);
-    vector<thread> threads;
+    std::vector<ResultHeap> thread_results(num_threads);
+    std::vector<std::thread> threads;
     size_t cur_start = 0;
     for (size_t i = 0; i < num_threads; i++) {
       size_t chunk_size = candidates_.size() / num_threads;
@@ -178,16 +176,16 @@ vector<MatchResult> MatcherBase::findMatches(const std::string &query,
       }
       threads.emplace_back(
         thread_worker,
-        ref(new_query),
-        ref(query_case),
-        ref(matchOptions),
+        std::ref(new_query),
+        std::ref(query_case),
+        std::ref(matchOptions),
         use_last_match,
         &min_score,
         max_results,
-        ref(candidates_),
+        std::ref(candidates_),
         cur_start,
         cur_start + chunk_size,
-        ref(thread_results[i])
+        std::ref(thread_results[i])
       );
       cur_start += chunk_size;
     }
@@ -215,10 +213,10 @@ vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   );
 }
 
-void MatcherBase::addCandidate(const string &candidate) {
+void MatcherBase::addCandidate(const std::string &candidate) {
   auto it = lookup_.find(candidate);
   if (it == lookup_.end()) {
-    string lowercase = str_to_lower(candidate);
+    std::string lowercase = str_to_lower(candidate);
     lookup_[candidate] = candidates_.size();
     CandidateData data;
     data.value = candidate;
@@ -229,11 +227,11 @@ void MatcherBase::addCandidate(const string &candidate) {
   }
 }
 
-void MatcherBase::removeCandidate(const string &candidate) {
+void MatcherBase::removeCandidate(const std::string &candidate) {
   auto it = lookup_.find(candidate);
   if (it != lookup_.end()) {
     if (it->second + 1 != candidates_.size()) {
-      swap(candidates_[it->second], candidates_.back());
+      std::swap(candidates_[it->second], candidates_.back());
       lookup_[candidates_[it->second].value] = it->second;
     }
     candidates_.pop_back();
