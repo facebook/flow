@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type exported_module_info =
+  [ `Module of Docblock.t
+  | `Package of Package_json.t
+  | `Unknown
+  ]
+
 (* export and import functions for the module system *)
-val exported_module :
-  options:Options.t ->
-  File_key.t ->
-  [ `Module of Docblock.t | `Package of Package_json.t ] ->
-  string option
+val exported_module : options:Options.t -> File_key.t -> exported_module_info -> string option
 
 type phantom_acc = Modulename.Set.t ref
 

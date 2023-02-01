@@ -161,15 +161,17 @@ let package_incompatible ~reader filename new_package =
 
 type phantom_acc = Modulename.Set.t ref
 
+type exported_module_info =
+  [ `Module of Docblock.t
+  | `Package of Package_json.t
+  | `Unknown
+  ]
+
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module :
-    Options.t ->
-    File_key.t ->
-    [ `Module of Docblock.t | `Package of Package_json.t ] ->
-    string option
+  val exported_module : Options.t -> File_key.t -> exported_module_info -> string option
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
@@ -430,9 +432,9 @@ module Haste : MODULE_SYSTEM = struct
   let exported_module options =
     let is_haste_file = is_haste_file options in
     let is_within_node_modules = is_within_node_modules options in
-    fun file info ->
-      match (file, info) with
-      | (File_key.SourceFile _, `Module info) ->
+    fun file (info : exported_module_info) ->
+      match file with
+      | File_key.SourceFile _ ->
         if is_mock file then
           Some (short_module_name_of file)
         else if Options.haste_use_name_reducers options then
@@ -444,13 +446,16 @@ module Haste : MODULE_SYSTEM = struct
             Some (haste_name options normalized_file_name)
           else
             None
-        else
-          Docblock.providesModule info
-      | (File_key.JsonFile path, `Package pkg) ->
-        if Package_json.haste_commonjs pkg || not (is_within_node_modules path) then
+        else (
+          match info with
+          | `Module info -> Docblock.providesModule info
+          | _ -> None
+        )
+      | File_key.JsonFile path ->
+        (match info with
+        | `Package pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules path) ->
           Package_json.name pkg
-        else
-          None
+        | _ -> None)
       | _ ->
         (* Lib files, resource files, etc don't have any fancy haste name *)
         None
