@@ -80,6 +80,109 @@ References:
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------- encountered_placeholder_failure.js:8:5
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   8| id((item) => 1); // error
+          ^^^^
+
+
+Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:10:8
+
+An annotation on rest parameter `item` is required because Flow cannot infer its type from local context.
+[missing-local-annot]
+
+   10| id((...item) => 1); // error
+              ^^^^
+
+
+Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:12:11
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   12| id(() => (item) => 1); // error
+                 ^^^^
+
+
+Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:14:24
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   14| async () => id(await ((item) => 1)) // error
+                              ^^^^
+
+
+Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:16:17
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   16| id(async () => (item) => 1); // error
+                       ^^^^
+
+
+Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:19:11
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   19| id({foo: (item) => 1}); // error
+                 ^^^^
+
+
+Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:23:15
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   23| id({...{foo: (item) => 1}}); // error
+                     ^^^^
+
+
+Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:25:6
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   25| id([(item) => 1]); // error
+            ^^^^
+
+
+Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:27:8
+
+Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [prop-missing]
+
+   encountered_placeholder_failure.js:27:8
+     27| id([...(item) => 1]); // error
+                ^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1677:11
+   1677| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:27:9
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   27| id([...(item) => 1]); // error
+               ^^^^
+
+
+Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:29:28
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   29| id({type: 'literal', foo: (item) => 1}) // error
+                                  ^^^^
+
+
+Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:32:8
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   32| id(id((item) => 1)); // error
+              ^^^^
+
+
 Error ----------------------------------------------------------------------------------- error_during_synthesis.js:4:32
 
 Cannot call `expectString` with `3` bound to the first parameter because number [1] is incompatible with string [2].
@@ -701,4 +804,4 @@ References:
 
 
 
-Found 48 errors
+Found 60 errors

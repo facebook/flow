@@ -4115,8 +4115,8 @@ struct
           rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
         | (_, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action)) ->
           elem_action_on_obj cx trace ~use_op l obj reason_op action
-        | (_, ElemT (use_op, reason_op, (AnyT _ as obj), action)) ->
-          let value = AnyT.untyped reason_op in
+        | (_, ElemT (use_op, reason_op, (AnyT (_, src) as obj), action)) ->
+          let value = AnyT.why src reason_op in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op obj value action
         (* It is not safe to write to an unknown index in a tuple. However, any is
          * a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
