@@ -134,8 +134,16 @@ let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
   let use = CallT { use_op; reason = call_reason; call_action; return_hint = hint_unavailable } in
   Flow_js.flow cx (intersection, use);
   match !call_speculation_hint_state with
-  | Speculation_hint_unset -> intersection
-  | Speculation_hint_invalid -> intersection
+  | Speculation_hint_unset
+  | Speculation_hint_invalid ->
+    (* We add an error to fail hint decomposition. *)
+    Flow_js.add_output
+      cx
+      Error_message.(
+        EUnionSpeculationFailed
+          { use_op = unknown_use; reason; reason_op = call_reason; branches = [] }
+      );
+    AnyT.error reason
   | Speculation_hint_set (_, t) -> t
 
 let simplify_callee cx reason use_op func_t =
