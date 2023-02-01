@@ -7,7 +7,7 @@
 
 declare var undefined: void;
 
-type PropertyDescriptor<T> = any
+type PropertyDescriptor<T> = any;
 
 declare class Object {}
 
@@ -35,7 +35,7 @@ type $ArrayLike<T> = {
   [indexer: number]: T,
   length: number,
   ...
-}
+};
 
 // Promise
 
@@ -78,4 +78,7 @@ declare function $asyncIterator<T>(p: AsyncIterable<T>): T;
 
 declare opaque type $Flow$ModuleRef<+T>;
 
-declare var module: { exports: any }
+declare var module: {
+  exports: any,
+  ...
+};
