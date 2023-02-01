@@ -809,8 +809,12 @@ struct
         | (DefT (reason, trust, EnumT enum), TypeCastT (use_op, cast_to_t)) ->
           rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) })
         | (UnionT _, TypeCastT (_, (UnionT _ as u)))
-          when union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) l u
-          ->
+          when union_optimization_guard
+                 cx
+                 ~equiv:false
+                 (Context.trust_errors cx |> TypeUtil.quick_subtype)
+                 l
+                 u ->
           ()
         | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
@@ -1695,12 +1699,13 @@ struct
                { computed_property_reason = reason; union_reason = r }
             )
         | ((UnionT (_, rep1) as u1), EqT { arg = UnionT _ as u2; _ }) ->
-          if union_optimization_guard cx (curry equatable) u1 u2 then begin
+          if union_optimization_guard cx ~equiv:true (curry equatable) u1 u2 then begin
             if Context.is_verbose cx then prerr_endline "UnionT ~> EqT fast path"
           end else
             flow_all_in_union cx trace rep1 u
         | ((UnionT (_, rep1) as u1), StrictEqT { arg = UnionT _ as u2; cond_context; _ }) ->
-          if union_optimization_guard cx (curry (strict_equatable cond_context)) u1 u2 then begin
+          if union_optimization_guard cx ~equiv:true (curry (strict_equatable cond_context)) u1 u2
+          then begin
             if Context.is_verbose cx then prerr_endline "UnionT ~> StrictEqT fast path"
           end else
             flow_all_in_union cx trace rep1 u
@@ -5823,7 +5828,13 @@ struct
         else
           wait_for_concrete_bound ()
       | UseT (_, (UnionT _ as u)) ->
-        if union_optimization_guard cx (Context.trust_errors cx |> TypeUtil.quick_subtype) bound u
+        if
+          union_optimization_guard
+            cx
+            ~equiv:false
+            (Context.trust_errors cx |> TypeUtil.quick_subtype)
+            bound
+            u
         then begin
           if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via a generic)";
           true
