@@ -47,6 +47,8 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_ArrElement of int option
   (* Hint on array literal `[...e]` becomes hint on `e` *)
   | Decomp_ArrSpread of int
+  (* Hint on empty array literal `[]` becomes hint on its element type. *)
+  | Decomp_EmptyArrayElement
   (* Type of `await e` becomes hint on `e` *)
   | Decomp_Await
   (* Type of `o` in `o.m(..)` becomes the type of `o.m` *)
@@ -97,6 +99,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_ArrElement None -> "Decomp_ArrElement (no index)"
   | Decomp_ArrElement (Some i) -> Utils_js.spf "Decomp_ArrElement (%d)" i
   | Decomp_ArrSpread i -> Utils_js.spf "Decomp_ArrSpread (%d)" i
+  | Decomp_EmptyArrayElement -> "Decomp_EmptyArrayElement"
   | Decomp_MethodName _ -> "Decomp_MethodName"
   | Decomp_MethodPrivateName _ -> "Decomp_MethodPrivateName"
   | Decomp_MethodElem -> "Decomp_MethodElem"
@@ -146,6 +149,7 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_ObjSpread -> Decomp_ObjSpread
   | Decomp_ArrElement o -> Decomp_ArrElement o
   | Decomp_ArrSpread o -> Decomp_ArrSpread o
+  | Decomp_EmptyArrayElement -> Decomp_EmptyArrayElement
   | Decomp_Await -> Decomp_Await
   | Decomp_MethodName name -> Decomp_MethodName name
   | Decomp_MethodPrivateName (name, class_stack) -> Decomp_MethodPrivateName (name, class_stack)
