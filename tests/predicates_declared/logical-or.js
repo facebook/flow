@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity check:
 // - conditional functions do not affect behavior of conditional
 //   expressions (e.g. `||`)

@@ -1,5 +1,3 @@
-// @flow
-
 type Foo = {|
   bar: string,
   baz: number,

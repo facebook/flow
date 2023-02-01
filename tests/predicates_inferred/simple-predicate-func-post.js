@@ -1,5 +1,3 @@
-// @flow
-
 // Feature check:
 // The predicate function is defined after the conditional check
 

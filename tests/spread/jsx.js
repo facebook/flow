@@ -1,4 +1,3 @@
-// @flow
 const React = require('react');
 
 type Props = $ReadOnly<{| bar: string, baz: number |}>;

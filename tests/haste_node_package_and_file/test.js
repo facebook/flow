@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * In this test, we have a Haste package (package/package.json), and a file
  * named package.js which does not provide a Haste module named "package".

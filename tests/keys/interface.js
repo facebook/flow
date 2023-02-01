@@ -1,5 +1,3 @@
-// @flow
-
 interface WithDict {
   ['x' | 'y']: number;
 }

@@ -1,6 +1,3 @@
-// @flow
-
-
 class A {
   +prop: number;
 

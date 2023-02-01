@@ -1,5 +1,3 @@
-// @flow
-
 function Foo() {
   (new.target: mixed); // OK
   (new.target: boolean); // Error

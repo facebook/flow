@@ -1,5 +1,3 @@
-// @flow
-
 import {is_string, is_number} from './pred-decls';
 
 //

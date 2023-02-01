@@ -1,4 +1,2 @@
-// @flow
-
 arguments;
 eval("");

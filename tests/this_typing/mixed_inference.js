@@ -1,6 +1,3 @@
-// @flow
-
-
 function bar() {}
 
 let o = { m() {}, n : function() {} }

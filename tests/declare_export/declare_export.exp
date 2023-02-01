@@ -1,14 +1,14 @@
-Error ----------------------------------------------------------------------------------------------------- const.js:5:1
+Error ----------------------------------------------------------------------------------------------------- const.js:3:1
 
 Cannot reassign constant `c` [1]. [reassign-const]
 
-   const.js:5:1
-   5| c = "const"; // ERROR
+   const.js:3:1
+   3| c = "const"; // ERROR
       ^
 
 References:
-   const.js:3:22
-   3| declare export const c: "const";
+   const.js:1:22
+   1| declare export const c: "const";
                            ^ [1]
 
 
@@ -1056,38 +1056,38 @@ References:
                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ import-let-const.js:7:2
+Error ------------------------------------------------------------------------------------------ import-let-const.js:5:2
 
 Cannot cast `l` to empty because string literal `let` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   import-let-const.js:7:2
-   7| (l: empty); // ERROR
+   import-let-const.js:5:2
+   5| (l: empty); // ERROR
        ^
 
 References:
-   let.js:3:23
-   3| declare export let l: "let";
+   let.js:1:23
+   1| declare export let l: "let";
                             ^^^^^ [1]
-   import-let-const.js:7:5
-   7| (l: empty); // ERROR
+   import-let-const.js:5:5
+   5| (l: empty); // ERROR
           ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- import-let-const.js:10:2
+Error ------------------------------------------------------------------------------------------ import-let-const.js:8:2
 
 Cannot cast `c` to empty because string literal `const` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   import-let-const.js:10:2
-   10| (c: empty); // ERROR
-        ^
+   import-let-const.js:8:2
+   8| (c: empty); // ERROR
+       ^
 
 References:
-   const.js:3:25
-    3| declare export const c: "const";
-                               ^^^^^^^ [1]
-   import-let-const.js:10:5
-   10| (c: empty); // ERROR
-           ^^^^^ [2]
+   const.js:1:25
+   1| declare export const c: "const";
+                              ^^^^^^^ [1]
+   import-let-const.js:8:5
+   8| (c: empty); // ERROR
+          ^^^^^ [2]
 
 
 

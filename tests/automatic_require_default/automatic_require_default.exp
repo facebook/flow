@@ -1,9 +1,9 @@
-Error ------------------------------------------------------------------------------------------------- imports.js:11:14
+Error -------------------------------------------------------------------------------------------------- imports.js:9:14
 
 Cannot get `Default.T` because property `T` is missing in `Number` [1]. [prop-missing]
 
-   imports.js:11:14
-    11| (1 : Default.T); // error T missing in number
+   imports.js:9:14
+     9| (1 : Default.T); // error T missing in number
                      ^
 
 References:
@@ -12,12 +12,12 @@ References:
                       ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- react.js:10:13
+Error ---------------------------------------------------------------------------------------------------- react.js:8:13
 
 Cannot get `React.NotAType` because property `NotAType` is missing in module `react` [1]. [prop-missing]
 
-   react.js:10:13
-    10| ("" : React.NotAType); // error NotAType missing in React
+   react.js:8:13
+     8| ("" : React.NotAType); // error NotAType missing in React
                     ^^^^^^^^
 
 References:
@@ -26,18 +26,18 @@ References:
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- react.js:11:13
+Error ---------------------------------------------------------------------------------------------------- react.js:9:13
 
 Cannot get `react.NotAType` because property `NotAType` is missing in module `react` [1]. [prop-missing]
 
-   react.js:11:13
-   11| ("" : react.NotAType); // error NotAType missing in react
-                   ^^^^^^^^
+   react.js:9:13
+   9| ("" : react.NotAType); // error NotAType missing in react
+                  ^^^^^^^^
 
 References:
-   react.js:4:15
-    4| const react = require('react');
-                     ^^^^^^^^^^^^^^^^ [1]
+   react.js:2:15
+   2| const react = require('react');
+                    ^^^^^^^^^^^^^^^^ [1]
 
 
 

@@ -1,5 +1,3 @@
-// @flow
-
 let x = null;
 function foo() {
   x = 0;

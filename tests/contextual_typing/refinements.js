@@ -1,5 +1,3 @@
-// @flow
-
 declare function havoc(): void;
 
 function test_member() {

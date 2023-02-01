@@ -1,970 +1,970 @@
-Error ----------------------------------------------------------------------------------------- ops_on_eval_call.js:7:25
+Error ----------------------------------------------------------------------------------------- ops_on_eval_call.js:5:25
 
 Cannot use class extends on `$Call` [1] in an export position. Please provide an (alternative) annotation for class
 extends [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:7:25
-   7| export class x1 extends ((0: any): T) {}
+   ops_on_eval_call.js:5:25
+   5| export class x1 extends ((0: any): T) {}
                               ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-   3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+   1| type T = $Call<() => any, void>;
                ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:10:19
+Error ----------------------------------------------------------------------------------------- ops_on_eval_call.js:8:19
 
 Cannot use property `f` on `$Call` [1] in an export position. Please provide an (alternative) annotation for property
 `f` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:10:19
-   10| export const x2 = t.f;
-                         ^^^ [2]
+   ops_on_eval_call.js:8:19
+   8| export const x2 = t.f;
+                        ^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_call.js:1:10
+   1| type T = $Call<() => any, void>;
+               ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:13:19
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:11:19
 
 Cannot use computed property on `$Call` [1] in an export position. Please provide an (alternative) annotation for
 computed property [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:13:19
-   13| export const x3 = t[('': string)];
+   ops_on_eval_call.js:11:19
+   11| export const x3 = t[('': string)];
                          ^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:16:19
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:14:19
 
 Cannot use spread on `$Call` [1] in an export position. Please provide an (alternative) annotation for spread [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_call.js:16:19
-   16| export const x4 = { ...t };
+   ops_on_eval_call.js:14:19
+   14| export const x4 = { ...t };
                          ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:19:17
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:17:17
 
 Cannot use exact on `$Call` [1] in an export position. Please provide an (alternative) annotation for exact [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_call.js:19:17
-   19| declare var y5: $Exact<T>;
+   ops_on_eval_call.js:17:17
+   17| declare var y5: $Exact<T>;
                        ^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:23:17
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:21:17
 
 Cannot use statics on `$Call` [1] in an export position. Please provide an (alternative) annotation for statics [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_call.js:23:17
-   23| declare var y6: Class<T>;
+   ops_on_eval_call.js:21:17
+   21| declare var y6: Class<T>;
                        ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:29:19
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:27:19
 
 Cannot use property `f` on `$Call` [1] in an export position. Please provide an (alternative) annotation for property
 `f` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:29:19
-   29| export const x7 = y7.f;
+   ops_on_eval_call.js:27:19
+   27| export const x7 = y7.f;
                          ^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:32:37
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:30:37
 
 Cannot use prototype on `$Call` [1] in an export position. Please provide an (alternative) annotation for prototype [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_call.js:32:37
-   32| declare export var x8: { __proto__: T };
+   ops_on_eval_call.js:30:37
+   30| declare export var x8: { __proto__: T };
                                            ^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:35:32
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:33:32
 
 Cannot use mixins on `$Call` [1] in an export position. Please provide an (alternative) annotation for mixins [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_call.js:35:32
-   35| declare export class x9 mixins t {}
+   ops_on_eval_call.js:33:32
+   33| declare export class x9 mixins t {}
                                       ^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:38:20
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:36:20
 
 Cannot use unary minus on `$Call` [1] in an export position. Please provide an (alternative) annotation for unary
 minus [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:38:20
-   38| export const x10 = -t;
+   ops_on_eval_call.js:36:20
+   36| export const x10 = -t;
                           ^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:41:20
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:39:20
 
 Cannot use unary not on `$Call` [1] in an export position. Please provide an (alternative) annotation for unary not [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_call.js:41:20
-   41| export const x11 = !t;
+   ops_on_eval_call.js:39:20
+   39| export const x11 = !t;
                           ^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:44:18
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:42:18
 
 Cannot use `$KeyMirror` on `$Call` [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:44:18
-   44| declare var y12: $KeyMirror<T>;
+   ops_on_eval_call.js:42:18
+   42| declare var y12: $KeyMirror<T>;
                         ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:48:18
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:46:18
 
 Cannot use `$ObjMapConst` on `$Call` [1] in an export position. Please provide an (alternative) annotation for
 `$ObjMapConst` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_call.js:48:18
-   48| declare var y13: $ObjMapConst<T, any>;
+   ops_on_eval_call.js:46:18
+   46| declare var y13: $ObjMapConst<T, any>;
                         ^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:52:18
+Error ---------------------------------------------------------------------------------------- ops_on_eval_call.js:50:18
 
 Cannot use key set on `$Call` [1] in an export position. Please provide an (alternative) annotation for key set [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_call.js:52:18
-   52| declare var y14: $Keys<T>;
+   ops_on_eval_call.js:50:18
+   50| declare var y14: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_call.js:3:10
-    3| type T = $Call<() => any, void>;
+   ops_on_eval_call.js:1:10
+    1| type T = $Call<() => any, void>;
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------- ops_on_eval_objmap.js:7:19
+Error --------------------------------------------------------------------------------------- ops_on_eval_objmap.js:5:19
 
 Cannot use property `f` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for property
 `f` [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:7:19
-   7| export const x2 = t.f;
+   ops_on_eval_objmap.js:5:19
+   5| export const x2 = t.f;
                         ^^^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-   3| type T = $ObjMap<{ f: number }, () => string>;
+   ops_on_eval_objmap.js:1:10
+   1| type T = $ObjMap<{ f: number }, () => string>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:10:19
+Error --------------------------------------------------------------------------------------- ops_on_eval_objmap.js:8:19
 
 Cannot use computed property on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
 computed property [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:10:19
-   10| export const x3 = t[('': string)];
-                         ^^^^^^^^^^^^^^^ [2]
+   ops_on_eval_objmap.js:8:19
+   8| export const x3 = t[('': string)];
+                        ^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-    3| type T = $ObjMap<{ f: number }, () => string>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_objmap.js:1:10
+   1| type T = $ObjMap<{ f: number }, () => string>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:13:19
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:11:19
 
 Cannot use spread on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for spread [2].
 (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:13:19
-   13| export const x4 = { ...t };
+   ops_on_eval_objmap.js:11:19
+   11| export const x4 = { ...t };
                          ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-    3| type T = $ObjMap<{ f: number }, () => string>;
+   ops_on_eval_objmap.js:1:10
+    1| type T = $ObjMap<{ f: number }, () => string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:16:17
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:14:17
 
 Cannot use exact on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for exact [2]. (Try
 using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:16:17
-   16| declare var y5: $Exact<T>;
+   ops_on_eval_objmap.js:14:17
+   14| declare var y5: $Exact<T>;
                        ^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-    3| type T = $ObjMap<{ f: number }, () => string>;
+   ops_on_eval_objmap.js:1:10
+    1| type T = $ObjMap<{ f: number }, () => string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:20:37
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:18:37
 
 Cannot use prototype on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
 prototype [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:20:37
-   20| declare export var x8: { __proto__: T };
+   ops_on_eval_objmap.js:18:37
+   18| declare export var x8: { __proto__: T };
                                            ^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-    3| type T = $ObjMap<{ f: number }, () => string>;
+   ops_on_eval_objmap.js:1:10
+    1| type T = $ObjMap<{ f: number }, () => string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:23:20
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:21:20
 
 Cannot use unary not on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for unary
 not [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:23:20
-   23| export const x11 = !t;
+   ops_on_eval_objmap.js:21:20
+   21| export const x11 = !t;
                           ^^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-    3| type T = $ObjMap<{ f: number }, () => string>;
+   ops_on_eval_objmap.js:1:10
+    1| type T = $ObjMap<{ f: number }, () => string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:26:18
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:24:18
 
 Cannot use `$KeyMirror` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:26:18
-   26| declare var y12: $KeyMirror<T>;
+   ops_on_eval_objmap.js:24:18
+   24| declare var y12: $KeyMirror<T>;
                         ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-    3| type T = $ObjMap<{ f: number }, () => string>;
+   ops_on_eval_objmap.js:1:10
+    1| type T = $ObjMap<{ f: number }, () => string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:30:18
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:28:18
 
 Cannot use `$ObjMapConst` on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for
 `$ObjMapConst` [2]. (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:30:18
-   30| declare var y13: $ObjMapConst<T, any>;
+   ops_on_eval_objmap.js:28:18
+   28| declare var y13: $ObjMapConst<T, any>;
                         ^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-    3| type T = $ObjMap<{ f: number }, () => string>;
+   ops_on_eval_objmap.js:1:10
+    1| type T = $ObjMap<{ f: number }, () => string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:34:18
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmap.js:32:18
 
 Cannot use key set on `$ObjMap` [1] in an export position. Please provide an (alternative) annotation for key set [2].
 (Try using the `$ObjMapConst` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmap.js:34:18
-   34| declare var y14: $Keys<T>;
+   ops_on_eval_objmap.js:32:18
+   32| declare var y14: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmap.js:3:10
-    3| type T = $ObjMap<{ f: number }, () => string>;
+   ops_on_eval_objmap.js:1:10
+    1| type T = $ObjMap<{ f: number }, () => string>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:7:19
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:5:19
 
 Cannot use property `f` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for property
 `f` [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:7:19
-   7| export const x2 = t.f;
+   ops_on_eval_objmapi.js:5:19
+   5| export const x2 = t.f;
                         ^^^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-   3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+   ops_on_eval_objmapi.js:1:10
+   1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:10:19
+Error -------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:8:19
 
 Cannot use computed property on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
 computed property [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:10:19
-   10| export const x3 = t[('': string)];
-                         ^^^^^^^^^^^^^^^ [2]
+   ops_on_eval_objmapi.js:8:19
+   8| export const x3 = t[('': string)];
+                        ^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_eval_objmapi.js:1:10
+   1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:13:19
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:11:19
 
 Cannot use spread on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for spread [2].
 (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:13:19
-   13| export const x4 = { ...t };
+   ops_on_eval_objmapi.js:11:19
+   11| export const x4 = { ...t };
                          ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+   ops_on_eval_objmapi.js:1:10
+    1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:16:17
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:14:17
 
 Cannot use exact on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for exact [2]. (Try
 using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:16:17
-   16| declare var y5: $Exact<T>;
+   ops_on_eval_objmapi.js:14:17
+   14| declare var y5: $Exact<T>;
                        ^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+   ops_on_eval_objmapi.js:1:10
+    1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:20:37
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:18:37
 
 Cannot use prototype on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
 prototype [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:20:37
-   20| declare export var x8: { __proto__: T };
+   ops_on_eval_objmapi.js:18:37
+   18| declare export var x8: { __proto__: T };
                                            ^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+   ops_on_eval_objmapi.js:1:10
+    1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:23:20
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:21:20
 
 Cannot use unary not on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for unary
 not [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:23:20
-   23| export const x11 = !t;
+   ops_on_eval_objmapi.js:21:20
+   21| export const x11 = !t;
                           ^^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+   ops_on_eval_objmapi.js:1:10
+    1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:26:18
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:24:18
 
 Cannot use `$KeyMirror` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:26:18
-   26| declare var y12: $KeyMirror<T>;
+   ops_on_eval_objmapi.js:24:18
+   24| declare var y12: $KeyMirror<T>;
                         ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+   ops_on_eval_objmapi.js:1:10
+    1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:30:18
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:28:18
 
 Cannot use `$ObjMapConst` on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for
 `$ObjMapConst` [2]. (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:30:18
-   30| declare var y13: $ObjMapConst<T, any>;
+   ops_on_eval_objmapi.js:28:18
+   28| declare var y13: $ObjMapConst<T, any>;
                         ^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+   ops_on_eval_objmapi.js:1:10
+    1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:34:18
+Error ------------------------------------------------------------------------------------- ops_on_eval_objmapi.js:32:18
 
 Cannot use key set on `$ObjMapi` [1] in an export position. Please provide an (alternative) annotation for key set [2].
 (Try using the `$KeyMirror` utility type instead.) [invalid-exported-annotation]
 
-   ops_on_eval_objmapi.js:34:18
-   34| declare var y14: $Keys<T>;
+   ops_on_eval_objmapi.js:32:18
+   32| declare var y14: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
-   ops_on_eval_objmapi.js:3:10
-    3| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
+   ops_on_eval_objmapi.js:1:10
+    1| type T = $ObjMapi<{ f: number }, <K>(K) => K>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ ops_on_inst_rest.js:5:8
+Error ------------------------------------------------------------------------------------------ ops_on_inst_rest.js:3:8
 
 Cannot use rest on `C` [1] in an export position. Please provide an (alternative) annotation for rest [2].
 [invalid-exported-annotation]
 
-   ops_on_inst_rest.js:5:8
-   5| const {...rest_c} = c;
+   ops_on_inst_rest.js:3:8
+   3| const {...rest_c} = c;
              ^^^^^^^^^ [2]
 
 References:
-   ops_on_inst_rest.js:3:15
-   3| declare class C { f: number }
+   ops_on_inst_rest.js:1:15
+   1| declare class C { f: number }
                     ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:13:25
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:11:25
 
 Cannot use class extends on intersection type [1] in an export position. Please provide an (alternative) annotation for
 class extends [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:13:25
-   13| export class x1 extends ((0: any): T) {}
+   ops_on_intersection.js:11:25
+   11| export class x1 extends ((0: any): T) {}
                                ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:6:10
-    6| type T = typeof C & typeof D;
+   ops_on_intersection.js:4:10
+    4| type T = typeof C & typeof D;
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:16:19
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:14:19
 
 Cannot use property `f` on intersection type [1] in an export position. Please provide an (alternative) annotation for
 property `f` [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:16:19
-   16| export const x2 = t.f;
+   ops_on_intersection.js:14:19
+   14| export const x2 = t.f;
                          ^^^ [2]
 
 References:
-   ops_on_intersection.js:6:10
-    6| type T = typeof C & typeof D;
+   ops_on_intersection.js:4:10
+    4| type T = typeof C & typeof D;
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:19:19
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:17:19
 
 Cannot use computed property on intersection type [1] in an export position. Please provide an (alternative) annotation
 for computed property [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:19:19
-   19| export const x3 = t[('': string)];
+   ops_on_intersection.js:17:19
+   17| export const x3 = t[('': string)];
                          ^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:6:10
-    6| type T = typeof C & typeof D;
+   ops_on_intersection.js:4:10
+    4| type T = typeof C & typeof D;
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:25:17
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:23:17
 
 Cannot use exact on intersection type [1] in an export position. Please provide an (alternative) annotation for
 exact [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:25:17
-   25| declare var y5: $Exact<S>;
+   ops_on_intersection.js:23:17
+   23| declare var y5: $Exact<S>;
                        ^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:7:10
-    7| type S = { f: any } & { g: any };
+   ops_on_intersection.js:5:10
+    5| type S = { f: any } & { g: any };
                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:29:17
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:27:17
 
 Cannot use statics on intersection type [1] in an export position. Please provide an (alternative) annotation for
 statics [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:29:17
-   29| declare var y6: Class<C & D>;
+   ops_on_intersection.js:27:17
+   27| declare var y6: Class<C & D>;
                        ^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:29:23
-   29| declare var y6: Class<C & D>;
+   ops_on_intersection.js:27:23
+   27| declare var y6: Class<C & D>;
                              ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:33:25
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:31:25
 
 Cannot use class extends on intersection type [1] in an export position. Please provide an (alternative) annotation for
 class extends [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:33:25
-   33| export class c7 extends ((0: any): T) {}
+   ops_on_intersection.js:31:25
+   31| export class c7 extends ((0: any): T) {}
                                ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:6:10
-    6| type T = typeof C & typeof D;
+   ops_on_intersection.js:4:10
+    4| type T = typeof C & typeof D;
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:38:37
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:36:37
 
 Cannot use prototype on intersection type [1] in an export position. Please provide an (alternative) annotation for
 prototype [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:38:37
-   38| declare export var x8: { __proto__: T };
+   ops_on_intersection.js:36:37
+   36| declare export var x8: { __proto__: T };
                                            ^ [2]
 
 References:
-   ops_on_intersection.js:6:10
-    6| type T = typeof C & typeof D;
+   ops_on_intersection.js:4:10
+    4| type T = typeof C & typeof D;
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:41:32
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:39:32
 
 Cannot use mixins on intersection type [1] in an export position. Please provide an (alternative) annotation for
 mixins [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:41:32
-   41| declare export class x9 mixins t {}
+   ops_on_intersection.js:39:32
+   39| declare export class x9 mixins t {}
                                       ^ [2]
 
 References:
-   ops_on_intersection.js:6:10
-    6| type T = typeof C & typeof D;
+   ops_on_intersection.js:4:10
+    4| type T = typeof C & typeof D;
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:44:20
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:42:20
 
 Cannot use unary minus on intersection type [1] in an export position. Please provide an (alternative) annotation for
 unary minus [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:44:20
-   44| export const x10 = -n;
+   ops_on_intersection.js:42:20
+   42| export const x10 = -n;
                           ^^ [2]
 
 References:
-   ops_on_intersection.js:10:16
-   10| declare var n: number & mixed;
+   ops_on_intersection.js:8:16
+    8| declare var n: number & mixed;
                       ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:47:20
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:45:20
 
 Cannot use unary not on intersection type [1] in an export position. Please provide an (alternative) annotation for
 unary not [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:47:20
-   47| export const x11 = !n;
+   ops_on_intersection.js:45:20
+   45| export const x11 = !n;
                           ^^ [2]
 
 References:
-   ops_on_intersection.js:10:16
-   10| declare var n: number & mixed;
+   ops_on_intersection.js:8:16
+    8| declare var n: number & mixed;
                       ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:50:18
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:48:18
 
 Cannot use `$KeyMirror` on intersection type [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:50:18
-   50| declare var y12: $KeyMirror<S>;
+   ops_on_intersection.js:48:18
+   48| declare var y12: $KeyMirror<S>;
                         ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:7:10
-    7| type S = { f: any } & { g: any };
+   ops_on_intersection.js:5:10
+    5| type S = { f: any } & { g: any };
                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:54:18
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:52:18
 
 Cannot use `$ObjMapConst` on intersection type [1] in an export position. Please provide an (alternative) annotation for
 `$ObjMapConst` [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:54:18
-   54| declare var y13: $ObjMapConst<S, any>;
+   ops_on_intersection.js:52:18
+   52| declare var y13: $ObjMapConst<S, any>;
                         ^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:7:10
-    7| type S = { f: any } & { g: any };
+   ops_on_intersection.js:5:10
+    5| type S = { f: any } & { g: any };
                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:58:18
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:56:18
 
 Cannot use key set on intersection type [1] in an export position. Please provide an (alternative) annotation for key
 set [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:58:18
-   58| declare var y14: $Keys<T>;
+   ops_on_intersection.js:56:18
+   56| declare var y14: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:6:10
-    6| type T = typeof C & typeof D;
+   ops_on_intersection.js:4:10
+    4| type T = typeof C & typeof D;
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:12:25
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:25
 
 Cannot use class extends on config of React component [1] in an export position. Please provide an (alternative)
 annotation for class extends [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:12:25
-   12| export class x1 extends ((0: any): T) {}
+   ops_on_react_config.js:10:25
+   10| export class x1 extends ((0: any): T) {}
                                ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:12:36
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:36
 
 Cannot extend `x1` [1] with `T` because `Props` [2] is not inheritable. [incompatible-use]
 
-   ops_on_react_config.js:12:36
-   12| export class x1 extends ((0: any): T) {}
+   ops_on_react_config.js:10:36
+   10| export class x1 extends ((0: any): T) {}
                                           ^ [2]
 
 References:
-   ops_on_react_config.js:12:14
-   12| export class x1 extends ((0: any): T) {}
+   ops_on_react_config.js:10:14
+   10| export class x1 extends ((0: any): T) {}
                     ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:15:19
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:13:19
 
 Cannot use property `f` on config of React component [1] in an export position. Please provide an (alternative)
 annotation for property `f` [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:15:19
-   15| export const x2 = t.f;
+   ops_on_react_config.js:13:19
+   13| export const x2 = t.f;
                          ^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:18:19
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:19
 
 Cannot use computed property on config of React component [1] in an export position. Please provide an (alternative)
 annotation for computed property [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:18:19
-   18| export const x3 = t[('': string)];
+   ops_on_react_config.js:16:19
+   16| export const x3 = t[('': string)];
                          ^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:21:19
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:19:19
 
 Cannot use spread on config of React component [1] in an export position. Please provide an (alternative) annotation for
 spread [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:21:19
-   21| export const x4 = { ...t };
+   ops_on_react_config.js:19:19
+   19| export const x4 = { ...t };
                          ^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:24:17
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:22:17
 
 Cannot use exact on config of React component [1] in an export position. Please provide an (alternative) annotation for
 exact [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:24:17
-   24| declare var y5: $Exact<T>;
+   ops_on_react_config.js:22:17
+   22| declare var y5: $Exact<T>;
                        ^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:28:17
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:26:17
 
 Cannot use statics on config of React component [1] in an export position. Please provide an (alternative) annotation
 for statics [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:28:17
-   28| declare var y6: Class<T>;
+   ops_on_react_config.js:26:17
+   26| declare var y6: Class<T>;
                        ^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:29:19
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:27:19
 
 `Props` [1] is not an instance type. [incompatible-use]
 
-   ops_on_react_config.js:29:19
-   29| export const x6 = y6.f;
+   ops_on_react_config.js:27:19
+   27| export const x6 = y6.f;
                          ^^
 
 References:
-   ops_on_react_config.js:28:23
-   28| declare var y6: Class<T>;
+   ops_on_react_config.js:26:23
+   26| declare var y6: Class<T>;
                              ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:32:14
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:30:14
 
 Cannot extend statics of `T` [1] with `c7` because `Props` [1] is not inheritable. [incompatible-use]
 
-   ops_on_react_config.js:32:14
-   32| export class c7 extends ((0: any): Class<T>) {}
+   ops_on_react_config.js:30:14
+   30| export class c7 extends ((0: any): Class<T>) {}
                     ^^
 
 References:
-   ops_on_react_config.js:32:25
-   32| export class c7 extends ((0: any): Class<T>) {}
+   ops_on_react_config.js:30:25
+   30| export class c7 extends ((0: any): Class<T>) {}
                                ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:34:19
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:32:19
 
 Cannot use property `f` on config of React component [1] in an export position. Please provide an (alternative)
 annotation for property `f` [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:34:19
-   34| export const x7 = y7.f;
+   ops_on_react_config.js:32:19
+   32| export const x7 = y7.f;
                          ^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:37:37
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:35:37
 
 Cannot use prototype on config of React component [1] in an export position. Please provide an (alternative) annotation
 for prototype [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:37:37
-   37| declare export var x8: { __proto__: T };
+   ops_on_react_config.js:35:37
+   35| declare export var x8: { __proto__: T };
                                            ^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:40:32
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:38:32
 
 Cannot use mixins on config of React component [1] in an export position. Please provide an (alternative) annotation for
 mixins [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:40:32
-   40| declare export class x9 mixins t {}
+   ops_on_react_config.js:38:32
+   38| declare export class x9 mixins t {}
                                       ^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:40:32
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:38:32
 
 `Props` [1] is not a class. [not-a-class]
 
-   ops_on_react_config.js:40:32
-   40| declare export class x9 mixins t {}
+   ops_on_react_config.js:38:32
+   38| declare export class x9 mixins t {}
                                       ^
 
 References:
-   ops_on_react_config.js:9:16
-    9| declare var t: T;
+   ops_on_react_config.js:7:16
+    7| declare var t: T;
                       ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:43:20
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:41:20
 
 Cannot use unary minus on config of React component [1] in an export position. Please provide an (alternative)
 annotation for unary minus [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:43:20
-   43| export const x10 = -t;
+   ops_on_react_config.js:41:20
+   41| export const x10 = -t;
                           ^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:43:21
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:41:21
 
 Cannot perform arithmetic operation because `Props` [1] is not a number or bigint. [unsafe-arithmetic]
 
-   ops_on_react_config.js:43:21
-   43| export const x10 = -t;
+   ops_on_react_config.js:41:21
+   41| export const x10 = -t;
                            ^
 
 References:
-   ops_on_react_config.js:9:16
-    9| declare var t: T;
+   ops_on_react_config.js:7:16
+    7| declare var t: T;
                       ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:46:20
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:44:20
 
 Cannot use unary not on config of React component [1] in an export position. Please provide an (alternative) annotation
 for unary not [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:46:20
-   46| export const x11 = !t;
+   ops_on_react_config.js:44:20
+   44| export const x11 = !t;
                           ^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:49:18
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:47:18
 
 Cannot use `$KeyMirror` on config of React component [1] in an export position. Please provide an (alternative)
 annotation for `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:49:18
-   49| declare var y12: $KeyMirror<T>;
+   ops_on_react_config.js:47:18
+   47| declare var y12: $KeyMirror<T>;
                         ^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:53:18
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:51:18
 
 Cannot use `$ObjMapConst` on config of React component [1] in an export position. Please provide an (alternative)
 annotation for `$ObjMapConst` [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:53:18
-   53| declare var y13: $ObjMapConst<T, any>;
+   ops_on_react_config.js:51:18
+   51| declare var y13: $ObjMapConst<T, any>;
                         ^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:57:18
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:55:18
 
 Cannot use key set on config of React component [1] in an export position. Please provide an (alternative) annotation
 for key set [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:57:18
-   57| declare var y14: $Keys<T>;
+   ops_on_react_config.js:55:18
+   55| declare var y14: $Keys<T>;
                         ^^^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:8:10
-    8| type T = React$Config<Props, DefaultProps>;
+   ops_on_react_config.js:6:10
+    6| type T = React$Config<Props, DefaultProps>;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 

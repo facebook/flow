@@ -1,5 +1,3 @@
-// @flow
-
 type O = {...empty};
 declare var o: O;
 (42: O); // Error: number ~> empty

@@ -1,5 +1,3 @@
-// @flow
-
 var { x } = {
   x: { foo: "foo" }
 };

@@ -1,5 +1,3 @@
-// @flow
-
 type Binary = 0 | 1;
 
 function stringifyBinary(binary: Binary): string {

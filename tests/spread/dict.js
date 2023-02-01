@@ -1,5 +1,3 @@
-// @flow
-
 function foo(map: { [key: string]: mixed }) {
   const first = { some: "hello" };
   const options = { some: 42  };

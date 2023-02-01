@@ -1,5 +1,3 @@
-// @flow
-
 function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
   return o;
 }

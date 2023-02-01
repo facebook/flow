@@ -1,4 +1,3 @@
-// @flow
 var A: string
 
 interface A {}

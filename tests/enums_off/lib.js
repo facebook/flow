@@ -1,5 +1,3 @@
-// @flow
-
 declare module 'declared-module' {
   declare enum G { // ERROR: enums not enabled
     J,

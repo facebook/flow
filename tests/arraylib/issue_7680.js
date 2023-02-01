@@ -1,5 +1,3 @@
-// @flow
-
 function workingGenericReduce<T, V>(
   obj: { array: Array<T> },
   accumulator: V,

@@ -1,4 +1,3 @@
-// @flow
 const id = require('./id');
 
 export type ObjectType = {

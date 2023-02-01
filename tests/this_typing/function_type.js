@@ -1,5 +1,3 @@
-// @flow
-
 /* simple */
 declare var x : (this : number) => void;
 

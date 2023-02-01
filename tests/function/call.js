@@ -1,5 +1,3 @@
-// @flow
-
 function test(this: number | string, a: string, b: number): number {
   return this.length; // expect []/"" this
 }

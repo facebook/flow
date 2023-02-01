@@ -50,8 +50,8 @@ Cannot call `foo.bar` because undefined [1] is not a function. [not-a-function]
             ^^^
 
 References:
-   exports_optional_prop.js:4:9
-    4|   bar?: () => string
+   exports_optional_prop.js:2:9
+    2|   bar?: () => string
                ^^^^^^^^^^^^ [1]
 
 
@@ -64,8 +64,8 @@ Cannot call `x.bar` because undefined [1] is not a function. [not-a-function]
             ^^^
 
 References:
-   exports_optional_prop.js:4:9
-    4|   bar?: () => string
+   exports_optional_prop.js:2:9
+    2|   bar?: () => string
                ^^^^^^^^^^^^ [1]
 
 

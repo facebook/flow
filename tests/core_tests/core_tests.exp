@@ -1,9 +1,9 @@
-Error ------------------------------------------------------------------------------------------------------ json.js:4:5
+Error ------------------------------------------------------------------------------------------------------ json.js:2:5
 
 Cannot use `new` on object type [1]. Only classes can be constructed. [invalid-constructor]
 
-   json.js:4:5
-      4| new JSON(); // ERROR
+   json.js:2:5
+      2| new JSON(); // ERROR
              ^^^^
 
 References:
@@ -37,43 +37,43 @@ References:
          -^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- json.js:11:6
+Error ------------------------------------------------------------------------------------------------------ json.js:9:6
 
 Cannot assign `1` to `JSON.parse` because property `parse` is not writable. [cannot-write]
 
-   11| JSON.parse = 1; // ERROR
-            ^^^^^
+   9| JSON.parse = 1; // ERROR
+           ^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- json_stringify.js:9:2
+Error -------------------------------------------------------------------------------------------- json_stringify.js:7:2
 
 Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
 
-   json_stringify.js:9:2
-      9| (JSON.stringify(bad1): string);
+   json_stringify.js:7:2
+      7| (JSON.stringify(bad1): string);
           ^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1654:21
    1654|       ) => string | void,
                              ^^^^ [1]
-   json_stringify.js:9:24
-      9| (JSON.stringify(bad1): string);
+   json_stringify.js:7:24
+      7| (JSON.stringify(bad1): string);
                                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:23:21
+Error ----------------------------------------------------------------------------------------------------- map.js:21:21
 
 Cannot call `Map` with array literal bound to `iterable` because string [1] is incompatible with tuple type [2] in type
 argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
-   map.js:23:21
-     23|     let x = new Map(['foo', 123]); // error
+   map.js:21:21
+     21|     let x = new Map(['foo', 123]); // error
                              ^^^^^^^^^^^^
 
 References:
-   map.js:23:22
-     23|     let x = new Map(['foo', 123]); // error
+   map.js:21:22
+     21|     let x = new Map(['foo', 123]); // error
                               ^^^^^ [1]
    <BUILTINS>/core.js:1737:38
    1737|     constructor(iterable?: ?Iterable<[K, V]>): void;
@@ -83,18 +83,18 @@ References:
                               ^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:23:21
+Error ----------------------------------------------------------------------------------------------------- map.js:21:21
 
 Cannot call `Map` with array literal bound to `iterable` because number [1] is incompatible with tuple type [2] in type
 argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
-   map.js:23:21
-     23|     let x = new Map(['foo', 123]); // error
+   map.js:21:21
+     21|     let x = new Map(['foo', 123]); // error
                              ^^^^^^^^^^^^
 
 References:
-   map.js:23:29
-     23|     let x = new Map(['foo', 123]); // error
+   map.js:21:29
+     21|     let x = new Map(['foo', 123]); // error
                                      ^^^ [1]
    <BUILTINS>/core.js:1737:38
    1737|     constructor(iterable?: ?Iterable<[K, V]>): void;
@@ -104,97 +104,97 @@ References:
                               ^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:24:44
+Error ----------------------------------------------------------------------------------------------------- map.js:22:44
 
 Cannot assign `new Map(...)` to `y` because string [1] is incompatible with number [2] in type argument `K` [3].
 [incompatible-type-arg]
 
-   map.js:24:44
-     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:22:44
+     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                     ^^^^^ [1]
 
 References:
-   map.js:24:16
-     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:22:16
+     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                         ^^^^^^ [2]
    <BUILTINS>/core.js:1735:19
    1735| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
                            ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:24:51
+Error ----------------------------------------------------------------------------------------------------- map.js:22:51
 
 Cannot assign `new Map(...)` to `y` because number [1] is incompatible with string [2] in type argument `V` [3].
 [incompatible-type-arg]
 
-   map.js:24:51
-     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:22:51
+     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                            ^^^ [1]
 
 References:
-   map.js:24:24
-     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:22:24
+     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                 ^^^^^^ [2]
    <BUILTINS>/core.js:1735:22
    1735| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
                               ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ map.js:29:6
+Error ------------------------------------------------------------------------------------------------------ map.js:27:6
 
 Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   map.js:29:6
-     29|     (x.get('foo'): boolean); // error, string | void
+   map.js:27:6
+     27|     (x.get('foo'): boolean); // error, string | void
               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1745:22
    1745|     get(key: K): V | void;
                               ^^^^ [1]
-   map.js:29:20
-     29|     (x.get('foo'): boolean); // error, string | void
+   map.js:27:20
+     27|     (x.get('foo'): boolean); // error, string | void
                             ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ map.js:29:6
+Error ------------------------------------------------------------------------------------------------------ map.js:27:6
 
 Cannot cast `x.get(...)` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   map.js:29:6
-   29|     (x.get('foo'): boolean); // error, string | void
+   map.js:27:6
+   27|     (x.get('foo'): boolean); // error, string | void
             ^^^^^^^^^^^^
 
 References:
-   map.js:28:27
-   28|   function(x: Map<string, number>) {
+   map.js:26:27
+   26|   function(x: Map<string, number>) {
                                  ^^^^^^ [1]
-   map.js:29:20
-   29|     (x.get('foo'): boolean); // error, string | void
+   map.js:27:20
+   27|     (x.get('foo'): boolean); // error, string | void
                           ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:30:11
+Error ----------------------------------------------------------------------------------------------------- map.js:28:11
 
 Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   map.js:30:11
-   30|     x.get(123); // error, wrong key type
+   map.js:28:11
+   28|     x.get(123); // error, wrong key type
                  ^^^ [1]
 
 References:
-   map.js:28:19
-   28|   function(x: Map<string, number>) {
+   map.js:26:19
+   26|   function(x: Map<string, number>) {
                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- regexp.js:26:19
+Error -------------------------------------------------------------------------------------------------- regexp.js:24:19
 
 Cannot call `RegExp` with `'z'` bound to `flags` because string literal `z` [1] is incompatible with `RegExp$flags` [2]
 since `z` is not a member of the set. [invalid-charset-type-arg]
 
-   regexp.js:26:19
-     26|     RegExp('foo', 'z'); // error
+   regexp.js:24:19
+     24|     RegExp('foo', 'z'); // error
                            ^^^ [1]
 
 References:
@@ -203,13 +203,13 @@ References:
                              ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- regexp.js:27:23
+Error -------------------------------------------------------------------------------------------------- regexp.js:25:23
 
 Cannot call `RegExp` with `'z'` bound to `flags` because string literal `z` [1] is incompatible with `RegExp$flags` [2]
 since `z` is not a member of the set. [invalid-charset-type-arg]
 
-   regexp.js:27:23
-     27|     new RegExp('foo', 'z'); // error
+   regexp.js:25:23
+     25|     new RegExp('foo', 'z'); // error
                                ^^^ [1]
 
 References:
@@ -218,23 +218,23 @@ References:
                              ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
+Error ------------------------------------------------------------------------------------------------- weakset.js:17:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
 property `@@iterator`: [incompatible-call]
  - Either number [2] is incompatible with interface type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
-   weakset.js:19:23
-     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+   weakset.js:17:23
+     17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1671:22
    1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [1]
-   weakset.js:19:24
-     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+   weakset.js:17:24
+     17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                 ^ [2]
    <BUILTINS>/core.js:1823:26
    1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
@@ -244,23 +244,23 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
+Error ------------------------------------------------------------------------------------------------- weakset.js:17:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
 property `@@iterator`: [incompatible-call]
  - Either number [2] is incompatible with interface type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
-   weakset.js:19:23
-     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+   weakset.js:17:23
+     17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1671:22
    1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [1]
-   weakset.js:19:27
-     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+   weakset.js:17:27
+     17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                    ^ [2]
    <BUILTINS>/core.js:1823:26
    1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
@@ -270,23 +270,23 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
+Error ------------------------------------------------------------------------------------------------- weakset.js:17:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
 property `@@iterator`: [incompatible-call]
  - Either number [2] is incompatible with interface type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
-   weakset.js:19:23
-     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+   weakset.js:17:23
+     17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1671:22
    1671| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [1]
-   weakset.js:19:30
-     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+   weakset.js:17:30
+     17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                       ^ [2]
    <BUILTINS>/core.js:1823:26
    1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
@@ -296,22 +296,22 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- weakset.js:36:23
+Error ------------------------------------------------------------------------------------------------- weakset.js:34:23
 
 Cannot call `WeakSet` with `numbers()` bound to `iterable` because in type argument `Yield` [1]: [incompatible-call]
  - Either number [2] is incompatible with interface type [3].
  - Or number [2] is incompatible with read-only array type [4].
 
-   weakset.js:36:23
-     36| let ws5 = new WeakSet(numbers()); // error, must be objects
+   weakset.js:34:23
+     34| let ws5 = new WeakSet(numbers()); // error, must be objects
                                ^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1677:22
    1677| interface $Iterable<+Yield,+Return,-Next> {
                               ^^^^^ [1]
-   weakset.js:29:31
-     29| function* numbers(): Iterable<number> {
+   weakset.js:27:31
+     27| function* numbers(): Iterable<number> {
                                        ^^^^^^ [2]
    <BUILTINS>/core.js:1823:26
    1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {

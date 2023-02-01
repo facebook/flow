@@ -1,5 +1,3 @@
-// @flow
-
 unbound = 1; // Error
 
 function actuallyBound() {

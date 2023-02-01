@@ -1,5 +1,3 @@
-// @flow
-
 export type T = $ReadOnly<{
     prop: ?$ReadOnly<{
       mode: 'TAG',

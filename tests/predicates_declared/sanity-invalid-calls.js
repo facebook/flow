@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity check:
 // - invalid calls at predicate positions
 

@@ -1,5 +1,3 @@
-// @flow
-
 // Boolean (the class) tests. booleans (the literals) are not part of core.js
 
 let tests = [

@@ -1,5 +1,3 @@
-// @flow
-
 declare function invariant(...Array<mixed>): void;
 
 function alwaysThrows() { throw '' }

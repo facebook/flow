@@ -1,5 +1,3 @@
-// @flow
-
 let x = 10n;
 
 let y: bigint = 10n;

@@ -445,17 +445,17 @@ References:
                                                  ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------- error_positioning/error_positioning.js:31:36
+Error --------------------------------------------------------------------- error_positioning/error_positioning.js:30:36
 
 `MockFn` [1] is not a React component. [not-a-component]
 
-   error_positioning/error_positioning.js:31:36
-   31| let RefetchContainer = HOC<any, _>(Component); // Error, mock is not a Component
+   error_positioning/error_positioning.js:30:36
+   30| let RefetchContainer = HOC<any, _>(Component); // Error, mock is not a Component
                                           ^^^^^^^^^
 
 References:
-   error_positioning/error_positioning.js:24:4
-   24| ): MockFn<TArguments, TReturn>
+   error_positioning/error_positioning.js:23:4
+   23| ): MockFn<TArguments, TReturn>
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 

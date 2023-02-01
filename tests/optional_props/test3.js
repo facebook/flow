@@ -1,5 +1,3 @@
-// @flow
-
 /*
    object literals are sealed. this is simply a heuristic
    decision: most of the time, the rule gives the 'right'

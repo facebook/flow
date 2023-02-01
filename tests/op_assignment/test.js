@@ -1,5 +1,3 @@
-// @flow
-
 declare function invariant(boolean): empty;
 
 ///////////

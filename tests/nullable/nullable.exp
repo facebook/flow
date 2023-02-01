@@ -96,17 +96,17 @@ References:
                                  ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- maybe.js:5:11
+Error ---------------------------------------------------------------------------------------------------- maybe.js:3:11
 
 Cannot cast `123` to nullable string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   maybe.js:5:11
-   5| ((123: ?(?number)): ?string); // error (only num ~> string)
+   maybe.js:3:11
+   3| ((123: ?(?number)): ?string); // error (only num ~> string)
                 ^^^^^^ [1]
 
 References:
-   maybe.js:5:22
-   5| ((123: ?(?number)): ?string); // error (only num ~> string)
+   maybe.js:3:22
+   3| ((123: ?(?number)): ?string); // error (only num ~> string)
                            ^^^^^^ [2]
 
 

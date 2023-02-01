@@ -1,5 +1,3 @@
-// @flow
-
 export const x: x = 0; // error recursive
 
 export const y: typeof y.f = 0; // error recursive

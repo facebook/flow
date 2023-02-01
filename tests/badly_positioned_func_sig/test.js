@@ -1,5 +1,3 @@
-// @flow
-
 export type Bar = $Call<
   <T>({
     +blah: T,

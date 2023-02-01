@@ -1,8 +1,8 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:13:22
+Error ---------------------------------------------------------------------------------------------------- test.js:11:22
 
 Cannot resolve module `node_pkg`. [cannot-resolve-module]
 
-   13| import node_pkg from 'node_pkg'; // error
+   11| import node_pkg from 'node_pkg'; // error
                             ^^^^^^^^^^
 
 

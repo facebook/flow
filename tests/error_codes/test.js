@@ -1,6 +1,3 @@
-// @flow
-
-
 /* basic */
 
 let x : number = 1;

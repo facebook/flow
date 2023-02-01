@@ -1,5 +1,3 @@
-// @flow
-
 // from sam, https://github.com/facebook/flow/issues/780
 // call to f() within if should properly havoc x.
 //

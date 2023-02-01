@@ -1,4 +1,3 @@
-// @flow
 class C {
   static m() {};
   m() {};

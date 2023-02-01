@@ -1,5 +1,3 @@
-// @flow
-
 import * as React from 'react';
 
 export type Props = {| f: any |} | {| g: any |};

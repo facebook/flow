@@ -1,4 +1,3 @@
-// @flow
 import * as React from 'react';
 import { PolyComponent } from "./poly_react_component_export";
 

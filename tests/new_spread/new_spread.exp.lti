@@ -1,30 +1,30 @@
-Error ------------------------------------------------------------------------------------------ cross_module/app.js:6:9
+Error ------------------------------------------------------------------------------------------ cross_module/app.js:4:9
 
 Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
 property `a`. [incompatible-call]
 
-   cross_module/app.js:6:9
-   6| app({a: 'foo', b: 2});
+   cross_module/app.js:4:9
+   4| app({a: 'foo', b: 2});
               ^^^^^ [1]
 
 References:
-   cross_module/app.js:5:24
-   5| const app = fn((o: {a: number, b: number}) => {});
+   cross_module/app.js:3:24
+   3| const app = fn((o: {a: number, b: number}) => {});
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ cross_module/use.js:5:9
+Error ------------------------------------------------------------------------------------------ cross_module/use.js:3:9
 
 Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
 property `a`. [incompatible-call]
 
-   cross_module/use.js:5:9
-   5| app({a: 'foo', b: 2});
+   cross_module/use.js:3:9
+   3| app({a: 'foo', b: 2});
               ^^^^^ [1]
 
 References:
-   cross_module/app.js:8:60
-   8| export default (fn((o: {a: number, b: number}) => {}): {|a:number, b:number|} => void);
+   cross_module/app.js:6:60
+   6| export default (fn((o: {a: number, b: number}) => {}): {|a:number, b:number|} => void);
                                                                  ^^^^^^ [2]
 
 
@@ -580,49 +580,49 @@ References:
                                     ^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------ type_empty.js:5:2
+Error ------------------------------------------------------------------------------------------------ type_empty.js:3:2
 
 Cannot cast `42` to `O` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   type_empty.js:5:2
-   5| (42: O); // Error: number ~> empty
+   type_empty.js:3:2
+   3| (42: O); // Error: number ~> empty
        ^^ [1]
 
 References:
-   type_empty.js:5:6
-   5| (42: O); // Error: number ~> empty
+   type_empty.js:3:6
+   3| (42: O); // Error: number ~> empty
            ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_empty.js:9:4
+Error ------------------------------------------------------------------------------------------------ type_empty.js:7:4
 
 Cannot cast `x` to number because object type [1] is incompatible with number [2]. [incompatible-cast]
 
-   type_empty.js:9:4
-   9|   (x: number); // Error: mixed ~> number,
+   type_empty.js:7:4
+   7|   (x: number); // Error: mixed ~> number,
          ^
 
 References:
-   type_empty.js:8:20
-   8| function fn1<T>(x: {...T}) {
+   type_empty.js:6:20
+   6| function fn1<T>(x: {...T}) {
                          ^^^^^^ [1]
-   type_empty.js:9:7
-   9|   (x: number); // Error: mixed ~> number,
+   type_empty.js:7:7
+   7|   (x: number); // Error: mixed ~> number,
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_empty.js:14:6
+Error ----------------------------------------------------------------------------------------------- type_empty.js:12:6
 
 Cannot call `fn` with object literal bound to the first parameter because object literal [1] is incompatible with
 `{ ...T }` [2]. [incompatible-call]
 
-   type_empty.js:14:6
-   14|   fn({}); // Error: object ~> empty
+   type_empty.js:12:6
+   12|   fn({}); // Error: object ~> empty
             ^^ [1]
 
 References:
-   type_empty.js:13:22
-   13| function fn2<T>(fn: ({...T}) => void) {
+   type_empty.js:11:22
+   11| function fn2<T>(fn: ({...T}) => void) {
                             ^^^^^^ [2]
 
 
@@ -965,125 +965,125 @@ References:
                      ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_mixed.js:5:5
+Error ------------------------------------------------------------------------------------------------ type_mixed.js:3:5
 
 Cannot get `o1.someProp` because property `someProp` is missing in `O1` [1]. [prop-missing]
 
-   type_mixed.js:5:5
-   5| (o1.someProp: empty); // Error someProp does not exist
+   type_mixed.js:3:5
+   3| (o1.someProp: empty); // Error someProp does not exist
           ^^^^^^^^
 
 References:
-   type_mixed.js:4:17
-   4| declare var o1: O1;
+   type_mixed.js:2:17
+   2| declare var o1: O1;
                       ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:2
+Error ------------------------------------------------------------------------------------------------ type_mixed.js:7:2
 
 Cannot cast `o2.someProp` to empty because `void` (due to access of non-existent property `someProp`) [1] is
 incompatible with empty [2]. [incompatible-cast]
 
-   type_mixed.js:9:2
-   9| (o2.someProp: empty); // Error someProp does not exist
+   type_mixed.js:7:2
+   7| (o2.someProp: empty); // Error someProp does not exist
        ^^^^^^^^^^^ [1]
 
 References:
-   type_mixed.js:9:15
-   9| (o2.someProp: empty); // Error someProp does not exist
+   type_mixed.js:7:15
+   7| (o2.someProp: empty); // Error someProp does not exist
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_mixed.js:9:5
+Error ------------------------------------------------------------------------------------------------ type_mixed.js:7:5
 
 Cannot get `o2.someProp` because property `someProp` is missing in `O2` [1]. [prop-missing]
 
-   type_mixed.js:9:5
-   9| (o2.someProp: empty); // Error someProp does not exist
+   type_mixed.js:7:5
+   7| (o2.someProp: empty); // Error someProp does not exist
           ^^^^^^^^
 
 References:
-   type_mixed.js:8:17
-   8| declare var o2: O2;
+   type_mixed.js:6:17
+   6| declare var o2: O2;
                       ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:13:2
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:11:2
 
 Cannot cast `o3.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   type_mixed.js:13:2
-   13| (o3.a: empty); // Error: number ~> empty
+   type_mixed.js:11:2
+   11| (o3.a: empty); // Error: number ~> empty
         ^^^^
 
 References:
-   type_mixed.js:11:30
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
+   type_mixed.js:9:30
+    9| type O3 = {...mixed, ...{|a: number, b?: number|}};
                                     ^^^^^^ [1]
-   type_mixed.js:13:8
-   13| (o3.a: empty); // Error: number ~> empty
+   type_mixed.js:11:8
+   11| (o3.a: empty); // Error: number ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:14:2
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:12:2
 
 Cannot cast `o3.b` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   type_mixed.js:14:2
-   14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+   type_mixed.js:12:2
+   12| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
         ^^^^
 
 References:
-   type_mixed.js:11:42
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
+   type_mixed.js:9:42
+    9| type O3 = {...mixed, ...{|a: number, b?: number|}};
                                                 ^^^^^^ [1]
-   type_mixed.js:14:8
-   14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+   type_mixed.js:12:8
+   12| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:14:2
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:12:2
 
 Cannot cast `o3.b` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
-   type_mixed.js:14:2
-   14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+   type_mixed.js:12:2
+   12| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
         ^^^^
 
 References:
-   type_mixed.js:11:42
-   11| type O3 = {...mixed, ...{|a: number, b?: number|}};
+   type_mixed.js:9:42
+    9| type O3 = {...mixed, ...{|a: number, b?: number|}};
                                                 ^^^^^^ [1]
-   type_mixed.js:14:8
-   14| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+   type_mixed.js:12:8
+   12| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:15:5
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:13:5
 
 Cannot get `o3.c` because property `c` is missing in `O3` [1]. [prop-missing]
 
-   type_mixed.js:15:5
-   15| (o3.c: empty); // Error c does not exist
+   type_mixed.js:13:5
+   13| (o3.c: empty); // Error c does not exist
            ^
 
 References:
-   type_mixed.js:12:17
-   12| declare var o3: O3;
+   type_mixed.js:10:17
+   10| declare var o3: O3;
                        ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- type_mixed.js:18:8
+Error ----------------------------------------------------------------------------------------------- type_mixed.js:16:8
 
 Cannot get `obj.someProp` because property `someProp` is missing in object type [1]. [prop-missing]
 
-   type_mixed.js:18:8
-   18|   (obj.someProp: empty); // Error someProp does not exist
+   type_mixed.js:16:8
+   16|   (obj.someProp: empty); // Error someProp does not exist
               ^^^^^^^^
 
 References:
-   type_mixed.js:17:21
-   17| function fn<O>(obj: {...O}) {
+   type_mixed.js:15:21
+   15| function fn<O>(obj: {...O}) {
                            ^^^^^^ [1]
 
 
@@ -1213,239 +1213,239 @@ References:
                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:12:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:10:2
 
 Cannot cast `o1` to object type because inexact `O1` [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
-   type_void.js:12:2
-   12| (o1: {||}); // error
+   type_void.js:10:2
+   10| (o1: {||}); // error
         ^^
 
 References:
-   type_void.js:10:17
-   10| declare var o1: O1;
+   type_void.js:8:17
+    8| declare var o1: O1;
                        ^^ [1]
-   type_void.js:12:6
-   12| (o1: {||}); // error
+   type_void.js:10:6
+   10| (o1: {||}); // error
             ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:13:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:11:2
 
 Cannot cast `o1` to object type because property `p` is missing in `O1` [1] but exists in object type [2].
 [prop-missing]
 
-   type_void.js:13:2
-   13| (o1: {p:T}); // error
+   type_void.js:11:2
+   11| (o1: {p:T}); // error
         ^^
 
 References:
-   type_void.js:10:17
-   10| declare var o1: O1;
+   type_void.js:8:17
+    8| declare var o1: O1;
                        ^^ [1]
-   type_void.js:13:6
-   13| (o1: {p:T}); // error
+   type_void.js:11:6
+   11| (o1: {p:T}); // error
+            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ type_void.js:19:2
+
+Cannot cast `o2` to object type because property `p` is missing in `O2` [1] but exists in object type [2].
+[prop-missing]
+
+   type_void.js:19:2
+   19| (o2: {p:T}); // error
+        ^^
+
+References:
+   type_void.js:16:17
+   16| declare var o2: O2;
+                       ^^ [1]
+   type_void.js:19:6
+   19| (o2: {p:T}); // error
             ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:21:2
 
-Cannot cast `o2` to object type because property `p` is missing in `O2` [1] but exists in object type [2].
-[prop-missing]
-
-   type_void.js:21:2
-   21| (o2: {p:T}); // error
-        ^^
-
-References:
-   type_void.js:18:17
-   18| declare var o2: O2;
-                       ^^ [1]
-   type_void.js:21:6
-   21| (o2: {p:T}); // error
-            ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ type_void.js:23:2
-
 Cannot cast object literal to `O2` because property `p` is missing in `O2` [1] but exists in object literal [2].
 [prop-missing]
 
-   type_void.js:23:2
-   23| ({p:x}: O2); // error
+   type_void.js:21:2
+   21| ({p:x}: O2); // error
         ^^^^^ [2]
 
 References:
-   type_void.js:23:9
-   23| ({p:x}: O2); // error
+   type_void.js:21:9
+   21| ({p:x}: O2); // error
                ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:28:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:26:2
 
 Cannot cast `o3` to object type because inexact `O3` [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
-   type_void.js:28:2
-   28| (o3: {||}); // error
+   type_void.js:26:2
+   26| (o3: {||}); // error
         ^^
 
 References:
-   type_void.js:26:17
-   26| declare var o3: O3;
+   type_void.js:24:17
+   24| declare var o3: O3;
                        ^^ [1]
-   type_void.js:28:6
-   28| (o3: {||}); // error
+   type_void.js:26:6
+   26| (o3: {||}); // error
             ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:29:2
+Error ------------------------------------------------------------------------------------------------ type_void.js:27:2
 
 Cannot cast `o3` to object type because property `p` is missing in `O3` [1] but exists in object type [2].
 [prop-missing]
 
-   type_void.js:29:2
-   29| (o3: {p:T}); // error
+   type_void.js:27:2
+   27| (o3: {p:T}); // error
         ^^
 
 References:
-   type_void.js:26:17
-   26| declare var o3: O3;
+   type_void.js:24:17
+   24| declare var o3: O3;
                        ^^ [1]
-   type_void.js:29:6
-   29| (o3: {p:T}); // error
+   type_void.js:27:6
+   27| (o3: {p:T}); // error
+            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ type_void.js:35:2
+
+Cannot cast `o4` to object type because property `p` is missing in `O4` [1] but exists in object type [2].
+[prop-missing]
+
+   type_void.js:35:2
+   35| (o4: {p:T}); // error
+        ^^
+
+References:
+   type_void.js:32:17
+   32| declare var o4: O4;
+                       ^^ [1]
+   type_void.js:35:6
+   35| (o4: {p:T}); // error
             ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:37:2
 
-Cannot cast `o4` to object type because property `p` is missing in `O4` [1] but exists in object type [2].
-[prop-missing]
-
-   type_void.js:37:2
-   37| (o4: {p:T}); // error
-        ^^
-
-References:
-   type_void.js:34:17
-   34| declare var o4: O4;
-                       ^^ [1]
-   type_void.js:37:6
-   37| (o4: {p:T}); // error
-            ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ type_void.js:39:2
-
 Cannot cast object literal to `O4` because property `p` is missing in `O4` [1] but exists in object literal [2].
 [prop-missing]
 
-   type_void.js:39:2
-   39| ({p:x}: O4); // error
+   type_void.js:37:2
+   37| ({p:x}: O4); // error
         ^^^^^ [2]
 
 References:
-   type_void.js:39:9
-   39| ({p:x}: O4); // error
+   type_void.js:37:9
+   37| ({p:x}: O4); // error
                ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_void.js:41:2
+
+Cannot cast `o5` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
+
+   type_void.js:41:2
+   41| (o5: {p?:T}); // ok
+        ^^
+
+References:
+   type_void.js:39:27
+   39| type O5 = {...void, ...{p:T}};
+                                 ^ [1]
+   type_void.js:41:10
+   41| (o5: {p?:T}); // ok
+                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:43:2
 
-Cannot cast `o5` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
-
-   type_void.js:43:2
-   43| (o5: {p?:T}); // ok
-        ^^
-
-References:
-   type_void.js:41:27
-   41| type O5 = {...void, ...{p:T}};
-                                 ^ [1]
-   type_void.js:43:10
-   43| (o5: {p?:T}); // ok
-                ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ type_void.js:45:2
-
 Cannot cast object literal to `O5` because property `p` is missing in object literal [1] but exists in `O5` [2].
 [prop-missing]
 
-   type_void.js:45:2
-   45| ({}: O5); // error
+   type_void.js:43:2
+   43| ({}: O5); // error
         ^^ [1]
 
 References:
-   type_void.js:45:6
-   45| ({}: O5); // error
+   type_void.js:43:6
+   43| ({}: O5); // error
             ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:47:5
+Error ------------------------------------------------------------------------------------------------ type_void.js:45:5
 
 Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type_void.js:47:5
-   47| ({p:y}: O5); // error: y ~> T
+   type_void.js:45:5
+   45| ({p:y}: O5); // error: y ~> T
            ^
 
 References:
-   type_void.js:7:16
-    7| declare var y: U;
+   type_void.js:5:16
+    5| declare var y: U;
                       ^ [1]
-   type_void.js:41:27
-   41| type O5 = {...void, ...{p:T}};
+   type_void.js:39:27
+   39| type O5 = {...void, ...{p:T}};
                                  ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ type_void.js:50:2
+
+Cannot cast `o6` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
+
+   type_void.js:50:2
+   50| (o6: {p?:T}); // error, void doesn't overwrite p
+        ^^
+
+References:
+   type_void.js:48:18
+   48| type O6 = {...{p:T}, ...void};
+                        ^ [1]
+   type_void.js:50:10
+   50| (o6: {p?:T}); // error, void doesn't overwrite p
+                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:52:2
 
-Cannot cast `o6` to object type because `T` [1] is incompatible with undefined [2] in property `p`. [incompatible-cast]
-
-   type_void.js:52:2
-   52| (o6: {p?:T}); // error, void doesn't overwrite p
-        ^^
-
-References:
-   type_void.js:50:18
-   50| type O6 = {...{p:T}, ...void};
-                        ^ [1]
-   type_void.js:52:10
-   52| (o6: {p?:T}); // error, void doesn't overwrite p
-                ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ type_void.js:54:2
-
 Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in `O6` [2].
 [prop-missing]
 
-   type_void.js:54:2
-   54| ({}: O6); // error
+   type_void.js:52:2
+   52| ({}: O6); // error
         ^^ [1]
 
 References:
-   type_void.js:54:6
-   54| ({}: O6); // error
+   type_void.js:52:6
+   52| ({}: O6); // error
             ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:56:5
+Error ------------------------------------------------------------------------------------------------ type_void.js:54:5
 
 Cannot cast object literal to `O6` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
 
-   type_void.js:56:5
-   56| ({p:y}: O6); // error: y ~> T
+   type_void.js:54:5
+   54| ({p:y}: O6); // error: y ~> T
            ^
 
 References:
-   type_void.js:7:16
-    7| declare var y: U;
+   type_void.js:5:16
+    5| declare var y: U;
                       ^ [1]
-   type_void.js:50:18
-   50| type O6 = {...{p:T}, ...void};
+   type_void.js:48:18
+   48| type O6 = {...{p:T}, ...void};
                         ^ [2]
 
 

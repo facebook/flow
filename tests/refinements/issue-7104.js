@@ -1,5 +1,3 @@
-// @flow
-
 type Box = {| +type: "GOOD", +value: string |} | {| +type: "BAD", +value: string |};
 async function coerce(t: string): Promise<number> {
   let box: Box = { type: "GOOD", value: t };

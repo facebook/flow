@@ -1,5 +1,3 @@
-// @flow
-
 type NoProps = $Values<{}>;
 const noReadProps = { set a(value: number) { /* noop */ } };
 type NoReadProps = $Values<typeof noReadProps>;

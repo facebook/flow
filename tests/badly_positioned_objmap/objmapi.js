@@ -1,5 +1,3 @@
-// @flow
-
 type MapKeyValue<Spec> =
   (<Key, Value: {}>(
     Key,

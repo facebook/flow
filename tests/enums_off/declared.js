@@ -1,5 +1,3 @@
-// @flow
-
 declare enum E { // ERROR: enums are off
   A,
   B,

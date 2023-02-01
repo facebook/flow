@@ -1,5 +1,3 @@
-// @flow
-
 import {f, g} from './conditional';
 
 (f.legal: number); // OK

@@ -1,5 +1,3 @@
-// @flow
-
 declare function foo(x : number) : ?string;
 
 declare var x : number;

@@ -1,5 +1,3 @@
-// @flow
-
 type A = {| x: number |} | {| y: number |}
 
 const a: A = { x: 0 };

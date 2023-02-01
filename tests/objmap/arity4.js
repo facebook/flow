@@ -1,5 +1,3 @@
-// @flow
-
 function g<T: number>(o: T): $Call<typeof makeEditedColumn, T> {
   return o;
 }

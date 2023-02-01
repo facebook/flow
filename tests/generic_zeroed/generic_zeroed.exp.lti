@@ -77,17 +77,17 @@ References:
                            ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- wc.js:7:12
+Error ------------------------------------------------------------------------------------------------------- wc.js:6:12
 
 Cannot return `"BAD_" + s` because string [1] is incompatible with `S` [2]. [incompatible-return]
 
-   wc.js:7:12
-   7|     return "BAD_" + s;
+   wc.js:6:12
+   6|     return "BAD_" + s;
                  ^^^^^^^^^^ [1]
 
 References:
-   wc.js:6:38
-   6|   function corrupt<S: string>(s: S): S {
+   wc.js:5:38
+   5|   function corrupt<S: string>(s: S): S {
                                            ^ [2]
 
 

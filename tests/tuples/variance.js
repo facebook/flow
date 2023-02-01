@@ -1,5 +1,3 @@
-// @flow
-
 type A = [+foo: string];
 (["s"]: A); // OK
 declare var a: A;

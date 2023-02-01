@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * test nested-promise unwrapping.
  * Note: currently we don't do this properly in the underlying

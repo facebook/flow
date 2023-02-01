@@ -1,5 +1,3 @@
-// @flow
-
 export default 10;
 
 export const named1 = 1;

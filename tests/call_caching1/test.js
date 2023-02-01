@@ -1,5 +1,3 @@
-// @flow
-
 const Immutable = require('immutable');
 
 const tasksPerStatusMap = new Map(

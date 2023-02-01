@@ -1,5 +1,3 @@
-// @flow
-
 class A {
     prop : number
     x() : number { return this.prop; }

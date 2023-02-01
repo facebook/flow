@@ -1,5 +1,3 @@
-// @flow
-
 function foo1(o: { x: number }) {
   if (o.p1) { // Error, testing for unknown property
     o.x;

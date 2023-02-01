@@ -1,5 +1,3 @@
-// @flow
-
 // Allowed
 export const test1: number = 1;
 

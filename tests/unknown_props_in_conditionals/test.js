@@ -1,5 +1,3 @@
-// @flow
-
 declare var mixed: mixed;
 declare var any: any;
 declare var myObject: Object;

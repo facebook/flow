@@ -1,26 +1,26 @@
-Error ---------------------------------------------------------------------------------------------- catch-param.js:20:4
+Error ---------------------------------------------------------------------------------------------- catch-param.js:18:4
 
 Cannot cast `e` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   catch-param.js:20:4
-   20|   (e: empty); // ERROR - is `mixed`
+   catch-param.js:18:4
+   18|   (e: empty); // ERROR - is `mixed`
           ^
 
 References:
-   catch-param.js:19:13
-   19| } catch (e: mixed) { // OK
+   catch-param.js:17:13
+   17| } catch (e: mixed) { // OK
                    ^^^^^ [1]
-   catch-param.js:20:7
-   20|   (e: empty); // ERROR - is `mixed`
+   catch-param.js:18:7
+   18|   (e: empty); // ERROR - is `mixed`
              ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- catch-param.js:32:13
+Error --------------------------------------------------------------------------------------------- catch-param.js:30:13
 
 Invalid catch parameter type annotation. Annotation must be `any` or `mixed` if specified.
 [invalid-catch-parameter-annotation]
 
-   32| } catch (e: Error) { // ERROR
+   30| } catch (e: Error) { // ERROR
                    ^^^^^
 
 

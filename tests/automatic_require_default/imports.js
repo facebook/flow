@@ -1,5 +1,3 @@
-// @flow
-
 import type {T as DefaultT} from './default_export';
 
 const Default = require('./default_export');

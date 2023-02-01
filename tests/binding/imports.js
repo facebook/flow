@@ -1,5 +1,3 @@
-// @flow
-
 import R1 from 'react';
 import R1 from 'react'; // error
 R1 = (42: any); // error

@@ -1,6 +1,3 @@
-// @flow
-
-
 type Filter = [number] | [string];
 
 function convert(filter: Filter) {

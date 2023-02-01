@@ -34,128 +34,128 @@ References:
        ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ undefined2.js:5:9
+Error ------------------------------------------------------------------------------------------------ undefined2.js:3:9
 
 Variable `id` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
 
-   5|     var id;
+   3|     var id;
               ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ undefined2.js:7:6
+Error ------------------------------------------------------------------------------------------------ undefined2.js:5:6
 
 Cannot cast `name` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   undefined2.js:7:6
-   7|     (name: boolean); // error, string or void
+   undefined2.js:5:6
+   5|     (name: boolean); // error, string or void
            ^^^^
 
 References:
-   undefined2.js:6:21
-   6|     var name = id ? 'John' : undefined;
+   undefined2.js:4:21
+   4|     var name = id ? 'John' : undefined;
                           ^^^^^^ [1]
-   undefined2.js:7:12
-   7|     (name: boolean); // error, string or void
+   undefined2.js:5:12
+   5|     (name: boolean); // error, string or void
                  ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ undefined2.js:7:6
+Error ------------------------------------------------------------------------------------------------ undefined2.js:5:6
 
 Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   undefined2.js:7:6
-   7|     (name: boolean); // error, string or void
+   undefined2.js:5:6
+   5|     (name: boolean); // error, string or void
            ^^^^
 
 References:
-   undefined2.js:6:30
-   6|     var name = id ? 'John' : undefined;
+   undefined2.js:4:30
+   4|     var name = id ? 'John' : undefined;
                                    ^^^^^^^^^ [1]
-   undefined2.js:7:12
-   7|     (name: boolean); // error, string or void
+   undefined2.js:5:12
+   5|     (name: boolean); // error, string or void
                  ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- undefined2.js:13:6
+Error ----------------------------------------------------------------------------------------------- undefined2.js:11:6
 
 Cannot cast `bar[x]` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   undefined2.js:13:6
-   13|     (bar[x]: boolean); // error, string or void
+   undefined2.js:11:6
+   11|     (bar[x]: boolean); // error, string or void
             ^^^^^^
 
 References:
-   undefined2.js:10:7
-   10|       undefined,
+   undefined2.js:8:7
+    8|       undefined,
              ^^^^^^^^^ [1]
-   undefined2.js:13:14
-   13|     (bar[x]: boolean); // error, string or void
+   undefined2.js:11:14
+   11|     (bar[x]: boolean); // error, string or void
                     ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- undefined2.js:13:6
+Error ----------------------------------------------------------------------------------------------- undefined2.js:11:6
 
 Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   undefined2.js:13:6
-   13|     (bar[x]: boolean); // error, string or void
+   undefined2.js:11:6
+   11|     (bar[x]: boolean); // error, string or void
             ^^^^^^
 
 References:
-   undefined2.js:11:7
-   11|       'bar',
+   undefined2.js:9:7
+    9|       'bar',
              ^^^^^ [1]
-   undefined2.js:13:14
-   13|     (bar[x]: boolean); // error, string or void
+   undefined2.js:11:14
+   11|     (bar[x]: boolean); // error, string or void
                     ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- undefined2.js:22:7
+Error ----------------------------------------------------------------------------------------------- undefined2.js:20:7
 
 Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
 [prop-missing]
 
-   undefined2.js:22:7
-   22|       x[0]; // should error, could be void
+   undefined2.js:20:7
+   20|       x[0]; // should error, could be void
              ^^^^
 
 References:
-   undefined2.js:16:15
-   16|   function(x: number) {
+   undefined2.js:14:15
+   14|   function(x: number) {
                      ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- undefined2.js:29:6
+Error ----------------------------------------------------------------------------------------------- undefined2.js:27:6
 
 Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   undefined2.js:29:6
-   29|     (bar[x]: boolean); // error, string only
+   undefined2.js:27:6
+   27|     (bar[x]: boolean); // error, string only
             ^^^^^^
 
 References:
-   undefined2.js:26:7
-   26|       undefined,
+   undefined2.js:24:7
+   24|       undefined,
              ^^^^^^^^^ [1]
-   undefined2.js:29:14
-   29|     (bar[x]: boolean); // error, string only
+   undefined2.js:27:14
+   27|     (bar[x]: boolean); // error, string only
                     ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- undefined2.js:29:6
+Error ----------------------------------------------------------------------------------------------- undefined2.js:27:6
 
 Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   undefined2.js:29:6
-   29|     (bar[x]: boolean); // error, string only
+   undefined2.js:27:6
+   27|     (bar[x]: boolean); // error, string only
             ^^^^^^
 
 References:
-   undefined2.js:27:7
-   27|       'bar',
+   undefined2.js:25:7
+   25|       'bar',
              ^^^^^ [1]
-   undefined2.js:29:14
-   29|     (bar[x]: boolean); // error, string only
+   undefined2.js:27:14
+   27|     (bar[x]: boolean); // error, string only
                     ^^^^^^^ [2]
 
 

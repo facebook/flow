@@ -1,3 +1,1 @@
-// @flow
-
 module.exports = function({}: {} = {}) {}

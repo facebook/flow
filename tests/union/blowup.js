@@ -1,5 +1,3 @@
-// @flow
-
 export type Select = {
   expression: ArithmeticExpression;
   alias: ?string;

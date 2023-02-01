@@ -1,5 +1,3 @@
-// @flow
-
 declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
 
 function bar2(fragmentRef?: {}) {

@@ -1,5 +1,3 @@
-// @flow
-
 // defs used in tests, here to stress tvar machinery
 
 // used in ObjAssign.js

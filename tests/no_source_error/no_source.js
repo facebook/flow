@@ -1,5 +1,3 @@
-// @flow
-
 /*
  * This code generates an error where one of the locations has no source
  * associated with it. This example shows that any code that processes errors

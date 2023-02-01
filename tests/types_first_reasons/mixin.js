@@ -1,5 +1,3 @@
-// @flow
-
 declare export class Iterable<K,V> {
   has(key: K): boolean;
 }

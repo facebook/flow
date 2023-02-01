@@ -1,5 +1,3 @@
-// @flow
-
 class A {}
 class P<X> {
   n: number;

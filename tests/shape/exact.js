@@ -1,5 +1,3 @@
-// @flow
-
 type State = {|
   foo: string,
 |};

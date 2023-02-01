@@ -1,24 +1,24 @@
-Error ------------------------------------------------------------------------------------------------------ dict.js:7:5
+Error ------------------------------------------------------------------------------------------------------ dict.js:5:5
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
 spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
 spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
 
-   dict.js:7:5
-           v
-    7|     {
-    8|       first,
-    9|       ...map // Error, can't spread indexer second
-   10|     },
-           ^ [1]
+   dict.js:5:5
+          v
+   5|     {
+   6|       first,
+   7|       ...map // Error, can't spread indexer second
+   8|     },
+          ^ [1]
 
 References:
-   dict.js:3:19
-    3| function foo(map: { [key: string]: mixed }) {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   dict.js:3:27
-    3| function foo(map: { [key: string]: mixed }) {
-                                 ^^^^^^ [3]
+   dict.js:1:19
+   1| function foo(map: { [key: string]: mixed }) {
+                        ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   dict.js:1:27
+   1| function foo(map: { [key: string]: mixed }) {
+                                ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
@@ -62,51 +62,51 @@ References:
                             ^^^^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- exact.js:14:35
+Error --------------------------------------------------------------------------------------------------- exact.js:12:35
 
 Cannot assign object literal to `spread_inexact_first` because inexact object literal [1] is incompatible with exact
 `Foo` [2]. [incompatible-exact]
 
-   exact.js:14:35
-   14| const spread_inexact_first: Foo = {...foo_inexact, ...other}; // not OK
+   exact.js:12:35
+   12| const spread_inexact_first: Foo = {...foo_inexact, ...other}; // not OK
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   exact.js:14:29
-   14| const spread_inexact_first: Foo = {...foo_inexact, ...other}; // not OK
+   exact.js:12:29
+   12| const spread_inexact_first: Foo = {...foo_inexact, ...other}; // not OK
                                    ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- exact.js:15:36
+Error --------------------------------------------------------------------------------------------------- exact.js:13:36
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
 it may contain `bar` with a type that conflicts with `bar`'s definition in object literal [3]. Try making object
 type [2] exact. [cannot-spread-inexact]
 
-   exact.js:15:36
-   15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
+   exact.js:13:36
+   13| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   exact.js:13:20
-   13| const foo_inexact: { baz: number } = { bar: 42, baz: 123 };
+   exact.js:11:20
+   11| const foo_inexact: { baz: number } = { bar: 42, baz: 123 };
                           ^^^^^^^^^^^^^^^ [2]
-   exact.js:9:15
-    9| const other = {bar: 'wat'}
+   exact.js:7:15
+    7| const other = {bar: 'wat'}
                      ^^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- null.js:6:10
+Error ----------------------------------------------------------------------------------------------------- null.js:4:10
 
 Cannot get `empty.x` because property `x` is missing in object literal [1]. [prop-missing]
 
-   null.js:6:10
-   6|   (empty.x); // Error
+   null.js:4:10
+   4|   (empty.x); // Error
                ^
 
 References:
-   null.js:5:17
-   5|   const empty = {...bar};
+   null.js:3:17
+   3|   const empty = {...bar};
                       ^^^^^^^^ [1]
 
 

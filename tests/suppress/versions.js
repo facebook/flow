@@ -1,5 +1,3 @@
-// @flow
-
 // $FlowFixMe[incompatible-cast] >=0.0.0
 (123: string); // should be suppressed
 

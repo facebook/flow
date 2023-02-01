@@ -1,5 +1,3 @@
-// @flow
-
 type nums = 1 | 2
 type bigints = 1n | 2n
 

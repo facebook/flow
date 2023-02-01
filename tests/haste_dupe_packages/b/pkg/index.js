@@ -1,3 +1,1 @@
-// @flow
-
 export default "b";

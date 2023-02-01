@@ -1,5 +1,3 @@
-// @flow
-
 function* generator(): Iterable<[string, number]> {
   while (true) {
     yield ['foo', 123];

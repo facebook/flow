@@ -1,5 +1,3 @@
-// @flow
-
 switch ('foo') {
     case 'foo': {
         const foo = 3;

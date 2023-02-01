@@ -1,5 +1,3 @@
-// @flow
-
 declare class Foo {
   i(x: number): void;
   i(x: string): void;

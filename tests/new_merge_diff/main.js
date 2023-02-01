@@ -1,5 +1,3 @@
-// @flow
-
 import { x as x1 } from './get_prop_union';
 // old merge error: number ~> empty
 // new merge error: number | string ~> empty

@@ -1,5 +1,3 @@
-// @flow
-
 type t = [ Set<string> | Array<string> ];
 
 declare var p: t;

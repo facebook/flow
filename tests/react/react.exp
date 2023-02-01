@@ -12,92 +12,92 @@ References:
                                                         ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- createContext.js:18:24
+Error ------------------------------------------------------------------------------------------- createContext.js:16:24
 
 Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first parameter of
 property `children`. [incompatible-type]
 
-   createContext.js:18:24
-   18|                 {(Tag: 'div' | 'span' | 'img') => <Tag />}
+   createContext.js:16:24
+   16|                 {(Tag: 'div' | 'span' | 'img') => <Tag />}
                               ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   createContext.js:6:39
-    6|   const Context = React.createContext<string>('div');
+   createContext.js:4:39
+    4|   const Context = React.createContext<string>('div');
                                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- createContext.js:24:22
+Error ------------------------------------------------------------------------------------------- createContext.js:22:22
 
 Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first parameter of
 property `children`. [incompatible-type]
 
-   createContext.js:24:22
-   24|               {(Tag: 'div' | 'span' | 'img') => <Tag />}
+   createContext.js:22:22
+   22|               {(Tag: 'div' | 'span' | 'img') => <Tag />}
                             ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   createContext.js:6:39
-    6|   const Context = React.createContext<string>('div');
+   createContext.js:4:39
+    4|   const Context = React.createContext<string>('div');
                                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- createContext.js:33:44
+Error ------------------------------------------------------------------------------------------- createContext.js:31:44
 
 Cannot assign `this.divRef.current` to `image` because `HTMLDivElement` [1] is incompatible with `HTMLImageElement` [2].
 [incompatible-type]
 
-   createContext.js:33:44
-   33|       var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
+   createContext.js:31:44
+   31|       var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
                                                   ^^^^^^^^^^^^^^^^^^^
 
 References:
-   createContext.js:10:30
-   10|     divRef: {current: null | HTMLDivElement} = React.createRef();
+   createContext.js:8:30
+    8|     divRef: {current: null | HTMLDivElement} = React.createRef();
                                     ^^^^^^^^^^^^^^ [1]
-   createContext.js:33:25
-   33|       var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
+   createContext.js:31:25
+   31|       var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
                                ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- createContext.js:55:24
+Error ------------------------------------------------------------------------------------------- createContext.js:53:24
 
 Cannot resolve name `createContext`. [cannot-resolve-name]
 
-   55|   const ThemeContext = createContext("light");
+   53|   const ThemeContext = createContext("light");
                               ^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------ createElementRequiredProp_string.js:17:14
+Error ------------------------------------------------------------------------ createElementRequiredProp_string.js:16:14
 
 Cannot create `Cmp` element because property `test` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   createElementRequiredProp_string.js:17:14
-   17|     return (<Cmp/>);
+   createElementRequiredProp_string.js:16:14
+   16|     return (<Cmp/>);
                     ^^^
 
 References:
-   createElementRequiredProp_string.js:17:13
-   17|     return (<Cmp/>);
+   createElementRequiredProp_string.js:16:13
+   16|     return (<Cmp/>);
                    ^^^^^^ [1]
-   createElementRequiredProp_string.js:4:35
-    4| class Bar extends React.Component<{test: number}> {
+   createElementRequiredProp_string.js:3:35
+    3| class Bar extends React.Component<{test: number}> {
                                          ^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------- default_props_undefined.js:10:10
+Error ---------------------------------------------------------------------------------- default_props_undefined.js:8:10
 
 Cannot create `Foo` element because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
 
-   default_props_undefined.js:10:10
-   10| <Foo bar="42"/>; // Error
-                ^^^^ [1]
+   default_props_undefined.js:8:10
+   8| <Foo bar="42"/>; // Error
+               ^^^^ [1]
 
 References:
-   default_props_undefined.js:5:41
-    5| class Foo extends React.Component<{bar: number}, void> {
-                                               ^^^^^^ [2]
+   default_props_undefined.js:3:41
+   3| class Foo extends React.Component<{bar: number}, void> {
+                                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ element_config.js:15:43
@@ -338,496 +338,496 @@ References:
                                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- element_with_component_type.js:8:2
+Error ------------------------------------------------------------------------------- element_with_component_type.js:6:2
 
 Cannot cast `<Foo />` to `React.Element` because property `a` is missing in object type [1] but exists in object
 type [2] in property `type`. [prop-missing]
 
-   element_with_component_type.js:8:2
-   8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+   element_with_component_type.js:6:2
+   6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
        ^^^^^^^^^^^^^
 
 References:
-   element_with_component_type.js:8:51
-   8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+   element_with_component_type.js:6:51
+   6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                                                         ^^^^^^^^^^^ [1]
-   element_with_component_type.js:5:35
-   5| class Foo extends React.Component<{a: number}> {}
+   element_with_component_type.js:3:35
+   3| class Foo extends React.Component<{a: number}> {}
                                         ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ hoc.js:11:8
+Error ------------------------------------------------------------------------------------------------------- hoc.js:9:8
 
 Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc.js:11:8
-   11|       <Component />; // Error: `foo` is required.
-              ^^^^^^^^^
+   hoc.js:9:8
+   9|       <Component />; // Error: `foo` is required.
+             ^^^^^^^^^
 
 References:
-   hoc.js:11:7
-   11|       <Component />; // Error: `foo` is required.
-             ^^^^^^^^^^^^^ [1]
-   hoc.js:6:34
-    6|   Component: React$ComponentType<{foo: number, bar: number}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   hoc.js:9:7
+   9|       <Component />; // Error: `foo` is required.
+            ^^^^^^^^^^^^^ [1]
+   hoc.js:4:34
+   4|   Component: React$ComponentType<{foo: number, bar: number}>,
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ hoc.js:11:8
+Error ------------------------------------------------------------------------------------------------------- hoc.js:9:8
 
 Cannot create `Component` element because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc.js:11:8
-   11|       <Component />; // Error: `foo` is required.
-              ^^^^^^^^^
+   hoc.js:9:8
+   9|       <Component />; // Error: `foo` is required.
+             ^^^^^^^^^
 
 References:
-   hoc.js:11:7
-   11|       <Component />; // Error: `foo` is required.
-             ^^^^^^^^^^^^^ [1]
-   hoc.js:6:34
-    6|   Component: React$ComponentType<{foo: number, bar: number}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   hoc.js:9:7
+   9|       <Component />; // Error: `foo` is required.
+            ^^^^^^^^^^^^^ [1]
+   hoc.js:4:34
+   4|   Component: React$ComponentType<{foo: number, bar: number}>,
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ hoc.js:12:8
+Error ------------------------------------------------------------------------------------------------------ hoc.js:10:8
 
 Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc.js:12:8
-   12|       <Component foo={42} />; // Error: `bar` is required.
+   hoc.js:10:8
+   10|       <Component foo={42} />; // Error: `bar` is required.
               ^^^^^^^^^
 
 References:
-   hoc.js:12:7
-   12|       <Component foo={42} />; // Error: `bar` is required.
+   hoc.js:10:7
+   10|       <Component foo={42} />; // Error: `bar` is required.
              ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc.js:6:34
-    6|   Component: React$ComponentType<{foo: number, bar: number}>,
+   hoc.js:4:34
+    4|   Component: React$ComponentType<{foo: number, bar: number}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc.js:35:49
+Error ----------------------------------------------------------------------------------------------------- hoc.js:33:49
 
 Cannot call `myHOC` with `class { ... }` bound to `Component` because string [1] is incompatible with number [2] in
 property `foo`. [incompatible-call]
 
-   hoc.js:35:49
-   35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
+   hoc.js:33:49
+   33| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
                                                        ^^^^^^ [1]
 
 References:
-   hoc.js:6:40
-    6|   Component: React$ComponentType<{foo: number, bar: number}>,
+   hoc.js:4:40
+    4|   Component: React$ComponentType<{foo: number, bar: number}>,
                                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ hoc.js:36:7
+Error ------------------------------------------------------------------------------------------------------ hoc.js:34:7
 
 Cannot call `myHOC` with function bound to `Component` because number [1] is incompatible with string [2] in property
 `foo`. [incompatible-call]
 
-   hoc.js:36:7
-   36| myHOC(function Empty(props: {foo: string}) {}); // Error
+   hoc.js:34:7
+   34| myHOC(function Empty(props: {foo: string}) {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc.js:6:40
-    6|   Component: React$ComponentType<{foo: number, bar: number}>,
+   hoc.js:4:40
+    4|   Component: React$ComponentType<{foo: number, bar: number}>,
                                               ^^^^^^ [1]
-   hoc.js:36:35
-   36| myHOC(function Empty(props: {foo: string}) {}); // Error
+   hoc.js:34:35
+   34| myHOC(function Empty(props: {foo: string}) {}); // Error
                                          ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ hoc.js:41:2
+Error ------------------------------------------------------------------------------------------------------ hoc.js:39:2
 
 Cannot create `Wrapped` element because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc.js:41:2
-   41| <Wrapped nonsense="what" />; // Error: `foo` is required.
+   hoc.js:39:2
+   39| <Wrapped nonsense="what" />; // Error: `foo` is required.
         ^^^^^^^
 
 References:
-   hoc.js:41:1
-   41| <Wrapped nonsense="what" />; // Error: `foo` is required.
+   hoc.js:39:1
+   39| <Wrapped nonsense="what" />; // Error: `foo` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc.js:38:36
-   38| const Wrapped: React$ComponentType<{foo: number}> = myHOC(Unwrapped);
+   hoc.js:36:36
+   36| const Wrapped: React$ComponentType<{foo: number}> = myHOC(Unwrapped);
                                           ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ hoc.js:43:2
+Error ------------------------------------------------------------------------------------------------------ hoc.js:41:2
 
 Cannot create `WrappedFun` element because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc.js:43:2
-   43| <WrappedFun />; // Error: `foo` is required.
+   hoc.js:41:2
+   41| <WrappedFun />; // Error: `foo` is required.
         ^^^^^^^^^^
 
 References:
-   hoc.js:43:1
-   43| <WrappedFun />; // Error: `foo` is required.
+   hoc.js:41:1
+   41| <WrappedFun />; // Error: `foo` is required.
        ^^^^^^^^^^^^^^ [1]
-   hoc.js:7:24
-    7| ): React$ComponentType<{foo: number}> {
+   hoc.js:5:24
+    5| ): React$ComponentType<{foo: number}> {
                               ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:21:37
 
 Cannot call `connect` with `MyComponent` bound to `Component` because property `a` is missing in object type [1] but
 exists in object type [2]. [prop-missing]
 
-   hoc2.js:23:37
-   23| const MyEnhancedComponent = connect(MyComponent);
+   hoc2.js:21:37
+   21| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
+   hoc2.js:4:34
+    4|   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc2.js:11:43
+   hoc2.js:9:43
                                                  v-
-   11| class MyComponent extends React.Component<{|
-   12|   a: number,
-   13|   b: number,
-   14|   prop: number,
-   15| |}> { render(): React.Node { return null }}
+    9| class MyComponent extends React.Component<{|
+   10|   a: number,
+   11|   b: number,
+   12|   prop: number,
+   13| |}> { render(): React.Node { return null }}
        -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:21:37
 
 Cannot call `connect` with `MyComponent` bound to `Component` because property `b` is missing in object type [1] but
 exists in object type [2]. [prop-missing]
 
-   hoc2.js:23:37
-   23| const MyEnhancedComponent = connect(MyComponent);
+   hoc2.js:21:37
+   21| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
+   hoc2.js:4:34
+    4|   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc2.js:11:43
+   hoc2.js:9:43
                                                  v-
-   11| class MyComponent extends React.Component<{|
-   12|   a: number,
-   13|   b: number,
-   14|   prop: number,
-   15| |}> { render(): React.Node { return null }}
+    9| class MyComponent extends React.Component<{|
+   10|   a: number,
+   11|   b: number,
+   12|   prop: number,
+   13| |}> { render(): React.Node { return null }}
        -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:21:37
 
 Cannot call `connect` with `MyComponent` bound to `Component` because number [1] is incompatible with string [2] in
 property `a`. [incompatible-call]
 
-   hoc2.js:23:37
-   23| const MyEnhancedComponent = connect(MyComponent);
+   hoc2.js:21:37
+   21| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
-   hoc2.js:12:6
-   12|   a: number,
+   hoc2.js:10:6
+   10|   a: number,
             ^^^^^^ [1]
-   hoc2.js:28:24
-   28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+   hoc2.js:26:24
+   26| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
                               ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc2.js:24:45
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:22:45
 
 Cannot call `connect` with `MyFunctionComponent` bound to `Component` because property `a` is missing in props [1] but
 exists in object type [2]. [prop-missing]
 
-   hoc2.js:24:45
-   24| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+   hoc2.js:22:45
+   22| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
                                                    ^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
+   hoc2.js:4:34
+    4|   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc2.js:17:37
+   hoc2.js:15:37
                                            v-
-   17| function MyFunctionComponent(props: {|
-   18|   a: number,
-   19|   b: number,
-   20|   prop: number,
-   21| |}) { return null }
+   15| function MyFunctionComponent(props: {|
+   16|   a: number,
+   17|   b: number,
+   18|   prop: number,
+   19| |}) { return null }
        -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc2.js:24:45
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:22:45
 
 Cannot call `connect` with `MyFunctionComponent` bound to `Component` because property `b` is missing in props [1] but
 exists in object type [2]. [prop-missing]
 
-   hoc2.js:24:45
-   24| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+   hoc2.js:22:45
+   22| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
                                                    ^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
+   hoc2.js:4:34
+    4|   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc2.js:17:37
+   hoc2.js:15:37
                                            v-
-   17| function MyFunctionComponent(props: {|
-   18|   a: number,
-   19|   b: number,
-   20|   prop: number,
-   21| |}) { return null }
+   15| function MyFunctionComponent(props: {|
+   16|   a: number,
+   17|   b: number,
+   18|   prop: number,
+   19| |}) { return null }
        -^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc2.js:24:45
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:22:45
 
 Cannot call `connect` with `MyFunctionComponent` bound to `Component` because string [1] is incompatible with number [2]
 in property `a`. [incompatible-call]
 
-   hoc2.js:24:45
-   24| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+   hoc2.js:22:45
+   22| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
                                                    ^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc2.js:32:32
-   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+   hoc2.js:30:32
+   30| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
                                       ^^^^^ [1]
-   hoc2.js:18:6
-   18|   a: number,
+   hoc2.js:16:6
+   16|   a: number,
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc3.js:26:2
+Error ----------------------------------------------------------------------------------------------------- hoc3.js:24:2
 
 Cannot create `MyEnhancedComponent` element because property `a` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc3.js:26:2
-   26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+   hoc3.js:24:2
+   24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc3.js:26:1
-   26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+   hoc3.js:24:1
+   24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc3.js:11:43
+   hoc3.js:9:43
                                                  v
-   11| class MyComponent extends React.Component<{
-   12|   a: number,
-   13|   b: number,
-   14|   prop: number,
-   15| }> { render(): React.Node { return null } }
+    9| class MyComponent extends React.Component<{
+   10|   a: number,
+   11|   b: number,
+   12|   prop: number,
+   13| }> { render(): React.Node { return null } }
        ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc3.js:26:2
+Error ----------------------------------------------------------------------------------------------------- hoc3.js:24:2
 
 Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc3.js:26:2
-   26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+   hoc3.js:24:2
+   24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc3.js:26:1
-   26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+   hoc3.js:24:1
+   24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc3.js:11:43
+   hoc3.js:9:43
                                                  v
-   11| class MyComponent extends React.Component<{
-   12|   a: number,
-   13|   b: number,
-   14|   prop: number,
-   15| }> { render(): React.Node { return null } }
+    9| class MyComponent extends React.Component<{
+   10|   a: number,
+   11|   b: number,
+   12|   prop: number,
+   13| }> { render(): React.Node { return null } }
        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc3.js:28:24
+Error ---------------------------------------------------------------------------------------------------- hoc3.js:26:24
 
 Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
 [incompatible-type]
 
-   hoc3.js:28:24
-   28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+   hoc3.js:26:24
+   26| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
                               ^^^^^ [1]
 
 References:
-   hoc3.js:12:6
-   12|   a: number,
+   hoc3.js:10:6
+   10|   a: number,
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc3.js:30:2
+Error ----------------------------------------------------------------------------------------------------- hoc3.js:28:2
 
 Cannot create `MyEnhancedFunctionComponent` element because property `a` is missing in props [1] but exists in object
 type [2]. [prop-missing]
 
-   hoc3.js:30:2
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+   hoc3.js:28:2
+   28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc3.js:30:1
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+   hoc3.js:28:1
+   28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc3.js:24:45
-   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
+   hoc3.js:22:45
+   22| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc3.js:30:2
+Error ----------------------------------------------------------------------------------------------------- hoc3.js:28:2
 
 Cannot create `MyEnhancedFunctionComponent` element because property `b` is missing in props [1] but exists in object
 type [2]. [prop-missing]
 
-   hoc3.js:30:2
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+   hoc3.js:28:2
+   28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc3.js:30:1
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+   hoc3.js:28:1
+   28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc3.js:24:45
-   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
+   hoc3.js:22:45
+   22| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc3.js:32:32
+Error ---------------------------------------------------------------------------------------------------- hoc3.js:30:32
 
 Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
 [incompatible-type]
 
-   hoc3.js:32:32
-   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+   hoc3.js:30:32
+   30| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
                                       ^^^^^ [1]
 
 References:
-   hoc3.js:24:49
-   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
+   hoc3.js:22:49
+   22| const MyEnhancedFunctionComponent = connect<{a: number, b: number}>(MyFunctionComponent);
                                                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc4.js:26:2
+Error ----------------------------------------------------------------------------------------------------- hoc4.js:24:2
 
 Cannot create `MyEnhancedComponent` element because property `a` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc4.js:26:2
-   26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+   hoc4.js:24:2
+   24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc4.js:26:1
-   26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+   hoc4.js:24:1
+   24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc4.js:11:43
+   hoc4.js:9:43
                                                  v
-   11| class MyComponent extends React.Component<{
-   12|   a: number,
-   13|   b: number,
-   14|   prop: number,
-   15| }> { render(): React.Node { return null } }
+    9| class MyComponent extends React.Component<{
+   10|   a: number,
+   11|   b: number,
+   12|   prop: number,
+   13| }> { render(): React.Node { return null } }
        ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc4.js:26:2
+Error ----------------------------------------------------------------------------------------------------- hoc4.js:24:2
 
 Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   hoc4.js:26:2
-   26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+   hoc4.js:24:2
+   24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc4.js:26:1
-   26| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+   hoc4.js:24:1
+   24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc4.js:11:43
+   hoc4.js:9:43
                                                  v
-   11| class MyComponent extends React.Component<{
-   12|   a: number,
-   13|   b: number,
-   14|   prop: number,
-   15| }> { render(): React.Node { return null } }
+    9| class MyComponent extends React.Component<{
+   10|   a: number,
+   11|   b: number,
+   12|   prop: number,
+   13| }> { render(): React.Node { return null } }
        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc4.js:28:24
+Error ---------------------------------------------------------------------------------------------------- hoc4.js:26:24
 
 Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
 [incompatible-type]
 
-   hoc4.js:28:24
-   28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+   hoc4.js:26:24
+   26| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
                               ^^^^^ [1]
 
 References:
-   hoc4.js:12:6
-   12|   a: number,
+   hoc4.js:10:6
+   10|   a: number,
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc4.js:30:2
+Error ----------------------------------------------------------------------------------------------------- hoc4.js:28:2
 
 Cannot create `MyEnhancedFunctionComponent` element because property `a` is missing in props [1] but exists in object
 type [2]. [prop-missing]
 
-   hoc4.js:30:2
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+   hoc4.js:28:2
+   28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc4.js:30:1
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+   hoc4.js:28:1
+   28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc4.js:24:45
-   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
+   hoc4.js:22:45
+   22| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc4.js:30:2
+Error ----------------------------------------------------------------------------------------------------- hoc4.js:28:2
 
 Cannot create `MyEnhancedFunctionComponent` element because property `b` is missing in props [1] but exists in object
 type [2]. [prop-missing]
 
-   hoc4.js:30:2
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+   hoc4.js:28:2
+   28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc4.js:30:1
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
+   hoc4.js:28:1
+   28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc4.js:24:45
-   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
+   hoc4.js:22:45
+   22| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- hoc4.js:32:32
+Error ---------------------------------------------------------------------------------------------------- hoc4.js:30:32
 
 Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
 [incompatible-type]
 
-   hoc4.js:32:32
-   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+   hoc4.js:30:32
+   30| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
                                       ^^^^^ [1]
 
 References:
-   hoc4.js:24:49
-   24| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
+   hoc4.js:22:49
+   22| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
                                                        ^^^^^^ [2]
 
 
@@ -1073,14 +1073,14 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- key.js:12:11
+Error ----------------------------------------------------------------------------------------------------- key.js:10:11
 
 Cannot create `Foo` element because in property `key`: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with number [3].
 
-   key.js:12:11
-    12| <Foo key={true} />; // Error
+   key.js:10:11
+    10| <Foo key={true} />; // Error
                   ^^^^ [1]
 
 References:
@@ -1092,14 +1092,14 @@ References:
                                           ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- key.js:21:16
+Error ----------------------------------------------------------------------------------------------------- key.js:19:16
 
 Cannot create `FooExact` element because in property `key`: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with number [3].
 
-   key.js:21:16
-    21| <FooExact key={true} />; // Error
+   key.js:19:16
+    19| <FooExact key={true} />; // Error
                        ^^^^ [1]
 
 References:
@@ -1111,145 +1111,145 @@ References:
                                           ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- profiler.js:21:3
+Error ------------------------------------------------------------------------------------------------- profiler.js:19:3
 
 Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclosing parent tag
 
-   21|   <Profiler id="fake" onRender={onRender}>
+   19|   <Profiler id="fake" onRender={onRender}>
          ^
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:12:11
+Error ----------------------------------------------------------------------------------------------------- ref.js:10:11
 
 Cannot create `Foo` element because number [1] is incompatible with `Foo` [2] in the first parameter of property `ref`.
 [incompatible-type]
 
-   ref.js:12:11
-   12| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
+   ref.js:10:11
+   10| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
                  ^^^^^^^^^^^^^^^^^^^
 
 References:
-   ref.js:12:17
-   12| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
+   ref.js:10:17
+   10| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
                        ^^^^^^ [1]
-   ref.js:5:7
-    5| class Foo extends React.Component<{}, void> {}
+   ref.js:3:7
+    3| class Foo extends React.Component<{}, void> {}
              ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:13:19
+Error ----------------------------------------------------------------------------------------------------- ref.js:11:19
 
 Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2]. [incompatible-cast]
 
-   ref.js:13:19
-    13| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
+   ref.js:11:19
+    11| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
                           ^^^
 
 References:
    <BUILTINS>/react.js:189:39
    189|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
-   ref.js:13:24
-    13| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
+   ref.js:11:24
+    11| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
                                ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:15:19
+Error ----------------------------------------------------------------------------------------------------- ref.js:13:19
 
 Cannot cast `foo` to union type because `Foo` [1] is incompatible with `Bar` [2]. [incompatible-cast]
 
-   ref.js:15:19
-   15| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+   ref.js:13:19
+   13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
                          ^^^
 
 References:
-   ref.js:5:7
-    5| class Foo extends React.Component<{}, void> {}
+   ref.js:3:7
+    3| class Foo extends React.Component<{}, void> {}
              ^^^ [1]
-   ref.js:15:24
-   15| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+   ref.js:13:24
+   13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
                               ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:23:16
+Error ----------------------------------------------------------------------------------------------------- ref.js:21:16
 
 Cannot create `FooExact` element because number [1] is incompatible with `FooExact` [2] in the first parameter of
 property `ref`. [incompatible-type]
 
-   ref.js:23:16
-   23| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+   ref.js:21:16
+   21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
                       ^^^^^^^^^^^^^^^^^^^
 
 References:
-   ref.js:23:22
-   23| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+   ref.js:21:22
+   21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
                             ^^^^^^ [1]
-   ref.js:17:7
-   17| class FooExact extends React.Component<{||}, void> {}
+   ref.js:15:7
+   15| class FooExact extends React.Component<{||}, void> {}
              ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
+Error ----------------------------------------------------------------------------------------------------- ref.js:22:16
 
 Cannot create `FooExact` element because `FooExact` [1] is incompatible with null [2] in the first parameter of property
 `ref`. [incompatible-type]
 
-   ref.js:24:16
-    24| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
+   ref.js:22:16
+    22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                        ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ref.js:24:22
-    24| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
+   ref.js:22:22
+    22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                              ^^^^^^^^ [1]
    <BUILTINS>/react.js:189:39
    189|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:26:16
+Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either property `current` is missing in function [1] but exists in object type [2].
  - Or `FooExact` [3] is incompatible with `Bar` [4] in the first parameter.
 
-   ref.js:26:16
-    26| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+   ref.js:24:16
+    24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/react.js:188:5
    188|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   ref.js:17:7
-    17| class FooExact extends React.Component<{||}, void> {}
+   ref.js:15:7
+    15| class FooExact extends React.Component<{||}, void> {}
               ^^^^^^^^ [3]
-   ref.js:26:22
-    26| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+   ref.js:24:22
+    24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
                              ^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- undefined_prop.js:7:21
+Error ------------------------------------------------------------------------------------------- undefined_prop.js:5:21
 
 Cannot create `MyComponent` element because undefined [1] is incompatible with string [2] in property `title`.
 [incompatible-type]
 
-   undefined_prop.js:7:21
-   7| <MyComponent title={undefined} />;
+   undefined_prop.js:5:21
+   5| <MyComponent title={undefined} />;
                           ^^^^^^^^^ [1]
 
 References:
-   undefined_prop.js:5:51
-   5| class MyComponent extends React.Component<{title: string}> {}
+   undefined_prop.js:3:51
+   3| class MyComponent extends React.Component<{title: string}> {}
                                                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useCallback_hook.js:6:9
+Error ------------------------------------------------------------------------------------------ useCallback_hook.js:4:9
 
 Cannot call `React.useCallback` because function [1] requires another argument. [incompatible-call]
 
-   useCallback_hook.js:6:9
-     6|   React.useCallback(); // Error: function requires another argument.
+   useCallback_hook.js:4:9
+     4|   React.useCallback(); // Error: function requires another argument.
                 ^^^^^^^^^^^
 
 References:
@@ -1262,77 +1262,77 @@ References:
           ---^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- useCallback_hook.js:12:23
+Error ---------------------------------------------------------------------------------------- useCallback_hook.js:10:23
 
 Cannot assign `callback()` to `str` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   useCallback_hook.js:12:23
-   12|   const str: string = callback();// Error: number is incompatible with string.
+   useCallback_hook.js:10:23
+   10|   const str: string = callback();// Error: number is incompatible with string.
                              ^^^^^^^^^^
 
 References:
-   useCallback_hook.js:10:44
-   10|   const callback = React.useCallback(() => 123);
+   useCallback_hook.js:8:44
+    8|   const callback = React.useCallback(() => 123);
                                                   ^^^ [1]
-   useCallback_hook.js:12:14
-   12|   const str: string = callback();// Error: number is incompatible with string.
+   useCallback_hook.js:10:14
+   10|   const str: string = callback();// Error: number is incompatible with string.
                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- useCallback_hook.js:21:3
+Error ----------------------------------------------------------------------------------------- useCallback_hook.js:19:3
 
 Cannot call `callback` because function [1] requires another argument. [incompatible-call]
 
-   useCallback_hook.js:21:3
-   21|   callback(true); // Error: function requires another argument.
+   useCallback_hook.js:19:3
+   19|   callback(true); // Error: function requires another argument.
          ^^^^^^^^
 
 References:
-   useCallback_hook.js:16:38
+   useCallback_hook.js:14:38
                                             v------------------------------
-   16|   const callback = React.useCallback((num: number, str: string) => {
-   17|     (num: number);
-   18|     (str: string);
-   19|   });
+   14|   const callback = React.useCallback((num: number, str: string) => {
+   15|     (num: number);
+   16|     (str: string);
+   17|   });
          ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- useCallback_hook.js:21:12
+Error ---------------------------------------------------------------------------------------- useCallback_hook.js:19:12
 
 Cannot call `callback` with `true` bound to `num` because boolean [1] is incompatible with number [2].
 [incompatible-call]
 
-   useCallback_hook.js:21:12
-   21|   callback(true); // Error: function requires another argument.
+   useCallback_hook.js:19:12
+   19|   callback(true); // Error: function requires another argument.
                   ^^^^ [1]
 
 References:
-   useCallback_hook.js:16:44
-   16|   const callback = React.useCallback((num: number, str: string) => {
+   useCallback_hook.js:14:44
+   14|   const callback = React.useCallback((num: number, str: string) => {
                                                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- useCallback_hook.js:22:12
+Error ---------------------------------------------------------------------------------------- useCallback_hook.js:20:12
 
 Cannot call `callback` with `'123'` bound to `num` because string [1] is incompatible with number [2].
 [incompatible-call]
 
-   useCallback_hook.js:22:12
-   22|   callback('123', 'abc'); // Error: string is incompatible with number.
+   useCallback_hook.js:20:12
+   20|   callback('123', 'abc'); // Error: string is incompatible with number.
                   ^^^^^ [1]
 
 References:
-   useCallback_hook.js:16:44
-   16|   const callback = React.useCallback((num: number, str: string) => {
+   useCallback_hook.js:14:44
+   14|   const callback = React.useCallback((num: number, str: string) => {
                                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- useContext_hook.js:6:9
+Error ------------------------------------------------------------------------------------------- useContext_hook.js:4:9
 
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
-   useContext_hook.js:6:9
-     6|   React.useMutationEffect(); // Error: function requires another argument.
+   useContext_hook.js:4:9
+     4|   React.useMutationEffect(); // Error: function requires another argument.
                 ^^^^^^^^^^^^^^^^^
 
 References:
@@ -1372,58 +1372,72 @@ References:
           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- useContext_hook.js:21:18
+Error ----------------------------------------------------------------------------------------- useContext_hook.js:19:18
 
 Cannot assign `React.useContext(...)` to `numericValue` because string [1] is incompatible with number [2].
 [incompatible-type]
 
-   useContext_hook.js:21:18
-   21|   numericValue = React.useContext(StringContext); // Error: string is incompatible with number
+   useContext_hook.js:19:18
+   19|   numericValue = React.useContext(StringContext); // Error: string is incompatible with number
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   useContext_hook.js:19:45
-   19|   const StringContext = React.createContext('hello');
+   useContext_hook.js:17:45
+   17|   const StringContext = React.createContext('hello');
                                                    ^^^^^^^ [1]
-   useContext_hook.js:16:21
-   16|   let numericValue: number;
+   useContext_hook.js:14:21
+   14|   let numericValue: number;
                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- useContext_hook.js:23:73
+Error ----------------------------------------------------------------------------------------- useContext_hook.js:21:73
 
 Cannot assign `React.createContext(...)` to `InvalidContext` because string [1] is incompatible with `CustomType` [2] in
 type argument `T` [3]. [incompatible-type-arg]
 
-   useContext_hook.js:23:73
-    23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
+   useContext_hook.js:21:73
+    21|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
                                                                                 ^^^^^^^ [1]
 
 References:
-   useContext_hook.js:23:39
-    23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
+   useContext_hook.js:21:39
+    21|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
                                               ^^^^^^^^^^ [2]
    <BUILTINS>/react.js:196:28
    196| declare type React$Context<T> = {
                                    ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------- useContext_hook.js:29:17
+Error ----------------------------------------------------------------------------------------- useContext_hook.js:27:17
 
 Cannot assign `React.useContext(...)` to `stringValue` because `CustomType` [1] is incompatible with string [2].
 [incompatible-type]
 
-   useContext_hook.js:29:17
-   29|   stringValue = React.useContext(CustomContext); // Error: CustomType is incompatible with string
+   useContext_hook.js:27:17
+   27|   stringValue = React.useContext(CustomContext); // Error: CustomType is incompatible with string
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   useContext_hook.js:25:38
-   25|   const CustomContext: React$Context<CustomType> = React.createContext({
+   useContext_hook.js:23:38
+   23|   const CustomContext: React$Context<CustomType> = React.createContext({
                                             ^^^^^^^^^^ [1]
-   useContext_hook.js:15:20
-   15|   let stringValue: string;
+   useContext_hook.js:13:20
+   13|   let stringValue: string;
                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- useContext_hook.js:48:43
+
+Cannot call `React.useContext` because no more than 1 argument is expected by function type [1]. [extra-arg]
+
+   useContext_hook.js:48:43
+    48|   const {foo} = React.useContext(Context, 0b001);
+                                                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:315:37
+   315|   declare export function useContext<T>(context: React$Context<T>): T;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:50:43
@@ -1431,7 +1445,7 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useContext` because no more than 1 argument is expected by function type [1]. [extra-arg]
 
    useContext_hook.js:50:43
-    50|   const {foo} = React.useContext(Context, 0b001);
+    50|   const {bar} = React.useContext(Context, 0b010);
                                                   ^^^^^
 
 References:
@@ -1440,43 +1454,29 @@ References:
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- useContext_hook.js:52:43
-
-Cannot call `React.useContext` because no more than 1 argument is expected by function type [1]. [extra-arg]
-
-   useContext_hook.js:52:43
-    52|   const {bar} = React.useContext(Context, 0b010);
-                                                  ^^^^^
-
-References:
-   <BUILTINS>/react.js:315:37
-   315|   declare export function useContext<T>(context: React$Context<T>): T;
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ useContext_hook.js:54:4
+Error ------------------------------------------------------------------------------------------ useContext_hook.js:52:4
 
 Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useContext_hook.js:54:4
-   54|   (bar: string); // Error: number is incompatible with string
+   useContext_hook.js:52:4
+   52|   (bar: string); // Error: number is incompatible with string
           ^^^
 
 References:
-   useContext_hook.js:35:19
-   35|     {foo: 0, bar: 0, baz: 0},
+   useContext_hook.js:33:19
+   33|     {foo: 0, bar: 0, baz: 0},
                          ^ [1]
-   useContext_hook.js:54:9
-   54|   (bar: string); // Error: number is incompatible with string
+   useContext_hook.js:52:9
+   52|   (bar: string); // Error: number is incompatible with string
                ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- useDebugValue_hook.js:5:30
+Error --------------------------------------------------------------------------------------- useDebugValue_hook.js:3:30
 
 Cannot call `React.useDebugValue` because property `useDebugValue` is missing in object type [1]. [prop-missing]
 
-   useDebugValue_hook.js:5:30
-     5| const undefinedValue = React.useDebugValue(123);
+   useDebugValue_hook.js:3:30
+     3| const undefinedValue = React.useDebugValue(123);
                                      ^^^^^^^^^^^^^
 
 References:
@@ -1516,12 +1516,12 @@ References:
           ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- useEffect_hook.js:6:9
+Error -------------------------------------------------------------------------------------------- useEffect_hook.js:4:9
 
 Cannot call `React.useEffect` because function [1] requires another argument. [incompatible-call]
 
-   useEffect_hook.js:6:9
-     6|   React.useEffect(); // Error: function requires another argument.
+   useEffect_hook.js:4:9
+     4|   React.useEffect(); // Error: function requires another argument.
                 ^^^^^^^^^
 
 References:
@@ -1534,13 +1534,13 @@ References:
           ------^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ useEffect_hook.js:22:19
+Error ------------------------------------------------------------------------------------------ useEffect_hook.js:20:19
 
 Cannot call `React.useEffect` with `1` bound to `create` because number [1] is incompatible with function type [2].
 [incompatible-call]
 
-   useEffect_hook.js:22:19
-    22|   React.useEffect(1); // Error: number is incompatible with function type
+   useEffect_hook.js:20:19
+    20|   React.useEffect(1); // Error: number is incompatible with function type
                           ^ [1]
 
 References:
@@ -1549,13 +1549,13 @@ References:
                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useEffect_hook.js:23:29
+Error ------------------------------------------------------------------------------------------ useEffect_hook.js:21:29
 
 Cannot call `React.useEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
 type [2]. [incompatible-call]
 
-   useEffect_hook.js:23:29
-    23|   React.useEffect(() => {}, 1); // Error: number is incompatible with function react-only array
+   useEffect_hook.js:21:29
+    21|   React.useEffect(() => {}, 1); // Error: number is incompatible with function react-only array
                                     ^ [1]
 
 References:
@@ -1564,14 +1564,14 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useEffect_hook.js:24:30
+Error ------------------------------------------------------------------------------------------ useEffect_hook.js:22:30
 
 Cannot call `React.useEffect` with async function bound to `create` because a call signature declaring the expected
 parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
 [incompatible-call]
 
-   useEffect_hook.js:24:30
-    24|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type
+   useEffect_hook.js:22:30
+    22|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type
                                      ^ [1]
 
 References:
@@ -1580,13 +1580,13 @@ References:
                                                 ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useEffect_hook.js:25:31
+Error ------------------------------------------------------------------------------------------ useEffect_hook.js:23:31
 
 Cannot call `React.useEffect` with function bound to `create` because number [1] is incompatible with undefined [2] in
 the return value of the return value. [incompatible-call]
 
-   useEffect_hook.js:25:31
-    25|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value
+   useEffect_hook.js:23:31
+    23|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value
                                       ^^^ [1]
 
 References:
@@ -1595,12 +1595,12 @@ References:
                                                       ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------- useImperativeHandle_hook.js:6:9
+Error ---------------------------------------------------------------------------------- useImperativeHandle_hook.js:4:9
 
 Cannot call `React.useImperativeHandle` because function [1] requires another argument. [incompatible-call]
 
-   useImperativeHandle_hook.js:6:9
-     6|   React.useImperativeHandle(); // Error: function requires another argument.
+   useImperativeHandle_hook.js:4:9
+     4|   React.useImperativeHandle(); // Error: function requires another argument.
                 ^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -1614,42 +1614,42 @@ References:
           ------^ [1]
 
 
-Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:31:41
+Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:29:41
 
 Cannot call `React.useImperativeHandle` with function bound to `create` because property `focus` is missing in object
 literal [1] but exists in `Interface` [2] in the return value. [incompatible-call]
 
-   useImperativeHandle_hook.js:31:41
-   31|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+   useImperativeHandle_hook.js:29:41
+   29|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
                                                ^^ [1]
 
 References:
-   useImperativeHandle_hook.js:30:31
-   30|   const ref: {current: null | Interface } = React.createRef();
+   useImperativeHandle_hook.js:28:31
+   28|   const ref: {current: null | Interface } = React.createRef();
                                      ^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:34:47
+Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:32:47
 
 Cannot call `React.useImperativeHandle` with function bound to `create` because property `focus` is missing in object
 literal [1] but exists in `Interface` [2] in the return value. [incompatible-call]
 
-   useImperativeHandle_hook.js:34:47
-   34|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+   useImperativeHandle_hook.js:32:47
+   32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
                                                      ^^ [1]
 
 References:
-   useImperativeHandle_hook.js:33:39
-   33|   const refSetter = (instance: null | Interface) => {};
+   useImperativeHandle_hook.js:31:39
+   31|   const refSetter = (instance: null | Interface) => {};
                                              ^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- useLayoutEffect_hook.js:6:9
+Error -------------------------------------------------------------------------------------- useLayoutEffect_hook.js:4:9
 
 Cannot call `React.useLayoutEffect` because function [1] requires another argument. [incompatible-call]
 
-   useLayoutEffect_hook.js:6:9
-     6|   React.useLayoutEffect(); // Error: function requires another argument.
+   useLayoutEffect_hook.js:4:9
+     4|   React.useLayoutEffect(); // Error: function requires another argument.
                 ^^^^^^^^^^^^^^^
 
 References:
@@ -1662,13 +1662,13 @@ References:
           ------^ [1]
 
 
-Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:22:25
+Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:20:25
 
 Cannot call `React.useLayoutEffect` with `1` bound to `create` because number [1] is incompatible with function
 type [2]. [incompatible-call]
 
-   useLayoutEffect_hook.js:22:25
-    22|   React.useLayoutEffect(1); // Error: number is incompatible with function type
+   useLayoutEffect_hook.js:20:25
+    20|   React.useLayoutEffect(1); // Error: number is incompatible with function type
                                 ^ [1]
 
 References:
@@ -1677,13 +1677,13 @@ References:
                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:23:35
+Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:21:35
 
 Cannot call `React.useLayoutEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
 type [2]. [incompatible-call]
 
-   useLayoutEffect_hook.js:23:35
-    23|   React.useLayoutEffect(() => {}, 1); // Error: number is incompatible with function react-only array
+   useLayoutEffect_hook.js:21:35
+    21|   React.useLayoutEffect(() => {}, 1); // Error: number is incompatible with function react-only array
                                           ^ [1]
 
 References:
@@ -1692,14 +1692,14 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:24:36
+Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:22:36
 
 Cannot call `React.useLayoutEffect` with async function bound to `create` because a call signature declaring the
 expected parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
 [incompatible-call]
 
-   useLayoutEffect_hook.js:24:36
-    24|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type
+   useLayoutEffect_hook.js:22:36
+    22|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type
                                            ^ [1]
 
 References:
@@ -1708,13 +1708,13 @@ References:
                                                 ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:25:37
+Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:23:37
 
 Cannot call `React.useLayoutEffect` with function bound to `create` because number [1] is incompatible with
 undefined [2] in the return value of the return value. [incompatible-call]
 
-   useLayoutEffect_hook.js:25:37
-    25|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value
+   useLayoutEffect_hook.js:23:37
+    23|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value
                                             ^^^ [1]
 
 References:
@@ -1723,12 +1723,12 @@ References:
                                                       ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- useMemo_hook.js:6:9
+Error ---------------------------------------------------------------------------------------------- useMemo_hook.js:4:9
 
 Cannot call `React.useMemo` because function [1] requires another argument. [incompatible-call]
 
-   useMemo_hook.js:6:9
-     6|   React.useMemo(); // Error: function requires another argument.
+   useMemo_hook.js:4:9
+     4|   React.useMemo(); // Error: function requires another argument.
                 ^^^^^^^
 
 References:
@@ -1741,29 +1741,119 @@ References:
           ---^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- useMemo_hook.js:17:27
+Error -------------------------------------------------------------------------------------------- useMemo_hook.js:15:27
 
 Cannot assign `React.useMemo(...)` to `invalid` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   useMemo_hook.js:17:27
-   17|   const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
+   useMemo_hook.js:15:27
+   15|   const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   useMemo_hook.js:17:47
-   17|   const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
+   useMemo_hook.js:15:47
+   15|   const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
                                                      ^^^^^ [1]
-   useMemo_hook.js:17:18
-   17|   const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
+   useMemo_hook.js:15:18
+   15|   const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:6:9
+Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:4:9
 
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
-   useMutationEffect_hook.js:6:9
-     6|   React.useMutationEffect(); // Error: function requires another argument.
+   useMutationEffect_hook.js:4:9
+     4|   React.useMutationEffect(); // Error: function requires another argument.
+                ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:415:26
+                                 v
+   415|   declare export default {
+   416|     +DOM: typeof DOM,
+   417|     +PropTypes: typeof PropTypes,
+   418|     +version: typeof version,
+   419|     +checkPropTypes: typeof checkPropTypes,
+   420|     +memo: typeof memo,
+   421|     +lazy: typeof lazy,
+   422|     +createClass: typeof createClass,
+   423|     +createContext: typeof createContext,
+   424|     +createElement: typeof createElement,
+   425|     +cloneElement: typeof cloneElement,
+   426|     +createFactory: typeof createFactory,
+   427|     +createRef: typeof createRef,
+   428|     +forwardRef: typeof forwardRef,
+   429|     +isValidElement: typeof isValidElement,
+      :
+   440|     +useReducer: typeof useReducer,
+   441|     +useRef: typeof useRef,
+   442|     +useEffect: typeof useEffect,
+   443|     +useLayoutEffect: typeof useLayoutEffect,
+   444|     +useCallback: typeof useCallback,
+   445|     +useMemo: typeof useMemo,
+   446|     +useImperativeHandle: typeof useImperativeHandle,
+   447|     +useTransition: typeof useTransition,
+   448|     +useDeferredValue: typeof useDeferredValue,
+   449|     +startTransition: typeof startTransition,
+   450|     +useId: typeof useId,
+   451|     +useInsertionEffect: typeof useInsertionEffect,
+   452|     +useSyncExternalStore: typeof useSyncExternalStore,
+   453|     ...
+   454|   };
+          ^ [1]
+
+
+Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:9:9
+
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
+
+   useMutationEffect_hook.js:9:9
+     9|   React.useMutationEffect(() => {});
+                ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:415:26
+                                 v
+   415|   declare export default {
+   416|     +DOM: typeof DOM,
+   417|     +PropTypes: typeof PropTypes,
+   418|     +version: typeof version,
+   419|     +checkPropTypes: typeof checkPropTypes,
+   420|     +memo: typeof memo,
+   421|     +lazy: typeof lazy,
+   422|     +createClass: typeof createClass,
+   423|     +createContext: typeof createContext,
+   424|     +createElement: typeof createElement,
+   425|     +cloneElement: typeof cloneElement,
+   426|     +createFactory: typeof createFactory,
+   427|     +createRef: typeof createRef,
+   428|     +forwardRef: typeof forwardRef,
+   429|     +isValidElement: typeof isValidElement,
+      :
+   440|     +useReducer: typeof useReducer,
+   441|     +useRef: typeof useRef,
+   442|     +useEffect: typeof useEffect,
+   443|     +useLayoutEffect: typeof useLayoutEffect,
+   444|     +useCallback: typeof useCallback,
+   445|     +useMemo: typeof useMemo,
+   446|     +useImperativeHandle: typeof useImperativeHandle,
+   447|     +useTransition: typeof useTransition,
+   448|     +useDeferredValue: typeof useDeferredValue,
+   449|     +startTransition: typeof startTransition,
+   450|     +useId: typeof useId,
+   451|     +useInsertionEffect: typeof useInsertionEffect,
+   452|     +useSyncExternalStore: typeof useSyncExternalStore,
+   453|     ...
+   454|   };
+          ^ [1]
+
+
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:10:9
+
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
+
+   useMutationEffect_hook.js:10:9
+    10|   React.useMutationEffect(() => {}, []);
                 ^^^^^^^^^^^^^^^^^
 
 References:
@@ -1808,7 +1898,7 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:11:9
-    11|   React.useMutationEffect(() => {});
+    11|   React.useMutationEffect(() => {}, [1, 2, 3]);
                 ^^^^^^^^^^^^^^^^^
 
 References:
@@ -1848,12 +1938,12 @@ References:
           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:12:9
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:14:9
 
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
-   useMutationEffect_hook.js:12:9
-    12|   React.useMutationEffect(() => {}, []);
+   useMutationEffect_hook.js:14:9
+    14|   React.useMutationEffect(() => () => {});
                 ^^^^^^^^^^^^^^^^^
 
 References:
@@ -1893,12 +1983,12 @@ References:
           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:13:9
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:15:9
 
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
-   useMutationEffect_hook.js:13:9
-    13|   React.useMutationEffect(() => {}, [1, 2, 3]);
+   useMutationEffect_hook.js:15:9
+    15|   React.useMutationEffect(() => () => {}, []);
                 ^^^^^^^^^^^^^^^^^
 
 References:
@@ -1943,7 +2033,7 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
    useMutationEffect_hook.js:16:9
-    16|   React.useMutationEffect(() => () => {});
+    16|   React.useMutationEffect(() => () => {}, [1, 2, 3]);
                 ^^^^^^^^^^^^^^^^^
 
 References:
@@ -1983,12 +2073,12 @@ References:
           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:17:9
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:20:9
 
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
-   useMutationEffect_hook.js:17:9
-    17|   React.useMutationEffect(() => () => {}, []);
+   useMutationEffect_hook.js:20:9
+    20|   React.useMutationEffect(1); // Error: number is incompatible with function type
                 ^^^^^^^^^^^^^^^^^
 
 References:
@@ -2028,12 +2118,12 @@ References:
           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:18:9
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:21:9
 
 Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
 
-   useMutationEffect_hook.js:18:9
-    18|   React.useMutationEffect(() => () => {}, [1, 2, 3]);
+   useMutationEffect_hook.js:21:9
+    21|   React.useMutationEffect(() => {}, 1); // Error: number is incompatible with function react-only array
                 ^^^^^^^^^^^^^^^^^
 
 References:
@@ -2073,105 +2163,15 @@ References:
           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:22:9
-
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
-
-   useMutationEffect_hook.js:22:9
-    22|   React.useMutationEffect(1); // Error: number is incompatible with function type
-                ^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:415:26
-                                 v
-   415|   declare export default {
-   416|     +DOM: typeof DOM,
-   417|     +PropTypes: typeof PropTypes,
-   418|     +version: typeof version,
-   419|     +checkPropTypes: typeof checkPropTypes,
-   420|     +memo: typeof memo,
-   421|     +lazy: typeof lazy,
-   422|     +createClass: typeof createClass,
-   423|     +createContext: typeof createContext,
-   424|     +createElement: typeof createElement,
-   425|     +cloneElement: typeof cloneElement,
-   426|     +createFactory: typeof createFactory,
-   427|     +createRef: typeof createRef,
-   428|     +forwardRef: typeof forwardRef,
-   429|     +isValidElement: typeof isValidElement,
-      :
-   440|     +useReducer: typeof useReducer,
-   441|     +useRef: typeof useRef,
-   442|     +useEffect: typeof useEffect,
-   443|     +useLayoutEffect: typeof useLayoutEffect,
-   444|     +useCallback: typeof useCallback,
-   445|     +useMemo: typeof useMemo,
-   446|     +useImperativeHandle: typeof useImperativeHandle,
-   447|     +useTransition: typeof useTransition,
-   448|     +useDeferredValue: typeof useDeferredValue,
-   449|     +startTransition: typeof startTransition,
-   450|     +useId: typeof useId,
-   451|     +useInsertionEffect: typeof useInsertionEffect,
-   452|     +useSyncExternalStore: typeof useSyncExternalStore,
-   453|     ...
-   454|   };
-          ^ [1]
-
-
-Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:23:9
-
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1]. [prop-missing]
-
-   useMutationEffect_hook.js:23:9
-    23|   React.useMutationEffect(() => {}, 1); // Error: number is incompatible with function react-only array
-                ^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:415:26
-                                 v
-   415|   declare export default {
-   416|     +DOM: typeof DOM,
-   417|     +PropTypes: typeof PropTypes,
-   418|     +version: typeof version,
-   419|     +checkPropTypes: typeof checkPropTypes,
-   420|     +memo: typeof memo,
-   421|     +lazy: typeof lazy,
-   422|     +createClass: typeof createClass,
-   423|     +createContext: typeof createContext,
-   424|     +createElement: typeof createElement,
-   425|     +cloneElement: typeof cloneElement,
-   426|     +createFactory: typeof createFactory,
-   427|     +createRef: typeof createRef,
-   428|     +forwardRef: typeof forwardRef,
-   429|     +isValidElement: typeof isValidElement,
-      :
-   440|     +useReducer: typeof useReducer,
-   441|     +useRef: typeof useRef,
-   442|     +useEffect: typeof useEffect,
-   443|     +useLayoutEffect: typeof useLayoutEffect,
-   444|     +useCallback: typeof useCallback,
-   445|     +useMemo: typeof useMemo,
-   446|     +useImperativeHandle: typeof useImperativeHandle,
-   447|     +useTransition: typeof useTransition,
-   448|     +useDeferredValue: typeof useDeferredValue,
-   449|     +startTransition: typeof startTransition,
-   450|     +useId: typeof useId,
-   451|     +useInsertionEffect: typeof useInsertionEffect,
-   452|     +useSyncExternalStore: typeof useSyncExternalStore,
-   453|     ...
-   454|   };
-          ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- useReducer_hook.js:6:9
+Error ------------------------------------------------------------------------------------------- useReducer_hook.js:4:9
 
 Cannot call `React.useReducer` because: [incompatible-call]
  - Either function type [1] requires another argument from call of method `useReducer` [2].
  - Or function type [3] requires another argument from call of method `useReducer` [2].
  - Or function type [4] requires another argument from call of method `useReducer` [2].
 
-   useReducer_hook.js:6:9
-     6|   React.useReducer(); // Error: function requires another argument.
+   useReducer_hook.js:4:9
+     4|   React.useReducer(); // Error: function requires another argument.
                 ^^^^^^^^^^
 
 References:
@@ -2182,8 +2182,8 @@ References:
    325|     initialState: S,
    326|   ): [S, Dispatch<A>];
           ------------------^ [1]
-   useReducer_hook.js:6:3
-     6|   React.useReducer(); // Error: function requires another argument.
+   useReducer_hook.js:4:3
+     4|   React.useReducer(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:328:37
                                             v------
@@ -2203,194 +2203,194 @@ References:
           ------------------^ [4]
 
 
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
 Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useReducer_hook.js:29:4
-   29|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:27:4
+   27|   (state.count: string); // Error: number is incompatible with string
           ^^^^^^^^^^^
 
 References:
-   useReducer_hook.js:9:76
-    9| type Action = {type: 'increment' | 'decrement'} | {type: 'reset', payload: number}
+   useReducer_hook.js:7:76
+    7| type Action = {type: 'increment' | 'decrement'} | {type: 'reset', payload: number}
                                                                                   ^^^^^^ [1]
-   useReducer_hook.js:29:17
-   29|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:27:17
+   27|   (state.count: string); // Error: number is incompatible with string
                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
 Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useReducer_hook.js:29:4
-   29|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:27:4
+   27|   (state.count: string); // Error: number is incompatible with string
           ^^^^^^^^^^^
 
 References:
-   useReducer_hook.js:11:33
-   11| function reducer(state: {count: number}, action: Action) {
+   useReducer_hook.js:9:33
+    9| function reducer(state: {count: number}, action: Action) {
                                        ^^^^^^ [1]
-   useReducer_hook.js:29:17
-   29|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:27:17
+   27|   (state.count: string); // Error: number is incompatible with string
                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
 Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useReducer_hook.js:29:4
-   29|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:27:4
+   27|   (state.count: string); // Error: number is incompatible with string
+          ^^^^^^^^^^^
+
+References:
+   useReducer_hook.js:14:23
+   14|       return { count: state.count + 1 };
+                             ^^^^^^^^^^^^^^^ [1]
+   useReducer_hook.js:27:17
+   27|   (state.count: string); // Error: number is incompatible with string
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
+
+Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   useReducer_hook.js:27:4
+   27|   (state.count: string); // Error: number is incompatible with string
           ^^^^^^^^^^^
 
 References:
    useReducer_hook.js:16:23
-   16|       return { count: state.count + 1 };
+   16|       return { count: state.count - 1 };
                              ^^^^^^^^^^^^^^^ [1]
-   useReducer_hook.js:29:17
-   29|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:27:17
+   27|   (state.count: string); // Error: number is incompatible with string
                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
 
 Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useReducer_hook.js:29:4
-   29|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:27:4
+   27|   (state.count: string); // Error: number is incompatible with string
           ^^^^^^^^^^^
 
 References:
-   useReducer_hook.js:18:23
-   18|       return { count: state.count - 1 };
-                             ^^^^^^^^^^^^^^^ [1]
-   useReducer_hook.js:29:17
-   29|   (state.count: string); // Error: number is incompatible with string
-                       ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ useReducer_hook.js:29:4
-
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   useReducer_hook.js:29:4
-   29|   (state.count: string); // Error: number is incompatible with string
-          ^^^^^^^^^^^
-
-References:
-   useReducer_hook.js:24:31
-   24| const initialState = { count: 0 };
+   useReducer_hook.js:22:31
+   22| const initialState = { count: 0 };
                                      ^ [1]
-   useReducer_hook.js:29:17
-   29|   (state.count: string); // Error: number is incompatible with string
+   useReducer_hook.js:27:17
+   27|   (state.count: string); // Error: number is incompatible with string
                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:16:62
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:14:62
 
 Cannot assign `React.useRef(...)` to `stringValue` because number [1] is incompatible with string [2] in property
 `current`. [incompatible-type]
 
-   useRef_hook.js:16:62
-   16|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
+   useRef_hook.js:14:62
+   14|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
                                                                     ^^^ [1]
 
 References:
-   useRef_hook.js:16:32
-   16|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
+   useRef_hook.js:14:32
+   14|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
                                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:17:62
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:15:62
 
 Cannot assign `React.useRef(...)` to `numberValue` because string [1] is incompatible with number [2] in property
 `current`. [incompatible-type]
 
-   useRef_hook.js:17:62
-   17|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
+   useRef_hook.js:15:62
+   15|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
                                                                     ^^^^^ [1]
 
 References:
-   useRef_hook.js:17:32
-   17|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
+   useRef_hook.js:15:32
+   15|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
                                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:18:51
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:16:51
 
 Cannot assign `React.useRef(...)` to `nullValue` because boolean [1] is incompatible with null [2] in property
 `current`. [incompatible-type]
 
-   useRef_hook.js:18:51
-   18|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
+   useRef_hook.js:16:51
+   16|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
                                                          ^^^^ [1]
 
 References:
-   useRef_hook.js:18:30
-   18|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
+   useRef_hook.js:16:30
+   16|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
                                     ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:24:25
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:22:25
 
 Cannot assign `123` to `stringValue.current` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   useRef_hook.js:24:25
-   24|   stringValue.current = 123; // Error: number is incompatible with string in property current
+   useRef_hook.js:22:25
+   22|   stringValue.current = 123; // Error: number is incompatible with string in property current
                                ^^^ [1]
 
 References:
-   useRef_hook.js:22:32
-   22|   const stringValue: {current: string | null} = React.useRef(null);
+   useRef_hook.js:20:32
+   20|   const stringValue: {current: string | null} = React.useRef(null);
                                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:32:51
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:30:51
 
 Cannot assign `React.useRef(...)` to `foo` because `Bar` [1] is incompatible with `Foo` [2] in property `current`.
 [incompatible-type]
 
-   useRef_hook.js:32:51
-   32|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+   useRef_hook.js:30:51
+   30|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
                                                          ^^^^^^^^^ [1]
 
 References:
-   useRef_hook.js:32:24
-   32|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+   useRef_hook.js:30:24
+   30|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
                               ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- useState_hook.js:10:2
+Error --------------------------------------------------------------------------------------------- useState_hook.js:8:2
 
 Cannot cast `count` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   useState_hook.js:10:2
-   10| (count: string); // Error: number is incompatible with string
-        ^^^^^
+   useState_hook.js:8:2
+   8| (count: string); // Error: number is incompatible with string
+       ^^^^^
 
 References:
-   useState_hook.js:7:42
-    7| const [count, setCount] = React.useState<number>(1);
-                                                ^^^^^^ [1]
-   useState_hook.js:10:9
-   10| (count: string); // Error: number is incompatible with string
-               ^^^^^^ [2]
+   useState_hook.js:5:42
+   5| const [count, setCount] = React.useState<number>(1);
+                                               ^^^^^^ [1]
+   useState_hook.js:8:9
+   8| (count: string); // Error: number is incompatible with string
+              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- useState_hook.js:13:10
+Error ------------------------------------------------------------------------------------------- useState_hook.js:11:10
 
 Cannot call `setCount` with `true` bound to the first parameter because boolean [1] is incompatible with number [2].
 [incompatible-call]
 
-   useState_hook.js:13:10
-   13| setCount(true); // Error: boolean is incompatible with number
+   useState_hook.js:11:10
+   11| setCount(true); // Error: boolean is incompatible with number
                 ^^^^ [1]
 
 References:
-   useState_hook.js:7:42
-    7| const [count, setCount] = React.useState<number>(1);
+   useState_hook.js:5:42
+    5| const [count, setCount] = React.useState<number>(1);
                                                 ^^^^^^ [2]
 
 

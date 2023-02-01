@@ -1,5 +1,3 @@
-// @flow
-
 import * as React from 'react';
 
 // Utility. We want a value for any.

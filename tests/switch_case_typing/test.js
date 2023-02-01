@@ -1,5 +1,3 @@
-// @flow
-
 type Enum = 'foo' | 'bar' | 'baz';
 declare var x: Enum;
 

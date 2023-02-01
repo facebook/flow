@@ -42,101 +42,101 @@ References:
              ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- instance.js:23:2
+Error ------------------------------------------------------------------------------------------------- instance.js:21:2
 
 Cannot cast `'missing'` to `T` because property `missing` is missing in `B` [1]. [prop-missing]
 
+   instance.js:21:2
+   21| ('missing': T); // Error
+        ^^^^^^^^^
+
+References:
+   instance.js:21:13
+   21| ('missing': T); // Error
+                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- instance.js:23:2
+
+Cannot cast `'bMethod'` to `T` because property `bMethod` is missing in `B` [1]. [prop-missing]
+
    instance.js:23:2
-   23| ('missing': T); // Error
+   23| ('bMethod': T); // Error: methods are on proto
         ^^^^^^^^^
 
 References:
    instance.js:23:13
-   23| ('missing': T); // Error
+   23| ('bMethod': T); // Error: methods are on proto
                    ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- instance.js:25:2
 
-Cannot cast `'bMethod'` to `T` because property `bMethod` is missing in `B` [1]. [prop-missing]
-
-   instance.js:25:2
-   25| ('bMethod': T); // Error: methods are on proto
-        ^^^^^^^^^
-
-References:
-   instance.js:25:13
-   25| ('bMethod': T); // Error: methods are on proto
-                   ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- instance.js:27:2
-
 Cannot cast `'aOne'` to `T` because property `aOne` (did you mean `bOne`?) is missing in `B` [1]. [prop-missing]
 
-   instance.js:27:2
-   27| ('aOne': T); // Error: non-own field
+   instance.js:25:2
+   25| ('aOne': T); // Error: non-own field
         ^^^^^^
 
 References:
-   instance.js:27:10
-   27| ('aOne': T); // Error: non-own field
+   instance.js:25:10
+   25| ('aOne': T); // Error: non-own field
                 ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- instance.js:28:2
+Error ------------------------------------------------------------------------------------------------- instance.js:26:2
 
 Cannot cast `'aMethod'` to `T` because property `aMethod` is missing in `B` [1]. [prop-missing]
 
-   instance.js:28:2
-   28| ('aMethod': T); // Error: non-own field
+   instance.js:26:2
+   26| ('aMethod': T); // Error: non-own field
         ^^^^^^^^^
 
 References:
-   instance.js:28:13
-   28| ('aMethod': T); // Error: non-own field
+   instance.js:26:13
+   26| ('aMethod': T); // Error: non-own field
                    ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ interface.js:21:2
+Error ------------------------------------------------------------------------------------------------ interface.js:19:2
 
 Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with literal union [2]. [incompatible-cast]
 
-   interface.js:21:2
-   21| ('xxx': $Keys<WithDict>); // ERROR
+   interface.js:19:2
+   19| ('xxx': $Keys<WithDict>); // ERROR
         ^^^^^ [1]
 
 References:
-   interface.js:4:4
-    4|   ['x' | 'y']: number;
+   interface.js:2:4
+    2|   ['x' | 'y']: number;
           ^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ interface.js:24:2
+Error ------------------------------------------------------------------------------------------------ interface.js:22:2
 
 Cannot cast `'xxx'` to key set because property `xxx` is missing in `WithProps` [1]. [prop-missing]
 
-   interface.js:24:2
-   24| ('xxx': $Keys<WithProps>); // ERROR
+   interface.js:22:2
+   22| ('xxx': $Keys<WithProps>); // ERROR
         ^^^^^
 
 References:
-   interface.js:24:15
-   24| ('xxx': $Keys<WithProps>); // ERROR
+   interface.js:22:15
+   22| ('xxx': $Keys<WithProps>); // ERROR
                      ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ interface.js:28:2
+Error ------------------------------------------------------------------------------------------------ interface.js:26:2
 
 Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with literal union [2]. [incompatible-cast]
 
-   interface.js:28:2
-   28| ('xxx': $Keys<WithBoth>); // ERROR
+   interface.js:26:2
+   26| ('xxx': $Keys<WithBoth>); // ERROR
         ^^^^^ [1]
 
 References:
-   interface.js:13:4
-   13|   ['x' | 'y']: number;
+   interface.js:11:4
+   11|   ['x' | 'y']: number;
           ^^^^^^^^^ [2]
 
 

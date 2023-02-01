@@ -1,183 +1,183 @@
-Error -------------------------------------------------------------------------------------------- import-value2.js:4:10
+Error -------------------------------------------------------------------------------------------- import-value2.js:2:10
 
 Cannot return `x` because number [1] is incompatible with string [2]. [incompatible-return]
 
-   import-value2.js:4:10
-   4|   return x;
+   import-value2.js:2:10
+   2|   return x;
                ^
 
 References:
-   import-value2.js:3:22
-   3| export function f(x: number): string {
+   import-value2.js:1:22
+   1| export function f(x: number): string {
                            ^^^^^^ [1]
-   import-value2.js:3:31
-   3| export function f(x: number): string {
+   import-value2.js:1:31
+   1| export function f(x: number): string {
                                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- import_dynamic_dep.js:4:4
+Error ---------------------------------------------------------------------------------------- import_dynamic_dep.js:3:4
 
 Cannot cast `y` to empty because module `./import-value1` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   import_dynamic_dep.js:4:4
-   4|   (y: empty); // error: number ~> empty
+   import_dynamic_dep.js:3:4
+   3|   (y: empty); // error: number ~> empty
          ^
 
 References:
    import-value1.js
    ^^^^^^^^^^^^^^^^ [1]
-   import_dynamic_dep.js:4:7
-   4|   (y: empty); // error: number ~> empty
+   import_dynamic_dep.js:3:7
+   3|   (y: empty); // error: number ~> empty
             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ test-multiple-export-2.js:6:2
+Error ------------------------------------------------------------------------------------ test-multiple-export-2.js:4:2
 
 Cannot cast `a.f` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   test-multiple-export-2.js:6:2
-   6| (a.f: number);
+   test-multiple-export-2.js:4:2
+   4| (a.f: number);
        ^^^
 
 References:
-   multiple-export-2.js:8:13
-   8|   static f: string = ""
+   multiple-export-2.js:6:13
+   6|   static f: string = ""
                   ^^^^^^ [1]
-   test-multiple-export-2.js:6:7
-   6| (a.f: number);
+   test-multiple-export-2.js:4:7
+   4| (a.f: number);
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:3:19
+Error ----------------------------------------------------------------------------------------------------- test.js:1:19
 
 Cannot assign `require(...)` to `n` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:3:19
-   3| const n: string = require('./import-value1'); // error: number ~/~> string
+   test.js:1:19
+   1| const n: string = require('./import-value1'); // error: number ~/~> string
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   import-value1.js:3:18
-   3| module.exports = 0;
+   import-value1.js:1:18
+   1| module.exports = 0;
                        ^ [1]
-   test.js:3:10
-   3| const n: string = require('./import-value1'); // error: number ~/~> string
+   test.js:1:10
+   1| const n: string = require('./import-value1'); // error: number ~/~> string
                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+
+Cannot cast `n` to `T` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:8:2
+   8| (n: T); // error: string ~/~> number
+       ^
+
+References:
+   test.js:1:10
+   1| const n: string = require('./import-value1'); // error: number ~/~> string
+               ^^^^^^ [1]
+   test.js:8:5
+   8| (n: T); // error: string ~/~> number
+          ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:2
+
+Cannot cast `f(...)` to `S` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:9:2
+   9| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
+       ^^^^^
+
+References:
+   import-value2.js:1:31
+   1| export function f(x: number): string {
+                                    ^^^^^^ [1]
+   test.js:9:9
+   9| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
+              ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:4
+
+Cannot call `f` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   test.js:9:4
+   9| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
+         ^^ [1]
+
+References:
+   import-value2.js:1:22
+   1| export function f(x: number): string {
+                           ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
-Cannot cast `n` to `T` because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
 
    test.js:10:2
-   10| (n: T); // error: string ~/~> number
+   10| (o: O); // error: number (property x) <~/~> string
         ^
 
 References:
-   test.js:3:10
-    3| const n: string = require('./import-value1'); // error: number ~/~> string
-                ^^^^^^ [1]
-   test.js:10:5
-   10| (n: T); // error: string ~/~> number
-           ^ [2]
+   import-value3.js:3:6
+    3|   x: 0,
+            ^ [1]
+   import-type5.js:4:6
+    4|   x: string;
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:2
+
+Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `y.x`. [incompatible-cast]
+
+   test.js:10:2
+   10| (o: O); // error: number (property x) <~/~> string
+        ^
+
+References:
+   import-value3.js:3:6
+    3|   x: 0,
+            ^ [1]
+   import-type4.js:4:6
+    4|   x: string;
+            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:2
 
-Cannot cast `f(...)` to `S` because string [1] is incompatible with number [2]. [incompatible-cast]
-
-   test.js:11:2
-   11| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
-        ^^^^^
-
-References:
-   import-value2.js:3:31
-    3| export function f(x: number): string {
-                                     ^^^^^^ [1]
-   test.js:11:9
-   11| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
-               ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:11:4
-
-Cannot call `f` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
-
-   test.js:11:4
-   11| (f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
-          ^^ [1]
-
-References:
-   import-value2.js:3:22
-    3| export function f(x: number): string {
-                            ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:12:2
-
-Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
-
-   test.js:12:2
-   12| (o: O); // error: number (property x) <~/~> string
-        ^
-
-References:
-   import-value3.js:5:6
-    5|   x: 0,
-            ^ [1]
-   import-type5.js:6:6
-    6|   x: string;
-            ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:12:2
-
-Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `y.x`. [incompatible-cast]
-
-   test.js:12:2
-   12| (o: O); // error: number (property x) <~/~> string
-        ^
-
-References:
-   import-value3.js:5:6
-    5|   x: 0,
-            ^ [1]
-   import-type4.js:6:6
-    6|   x: string;
-            ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:13:2
-
 Cannot cast `o.y` to `O` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
 
-   test.js:13:2
-   13| (o.y: O); // error: number (property x) <~/~> string
+   test.js:11:2
+   11| (o.y: O); // error: number (property x) <~/~> string
         ^^^
 
 References:
-   import-value3.js:5:6
-    5|   x: 0,
+   import-value3.js:3:6
+    3|   x: 0,
             ^ [1]
-   import-type5.js:6:6
-    6|   x: string;
+   import-type5.js:4:6
+    4|   x: string;
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:2
+Error ----------------------------------------------------------------------------------------------------- test.js:11:2
 
 Cannot cast `o.y` to `O` because number [1] is incompatible with string [2] in property `y.x`. [incompatible-cast]
 
-   test.js:13:2
-   13| (o.y: O); // error: number (property x) <~/~> string
+   test.js:11:2
+   11| (o.y: O); // error: number (property x) <~/~> string
         ^^^
 
 References:
-   import-value3.js:5:6
-    5|   x: 0,
+   import-value3.js:3:6
+    3|   x: 0,
             ^ [1]
-   import-type4.js:6:6
-    6|   x: string;
+   import-type4.js:4:6
+    4|   x: string;
             ^^^^^^ [2]
 
 

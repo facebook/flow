@@ -1,5 +1,3 @@
-// @flow
-
 declare var any: any;
 
 function Foo(props: {}) {}

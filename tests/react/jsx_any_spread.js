@@ -1,5 +1,3 @@
-// @flow
-
 const React = require('react');
 
 const any: any = null;

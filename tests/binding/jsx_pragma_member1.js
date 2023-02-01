@@ -1,4 +1,3 @@
-// @flow
 // @jsx Foo.baz
 // Error: cannot resolve Foo
 

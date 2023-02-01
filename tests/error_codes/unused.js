@@ -1,5 +1,3 @@
-// @flow
-
 let y : number | { x : number }  = 1;
 
 //$FlowFixMe[incompatible-cast]

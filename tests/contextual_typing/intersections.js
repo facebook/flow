@@ -1,5 +1,3 @@
-// @flow
-
 function test1() {
   declare function foo(tag: 'boolean', cb: (x: boolean) => void): void;
   declare function foo(tag: 'str', cb: (x: string) => void): void;

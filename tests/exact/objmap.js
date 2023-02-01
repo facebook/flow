@@ -1,5 +1,3 @@
-// @flow
-
 type ExactThing = {| a: 1 |};
 
 type MappedThing = $ObjMap<ExactThing, (1) => 2>;

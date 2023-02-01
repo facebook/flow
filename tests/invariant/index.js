@@ -1,5 +1,3 @@
-// @flow
-
 declare function invariant(): void;
 
 declare var a: true;

@@ -1,4 +1,3 @@
-// @flow
 type immutable$JSIterable<+T> = $Iterable<T, void, void>;
 
 declare export class List<+T> {

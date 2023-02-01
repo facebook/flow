@@ -1,5 +1,3 @@
-// @flow
-
 export type Fragment = {|
   type: 'ONE_CONFIG',
 |};

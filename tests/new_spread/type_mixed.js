@@ -1,5 +1,3 @@
-// @flow
-
 type O1 = {...mixed};
 declare var o1: O1;
 (o1.someProp: empty); // Error someProp does not exist

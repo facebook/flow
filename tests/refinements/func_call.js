@@ -1,5 +1,3 @@
-// @flow
-
 let tests = [
   function(x: { y?: string }, z: () => string) {
     if (x.y) {

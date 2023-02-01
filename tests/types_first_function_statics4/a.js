@@ -1,5 +1,3 @@
-// @flow
-
 function foo() {}
 foo.x = 1;
 

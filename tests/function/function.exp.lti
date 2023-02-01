@@ -242,294 +242,294 @@ References:
                                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ bind.js:7:7
+Error ------------------------------------------------------------------------------------------------------ bind.js:5:7
 
 Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   bind.js:7:7
-   7|     y(123); // error, number !~> string
+   bind.js:5:7
+   5|     y(123); // error, number !~> string
             ^^^ [1]
 
 References:
-   bind.js:4:30
-   4|   function(x: (a: string, b: string) => void) {
+   bind.js:2:30
+   2|   function(x: (a: string, b: string) => void) {
                                    ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- bind.js:14:7
+Error ----------------------------------------------------------------------------------------------------- bind.js:12:7
 
 Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   bind.js:14:7
-   14|     y(123); // error, number !~> string
+   bind.js:12:7
+   12|     y(123); // error, number !~> string
              ^^^ [1]
 
 References:
-   bind.js:11:32
-   11|   function(x: { (a: string, b: string): void }) {
+   bind.js:9:32
+    9|   function(x: { (a: string, b: string): void }) {
                                       ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- bind.js:19:7
+Error ----------------------------------------------------------------------------------------------------- bind.js:17:7
 
 Cannot call `x.bind` because property `bind` is missing in object type [1]. [prop-missing]
 
-   bind.js:19:7
-   19|     x.bind(x, 'foo'); // error
+   bind.js:17:7
+   17|     x.bind(x, 'foo'); // error
              ^^^^
 
 References:
-   bind.js:18:15
-   18|   function(x: { a: string }) {
+   bind.js:16:15
+   16|   function(x: { a: string }) {
                      ^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- bind.js:25:13
+Error ---------------------------------------------------------------------------------------------------- bind.js:23:13
 
 Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   bind.js:25:13
-   25|     (x.bind(123): void); // error, number !~> string
+   bind.js:23:13
+   23|     (x.bind(123): void); // error, number !~> string
                    ^^^ [1]
 
 References:
-   bind.js:23:54
-   23|   function(x: {(a: string, b: string): void, bind(a: string): void}) {
+   bind.js:21:54
+   21|   function(x: {(a: string, b: string): void, bind(a: string): void}) {
                                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- bind.js:32:3
+Error ----------------------------------------------------------------------------------------------------- bind.js:30:3
 
 Cannot call `A.bind` because class `A` [1] is not a function type. [incompatible-use]
 
-   bind.js:32:3
-   32| A.bind(3);
+   bind.js:30:3
+   30| A.bind(3);
          ^^^^
 
 References:
-   bind.js:30:7
-   30| class A {}
+   bind.js:28:7
+   28| class A {}
              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:4:15
+Error ----------------------------------------------------------------------------------------------------- call.js:2:15
 
 Cannot get `this.length` because property `length` is missing in `Number` [1]. [prop-missing]
 
-   call.js:4:15
-   4|   return this.length; // expect []/"" this
+   call.js:2:15
+   2|   return this.length; // expect []/"" this
                     ^^^^^^
 
 References:
-   call.js:3:21
-   3| function test(this: number | string, a: string, b: number): number {
+   call.js:1:21
+   1| function test(this: number | string, a: string, b: number): number {
                           ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:14:6
+Error ----------------------------------------------------------------------------------------------------- call.js:12:6
 
 Cannot call `test.call` because function [1] requires another argument. [incompatible-call]
 
-   call.js:14:6
-   14| test.call("", ""); // error: void ~> number
+   call.js:12:6
+   12| test.call("", ""); // error: void ~> number
             ^^^^
 
 References:
-   call.js:3:1
-    3| function test(this: number | string, a: string, b: number): number {
+   call.js:1:1
+    1| function test(this: number | string, a: string, b: number): number {
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:17:19
+Error ---------------------------------------------------------------------------------------------------- call.js:15:19
 
 Cannot call `test.call` with empty string bound to `b` because string [1] is incompatible with number [2].
 [incompatible-call]
 
-   call.js:17:19
-   17| test.call("", "", ""); // error: string ~> number (2nd arg)
+   call.js:15:19
+   15| test.call("", "", ""); // error: string ~> number (2nd arg)
                          ^^ [1]
 
 References:
-   call.js:3:52
-    3| function test(this: number | string, a: string, b: number): number {
+   call.js:1:52
+    1| function test(this: number | string, a: string, b: number): number {
                                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:18:15
+Error ---------------------------------------------------------------------------------------------------- call.js:16:15
 
 Cannot call `test.call` with `0` bound to `a` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   call.js:18:15
-   18| test.call("", 0, 0); // error: number ~> string (1st arg)
+   call.js:16:15
+   16| test.call("", 0, 0); // error: number ~> string (1st arg)
                      ^ [1]
 
 References:
-   call.js:3:41
-    3| function test(this: number | string, a: string, b: number): number {
+   call.js:1:41
+    1| function test(this: number | string, a: string, b: number): number {
                                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:21:60
+Error ---------------------------------------------------------------------------------------------------- call.js:19:60
 
 Cannot call `test.call` with `args[0]` bound to `a` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   call.js:21:60
-   21| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
+   call.js:19:60
+   19| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
                                                                   ^^^^^^^
 
 References:
-   call.js:21:25
-   21| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
+   call.js:19:25
+   19| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
                                ^^^^^^ [1]
-   call.js:3:41
-    3| function test(this: number | string, a: string, b: number): number {
+   call.js:1:41
+    1| function test(this: number | string, a: string, b: number): number {
                                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:21:69
+Error ---------------------------------------------------------------------------------------------------- call.js:19:69
 
 Cannot call `test.call` with `args[1]` bound to `b` because string [1] is incompatible with number [2].
 [incompatible-call]
 
-   call.js:21:69
-   21| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
+   call.js:19:69
+   19| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
                                                                            ^^^^^^^
 
 References:
-   call.js:21:34
-   21| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
+   call.js:19:34
+   19| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
                                         ^^^^^^ [1]
-   call.js:3:52
-    3| function test(this: number | string, a: string, b: number): number {
+   call.js:1:52
+    1| function test(this: number | string, a: string, b: number): number {
                                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:30:28
+Error ---------------------------------------------------------------------------------------------------- call.js:28:28
 
 Cannot call `test.apply.call` with number bound to `a` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   call.js:30:28
-   30| (test.apply.call(test, 0, [0, 'foo']): number);
+   call.js:28:28
+   28| (test.apply.call(test, 0, [0, 'foo']): number);
                                   ^ [1]
 
 References:
-   call.js:3:41
-    3| function test(this: number | string, a: string, b: number): number {
+   call.js:1:41
+    1| function test(this: number | string, a: string, b: number): number {
                                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:30:31
+Error ---------------------------------------------------------------------------------------------------- call.js:28:31
 
 Cannot call `test.apply.call` with string bound to `b` because string [1] is incompatible with number [2].
 [incompatible-call]
 
-   call.js:30:31
-   30| (test.apply.call(test, 0, [0, 'foo']): number);
+   call.js:28:31
+   28| (test.apply.call(test, 0, [0, 'foo']): number);
                                      ^^^^^ [1]
 
 References:
-   call.js:3:52
-    3| function test(this: number | string, a: string, b: number): number {
+   call.js:1:52
+    1| function test(this: number | string, a: string, b: number): number {
                                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:40:20
+Error ---------------------------------------------------------------------------------------------------- call.js:38:20
 
 Cannot call `x.call` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   call.js:40:20
-   40|   x.call(x, 'foo', 123); // error, number !~> string
+   call.js:38:20
+   38|   x.call(x, 'foo', 123); // error, number !~> string
                           ^^^ [1]
 
 References:
-   call.js:38:36
-   38| function test3(x: { (a: string, b: string): void }) {
+   call.js:36:36
+   36| function test3(x: { (a: string, b: string): void }) {
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:47:11
+Error ---------------------------------------------------------------------------------------------------- call.js:45:11
 
 Cannot call `f` with object literal bound to `y` because string [1] is incompatible with string literal `bar` [2] in
 property `x`. [incompatible-call]
 
-   call.js:47:11
-   47|     f({x: "foo"}); // error, "foo" !~> "bar"
+   call.js:45:11
+   45|     f({x: "foo"}); // error, "foo" !~> "bar"
                  ^^^^^ [1]
 
 References:
-   call.js:46:24
-   46|     function f(y: { x: "bar" }): void {}
+   call.js:44:24
+   44|     function f(y: { x: "bar" }): void {}
                               ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:53:11
+Error ---------------------------------------------------------------------------------------------------- call.js:51:11
 
 Cannot call `f` with object literal bound to `y` because number [1] is incompatible with number literal `123` [2] in
 property `x`. [incompatible-call]
 
-   call.js:53:11
-   53|     f({x: 234}); // error, 234 !~> 123
+   call.js:51:11
+   51|     f({x: 234}); // error, 234 !~> 123
                  ^^^ [1]
 
 References:
-   call.js:52:24
-   52|     function f(y: { x: 123 }): void {}
+   call.js:50:24
+   50|     function f(y: { x: 123 }): void {}
                               ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:59:11
+Error ---------------------------------------------------------------------------------------------------- call.js:57:11
 
 Cannot call `f` with object literal bound to `y` because boolean [1] is incompatible with boolean literal `false` [2] in
 property `x`. [incompatible-call]
 
-   call.js:59:11
-   59|     f({x: true}); // error, true !~> false
+   call.js:57:11
+   57|     f({x: true}); // error, true !~> false
                  ^^^^ [1]
 
 References:
-   call.js:58:24
-   58|     function f(y: { x: false }): void {}
+   call.js:56:24
+   56|     function f(y: { x: false }): void {}
                               ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- call_error_generic.js:23:5
+Error --------------------------------------------------------------------------------------- call_error_generic.js:21:5
 
 Cannot call `bar` with `foo` bound to `x` because null or undefined [1] is incompatible with string [2] in type argument
 `T` [3]. [incompatible-call]
 
-   call_error_generic.js:23:5
-   23| bar(foo);
+   call_error_generic.js:21:5
+   21| bar(foo);
            ^^^
 
 References:
-   call_error_generic.js:16:23
-   16|   const set = new Set<?string>();
+   call_error_generic.js:14:23
+   14|   const set = new Set<?string>();
                              ^^^^^^^ [1]
-   call_error_generic.js:21:25
-   21| function bar(x: ROArray<string>) { }
+   call_error_generic.js:19:25
+   19| function bar(x: ROArray<string>) { }
                                ^^^^^^ [2]
-   call_error_generic.js:10:24
-   10| declare class ROArray<+T> { }
+   call_error_generic.js:8:24
+    8| declare class ROArray<+T> { }
                               ^ [3]
 
 
-Error --------------------------------------------------------------------------------------- call_error_generic2.js:6:8
+Error --------------------------------------------------------------------------------------- call_error_generic2.js:4:8
 
 Cannot call `bar1` because property `$data` is missing in object type [1] but exists in object type [2] in type argument
 `TKey`. [prop-missing]
 
-   call_error_generic2.js:6:8
-   6|   bar1(fragmentRef);
+   call_error_generic2.js:4:8
+   4|   bar1(fragmentRef);
              ^^^^^^^^^^^
 
 References:
-   call_error_generic2.js:5:29
-   5| function bar2(fragmentRef?: {}) {
+   call_error_generic2.js:3:29
+   3| function bar2(fragmentRef?: {}) {
                                   ^^ [1]
-   call_error_generic2.js:3:30
-   3| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
+   call_error_generic2.js:1:30
+   1| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
                                    ^^^^^^^^^^^^^^^^ [2]
 
 
@@ -641,17 +641,17 @@ Cannot assign `123` to `y.name` because property `name` is not writable. [cannot
              ^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ issue-7529.js:4:7
+Error ------------------------------------------------------------------------------------------------ issue-7529.js:2:7
 
 Cannot call `foo` with `123` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   issue-7529.js:4:7
-   4|   foo(123);
+   issue-7529.js:2:7
+   2|   foo(123);
             ^^^ [1]
 
 References:
-   issue-7529.js:3:29
-   3| const bar = function foo(x: string) {
+   issue-7529.js:1:29
+   1| const bar = function foo(x: string) {
                                   ^^^^^^ [2]
 
 

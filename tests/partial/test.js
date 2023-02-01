@@ -1,5 +1,3 @@
-// @flow
-
 type Foo = {| x : string, y : string |};
 let a : Foo = {x : "", y : ""};
 let b1 : $Partial<Foo> = {x : ""};

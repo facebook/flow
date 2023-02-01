@@ -1,5 +1,3 @@
-// @flow
-
 let a = {
     m() {
         this; // error, refer to method on line 4

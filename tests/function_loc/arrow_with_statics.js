@@ -1,4 +1,3 @@
-// @flow
 const f = () => {};
 f.x = 1;
 (f: empty); // err

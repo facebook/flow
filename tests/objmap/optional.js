@@ -1,5 +1,3 @@
-// @flow
-
 declare var o1: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;
 declare var o2: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;
 declare var o3: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;

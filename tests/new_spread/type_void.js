@@ -1,5 +1,3 @@
-// @flow
-
 declare class T {}
 declare var x: T;
 

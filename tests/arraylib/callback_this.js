@@ -1,5 +1,3 @@
-// @flow
-
 class A {
     x: Array<number> = [1, 2, 3];
     y = 4;

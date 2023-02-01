@@ -1,5 +1,3 @@
-// @flow
-
 // This file is in a dependency cycle with another file. In types-first, the representations of the
 // types of this file, computed when merging the combined signature of these files, might be
 // different than those computed when checking the code of this file separately. This might kill

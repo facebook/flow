@@ -1,5 +1,3 @@
-// @flow
-
 function foo(b: boolean) {
     var x = b? 0 : null;
     while (typeof x == "string" || typeof x == "number") {

@@ -1,5 +1,3 @@
-// @flow
-
 export default function A() {}
 export function B() {}
 

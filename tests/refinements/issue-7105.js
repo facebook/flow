@@ -1,5 +1,3 @@
-// @flow
-
 type Box = {| +type: "GOOD", +value: string |} | {| +type: "BAD", +value: string |};
 type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
 function coerce(t: string): number {

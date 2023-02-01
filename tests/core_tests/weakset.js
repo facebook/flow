@@ -1,5 +1,3 @@
-// @flow
-
 let ws = new WeakSet<any>();
 let obj: Object = {};
 let dict: {foo: string} = {foo: 'bar'};

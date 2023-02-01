@@ -1,5 +1,3 @@
-// @flow
-
 import {name} from "testproj";
 
 (name: "node_modules/testproj");

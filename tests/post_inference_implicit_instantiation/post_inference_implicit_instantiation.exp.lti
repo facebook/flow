@@ -71,54 +71,54 @@ Missing an annotation on return because generic functions must be fully annotate
                                                           
 
 
-Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:4:7
+Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:2:7
 
 Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
 [incompatible-call]
 
-   polyt_flow_error.js:4:7
-   4| first(1); // Incompatibility error, but no error on under-constrained T
+   polyt_flow_error.js:2:7
+   2| first(1); // Incompatibility error, but no error on under-constrained T
             ^ [1]
 
 References:
-   polyt_flow_error.js:3:27
-   3| declare function first<T>(Array<T>): ?T;
+   polyt_flow_error.js:1:27
+   1| declare function first<T>(Array<T>): ?T;
                                 ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- react_children.js:5:16
+Error ------------------------------------------------------------------------------------------- react_children.js:3:16
 
 Cannot call `React.Children.toArray` because `T` [1] is underconstrained by call of method `toArray` [2]. Either add
 explicit type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   react_children.js:5:16
-     5| React.Children.toArray(1); // underconstrained
+   react_children.js:3:16
+     3| React.Children.toArray(1); // underconstrained
                        ^^^^^^^
 
 References:
    <BUILTINS>/react.js:292:13
    292|     toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
                     ^ [1]
-   react_children.js:5:1
-     5| React.Children.toArray(1); // underconstrained
+   react_children.js:3:1
+     3| React.Children.toArray(1); // underconstrained
         ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- react_children.js:6:16
+Error ------------------------------------------------------------------------------------------- react_children.js:4:16
 
 Cannot call `React.Children.toArray` because `T` [1] is underconstrained by call of method `toArray` [2]. Either add
 explicit type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   react_children.js:6:16
-     6| React.Children.toArray([1]); // underconstrained
+   react_children.js:4:16
+     4| React.Children.toArray([1]); // underconstrained
                        ^^^^^^^
 
 References:
    <BUILTINS>/react.js:292:13
    292|     toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
                     ^ [1]
-   react_children.js:6:1
-     6| React.Children.toArray([1]); // underconstrained
+   react_children.js:4:1
+     4| React.Children.toArray([1]); // underconstrained
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

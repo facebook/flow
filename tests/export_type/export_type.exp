@@ -156,19 +156,19 @@ References:
             ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------- values_as_type_exports.js:4:14
+Error ----------------------------------------------------------------------------------- values_as_type_exports.js:2:14
 
 Cannot export the value `num` as a type. [export-value-as-type]
 
-   4| export type {num};
+   2| export type {num};
                    ^^^
 
 
-Error ----------------------------------------------------------------------------------- values_as_type_exports.js:7:14
+Error ----------------------------------------------------------------------------------- values_as_type_exports.js:5:14
 
 Cannot export the value `fun` as a type. [export-value-as-type]
 
-   7| export type {fun}
+   5| export type {fun}
                    ^^^
 
 

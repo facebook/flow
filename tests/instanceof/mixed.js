@@ -1,5 +1,3 @@
-// @flow
-
 class C { }
 function foo(x: mixed) {
   if (x instanceof C) {

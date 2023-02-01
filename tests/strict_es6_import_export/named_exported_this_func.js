@@ -1,5 +1,3 @@
-// @flow
-
 // Error on named exported functions
 export function named1() { this; }
 export const named2 = function() { this; }

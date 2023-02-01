@@ -1,4 +1,3 @@
-// @flow
 //
 import * as Test from './test';
 import {hide, type ID, type TransparentMyNum} from './test';

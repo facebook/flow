@@ -1,5 +1,3 @@
-// @flow
-
 class A {
   static foo(this : typeof A) {}
   static foo2(this : number) {} // error

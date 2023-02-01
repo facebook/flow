@@ -1,5 +1,3 @@
-// @flow
-
 type X = ({a:true} & {b:string}) | ({a:false} & {c:string});
 //type X = {a:true, b:string} | {a:false, c:string}; // this works.
 

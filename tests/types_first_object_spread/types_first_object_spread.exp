@@ -1,248 +1,248 @@
-Error --------------------------------------------------------------------------------------------------- driver.js:10:2
+Error ---------------------------------------------------------------------------------------------------- driver.js:8:2
 
 Cannot cast `b1.x` to string because `void` (due to access of non-existent property `x`) [1] is incompatible with
 string [2]. [incompatible-cast]
 
-   driver.js:10:2
-   10| (b1.x: string); // Error number ~> string
-        ^^^^ [1]
+   driver.js:8:2
+   8| (b1.x: string); // Error number ~> string
+       ^^^^ [1]
 
 References:
-   driver.js:10:8
-   10| (b1.x: string); // Error number ~> string
-              ^^^^^^ [2]
+   driver.js:8:8
+   8| (b1.x: string); // Error number ~> string
+             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- driver.js:10:2
+Error ---------------------------------------------------------------------------------------------------- driver.js:8:2
 
 Cannot cast `b1.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   driver.js:10:2
-   10| (b1.x: string); // Error number ~> string
-        ^^^^
+   driver.js:8:2
+   8| (b1.x: string); // Error number ~> string
+       ^^^^
 
 References:
-   test1.js:3:16
-    3| type A = {| x: number |} | {| y: number |}
-                      ^^^^^^ [1]
-   driver.js:10:8
-   10| (b1.x: string); // Error number ~> string
-              ^^^^^^ [2]
+   test1.js:1:16
+   1| type A = {| x: number |} | {| y: number |}
+                     ^^^^^^ [1]
+   driver.js:8:8
+   8| (b1.x: string); // Error number ~> string
+             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- driver.js:11:2
+Error ---------------------------------------------------------------------------------------------------- driver.js:9:2
 
 Cannot cast `b1.y` to string because `void` (due to access of non-existent property `y`) [1] is incompatible with
 string [2]. [incompatible-cast]
 
-   driver.js:11:2
-   11| (b1.y: string); // Error, y may not exist, number ~> string
-        ^^^^ [1]
+   driver.js:9:2
+   9| (b1.y: string); // Error, y may not exist, number ~> string
+       ^^^^ [1]
 
 References:
-   driver.js:11:8
-   11| (b1.y: string); // Error, y may not exist, number ~> string
-              ^^^^^^ [2]
+   driver.js:9:8
+   9| (b1.y: string); // Error, y may not exist, number ~> string
+             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- driver.js:11:2
+Error ---------------------------------------------------------------------------------------------------- driver.js:9:2
 
 Cannot cast `b1.y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   driver.js:11:2
-   11| (b1.y: string); // Error, y may not exist, number ~> string
-        ^^^^
+   driver.js:9:2
+   9| (b1.y: string); // Error, y may not exist, number ~> string
+       ^^^^
 
 References:
-   test1.js:3:34
-    3| type A = {| x: number |} | {| y: number |}
-                                        ^^^^^^ [1]
-   driver.js:11:8
-   11| (b1.y: string); // Error, y may not exist, number ~> string
-              ^^^^^^ [2]
+   test1.js:1:34
+   1| type A = {| x: number |} | {| y: number |}
+                                       ^^^^^^ [1]
+   driver.js:9:8
+   9| (b1.y: string); // Error, y may not exist, number ~> string
+             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- driver.js:12:2
+Error --------------------------------------------------------------------------------------------------- driver.js:10:2
 
 Cannot cast `b1.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   driver.js:12:2
-   12| (b1.z: string); // Error, z may not exist, number ~> string
+   driver.js:10:2
+   10| (b1.z: string); // Error, z may not exist, number ~> string
         ^^^^
 
 References:
-   test1.js:6:16
-    6| const b = { z: 0, ...a };
+   test1.js:4:16
+    4| const b = { z: 0, ...a };
                       ^ [1]
-   driver.js:12:8
-   12| (b1.z: string); // Error, z may not exist, number ~> string
+   driver.js:10:8
+   10| (b1.z: string); // Error, z may not exist, number ~> string
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- driver.js:15:2
+Error --------------------------------------------------------------------------------------------------- driver.js:13:2
 
 Cannot cast `b2.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   driver.js:15:2
-   15| (b2.x: string); // Error number ~> string
+   driver.js:13:2
+   13| (b2.x: string); // Error number ~> string
         ^^^^
 
 References:
-   test2.js:3:16
-    3| const a = { x: 0 };
+   test2.js:1:16
+    1| const a = { x: 0 };
                       ^ [1]
-   driver.js:15:8
-   15| (b2.x: string); // Error number ~> string
+   driver.js:13:8
+   13| (b2.x: string); // Error number ~> string
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- driver.js:16:2
+Error --------------------------------------------------------------------------------------------------- driver.js:14:2
 
 Cannot cast `b2.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   driver.js:16:2
-   16| (b2.z: string); // Error number ~> string
+   driver.js:14:2
+   14| (b2.z: string); // Error number ~> string
         ^^^^
 
 References:
-   test2.js:4:16
-    4| const b = { z: 0, ...a };
+   test2.js:2:16
+    2| const b = { z: 0, ...a };
                       ^ [1]
-   driver.js:16:8
-   16| (b2.z: string); // Error number ~> string
+   driver.js:14:8
+   14| (b2.z: string); // Error number ~> string
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- driver.js:19:2
+Error --------------------------------------------------------------------------------------------------- driver.js:17:2
 
 Cannot cast `b3` to object type because inexact object literal [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
-   driver.js:19:2
-   19| (b3: {| |}); // Error inexact -> exact
+   driver.js:17:2
+   17| (b3: {| |}); // Error inexact -> exact
         ^^
 
 References:
-   test3.js:4:18
-    4| module.exports = { ...a };
+   test3.js:2:18
+    2| module.exports = { ...a };
                         ^^^^^^^^ [1]
-   driver.js:19:6
-   19| (b3: {| |}); // Error inexact -> exact
+   driver.js:17:6
+   17| (b3: {| |}); // Error inexact -> exact
             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test1.js:7:2
+Error ----------------------------------------------------------------------------------------------------- test1.js:5:2
 
 Cannot cast `b.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test1.js:7:2
-   7| (b.x: string); // Error, might not be on b or will be number
+   test1.js:5:2
+   5| (b.x: string); // Error, might not be on b or will be number
        ^^^
 
 References:
-   test1.js:3:16
-   3| type A = {| x: number |} | {| y: number |}
+   test1.js:1:16
+   1| type A = {| x: number |} | {| y: number |}
                      ^^^^^^ [1]
-   test1.js:7:7
-   7| (b.x: string); // Error, might not be on b or will be number
+   test1.js:5:7
+   5| (b.x: string); // Error, might not be on b or will be number
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test1.js:7:2
+Error ----------------------------------------------------------------------------------------------------- test1.js:5:2
 
 Cannot cast `b.x` to string because `void` (due to access of non-existent property `x`) [1] is incompatible with
 string [2]. [incompatible-cast]
 
-   test1.js:7:2
-   7| (b.x: string); // Error, might not be on b or will be number
+   test1.js:5:2
+   5| (b.x: string); // Error, might not be on b or will be number
        ^^^ [1]
 
 References:
-   test1.js:7:7
-   7| (b.x: string); // Error, might not be on b or will be number
+   test1.js:5:7
+   5| (b.x: string); // Error, might not be on b or will be number
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test1.js:8:2
+Error ----------------------------------------------------------------------------------------------------- test1.js:6:2
 
 Cannot cast `b.y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test1.js:8:2
-   8| (b.y: string); // Error, might not be on b or will be number
+   test1.js:6:2
+   6| (b.y: string); // Error, might not be on b or will be number
        ^^^
 
 References:
-   test1.js:3:34
-   3| type A = {| x: number |} | {| y: number |}
+   test1.js:1:34
+   1| type A = {| x: number |} | {| y: number |}
                                        ^^^^^^ [1]
-   test1.js:8:7
-   8| (b.y: string); // Error, might not be on b or will be number
+   test1.js:6:7
+   6| (b.y: string); // Error, might not be on b or will be number
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test1.js:8:2
+Error ----------------------------------------------------------------------------------------------------- test1.js:6:2
 
 Cannot cast `b.y` to string because `void` (due to access of non-existent property `y`) [1] is incompatible with
 string [2]. [incompatible-cast]
 
-   test1.js:8:2
-   8| (b.y: string); // Error, might not be on b or will be number
+   test1.js:6:2
+   6| (b.y: string); // Error, might not be on b or will be number
        ^^^ [1]
 
 References:
-   test1.js:8:7
-   8| (b.y: string); // Error, might not be on b or will be number
+   test1.js:6:7
+   6| (b.y: string); // Error, might not be on b or will be number
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test1.js:9:2
+Error ----------------------------------------------------------------------------------------------------- test1.js:7:2
 
 Cannot cast `b.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test1.js:9:2
-   9| (b.z: string); // Error number ~> string
+   test1.js:7:2
+   7| (b.z: string); // Error number ~> string
        ^^^
 
 References:
-   test1.js:6:16
-   6| const b = { z: 0, ...a };
+   test1.js:4:16
+   4| const b = { z: 0, ...a };
                      ^ [1]
-   test1.js:9:7
-   9| (b.z: string); // Error number ~> string
+   test1.js:7:7
+   7| (b.z: string); // Error number ~> string
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test2.js:5:2
+Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
 
 Cannot cast `b.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test2.js:5:2
-   5| (b.x: string);
+   test2.js:3:2
+   3| (b.x: string);
        ^^^
 
 References:
-   test2.js:3:16
-   3| const a = { x: 0 };
+   test2.js:1:16
+   1| const a = { x: 0 };
                      ^ [1]
-   test2.js:5:7
-   5| (b.x: string);
+   test2.js:3:7
+   3| (b.x: string);
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test2.js:6:2
+Error ----------------------------------------------------------------------------------------------------- test2.js:4:2
 
 Cannot cast `b.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test2.js:6:2
-   6| (b.z: string);
+   test2.js:4:2
+   4| (b.z: string);
        ^^^
 
 References:
-   test2.js:4:16
-   4| const b = { z: 0, ...a };
+   test2.js:2:16
+   2| const b = { z: 0, ...a };
                      ^ [1]
-   test2.js:6:7
-   6| (b.z: string);
+   test2.js:4:7
+   4| (b.z: string);
             ^^^^^^ [2]
 
 

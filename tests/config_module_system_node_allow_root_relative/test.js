@@ -1,5 +1,3 @@
-// @flow
-
 // These exist in both user code and node_modules, but user code wins
 import ambiguous from 'ambiguous';
 (ambiguous: empty)

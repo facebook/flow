@@ -1,151 +1,151 @@
-Error --------------------------------------------------------------------------------------------------- cycle1.js:5:12
+Error --------------------------------------------------------------------------------------------------- cycle1.js:3:12
 
 Cannot get `o_loop.q` because property `q` is missing in object literal [1]. [prop-missing]
 
-   cycle1.js:5:12
-   5| if (o_loop.q) {} // error: o_loop.q does not exist (NB: this is `o` exported from here)
+   cycle1.js:3:12
+   3| if (o_loop.q) {} // error: o_loop.q does not exist (NB: this is `o` exported from here)
                  ^
 
 References:
-   cycle1.js:7:18
-   7| export const o = { p: 0 };
+   cycle1.js:5:18
+   5| export const o = { p: 0 };
                        ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- cycle2.js:5:7
+Error ---------------------------------------------------------------------------------------------------- cycle2.js:3:7
 
 Cannot get `o.q` because property `q` is missing in object literal [1]. [prop-missing]
 
-   cycle2.js:5:7
-   5| if (o.q) {} // error: o.q does not exist
+   cycle2.js:3:7
+   3| if (o.q) {} // error: o.q does not exist
             ^
 
 References:
-   cycle1.js:7:18
-   7| export const o = { p: 0 };
+   cycle1.js:5:18
+   5| export const o = { p: 0 };
                        ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- dependent.js:5:7
+Error ------------------------------------------------------------------------------------------------- dependent.js:3:7
 
 Cannot get `o.q` because property `q` is missing in object literal [1]. [prop-missing]
 
-   dependent.js:5:7
-   5| if (o.q) {} // error, o.q not declared
+   dependent.js:3:7
+   3| if (o.q) {} // error, o.q not declared
             ^
 
 References:
-   dependency.js:3:18
-   3| export const o = { p: 0 };
+   dependency.js:1:18
+   1| export const o = { p: 0 };
                        ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:18:11
+Error ---------------------------------------------------------------------------------------------------- test.js:16:11
 
 Cannot get `mixed.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in mixed [1].
 [incompatible-type]
 
-   test.js:18:11
-   18| if (mixed.thisPropDoesNotExist) {} // Error
+   test.js:16:11
+   16| if (mixed.thisPropDoesNotExist) {} // Error
                  ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:3:20
-    3| declare var mixed: mixed;
+   test.js:1:20
+    1| declare var mixed: mixed;
                           ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:29:19
+Error ---------------------------------------------------------------------------------------------------- test.js:27:19
 
 Cannot get `inexactObject.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in object type [1].
 [prop-missing]
 
-   test.js:29:19
-   29| if (inexactObject.thisPropDoesNotExist) {} // Error
+   test.js:27:19
+   27| if (inexactObject.thisPropDoesNotExist) {} // Error
                          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:8:28
-    8| declare var inexactObject: { x: string };
+   test.js:6:28
+    6| declare var inexactObject: { x: string };
                                   ^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:32:17
+Error ---------------------------------------------------------------------------------------------------- test.js:30:17
 
 Cannot get `exactObject.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in object type [1].
 [prop-missing]
 
-   test.js:32:17
-   32| if (exactObject.thisPropDoesNotExist) {} // Error
+   test.js:30:17
+   30| if (exactObject.thisPropDoesNotExist) {} // Error
                        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:9:26
-    9| declare var exactObject: {| x: string |};
+   test.js:7:26
+    7| declare var exactObject: {| x: string |};
                                 ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:35:20
+Error ---------------------------------------------------------------------------------------------------- test.js:33:20
 
 Cannot get `unionOfObjects.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in object type [1].
 [prop-missing]
 
-   test.js:35:20
-   35| if (unionOfObjects.thisPropDoesNotExist) {} // Error
+   test.js:33:20
+   33| if (unionOfObjects.thisPropDoesNotExist) {} // Error
                           ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:11:29
-   11| declare var unionOfObjects: { x: string } | { y: string };
+   test.js:9:29
+    9| declare var unionOfObjects: { x: string } | { y: string };
                                    ^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:40:5
+Error ----------------------------------------------------------------------------------------------------- test.js:38:5
 
 Cannot get `intersectionOfObjects.thisPropDoesNotExist` because: [incompatible-use]
  - Either property `thisPropDoesNotExist` is missing in object type [1].
  - Or property `thisPropDoesNotExist` is missing in object type [2].
 
-   test.js:40:5
-   40| if (intersectionOfObjects.thisPropDoesNotExist) {} // Error
+   test.js:38:5
+   38| if (intersectionOfObjects.thisPropDoesNotExist) {} // Error
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:12:36
-   12| declare var intersectionOfObjects: { x: string } & { y: string };
+   test.js:10:36
+   10| declare var intersectionOfObjects: { x: string } & { y: string };
                                           ^^^^^^^^^^^^^ [1]
-   test.js:12:52
-   12| declare var intersectionOfObjects: { x: string } & { y: string };
+   test.js:10:52
+   10| declare var intersectionOfObjects: { x: string } & { y: string };
                                                           ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:45:13
+Error ---------------------------------------------------------------------------------------------------- test.js:43:13
 
 Cannot get `myClass.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in statics of
 `myClass` [1]. [prop-missing]
 
-   test.js:45:13
-   45| if (myClass.thisPropDoesNotExist) {} // Error
+   test.js:43:13
+   43| if (myClass.thisPropDoesNotExist) {} // Error
                    ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:14:7
-   14| class myClass {}
+   test.js:12:7
+   12| class myClass {}
              ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:47:14
+Error ---------------------------------------------------------------------------------------------------- test.js:45:14
 
 Cannot get `instance.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in `myClass` [1].
 [prop-missing]
 
-   test.js:47:14
-   47| if (instance.thisPropDoesNotExist) {} // Error
+   test.js:45:14
+   45| if (instance.thisPropDoesNotExist) {} // Error
                     ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:15:23
-   15| declare var instance: myClass;
+   test.js:13:23
+   13| declare var instance: myClass;
                              ^^^^^^^ [1]
 
 

@@ -1,5 +1,3 @@
-// @flow
-
 // Sanity check: make sure the parameters are checked as usual
 
 declare function foo(

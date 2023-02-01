@@ -1,5 +1,3 @@
-// @flow
-
 // Array#concat
 'use strict';
 import * as React from 'react';

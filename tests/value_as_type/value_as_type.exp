@@ -1,81 +1,81 @@
-Error --------------------------------------------------------------------------------------------------- test1.js:16:27
+Error --------------------------------------------------------------------------------------------------- test1.js:14:27
 
 Cannot use `HocChild` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   16|   _handleChild = (child: ?HocChild): void => {}; // Error
+   14|   _handleChild = (child: ?HocChild): void => {}; // Error
                                  ^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test2.js:4:5
+Error ----------------------------------------------------------------------------------------------------- test2.js:2:5
 
 Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   4| (0: n);
+   2| (0: n);
           ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test2.js:5:13
+Error ---------------------------------------------------------------------------------------------------- test2.js:3:13
 
 Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   5| ([0]: Array<n>);
+   3| ([0]: Array<n>);
                   ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:4:10
+Error ---------------------------------------------------------------------------------------------------- test3.js:2:10
 
 Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   4| type T = n;
+   2| type T = n;
                ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:5:19
+Error ---------------------------------------------------------------------------------------------------- test3.js:3:19
 
 Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   5| opaque type OT1 = n;
+   3| opaque type OT1 = n;
                         ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:6:18
+Error ---------------------------------------------------------------------------------------------------- test3.js:4:18
 
 Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   6| opaque type OT2: n = 0;
+   4| opaque type OT2: n = 0;
                        ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:7:21
+Error ---------------------------------------------------------------------------------------------------- test3.js:5:21
 
 Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   7| interface I extends n { }
+   5| interface I extends n { }
                           ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:8:20
+Error ---------------------------------------------------------------------------------------------------- test3.js:6:20
 
 Cannot use `n` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   8| class C implements n { }
+   6| class C implements n { }
                          ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test4.js:7:12
+Error ---------------------------------------------------------------------------------------------------- test4.js:5:12
 
 Cannot use `connect` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   7| type Foo = connect<number>;
+   5| type Foo = connect<number>;
                  ^^^^^^^
 
 

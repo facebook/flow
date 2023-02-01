@@ -1,5 +1,3 @@
-// @flow
-
 function length_refinement(a: [string] | [number, string]): void {
   if (a.length === 1) {
     (a[0]: string);

@@ -1,25 +1,25 @@
-Error ------------------------------------------------------------------------------------------------------ main.js:4:2
+Error ------------------------------------------------------------------------------------------------------ main.js:2:2
 
 Cannot cast `<fbt />` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   main.js:4:2
-   4| (<fbt />: string); // Error (the libdef in this test marks fbt as number)
+   main.js:2:2
+   2| (<fbt />: string); // Error (the libdef in this test marks fbt as number)
        ^^^^^^^
 
 References:
    flow-typed/fbt.js:1:12
    1| type Fbt = number
                  ^^^^^^ [1]
-   main.js:4:11
-   4| (<fbt />: string); // Error (the libdef in this test marks fbt as number)
+   main.js:2:11
+   2| (<fbt />: string); // Error (the libdef in this test marks fbt as number)
                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:6:12
+Error ----------------------------------------------------------------------------------------------------- main.js:4:12
 
 Cannot resolve name `unboundVariable`. [cannot-resolve-name]
 
-   6| <fbt desc={unboundVariable}/>; // Error (missing var)
+   4| <fbt desc={unboundVariable}/>; // Error (missing var)
                  ^^^^^^^^^^^^^^^
 
 

@@ -1,18 +1,18 @@
-Error ------------------------------------------------------------------------------------------------ no_source.js:18:7
+Error ------------------------------------------------------------------------------------------------ no_source.js:16:7
 
 Cannot call `x.filter` because property `bar` is missing in `Foo` [1] but exists in `FooPlus` [2] in the first
 parameter. [incompatible-call]
 
-   no_source.js:18:7
-   18|     x.filter(this.z);
+   no_source.js:16:7
+   16|     x.filter(this.z);
              ^^^^^^
 
 References:
-   no_source.js:17:20
-   17|     const x: Array<Foo> = [];
+   no_source.js:15:20
+   15|     const x: Array<Foo> = [];
                           ^^^ [1]
-   no_source.js:15:12
-   15|   +z : (x: FooPlus) => boolean = (x) => { return true; }
+   no_source.js:13:12
+   13|   +z : (x: FooPlus) => boolean = (x) => { return true; }
                   ^^^^^^^ [2]
 
 

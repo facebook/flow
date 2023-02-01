@@ -439,7 +439,7 @@ References:
                ^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------ truncate.js:108:5
+Error ------------------------------------------------------------------------------------------------ truncate.js:106:5
 
 Cannot assign `"hello"` to `y` because: [incompatible-type]
  - Either string [1] is incompatible with string literal `a1` [2].
@@ -498,163 +498,163 @@ Only showing the the first 50 branches. To see all branches, re-run Flow with --
 All writes to `y` must be compatible with the type of its initializer [52]. Add an annotation to `y` [52] if a different
 type is desired.
 
-   truncate.js:108:5
-   108| y = "hello"; // error;
+   truncate.js:106:5
+   106| y = "hello"; // error;
             ^^^^^^^ [1]
 
 References:
-   truncate.js:4:5
-     4|   | 'a1'
+   truncate.js:2:5
+     2|   | 'a1'
             ^^^^ [2]
-   truncate.js:5:5
-     5|   | 'a2'
+   truncate.js:3:5
+     3|   | 'a2'
             ^^^^ [3]
-   truncate.js:6:5
-     6|   | 'a3'
+   truncate.js:4:5
+     4|   | 'a3'
             ^^^^ [4]
-   truncate.js:7:5
-     7|   | 'a4'
+   truncate.js:5:5
+     5|   | 'a4'
             ^^^^ [5]
-   truncate.js:8:5
-     8|   | 'a5'
+   truncate.js:6:5
+     6|   | 'a5'
             ^^^^ [6]
-   truncate.js:9:5
-     9|   | 'a6'
+   truncate.js:7:5
+     7|   | 'a6'
             ^^^^ [7]
-   truncate.js:10:5
-    10|   | 'a7'
+   truncate.js:8:5
+     8|   | 'a7'
             ^^^^ [8]
-   truncate.js:11:5
-    11|   | 'a8'
+   truncate.js:9:5
+     9|   | 'a8'
             ^^^^ [9]
-   truncate.js:12:5
-    12|   | 'a9'
+   truncate.js:10:5
+    10|   | 'a9'
             ^^^^ [10]
-   truncate.js:13:5
-    13|   | 'a10'
+   truncate.js:11:5
+    11|   | 'a10'
             ^^^^^ [11]
-   truncate.js:14:5
-    14|   | 'a11'
+   truncate.js:12:5
+    12|   | 'a11'
             ^^^^^ [12]
-   truncate.js:15:5
-    15|   | 'a12'
+   truncate.js:13:5
+    13|   | 'a12'
             ^^^^^ [13]
-   truncate.js:16:5
-    16|   | 'a13'
+   truncate.js:14:5
+    14|   | 'a13'
             ^^^^^ [14]
-   truncate.js:17:5
-    17|   | 'a14'
+   truncate.js:15:5
+    15|   | 'a14'
             ^^^^^ [15]
-   truncate.js:18:5
-    18|   | 'a15'
+   truncate.js:16:5
+    16|   | 'a15'
             ^^^^^ [16]
-   truncate.js:19:5
-    19|   | 'a16'
+   truncate.js:17:5
+    17|   | 'a16'
             ^^^^^ [17]
-   truncate.js:20:5
-    20|   | 'a17'
+   truncate.js:18:5
+    18|   | 'a17'
             ^^^^^ [18]
-   truncate.js:21:5
-    21|   | 'a18'
+   truncate.js:19:5
+    19|   | 'a18'
             ^^^^^ [19]
-   truncate.js:22:5
-    22|   | 'a19'
+   truncate.js:20:5
+    20|   | 'a19'
             ^^^^^ [20]
-   truncate.js:23:5
-    23|   | 'a20'
+   truncate.js:21:5
+    21|   | 'a20'
             ^^^^^ [21]
-   truncate.js:24:5
-    24|   | 'a21'
+   truncate.js:22:5
+    22|   | 'a21'
             ^^^^^ [22]
-   truncate.js:25:5
-    25|   | 'a22'
+   truncate.js:23:5
+    23|   | 'a22'
             ^^^^^ [23]
-   truncate.js:26:5
-    26|   | 'a23'
+   truncate.js:24:5
+    24|   | 'a23'
             ^^^^^ [24]
-   truncate.js:27:5
-    27|   | 'a24'
+   truncate.js:25:5
+    25|   | 'a24'
             ^^^^^ [25]
-   truncate.js:28:5
-    28|   | 'a25'
+   truncate.js:26:5
+    26|   | 'a25'
             ^^^^^ [26]
-   truncate.js:29:5
-    29|   | 'a26'
+   truncate.js:27:5
+    27|   | 'a26'
             ^^^^^ [27]
-   truncate.js:30:5
-    30|   | 'a27'
+   truncate.js:28:5
+    28|   | 'a27'
             ^^^^^ [28]
-   truncate.js:31:5
-    31|   | 'a28'
+   truncate.js:29:5
+    29|   | 'a28'
             ^^^^^ [29]
-   truncate.js:32:5
-    32|   | 'a29'
+   truncate.js:30:5
+    30|   | 'a29'
             ^^^^^ [30]
-   truncate.js:33:5
-    33|   | 'a30'
+   truncate.js:31:5
+    31|   | 'a30'
             ^^^^^ [31]
-   truncate.js:34:5
-    34|   | 'a31'
+   truncate.js:32:5
+    32|   | 'a31'
             ^^^^^ [32]
-   truncate.js:35:5
-    35|   | 'a32'
+   truncate.js:33:5
+    33|   | 'a32'
             ^^^^^ [33]
-   truncate.js:36:5
-    36|   | 'a33'
+   truncate.js:34:5
+    34|   | 'a33'
             ^^^^^ [34]
-   truncate.js:37:5
-    37|   | 'a34'
+   truncate.js:35:5
+    35|   | 'a34'
             ^^^^^ [35]
-   truncate.js:38:5
-    38|   | 'a35'
+   truncate.js:36:5
+    36|   | 'a35'
             ^^^^^ [36]
-   truncate.js:39:5
-    39|   | 'a36'
+   truncate.js:37:5
+    37|   | 'a36'
             ^^^^^ [37]
-   truncate.js:40:5
-    40|   | 'a37'
+   truncate.js:38:5
+    38|   | 'a37'
             ^^^^^ [38]
-   truncate.js:41:5
-    41|   | 'a38'
+   truncate.js:39:5
+    39|   | 'a38'
             ^^^^^ [39]
-   truncate.js:42:5
-    42|   | 'a39'
+   truncate.js:40:5
+    40|   | 'a39'
             ^^^^^ [40]
-   truncate.js:43:5
-    43|   | 'a40'
+   truncate.js:41:5
+    41|   | 'a40'
             ^^^^^ [41]
-   truncate.js:44:5
-    44|   | 'a41'
+   truncate.js:42:5
+    42|   | 'a41'
             ^^^^^ [42]
-   truncate.js:45:5
-    45|   | 'a42'
+   truncate.js:43:5
+    43|   | 'a42'
             ^^^^^ [43]
-   truncate.js:46:5
-    46|   | 'a43'
+   truncate.js:44:5
+    44|   | 'a43'
             ^^^^^ [44]
-   truncate.js:47:5
-    47|   | 'a44'
+   truncate.js:45:5
+    45|   | 'a44'
             ^^^^^ [45]
-   truncate.js:48:5
-    48|   | 'a45'
+   truncate.js:46:5
+    46|   | 'a45'
             ^^^^^ [46]
-   truncate.js:49:5
-    49|   | 'a46'
+   truncate.js:47:5
+    47|   | 'a46'
             ^^^^^ [47]
-   truncate.js:50:5
-    50|   | 'a47'
+   truncate.js:48:5
+    48|   | 'a47'
             ^^^^^ [48]
-   truncate.js:51:5
-    51|   | 'a48'
+   truncate.js:49:5
+    49|   | 'a48'
             ^^^^^ [49]
-   truncate.js:52:5
-    52|   | 'a49'
+   truncate.js:50:5
+    50|   | 'a49'
             ^^^^^ [50]
-   truncate.js:53:5
-    53|   | 'a50'
+   truncate.js:51:5
+    51|   | 'a50'
             ^^^^^ [51]
-   truncate.js:107:5
-   107| var y = x;
+   truncate.js:105:5
+   105| var y = x;
             ^ [52]
 
 

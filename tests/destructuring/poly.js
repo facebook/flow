@@ -1,5 +1,3 @@
-// @flow
-
 function obj_pattern<X>({ prop } : { prop: X }) {} // prop: X
 type Prop<X> = { prop: X };
 function obj_pattern2<X>({ prop } : Prop<X>) {} // prop: X

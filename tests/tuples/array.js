@@ -1,5 +1,3 @@
-// @flow
-
 function foo1(x: Array<number>): [number, ?number] {
   return x; // Error, can't enforce arity when flowing array to tuple
 }

@@ -1,5 +1,3 @@
-// @flow
-
 declare var y: mixed;
 
 // Sanity check: this should fail, because the preficate function

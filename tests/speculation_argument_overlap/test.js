@@ -1,5 +1,3 @@
-// @flow
-
 declare function overload(key: boolean): string;
 declare function overload(key: boolean): number;
 

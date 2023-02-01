@@ -1,5 +1,3 @@
-// @flow
-
 declare class C1 {
   f: number;
 }

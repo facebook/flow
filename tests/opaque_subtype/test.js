@@ -1,5 +1,3 @@
-// @flow
-
 import type {SuperType} from './super';
 export opaque type Counter: number = number;
 export opaque type OtherCounter: number = number;

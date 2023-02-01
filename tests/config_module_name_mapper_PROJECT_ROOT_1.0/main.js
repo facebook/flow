@@ -1,5 +1,3 @@
-// @flow
-
 import {test} from 'testmodule';
 
 var a: number = test;

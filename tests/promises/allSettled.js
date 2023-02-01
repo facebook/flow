@@ -1,5 +1,3 @@
-// @flow
-
 // First argument is required
 Promise.allSettled<Array<mixed>>(); // Error: expected $Iterable instead of undefined (too few arguments)
 

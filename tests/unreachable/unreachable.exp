@@ -1,16 +1,16 @@
-Error ------------------------------------------------------------------------------------------ jsx_unreachable.js:3:19
+Error ------------------------------------------------------------------------------------------ jsx_unreachable.js:1:19
 
 Cannot resolve module `react`. [cannot-resolve-module]
 
-   3| import React from 'react';
+   1| import React from 'react';
                         ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- jsx_unreachable.js:9:3
+Error ------------------------------------------------------------------------------------------- jsx_unreachable.js:7:3
 
 Unreachable code. [unreachable-code]
 
-   9|   <Component />;
+   7|   <Component />;
         ^^^^^^^^^^^^^^
 
 

@@ -1,4 +1,3 @@
-// @flow
 // Same file as test.js in the root directory.
 // This tests that the paths really are root-relative
 

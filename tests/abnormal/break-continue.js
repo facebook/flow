@@ -1,5 +1,3 @@
-// @flow
-
 function foo() {
     while(true) { break; }
 }

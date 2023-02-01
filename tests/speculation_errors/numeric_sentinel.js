@@ -1,5 +1,3 @@
-// @flow
-
 type INT_SENTINELS =
   | {type: 1, p: number}
   | {type: 2, p: string};

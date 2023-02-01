@@ -1,4 +1,3 @@
-// @flow
 class A<N> {
   prop : N;
 

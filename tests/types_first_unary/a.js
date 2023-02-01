@@ -1,4 +1,3 @@
-// @flow
 export type T1 = -1;
 export type T2 = false;
 export type T3 = 1;

@@ -1,5 +1,3 @@
-// @flow
-
 export type SUIActionMenuUniform = {|
   backgroundColor: string,
   borderColor: string,

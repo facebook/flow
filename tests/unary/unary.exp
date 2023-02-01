@@ -98,127 +98,127 @@ References:
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:12:5
+Error --------------------------------------------------------------------------------------------------- update.js:10:5
 
 Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
-   update.js:12:5
-   12|     y++; // error, we don't allow coercion here
+   update.js:10:5
+   10|     y++; // error, we don't allow coercion here
            ^
 
 References:
-   update.js:11:15
-   11|   function(y: string) {
+   update.js:9:15
+    9|   function(y: string) {
                      ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:18:5
+Error --------------------------------------------------------------------------------------------------- update.js:16:5
 
 Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
-   update.js:18:5
-   18|     y--; // error, we don't allow coercion here
+   update.js:16:5
+   16|     y--; // error, we don't allow coercion here
            ^
 
 References:
-   update.js:17:15
-   17|   function(y: string) {
+   update.js:15:15
+   15|   function(y: string) {
                      ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:22:7
+Error --------------------------------------------------------------------------------------------------- update.js:20:7
 
 Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
-   update.js:22:7
-   22|     ++y; // error, we don't allow coercion here
+   update.js:20:7
+   20|     ++y; // error, we don't allow coercion here
              ^
 
 References:
-   update.js:21:15
-   21|   function(y: string) {
+   update.js:19:15
+   19|   function(y: string) {
                      ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:26:7
+Error --------------------------------------------------------------------------------------------------- update.js:24:7
 
 Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
-   update.js:26:7
-   26|     --y; // error, we don't allow coercion here
+   update.js:24:7
+   24|     --y; // error, we don't allow coercion here
              ^
 
 References:
-   update.js:25:15
-   25|   function(y: string) {
+   update.js:23:15
+   23|   function(y: string) {
                      ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:31:5
+Error --------------------------------------------------------------------------------------------------- update.js:29:5
 
 Cannot reassign constant `y` [1]. [reassign-const]
 
-   update.js:31:5
-   31|     y++; // error, can't update const
+   update.js:29:5
+   29|     y++; // error, can't update const
            ^
 
 References:
-   update.js:30:11
-   30|     const y = 123;
+   update.js:28:11
+   28|     const y = 123;
                  ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:32:5
+Error --------------------------------------------------------------------------------------------------- update.js:30:5
 
 Cannot reassign constant `y` [1]. [reassign-const]
 
-   update.js:32:5
-   32|     y--; // error, can't update const
+   update.js:30:5
+   30|     y--; // error, can't update const
            ^
 
 References:
-   update.js:30:11
-   30|     const y = 123;
+   update.js:28:11
+   28|     const y = 123;
                  ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:36:7
+Error --------------------------------------------------------------------------------------------------- update.js:34:7
 
 Cannot update `o.y` because property `y` is not writable. [cannot-write]
 
-   36|     o.y++; // error, can't update read-only property
+   34|     o.y++; // error, can't update read-only property
              ^
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:37:7
+Error --------------------------------------------------------------------------------------------------- update.js:35:7
 
 Cannot update `o.y` because property `y` is not writable. [cannot-write]
 
-   37|     o.y--; // error, can't update read-only property
+   35|     o.y--; // error, can't update read-only property
              ^
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:41:7
+Error --------------------------------------------------------------------------------------------------- update.js:39:7
 
 Cannot get `o.y` because property `y` is not readable. [cannot-read]
 
-   41|     o.y++; // error, can't read write-only property
+   39|     o.y++; // error, can't read write-only property
              ^
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:47:5
+Error --------------------------------------------------------------------------------------------------- update.js:45:5
 
 Cannot update `xs[0]` because read-only arrays cannot be written to. [cannot-write]
 
-   47|     xs[0]++;
+   45|     xs[0]++;
            ^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- update.js:48:5
+Error --------------------------------------------------------------------------------------------------- update.js:46:5
 
 Cannot update `xs[0]` because read-only arrays cannot be written to. [cannot-write]
 
-   48|     xs[0]--;
+   46|     xs[0]--;
            ^^^^^
 
 

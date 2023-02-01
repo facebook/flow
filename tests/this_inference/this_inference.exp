@@ -1,122 +1,122 @@
-Error -------------------------------------------------------------------------------------------- class_methods.js:8:10
+Error -------------------------------------------------------------------------------------------- class_methods.js:6:10
 
 Cannot call `{...}.method` because object literal [1] is incompatible with `A` [2]. [incompatible-call]
 
-   class_methods.js:8:10
-   8| let _1 = {prop : "", method : (new A()).x }.method(); // object incompatible with A
+   class_methods.js:6:10
+   6| let _1 = {prop : "", method : (new A()).x }.method(); // object incompatible with A
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   class_methods.js:3:7
-   3| class A {
+   class_methods.js:1:7
+   1| class A {
             ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_methods.js:8:41
+Error -------------------------------------------------------------------------------------------- class_methods.js:6:41
 
 Cannot get `(new A()).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_methods.js:8:41
-   8| let _1 = {prop : "", method : (new A()).x }.method(); // object incompatible with A
+   class_methods.js:6:41
+   6| let _1 = {prop : "", method : (new A()).x }.method(); // object incompatible with A
                                               ^ [1]
 
 References:
-   class_methods.js:5:5
-   5|     x() : number { return this.prop; }
+   class_methods.js:3:5
+   3|     x() : number { return this.prop; }
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- class_methods.js:15:10
+Error ------------------------------------------------------------------------------------------- class_methods.js:13:10
 
 Cannot call `{...}.method` because object literal [1] is incompatible with `B` [2]. [incompatible-call]
 
-   class_methods.js:15:10
-   15| let _2 = {prop : "", method : (new B()).x }.method(); // object incompatible with B
+   class_methods.js:13:10
+   13| let _2 = {prop : "", method : (new B()).x }.method(); // object incompatible with B
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   class_methods.js:10:7
-   10| class B {
+   class_methods.js:8:7
+    8| class B {
              ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- class_methods.js:15:41
+Error ------------------------------------------------------------------------------------------- class_methods.js:13:41
 
 Cannot get `(new B()).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_methods.js:15:41
-   15| let _2 = {prop : "", method : (new B()).x }.method(); // object incompatible with B
+   class_methods.js:13:41
+   13| let _2 = {prop : "", method : (new B()).x }.method(); // object incompatible with B
                                                ^ [1]
 
 References:
-   class_methods.js:12:5
-   12|     x() : number { return 3; }
+   class_methods.js:10:5
+   10|     x() : number { return 3; }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- class_methods.js:23:15
+Error ------------------------------------------------------------------------------------------- class_methods.js:21:15
 
 Cannot get `(new A).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_methods.js:23:15
-   23| c.x = (new A).x;
+   class_methods.js:21:15
+   21| c.x = (new A).x;
                      ^ [1]
 
 References:
-   class_methods.js:5:5
-    5|     x() : number { return this.prop; }
+   class_methods.js:3:5
+    3|     x() : number { return this.prop; }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_methods.js:24:2
+Error -------------------------------------------------------------------------------------------- class_methods.js:22:2
 
 Cannot call `c.x` because `C` [1] is incompatible with `A` [2]. [incompatible-call]
 
-   class_methods.js:24:2
-   24| (c.x()); // C incompatible with A
+   class_methods.js:22:2
+   22| (c.x()); // C incompatible with A
         ^
 
 References:
-   class_methods.js:22:9
-   22| let c = new C();
+   class_methods.js:20:9
+   20| let c = new C();
                ^^^^^^^ [1]
-   class_methods.js:3:7
-    3| class A {
+   class_methods.js:1:7
+    1| class A {
              ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- class_methods.js:30:22
+Error ------------------------------------------------------------------------------------------- class_methods.js:28:22
 
 Cannot get `this.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
-   class_methods.js:30:22
-   30|         let m = this.m;
+   class_methods.js:28:22
+   28|         let m = this.m;
                             ^ [1]
 
 References:
-   class_methods.js:28:5
-   28|     m(): number { return this.x }
+   class_methods.js:26:5
+   26|     m(): number { return this.x }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- class_methods.js:31:17
+Error ------------------------------------------------------------------------------------------- class_methods.js:29:17
 
 Cannot call `m` because global object [1] is incompatible with `this` [2]. [incompatible-call]
 
-   class_methods.js:31:17
-   31|         let z = m(); // global object incompatible with D
+   class_methods.js:29:17
+   29|         let z = m(); // global object incompatible with D
                        ^
 
 References:
-   class_methods.js:31:17
-   31|         let z = m(); // global object incompatible with D
+   class_methods.js:29:17
+   29|         let z = m(); // global object incompatible with D
                        ^^^ [1]
-   class_methods.js:26:7
-   26| class D {
+   class_methods.js:24:7
+   24| class D {
              ^ [2]
 
 

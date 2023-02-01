@@ -1,5 +1,3 @@
-// @flow
-
 // All forms of functions are hoisted
 
 f1;

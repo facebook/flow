@@ -1,6 +1,3 @@
-// @flow
-
-
 type T = 'A' | 'B';
 
 const E = {A: 'A', B: 'B'};

@@ -1,5 +1,3 @@
-// @flow
-
 var a = { p: 0 };
 (a.q ? a.q : "foo");
 (a.q: mixed); // An error here

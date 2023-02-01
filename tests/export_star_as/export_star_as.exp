@@ -1,34 +1,34 @@
-Error ----------------------------------------------------------------------------------------------------- dest.js:6:17
+Error ----------------------------------------------------------------------------------------------------- dest.js:4:17
 
 Cannot assign `source.num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   dest.js:6:17
-   6| var b: string = source.num; // Error: num ~> string
+   dest.js:4:17
+   4| var b: string = source.num; // Error: num ~> string
                       ^^^^^^^^^^
 
 References:
-   source.js:4:20
-   4| export const num = 42;
+   source.js:2:20
+   2| export const num = 42;
                          ^^ [1]
-   dest.js:6:8
-   6| var b: string = source.num; // Error: num ~> string
+   dest.js:4:8
+   4| var b: string = source.num; // Error: num ~> string
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dest.js:9:17
+Error ----------------------------------------------------------------------------------------------------- dest.js:7:17
 
 Cannot assign `source.str` to `d` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   dest.js:9:17
-   9| var d: number = source.str; // Error: num ~> string
+   dest.js:7:17
+   7| var d: number = source.str; // Error: num ~> string
                       ^^^^^^^^^^
 
 References:
-   source.js:3:20
-   3| export const str = 'asdf';
+   source.js:1:20
+   1| export const str = 'asdf';
                          ^^^^^^ [1]
-   dest.js:9:8
-   9| var d: number = source.str; // Error: num ~> string
+   dest.js:7:8
+   7| var d: number = source.str; // Error: num ~> string
              ^^^^^^ [2]
 
 

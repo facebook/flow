@@ -1,5 +1,3 @@
-// @flow
-
 type T = $ObjMapi<{ f: number }, <K>(K) => K>;
 declare var t: T;
 

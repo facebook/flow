@@ -1,5 +1,3 @@
-// @flow
-
 export type CommitTemplate<TCommitState> = {
   title: string | (TCommitState => string),
   summary: string | (TCommitState => string),

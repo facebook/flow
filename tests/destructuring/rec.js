@@ -1,5 +1,3 @@
-// @flow
-
 // Make sure that destructuring doesn't cause infinite loops when combined with
 // funny doses of repositioning
 

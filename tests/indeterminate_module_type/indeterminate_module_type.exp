@@ -1,138 +1,138 @@
-Error ---------------------------------------------------------------------------------------------- cjs_after_es.js:3:1
+Error ---------------------------------------------------------------------------------------------- cjs_after_es.js:2:1
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
 module! [module-type-conflict]
 
-   3| module.exports = 0; // error
+   2| module.exports = 0; // error
       ^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- cjs_after_es.js:4:2
+Error ---------------------------------------------------------------------------------------------- cjs_after_es.js:3:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   cjs_after_es.js:4:2
-   4| (0: string); // error
+   cjs_after_es.js:3:2
+   3| (0: string); // error
        ^ [1]
 
 References:
-   cjs_after_es.js:4:5
-   4| (0: string); // error
+   cjs_after_es.js:3:5
+   3| (0: string); // error
           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- es_decl_after_cjs.js:3:1
+Error ----------------------------------------------------------------------------------------- es_decl_after_cjs.js:2:1
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
 module! [module-type-conflict]
 
-   3| export const x = 0; // error
+   2| export const x = 0; // error
       ^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- es_decl_after_cjs.js:4:2
+Error ----------------------------------------------------------------------------------------- es_decl_after_cjs.js:3:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   es_decl_after_cjs.js:4:2
-   4| (0: string); // error
+   es_decl_after_cjs.js:3:2
+   3| (0: string); // error
        ^ [1]
 
 References:
-   es_decl_after_cjs.js:4:5
-   4| (0: string); // error
+   es_decl_after_cjs.js:3:5
+   3| (0: string); // error
           ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- es_default_after_cjs.js:3:1
+Error -------------------------------------------------------------------------------------- es_default_after_cjs.js:2:1
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
 module! [module-type-conflict]
 
-   3| export default 0; // error
+   2| export default 0; // error
       ^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------- es_default_after_cjs.js:4:2
+Error -------------------------------------------------------------------------------------- es_default_after_cjs.js:3:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   es_default_after_cjs.js:4:2
-   4| (0: string); // error
+   es_default_after_cjs.js:3:2
+   3| (0: string); // error
        ^ [1]
 
 References:
-   es_default_after_cjs.js:4:5
-   4| (0: string); // error
+   es_default_after_cjs.js:3:5
+   3| (0: string); // error
           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- es_ns_after_cjs.js:3:1
+Error ------------------------------------------------------------------------------------------- es_ns_after_cjs.js:2:1
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
 module! [module-type-conflict]
 
-   3| export * as ns from "./dependency"; // error
+   2| export * as ns from "./dependency"; // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- es_ns_after_cjs.js:4:2
+Error ------------------------------------------------------------------------------------------- es_ns_after_cjs.js:3:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   es_ns_after_cjs.js:4:2
-   4| (0: string); // error
+   es_ns_after_cjs.js:3:2
+   3| (0: string); // error
        ^ [1]
 
 References:
-   es_ns_after_cjs.js:4:5
-   4| (0: string); // error
+   es_ns_after_cjs.js:3:5
+   3| (0: string); // error
           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- es_spec_after_cjs.js:3:1
+Error ----------------------------------------------------------------------------------------- es_spec_after_cjs.js:2:1
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
 module! [module-type-conflict]
 
-   3| export {x} from "./dependency"; // error
+   2| export {x} from "./dependency"; // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- es_spec_after_cjs.js:4:2
+Error ----------------------------------------------------------------------------------------- es_spec_after_cjs.js:3:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   es_spec_after_cjs.js:4:2
-   4| (0: string); // error
+   es_spec_after_cjs.js:3:2
+   3| (0: string); // error
        ^ [1]
 
 References:
-   es_spec_after_cjs.js:4:5
-   4| (0: string); // error
+   es_spec_after_cjs.js:3:5
+   3| (0: string); // error
           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- es_star_after_cjs.js:3:1
+Error ----------------------------------------------------------------------------------------- es_star_after_cjs.js:2:1
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
 module! [module-type-conflict]
 
-   3| export * from "./dependency"; // error
+   2| export * from "./dependency"; // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- es_star_after_cjs.js:4:2
+Error ----------------------------------------------------------------------------------------- es_star_after_cjs.js:3:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   es_star_after_cjs.js:4:2
-   4| (0: string); // error
+   es_star_after_cjs.js:3:2
+   3| (0: string); // error
        ^ [1]
 
 References:
-   es_star_after_cjs.js:4:5
-   4| (0: string); // error
+   es_star_after_cjs.js:3:5
+   3| (0: string); // error
           ^^^^^^ [2]
 
 

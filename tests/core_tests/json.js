@@ -1,5 +1,3 @@
-// @flow
-
 // Can't construct
 new JSON(); // ERROR
 

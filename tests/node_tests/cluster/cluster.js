@@ -1,5 +1,3 @@
-// @flow
-
 import type {ClusterSettings, ClusterSettingsOpt} from 'cluster';
 
 const cluster = require('cluster');

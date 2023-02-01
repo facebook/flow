@@ -1,5 +1,3 @@
-// @flow
-
 declare class C {
     static x: number;
     static foo(x: number): void;

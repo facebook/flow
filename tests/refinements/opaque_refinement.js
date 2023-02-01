@@ -1,5 +1,3 @@
-// @flow
-
 import type {Opaque, State} from './opaque_type.js'
 
 type Obj = {[id: Opaque]: void};

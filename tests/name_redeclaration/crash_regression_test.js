@@ -1,5 +1,3 @@
-// @flow
-
 // The following code used to cause a crash, but they have been fixed now.
 
 function missing_provider_crash_fixed() {

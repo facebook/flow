@@ -1,5 +1,3 @@
-// @flow
-
 declare class MyPromise {
   constructor(_: mixed): void;
 }

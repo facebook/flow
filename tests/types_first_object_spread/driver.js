@@ -1,5 +1,3 @@
-// @flow
-
 import type { B as B1 } from './test1';
 const b1 = require('./test1');
 

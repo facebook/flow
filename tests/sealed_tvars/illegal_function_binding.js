@@ -1,5 +1,3 @@
-// @flow
-
 function a() {}
 function a() {} // error: illegal binding
 

@@ -1,5 +1,3 @@
-// @flow
-
 let n = 0;
 type T = n;
 opaque type OT1 = n;

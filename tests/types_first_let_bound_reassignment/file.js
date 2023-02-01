@@ -1,5 +1,3 @@
-// @flow
-
 import * as Lib from './lib';
 
 class C {}

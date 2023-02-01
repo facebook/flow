@@ -1,5 +1,3 @@
-// @flow
-
 import type {InputDefinition} from './test2';
 
 type InputNodeProps = {

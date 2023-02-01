@@ -1,160 +1,160 @@
-Error --------------------------------------------------------------------------- predicate_with_non_bool_annot.js:10:37
+Error ---------------------------------------------------------------------------- predicate_with_non_bool_annot.js:8:37
 
 Cannot return `(x === 'a') || (x === 'c') ? x : null` because string literal `c` [1] is incompatible with literal
 union [2]. [incompatible-return]
 
-   predicate_with_non_bool_annot.js:10:37
-   10|   return (x === 'a' || x === 'c') ? x : null; // error: 'c' incompatible with T
-                                           ^
+   predicate_with_non_bool_annot.js:8:37
+   8|   return (x === 'a' || x === 'c') ? x : null; // error: 'c' incompatible with T
+                                          ^
 
 References:
-   predicate_with_non_bool_annot.js:9:25
-    9| function validate_2(x: ?string): ?T %checks {
-                               ^^^^^^ [1]
-   predicate_with_non_bool_annot.js:9:35
-    9| function validate_2(x: ?string): ?T %checks {
-                                         ^ [2]
+   predicate_with_non_bool_annot.js:7:25
+   7| function validate_2(x: ?string): ?T %checks {
+                              ^^^^^^ [1]
+   predicate_with_non_bool_annot.js:7:35
+   7| function validate_2(x: ?string): ?T %checks {
+                                        ^ [2]
 
 
-Error ------------------------------------------------------------------------------------- sanity-multi-params.js:10:12
+Error -------------------------------------------------------------------------------------- sanity-multi-params.js:8:12
 
 Cannot return `x` because array type [1] is incompatible with string [2]. [incompatible-return]
 
-   sanity-multi-params.js:10:12
-   10|     return x;
-                  ^
+   sanity-multi-params.js:8:12
+   8|     return x;
+                 ^
 
 References:
-   sanity-multi-params.js:8:26
-    8| function foo(x: string | Array<string>): string {
-                                ^^^^^^^^^^^^^ [1]
-   sanity-multi-params.js:8:42
-    8| function foo(x: string | Array<string>): string {
-                                                ^^^^^^ [2]
+   sanity-multi-params.js:6:26
+   6| function foo(x: string | Array<string>): string {
+                               ^^^^^^^^^^^^^ [1]
+   sanity-multi-params.js:6:42
+   6| function foo(x: string | Array<string>): string {
+                                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- sanity-multi-params.js:12:14
+Error ------------------------------------------------------------------------------------- sanity-multi-params.js:10:14
 
 Cannot call `x.join` because property `join` is missing in `String` [1]. [prop-missing]
 
-   sanity-multi-params.js:12:14
-   12|     return x.join();
+   sanity-multi-params.js:10:14
+   10|     return x.join();
                     ^^^^
 
 References:
-   sanity-multi-params.js:8:17
-    8| function foo(x: string | Array<string>): string {
+   sanity-multi-params.js:6:17
+    6| function foo(x: string | Array<string>): string {
                        ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- sanity-ordering.js:15:41
+Error ----------------------------------------------------------------------------------------- sanity-ordering.js:13:41
 
 Cannot assign object literal to `head[key]` because an index signature declaring the expected key / value type is
 missing in object type [1]. [prop-missing]
 
-   sanity-ordering.js:15:41
-   15|     head = head[key] || create && (head[key] = {}); // error: no indexed type
+   sanity-ordering.js:13:41
+   13|     head = head[key] || create && (head[key] = {}); // error: no indexed type
                                                ^^^
 
 References:
-   sanity-ordering.js:10:26
-   10| function dotAccess(head: { page: ?Object; }, create?: mixed) {
+   sanity-ordering.js:8:26
+    8| function dotAccess(head: { page: ?Object; }, create?: mixed) {
                                 ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:13:12
+Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:11:12
 
 Cannot return `x` because array type [1] is incompatible with string [2]. [incompatible-return]
 
-   sanity-unbound-var.js:13:12
-   13|     return x;
+   sanity-unbound-var.js:11:12
+   11|     return x;
                   ^
 
 References:
-   sanity-unbound-var.js:11:26
-   11| function foo(x: string | Array<string>): string {
+   sanity-unbound-var.js:9:26
+    9| function foo(x: string | Array<string>): string {
                                 ^^^^^^^^^^^^^ [1]
-   sanity-unbound-var.js:11:42
-   11| function foo(x: string | Array<string>): string {
+   sanity-unbound-var.js:9:42
+    9| function foo(x: string | Array<string>): string {
                                                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:15:14
+Error -------------------------------------------------------------------------------------- sanity-unbound-var.js:13:14
 
 Cannot call `x.join` because property `join` is missing in `String` [1]. [prop-missing]
 
-   sanity-unbound-var.js:15:14
-   15|     return x.join();
+   sanity-unbound-var.js:13:14
+   13|     return x.join();
                     ^^^^
 
 References:
-   sanity-unbound-var.js:11:17
-   11| function foo(x: string | Array<string>): string {
+   sanity-unbound-var.js:9:17
+    9| function foo(x: string | Array<string>): string {
                        ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- sanity.js:5:27
+Error --------------------------------------------------------------------------------------------------- sanity.js:3:27
 
 Cannot declare predicate when a function body is present. [unsupported-syntax]
 
-   5| function check(y: mixed): %checks(typeof y === "string") {
+   3| function check(y: mixed): %checks(typeof y === "string") {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- sanity.js:16:48
+Error -------------------------------------------------------------------------------------------------- sanity.js:14:48
 
 Invalid body for predicate function. Expected a simple return statement as body. [unsupported-syntax]
 
                                                       v
-   16| function indirect_is_number(y: mixed): %checks {
-   17|   var y = 1;
-   18|   return typeof y === "number";
-   19| }
+   14| function indirect_is_number(y: mixed): %checks {
+   15|   var y = 1;
+   16|   return typeof y === "number";
+   17| }
        ^
 
 
-Error -------------------------------------------------------------------------------------------------- wf-eval.js:5:42
+Error -------------------------------------------------------------------------------------------------- wf-eval.js:3:42
 
 The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
 [unsupported-syntax]
 
-   5| function f3<V>(x: V): $Call<<V>(V) => V, V> %checks { return x; } // error
+   3| function f3<V>(x: V): $Call<<V>(V) => V, V> %checks { return x; } // error
                                                ^
 
 
-Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:3:23
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:1:23
 
 The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
 [unsupported-syntax]
 
-   3| function f1<X>(x: X): X %checks { return x; } // error: poly return in %checks
+   1| function f1<X>(x: X): X %checks { return x; } // error: poly return in %checks
                             ^
 
 
-Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:4:24
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:2:24
 
 The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
 [unsupported-syntax]
 
-   4| function f2<X>(x: X): [X, X] %checks { return [x, x]; } // error: poly return in %checks
+   2| function f2<X>(x: X): [X, X] %checks { return [x, x]; } // error: poly return in %checks
                              ^
 
 
-Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:4:27
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:2:27
 
 The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
 [unsupported-syntax]
 
-   4| function f2<X>(x: X): [X, X] %checks { return [x, x]; } // error: poly return in %checks
+   2| function f2<X>(x: X): [X, X] %checks { return [x, x]; } // error: poly return in %checks
                                 ^
 
 
-Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:7:30
+Error ------------------------------------------------------------------------------------------- wf-polymorphic.js:5:30
 
 The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
 [unsupported-syntax]
 
-   7| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
+   5| declare function g<X>(x: X): X %checks(x); // error: poly return in %checks
                                    ^
 
 

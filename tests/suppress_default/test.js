@@ -1,5 +1,3 @@
-// @flow
-
 //$FlowFixMe
 (3 : string);  // no error
 

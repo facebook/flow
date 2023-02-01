@@ -1,146 +1,146 @@
-Error --------------------------------------------------------------------------------------------------------- b.js:7:2
+Error --------------------------------------------------------------------------------------------------------- b.js:5:2
 
 Cannot cast `a.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   b.js:7:2
-   7| (a.x: string);
+   b.js:5:2
+   5| (a.x: string);
        ^^^
 
 References:
-   a.js:5:9
-   5| foo.x = 1;
+   a.js:3:9
+   3| foo.x = 1;
               ^ [1]
-   b.js:7:7
-   7| (a.x: string);
+   b.js:5:7
+   5| (a.x: string);
             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- b.js:8:4
+Error --------------------------------------------------------------------------------------------------------- b.js:6:4
 
 Cannot get `a.other` because property `other` is missing in statics of function type [1]. [prop-missing]
 
-   b.js:8:4
-   8| (a.other: number);
+   b.js:6:4
+   6| (a.other: number);
          ^^^^^
 
 References:
-   a.js:3:1
-   3| function foo() {}
+   a.js:1:1
+   1| function foo() {}
       ^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:15:2
+Error -------------------------------------------------------------------------------------------------------- b.js:13:2
 
 Cannot cast `poly_a.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   b.js:15:2
-   15| (poly_a.x: string);
+   b.js:13:2
+   13| (poly_a.x: string);
         ^^^^^^^^
 
 References:
-   poly_a.js:5:9
-    5| foo.x = 1;
+   poly_a.js:3:9
+    3| foo.x = 1;
                ^ [1]
-   b.js:15:12
-   15| (poly_a.x: string);
+   b.js:13:12
+   13| (poly_a.x: string);
                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:16:9
+Error -------------------------------------------------------------------------------------------------------- b.js:14:9
 
 Cannot get `poly_a.other` because property `other` is missing in statics of function type [1]. [prop-missing]
 
-   b.js:16:9
-   16| (poly_a.other: number);
+   b.js:14:9
+   14| (poly_a.other: number);
                ^^^^^
 
 References:
-   poly_a.js:3:1
-    3| function foo<T>() {}
+   poly_a.js:1:1
+    1| function foo<T>() {}
        ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- conditional-import.js:6:4
+Error ---------------------------------------------------------------------------------------- conditional-import.js:4:4
 
 Cannot get `f.a` because property `a` is missing in statics of function type [1]. [prop-missing]
 
-   conditional-import.js:6:4
-   6| (f.a: number); // ERROR
+   conditional-import.js:4:4
+   4| (f.a: number); // ERROR
          ^
 
 References:
-   conditional.js:7:8
-   7| export function f() {}
+   conditional.js:5:8
+   5| export function f() {}
              ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- conditional-import.js:7:4
+Error ---------------------------------------------------------------------------------------- conditional-import.js:5:4
 
 Cannot get `f.b` because property `b` is missing in statics of function type [1]. [prop-missing]
 
-   conditional-import.js:7:4
-   7| (f.b: number); // ERROR
+   conditional-import.js:5:4
+   5| (f.b: number); // ERROR
          ^
 
 References:
-   conditional.js:7:8
-   7| export function f() {}
+   conditional.js:5:8
+   5| export function f() {}
              ^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------- conditional-import.js:10:4
+Error ---------------------------------------------------------------------------------------- conditional-import.js:8:4
 
 Cannot get `g.a` because property `a` is missing in statics of function type [1]. [prop-missing]
 
-   conditional-import.js:10:4
-   10| (g.a: number); // ERROR
+   conditional-import.js:8:4
+    8| (g.a: number); // ERROR
           ^
 
 References:
-   conditional.js:22:11
-   22| const g = () => {};
+   conditional.js:20:11
+   20| const g = () => {};
                  ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- conditional.js:12:5
+Error ---------------------------------------------------------------------------------------------- conditional.js:10:5
 
 Cannot assign `1` to `f.a` because property `a` is missing in function [1]. [prop-missing]
 
-   conditional.js:12:5
-   12|   f.a = 1;
+   conditional.js:10:5
+   10|   f.a = 1;
            ^
 
 References:
-   conditional.js:7:8
-    7| export function f() {}
+   conditional.js:5:8
+    5| export function f() {}
               ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- conditional.js:17:7
+Error ---------------------------------------------------------------------------------------------- conditional.js:15:7
 
 Cannot assign `1` to `f.b` because property `b` is missing in function [1]. [prop-missing]
 
-   conditional.js:17:7
-   17|     f.b = 1;
+   conditional.js:15:7
+   15|     f.b = 1;
              ^
 
 References:
-   conditional.js:7:8
-    7| export function f() {}
+   conditional.js:5:8
+    5| export function f() {}
               ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- conditional.js:27:5
+Error ---------------------------------------------------------------------------------------------- conditional.js:25:5
 
 Cannot assign `1` to `g.a` because property `a` is missing in function [1]. [prop-missing]
 
-   conditional.js:27:5
-   27|   g.a = 1;
+   conditional.js:25:5
+   25|   g.a = 1;
            ^
 
 References:
-   conditional.js:22:11
-   22| const g = () => {};
+   conditional.js:20:11
+   20| const g = () => {};
                  ^^^^^^^^ [1]
 
 

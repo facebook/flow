@@ -1,5 +1,3 @@
-// @flow
-
 declare opaque type X;
 declare opaque type Y;
 declare var x: X;

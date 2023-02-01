@@ -1,5 +1,3 @@
-// @flow
-
 const https = require('https');
 const url = 'http://nodejs.org/dist/index.json';
 

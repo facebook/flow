@@ -1,5 +1,3 @@
-// @flow
-
 interface I_Function_this {
     +x : (this : I_Function_this) => void
 }

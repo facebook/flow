@@ -1,5 +1,3 @@
-// @flow
-
 class A {
   aOne: boolean;
 

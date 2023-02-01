@@ -1,5 +1,3 @@
-// @flow
-
 /*
   $Pred<N> is an "abstract predicate type", i.e. denotes a (function) type that
   refines N variables. So if `cb` is a function, then it should be refining

@@ -1,5 +1,3 @@
-// @flow
-
 declare function get(key: string): void;
 declare function get(key: number): void;
 get(true); // incompatible-call

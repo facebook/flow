@@ -1,5 +1,3 @@
-// @flow
-
 type T = $ObjMap<{ f: number }, () => string>;
 declare var t: T;
 

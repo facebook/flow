@@ -16,20 +16,20 @@ References:
                          ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test3.js:5:11
+Error ---------------------------------------------------------------------------------------------------- test3.js:4:11
 
 Cannot assign `x` to `a` because rest of object pattern [1] is incompatible with string [2]. [incompatible-type]
 
-   test3.js:5:11
-   5| ({...a} = x);
+   test3.js:4:11
+   4| ({...a} = x);
                 ^
 
 References:
-   test3.js:5:6
-   5| ({...a} = x);
+   test3.js:4:6
+   4| ({...a} = x);
            ^ [1]
-   test3.js:4:9
-   4| var a : string;
+   test3.js:3:9
+   3| var a : string;
               ^^^^^^ [2]
 
 

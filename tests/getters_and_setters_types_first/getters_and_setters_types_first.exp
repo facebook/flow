@@ -56,91 +56,91 @@ References:
                                    ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- import-class.js:8:38
+Error --------------------------------------------------------------------------------------------- import-class.js:6:38
 
 Cannot get `foo.goodGetterNoAnnotation` because property `goodGetterNoAnnotation` is missing in `Foo` [1].
 [prop-missing]
 
-   import-class.js:8:38
-   8| var testGetterNoError1: number = foo.goodGetterNoAnnotation;
+   import-class.js:6:38
+   6| var testGetterNoError1: number = foo.goodGetterNoAnnotation;
                                            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   import-class.js:5:11
-   5| var foo = new Foo();
+   import-class.js:3:11
+   3| var foo = new Foo();
                 ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- import-class.js:11:40
+Error --------------------------------------------------------------------------------------------- import-class.js:9:40
 
 Cannot get `foo.goodGetterNoAnnotation` because property `goodGetterNoAnnotation` is missing in `Foo` [1].
 [prop-missing]
 
-   import-class.js:11:40
-   11| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
-                                              ^^^^^^^^^^^^^^^^^^^^^^
+   import-class.js:9:40
+   9| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
+                                             ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   import-class.js:5:11
-    5| var foo = new Foo();
-                 ^^^^^^^^^ [1]
+   import-class.js:3:11
+   3| var foo = new Foo();
+                ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- import-class.js:12:36
+Error -------------------------------------------------------------------------------------------- import-class.js:10:36
 
 Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
 string [2]. [incompatible-type]
 
-   import-class.js:12:36
-   12| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+   import-class.js:10:36
+   10| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    class.js:8:35
     8|   get goodGetterWithAnnotation(): number { return 4; }
                                          ^^^^^^ [1]
-   import-class.js:12:27
-   12| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+   import-class.js:10:27
+   10| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
                                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- import-class.js:15:5
+Error --------------------------------------------------------------------------------------------- import-class.js:13:5
 
 Cannot assign `123` to `foo.goodSetterNoAnnotation` because property `goodSetterNoAnnotation` is missing in `Foo` [1].
 [prop-missing]
 
-   import-class.js:15:5
-   15| foo.goodSetterNoAnnotation = 123;
+   import-class.js:13:5
+   13| foo.goodSetterNoAnnotation = 123;
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   import-class.js:5:11
-    5| var foo = new Foo();
+   import-class.js:3:11
+    3| var foo = new Foo();
                  ^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- import-class.js:19:5
+Error --------------------------------------------------------------------------------------------- import-class.js:17:5
 
 Cannot assign `"hello"` to `foo.goodSetterNoAnnotation` because property `goodSetterNoAnnotation` is missing in
 `Foo` [1]. [prop-missing]
 
-   import-class.js:19:5
-   19| foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
+   import-class.js:17:5
+   17| foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   import-class.js:5:11
-    5| var foo = new Foo();
+   import-class.js:3:11
+    3| var foo = new Foo();
                  ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- import-class.js:20:32
+Error -------------------------------------------------------------------------------------------- import-class.js:18:32
 
 Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
 [incompatible-type]
 
-   import-class.js:20:32
-   20| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+   import-class.js:18:32
+   18| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                       ^^^^^^^ [1]
 
 References:
@@ -149,21 +149,21 @@ References:
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- import-class.js:22:44
+Error -------------------------------------------------------------------------------------------- import-class.js:20:44
 
 Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
 incompatible with number [2]. [incompatible-type]
 
-   import-class.js:22:44
-   22| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   import-class.js:20:44
+   20| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    class.js:16:43
    16|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
                                                  ^^^^^^^ [1]
-   import-class.js:22:35
-   22| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   import-class.js:20:35
+   20| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                          ^^^^^^ [2]
 
 

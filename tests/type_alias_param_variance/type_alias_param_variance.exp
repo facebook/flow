@@ -1,60 +1,60 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:7:18
+Error ----------------------------------------------------------------------------------------------------- test.js:5:18
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   test.js:7:18
-   7| type A<-T> = Foo<T>; // Error, Foo expects invariant type
+   test.js:5:18
+   5| type A<-T> = Foo<T>; // Error, Foo expects invariant type
                        ^
 
 References:
-   test.js:7:9
-   7| type A<-T> = Foo<T>; // Error, Foo expects invariant type
+   test.js:5:9
+   5| type A<-T> = Foo<T>; // Error, Foo expects invariant type
+              ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:18
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test.js:6:18
+   6| type B<+T> = Foo<T>; // Error, Foo expects invariant type
+                       ^
+
+References:
+   test.js:6:9
+   6| type B<+T> = Foo<T>; // Error, Foo expects invariant type
               ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:18
 
-Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
    test.js:8:18
-   8| type B<+T> = Foo<T>; // Error, Foo expects invariant type
+   8| type D<-T> = Bar<T>; // Error, Bar expects covariant type
                        ^
 
 References:
    test.js:8:9
-   8| type B<+T> = Foo<T>; // Error, Foo expects invariant type
+   8| type D<-T> = Bar<T>; // Error, Bar expects covariant type
               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:10:18
-
-Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
-[incompatible-variance]
-
-   test.js:10:18
-   10| type D<-T> = Bar<T>; // Error, Bar expects covariant type
-                        ^
-
-References:
-   test.js:10:9
-   10| type D<-T> = Bar<T>; // Error, Bar expects covariant type
-               ^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:15:18
+Error ---------------------------------------------------------------------------------------------------- test.js:13:18
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   test.js:15:18
-   15| type I<+T> = Baz<T>; // Error, Baz expects contravariant type
+   test.js:13:18
+   13| type I<+T> = Baz<T>; // Error, Baz expects contravariant type
                         ^
 
 References:
-   test.js:15:9
-   15| type I<+T> = Baz<T>; // Error, Baz expects contravariant type
+   test.js:13:9
+   13| type I<+T> = Baz<T>; // Error, Baz expects contravariant type
                ^ [1]
 
 

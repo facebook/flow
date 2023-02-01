@@ -1,5 +1,3 @@
-// @flow
-
 // "For async functions, a Promise<T> is returned,
 // and the type of return expressions must be T."
 //

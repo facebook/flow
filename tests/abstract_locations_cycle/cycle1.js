@@ -1,5 +1,3 @@
-// @flow
-
 import {foo} from './cycle2';
 import type {Bar} from './cycle2';
 

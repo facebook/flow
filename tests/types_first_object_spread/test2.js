@@ -1,5 +1,3 @@
-// @flow
-
 const a = { x: 0 };
 const b = { z: 0, ...a };
 (b.x: string);

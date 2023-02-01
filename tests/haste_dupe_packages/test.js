@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * This tests that we detect duplicate haste packages
  */

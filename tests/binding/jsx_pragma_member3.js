@@ -1,4 +1,3 @@
-// @flow
 // @jsx Foo['bar']
 // Error: cannot resolve Foo
 

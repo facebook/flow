@@ -1,5 +1,3 @@
-// @flow
-
 interface A {
   prop : number,
 
