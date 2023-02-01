@@ -135,6 +135,42 @@ References:
         ^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:21:5
+
+Cannot call `PolyClass1` because `T` [1] is underconstrained by new `PolyClass1` [2]. Either add explicit type arguments
+or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   underconstrained_class_constructor.js:21:5
+   21| new PolyClass1(); // Error
+           ^^^^^^^^^^
+
+References:
+   exported_poly_class.js:1:25
+    1| export class PolyClass1<T> {}
+                               ^ [1]
+   underconstrained_class_constructor.js:21:1
+   21| new PolyClass1(); // Error
+       ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:22:5
+
+Cannot call `PolyClass2` because `T` [1] is underconstrained by new `PolyClass2` [2]. Either add explicit type arguments
+or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   underconstrained_class_constructor.js:22:5
+   22| new PolyClass2(); // Error
+           ^^^^^^^^^^
+
+References:
+   exported_poly_class.js:2:25
+    2| export class PolyClass2<T> {
+                               ^ [1]
+   underconstrained_class_constructor.js:22:1
+   22| new PolyClass2(); // Error
+       ^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------- underconstrained_fun_call.js:3:1
 
 Cannot call `f` because `T` [1] is underconstrained by call of `f` [2]. Either add explicit type arguments or cast the
@@ -543,4 +579,4 @@ References:
 
 
 
-Found 32 errors
+Found 34 errors

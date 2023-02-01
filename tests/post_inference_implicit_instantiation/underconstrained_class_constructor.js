@@ -16,3 +16,7 @@ declare class C<-T>{
 new C(3); // Ok: It will error under Pierce, but we also consider lower bounds here.
 
 new Array(1); // Error
+
+import {PolyClass1, PolyClass2} from './exported_poly_class';
+new PolyClass1(); // Error
+new PolyClass2(); // Error

@@ -182,7 +182,7 @@ let add_default_constructor reason extends props =
             Type.mk_boundfunctiontype
               []
               return
-              ~this:(Type.bound_function_dummy_this (Reason.aloc_of_reason reason))
+              ~this:(Type.implicit_mixed_this reason)
               ~rest_param:None
               ~def_reason:reason
           in
@@ -1516,7 +1516,11 @@ and merge_fun
     in
     let this_t =
       match this_param with
-      | None -> Type.bound_function_dummy_this (Reason.aloc_of_reason reason)
+      | None ->
+        if is_method then
+          Type.implicit_mixed_this reason
+        else
+          Type.bound_function_dummy_this (Reason.aloc_of_reason reason)
       | Some t -> merge tps file t
     in
     let return = merge tps file return in
