@@ -1,3 +1,45 @@
+### 0.199.0
+
+Likely to cause new Flow errors:
+*  Support for spread argument in the builtin special-cased $Compose function is dropped. If you need this, you can write it yourself:
+```
+declare function compose<T>(
+  fns:...$ReadOnlyArray<T=>T>,
+): T;
+```
+* Flow now consistently disallows implicit coercion of dates to numbers. Prefer explicit conversion with `getTime()`.
+* When a type argument is inferred from type argument bound or default, and such inference causes error downstream, we will provide better explanations in the error message where the type is coming from. Examples in [try Flow](https://flow.org/try/#0MYewdgzgLgBADjAvDMBTA7jACgJxAWwEsJUAKUnVCEAGwDdUBKJAPhkuvrICJvHGA3AChScAFzY8REgB5oOQmADmLQTAD06mKhx4cQoQBNUwGgENKMAGYBXMMCiFwMfGaWFgAYTM0aARhkAFRZSQNYXQgAPVENGCToQQkNhY1MLVGs7BycwFzcPb18AJiCkFBt8ACMdELDENiJo2IlA4SFXdy8ff1IIcN6JeUUlfgENLR09dvyu4t7+iEGoBWVR8e1dEH0Ogu6-efqYCAA6M0rgWLHNDamd2Zoig7YTs4u1a8mtoA).
+* We fixed a bug under LTI that causes us to incorrectly skip checking for some function expressions [Example](https://flow.org/try/#0CYUwxgNghgTiAEAzArgOzAFwJYHtVJxwB4A1APgAoA3ALnhIBok6KSBKeAXjPipy2Bs6fAQG4AUOMSEK4+PADe8EBBABbEKgwBnOgG0AuvAC+DOfGpQIyEHSUr1mnXQCCMGFACeRbRhhZUAHMeYw5uRQsqKxs6dQAHDE82URMmAHo0+FQcAHdldxwYbXE2cSA). Some previously hidden errors might be revealed.
+* We fixed a bug that causes some empty arrays to be incorrectly inferred as `Array<empty>` under LTI. e.g. `Array.from(nullableStringArray ?? [])`. As a result, previously hidden errors might be revealed.
+* Errors for bad == or === comparisons will now consistently show up. Previously, some errors might be hidden when some optimizations are hit, which heavily depends on the implementation details. [Example]( https://flow.org/try/#0N4AgUCICYKYMYBsCGAnGIBuqQA8CMAXCAHYCuAtgEYwogA+IAzgC4oCWxA5gNwTTzI0mbAE9CJCtVoMW7Lr0hwA9sRYg4IALy48IAITax3EAHoTJJQHcQNFEpSMwAXzBhQfZaua4ATFpAAFOIA-GRUNACU9AwARDEK6ipqIn7aQUShkpHRIHEJnmoa2jh+BiApxmYgAA5oGGxKpIwIIjYodg7OYEA)
+* More `missing-local-annot` error might be shown in cases when we cannot resolve overload. [Example]( https://flow.org/try/#0CYUwxgNghgTiAEAzArgOzAFwJYHtVJxwAoAPALnlWQFsAjEGAGiQqKroYEp4BeAPngA3HFmCcKw0QG4AUKEiwEKdNjwFi5eAGcMMLKgDmzRKx17D3fkJFiJN2XPDQ4Q2PE3t6MeAB9tu-QNZREJSZgBPXgEAbwBfTil4AHok+AYYHG9qLC0tQPgoVFQcDChVfBDvcKA)
+* We fixed a bug where an unannotated parameter does not cause a missing-local-annot error under LTI. e.g.
+```
+declare function id<T>(T): T;
+id([(item) => 1]); // now errors
+```
+
+New Features:
+* Improved behavior of string literal autocomplete. Results will be provided regardless of the quote style used, and extra quotes won't be inserted when one is already typed.
+* Add support for `declare let` and `declare const`. These work like `declare var`, but follow the rules of `let` and `const` respectively.
+
+Notable bug fixes:
+* We will no longer emit escaped-generic errors for predicate function bodies.
+* `$Compose` now works under LTI mode.
+* Remove spurious `illegal-this` error when a this annotation is used in contextual typing.
+* Under LTI mode, we will no longer emit spurious incompatibility errors in invalid predicate function like `function f({a: b}): boolean %checks { return typeof b === 'string'; }`. Instead, you will only get error on this unsupported syntax.
+* Fix type created by tagged template literals and `String.raw`. (Closes #7580. Fixes #5705. Fixes #2616.)
+* We will emit fewer `underconstrained-implicit-instantiation` errors, when we decide that using type parameter default or bound won't cause downstream errors.
+* Fixed a bug in LTI where some errors in utility types were not properly shown. [Example](https://flow.org/try/#0CYUwxgNghgTiAEAzArgOzAFwJYHtVIEYAeAeQD4AKHALnhIEpaASABRhwAcQYMBPAFV5ciAbwC+AGngByDtLIBueAHpl8AKIx2MeAGcAFjmQRg8DjiyoM8fdxAA6AFCPQkWAgBuseDXjiFjhSIBFSM8CAAthx89AFAA)
+* Fix IDE services that stopped working while a file contained a setter with the wrong number of parameters.
+
+Misc:
+* [Try Flow](https://flow.org/try) is now using the new [local type inference](https://medium.com/flow-type/local-type-inference-for-flow-aaa65d071347) algorithm.
+
+Parser:
+* Parse bigint object keys (but type checking is not support yet).
+
+
 ### 0.198.2
 
 Notable bug fixes:
