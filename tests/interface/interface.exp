@@ -418,8 +418,8 @@ Cannot cast `s` to interface type because string [1] is incompatible with boolea
           ^
 
 References:
-   <BUILTINS>/core.js:1113:26
-   1113|     charAt(pos: number): string;
+   <BUILTINS>/core.js:1117:26
+   1117|     charAt(pos: number): string;
                                   ^^^^^^ [1]
    string.js:4:37
       4| (s: interface {charAt(pos: number): boolean}); // ERROR

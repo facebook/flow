@@ -8,13 +8,13 @@ Cannot cast `import.meta` to number literal `1` because `Import$Meta` [1] is inc
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2619:20
+   <BUILTINS>/core.js:2617:20
                             v
-   2619| type Import$Meta = {
-   2620|   [string]: mixed,
-   2621|   url?: string,
-   2622|   ...
-   2623| };
+   2617| type Import$Meta = {
+   2618|   [string]: mixed,
+   2619|   url?: string,
+   2620|   ...
+   2621| };
          ^ [1]
    import_meta.js:7:15
       7| (import.meta: 1); // Error
@@ -31,8 +31,8 @@ Cannot cast `import.meta.XXX` to number literal `1` because mixed [1] is incompa
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2620:13
-   2620|   [string]: mixed,
+   <BUILTINS>/core.js:2618:13
+   2618|   [string]: mixed,
                      ^^^^^ [1]
    import_meta.js:8:19
       8| (import.meta.XXX: 1); // Error

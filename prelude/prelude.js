@@ -37,6 +37,10 @@ type $ArrayLike<T> = {
   ...
 };
 
+interface TaggedTemplateLiteralArray extends $ReadOnlyArray<string> {
+  +raw: $ReadOnlyArray<string>;
+}
+
 // Promise
 
 declare class Promise<+R> {}
