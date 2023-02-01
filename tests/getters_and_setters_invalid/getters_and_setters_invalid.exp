@@ -1,0 +1,224 @@
+Error -------------------------------------------------------------------------------- setter_class_missing_param.js:2:7
+
+Setter should have exactly one parameter
+
+   2|   set foo() {}
+            ^^^
+
+
+
+Found 1 error
+setter_class_missing_param.js:6:4
+Flags: --pretty
+{
+  "type":"any (implicit)",
+  "reasons":[],
+  "loc":{
+    "source":"setter_class_missing_param.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":3,"offset":49},
+    "end":{"line":6,"column":5,"offset":52}
+  },
+  "path":"setter_class_missing_param.js",
+  "line":6,
+  "endline":6,
+  "start":3,
+  "end":5
+}
+
+Error ------------------------------------------------------------------------------ setter_class_multiple_params.js:2:7
+
+Setter should have exactly one parameter
+
+   2|   set foo(x: string, y: string) {}
+            ^^^
+
+
+
+Found 1 error
+setter_class_multiple_params.js:6:4
+Flags: --pretty
+{
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"setter_class_multiple_params.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":3,"offset":69},
+    "end":{"line":6,"column":5,"offset":72}
+  },
+  "path":"setter_class_multiple_params.js",
+  "line":6,
+  "endline":6,
+  "start":3,
+  "end":5
+}
+
+Error ---------------------------------------------------------------------------- setter_interface_missing_param.js:2:7
+
+Setter should have exactly one parameter
+
+   2|   set foo(): void
+            ^^^
+
+
+
+Found 1 error
+setter_interface_missing_param.js:6:4
+Flags: --pretty
+{
+  "type":"any (implicit)",
+  "reasons":[],
+  "loc":{
+    "source":"setter_interface_missing_param.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":3,"offset":55},
+    "end":{"line":6,"column":5,"offset":58}
+  },
+  "path":"setter_interface_missing_param.js",
+  "line":6,
+  "endline":6,
+  "start":3,
+  "end":5
+}
+
+Error -------------------------------------------------------------------------- setter_interface_multiple_params.js:2:7
+
+Setter should have exactly one parameter
+
+   2|   set foo(x: string, y: string): void
+            ^^^
+
+
+
+Found 1 error
+setter_interface_multiple_params.js:6:4
+Flags: --pretty
+{
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"setter_interface_multiple_params.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":3,"offset":75},
+    "end":{"line":6,"column":5,"offset":78}
+  },
+  "path":"setter_interface_multiple_params.js",
+  "line":6,
+  "endline":6,
+  "start":3,
+  "end":5
+}
+
+Error ------------------------------------------------------------------------------- setter_object_missing_param.js:2:7
+
+Setter should have exactly one parameter
+
+   2|   set foo() {}
+            ^^^
+
+
+
+Found 1 error
+setter_object_missing_param.js:5:4
+Flags: --pretty
+{
+  "type":"any (implicit)",
+  "reasons":[],
+  "loc":{
+    "source":"setter_object_missing_param.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":3,"offset":33},
+    "end":{"line":5,"column":5,"offset":36}
+  },
+  "path":"setter_object_missing_param.js",
+  "line":5,
+  "endline":5,
+  "start":3,
+  "end":5
+}
+
+Error ----------------------------------------------------------------------------- setter_object_multiple_params.js:2:7
+
+Setter should have exactly one parameter
+
+   2|   set foo(x: string, y: string) {}
+            ^^^
+
+
+
+Found 1 error
+setter_object_multiple_params.js:5:4
+Flags: --pretty
+{
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"setter_object_multiple_params.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":3,"offset":53},
+    "end":{"line":5,"column":5,"offset":56}
+  },
+  "path":"setter_object_multiple_params.js",
+  "line":5,
+  "endline":5,
+  "start":3,
+  "end":5
+}
+
+Error --------------------------------------------------------------------------------- setter_type_missing_param.js:2:7
+
+Setter should have exactly one parameter
+
+   2|   set foo(): void
+            ^^^
+
+
+
+Found 1 error
+setter_type_missing_param.js:6:4
+Flags: --pretty
+{
+  "type":"any (implicit)",
+  "reasons":[],
+  "loc":{
+    "source":"setter_type_missing_param.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":3,"offset":52},
+    "end":{"line":6,"column":5,"offset":55}
+  },
+  "path":"setter_type_missing_param.js",
+  "line":6,
+  "endline":6,
+  "start":3,
+  "end":5
+}
+
+Error ------------------------------------------------------------------------------- setter_type_multiple_params.js:2:7
+
+Setter should have exactly one parameter
+
+   2|   set foo(x: string, y: string): void
+            ^^^
+
+
+
+Found 1 error
+setter_type_multiple_params.js:6:4
+Flags: --pretty
+{
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"setter_type_multiple_params.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":3,"offset":72},
+    "end":{"line":6,"column":5,"offset":75}
+  },
+  "path":"setter_type_multiple_params.js",
+  "line":6,
+  "endline":6,
+  "start":3,
+  "end":5
+}
+

@@ -3873,8 +3873,14 @@ let string_of_type_t_kind = function
   | ImportEnumKind -> "ImportEnumKind"
   | InstanceKind -> "InstanceKind"
 
+(** A setter's type is determined by its sole parameter.
+
+    If it has more than one param, returns the type of the first param;
+    if it has no params, returns `any`. If it isn't even a function,
+    raises an exception because this is a Flow bug. *)
 let extract_setter_type = function
-  | DefT (_, _, FunT (_, { params = [(_, param_t)]; _ })) -> param_t
+  | DefT (_, _, FunT (_, { params = (_, param_t) :: _; _ })) -> param_t
+  | DefT (reason, _, FunT _) -> AnyT.error reason
   | _ -> failwith "Setter property with unexpected type"
 
 let extract_getter_type = function
