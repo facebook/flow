@@ -1,2 +1,3 @@
 [options]
+all=false
 max_header_tokens=3

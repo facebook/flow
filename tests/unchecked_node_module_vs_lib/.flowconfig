@@ -1,4 +1,6 @@
 [options]
+all=false
 module.system=node
+
 [libs]
 lib.js

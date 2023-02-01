@@ -1,2 +1,5 @@
+[options]
+all=false
+
 [ignore]
 <PROJECT_ROOT>/tmp*
