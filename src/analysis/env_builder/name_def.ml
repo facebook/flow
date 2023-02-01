@@ -2317,7 +2317,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       end;
       this#record_hint loc hints;
       match expr with
-      | Ast.Expression.Array expr -> this#visit_array_expression ~array_hints:hints expr
+      | Ast.Expression.Array expr -> this#visit_array_expression ~array_hints:hints loc expr
       | Ast.Expression.ArrowFunction x ->
         let scope_kind = func_scope_kind x in
         this#in_new_tparams_env (fun () ->
@@ -2383,7 +2383,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     method! array loc _ = fail loc "Should be visited by visit_array_expression"
 
-    method private visit_array_expression ~array_hints expr =
+    method private visit_array_expression ~array_hints loc expr =
       let { Ast.Expression.Array.elements; comments = _ } = expr in
       let (_ : bool) =
         Base.List.foldi ~init:false elements ~f:(fun i seen_spread element ->
@@ -2421,7 +2421,10 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             | Ast.Expression.Array.Hole _ -> seen_spread
         )
       in
-      ()
+      if Base.List.is_empty elements then
+        (* We overwrite the hint on empty array with the hint on empty array element.
+           Since only the hint on empty array element will be read, this is safe. *)
+        this#record_hint loc (decompose_hints Decomp_EmptyArrayElement array_hints)
 
     method! conditional loc _ = fail loc "Should be visited by visit_conditional"
 

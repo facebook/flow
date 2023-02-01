@@ -10,6 +10,7 @@ open Type
 open Hint_api
 open Utils_js
 module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
+module PinTypes = Implicit_instantiation.PinTypes (Flow_js.FlowJs)
 
 let with_hint_result ~ok ~error = function
   | HintAvailable t -> ok t
@@ -387,6 +388,22 @@ and type_of_hint_decomposition cx op reason t =
             let use_t = ArrRestT (unknown_use, reason, i, OpenT tout) in
             SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
         )
+      | Decomp_EmptyArrayElement ->
+        if Tvar_resolver.has_placeholders cx t then (
+          Debug_js.Verbose.print_if_verbose_lazy
+            cx
+            (lazy [spf "Encountered placeholder type: %s" (Debug_js.dump_t cx ~depth:3 t)]);
+          Context.mk_placeholder cx reason
+        ) else
+          let elemt = Tvar.mk cx reason in
+          Context.run_in_implicit_instantiation_mode cx (fun () ->
+              SpeculationFlow.flow_t
+                cx
+                reason
+                ~upper_unresolved:false
+                (DefT (reason, bogus_trust (), ArrT (ArrayAT (elemt, Some []))), t)
+          );
+          PinTypes.pin_type cx ~use_op:unknown_use reason elemt
       | Decomp_Await ->
         Tvar.mk_where cx reason (fun tout ->
             Flow_js.flow_t cx (t, tout);
@@ -600,8 +617,3 @@ and evaluate_hints cx reason hints =
       match evaluate_hint cx reason hint with
       | HintAvailable t -> Base.Continue_or_stop.Stop (HintAvailable t)
       | r -> Base.Continue_or_stop.Continue r)
-
-let sandbox_flow_succeeds cx (t1, t2) =
-  match SpeculationFlow.flow_t cx (TypeUtil.reason_of_t t1) ~upper_unresolved:false (t1, t2) with
-  | exception Flow_js_utils.SpeculationSingletonError -> false
-  | () -> true

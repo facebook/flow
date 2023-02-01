@@ -294,7 +294,6 @@ module Make
     Class_sig.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
       (Func_stmt_sig)
       (Class_stmt_sig_types)
-  module PinTypes = Implicit_instantiation.PinTypes (Flow.FlowJs)
 
   (* In positions where an annotation may be present or an annotation can be pushed down,
    * we should prefer the annotation over the pushed-down annotation. *)
@@ -2292,25 +2291,12 @@ module Make
         ()
       else
         match lazy_hint element_reason with
-        | HintAvailable hint ->
-          let elemt' = Tvar.mk cx element_reason in
-          if
-            Context.run_in_implicit_instantiation_mode cx (fun () ->
-                Type_hint.sandbox_flow_succeeds
-                  cx
-                  (DefT (reason, bogus_trust (), ArrT (ArrayAT (elemt', Some []))), hint)
-            )
-          then
-            Flow.unify cx elemt (PinTypes.pin_type cx ~use_op:unknown_use element_reason elemt')
-          else
-            (* A hint is available, but cannot be used to provide a type for this
-             * array element. In this case, the element type of the array is likely
-             * useless (does not escape the annotation), so we can use `empty` as
-             * its type. *)
-            Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
+        | HintAvailable hint -> Flow.flow_t cx (hint, elemt)
         | DecompositionError ->
-          (* Similar to the case above, but the error occured earlier in the
-           * hint decomposition chain. *)
+          (* A hint is available, but cannot be used to provide a type for this
+           * array element. In this case, the element type of the array is likely
+           * useless (does not escape the annotation), so we can use `empty` as
+           * its type. *)
           Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
         | NoHint
         | EncounteredPlaceholder ->

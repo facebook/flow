@@ -31,5 +31,3 @@ val evaluate_hints :
   Hint_api.hint
   list ->
   Type.hint_eval_result
-
-val sandbox_flow_succeeds : Context.t -> Type.t * Type.t -> bool

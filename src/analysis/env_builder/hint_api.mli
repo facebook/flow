@@ -36,6 +36,7 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_ObjSpread
   | Decomp_ArrElement of int option
   | Decomp_ArrSpread of int
+  | Decomp_EmptyArrayElement
   | Decomp_Await
   | Decomp_MethodName of string
   | Decomp_MethodPrivateName of string * ALoc.t list

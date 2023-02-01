@@ -51,3 +51,12 @@ function test6() {
   (array || []).reduce((acc, item) => acc, {}); // okay
   (array ?? []).reduce((acc, item) => acc, {}); // okay
 }
+
+function test7() {
+  declare function arrayFrom<A>(iter: $ReadOnlyArray<A>): Array<A>;
+  declare function arrayFrom(arrayLike: interface { length: number }): Array<void>;
+
+  declare var tags: ?$ReadOnlyArray<string>;
+  const tagsList = arrayFrom(tags ?? []);
+  tagsList.forEach(tag => (tag: number)); // error: string ~> number
+}
