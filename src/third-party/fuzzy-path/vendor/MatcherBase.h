@@ -6,7 +6,6 @@
 #include <vector>
 
 struct MatcherOptions {
-  bool case_sensitive = false;
   bool smart_case = false;
   size_t num_threads = 0;
   size_t max_results = 0;

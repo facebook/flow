@@ -6,8 +6,6 @@
  *)
 
 type options = {
-  case_sensitive: bool;
-
   (** Prefers case-sensitive matches when the query contains an uppercase letter. *)
   smart_case: bool;
 

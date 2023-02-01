@@ -132,7 +132,6 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
     max_results = std::numeric_limits<size_t>::max();
   }
   MatchOptions matchOptions;
-  matchOptions.case_sensitive = options.case_sensitive;
   matchOptions.smart_case = false;
   matchOptions.max_gap = options.max_gap;
 
@@ -142,17 +141,12 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
     if (!isspace(c)) {
       new_query += c;
     }
-    if (options.smart_case && isupper(c) && !matchOptions.case_sensitive) {
+    if (options.smart_case && isupper(c)) {
       matchOptions.smart_case = true;
     }
   }
 
-  std::string query_case;
-  if (!options.case_sensitive) {
-    query_case = str_to_lower(new_query);
-  } else {
-    query_case = query;
-  }
+  std::string query_case = str_to_lower(new_query);
 
   // If our current query is just an extension of the last query,
   // quickly ignore all previous non-matches as an optimization.

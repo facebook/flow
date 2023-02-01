@@ -6,8 +6,6 @@
  *)
 
 type options = {
-  case_sensitive: bool;
-
   (** Prefers case-sensitive matches when the query contains an uppercase letter. *)
   smart_case: bool;
 
@@ -37,7 +35,6 @@ external ext_remove_candidate : t -> string -> unit = "fuzzy_remove_candidate"
 external ext_match : t -> string -> options -> match_result list = "fuzzy_match"
 
 let default_options = {
-  case_sensitive = false;
   smart_case = false;
   num_threads = 1;
   max_results = max_int;

@@ -19,7 +19,6 @@ struct matcher;
 typedef struct matcher matcher_t;
 
 typedef struct matcher_options {
-  bool case_sensitive;
   bool smart_case;
   size_t num_threads;
   size_t max_results;

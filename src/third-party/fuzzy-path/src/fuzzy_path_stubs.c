@@ -95,11 +95,10 @@ value fuzzy_match(value matcher_val, value query_val, value options) {
   matcher_t *matcher = Matcher_val(matcher_val);
   const char *query = String_val(query_val);
   matcher_options_t opts = {
-    (bool)Bool_val(Field(options, 0)), // case_sensitive
-    (bool)Bool_val(Field(options, 1)), // smart_case
-    Int_val(Field(options, 2)), // num_threads
-    Int_val(Field(options, 3)), // max_results
-    Int_val(Field(options, 4)), // max_gap
+    (bool)Bool_val(Field(options, 0)), // smart_case
+    Int_val(Field(options, 1)), // num_threads
+    Int_val(Field(options, 2)), // max_results
+    Int_val(Field(options, 3)), // max_gap
   };
 
   match_results_t results = matcher_find(matcher, query, opts);

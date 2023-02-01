@@ -170,8 +170,8 @@ float score_match(const char *haystack,
   MatchInfo m;
   m.haystack_len = strlen(haystack);
   m.needle_len = strlen(needle);
-  m.haystack_case = options.case_sensitive ? haystack : haystack_lower;
-  m.needle_case = options.case_sensitive ? needle : needle_lower;
+  m.haystack_case = haystack_lower;
+  m.needle_case = needle_lower;
   m.smart_case = options.smart_case;
   m.max_gap = options.max_gap;
   m.min_score = min_score;
