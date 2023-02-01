@@ -1,1 +1,1 @@
-function foo(a: function, b: switch){}
+function foo(a: Function, b: switch){}

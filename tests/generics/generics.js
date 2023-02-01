@@ -37,4 +37,3 @@ var h2:F<Array<Array<Array<number>>>> = h1;
 
 var obj : Object<string, string> = {} // error, arity 0
 var fn1 : Function<string> = function() { return 'foo'; } // error, arity 0
-var fn2 : function<string> = function() { return 'foo'; } // error, arity 0

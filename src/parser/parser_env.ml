@@ -629,6 +629,7 @@ let is_reserved_type str_val =
   | "empty"
   | "extends"
   | "false"
+  | "function"
   | "interface"
   | "keyof"
   | "mixed"
@@ -658,6 +659,7 @@ let token_is_reserved_type t =
   | T_EMPTY_TYPE
   | T_EXTENDS
   | T_FALSE
+  | T_FUNCTION
   | T_INTERFACE
   | T_KEYOF
   | T_MIXED_TYPE
@@ -727,7 +729,6 @@ let token_is_type_identifier env t =
     | T_FALSE
     | T_FINALLY
     | T_FOR
-    | T_FUNCTION
     | T_IDENTIFIER _
     | T_IF
     | T_IMPLEMENTS
@@ -760,6 +761,7 @@ let token_is_type_identifier env t =
     (* identifier-ish, but not valid types *)
     | T_STATIC
     | T_TYPEOF
+    | T_FUNCTION
     | T_KEYOF
     | T_READONLY
     | T_VOID ->

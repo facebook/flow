@@ -1,1 +1,1 @@
-var a: function.switch
+var a: Function.switch

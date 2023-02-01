@@ -874,8 +874,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let reason = mk_reason (RStatics (desc_of_t t)) loc in
               reconstruct_ast (DefT (reason, infer_trust cx, ClassT t)) targs
           )
-        | "Function"
-        | "function" ->
+        | "Function" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               add_unclear_type_error_if_not_lib_file cx loc;
               let reason = mk_annot_reason RFunctionType loc in
