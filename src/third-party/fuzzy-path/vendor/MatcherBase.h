@@ -11,7 +11,6 @@ struct MatcherOptions {
   size_t num_threads = 0;
   size_t max_results = 0;
   size_t max_gap = 0;
-  std::string root_path;
 };
 
 struct MatchResult {
@@ -19,27 +18,22 @@ struct MatchResult {
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.
   const std::string *value;
-  int score_based_root_path;
 
   MatchResult(float score,
-              int score_based_root_path,
               const std::string *value)
-    : score(score), value(value), score_based_root_path(score_based_root_path) {}
+    : score(score), value(value) {}
 
   // Order small scores to the top of any priority queue.
   // We need a min-heap to maintain the top-N results.
   bool operator<(const MatchResult& other) const {
     if (score == other.score) {
       // In case of a tie, favour shorter strings.
-      if (score_based_root_path == other.score_based_root_path) {
-        int length = value->length() - other.value->length();
-        // In the case of a tie, favor lexicographically-earlier
-        if (length == 0) {
-          return value > other.value;
-        }
-        return length < 0;
+      int length = value->length() - other.value->length();
+      // In the case of a tie, favor lexicographically-earlier
+      if (length == 0) {
+        return value > other.value;
       }
-      return score_based_root_path > other.score_based_root_path;
+      return length < 0;
     }
     return score > other.score;
   }
@@ -50,7 +44,6 @@ public:
   struct CandidateData {
     std::string value;
     std::string lowercase;
-    int num_dirs;
     /**
      * A bitmask representing the counts of letters a-z contained in the string.
      * Bits i*2 and i*2 + 1 represent a count of the i-th letter:

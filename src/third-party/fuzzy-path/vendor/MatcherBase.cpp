@@ -45,56 +45,12 @@ inline string str_to_lower(const std::string &s) {
   return lower;
 }
 
-bool is_slash(char c) {
-  return c == '/' || c == '\\';
-}
-
-int num_dirs(const std::string &path) {
-  int num = 0;
-  for (size_t i = 0; i < path.length(); i++) {
-    if (is_slash(path[i])) {
-      num++;
-    }
-  }
-  return num;
-}
-
-int score_based_root_path(const MatchOptions &options,
-                          const MatcherBase::CandidateData &candidate) {
-  const std::string &root = options.root_path;
-  if (root.length() == 0) {
-    return 0;
-  }
-
-  const std::string &value = candidate.value;
-
-  size_t num_common_dirs = 0;
-  size_t i = 0;
-
-  // Count number of common directories
-  for (; i < root.length() && i < value.length(); i++) {
-    if (root[i] != value[i]) {
-      break;
-    }
-    if (is_slash(root[i])) {
-      num_common_dirs++;
-    }
-  }
-
-  if (i == root.length() && i < value.length() && is_slash(value[i])) {
-    num_common_dirs++;
-  }
-
-  return 1000 * num_common_dirs - candidate.num_dirs;
-}
-
 // Push a new entry on the heap while ensuring size <= max_results.
 void push_heap(ResultHeap &heap,
                float score,
-               int score_based_root_path,
                const std::string *value,
                size_t max_results) {
-  MatchResult result(score, score_based_root_path, value);
+  MatchResult result(score, value);
   if (heap.size() < max_results || result < heap.top()) {
     heap.push(std::move(result));
     if (heap.size() > max_results) {
@@ -148,7 +104,6 @@ void thread_worker(
         push_heap(
           result,
           score,
-          score_based_root_path(options, candidate),
           &candidate.value,
           max_results
         );
@@ -182,7 +137,6 @@ vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   matchOptions.case_sensitive = options.case_sensitive;
   matchOptions.smart_case = false;
   matchOptions.max_gap = options.max_gap;
-  matchOptions.root_path = options.root_path;
 
   string new_query;
   // Ignore all whitespace in the query.
@@ -245,7 +199,6 @@ vector<MatchResult> MatcherBase::findMatches(const std::string &query,
         push_heap(
           combined,
           top.score,
-          top.score_based_root_path,
           top.value,
           max_results
         );
@@ -272,7 +225,6 @@ void MatcherBase::addCandidate(const string &candidate) {
     data.bitmask = letter_bitmask(lowercase.c_str());
     data.lowercase = std::move(lowercase);
     data.last_match = true;
-    data.num_dirs = num_dirs(candidate);
     candidates_.emplace_back(std::move(data));
   }
 }

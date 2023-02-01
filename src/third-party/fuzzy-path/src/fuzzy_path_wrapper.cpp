@@ -51,8 +51,6 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
   cpp_options.num_threads = options.num_threads;
   cpp_options.max_results = options.max_results;
   cpp_options.max_gap = options.max_gap;
-  std::string root_path_str(options.root_path);
-  cpp_options.root_path = root_path_str;
 
   std::string q(query);
   std::vector<MatchResult> matches = obj->findMatches(q, cpp_options);
@@ -61,8 +59,7 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
   for (size_t i = 0; i < matches.size(); i++) {
     results[i] = {
       matches[i].score,
-      matches[i].value->c_str(),
-      matches[i].score_based_root_path
+      matches[i].value->c_str()
     };
   }
 

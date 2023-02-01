@@ -18,8 +18,6 @@ type options = {
   (** Maximum gap to allow between consecutive letters in a match.
       Provide a smaller maxGap to speed up query results. *)
   max_gap: int;
-
-  root_path: string;
 }
 
 type match_result = {
