@@ -13,6 +13,7 @@ type t =
   | AmbiguousLetBracket
   | AsyncFunctionAsStatement
   | AwaitAsIdentifierReference
+  | AwaitInAsyncFormalParameters
   | ComputedShorthandProperty
   | DeclareAsync
   | DeclareClassElement
@@ -188,6 +189,7 @@ module PP = struct
     | AsyncFunctionAsStatement ->
       "Async functions can only be declared at top level or immediately within another function."
     | AwaitAsIdentifierReference -> "`await` is an invalid identifier in async functions"
+    | AwaitInAsyncFormalParameters -> "`await` is not allowed in async function parameters."
     | ComputedShorthandProperty -> "Computed properties must have a value."
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. "

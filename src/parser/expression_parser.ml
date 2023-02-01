@@ -183,7 +183,15 @@ module Expression
       | _ -> ret
     in
     fun env ->
-      match (Peek.token env, Peek.is_identifier env) with
+      let is_identifier =
+        Peek.is_identifier env
+        &&
+        match Peek.token env with
+        | T_AWAIT when allow_await env -> false
+        | T_YIELD when allow_yield env -> false
+        | _ -> true
+      in
+      match (Peek.token env, is_identifier) with
       | (T_YIELD, _) when allow_yield env -> Cover_expr (yield env)
       | ((T_LPAREN as t), _)
       | ((T_LESS_THAN as t), _)
@@ -579,7 +587,9 @@ module Expression
      * identifier. This is a little bit inconsistent, since it can be used as
      * an identifier in other contexts (such as a variable name), but it's how
      * Babel does it. *)
-    | T_AWAIT when allow_await env -> Some Await
+    | T_AWAIT when allow_await env ->
+      if in_formal_parameters env then error env Parse_error.AwaitInAsyncFormalParameters;
+      Some Await
     | _ -> None
 
   and unary_cover env =
@@ -1136,6 +1146,10 @@ module Expression
               (* #sec-function-definitions-static-semantics-early-errors *)
               let env = env |> with_allow_super No_super in
               let params =
+                (* await is a keyword if *this* is an async function, OR if it's already
+                   a keyword in the current scope (e.g. if this is a non-async function
+                   nested in an async function). *)
+                let await = await || allow_await env in
                 let params = Declaration.function_params ~await ~yield env in
                 if Peek.token env = T_COLON then
                   params
@@ -1622,6 +1636,7 @@ module Expression
         | ParameterAfterRestParameter
         | NewlineBeforeArrow
         | AwaitAsIdentifierReference
+        | AwaitInAsyncFormalParameters
         | YieldInFormalParameters
         | ThisParamBannedInArrowFunctions ->
           ()
@@ -1649,7 +1664,13 @@ module Expression
         else
           (false, [])
       in
-      let env = with_allow_await async env in
+
+      (* await is a keyword if this is an async function, or if we're in one already. *)
+      let await = async || allow_await env in
+      let env = with_allow_await await env in
+
+      let yield = allow_yield env in
+
       let (sig_loc, (tparams, params, return, predicate)) =
         with_loc
           (fun env ->
@@ -1688,11 +1709,7 @@ module Expression
                 None
               )
             else
-              let params =
-                let yield = allow_yield env in
-                let await = allow_await env in
-                Declaration.function_params ~await ~yield env
-              in
+              let params = Declaration.function_params ~await ~yield env in
               (* There's an ambiguity if you use a function type as the return
                * type for an arrow function. So we disallow anonymous function
                * types in arrow function return types unless the function type is
