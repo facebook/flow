@@ -24,6 +24,15 @@ type test_result = {
 
 module SMap = Flow_map.Make (String)
 
+module Test_name_set = Flow_set.Make (struct
+  type t = test_name
+
+  let compare (a_name, a_strict) (b_name, b_strict) =
+    match String.compare a_name b_name with
+    | 0 -> Bool.compare a_strict b_strict
+    | k -> k
+end)
+
 module Progress_bar = struct
   type t = {
     mutable count: int;
@@ -99,7 +108,7 @@ let files_of_path path =
     []
   |> List.rev
 
-let print_name ~strip_root (filename, use_strict) =
+let string_of_name ~strip_root (filename, use_strict) =
   let filename =
     match strip_root with
     | Some root ->
@@ -113,13 +122,16 @@ let print_name ~strip_root (filename, use_strict) =
     else
       "(default)"
   in
+  Printf.sprintf "%s %s" filename strict
+
+let print_name ~strip_root name =
   let cr =
     if Unix.isatty Unix.stdout then
       "\r"
     else
       ""
   in
-  Printf.printf "%s%s %s\n%!" cr filename strict
+  Printf.printf "%s%s\n%!" cr (string_of_name ~strip_root name)
 
 let print_error err =
   match err with
@@ -300,13 +312,18 @@ let fold_test
   in
   let features_acc =
     List.fold_left
-      (fun acc name ->
-        let feature =
-          try SMap.find name acc with
-          | Not_found -> (0, 0, 0)
+      (fun acc feature ->
+        let (passed_acc, failed_acc, errored_acc) =
+          try SMap.find feature acc with
+          | Not_found -> (Test_name_set.empty, Test_name_set.empty, Test_name_set.empty)
         in
-        let feature = incr_result feature passed in
-        SMap.add name feature acc)
+        let feature_acc =
+          match passed with
+          | `Passed -> (Test_name_set.add name passed_acc, failed_acc, errored_acc)
+          | `Failed -> (passed_acc, Test_name_set.add name failed_acc, errored_acc)
+          | `Errored -> (passed_acc, failed_acc, Test_name_set.add name errored_acc)
+        in
+        SMap.add feature feature_acc acc)
       features_acc
       frontmatter.Frontmatter.features
   in
@@ -323,11 +340,13 @@ let main () =
   let verbose_ref = ref Normal in
   let path_ref = ref None in
   let strip_root_ref = ref false in
+  let features_ref = ref false in
   let speclist =
     [
       ("-q", Arg.Unit (fun () -> verbose_ref := Quiet), "Enables quiet mode");
       ("-v", Arg.Unit (fun () -> verbose_ref := Verbose), "Enables verbose mode");
       ("-s", Arg.Set strip_root_ref, "Print paths relative to root directory");
+      ("-f", Arg.Set features_ref, "List failed/errored tests by feature tag");
     ]
   in
   let usage_msg = "Runs flow parser on test262 tests. Options available:" in
@@ -350,6 +369,7 @@ let main () =
     else
       None
   in
+  let features = !features_ref in
   let quiet = !verbose_ref = Quiet in
   let verbose = !verbose_ref = Verbose in
   let files = files_of_path path |> List.sort String.compare in
@@ -380,15 +400,27 @@ let main () =
     Printf.printf "\nFeatures:\n";
     SMap.iter
       (fun name (passed, failed, errored) ->
-        if failed > 0 || errored > 0 || verbose then
-          let total = passed + failed + errored in
+        let passed_cnt = Test_name_set.cardinal passed in
+        let failed_cnt = Test_name_set.cardinal failed in
+        let errored_cnt = Test_name_set.cardinal errored in
+        if failed_cnt > 0 || errored_cnt > 0 || verbose then (
+          let total = passed_cnt + failed_cnt + errored_cnt in
           let total_f = float_of_int total in
           Printf.printf
             "  %s: %d/%d (%.2f%%)\n"
             name
-            passed
+            passed_cnt
             total
-            (float_of_int passed /. total_f *. 100.))
+            (float_of_int passed_cnt /. total_f *. 100.);
+          if features then (
+            Test_name_set.iter
+              (fun name -> Printf.printf "    [F] %s\n" (string_of_name ~strip_root name))
+              failed;
+            Test_name_set.iter
+              (fun name -> Printf.printf "    [E] %s\n" (string_of_name ~strip_root name))
+              errored
+          )
+        ))
       results_by_feature
   );
 
