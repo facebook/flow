@@ -51,7 +51,12 @@ module type S = sig
     output
 
   val solve_targs :
-    Context.t -> use_op:Type.use_op -> ?return_hint:Type.t -> Check.t -> output Subst_name.Map.t
+    Context.t ->
+    use_op:Type.use_op ->
+    ?allow_underconstrained:bool ->
+    ?return_hint:Type.t ->
+    Check.t ->
+    output Subst_name.Map.t
 
   val run :
     Context.t ->

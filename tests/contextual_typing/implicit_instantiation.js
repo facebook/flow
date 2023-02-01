@@ -159,3 +159,9 @@ function test13() {
     (value: { elements: Array<string> }) => { (value: empty); }, // error
   )
 }
+
+function test14() {
+  declare function magic<T>(): T;
+  const m: mixed = { foo: magic() }; // ok
+  const interfaceVar: interface {[string]: mixed} = { foo: magic() }; // ok
+}
