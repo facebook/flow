@@ -6903,31 +6903,16 @@ module Make
 
   and mk_func_sig =
     let predicate_function_kind cx loc params =
-      let open Error_message in
-      let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
-      let kind = Func_class_sig_types.Func.Predicate in
-      let kind =
-        List.fold_left
-          (fun kind (_, param) ->
-            let open Flow_ast.Function.Param in
-            match param.argument with
-            | (ploc, Flow_ast.Pattern.Object _)
-            | (ploc, Flow_ast.Pattern.Array _)
-            | (ploc, Flow_ast.Pattern.Expression _) ->
-              let reason = mk_reason RDestructuring ploc in
-              Flow_js.add_output cx (EUnsupportedSyntax (loc, PredicateInvalidParameter reason));
-              Func_class_sig_types.Func.Ordinary
-            | (_, Flow_ast.Pattern.Identifier _) -> kind)
-          kind
-          params
-      in
-      match rest with
-      | Some (rloc, { Flow_ast.Function.RestParam.argument; comments = _ }) ->
-        let desc = Reason.code_desc_of_pattern argument in
-        let reason = mk_reason (RRestParameter (Some desc)) rloc in
-        Flow_js.add_output cx (EUnsupportedSyntax (loc, PredicateInvalidParameter reason));
+      let invalid_param_reasons = Name_def.predicate_function_invalid_param_reasons params in
+      Base.List.iter invalid_param_reasons ~f:(fun reason ->
+          Flow_js.add_output
+            cx
+            Error_message.(EUnsupportedSyntax (loc, PredicateInvalidParameter reason))
+      );
+      if Base.List.is_empty invalid_param_reasons then
+        Func_class_sig_types.Func.Predicate
+      else
         Func_class_sig_types.Func.Ordinary
-      | None -> kind
     in
     let function_kind cx ~constructor ~async ~generator ~predicate ~params ~ret_loc =
       let open Ast.Type.Predicate in
@@ -7175,8 +7160,8 @@ module Make
         let (return_annotated_or_inferred, predicate) =
           let open Ast.Type.Predicate in
           match predicate with
-          | None -> (return_annotated_or_inferred, None)
-          | Some ((_, { kind = Ast.Type.Predicate.Inferred; comments = _ }) as pred) ->
+          | Some ((_, { kind = Ast.Type.Predicate.Inferred; comments = _ }) as pred)
+            when kind = Func_class_sig_types.Func.Predicate ->
             (* Predicate Functions
              *
              * function f(x: S): [T] %checks { return e; }
@@ -7232,6 +7217,10 @@ module Make
               cx
               Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
             (annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
+          | _ ->
+            ( return_annotated_or_inferred,
+              Base.Option.map ~f:Tast_utils.error_mapper#type_predicate predicate
+            )
         in
         let return_t =
           mk_inference_target_with_annots
