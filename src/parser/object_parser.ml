@@ -94,6 +94,17 @@ module Object
             { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
           )
       )
+    | T_BIGINT { kind; raw } ->
+      let loc = Peek.loc env in
+      let value = Expression.bigint env kind raw in
+      let value = Literal.BigInt value in
+      let trailing = Eat.trailing_comments env in
+      ( loc,
+        Literal
+          ( loc,
+            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+          )
+      )
     | T_LBRACKET ->
       let (loc, key) =
         with_loc

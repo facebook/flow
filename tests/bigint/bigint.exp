@@ -184,6 +184,52 @@ References:
             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ object_key.js:5:2
+
+Cannot cast object literal to `T` because property `1` is missing in object literal [1] but exists in `T` [2].
+[prop-missing]
+
+   object_key.js:5:2
+   5| ({ 1n: "foo" }: T); // error (TODO: non-string literals not supported)
+       ^^^^^^^^^^^^^ [1]
+
+References:
+   object_key.js:5:17
+   5| ({ 1n: "foo" }: T); // error (TODO: non-string literals not supported)
+                      ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ object_key.js:5:4
+
+Non-string literal property keys not supported. [unsupported-syntax]
+
+   5| ({ 1n: "foo" }: T); // error (TODO: non-string literals not supported)
+         ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ object_key.js:6:2
+
+Cannot cast object literal to `T` because property `1` is missing in object literal [1] but exists in `T` [2].
+[prop-missing]
+
+   object_key.js:6:2
+   6| ({ 2n: "foo" }: T); // error
+       ^^^^^^^^^^^^^ [1]
+
+References:
+   object_key.js:6:17
+   6| ({ 2n: "foo" }: T); // error
+                      ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ object_key.js:6:4
+
+Non-string literal property keys not supported. [unsupported-syntax]
+
+   6| ({ 2n: "foo" }: T); // error
+         ^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- unions.js:7:10
 
 Cannot return `x` because number literal `1` [1] is incompatible with literal union [2]. [incompatible-return]
@@ -253,4 +299,4 @@ References:
 
 
 
-Found 14 errors
+Found 18 errors
