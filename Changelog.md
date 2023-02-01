@@ -32,6 +32,7 @@ Notable bug fixes:
 * We will emit fewer `underconstrained-implicit-instantiation` errors, when we decide that using type parameter default or bound won't cause downstream errors.
 * Fixed a bug in LTI where some errors in utility types were not properly shown. [Example](https://flow.org/try/#0CYUwxgNghgTiAEAzArgOzAFwJYHtVIEYAeAeQD4AKHALnhIEpaASABRhwAcQYMBPAFV5ciAbwC+AGngByDtLIBueAHpl8AKIx2MeAGcAFjmQRg8DjiyoM8fdxAA6AFCPQkWAgBuseDXjiFjhSIBFSM8CAAthx89AFAA)
 * Fix IDE services that stopped working while a file contained a setter with the wrong number of parameters.
+* Fix an issue with lazy mode where deleting a file before the server starts did not check files that were depending on the deleted file.
 
 Misc:
 * [Try Flow](https://flow.org/try) is now using the new [local type inference](https://medium.com/flow-type/local-type-inference-for-flow-aaa65d071347) algorithm.
