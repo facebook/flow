@@ -1,3 +1,12 @@
+### 0.198.2
+
+Notable bug fixes:
+* Fix a crash on Windows
+* Fix a bug that could possibly result in a crash
+
+Parser:
+* Fix bugs concerning `await` in async formal parameters (including a regression in 0.198.0)
+
 ### 0.198.1
 
 * Fix a regression in 0.198.0 that can lead to a crash
