@@ -1,4 +1,5 @@
 [options]
+all=true
 ; this ordering determines precedence
 module.file_ext=.zzz
 module.file_ext=.js

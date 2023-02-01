@@ -1,2 +1,3 @@
 [options]
+all=true
 module.system.node.allow_root_relative=true

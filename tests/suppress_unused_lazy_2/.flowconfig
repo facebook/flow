@@ -1,3 +1,4 @@
 [options]
+all=true
 file_watcher=none
 lazy_mode=fs

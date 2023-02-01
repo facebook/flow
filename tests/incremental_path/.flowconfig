@@ -2,3 +2,4 @@
 .*/incremental_path/tmp*
 
 [options]
+all=true

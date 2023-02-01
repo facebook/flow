@@ -8,5 +8,6 @@
 all=warn
 
 [options]
+all=true
 
 [strict]

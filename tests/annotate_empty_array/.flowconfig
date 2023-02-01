@@ -1,3 +1,4 @@
 [options]
+all=true
 inference_mode=constrain_writes
 experimental.array_literal_providers=true

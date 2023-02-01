@@ -5,4 +5,5 @@
 [libs]
 
 [options]
+all=true
 no_flowlib=true

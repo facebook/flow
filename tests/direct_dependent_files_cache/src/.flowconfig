@@ -1,2 +1,5 @@
 [include]
 ../node_modules
+
+[options]
+all=true

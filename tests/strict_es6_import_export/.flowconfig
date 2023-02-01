@@ -1,4 +1,5 @@
 [options]
+all=true
 experimental.strict_es6_import_export=true
 no_flowlib=false
 

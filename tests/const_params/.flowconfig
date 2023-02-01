@@ -5,4 +5,5 @@
 [libs]
 
 [options]
+all=true
 experimental.const_params=true

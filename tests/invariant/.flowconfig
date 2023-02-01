@@ -1,2 +1,5 @@
 [lints]
 unnecessary-invariant=error
+
+[options]
+all=true

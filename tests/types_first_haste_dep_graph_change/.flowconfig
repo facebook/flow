@@ -2,4 +2,5 @@
 <PROJECT_ROOT>/tmp
 
 [options]
+all=true
 module.system=haste

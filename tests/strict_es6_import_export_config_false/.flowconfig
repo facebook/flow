@@ -1,2 +1,5 @@
 [lints]
 all=error
+
+[options]
+all=true

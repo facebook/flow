@@ -8,6 +8,7 @@ lib
 [lints]
 
 [options]
+all=true
 no_flowlib=false
 facebook.fbt=FbtElement
 

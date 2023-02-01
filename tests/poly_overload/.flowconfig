@@ -1,2 +1,4 @@
 [libs]
 decls
+[options]
+all=true

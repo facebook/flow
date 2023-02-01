@@ -1,4 +1,5 @@
 [options]
+all=true
 inference_mode=constrain_writes
 experimental.cycle_errors=true
 enums=true

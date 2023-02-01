@@ -1,2 +1,3 @@
 [options]
+all=true
 inference_mode=constrain_writes

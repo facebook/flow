@@ -1,4 +1,5 @@
 [options]
+all=true
 
 
 ; Since we run all tests with saved state as well, we don't need any specific

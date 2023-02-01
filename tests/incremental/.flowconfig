@@ -1,5 +1,6 @@
 [ignore]
 .*dup.*
 [options]
+all=true
 module.system=haste
 

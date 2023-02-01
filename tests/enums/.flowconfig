@@ -6,5 +6,6 @@
 lib.js
 
 [options]
+all=true
 no_flowlib=false
 enums=true

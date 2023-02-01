@@ -8,6 +8,7 @@ lib.js
 [lints]
 
 [options]
+all=true
 experimental.abstract_locations=false
 
 [strict]

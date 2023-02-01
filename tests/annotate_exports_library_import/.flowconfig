@@ -8,5 +8,6 @@ libs
 [lints]
 
 [options]
+all=true
 
 [strict]

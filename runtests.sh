@@ -309,6 +309,10 @@ print_result() {
         name=${testname%*/}
         name=${name##*/}
         printf "Missing %s.exp file or .flowconfig file\n" "$name" ;;
+      $RUNTEST_MISSING_ALL_OPTION )
+        (( errored++ ))
+        print_error "$testname"
+        echo 'You are required to set either `all=true` or `all=false` in your test `.flowconfig`.' ;;
       $RUNTEST_ERROR | '')
         # '' means the parallel runner stopped before giving a result
         (( errored++ ))

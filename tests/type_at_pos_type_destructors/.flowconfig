@@ -8,6 +8,7 @@ lib.js
 [lints]
 
 [options]
+all=true
 no_flowlib=false
 
 [strict]

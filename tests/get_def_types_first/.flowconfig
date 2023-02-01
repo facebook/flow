@@ -1,4 +1,5 @@
 [options]
+all=true
 module.system=haste
 no_flowlib=true
 enums=true

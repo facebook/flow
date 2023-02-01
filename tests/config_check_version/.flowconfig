@@ -1,2 +1,5 @@
 [version]
 ^0.1
+
+[options]
+all=true

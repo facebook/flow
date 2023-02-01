@@ -6,3 +6,4 @@
 declarations
 
 [options]
+all=true

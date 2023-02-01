@@ -7,6 +7,7 @@
 [lints]
 
 [options]
+all=true
 experimental.run_post_inference_implicit_instantiation=true
 
 [strict]

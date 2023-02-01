@@ -6,6 +6,7 @@
 libs/
 
 [options]
+all=true
 
 [lints]
 

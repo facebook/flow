@@ -5,6 +5,7 @@
 [libs]
 
 [options]
+all=true
 include_warnings=true
 
 [lints]

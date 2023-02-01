@@ -2,3 +2,4 @@
 <PROJECT_ROOT>/tmp*
 
 [options]
+all=true

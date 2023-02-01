@@ -7,6 +7,7 @@
 [lints]
 
 [options]
+all=true
 
 suppress_type=$FlowFixMe
 

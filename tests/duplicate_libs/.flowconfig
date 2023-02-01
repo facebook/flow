@@ -2,3 +2,6 @@
 [libs]
 lib
 lib/shared
+
+[options]
+all=true

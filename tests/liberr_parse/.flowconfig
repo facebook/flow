@@ -6,3 +6,4 @@
 libs/
 
 [options]
+all=true

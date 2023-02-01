@@ -1,4 +1,5 @@
 [options]
+all=true
 lazy_mode=true
 
 [lints]

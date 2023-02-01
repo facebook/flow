@@ -1,3 +1,4 @@
 [options]
+all=true
 experimental.cycle_errors=true
 no_flowlib=false

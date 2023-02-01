@@ -3,3 +3,6 @@
 
 [lints]
 sketchy-null=error
+
+[options]
+all=true

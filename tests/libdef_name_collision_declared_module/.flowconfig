@@ -1,3 +1,6 @@
 [libs]
 ./libs_a
 ./libs_b
+
+[options]
+all=true

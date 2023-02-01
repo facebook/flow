@@ -5,6 +5,7 @@
 [libs]
 
 [options]
+all=true
 
 [lints]
 sketchy-null=error

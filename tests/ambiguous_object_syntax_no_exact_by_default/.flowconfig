@@ -1,4 +1,5 @@
 [options]
+all=true
 
 [lints]
 ambiguous-object-type=error

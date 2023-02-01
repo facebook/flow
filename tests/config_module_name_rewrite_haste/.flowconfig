@@ -5,6 +5,7 @@
 [libs]
 
 [options]
+all=true
 module.system=haste
 
 module.name_mapper='1Doesnt\(Exist\)' -> '\1s'

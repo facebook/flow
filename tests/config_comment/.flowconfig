@@ -13,6 +13,7 @@
 # I can write whatever I like here
   # Spaces before comment is allowed
 [options]
+all=true
 
 # I can write whatever I like here
   # Spaces before comment is allowed

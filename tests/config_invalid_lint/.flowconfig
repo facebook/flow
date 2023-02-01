@@ -4,3 +4,6 @@ sketchy-null=warn
 sketchy-null=warn
 ; doesn't exist
 nonexisting-lint=warn
+
+[options]
+all=true

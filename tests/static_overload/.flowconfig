@@ -1,2 +1,4 @@
 [libs]
 lib
+[options]
+all=true

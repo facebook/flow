@@ -148,7 +148,7 @@ start_flow_unsafe () {
     then
       PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
       "$FLOW" start "$root" \
-        $flowlib $all $inference_flag --wait \
+        $flowlib $inference_flag --wait \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
         --saved-state-no-fallback \
@@ -165,7 +165,7 @@ start_flow_unsafe () {
     # start server and wait
     PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
     "$FLOW" start "$root" \
-      $flowlib $all $inference_flag --wait \
+      $flowlib $inference_flag --wait \
       --wait-for-recheck "$wait_for_recheck" \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
@@ -278,7 +278,6 @@ runtest() {
         #
         auto_start=true
         flowlib=" --no-flowlib"
-        all=" --all"
         inference_flag=""
         shell=""
         cmd="check"
@@ -378,9 +377,8 @@ runtest() {
             flowlib=""
         fi
 
-        # if .flowconfig sets all=false, don't pass the cli flag
-        if [ -f .flowconfig ] && grep -q "all=false" .flowconfig; then
-            all=""
+        if [ -f .flowconfig ] && ! grep -q -E "all=(true|false)" .flowconfig; then
+          return $RUNTEST_MISSING_ALL_OPTION
         fi
 
         if [[ "$check_only" -eq 1 ]] && [[ "$cmd" != "check" ]]; then
@@ -400,7 +398,7 @@ runtest() {
             set -e
             # start server and wait
             "$FLOW" start "$root" \
-              $flowlib $all $inference_flag --wait \
+              $flowlib $inference_flag --wait \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy-mode none \
               --file-watcher "$file_watcher" \
@@ -429,7 +427,7 @@ runtest() {
             else
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
-                $inference_flag $flowlib $all \
+                $inference_flag $flowlib \
                 --strip-root --show-all-errors \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
@@ -457,7 +455,7 @@ runtest() {
           # shellcheck disable=SC2086
           codemod_out=$(\
             "$FLOW" "codemod" "annotate-exports" \
-                $flowlib $all \
+                $flowlib \
                 ${cmd_args[*]} \
                 --strip-root \
                 --quiet \

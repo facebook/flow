@@ -1,3 +1,4 @@
 [options]
+all=true
 munge_underscores=true
 no_flowlib=false

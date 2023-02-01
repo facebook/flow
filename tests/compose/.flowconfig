@@ -2,4 +2,5 @@
 lib/
 
 [options]
+all=true
 no_flowlib=false
