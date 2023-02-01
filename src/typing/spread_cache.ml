@@ -28,7 +28,7 @@ type reason_state = ALoc.t Error_message.exponential_spread_reason_group
 type cache_state =
   (int option * (Type.Object.slice * reason_state) IMap.t, reason_state * reason_state) result
 
-type t = cache_state IMap.t ref
+type t = cache_state IMap.t
 
 let add_lower_bound cache spread_id resolve_idx r objtypes =
   let state =
