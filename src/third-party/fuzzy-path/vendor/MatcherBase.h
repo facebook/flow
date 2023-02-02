@@ -29,7 +29,7 @@ struct MatchResult {
       int length = value->length() - other.value->length();
       // In the case of a tie, favor lexicographically-earlier
       if (length == 0) {
-        return value > other.value;
+        return *value < *other.value;
       }
       return length < 0;
     }

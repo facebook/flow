@@ -101,7 +101,10 @@ let tests = "fuzzy-path" >::: [
   "stable_ordering" >:: (fun ctxt ->
     let matcher = Fuzzy_path.init ["Foo"; "foo"; "far"; "foobar"] in
     let result = Fuzzy_path.search "f" matcher in
-    assert_values ~ctxt ["far"; "foo"; "Foo"; "foobar"] result;
+    (* "Foo", "foo" and "far" all have the same score, which is higher than
+       the score for "foobar". If the scores and the lengths are the same,
+       then sort lexicographically. *)
+    assert_values ~ctxt ["Foo"; "far"; "foo"; "foobar"] result;
   );
 ]
 
