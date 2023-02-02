@@ -54,7 +54,7 @@ class FlowWorker {
     workerRegistry[version] = worker;
   }
 
-  send(data: mixed) {
+  send(data: mixed): any {
     const id = ++this._index;
     const version = this._version;
     this._pending[id] = new Deferred();
@@ -89,19 +89,27 @@ class AsyncLocalFlow implements AsyncFlow {
     this._flow = flow;
   }
 
-  checkContent(filename, body) {
+  checkContent(
+    filename: string,
+    body: string,
+  ): Promise<$ReadOnlyArray<FlowJsError>> {
     return Promise.resolve(this._flow.checkContent(filename, body));
   }
 
-  typeAtPos(filename, body, line, col) {
+  typeAtPos(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+  ): Promise<string> {
     return Promise.resolve(this._flow.typeAtPos(filename, body, line, col));
   }
 
-  supportsParse() {
+  supportsParse(): Promise<boolean> {
     return Promise.resolve(this._flow.parse != null);
   }
 
-  parse(body, options) {
+  parse(body: string, options: FlowJsOptions): Promise<interface {}> {
     return Promise.resolve(this._flow.parse(body, options));
   }
 }
@@ -113,19 +121,27 @@ class AsyncWorkerFlow implements AsyncFlow {
     this._worker = worker;
   }
 
-  checkContent(filename, body) {
+  checkContent(
+    filename: string,
+    body: string,
+  ): Promise<$ReadOnlyArray<FlowJsError>> {
     return this._worker.send({type: 'checkContent', filename, body});
   }
 
-  typeAtPos(filename, body, line, col) {
+  typeAtPos(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+  ): Promise<string> {
     return this._worker.send({type: 'typeAtPos', filename, body, line, col});
   }
 
-  supportsParse() {
+  supportsParse(): Promise<boolean> {
     return this._worker.send({type: 'supportsParse'});
   }
 
-  parse(body, options) {
+  parse(body: string, options: FlowJsOptions): Promise<interface {}> {
     return this._worker.send({type: 'parse', body, options});
   }
 }

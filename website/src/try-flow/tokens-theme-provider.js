@@ -48,6 +48,7 @@ const registry = import('vscode-oniguruma/release/onig.wasm')
   });
 
 // from https://github.com/microsoft/vscode/blob/013501950e78b9dde5c2e6ec3f2ddfb9201156b7/src/vs/editor/common/modes/supports/tokenization.ts#L398
+// $FlowFixMe[missing-local-annot]
 function generateTokensCSSForColorMap(colorMap) {
   const rules = [];
   for (let i = 1, len = colorMap.length; i < len; i++) {

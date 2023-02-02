@@ -4,6 +4,7 @@
 <PROJECT_ROOT>/build/.*
 <PROJECT_ROOT>/babel.config.js
 <PROJECT_ROOT>/docusaurus.config.js
+<PROJECT_ROOT>/src/try-flow/require_2_3_3.js
 .*/node_modules/.*
 
 [libs]
@@ -13,7 +14,6 @@ libs
 [options]
 all=true
 exact_by_default=true
-exact_empty_objects=true
 
 [version]
-0.194.0
+0.198.2

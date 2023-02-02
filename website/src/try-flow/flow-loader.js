@@ -6,11 +6,12 @@
  */
 
 // defines window.requirejs
+// $FlowFixMe[cannot-resolve-module]
 import './require_2_3_3';
 
 declare function requirejs(pathList: $ReadOnlyArray<string>, resolve: (any) => void): void;
 
-const versionCache = {};
+const versionCache /*: Map<string, Promise<FlowJs>> */ = new Map();
 
 const TRY_LIB_CONTENTS = `
 declare type $JSXIntrinsics = {
@@ -24,7 +25,7 @@ declare type $JSXIntrinsics = {
 };
 `.slice(1);
 
-function get(url) {
+function get(url: string) {
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
     req.open('GET', url);
@@ -44,8 +45,9 @@ function get(url) {
 }
 
 export function load(version: string): Promise<FlowJs> {
-  if (version in versionCache) {
-    return Promise.resolve(versionCache[version]);
+  const cached = versionCache.get(version);
+  if (cached) {
+    return Promise.resolve(cached);
   }
   const majorVersion =
     version === 'master'
@@ -81,7 +83,7 @@ export function load(version: string): Promise<FlowJs> {
       } else {
         self.flow.initBuiltins([...libs, 'try-lib.js']);
       }
-      versionCache[version] = self.flow;
+      versionCache.set(version, self.flow);
       // $FlowFixMe[cannot-resolve-name]
       return flow;
     })

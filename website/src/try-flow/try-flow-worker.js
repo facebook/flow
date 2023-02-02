@@ -11,7 +11,17 @@ import {load} from './flow-loader';
 
 declare function postMessage(message: mixed): void;
 
-const versionCache = {};
+const versionCache = new Map<string, Promise<FlowJs>>();
+
+function computeIfAbset<K, V>(map: Map<K, V>, key: K, ifAbsent: K => V): V {
+  const existingValue = map.get(key);
+  if (existingValue !== undefined) {
+    return existingValue;
+  }
+  const newValue = ifAbsent(key);
+  map.set(key, newValue);
+  return newValue;
+}
 
 // $FlowFixMe[prop-missing]
 this.onmessage = function (e) {
@@ -65,14 +75,10 @@ this.onmessage = function (e) {
   }
 };
 
-function getFlow(version) {
-  if (!(version in versionCache)) {
-    versionCache[version] = new Promise(resolve => resolve(load(version)));
-  }
-  return versionCache[version];
+function getFlow(version: string): Promise<FlowJs> {
+  return computeIfAbset(
+    versionCache,
+    version,
+    version => new Promise(resolve => resolve(load(version))),
+  );
 }
-
-//
-// this.console = {
-//   log: function(v) { postMessage({type: "debug", message: v}); }
-// };

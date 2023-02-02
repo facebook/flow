@@ -42,7 +42,7 @@ function asSeverity(severity: string) {
 
 function validateFlowCode(
   flow: Promise<AsyncFlow>,
-  model,
+  model: any,
   callback: ($ReadOnlyArray<FlowJsError>, string) => void,
 ) {
   Promise.resolve(flow)
@@ -94,7 +94,7 @@ export default function TryFlow({
     flowRef.current?.then(flow => flow.supportsParse().then(setSupportParse));
   }, [flowVersion]);
 
-  function changeFlowVersion(event) {
+  function changeFlowVersion(event: SyntheticInputEvent<>) {
     const version = event.target.value;
     setLoading(true);
     setFlowVersion(version);
@@ -102,7 +102,7 @@ export default function TryFlow({
     flowRef.current.then(() => setLoading(false));
   }
 
-  function onFlowErrors(errors, value) {
+  function onFlowErrors(errors: $ReadOnlyArray<FlowJsError>, value: string) {
     setErrors(errors);
     flowRef.current.then(flow => {
       if (supportsParse) {

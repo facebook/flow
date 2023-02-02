@@ -16,7 +16,7 @@ import createTokensProvider from './tokens-theme-provider';
 import flowLanguageConfiguration from './flow-configuration.json';
 import type {AsyncFlow} from './init-flow';
 
-function getHashedValue(hash) {
+function getHashedValue(hash: string) {
   if (hash[0] !== '#' || hash.length < 2) return null;
   const version = hash.slice(1, 2);
   const encoded = hash.slice(2);
