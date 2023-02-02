@@ -212,7 +212,7 @@ type worker_mutator = {
     string option ->
     (Package_json.t, unit) result ->
     Modulename.Set.t;
-  clear_not_found: File_key.t -> Modulename.Set.t;
+  clear_not_found: File_key.t -> string option -> Modulename.Set.t;
 }
 
 module Parse_mutator : sig

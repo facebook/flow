@@ -569,15 +569,8 @@ let reducer
         if skip_changed then
           Modulename.Set.empty
         else
-          let dirty_modules = worker_mutator.Parsing_heaps.clear_not_found file_key in
-          (* if the file wasn't already parsed, like if we are notified that a file
-             was changed since mergebase, but we can't parse it since it was gone
-             before we started, then the heap won't know which module to dirty. if
-             a haste name reducer applies, we can figure it out from just the filename;
-             otherwise, lazy mode will miss that this module is dirty. *)
-          match exported_module file_key `Unknown with
-          | Some m -> Modulename.Set.add (Modulename.String m) dirty_modules
-          | None -> dirty_modules
+          let module_name = exported_module file_key `Unknown in
+          worker_mutator.Parsing_heaps.clear_not_found file_key module_name
       in
       let not_found = FilenameSet.add file_key acc.not_found in
       let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in

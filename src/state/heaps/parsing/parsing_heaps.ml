@@ -875,36 +875,49 @@ let prepare_add_package_file file_key file_opt hash module_name package_info =
 (* If this file used to exist, but no longer does, then it was deleted. Record
  * the deletion by clearing parse information. Deletion might also require
  * re-picking module providers, so we return dirty modules. *)
-let clear_file file_key =
+let clear_file file_key module_name =
   let read_resolved_requires_caml = read_resolved_requires in
   let open Heap in
-  match FileHeap.get file_key with
-  | None -> MSet.empty
-  | Some file ->
+  let parsed_file =
+    let* file = get_file_addr file_key in
     let parse_ent = get_parse file in
-    (match entity_read_latest parse_ent with
+    let* parse = entity_read_latest parse_ent in
+    Some (file, parse_ent, parse)
+  in
+  match parsed_file with
+  | None ->
+    (* if the file wasn't already parsed, like if we are notified that a file
+       was changed since mergebase, but we can't parse it since it was gone
+       before we started, then the heap won't know which module to dirty. if
+       a haste name reducer applies, we can figure it out from just the filename;
+       otherwise, lazy mode will miss that this module is dirty. *)
+    (match module_name with
     | None -> MSet.empty
-    | Some parse ->
-      let () =
-        let old_resolved_requires =
-          let* parse = coerce_typed parse in
-          let* addr = entity_read_latest (get_resolved_requires parse) in
-          Some (read_resolved_requires_caml addr)
-        in
-        alloc
-          (let+ update_revdeps = prepare_update_revdeps old_resolved_requires None in
-           update_revdeps file
-          )
+    | Some name ->
+      let m = alloc (prepare_find_or_add_haste_module name) in
+      ignore (m : haste_module_addr);
+      MSet.singleton (Modulename.String name))
+  | Some (file, parse_ent, parse) ->
+    let () =
+      let old_resolved_requires =
+        let* parse = coerce_typed parse in
+        let* addr = entity_read_latest (get_resolved_requires parse) in
+        Some (read_resolved_requires_caml addr)
       in
-      entity_advance parse_ent None;
-      let dirty_modules = MSet.singleton (Files.eponymous_module file_key) in
-      let haste_ent = get_haste_info file in
-      (match entity_read_latest haste_ent with
-      | None -> dirty_modules
-      | Some haste_info ->
-        entity_advance haste_ent None;
-        let m = get_haste_module haste_info in
-        MSet.add (haste_modulename m) dirty_modules))
+      alloc
+        (let+ update_revdeps = prepare_update_revdeps old_resolved_requires None in
+         update_revdeps file
+        )
+    in
+    entity_advance parse_ent None;
+    let dirty_modules = MSet.singleton (Files.eponymous_module file_key) in
+    let haste_ent = get_haste_info file in
+    (match entity_read_latest haste_ent with
+    | None -> dirty_modules
+    | Some haste_info ->
+      entity_advance haste_ent None;
+      let m = get_haste_module haste_info in
+      MSet.add (haste_modulename m) dirty_modules)
 
 let rollback_resolved_requires file ent =
   if Heap.entity_changed ent then (
@@ -1172,7 +1185,8 @@ let add_package file_key file_opt hash module_name package_info : MSet.t =
   WorkerCancel.with_no_cancellations @@ fun () ->
   Heap.alloc (prepare_add_package_file file_key file_opt hash module_name package_info)
 
-let clear_not_found file_key = WorkerCancel.with_no_cancellations @@ fun () -> clear_file file_key
+let clear_not_found file_key module_name =
+  WorkerCancel.with_no_cancellations @@ fun () -> clear_file file_key module_name
 
 module type READER = sig
   type reader
@@ -1553,13 +1567,13 @@ type worker_mutator = {
     string option ->
     (Package_json.t, unit) result ->
     MSet.t;
-  clear_not_found: File_key.t -> MSet.t;
+  clear_not_found: File_key.t -> string option -> MSet.t;
 }
 
 (* Parsing is pretty easy - there is no before state and no chance of rollbacks, so we don't
  * need to worry about a transaction *)
 module Parse_mutator = struct
-  let clear_not_found = Fun.const MSet.empty
+  let clear_not_found _ _ = MSet.empty
 
   let create () = { add_parsed; add_unparsed; add_package; clear_not_found }
 end
@@ -2151,7 +2165,7 @@ module Saved_state_mutator = struct
 
   let add_package () = add_package
 
-  let clear_not_found () = clear_file
+  let clear_not_found () f = clear_file f None
 
   let record_not_found () not_found = not_found_files := not_found
 
