@@ -913,6 +913,13 @@ let union_of_ts reason ts =
   (* If we have more than one type then we make a union type. *)
   | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
 
+let union_of_ts_opt reason ts =
+  match ts with
+  | [] -> None
+  | [t0] -> Some t0
+  (* If we have more than one type then we make a union type. *)
+  | t0 :: t1 :: ts -> Some (UnionT (reason, UnionRep.make t0 t1 ts))
+
 let annotated_or_inferred_of_option ~default = function
   | Some t -> Annotated t
   | None -> Inferred default

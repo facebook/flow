@@ -12,6 +12,12 @@ module TypeParamMarked = Marked.Make (Subst_name)
 module Marked = TypeParamMarked
 module Check = Implicit_instantiation_check
 
+let rec union_flatten_list ts = Base.List.concat_map ts ~f:union_flatten
+
+and union_flatten = function
+  | UnionT (_, rep) -> union_flatten_list (UnionRep.members rep)
+  | t -> [t]
+
 module type OBSERVER = sig
   type output
 
@@ -533,22 +539,9 @@ struct
              UpperEmpty)
     | t -> UpperT t
 
-  and get_t_with_placeholder_removed cx t =
-    match get_t cx t with
-    | UnionT (r, rep) ->
-      (match
-         UnionRep.members rep
-         |> Base.List.filter ~f:(fun t -> not @@ Tvar_resolver.has_placeholders cx t)
-       with
-      | [] -> None
-      | [t] -> Some t
-      | t1 :: t2 :: rest -> Some (UnionT (r, UnionRep.make t1 t2 rest)))
-    | t when Tvar_resolver.has_placeholders cx t -> None
-    | t -> Some t
-
   and merge_lower_bounds cx t =
     match t with
-    | OpenT (_, id) ->
+    | OpenT (r, id) ->
       let constraints = Context.find_graph cx id in
       (match constraints with
       | Constraint.FullyResolved (_, (lazy t))
@@ -562,7 +555,12 @@ struct
         if TypeMap.cardinal lowers = 0 then
           None
         else
-          get_t_with_placeholder_removed cx t)
+          TypeMap.keys lowers
+          |> List.filter is_proper_def
+          |> Flow_js_utils.collect_lowers cx (ISet.singleton id) [] ~filter_empty:false
+          |> union_flatten_list
+          |> Base.List.filter ~f:(fun t -> not @@ Tvar_resolver.has_placeholders cx t)
+          |> TypeUtil.union_of_ts_opt r)
     | t -> Some t
 
   let on_missing_bounds

@@ -30,32 +30,31 @@ let possible_types_of_type cx = function
 
 let possible_uses cx id = uses_of (Context.find_graph cx id) |> List.filter is_proper_use
 
-let merge_tvar_opt =
-  let rec collect_lowers ~filter_empty cx seen acc = function
-    | [] -> Base.List.rev acc
-    | t :: ts ->
-      (match t with
-      (* Recursively unwrap unseen tvars *)
-      | OpenT (_, id) ->
-        if ISet.mem id seen then
-          collect_lowers ~filter_empty cx seen acc ts
-        (* already unwrapped *)
-        else
-          let seen = ISet.add id seen in
-          collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
-      | DefT (_, _, EmptyT) when filter_empty -> collect_lowers ~filter_empty cx seen acc ts
-      (* Everything else becomes part of the merge typed *)
-      | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
+let rec collect_lowers ~filter_empty cx seen acc = function
+  | [] -> Base.List.rev acc
+  | t :: ts ->
+    (match t with
+    (* Recursively unwrap unseen tvars *)
+    | OpenT (_, id) ->
+      if ISet.mem id seen then
+        collect_lowers ~filter_empty cx seen acc ts
+      (* already unwrapped *)
+      else
+        let seen = ISet.add id seen in
+        collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
+    | DefT (_, _, EmptyT) when filter_empty -> collect_lowers ~filter_empty cx seen acc ts
+    (* Everything else becomes part of the merge typed *)
+    | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
+
+let merge_tvar_opt ?(filter_empty = false) cx r id =
+  let lowers =
+    let seen = ISet.singleton id in
+    collect_lowers cx seen [] (possible_types cx id) ~filter_empty
   in
-  fun ?(filter_empty = false) cx r id ->
-    let lowers =
-      let seen = ISet.singleton id in
-      collect_lowers cx seen [] (possible_types cx id) ~filter_empty
-    in
-    match lowers with
-    | [t] -> Some t
-    | t0 :: t1 :: ts -> Some (UnionT (r, UnionRep.make t0 t1 ts))
-    | [] -> None
+  match lowers with
+  | [t] -> Some t
+  | t0 :: t1 :: ts -> Some (UnionT (r, UnionRep.make t0 t1 ts))
+  | [] -> None
 
 let merge_tvar ?(filter_empty = false) ~no_lowers cx r id =
   match merge_tvar_opt ~filter_empty cx r id with

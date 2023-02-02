@@ -99,6 +99,8 @@ val map_annotated_or_inferred :
 
 val union_of_ts : reason -> Type.t list -> Type.t
 
+val union_of_ts_opt : reason -> Type.t list -> Type.t option
+
 val annotated_or_inferred_of_option : default:Type.t -> Type.t option -> Type.annotated_or_inferred
 
 val subtype_this_of_function : Type.funtype -> Type.t
