@@ -5,7 +5,6 @@
 
 struct MatchOptions {
   bool smart_case;
-  size_t max_gap;
 };
 
 /**

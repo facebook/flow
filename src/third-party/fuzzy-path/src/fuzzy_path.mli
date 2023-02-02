@@ -12,10 +12,6 @@ type options = {
   num_threads: int;
 
   max_results: int;
-
-  (** Maximum gap to allow between consecutive letters in a match.
-      Provide a smaller maxGap to speed up query results. *)
-  max_gap: int;
 }
 
 type match_result = {

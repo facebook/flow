@@ -12,10 +12,6 @@ type options = {
   num_threads: int;
 
   max_results: int;
-
-  (** Maximum gap to allow between consecutive letters in a match.
-      Provide a smaller maxGap to speed up query results. *)
-  max_gap: int;
 }
 
 type match_result = {
@@ -38,7 +34,6 @@ let default_options = {
   smart_case = false;
   num_threads = 1;
   max_results = max_int;
-  max_gap = 0;
 }
 
 let search ?(options = default_options) query t : match_result list =

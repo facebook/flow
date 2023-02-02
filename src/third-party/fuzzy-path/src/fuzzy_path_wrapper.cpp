@@ -49,7 +49,6 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
   cpp_options.smart_case = options.smart_case;
   cpp_options.num_threads = options.num_threads;
   cpp_options.max_results = options.max_results;
-  cpp_options.max_gap = options.max_gap;
 
   std::string q(query);
   std::vector<MatchResult> matches = obj->findMatches(q, cpp_options);

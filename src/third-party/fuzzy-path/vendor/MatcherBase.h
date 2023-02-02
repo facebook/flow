@@ -9,7 +9,6 @@ struct MatcherOptions {
   bool smart_case = false;
   size_t num_threads = 0;
   size_t max_results = 0;
-  size_t max_gap = 0;
 };
 
 struct MatchResult {

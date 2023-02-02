@@ -22,7 +22,6 @@ typedef struct matcher_options {
   bool smart_case;
   size_t num_threads;
   size_t max_results;
-  size_t max_gap;
 } matcher_options_t;
 
 typedef struct match_result {

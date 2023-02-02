@@ -37,7 +37,6 @@ struct MatchInfo {
   int* last_match;
   float *memo;
   bool smart_case;
-  size_t max_gap;
   float min_score;
 };
 
@@ -79,9 +78,6 @@ float recursive_match(const MatchInfo &m,
   char c = m.needle_case[needle_idx];
 
   size_t lim = m.last_match[needle_idx];
-  if (needle_idx > 0 && m.max_gap && haystack_idx + m.max_gap < lim) {
-    lim = haystack_idx + m.max_gap;
-  }
 
   // This is only used when needle_idx == haystack_idx == 0.
   // It won't be accurate for any other run.
@@ -173,7 +169,6 @@ float score_match(const char *haystack,
   m.haystack_case = haystack_lower;
   m.needle_case = needle_lower;
   m.smart_case = options.smart_case;
-  m.max_gap = options.max_gap;
   m.min_score = min_score;
 
 #ifdef _WIN32
