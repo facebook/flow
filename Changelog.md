@@ -1,3 +1,9 @@
+### 0.199.1
+
+Notable bug fixes:
+* Fix crash related to deleted files in Haste
+
+
 ### 0.199.0
 
 Likely to cause new Flow errors:
