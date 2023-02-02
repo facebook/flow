@@ -40,10 +40,22 @@ function asSeverity(severity: string) {
   }
 }
 
+type ValidateResult = $ReadOnly<
+  | {
+      kind: 'success',
+      errors: $ReadOnlyArray<FlowJsError>,
+      value: string,
+    }
+  | {
+      kind: 'error',
+      internalError: string,
+    },
+>;
+
 function validateFlowCode(
   flow: Promise<AsyncFlow>,
   model: any,
-  callback: ($ReadOnlyArray<FlowJsError>, string) => void,
+  callback: ValidateResult => void,
 ) {
   Promise.resolve(flow)
     .then(flowProxy => flowProxy.checkContent('-', model.getValue()))
@@ -68,10 +80,9 @@ function validateFlowCode(
         };
       });
       monaco.editor.setModelMarkers(model, 'default', markers);
-      if (callback != null) {
-        callback(errors, model.getValue());
-      }
-    });
+      callback({kind: 'success', errors, value: model.getValue()});
+    })
+    .catch(e => callback({kind: 'error', internalError: JSON.stringify(e)}));
 }
 
 type Props = {defaultFlowVersion: string, flowVersions: $ReadOnlyArray<string>};
@@ -84,6 +95,7 @@ export default function TryFlow({
   const [loading, setLoading] = useState(true);
   const [supportsParse, setSupportParse] = useState(false);
   const [errors, setErrors] = useState([]);
+  const [internalError, setInternalError] = useState('');
   const [astJSON, setASTJSON] = useState('{}');
 
   const flowRef = useRef(initFlow(flowVersion));
@@ -102,13 +114,20 @@ export default function TryFlow({
     flowRef.current.then(() => setLoading(false));
   }
 
-  function onFlowErrors(errors: $ReadOnlyArray<FlowJsError>, value: string) {
-    setErrors(errors);
-    flowRef.current.then(flow => {
-      if (supportsParse) {
-        getASTJSON(flow, value).then(setASTJSON);
-      }
-    });
+  function onValidate(result: ValidateResult) {
+    if (result.kind === 'error') {
+      setInternalError(result.internalError);
+      setErrors([]);
+      setASTJSON('{}');
+    } else {
+      setInternalError('');
+      setErrors(result.errors);
+      flowRef.current.then(flow => {
+        if (supportsParse) {
+          getASTJSON(flow, result.value).then(setASTJSON);
+        }
+      });
+    }
   }
 
   function onCodeChange() {
@@ -118,7 +137,7 @@ export default function TryFlow({
     const flow = flowRef.current;
 
     // typecheck on edit
-    validateFlowCode(flow, model, onFlowErrors);
+    validateFlowCode(flow, model, onValidate);
     // update the URL
     const encoded = LZString.compressToEncodedURIComponent(value);
     window.location.hash = `0${encoded}`;
@@ -141,6 +160,7 @@ export default function TryFlow({
         changeFlowVersion={changeFlowVersion}
         loading={loading}
         errors={errors}
+        internalError={internalError}
         ast={
           supportsParse
             ? astJSON

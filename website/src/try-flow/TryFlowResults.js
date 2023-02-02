@@ -73,6 +73,7 @@ type Props = {
   changeFlowVersion: (SyntheticInputEvent<>) => void,
   loading: boolean,
   errors: $ReadOnlyArray<FlowJsError>,
+  internalError: string,
   ast: string,
 };
 
@@ -82,6 +83,7 @@ export default function TryFlowResults({
   changeFlowVersion,
   loading,
   errors,
+  internalError,
   ast,
 }: Props): MixedElement {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
@@ -126,17 +128,21 @@ export default function TryFlowResults({
       {activeToolbarTab === 'errors' && (
         <pre className={clsx(styles.resultBody, styles.errors)}>
           <ul>
-            {errors.map((error, i) => (
-              <li key={i}>
-                {error.message.map((msg, i) => (
-                  <ErrorMessage key={i} msg={msg} />
-                ))}
-                {error.extra &&
-                  error.extra.map((info, i) => (
-                    <ErrorMessageExtra key={i} info={info} />
+            {internalError ? (
+              <li>TryFlow encountered an internal error: {internalError}</li>
+            ) : (
+              errors.map((error, i) => (
+                <li key={i}>
+                  {error.message.map((msg, i) => (
+                    <ErrorMessage key={i} msg={msg} />
                   ))}
-              </li>
-            ))}
+                  {error.extra &&
+                    error.extra.map((info, i) => (
+                      <ErrorMessageExtra key={i} info={info} />
+                    ))}
+                </li>
+              ))
+            )}
           </ul>
         </pre>
       )}
