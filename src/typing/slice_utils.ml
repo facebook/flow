@@ -1141,8 +1141,20 @@ let resolve
   (* Resolve each member of a union. *)
   | UnionT (union_reason, rep) ->
     let union_loc = aloc_of_reason union_reason in
-    let (t, todo) = UnionRep.members_nel rep in
-    let resolve_tool = Resolve (List0 (todo, (union_loc, Or))) in
+    let (t, resolve_tool) =
+      let (t0, ts0) = UnionRep.members_nel rep in
+      let members_filtered =
+        Base.List.filter
+          ~f:(function
+            | DefT (_, _, EmptyT) -> false
+            | _ -> true)
+          (t0 :: Nel.to_list ts0)
+      in
+      match members_filtered with
+      | [] -> (t0, Resolve (List0 (ts0, (union_loc, Or))))
+      | t :: [] -> (t, Resolve Next)
+      | t :: t' :: ts -> (t, Resolve (List0 ((t', ts), (union_loc, Or))))
+    in
     let tool =
       match tool with
       | Spread (options, state) ->
