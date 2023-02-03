@@ -21,27 +21,9 @@ References:
                        ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- constructor.js:15:6
-
-Cannot call `Foo` because string [1] is incompatible with number [2]. [incompatible-call]
-
-   constructor.js:15:6
-   15| (new Foo(123): Bar<string>); // error, number !~> string
-            ^^^
-
-References:
-   constructor.js:15:20
-   15| (new Foo(123): Bar<string>); // error, number !~> string
-                          ^^^^^^ [1]
-   constructor.js:15:10
-   15| (new Foo(123): Bar<string>); // error, number !~> string
-                ^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------- constructor.js:15:10
 
-Cannot cast `new Foo(...)` to `Bar` because number [1] is incompatible with string [2] in type argument `T` [3].
-[incompatible-cast]
+Cannot call `Foo` with `123` bound to `iterable` because number [1] is incompatible with string [2]. [incompatible-call]
 
    constructor.js:15:10
    15| (new Foo(123): Bar<string>); // error, number !~> string
@@ -51,32 +33,11 @@ References:
    constructor.js:15:20
    15| (new Foo(123): Bar<string>); // error, number !~> string
                           ^^^^^^ [2]
-   constructor.js:10:19
-   10| declare class Bar<T> {}
-                         ^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------- constructor.js:22:6
-
-Cannot call `Baz` because string [1] is incompatible with number [2]. [incompatible-call]
-
-   constructor.js:22:6
-   22| (new Baz(123): Baz<string>); // error, number !~> string
-            ^^^
-
-References:
-   constructor.js:22:20
-   22| (new Baz(123): Baz<string>); // error, number !~> string
-                          ^^^^^^ [1]
-   constructor.js:22:10
-   22| (new Baz(123): Baz<string>); // error, number !~> string
-                ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- constructor.js:22:10
 
-Cannot cast `new Baz(...)` to `Baz` because number [1] is incompatible with string [2] in type argument `T` [3].
-[incompatible-cast]
+Cannot call `Baz` with `123` bound to `iterable` because number [1] is incompatible with string [2]. [incompatible-call]
 
    constructor.js:22:10
    22| (new Baz(123): Baz<string>); // error, number !~> string
@@ -86,9 +47,6 @@ References:
    constructor.js:22:20
    22| (new Baz(123): Baz<string>); // error, number !~> string
                           ^^^^^^ [2]
-   constructor.js:18:19
-   18| declare class Baz<T> {
-                         ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- constructor.js:25:22
@@ -129,4 +87,4 @@ References:
 
 
 
-Found 9 errors
+Found 7 errors
