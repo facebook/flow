@@ -31,3 +31,15 @@
   type B<T> = A<T> | A<number>;
   const x: B<string> = (x) => { (x: string); }; // error number ~> string
 }
+
+{
+  declare var mixedArray1: Array<string> | Array<number>;
+  const list = mixedArray1.slice();
+  list.forEach(elem => {(elem: empty)}); // error
+}
+
+{
+  declare var mixedArray2: Array<empty> | Array<number>;
+  const list = mixedArray2.slice();
+  list.forEach(elem => {(elem: empty)}); // error
+}

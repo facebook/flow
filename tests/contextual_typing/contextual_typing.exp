@@ -856,5 +856,56 @@ References:
                                            ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- unions.js:38:26
 
-Found 64 errors
+Cannot cast `elem` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   unions.js:38:26
+   38|   list.forEach(elem => {(elem: empty)}); // error
+                                ^^^^
+
+References:
+   unions.js:36:34
+   36|   declare var mixedArray1: Array<string> | Array<number>;
+                                        ^^^^^^ [1]
+   unions.js:38:32
+   38|   list.forEach(elem => {(elem: empty)}); // error
+                                      ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- unions.js:38:26
+
+Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   unions.js:38:26
+   38|   list.forEach(elem => {(elem: empty)}); // error
+                                ^^^^
+
+References:
+   unions.js:36:50
+   36|   declare var mixedArray1: Array<string> | Array<number>;
+                                                        ^^^^^^ [1]
+   unions.js:38:32
+   38|   list.forEach(elem => {(elem: empty)}); // error
+                                      ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- unions.js:44:26
+
+Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   unions.js:44:26
+   44|   list.forEach(elem => {(elem: empty)}); // error
+                                ^^^^
+
+References:
+   unions.js:42:49
+   42|   declare var mixedArray2: Array<empty> | Array<number>;
+                                                       ^^^^^^ [1]
+   unions.js:44:32
+   44|   list.forEach(elem => {(elem: empty)}); // error
+                                      ^^^^^ [2]
+
+
+
+Found 67 errors

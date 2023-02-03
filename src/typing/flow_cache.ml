@@ -57,22 +57,25 @@ end
    those type variables as part of the identity of the operation. *)
 module PolyInstantiation = struct
   let find cx reason_tapp typeparam op_reason =
-    let cache = Context.instantiation_cache cx in
-    let in_synthesis_mode = Context.in_synthesis_mode cx in
-    match
-      Reason.ImplicitInstantiationReasonMap.find_opt
-        (reason_tapp, typeparam.reason, op_reason, in_synthesis_mode)
-        !cache
-    with
-    | Some t -> t
-    | None ->
-      let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
-      cache :=
-        Reason.ImplicitInstantiationReasonMap.add
+    if Context.lti cx then
+      ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp
+    else
+      let cache = Context.instantiation_cache cx in
+      let in_synthesis_mode = Context.in_synthesis_mode cx in
+      match
+        Reason.ImplicitInstantiationReasonMap.find_opt
           (reason_tapp, typeparam.reason, op_reason, in_synthesis_mode)
-          t
-          !cache;
-      t
+          !cache
+      with
+      | Some t -> t
+      | None ->
+        let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
+        cache :=
+          Reason.ImplicitInstantiationReasonMap.add
+            (reason_tapp, typeparam.reason, op_reason, in_synthesis_mode)
+            t
+            !cache;
+        t
 end
 
 module Eval = struct
