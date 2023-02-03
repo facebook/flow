@@ -60,3 +60,12 @@ function test7() {
   const tagsList = arrayFrom(tags ?? []);
   tagsList.forEach(tag => (tag: number)); // error: string ~> number
 }
+
+function test8() {
+  declare function overload(string, (string) => void): void;
+  declare function overload(number, (number) => void): void;
+
+  declare var foo: ?string;
+  overload(foo || "", (s) => {}); // okay
+  overload(foo || 42, (s) => {}); // error because we can't resolve overload
+}

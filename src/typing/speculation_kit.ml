@@ -100,9 +100,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
           in
           Speculation_hint_set (spec_id_path, lhs_t)
         | Speculation_hint_invalid -> Speculation_hint_invalid
-        | Speculation_hint_set (old_spec_id_path, _) ->
+        | Speculation_hint_set (old_spec_id_path, old_t) ->
           if List.mem speculation_id old_spec_id_path then
             (* We are moving back a successful speculation path. *)
+            old_callee_hint
+          else if lhs_t == old_t then
+            (* We are in a different branch, but the outcome is the same, so keep it. *)
             old_callee_hint
           else
             Speculation_hint_invalid

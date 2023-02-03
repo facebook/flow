@@ -466,6 +466,14 @@ References:
                                        ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- intersections.js:70:24
+
+An annotation on `s` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   70|   overload(foo || 42, (s) => {}); // error because we can't resolve overload
+                              ^
+
+
 Error ------------------------------------------------------------------------------------------------------ lits.js:3:5
 
 Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
@@ -849,4 +857,4 @@ References:
 
 
 
-Found 63 errors
+Found 64 errors

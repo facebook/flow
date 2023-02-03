@@ -1111,9 +1111,9 @@ module rec TypeTerm : sig
    * remains the same.
    * (ii) The successful speculation id has not been recorded in "set". This choice
    * is a sibling of the currently "set" choice. This is possible thanks to the
-   * special behavior of PreprocessKitT with union-like types. Two
-   * overloads from sibling branches are unlikely to lead to a helpful hint --
-   * this case is deemed "invalid".
+   * special behavior of PreprocessKitT with union-like types. In this case, we
+   * will only accept the overload if all sibling branches agree on the result.
+   * Otherwise the result is deemed "invalid".
    *)
   and speculation_hint_state =
     | Speculation_hint_unset
