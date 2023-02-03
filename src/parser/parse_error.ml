@@ -135,6 +135,7 @@ type t =
   | StrictReservedWord
   | StrictVarName
   | SuperPrivate
+  | TSClassVisibility of [ `Public | `Private | `Protected ]
   | ThisParamAnnotationRequired
   | ThisParamBannedInArrowFunctions
   | ThisParamBannedInConstructor
@@ -416,6 +417,20 @@ module PP = struct
     | StrictReservedWord -> "Use of reserved word in strict mode"
     | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
     | SuperPrivate -> "You may not access a private field through the `super` keyword."
+    | TSClassVisibility kind ->
+      let (keyword, append) =
+        match kind with
+        | `Private ->
+          ( "private",
+            " You can try using JavaScript private fields by prepending `#` to the field name."
+          )
+        | `Public ->
+          ( "public",
+            " Fields and methods are public by default. You can simply omit the `public` keyword."
+          )
+        | `Protected -> ("protected", "")
+      in
+      Printf.sprintf "Flow does not support using `%s` in classes.%s" keyword append
     | ThisParamAnnotationRequired -> "A type annotation is required for the `this` parameter."
     | ThisParamBannedInArrowFunctions ->
       "Arrow functions cannot have a `this` parameter; arrow functions automatically bind `this` when declared."

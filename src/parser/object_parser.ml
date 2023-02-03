@@ -881,6 +881,22 @@ module Object
           (ret, leading)
         | _ -> (None, [])
       in
+      (* Error on TS class visibility modifiers. *)
+      (match Peek.token env with
+      | (T_PUBLIC as t)
+      | (T_PRIVATE as t)
+      | (T_PROTECTED as t)
+        when Peek.ith_is_identifier ~i:1 env ->
+        let kind =
+          match t with
+          | T_PUBLIC -> `Public
+          | T_PRIVATE -> `Private
+          | T_PROTECTED -> `Protected
+          | _ -> failwith "Must be one of the above"
+        in
+        error env (Parse_error.TSClassVisibility kind);
+        Eat.token env
+      | _ -> ());
       let static =
         Peek.token env = T_STATIC
         &&
