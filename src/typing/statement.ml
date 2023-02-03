@@ -1301,13 +1301,11 @@ module Make
             | InterfaceDeclaration { Interface.id; _ }
             | EnumDeclaration { EnumDeclaration.id; _ } ->
               let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-              Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
               Import_export.export_binding cx (OrdinaryName name) id_loc export_kind
             | VariableDeclaration { VariableDeclaration.declarations; _ } ->
               Flow_ast_utils.fold_bindings_of_variable_declarations
                 (fun _ () id ->
                   let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-                  Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
                   Import_export.export_binding cx (OrdinaryName name) id_loc export_kind)
                 ()
                 declarations
@@ -1319,7 +1317,6 @@ module Make
       (loc, ExportNamedDeclaration { export_decl with ExportNamedDeclaration.declaration })
     | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments }) ->
       let module D = ExportDefaultDeclaration in
-      Type_inference_hooks_js.dispatch_export_named_hook "default" default;
       let (export_loc, t, declaration) =
         match declaration with
         | D.Declaration (loc, stmt) ->
@@ -6527,7 +6524,6 @@ module Make
                   ~decorators
                   ~comments
                   ~get_typed_method_key =
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
                 let decorators =
                   Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
                 in
@@ -6718,7 +6714,6 @@ module Make
                       comments;
                     }
                   ) ->
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
                 let reason = mk_reason (RPrivateProperty name) loc in
                 let polarity = Anno.polarity cx variance in
                 let (field, annot_t, annot_ast, get_value) =
@@ -6763,7 +6758,6 @@ module Make
                       comments;
                     }
                   ) ->
-                Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity cx variance in
                 let (field, annot_t, annot, get_value) =

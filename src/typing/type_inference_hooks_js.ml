@@ -19,11 +19,7 @@ let jsx_nop _ _ _ = false
 
 let ref_nop _ _ _ = ()
 
-let class_member_decl_nop _ _ _ _ _ = ()
-
 let obj_prop_decl_nop _ _ _ = false
-
-let obj_type_prop_decl_nop _ _ _ = ()
 
 let obj_to_obj_nop _ _ _ = ()
 
@@ -72,16 +68,11 @@ type hook_state_t = {
      things a bit *)
   call_hook: Context.t -> string -> ALoc.t -> Type.t -> unit;
   jsx_hook: Context.t -> string -> ALoc.t -> bool;
-  class_member_decl_hook:
-    Context.t -> Type.t (* self *) -> bool (* static *) -> string -> ALoc.t -> unit;
   obj_prop_decl_hook: Context.t -> string -> ALoc.t -> bool;
-  obj_type_prop_decl_hook: Context.t -> string -> ALoc.t -> unit;
   (* Called when ObjT 1 ~> ObjT 2 *)
   obj_to_obj_hook: Context.t -> Type.t (* ObjT 1 *) -> Type.t (* ObjT 2 *) -> unit;
   (* Called when InstanceT ~> ObjT *)
   instance_to_obj_hook: Context.t -> Type.t (* InstanceT *) -> Type.t (* ObjT *) -> unit;
-  (* Dispatched with "default" for default exports *)
-  export_named_hook: string (* name *) -> ALoc.t -> unit;
 }
 
 let nop_hook_state =
@@ -92,12 +83,9 @@ let nop_hook_state =
     member_hook = member_nop;
     call_hook = call_nop;
     jsx_hook = jsx_nop;
-    class_member_decl_hook = class_member_decl_nop;
     obj_prop_decl_hook = obj_prop_decl_nop;
-    obj_type_prop_decl_hook = obj_type_prop_decl_nop;
     obj_to_obj_hook = obj_to_obj_nop;
     instance_to_obj_hook = instance_to_obj_nop;
-    export_named_hook = export_named_nop;
   }
 
 let hook_state = ref nop_hook_state
@@ -114,19 +102,11 @@ let set_call_hook hook = hook_state := { !hook_state with call_hook = hook }
 
 let set_jsx_hook hook = hook_state := { !hook_state with jsx_hook = hook }
 
-let set_class_member_decl_hook hook =
-  hook_state := { !hook_state with class_member_decl_hook = hook }
-
 let set_obj_prop_decl_hook hook = hook_state := { !hook_state with obj_prop_decl_hook = hook }
-
-let set_obj_type_prop_decl_hook hook =
-  hook_state := { !hook_state with obj_type_prop_decl_hook = hook }
 
 let set_obj_to_obj_hook hook = hook_state := { !hook_state with obj_to_obj_hook = hook }
 
 let set_instance_to_obj_hook hook = hook_state := { !hook_state with instance_to_obj_hook = hook }
-
-let set_export_named_hook hook = hook_state := { !hook_state with export_named_hook = hook }
 
 let reset_hooks () = hook_state := nop_hook_state
 
@@ -142,15 +122,8 @@ let dispatch_call_hook cx name loc this_t = !hook_state.call_hook cx name loc th
 
 let dispatch_jsx_hook cx name loc = !hook_state.jsx_hook cx name loc
 
-let dispatch_class_member_decl_hook cx self static name loc =
-  !hook_state.class_member_decl_hook cx self static name loc
-
 let dispatch_obj_prop_decl_hook cx name loc = !hook_state.obj_prop_decl_hook cx name loc
-
-let dispatch_obj_type_prop_decl_hook cx name loc = !hook_state.obj_type_prop_decl_hook cx name loc
 
 let dispatch_obj_to_obj_hook cx t1 t2 = !hook_state.obj_to_obj_hook cx t1 t2
 
 let dispatch_instance_to_obj_hook cx t1 t2 = !hook_state.instance_to_obj_hook cx t1 t2
-
-let dispatch_export_named_hook loc = !hook_state.export_named_hook loc

@@ -1533,7 +1533,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | Ast.Expression.Object.Property.Literal
             (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
         | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
-          Type_inference_hooks_js.dispatch_obj_type_prop_decl_hook cx name loc;
           let (((_, t), _) as value_ast) = convert cx tparams_map value in
           let prop_ast t =
             {

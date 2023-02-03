@@ -51,86 +51,205 @@ let get_object_literal_loc ty : ALoc.t option =
   | RObjectLit -> Some (def_loc_of_t ty)
   | _ -> None
 
-type def_kind =
+type 'loc def_kind =
   | Use of Type.t * (* name *) string
       (** Use of a property, e.g. `foo.bar`. Includes type of receiver (`foo`) and name of the
           property `bar` *)
   | Class_def of Type.t * (* name *) string * (* static *) bool
       (** In a class, where a property/method is defined. Includes the type of the class and the name
           of the property. *)
-  | Obj_def of Loc.t * (* name *) string
+  | Obj_def of 'loc * (* name *) string
       (** In an object type. Includes the location of the property definition and its name. *)
   | Use_in_literal of Type.t Nel.t * (* name *) string
       (** List of types that the object literal flows into directly, as well as the name of the
           property. *)
 
-let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
+let map_def_kind_loc ~f = function
+  | Use (t, name) -> Use (t, name)
+  | Class_def (t, name, static) -> Class_def (t, name, static)
+  | Obj_def (loc, name) -> Obj_def (f loc, name)
+  | Use_in_literal (ts, name) -> Use_in_literal (ts, name)
+
+module Def_kind_search = struct
+  exception
+    Found_class_def of {
+      name: string;
+      static: bool;
+    }
+
+  exception Found_import of { name: string }
+
+  exception Found of ALoc.t def_kind
+
+  class searcher ~(covers_target : ALoc.t -> bool) =
+    object (this)
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      method on_loc_annot x = x
+
+      method on_type_annot x = x
+
+      method! expression (((l, t), expr) as x) =
+        let open Flow_ast.Expression in
+        if covers_target l then
+          match expr with
+          | Class _ ->
+            (try super#expression x with
+            | Found_class_def { name; static } -> raise (Found (Class_def (t, name, static))))
+          | _ -> super#expression x
+        else
+          x
+
+      method! statement ((l, _) as x) =
+        if covers_target l then
+          super#statement x
+        else
+          x
+
+      method! class_declaration cls =
+        let open Flow_ast.Class in
+        let { id; _ } = cls in
+        let class_type =
+          match id with
+          | Some ((_, annot), _) -> annot
+          | None -> failwith "Class declaration must have an id"
+        in
+        try super#class_declaration cls with
+        | Found_class_def { name; static } -> raise (Found (Class_def (class_type, name, static)))
+
+      method private visit_class_key ~static key =
+        let open Flow_ast.Expression.Object.Property in
+        match key with
+        | Identifier ((loc, _), { Flow_ast.Identifier.name; _ }) ->
+          if covers_target loc then raise (Found_class_def { name; static })
+        | _ -> ()
+
+      method! class_method prop =
+        let open Flow_ast.Class.Method in
+        let { key; static; _ } = prop in
+        this#visit_class_key ~static key;
+        super#class_method prop
+
+      method! class_property prop =
+        let open Flow_ast.Class.Property in
+        let { key; static; _ } = prop in
+        this#visit_class_key ~static key;
+        super#class_property prop
+
+      method! class_private_field field =
+        let open Flow_ast.Class.PrivateField in
+        let { key; static; _ } = field in
+        let (loc, { Flow_ast.PrivateName.name; comments = _ }) = key in
+        if covers_target loc then raise (Found_class_def { name; static });
+        super#class_private_field field
+
+      method! import_declaration loc decl =
+        let open Flow_ast.Statement.ImportDeclaration in
+        try super#import_declaration loc decl with
+        | Found_import { name } ->
+          let { source = ((_, module_t), _); _ } = decl in
+          raise (Found (Use (module_t, name)))
+
+      method! import_default_specifier ~import_kind:_ id =
+        let ((loc, _), _) = id in
+        if covers_target loc then raise (Found_import { name = "default" });
+        id
+
+      method! import_named_specifier ~import_kind:_ specifier =
+        let open Flow_ast.Statement.ImportDeclaration in
+        let { kind = _; local; remote } = specifier in
+        let ((loc, _), { Flow_ast.Identifier.name; _ }) = Base.Option.value ~default:remote local in
+        if covers_target loc then raise (Found_import { name });
+        specifier
+
+      method! export_default_declaration loc decl =
+        let open Flow_ast.Statement.ExportDefaultDeclaration in
+        let { default; _ } = decl in
+        if covers_target default then raise (Found (Obj_def (default, "default")));
+        super#export_default_declaration loc decl
+
+      method! export_named_declaration loc decl =
+        let { Flow_ast.Statement.ExportNamedDeclaration.declaration; _ } = decl in
+        (match declaration with
+        | Some (_, stmt) ->
+          let open Flow_ast.Statement in
+          (match stmt with
+          | FunctionDeclaration { Flow_ast.Function.id = Some id; _ }
+          | ClassDeclaration { Flow_ast.Class.id = Some id; _ }
+          | TypeAlias { TypeAlias.id; _ }
+          | OpaqueType { OpaqueType.id; _ }
+          | InterfaceDeclaration { Interface.id; _ }
+          | EnumDeclaration { EnumDeclaration.id; _ } ->
+            let ((id_loc, _), { Flow_ast.Identifier.name; comments = _ }) = id in
+            if covers_target id_loc then raise (Found (Obj_def (id_loc, name)))
+          | VariableDeclaration { VariableDeclaration.declarations; _ } ->
+            Flow_ast_utils.fold_bindings_of_variable_declarations
+              (fun _has_annot () id ->
+                let ((id_loc, _), { Flow_ast.Identifier.name; comments = _ }) = id in
+                if covers_target id_loc then raise (Found (Obj_def (id_loc, name))))
+              ()
+              declarations
+          | _ -> ())
+        | None -> ());
+        super#export_named_declaration loc decl
+
+      method! member expr =
+        let open Flow_ast.Expression.Member in
+        let { _object; property; comments = _ } = expr in
+        (match property with
+        | PropertyIdentifier ((id_loc, _), { Flow_ast.Identifier.name; _ })
+        | PropertyPrivateName (id_loc, { Flow_ast.PrivateName.name; _ }) ->
+          if covers_target id_loc then
+            let ((_, obj_t), _) = _object in
+            raise (Found (Use (obj_t, name)))
+        | PropertyExpression _ -> ());
+        super#member expr
+
+      method! object_property_type prop =
+        let open Flow_ast.Expression.Object.Property in
+        let (_, { Flow_ast.Type.Object.Property.key; _ }) = prop in
+        (match key with
+        | Identifier ((loc, _), { Flow_ast.Identifier.name; _ }) ->
+          if covers_target loc then raise (Found (Obj_def (loc, name)))
+        | _ -> ());
+        super#object_property_type prop
+    end
+
+  let search ~f ast =
+    let s = new searcher ~covers_target:f in
+    try
+      let _ = s#program ast in
+      None
+    with
+    | Found def_kind -> Some def_kind
+end
+
+let set_obj_to_obj_hook ~reader ~loc ~name prop_access_info =
   let set_prop_access_info new_info =
     let set_ok info = prop_access_info := Ok (Some info) in
     let set_err err = prop_access_info := Error err in
     match !prop_access_info with
     | Error _ -> ()
     | Ok None -> prop_access_info := Ok (Some new_info)
-    | Ok (Some info) -> begin
-      match (info, new_info) with
-      | (Use _, Use _)
-      | (Class_def _, Class_def _)
-      | (Obj_def _, Obj_def _) ->
-        (* If we see hooks firing multiple times for the same
-         * location, this is innocuous and we should take the last result.
-         * Previously, this would occur due to generate-tests.
-         *)
-        set_ok new_info
-      (* Literals can flow into multiple types. Include them all. *)
-      | (Use_in_literal (types, name), Use_in_literal (new_types, new_name)) ->
-        if name = new_name then
-          set_ok (Use_in_literal (Nel.rev_append new_types types, name))
-        else
-          set_err "Names did not match"
-      (* We should not see mismatches. *)
-      | (Use _, _)
-      | (Class_def _, _)
-      | (Obj_def _, _)
-      | (Use_in_literal _, _) ->
-        set_err "Unexpected mismatch between definition kind"
+    | Ok (Some (types, name)) -> begin
+      let (new_types, new_name) = new_info in
+      if name = new_name then
+        set_ok (Nel.rev_append new_types types, name)
+      else
+        set_err "Names did not match"
     end
   in
-  let use_hook ret _ctxt name loc ty =
-    let loc = loc_of_aloc ~reader loc in
-    if Loc.contains loc target_loc then set_prop_access_info (Use (ty, name));
-    ret
+  let obj_to_obj_hook _ctxt obj1 obj2 =
+    match get_object_literal_loc obj1 with
+    | Some obj_aloc when loc_of_aloc ~reader obj_aloc = loc ->
+      let open Type in
+      (match obj2 with
+      | DefT (_, _, ObjT _) -> set_prop_access_info (Nel.one obj2, name)
+      | _ -> ())
+    | _ -> ()
   in
-  let class_def_hook _ctxt ty static name loc =
-    let loc = loc_of_aloc ~reader loc in
-    if Loc.contains loc target_loc then set_prop_access_info (Class_def (ty, name, static))
-  in
-  let obj_def_hook _ctxt name loc =
-    let loc = loc_of_aloc ~reader loc in
-    if Loc.contains loc target_loc then set_prop_access_info (Obj_def (loc, name))
-  in
-  let export_named_hook name loc =
-    let loc = loc_of_aloc ~reader loc in
-    if Loc.contains loc target_loc then set_prop_access_info (Obj_def (loc, name))
-  in
-  Type_inference_hooks_js.set_member_hook (use_hook false);
-  Type_inference_hooks_js.set_call_hook (use_hook ());
-  Type_inference_hooks_js.set_class_member_decl_hook class_def_hook;
-  Type_inference_hooks_js.set_obj_type_prop_decl_hook obj_def_hook;
-  Type_inference_hooks_js.set_export_named_hook export_named_hook;
-
-  match literal_key_info with
-  | Some (target_loc, _, name) ->
-    let obj_to_obj_hook _ctxt obj1 obj2 =
-      match get_object_literal_loc obj1 with
-      | Some obj_aloc when loc_of_aloc ~reader obj_aloc = target_loc ->
-        let open Type in
-        (match obj2 with
-        | DefT (_, _, ObjT _) -> set_prop_access_info (Use_in_literal (Nel.one obj2, name))
-        | _ -> ())
-      | _ -> ()
-    in
-    Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
-  | None -> ()
+  Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
 
 let unset_hooks () = Type_inference_hooks_js.reset_hooks ()
 
@@ -359,20 +478,37 @@ let get_def_info ~reader ~options profiling file_key ast_info loc : (def_info op
   let props_access_info = ref (Ok None) in
   let (ast, file_sig, info) = ast_info in
   let literal_key_info : (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
-  let cx =
-    set_def_loc_hook ~reader props_access_info literal_key_info loc;
+  let do_check () =
+    Merge_service.check_contents_context ~reader options file_key ast info file_sig
+  in
+  let (cx, typed_ast) =
     Profiling_js.with_timer profiling ~timer:"MergeContents" ~f:(fun () ->
         let () = Type_contents.ensure_checked_dependencies ~options ~reader file_key file_sig in
-        let (cx, _) =
-          Merge_service.check_contents_context ~reader options file_key ast info file_sig
-        in
-        cx
+        match literal_key_info with
+        | Some (loc, _, name) ->
+          set_obj_to_obj_hook ~reader ~loc ~name props_access_info;
+          let result = do_check () in
+          unset_hooks ();
+          result
+        | None -> do_check () (* TODO: replace with typed AST *)
     )
   in
-  unset_hooks ();
+  let def_kind =
+    match !props_access_info with
+    (* If props_access_info is set, it must be from the obj_to_obj hook *)
+    | Ok (Some (types, name)) -> Some (Use_in_literal (types, name))
+    | _ ->
+      Def_kind_search.search
+        ~f:(fun aloc ->
+          let l = loc_of_aloc ~reader aloc in
+          Loc.contains l loc)
+        typed_ast
+      |> Base.Option.map ~f:(map_def_kind_loc ~f:(loc_of_aloc ~reader))
+  in
+
   let def_info =
-    !props_access_info
-    >>= Base.Option.value_map ~f:(def_info_of_typecheck_results ~reader cx) ~default:(Ok None)
+    def_kind
+    |> Base.Option.value_map ~f:(def_info_of_typecheck_results ~reader cx) ~default:(Ok None)
     >>= add_literal_properties literal_key_info
   in
   def_info
