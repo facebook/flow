@@ -2485,13 +2485,18 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
     method private visit_logical_expression ~hints ~cond expr =
       let open Ast.Expression.Logical in
       let { operator; left; right; comments = _ } = expr in
-      let (left_cond, right_hints) =
+      let (left_cond, left_hints, right_hints) =
         match operator with
-        | And -> (OtherConditionalTest, hints)
-        | Or -> (OtherConditionalTest, Base.List.append hints [Hint_t (ValueHint left)])
-        | NullishCoalesce -> (cond, Base.List.append hints [Hint_t (ValueHint left)])
+        | And -> (OtherConditionalTest, hints, hints)
+        | Or ->
+          ( OtherConditionalTest,
+            decompose_hints Comp_MaybeT hints,
+            Base.List.append hints [Hint_t (ValueHint left)]
+          )
+        | NullishCoalesce ->
+          (cond, decompose_hints Comp_MaybeT hints, Base.List.append hints [Hint_t (ValueHint left)])
       in
-      this#visit_expression ~hints ~cond:left_cond left;
+      this#visit_expression ~hints:left_hints ~cond:left_cond left;
       this#visit_expression ~hints:right_hints ~cond right
 
     method! object_ loc _ = fail loc "Should be visited by visit_object_expression"

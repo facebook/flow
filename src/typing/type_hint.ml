@@ -482,6 +482,7 @@ and type_of_hint_decomposition cx op reason t =
             SpeculationFlow.resolved_lower_flow_t cx reason (t, fun_t)
         )
       | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t
+      | Comp_MaybeT -> MaybeT (reason, t)
       | Decomp_JsxProps ->
         Tvar.mk_no_wrap_where cx reason (fun props_t ->
             SpeculationFlow.resolved_lower_flow

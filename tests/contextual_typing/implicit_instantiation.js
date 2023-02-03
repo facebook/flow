@@ -165,3 +165,17 @@ function test14() {
   const m: mixed = { foo: magic() }; // ok
   const interfaceVar: interface {[string]: mixed} = { foo: magic() }; // ok
 }
+
+function test15() {
+  const map: Map<string, string> = [""].reduce((acc, v) => {
+    // TODO: This is an unfortunate error when we wrap the hint on logical expression with MaybeT
+    //       for LHS. It makes acc to have type `?Map<string, string>`
+    acc.set("", ""); // error
+    return acc;
+  }, new Map()) ?? new Map();
+}
+
+function test16() {
+  const safeParse = <T>(json: ?string): ?T => null;
+  const foo: Array<string> = safeParse('') ?? []; // ok
+}

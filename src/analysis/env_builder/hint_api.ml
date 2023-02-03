@@ -70,6 +70,9 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Hint on call `f()` becomes hint on `f`. This is only meant to be used for the
    * case of immediate function call `(function() {})()`. *)
   | Comp_ImmediateFuncCall
+  (* Given t, returns MaybeT(t).
+     This is helpful for constructing a hint for `a` in `a ?? b` when the hint on `a ?? b` is t. *)
+  | Comp_MaybeT
   (* Type of C in `<C [props]/>` becomes hint on `props` *)
   | Decomp_JsxProps
   (* Type of C in `<C ref={ref} ... />` becomes hint on `ref` *)
@@ -109,6 +112,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_FuncRest i -> Utils_js.spf "Decomp_FuncRest (%d)" i
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
   | Comp_ImmediateFuncCall -> "Comp_ImmediateFuncCall"
+  | Comp_MaybeT -> "Comp_MaybeT"
   | Decomp_JsxProps -> "Decomp_JsxProps"
   | Decomp_JsxRef -> "Decomp_JsxRef"
   | Decomp_SentinelRefinement _ -> "Decomp_SentinelRefinement"
@@ -160,6 +164,7 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_FuncRest i -> Decomp_FuncRest i
   | Decomp_FuncReturn -> Decomp_FuncReturn
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
+  | Comp_MaybeT -> Comp_MaybeT
   | Decomp_JsxProps -> Decomp_JsxProps
   | Decomp_JsxRef -> Decomp_JsxRef
   | Decomp_SentinelRefinement checks -> Decomp_SentinelRefinement checks

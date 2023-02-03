@@ -47,6 +47,7 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_FuncRest of int
   | Decomp_FuncReturn
   | Comp_ImmediateFuncCall
+  | Comp_MaybeT
   | Decomp_JsxProps
   | Decomp_JsxRef
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
