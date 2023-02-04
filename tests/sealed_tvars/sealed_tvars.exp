@@ -437,8 +437,24 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
                 ^^
 
 
+Error ----------------------------------------------------------------------------------------------------- this.js:9:19
 
-Found 38 errors
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   9|     foo = function(): void { //require this annot
+                        ^^
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:12:33
+
+Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+
+   12|     foo_a: () => void = function(): void { // require this annot
+                                       ^^
+
+
+
+Found 40 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

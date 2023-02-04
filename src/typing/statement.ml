@@ -6233,10 +6233,27 @@ module Make
             | ((_, Ast.Expression.(ArrowFunction function_ | Function function_)), Inferred _) ->
               let { Ast.Function.sig_loc; _ } = function_ in
               let cache = Context.node_cache cx in
+              let (this_t, arrow, function_loc_opt) =
+                match expr with
+                | (_, Ast.Expression.ArrowFunction _) ->
+                  (dummy_this (aloc_of_reason reason), true, None)
+                | (loc, _) ->
+                  let this_t =
+                    if
+                      Signature_utils.This_finder.found_this_in_body_or_params
+                        function_.Ast.Function.body
+                        function_.Ast.Function.params
+                    then
+                      Tvar.mk cx (mk_reason RThis sig_loc)
+                    else
+                      Type.implicit_mixed_this reason
+                  in
+                  (this_t, false, Some loc)
+              in
               let ((func_sig, _) as sig_data) =
                 mk_func_sig
                   cx
-                  ~required_this_param_type:None
+                  ~required_this_param_type:(Base.Option.some_if (not arrow) this_t)
                   ~constructor:false
                   ~require_return_annot:true
                   ~statics:SMap.empty
@@ -6246,25 +6263,6 @@ module Make
               in
               if not (Context.in_synthesis_mode cx) then
                 Node_cache.set_function_sig cache sig_loc sig_data;
-              let this_t =
-                match expr with
-                | (_, Ast.Expression.ArrowFunction _) -> dummy_this (aloc_of_reason reason)
-                | _ ->
-                  if
-                    Signature_utils.This_finder.found_this_in_body_or_params
-                      function_.Ast.Function.body
-                      function_.Ast.Function.params
-                  then
-                    Tvar.mk cx (mk_reason RThis sig_loc)
-                  else
-                    Type.implicit_mixed_this reason
-              in
-              let (arrow, function_loc_opt) =
-                match expr with
-                | (loc, Ast.Expression.Function _) -> (false, Some loc)
-                | (_, Ast.Expression.ArrowFunction _) -> (true, None)
-                | _ -> failwith "expr can only be Function or ArrowFunction"
-              in
               let t =
                 Statement.Func_stmt_sig.functiontype cx ~arrow function_loc_opt this_t func_sig
               in
