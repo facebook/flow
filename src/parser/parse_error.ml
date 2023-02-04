@@ -135,6 +135,7 @@ type t =
   | StrictReservedWord
   | StrictVarName
   | SuperPrivate
+  | TSAbstractClass
   | TSClassVisibility of [ `Public | `Private | `Protected ]
   | TSTemplateLiteralType
   | ThisParamAnnotationRequired
@@ -418,6 +419,7 @@ module PP = struct
     | StrictReservedWord -> "Use of reserved word in strict mode"
     | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
     | SuperPrivate -> "You may not access a private field through the `super` keyword."
+    | TSAbstractClass -> "Flow does not support abstract classes."
     | TSClassVisibility kind ->
       let (keyword, append) =
         match kind with

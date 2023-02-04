@@ -965,6 +965,7 @@ module Peek = struct
     | T_CLASS
     | T_AT ->
       true
+    | T_IDENTIFIER { raw = "abstract"; _ } when ith_token ~i:1 env = T_CLASS -> true
     | _ -> false
 end
 

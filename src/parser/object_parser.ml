@@ -1070,6 +1070,11 @@ module Object
     let env = env |> with_strict true in
     let decorators = decorators @ decorator_list env in
     let leading = Peek.comments env in
+    (match Peek.token env with
+    | T_IDENTIFIER { raw = "abstract"; _ } ->
+      error env Parse_error.TSAbstractClass;
+      Eat.token env
+    | _ -> ());
     Expect.token env T_CLASS;
     let id =
       let tmp_env = env |> with_no_let true in

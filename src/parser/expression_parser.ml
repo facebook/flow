@@ -1316,6 +1316,8 @@ module Expression
       let (loc, template) = template_literal env part in
       Cover_expr (loc, Expression.TemplateLiteral template)
     | T_CLASS -> Cover_expr (Parse.class_expression env)
+    | T_IDENTIFIER { raw = "abstract"; _ } when Peek.ith_token ~i:1 env = T_CLASS ->
+      Cover_expr (Parse.class_expression env)
     | _ when Peek.is_identifier env ->
       let id = Parse.identifier env in
       Cover_expr (fst id, Expression.Identifier id)
