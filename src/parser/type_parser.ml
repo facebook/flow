@@ -419,6 +419,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
         env
+    | T_ERROR "`" ->
+      error env Parse_error.TSTemplateLiteralType;
+      (loc, Type.Any None)
     | _ ->
       (match primitive env with
       | Some t -> (loc, t)

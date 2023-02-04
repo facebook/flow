@@ -136,6 +136,7 @@ type t =
   | StrictVarName
   | SuperPrivate
   | TSClassVisibility of [ `Public | `Private | `Protected ]
+  | TSTemplateLiteralType
   | ThisParamAnnotationRequired
   | ThisParamBannedInArrowFunctions
   | ThisParamBannedInConstructor
@@ -431,6 +432,7 @@ module PP = struct
         | `Protected -> ("protected", "")
       in
       Printf.sprintf "Flow does not support using `%s` in classes.%s" keyword append
+    | TSTemplateLiteralType -> "Flow does not support template literal types."
     | ThisParamAnnotationRequired -> "A type annotation is required for the `this` parameter."
     | ThisParamBannedInArrowFunctions ->
       "Arrow functions cannot have a `this` parameter; arrow functions automatically bind `this` when declared."
