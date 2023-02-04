@@ -672,15 +672,11 @@ let add_error cx error = cx.ccx.errors <- Flow_error.ErrorSet.add error cx.ccx.e
 
 let reset_errors cx errors = cx.ccx.errors <- errors
 
-let add_error_suppression cx loc codes =
-  cx.ccx.error_suppressions <- Error_suppressions.add loc codes cx.ccx.error_suppressions
+let add_error_suppressions cx suppressions =
+  cx.ccx.error_suppressions <- Error_suppressions.union suppressions cx.ccx.error_suppressions
 
 let add_severity_cover cx filekey severity_cover =
   cx.ccx.severity_cover <- Utils_js.FilenameMap.add filekey severity_cover cx.ccx.severity_cover
-
-let add_lint_suppressions cx suppressions =
-  cx.ccx.error_suppressions <-
-    Error_suppressions.add_lint_suppressions suppressions cx.ccx.error_suppressions
 
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 

@@ -6,7 +6,6 @@
  *)
 
 open Loc_collections
-open Utils_js
 module Ast = Flow_ast
 
 (* infer phase services *)
@@ -58,28 +57,28 @@ let add_require_tvars =
    This logic produces a set of error codes associated with the location of the
    bottom suppression in the stack *)
 
-let scan_for_error_suppressions cx =
+let scan_for_error_suppressions acc errs comments =
   let open Suppression_comments in
+  let open Loc in
   (* If multiple comments are stacked together, we join them into a codeset positioned on the
      location of the last comment *)
-  Base.List.fold_left
-    ~f:
-      (fun acc -> function
-        | (({ Loc.start = { Loc.line; _ }; _ } as loc), { Ast.Comment.text; _ }) -> begin
-          match (should_suppress text loc, acc) with
-          | (Ok (Some (Specific _ as codes)), Some (prev_loc, (Specific _ as prev_codes)))
-            when line = prev_loc.Loc._end.Loc.line + 1 ->
-            Some ({ prev_loc with Loc._end = loc.Loc._end }, join_applicable_codes codes prev_codes)
-          | (Ok codes, _) ->
-            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
-            Base.Option.map codes ~f:(mk_tuple loc)
-          | (Error (), _) ->
-            Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
-            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
-            None
-        end)
-    ~init:None
-  %> Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry)
+  let (supps, errs) =
+    Base.List.fold_left comments ~init:([], errs) ~f:(fun (supps, errs) comment ->
+        let (loc, { Ast.Comment.text; _ }) = comment in
+        match (should_suppress text loc, supps) with
+        | (Error (), _) -> (supps, Error_message.EMalformedCode (ALoc.of_loc loc) :: errs)
+        | (Ok None, _) -> (supps, errs)
+        | (Ok (Some (Specific _ as codes)), (prev_loc, (Specific _ as prev_codes)) :: supps)
+          when loc.start.line = prev_loc._end.line + 1 ->
+          let supp = ({ prev_loc with _end = loc._end }, join_applicable_codes codes prev_codes) in
+          (supp :: supps, errs)
+        | (Ok (Some codes), _) -> ((loc, codes) :: supps, errs)
+    )
+  in
+  let acc =
+    List.fold_left (fun acc (loc, codes) -> Error_suppressions.add loc codes acc) acc supps
+  in
+  (acc, errs)
 
 type 'a located = {
   value: 'a;
@@ -200,9 +199,7 @@ let scan_for_lint_suppressions =
     in
     List.rev parts
   in
-  let add_error cx (loc, kind) =
-    Error_message.ELintSetting (ALoc.of_loc loc, kind) |> Flow_js.add_output cx
-  in
+  let add_error (loc, kind) acc = Error_message.ELintSetting (ALoc.of_loc loc, kind) :: acc in
   let parse_kind loc_str =
     match Lints.kinds_of_string loc_str.value with
     | Some kinds -> Ok kinds
@@ -213,7 +210,7 @@ let scan_for_lint_suppressions =
     | Some state -> Ok state
     | None -> Error (loc_value.loc, LintSettings.Invalid_setting)
   in
-  let get_kind_setting cx arg =
+  let get_kind_setting (acc, errs) arg =
     let arg = trim_and_stars_locational arg in
     match split_delim_locational ':' arg with
     | [rule; setting] ->
@@ -222,20 +219,19 @@ let scan_for_lint_suppressions =
       begin
         match (parse_kind rule, parse_value setting) with
         | (Ok kinds, Ok setting) ->
-          Some (Base.List.map ~f:(fun kind -> ({ value = kind; loc = arg.loc }, setting)) kinds)
-        | (rule_result, setting_result) ->
-          Base.Result.iter_error rule_result ~f:(add_error cx);
-          Base.Result.iter_error setting_result ~f:(add_error cx);
-          None
+          let settings = Base.List.map ~f:(fun kind -> (kind, (setting, arg.loc))) kinds in
+          (settings :: acc, errs)
+        | (Error e, Ok _) -> (acc, add_error e errs)
+        | (Ok _, Error e) -> (acc, add_error e errs)
+        | (Error e1, Error e2) -> (acc, add_error e1 (add_error e2 errs))
       end
-    | _ ->
-      add_error cx (arg.loc, LintSettings.Malformed_argument);
-      None
+    | _ -> (acc, add_error (arg.loc, LintSettings.Malformed_argument) errs)
   in
   (* parse arguments of the form lint1:setting1,lint2:setting2... *)
-  let get_settings_list cx args =
-    split_delim_locational ',' args
-    |> Base.List.map ~f:(fun rule -> get_kind_setting cx rule |> Base.Option.value ~default:[])
+  let get_settings_list errs args =
+    let args = split_delim_locational ',' args in
+    let (settings, errs) = List.fold_left get_kind_setting ([], errs) args in
+    (List.rev settings, errs)
   in
   (* Doesn't preserve offset, but is only used in locations where offset isn't used,
    * so that's fine. *)
@@ -273,25 +269,22 @@ let scan_for_lint_suppressions =
         { loc = new_loc; value = s }
     )
   in
-  let nested_map f outer_list = Base.List.map ~f:(Base.List.map ~f) outer_list in
-  let process_comment
-      cx ((severity_cover_builder, running_settings, suppression_locs) as acc) comment =
+  let process_comment acc comment =
+    let (severity_cover_builder, running_settings, suppression_locs, errs) = acc in
     let loc_comment = comment |> convert_comment |> trim_and_stars_locational in
     match parse_keyword loc_comment with
     | Some (keyword, Some args) ->
       (* Case where we're changing certain lint settings *)
-      let settings_list =
-        get_settings_list cx args
-        |> nested_map (fun ({ loc; value = kind }, state) -> (kind, (state, loc)))
-      in
+      let (settings_list, errs) = get_settings_list errs args in
       let error_encountered = ref false in
+      let errs = ref errs in
       let (new_builder, new_running_settings) =
         let covered_range = get_range keyword in
         ExactCover.update_settings_and_running
           running_settings
           (fun err ->
             error_encountered := true;
-            add_error cx err)
+            errs := add_error err !errs)
           covered_range
           settings_list
           severity_cover_builder
@@ -322,7 +315,7 @@ let scan_for_lint_suppressions =
               | Some arg_loc ->
                 if not (Loc_collections.LocSet.mem arg_loc used_locs) then (
                   error_encountered := true;
-                  add_error cx (arg_loc, LintSettings.Overwritten_argument)
+                  errs := add_error (arg_loc, LintSettings.Overwritten_argument) !errs
                 )
               | None -> ())
             arg_locs
@@ -346,31 +339,33 @@ let scan_for_lint_suppressions =
         match keyword.value with
         | Line
         | Next_line ->
-          (new_builder, running_settings, suppression_locs)
-        | Unending -> (new_builder, new_running_settings, suppression_locs)
+          (new_builder, running_settings, suppression_locs, !errs)
+        | Unending -> (new_builder, new_running_settings, suppression_locs, !errs)
       end
     | Some (keyword, None) ->
       (* Case where we're wholly enabling/disabling linting *)
-      add_error cx (keyword.loc, LintSettings.Naked_comment);
-      acc (* TODO (rballard): regional lint disabling *)
+      (* TODO (rballard): regional lint disabling *)
+      let errs = add_error (keyword.loc, LintSettings.Naked_comment) errs in
+      (severity_cover_builder, running_settings, suppression_locs, errs)
     | None -> acc
   in
-  fun cx base_settings comments ->
-    let severity_cover_builder = ExactCover.new_builder (Context.file cx) base_settings in
-    let (severity_cover_builder, _, suppression_locs) =
+  fun file_key base_settings acc errs comments ->
+    let severity_cover_builder = ExactCover.new_builder file_key base_settings in
+    let (severity_cover_builder, _, suppression_locs, errs) =
       List.fold_left
-        (process_comment cx)
-        (severity_cover_builder, base_settings, Loc_collections.LocSet.empty)
+        process_comment
+        (severity_cover_builder, base_settings, Loc_collections.LocSet.empty, errs)
         comments
     in
     let severity_cover = ExactCover.bake severity_cover_builder in
-    Context.add_severity_cover cx (Context.file cx) severity_cover;
-    Context.add_lint_suppressions cx suppression_locs
+    let acc = Error_suppressions.add_lint_suppressions suppression_locs acc in
+    (severity_cover, acc, errs)
 
-let scan_for_suppressions cx lint_severities comments =
+let scan_for_suppressions file_key lint_severities comments =
   let comments = List.sort (fun (loc1, _) (loc2, _) -> Loc.compare loc1 loc2) comments in
-  scan_for_error_suppressions cx comments;
-  scan_for_lint_suppressions cx lint_severities comments
+  let acc = Error_suppressions.empty in
+  let (acc, errs) = scan_for_error_suppressions acc [] comments in
+  scan_for_lint_suppressions file_key lint_severities acc errs comments
 
 module Statement = Fix_statement.Statement_
 
@@ -470,7 +465,13 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
 
     (* infer *)
     let typed_statements = infer_core cx aloc_statements in
-    scan_for_suppressions cx lint_severities comments;
+
+    let (severity_cover, suppressions, suppression_errors) =
+      scan_for_suppressions filename lint_severities comments
+    in
+    Context.add_severity_cover cx filename severity_cover;
+    Context.add_error_suppressions cx suppressions;
+    List.iter (Flow_js.add_output cx) suppression_errors;
 
     let program =
       ( prog_aloc,
@@ -515,7 +516,13 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
     initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
 
     let t_stmts = infer_core cx aloc_statements in
-    scan_for_suppressions cx lint_severities all_comments;
+
+    let (severity_cover, suppressions, suppression_errors) =
+      scan_for_suppressions (Context.file cx) lint_severities all_comments
+    in
+    Context.add_severity_cover cx (Context.file cx) severity_cover;
+    Context.add_error_suppressions cx suppressions;
+    List.iter (Flow_js.add_output cx) suppression_errors;
 
     (Env.init_builtins_from_libdef cx, t_stmts)
   with

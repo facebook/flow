@@ -6,7 +6,10 @@
  *)
 
 val scan_for_suppressions :
-  Context.t -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
+  File_key.t ->
+  Severity.severity LintSettings.t ->
+  Loc.t Flow_ast.Comment.t list ->
+  ExactCover.lint_severity_cover * Error_suppressions.t * ALoc.t Error_message.t' list
 
 val add_require_tvars : Context.t -> File_sig.With_ALoc.t -> unit
 

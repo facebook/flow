@@ -363,23 +363,22 @@ let merge_component ~mutator ~options ~reader component =
     let metadata = Context.metadata_of_options options in
     let lint_severities = Options.lint_severities options in
     let strict_mode = Options.strict_mode options in
-    let ccx = Context.(make_ccx (empty_master_cx ())) in
-    let (cx, _) =
-      Nel.map
-        (fun (file, _, parse) ->
+    let suppressions =
+      Nel.fold_left
+        (fun acc (file, _, parse) ->
           let docblock = Parsing_heaps.read_docblock_unsafe file parse in
           let metadata = Context.docblock_overrides docblock metadata in
           let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in
-          let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file parse) in
-          let cx = Context.make ccx metadata file aloc_table Context.Merging in
           let (_, { Flow_ast.Program.all_comments = comments; _ }) =
             Parsing_heaps.read_ast_unsafe file parse
           in
-          Type_inference_js.scan_for_suppressions cx lint_severities comments;
-          cx)
+          let (_, suppressions, _) =
+            Type_inference_js.scan_for_suppressions file lint_severities comments
+          in
+          Error_suppressions.union suppressions acc)
+        Error_suppressions.empty
         component
     in
-    let suppressions = Context.error_suppressions cx in
     let diff = Parsing_heaps.Merge_context_mutator.add_merge_on_diff mutator component hash in
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Some (suppressions, duration))
