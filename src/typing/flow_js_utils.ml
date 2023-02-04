@@ -437,26 +437,7 @@ let add_output_generic ~src_cx:cx ~dst_cx ?trace msg =
       else
         Trace.reasons_of_trace ~level:max_trace_depth trace
   in
-  let is_enabled =
-    match Error_message.kind_of_msg msg with
-    | Errors.LintError lint_kind -> begin
-      match Error_message.loc_of_msg msg with
-      | Some loc ->
-        ALoc.to_loc_with_tables (Context.aloc_tables cx) loc
-        |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
-        |> Base.Option.value_map ~default:true ~f:(fun lint_settings ->
-               LintSettings.is_explicit lint_kind lint_settings
-               || LintSettings.get_value lint_kind lint_settings <> Severity.Off
-           )
-      | _ -> true
-    end
-    | _ -> true
-  in
-  (* If the lint error isn't enabled at this location and isn't explicitly suppressed, just don't
-     even add it *)
-  if not is_enabled then
-    ()
-  else if Speculation.speculating cx then
+  if Speculation.speculating cx then
     if Error_message.is_lint_error msg then
       ignore @@ Speculation.defer_action cx (Speculation_state.ErrorAction msg)
     else (
