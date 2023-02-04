@@ -1,0 +1,30 @@
+Error ------------------------------------------------------------------------------------------------ eval_call.js:16:2
+
+Cannot cast empty string to `App1` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   eval_call.js:16:2
+   16| ("": App1<number>); // Expected error: string incomp. with number
+        ^^ [1]
+
+References:
+   eval_call.js:16:6
+   16| ("": App1<number>); // Expected error: string incomp. with number
+            ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ eval_call.js:17:2
+
+Cannot cast `1` to `App2` because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   eval_call.js:17:2
+   17| (1: App2<string>); // Expected error: number incomp. with string
+        ^ [1]
+
+References:
+   eval_call.js:17:5
+   17| (1: App2<string>); // Expected error: number incomp. with string
+           ^^^^^^^^^^^^ [2]
+
+
+
+Found 2 errors
