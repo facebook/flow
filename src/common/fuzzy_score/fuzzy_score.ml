@@ -25,11 +25,15 @@ type arrow =
   | Left
   | Left_left
 
-let arrows = Array.make_matrix max_len max_len Empty
+let make_table def =
+  (* row 0 and column 0 are base cases, so these tables must be max_len + 1 *)
+  Array.make_matrix (max_len + 1) (max_len + 1) def
 
-let diag = Array.make_matrix max_len max_len 0
+let arrows = make_table Empty
 
-let table = Array.make_matrix max_len max_len 0
+let diag = make_table 0
+
+let table = make_table 0
 
 let length x = Base.Int.min (String.length x) max_len
 
