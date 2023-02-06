@@ -30,3 +30,10 @@ id({type: 'literal', foo: (item) => 1}) // error
 
 // Nested
 id(id((item) => 1)); // error
+
+//
+{
+  // ResolvedAnySpreadArg
+  declare function debounce<TArgs: $ReadOnlyArray<mixed>>((...TArgs) => void): (...TArgs) => void;
+  debounce((foo) => {}); // error
+}

@@ -2004,10 +2004,10 @@ struct
         (* `any` is obviously fine as a spread element. `Object` is fine because
          * any Iterable can be spread, and `Object` is the any type that covers
          * iterable objects. *)
-        | ( AnyT (r, _),
+        | ( AnyT (r, src),
             ResolveSpreadT (use_op, reason_op, { rrt_resolved; rrt_unresolved; rrt_resolve_to })
           ) ->
-          let rrt_resolved = ResolvedAnySpreadArg r :: rrt_resolved in
+          let rrt_resolved = ResolvedAnySpreadArg (r, src) :: rrt_resolved in
           resolve_spread_list_rec
             cx
             ~trace
@@ -8847,22 +8847,24 @@ struct
            ~init:[]
       |> Base.List.rev
     in
-    let spread_resolved_to_any =
-      List.exists (function
-          | ResolvedAnySpreadArg _ -> true
+    let spread_resolved_to_any_src =
+      List.find_map (function
+          | ResolvedAnySpreadArg (_, src) -> Some src
           | ResolvedArg _
           | ResolvedSpreadArg _ ->
-            false
+            None
           )
     in
     let finish_array cx ~use_op ?trace ~reason_op ~resolve_to resolved elemt tout =
       (* Did `any` flow to one of the rest parameters? If so, we need to resolve
        * to a type that is both a subtype and supertype of the desired type. *)
       let result =
-        if spread_resolved_to_any resolved then
-          match resolve_to with
+        match spread_resolved_to_any_src resolved with
+        | Some any_src ->
+          (match resolve_to with
           (* Array<any> is a good enough any type for arrays *)
-          | `Array -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (AnyT.untyped reason_op, None)))
+          | `Array ->
+            DefT (reason_op, bogus_trust (), ArrT (ArrayAT (AnyT.why any_src reason_op, None)))
           (* Array literals can flow to a tuple. Arrays can't. So if the presence
            * of an `any` forces us to degrade an array literal to Array<any> then
            * we might get a new error. Since introducing `any`'s shouldn't cause
@@ -8870,8 +8872,8 @@ struct
           | `Literal
           (* There is no AnyTupleT type, so let's degrade to `any`. *)
           | `Tuple ->
-            AnyT.untyped reason_op
-        else
+            AnyT.why any_src reason_op)
+        | None ->
           (* Spreads that resolve to tuples are flattened *)
           let elems = flatten_spread_args resolved in
           let tuple_types =
@@ -9009,7 +9011,7 @@ struct
               in
               flatten cx r args spread rest
             | ResolvedSpreadArg (r, _, _) :: _
-            | ResolvedAnySpreadArg r :: _ ->
+            | ResolvedAnySpreadArg (r, _) :: _ ->
               (* We weren't able to flatten the call argument list to remove all
                * spreads. This means we need to build a spread argument, with
                * unknown arity. *)
@@ -9023,8 +9025,8 @@ struct
                 (t, generic, Generic.ArraySpread.NonROSpread, rest)
               | ResolvedSpreadArg (_, arrtype, generic) :: rest ->
                 (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype, rest)
-              | ResolvedAnySpreadArg reason :: rest ->
-                (AnyT.untyped reason, None, Generic.ArraySpread.NonROSpread, rest)
+              | ResolvedAnySpreadArg (reason, any_src) :: rest ->
+                (AnyT.why any_src reason, None, Generic.ArraySpread.NonROSpread, rest)
               | [] -> failwith "Empty list already handled"
             in
             let tset = TypeExSet.add elemt tset in
@@ -9150,7 +9152,7 @@ struct
                   generic
               in
               SpreadArg arr
-            | ResolvedAnySpreadArg r -> SpreadArg (AnyT.untyped r))
+            | ResolvedAnySpreadArg (r, any_src) -> SpreadArg (AnyT.why any_src r))
           flattened
       in
       let call_t =

@@ -183,6 +183,14 @@ An annotation on `item` is required because Flow cannot infer its type from loca
               ^^^^
 
 
+Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:38:13
+
+An annotation on `foo` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   38|   debounce((foo) => {}); // error
+                   ^^^
+
+
 Error ----------------------------------------------------------------------------------- error_during_synthesis.js:4:32
 
 Cannot call `expectString` with `3` bound to the first parameter because number [1] is incompatible with string [2].
@@ -908,4 +916,4 @@ References:
 
 
 
-Found 67 errors
+Found 68 errors

@@ -1505,7 +1505,7 @@ module rec TypeTerm : sig
   and resolved_param =
     | ResolvedArg of t * Generic.id option
     | ResolvedSpreadArg of reason * arrtype * Generic.id option
-    | ResolvedAnySpreadArg of reason
+    | ResolvedAnySpreadArg of reason * any_source
 
   and spread_resolve =
     (* Once we've finished resolving spreads, try to construct an array with known element types *)
