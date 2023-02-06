@@ -1302,7 +1302,7 @@ let super
     in
     let resolve_tool = Object.Super (acc, resolve_tool) in
     recurse cx use_op reason resolve_tool tool super
-  | AnyT _ -> return cx use_op (AnyT.untyped reason)
+  | AnyT (_, src) -> return cx use_op (AnyT.why src reason)
   | _ -> next cx use_op tool reason (Nel.one acc)
 
 let run

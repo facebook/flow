@@ -1843,7 +1843,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
-        | AnyT _ -> F.return cx trace ~use_op:unknown_use (AnyT.untyped reason_op)
+        | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
         | GenericT { bound = DefT (_, _, StrT _); _ }
         | GenericT { bound = DefT (_, _, NumT _); _ }
         | DefT (_, _, StrT _)
