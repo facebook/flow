@@ -24,9 +24,15 @@ type search_results = {
 }
 [@@deriving show]
 
-type search_options = Fuzzy_path.options
+type search_options = Fuzzy_path.options = {
+  smart_case: bool;
+  first_match_can_be_weak: bool;
+  num_threads: int;
+  max_results: int;
+}
 
-let default_options : search_options = Fuzzy_path.default_options
+let default_options : search_options =
+  Fuzzy_path.{ default_options with first_match_can_be_weak = false }
 
 type candidates = {
   values: string list;
@@ -144,7 +150,7 @@ let take =
     in
     helper ~n ~query [] seq
 
-let search ?(options = Fuzzy_path.default_options) query { index; value_matcher; type_matcher } =
+let search ?(options = default_options) query { index; value_matcher; type_matcher } =
   let (matcher, query_txt) =
     match query with
     | Value txt -> (value_matcher, txt)

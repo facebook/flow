@@ -13,7 +13,7 @@ let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 let max_autoimport_suggestions = 100
 
 let default_autoimport_options =
-  let open Fuzzy_path in
+  let open Export_search in
   {
     default_options with
     max_results = max_autoimport_suggestions;

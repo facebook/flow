@@ -799,41 +799,6 @@ module.exports = (suite(
                     ],
                   },
                 },
-                {
-                  label: 'undefined',
-                  kind: 6,
-                  detail: '(global)',
-                  sortText: '00000000000000000008',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 2,
-                        character: 1,
-                      },
-                    },
-                    newText: 'undefined',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'global',
-                      {
-                        token: 'fAUTO332',
-                        index: 8,
-                        session_requests: 1,
-                        typed_length: 1,
-                        completion: 'undefined',
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
