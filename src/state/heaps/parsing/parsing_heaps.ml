@@ -311,11 +311,9 @@ let read_resolved_requires resolved_requires =
     read_phantom_dependencies Fun.id resolved_requires
   )
 
-let read_resolved_modules_map parse resolved_requires =
+let read_resolved_modules_map f parse resolved_requires =
   let requires = read_requires parse in
-  let resolved_modules =
-    read_resolved_modules (read_resolved_module read_dependency) resolved_requires
-  in
+  let resolved_modules = read_resolved_modules (read_resolved_module f) resolved_requires in
   let n = Array.length requires in
   let i = ref 0 in
   let f () =
@@ -1234,7 +1232,11 @@ module type READER = sig
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires_addr
 
   val get_resolved_modules_unsafe :
-    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_module SMap.t
+    reader:reader ->
+    (dependency_addr -> 'a) ->
+    File_key.t ->
+    [ `typed ] parse_addr ->
+    'a resolved_module' SMap.t
 
   val get_leader_unsafe : reader:reader -> File_key.t -> [ `typed ] parse_addr -> file_addr
 
@@ -1328,9 +1330,9 @@ module Mutator_reader = struct
     | Some resolved_requires -> resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
-  let get_old_resolved_modules_unsafe ~reader file parse =
+  let get_old_resolved_modules_unsafe ~reader f file parse =
     let resolved_requires = get_old_resolved_requires_unsafe ~reader file parse in
-    read_resolved_modules_map parse resolved_requires
+    read_resolved_modules_map f parse resolved_requires
 
   let has_ast ~reader file =
     let parse_opt =
@@ -1444,9 +1446,9 @@ module Mutator_reader = struct
     | Some resolved_requires -> resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
-  let get_resolved_modules_unsafe ~reader file parse =
+  let get_resolved_modules_unsafe ~reader f file parse =
     let resolved_requires = get_resolved_requires_unsafe ~reader file parse in
-    read_resolved_modules_map parse resolved_requires
+    read_resolved_modules_map f parse resolved_requires
 
   let get_leader_unsafe ~reader file parse =
     match get_leader ~reader parse with
@@ -1867,9 +1869,9 @@ module Reader = struct
     | Some resolved_requires -> resolved_requires
     | None -> raise (Resolved_requires_not_found (File_key.to_string file))
 
-  let get_resolved_modules_unsafe ~reader file parse =
+  let get_resolved_modules_unsafe ~reader f file parse =
     let resolved_requires = get_resolved_requires_unsafe ~reader file parse in
-    read_resolved_modules_map parse resolved_requires
+    read_resolved_modules_map f parse resolved_requires
 
   let get_leader_unsafe ~reader file parse =
     match get_leader ~reader parse with

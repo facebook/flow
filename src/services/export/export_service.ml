@@ -154,7 +154,11 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
           let imports = Parsing_heaps.read_imports parse in
           let haste_info = Parsing_heaps.Mutator_reader.get_old_haste_info ~reader file in
           let resolved_modules =
-            Parsing_heaps.Mutator_reader.get_old_resolved_modules_unsafe ~reader file_key parse
+            Parsing_heaps.Mutator_reader.get_old_resolved_modules_unsafe
+              ~reader
+              Parsing_heaps.read_dependency
+              file_key
+              parse
           in
           let provider module_name =
             Parsing_heaps.Mutator_reader.get_old_provider ~reader module_name
@@ -172,7 +176,11 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
           let imports = Parsing_heaps.read_imports parse in
           let haste_info = Parsing_heaps.Mutator_reader.get_haste_info ~reader file in
           let resolved_modules =
-            Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader file_key parse
+            Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe
+              ~reader
+              Parsing_heaps.read_dependency
+              file_key
+              parse
           in
           let provider module_name =
             Parsing_heaps.Mutator_reader.get_provider ~reader module_name

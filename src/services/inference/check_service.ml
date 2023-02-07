@@ -232,7 +232,11 @@ let mk_heap_reader reader =
     let get_type_sig_buf (_, parse) = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse))
 
     let get_resolved_modules (file_key, parse) =
-      Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe ~reader file_key parse
+      Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe
+        ~reader
+        Parsing_heaps.read_dependency
+        file_key
+        parse
   end in
   (module Reader : READER)
 

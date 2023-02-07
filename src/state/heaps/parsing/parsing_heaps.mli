@@ -136,7 +136,11 @@ module type READER = sig
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires_addr
 
   val get_resolved_modules_unsafe :
-    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_module SMap.t
+    reader:reader ->
+    (dependency_addr -> 'a) ->
+    File_key.t ->
+    [ `typed ] parse_addr ->
+    'a resolved_module' SMap.t
 
   val get_leader_unsafe : reader:reader -> File_key.t -> [ `typed ] parse_addr -> file_addr
 
@@ -177,7 +181,11 @@ module Mutator_reader : sig
     reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_requires_addr
 
   val get_old_resolved_modules_unsafe :
-    reader:reader -> File_key.t -> [ `typed ] parse_addr -> resolved_module SMap.t
+    reader:reader ->
+    (dependency_addr -> 'a) ->
+    File_key.t ->
+    [ `typed ] parse_addr ->
+    'a resolved_module' SMap.t
 
   val get_old_provider : reader:reader -> Modulename.t -> file_addr option
 

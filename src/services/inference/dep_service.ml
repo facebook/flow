@@ -133,7 +133,11 @@ let file_dependencies ~reader file =
     Bin.fold_tbl Bin.read_str SSet.add buf (Bin.module_refs buf) SSet.empty
   in
   let resolved_modules =
-    Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader file parse
+    Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe
+      ~reader
+      Parsing_heaps.read_dependency
+      file
+      parse
   in
   SMap.fold
     (fun mref m (sig_files, all_files) ->
