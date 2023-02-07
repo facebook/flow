@@ -9582,3 +9582,144 @@ type_binding_id.js:11:15
 Flags: --pretty
 {"result":[]}
 
+fixme.js:5:4
+Flags: --lsp
+{
+  "label":"$FlowFixMe[incompatible-call]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":3},"end":{"line":4,"character":3}},
+    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[incompatible-call]"
+      }
+    ]
+  }
+}
+
+fixme.js:8:5
+Flags: --lsp
+{
+  "label":"$FlowFixMe[incompatible-call]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[incompatible-call]"
+      }
+    ]
+  }
+}
+{
+  "label":"$FlowFixMe[unsafe-addition]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"\\$FlowFixMe[unsafe-addition] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[unsafe-addition]"
+      }
+    ]
+  }
+}
+
+fixme.js:14:8
+Flags: --lsp
+{
+  "label":"$FlowFixMe[unused-promise-in-async-scope]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":13,"character":7},"end":{"line":13,"character":7}},
+    "newText":"\\$FlowFixMe[unused-promise-in-async-scope] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[unused-promise-in-async-scope]"
+      }
+    ]
+  }
+}
+
+fixme.js:18:12
+Flags: --pretty
+{"result":[]}
+
+fixme.js:21:10
+Flags: --lsp
+{
+  "label":"$FlowFixMe[incompatible-call]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":20,"character":3},"end":{"line":20,"character":9}},
+    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[incompatible-call]"
+      }
+    ]
+  }
+}
+

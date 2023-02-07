@@ -15,7 +15,10 @@ type ac_id = {
 type autocomplete_type =
   | Ac_ignored  (** ignore extraneous requests the IDE sends *)
   | Ac_binding  (** binding identifiers introduce new names *)
-  | Ac_comment  (** inside a comment *)
+  | Ac_comment of {
+      text: string;
+      word_loc: Loc.t;
+    }  (** inside a comment *)
   | Ac_id of ac_id  (** identifier references *)
   | Ac_class_key of { enclosing_class_t: Type.t option }  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)

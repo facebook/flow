@@ -1904,13 +1904,86 @@ let autocomplete_object_key
     AcResult
       { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
+(* Applicable error codes are those corresponding to errors on the next line *)
+let applicable_error_codes ~reader ~cx comment_loc =
+  let next_line =
+    comment_loc |> loc_of_aloc ~reader |> Loc.start_loc |> fun loc ->
+    Loc.
+      {
+        loc with
+        start = { loc.start with line = loc.start.line + 1 };
+        _end = { loc._end with line = loc._end.line + 1 };
+      }
+  in
+  let applies error_loc = Loc.lines_intersect next_line error_loc in
+  cx
+  |> Context.errors
+  |> Flow_error.concretize_errors (loc_of_aloc ~reader)
+  |> Flow_error.make_errors_printable
+  |> Errors.ConcreteLocPrintableErrorSet.elements
+  |> Base.List.rev_filter_map ~f:(fun err ->
+         if applies (Errors.loc_of_printable_error err) then
+           Option.map Error_codes.string_of_code (Errors.code_of_printable_error err)
+         else
+           None
+     )
+
+let has_leading text =
+  (* There is leading text if there are non-whitespace characters before the word we're autocompleting in. *)
+  let (before, _) = Autocomplete_sigil.remove text in
+  let before = Base.String.rstrip before ~drop:(fun c -> not (Base.Char.is_whitespace c)) in
+  Base.String.exists before ~f:(fun c -> not (Base.Char.is_whitespace c))
+
+let autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc =
+  if has_leading text then
+    (* Don't suggest if there's leading text (the fixme would be invalid) *)
+    []
+  else
+    let edit_locs = (word_loc, word_loc) in
+    let error_codes = applicable_error_codes ~reader ~cx ac_loc in
+    Base.List.map error_codes ~f:(fun error_code ->
+        let name = Printf.sprintf "$FlowFixMe[%s]" error_code in
+        let insert_text =
+          Printf.sprintf "\\$FlowFixMe[%s] ${1:reason for suppression}" error_code
+        in
+        {
+          ServerProt.Response.Completion.kind = Some Lsp.Completion.Text;
+          name;
+          labelDetail = None;
+          description = None;
+          itemDetail = None;
+          text_edit = Some (text_edit ~insert_text name edit_locs);
+          additional_text_edits = [];
+          sort_text = sort_text_of_rank 0;
+          preselect = false;
+          documentation = None;
+          tags = None;
+          log_info = "fixme comment";
+          insert_text_format = Lsp.Completion.SnippetFormat;
+        }
+    )
+    |> filter_by_token_and_sort token
+
+let autocomplete_comment ~reader ~cx ~trigger_character ~ac_loc ~token ~text ~word_loc =
+  let (items, errors_to_log) =
+    if Base.Option.is_some trigger_character then
+      (* Only suggest things if autocomplete was triggered manually. We don't
+         want to be annoying when someone is trying to write comments. *)
+      ([], [])
+    else
+      let items_fixme = autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc in
+      (items_fixme, [])
+  in
+  AcResult
+    { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
+
 (** Used for logging to classify the kind of completion request *)
 let string_of_autocomplete_type ac_type =
   let open Autocomplete_js in
   match ac_type with
   | Ac_ignored -> "Empty"
   | Ac_binding -> "Empty"
-  | Ac_comment -> "Empty"
+  | Ac_comment _ -> "Ac_comment"
   | Ac_enum -> "Acenum"
   | Ac_module -> "Acmodule"
   | Ac_type -> "Actype"
@@ -1962,7 +2035,8 @@ let autocomplete_get_results
       match autocomplete_type with
       | Ac_binding -> AcEmpty "Binding"
       | Ac_ignored -> AcEmpty "Ignored"
-      | Ac_comment -> AcEmpty "Comment"
+      | Ac_comment { text; word_loc } ->
+        autocomplete_comment ~reader ~cx ~trigger_character ~ac_loc ~token ~text ~word_loc
       | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
         autocomplete_class_key
