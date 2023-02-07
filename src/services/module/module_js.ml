@@ -218,7 +218,8 @@ module Node = struct
   let path_if_exists ~reader ~file_options phantom_acc path =
     let path = resolve_symlinks path in
     let mname = Files.eponymous_module (Files.filename_from_string ~options:file_options path) in
-    match Parsing_heaps.Reader_dispatcher.get_provider ~reader mname with
+    let dependency = Parsing_heaps.get_dependency mname in
+    match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
     | Some _ -> Some mname
     | None ->
       record_phantom_dependency mname phantom_acc;
@@ -475,7 +476,8 @@ module Haste : MODULE_SYSTEM = struct
       | package :: rest -> (package, rest)
     in
     let mname = Modulename.String name in
-    match Parsing_heaps.Reader_dispatcher.get_provider ~reader mname with
+    let dependency = Parsing_heaps.get_dependency mname in
+    match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
     | Some addr ->
       (match (package_dir_opt ~reader addr, subpath) with
       | (Some package_dir, []) -> Node.resolve_package ~options ~reader ?phantom_acc package_dir

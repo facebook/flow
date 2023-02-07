@@ -184,7 +184,8 @@ let unchecked_dependencies ~options ~reader file file_sig =
   in
   let unchecked_dependency m =
     let ( let* ) = Option.bind in
-    let* file = Parsing_heaps.Reader.get_provider ~reader m in
+    let* dependency = Parsing_heaps.get_dependency m in
+    let* file = Parsing_heaps.Reader.get_provider ~reader dependency in
     let* parse = Parsing_heaps.Reader.get_typed_parse ~reader file in
     match Parsing_heaps.Reader.get_leader ~reader parse with
     | None -> Some (Parsing_heaps.read_file_key file)

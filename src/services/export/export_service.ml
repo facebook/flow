@@ -67,7 +67,8 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
       | Unresolved_source mref ->
         let result = SMap.find_opt mref resolved_modules in
         (match result with
-        | Some (Ok module_name) ->
+        | Some (Ok dependency) ->
+          let module_name = Parsing_heaps.read_dependency dependency in
           let (source, module_name) = (module_name, string_of_modulename module_name) in
           let (kind, name) =
             match import.Imports.kind with
@@ -82,7 +83,7 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
             let file_key = File_key fn in
             Export_index.add name file_key kind acc
           | Modulename.String _ ->
-            (match provider source with
+            (match provider dependency with
             | Some file ->
               let file_key = File_key (Parsing_heaps.read_file_key file) in
               Export_index.add name file_key kind acc
@@ -156,13 +157,11 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
           let resolved_modules =
             Parsing_heaps.Mutator_reader.get_old_resolved_modules_unsafe
               ~reader
-              Parsing_heaps.read_dependency
+              Fun.id
               file_key
               parse
           in
-          let provider module_name =
-            Parsing_heaps.Mutator_reader.get_old_provider ~reader module_name
-          in
+          let provider = Parsing_heaps.Mutator_reader.get_old_provider ~reader in
           ( add_exports_of_checked_file file_key parse haste_info exports_to_remove,
             add_imports imports resolved_modules provider imports_to_remove
           )
@@ -176,15 +175,9 @@ let index_file ~reader (exports_to_add, exports_to_remove, imports_to_add, impor
           let imports = Parsing_heaps.read_imports parse in
           let haste_info = Parsing_heaps.Mutator_reader.get_haste_info ~reader file in
           let resolved_modules =
-            Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe
-              ~reader
-              Parsing_heaps.read_dependency
-              file_key
-              parse
+            Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file_key parse
           in
-          let provider module_name =
-            Parsing_heaps.Mutator_reader.get_provider ~reader module_name
-          in
+          let provider = Parsing_heaps.Mutator_reader.get_provider ~reader in
           ( add_exports_of_checked_file file_key parse haste_info exports_to_add,
             add_imports imports resolved_modules provider imports_to_add
           )

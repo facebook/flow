@@ -195,7 +195,8 @@ let mk_heap_reader reader =
     let get_master_cx () = Context_heaps.Reader_dispatcher.find_master ~reader
 
     let get_provider m =
-      match Parsing_heaps.Reader_dispatcher.get_provider ~reader m with
+      let dependency = Parsing_heaps.get_dependency_unsafe m in
+      match Parsing_heaps.Reader_dispatcher.get_provider ~reader dependency with
       | None -> None
       | Some dep_addr ->
         let file_key =

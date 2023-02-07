@@ -245,11 +245,7 @@ let sig_hash ~root =
 
     let dependencies =
       let resolved_modules =
-        Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe
-          ~reader
-          Parsing_heaps.read_dependency
-          file_key
-          parse
+        Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file_key parse
       in
       let f buf pos =
         let mref = Bin.read_str buf pos in

@@ -776,7 +776,8 @@ let find_module ~options ~reader (moduleref, filename) =
   in
   let provider =
     match resolved_module with
-    | Ok m -> Parsing_heaps.Reader.get_provider ~reader m
+    | Ok m ->
+      Option.bind (Parsing_heaps.get_dependency m) (Parsing_heaps.Reader.get_provider ~reader)
     | Error _ ->
       (* TODO: We reach this codepath for requires that might resolve to
        * builtin modules. During check we check the master context, which we
@@ -835,7 +836,8 @@ let module_name_of_string ~options module_name_str =
 let get_imports ~options ~reader module_names =
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
-    match Parsing_heaps.Reader.get_provider ~reader module_name with
+    let dependency = Parsing_heaps.get_dependency_unsafe module_name in
+    match Parsing_heaps.Reader.get_provider ~reader dependency with
     | Some addr ->
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements

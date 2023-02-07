@@ -39,6 +39,10 @@ val get_haste_module : string -> haste_module_addr option
 
 val get_haste_module_unsafe : string -> haste_module_addr
 
+val get_dependency : Modulename.t -> dependency_addr option
+
+val get_dependency_unsafe : Modulename.t -> dependency_addr
+
 val iter_dependents : (file_addr -> unit) -> Modulename.t -> unit
 
 val read_file_name : file_addr -> string
@@ -48,6 +52,8 @@ val read_file_key : file_addr -> File_key.t
 val read_file_hash : [> ] parse_addr -> Xx.hash
 
 val read_module_name : haste_info_addr -> string
+
+val read_dependency_name : dependency_addr -> string
 
 val read_ast_unsafe : File_key.t -> [ `typed ] parse_addr -> (Loc.t, Loc.t) Flow_ast.Program.t
 
@@ -83,7 +89,7 @@ val read_phantom_dependencies : (dependency_addr -> 'a) -> resolved_requires_add
 module type READER = sig
   type reader
 
-  val get_provider : reader:reader -> Modulename.t -> file_addr option
+  val get_provider : reader:reader -> dependency_addr -> file_addr option
 
   val is_typed_file : reader:reader -> file_addr -> bool
 
@@ -187,7 +193,7 @@ module Mutator_reader : sig
     [ `typed ] parse_addr ->
     'a resolved_module' SMap.t
 
-  val get_old_provider : reader:reader -> Modulename.t -> file_addr option
+  val get_old_provider : reader:reader -> dependency_addr -> file_addr option
 
   val get_old_file_hash : reader:reader -> File_key.t -> Xx.hash option
 

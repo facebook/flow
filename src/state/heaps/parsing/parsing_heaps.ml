@@ -151,21 +151,26 @@ let get_haste_module_unsafe name =
   | Some addr -> addr
   | None -> raise (Haste_module_not_found name)
 
+let get_dependency = function
+  | Modulename.String name -> (get_haste_module name :> dependency_addr option)
+  | Modulename.Filename key -> (get_file_addr key :> dependency_addr option)
+
+let get_dependency_unsafe = function
+  | Modulename.String name -> (get_haste_module_unsafe name :> dependency_addr)
+  | Modulename.Filename key -> (get_file_addr_unsafe key :> dependency_addr)
+
 let read_provider reader m =
-  match m with
-  | Modulename.String name ->
-    let* haste_module = get_haste_module name in
-    reader.Heap.read (Heap.get_haste_provider haste_module)
-  | Modulename.Filename file_key ->
-    let open Heap in
-    let* file = get_file_addr file_key in
+  let haste_provider m = reader.Heap.read (Heap.get_haste_provider m) in
+  let file_provider file =
     let parsed_decl =
-      let* decl = get_alternate_file file in
+      let* decl = Heap.get_alternate_file file in
       get_parsed_file reader decl
     in
-    (match parsed_decl with
+    match parsed_decl with
     | Some _ as decl_provider -> decl_provider
-    | None -> get_parsed_file reader file)
+    | None -> get_parsed_file reader file
+  in
+  Heap.read_dependency haste_provider file_provider m
 
 let iter_dependents f mname =
   let dependents =
@@ -1179,7 +1184,7 @@ let clear_not_found file_key module_name =
 module type READER = sig
   type reader
 
-  val get_provider : reader:reader -> Modulename.t -> file_addr option
+  val get_provider : reader:reader -> dependency_addr -> file_addr option
 
   val is_typed_file : reader:reader -> file_addr -> bool
 

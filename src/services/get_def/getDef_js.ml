@@ -106,7 +106,8 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast :
       in
       let provider =
         match resolved_module with
-        | Ok m -> Parsing_heaps.Reader.get_provider ~reader m
+        | Ok m ->
+          Option.bind (Parsing_heaps.get_dependency m) (Parsing_heaps.Reader.get_provider ~reader)
         | Error _ ->
           (* TODO: We reach this codepath for requires that might resolve to
            * builtin modules. During check we check the master context, which we
