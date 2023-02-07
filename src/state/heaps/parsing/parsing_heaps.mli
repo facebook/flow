@@ -261,7 +261,7 @@ module Resolved_requires_mutator : sig
     file_addr ->
     [ `typed ] parse_addr ->
     dependency_addr resolved_module' array ->
-    Modulename.Set.t ->
+    dependency_addr option Modulename.Map.t ->
     unit
 end
 

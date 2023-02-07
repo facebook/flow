@@ -159,7 +159,7 @@ let package_incompatible ~reader filename new_package =
         (* This shouldn't happen -- if it does, it probably means we need to add cases above *)
         Incompatible Unknown
 
-type phantom_acc = Modulename.Set.t ref
+type phantom_acc = Parsing_heaps.dependency_addr option Modulename.Map.t ref
 
 type exported_module_info =
   [ `Module of Docblock.t
@@ -206,9 +206,9 @@ let is_relative_or_absolute r =
 
 let resolve_symlinks path = Path.to_string (Path.make path)
 
-let record_phantom_dependency mname = function
+let record_phantom_dependency mname dependency = function
   | None -> ()
-  | Some phantom_acc -> phantom_acc := Modulename.Set.add mname !phantom_acc
+  | Some phantom_acc -> phantom_acc := Modulename.Map.add mname dependency !phantom_acc
 
 (****************** Node module system *********************)
 
@@ -222,7 +222,7 @@ module Node = struct
     match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
     | Some _ -> dependency
     | None ->
-      record_phantom_dependency mname phantom_acc;
+      record_phantom_dependency mname dependency phantom_acc;
       None
 
   let path_if_exists_with_file_exts ~reader ~file_options phantom_acc path file_exts =
@@ -484,7 +484,7 @@ module Haste : MODULE_SYSTEM = struct
       | (Some package_dir, subpath) ->
         (* add a phantom dep on the package name, so we re-resolve the subpath
            if the package gets a new provider *)
-        record_phantom_dependency mname phantom_acc;
+        record_phantom_dependency mname dependency phantom_acc;
 
         let path = Files.construct_path package_dir subpath in
         Node.resolve_relative ~options ~reader ?phantom_acc dir path
@@ -495,10 +495,10 @@ module Haste : MODULE_SYSTEM = struct
 
            we do need to add a phantom dep on the module, so we re-resolve
            if the provider changes to a package. *)
-        record_phantom_dependency mname phantom_acc;
+        record_phantom_dependency mname dependency phantom_acc;
         None)
     | None ->
-      record_phantom_dependency mname phantom_acc;
+      record_phantom_dependency mname dependency phantom_acc;
       None
 
   let resolve_import ~options ~reader node_modules_containers f ?phantom_acc r =
@@ -598,7 +598,7 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
   let file_addr = Parsing_heaps.get_file_addr_unsafe file in
   let parse = Parsing_heaps.Mutator_reader.get_typed_parse_unsafe ~reader file file_addr in
   let requires = Parsing_heaps.read_requires parse in
-  let phantom_acc = ref Modulename.Set.empty in
+  let phantom_acc = ref Modulename.Map.empty in
   let resolved_modules =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     Array.map

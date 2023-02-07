@@ -14,7 +14,7 @@ type exported_module_info =
 (* export and import functions for the module system *)
 val exported_module : options:Options.t -> File_key.t -> exported_module_info -> string option
 
-type phantom_acc = Modulename.Set.t ref
+type phantom_acc
 
 val imported_module :
   options:Options.t ->

@@ -1662,11 +1662,16 @@ module Resolved_requires_mutator = struct
     Transaction.add ~commit ~rollback transaction
 
   let add_resolved_requires () file parse resolved_modules phantom_dependencies =
+    let prepare_phantom_dependency (mname, addr_opt) =
+      match addr_opt with
+      | Some addr -> Heap.prepare_const addr
+      | None -> prepare_find_or_add_dependency mname
+    in
     let prepare_resolved_requires =
       let+ phantom_dependencies =
-        Modulename.Set.elements phantom_dependencies
+        Modulename.Map.bindings phantom_dependencies
         |> Array.of_list
-        |> prepare_write_phantom_dependencies
+        |> Heap.prepare_all prepare_phantom_dependency
       in
       (resolved_modules, phantom_dependencies)
     in
