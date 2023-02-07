@@ -10,7 +10,7 @@ open Utils_js
 type denormalized_file_data = {
   requires: string array;
   resolved_modules: Parsing_heaps.resolved_module array;
-  phantom_dependencies: Modulename.Set.t;
+  phantom_dependencies: Modulename.t array;
   exports: Exports.t;
   hash: Xx.hash;
   imports: Imports.t;
@@ -193,16 +193,9 @@ end = struct
     loop 0 saved_state_version_length
 
   let normalize_resolved_requires ~normalizer resolved_modules phantom_dependencies =
-    let resolved_modules =
-      Array.map
-        (resolved_module_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
-        resolved_modules
-    in
-    let phantom_dependencies =
-      Modulename.Set.map
-        (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
-        phantom_dependencies
-    in
+    let f = FileNormalizer.normalize_file_key normalizer in
+    let resolved_modules = Array.map (resolved_module_map_fn ~f) resolved_modules in
+    let phantom_dependencies = Array.map (modulename_map_fn ~f) phantom_dependencies in
     (resolved_modules, phantom_dependencies)
 
   let normalize_file_data
@@ -229,6 +222,9 @@ end = struct
         (Parsing_heaps.read_resolved_module Parsing_heaps.read_dependency)
         resolved_requires
     in
+    let phantom_dependencies =
+      Parsing_heaps.read_phantom_dependencies Parsing_heaps.read_dependency resolved_requires
+    in
     let file_data =
       {
         module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
@@ -236,7 +232,7 @@ end = struct
           {
             requires;
             resolved_modules;
-            phantom_dependencies = Parsing_heaps.read_phantom_dependencies_set resolved_requires;
+            phantom_dependencies;
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
             imports;
@@ -529,15 +525,16 @@ end = struct
         Lwt.return (assert_version version)
 
   let denormalize_resolved_requires ~root resolved_modules phantom_dependencies =
-    (* We do our best to avoid reading the file system (which Path.make will do) *)
-    let phantom_dependencies =
-      Modulename.Set.map
-        (modulename_map_fn ~f:(denormalize_file_key_nocache ~root))
-        phantom_dependencies
-    in
     let resolved_modules =
       Array.map (resolved_module_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
+    let phantom_dependencies =
+      Array.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) phantom_dependencies
+    in
+    (* Sort after denormalizing because the denormalized file keys could be in a
+     * different sort order, specifically for paths outside of the root, i.e.,
+     * paths starting with `../` *)
+    Array.sort Modulename.compare phantom_dependencies;
     (resolved_modules, phantom_dependencies)
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)

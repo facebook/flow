@@ -306,19 +306,6 @@ let read_phantom_dependencies f resolved_requires =
   let addr = Heap.get_phantom_dependencies resolved_requires in
   Heap.read_addr_tbl f addr
 
-let read_phantom_dependencies_set resolved_requires : Modulename.Set.t =
-  let addr = Heap.get_phantom_dependencies resolved_requires in
-  let init n f =
-    let i = ref 0 in
-    let f () =
-      let addr = f !i in
-      incr i;
-      addr
-    in
-    Modulename.Set.of_increasing_iterator_unchecked f n
-  in
-  Heap.read_addr_tbl_generic read_dependency addr init
-
 let read_resolved_requires resolved_requires =
   ( read_resolved_modules (read_resolved_module Fun.id) resolved_requires,
     read_phantom_dependencies Fun.id resolved_requires
@@ -436,9 +423,7 @@ let prepare_write_resolved_modules resolved_modules =
   Heap.prepare_all f resolved_modules
 
 let prepare_write_phantom_dependencies phantom_dependencies =
-  Modulename.Set.elements phantom_dependencies
-  |> Array.of_list
-  |> Heap.prepare_all prepare_find_or_add_dependency
+  Heap.prepare_all prepare_find_or_add_dependency phantom_dependencies
 
 let prepare_write_resolved_module = function
   | Ok dependency -> Heap.prepare_const (dependency :> resolved_module_addr)
@@ -1672,7 +1657,11 @@ module Resolved_requires_mutator = struct
   let add_resolved_requires () file parse resolved_modules phantom_dependencies =
     let prepare_resolved_requires =
       let+ resolved_modules = prepare_write_resolved_modules resolved_modules
-      and+ phantom_dependencies = prepare_write_phantom_dependencies phantom_dependencies in
+      and+ phantom_dependencies =
+        Modulename.Set.elements phantom_dependencies
+        |> Array.of_list
+        |> prepare_write_phantom_dependencies
+      in
       (resolved_modules, phantom_dependencies)
     in
     let prepare_update resolved_requires =

@@ -80,8 +80,6 @@ val read_resolved_modules : (resolved_module_addr -> 'a) -> resolved_requires_ad
 
 val read_phantom_dependencies : (dependency_addr -> 'a) -> resolved_requires_addr -> 'a array
 
-val read_phantom_dependencies_set : resolved_requires_addr -> Modulename.Set.t
-
 module type READER = sig
   type reader
 
@@ -272,7 +270,7 @@ module Saved_state_mutator : sig
     Exports.t ->
     string array ->
     resolved_module array ->
-    Modulename.Set.t ->
+    Modulename.t array ->
     Imports.t ->
     Cas_digest.t option ->
     Modulename.Set.t
