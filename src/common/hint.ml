@@ -5,6 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type hint_kind =
+  (* This kind of hint expects that the `typeof e <: hint` when `hint` is an available hint on `e` *)
+  | ExpectedTypeHint
+  (* This kind of hint doesn't have the same restriction as `ExpectedTypeHint`.
+   * Instead, it is designed to provide some context when there wasn't an ExpectedTypeHint available.
+   * e.g. We use the type of `a` to contextually type `b` in `a ?? b`. *)
+  | BestEffortHint
+
 (* In contextual typing we often need to perform decompositions on type hints before
  * we descend deeper into an expression during type checking. For example if an
  * object literal `{ f: (x) => x + 1 }` is checked with a hint `{ f: (number) => number }`
@@ -89,8 +97,9 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_Promise
 
 and ('t, 'targs, 'args, 'props, 'children) hint =
-  | Hint_t of 't
-  | Hint_Decomp of (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't
+  | Hint_t of 't * hint_kind
+  | Hint_Decomp of
+      (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't * hint_kind
   (* The hint placeholder used in env_resolution to pass to expression type checkers.
      It will eventually be removed once we move all hint decomposition logic into env_resolution. *)
   | Hint_Placeholder
@@ -126,8 +135,8 @@ let string_of_hints ~on_hint hints =
     "[%s]"
     (hints
     |> Base.List.map ~f:(function
-           | Hint_t t -> Utils_js.spf "Hint_t (%s)" (on_hint t)
-           | Hint_Decomp (ops, t) ->
+           | Hint_t (t, _) -> Utils_js.spf "Hint_t (%s)" (on_hint t)
+           | Hint_Decomp (ops, t, _) ->
              Utils_js.spf
                "Hint_Decomp (%s)(%s)"
                (Nel.map (fun (_, op) -> string_of_hint_unknown_kind op) ops
@@ -142,8 +151,9 @@ let string_of_hints ~on_hint hints =
 
 let decompose_hints decomp =
   Base.List.map ~f:(function
-      | Hint_t t -> Hint_Decomp (Nel.one (Reason.mk_id (), decomp), t)
-      | Hint_Decomp (decomps, t) -> Hint_Decomp (Nel.cons (Reason.mk_id (), decomp) decomps, t)
+      | Hint_t (t, kind) -> Hint_Decomp (Nel.one (Reason.mk_id (), decomp), t, kind)
+      | Hint_Decomp (decomps, t, kind) ->
+        Hint_Decomp (Nel.cons (Reason.mk_id (), decomp) decomps, t, kind)
       | Hint_Placeholder -> Hint_Placeholder
       )
 
@@ -184,12 +194,13 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_Promise -> Decomp_Promise
 
 and map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = function
-  | Hint_t t -> Hint_t (map_base_hint t)
-  | Hint_Decomp (ops, t) ->
+  | Hint_t (t, kind) -> Hint_t (map_base_hint t, kind)
+  | Hint_Decomp (ops, t, kind) ->
     Hint_Decomp
       ( Nel.map
           (fun (i, op) -> (i, map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx op))
           ops,
-        map_base_hint t
+        map_base_hint t,
+        kind
       )
   | Hint_Placeholder -> Hint_Placeholder

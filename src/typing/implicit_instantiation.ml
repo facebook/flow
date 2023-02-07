@@ -65,7 +65,7 @@ module type S = sig
     Context.t ->
     use_op:Type.use_op ->
     ?allow_underconstrained:bool ->
-    ?return_hint:Type.t ->
+    ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
     output Subst_name.Map.t
 
@@ -914,7 +914,7 @@ struct
         let has_new_errors =
           not @@ Flow_error.ErrorSet.equal init_errors errors_before_using_return_hint
         in
-        Base.Option.iter return_hint ~f:(fun hint -> Flow.flow_t cx (tout, hint));
+        Base.Option.iter return_hint ~f:(fun (hint, _kind) -> Flow.flow_t cx (tout, hint));
         Context.reset_errors cx Flow_error.ErrorSet.empty;
         let restore () =
           let implicit_instantiation_errors =
@@ -1215,7 +1215,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     if Context.lti cx then
       let (allow_underconstrained, return_hint) =
         match lazy_hint reason_op with
-        | HintAvailable t -> (true, Some t)
+        | HintAvailable (t, kind) -> (true, Some (t, kind))
         | DecompositionError -> (true, None)
         | NoHint
         | EncounteredPlaceholder ->

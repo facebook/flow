@@ -9,10 +9,10 @@ module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
   val jsx_attributes_possible_sentinel_refinements :
-    (ALoc.t, ALoc.t) Flow_ast.JSX.Opening.attribute list -> Hint_api.sentinel_refinement SMap.t
+    (ALoc.t, ALoc.t) Flow_ast.JSX.Opening.attribute list -> Hint.sentinel_refinement SMap.t
 
   val object_properties_possible_sentinel_refinements :
-    (ALoc.t, ALoc.t) Flow_ast.Expression.Object.property list -> Hint_api.sentinel_refinement SMap.t
+    (ALoc.t, ALoc.t) Flow_ast.Expression.Object.property list -> Hint.sentinel_refinement SMap.t
 
   val visit_eq_test :
     on_type_of_test:

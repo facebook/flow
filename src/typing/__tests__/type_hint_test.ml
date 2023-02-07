@@ -7,7 +7,7 @@
 
 open OUnit2
 open Reason
-open Hint_api
+open Hint
 
 let metadata =
   {
@@ -262,10 +262,12 @@ let mk_hint base_t ops =
   ops
   |> List.mapi (fun i op -> (i, op))
   |> Nel.of_list
-  |> Base.Option.value_map ~default:(Hint_t base_t) ~f:(fun l -> Hint_Decomp (l, base_t))
+  |> Base.Option.value_map
+       ~default:(Hint_t (base_t, ExpectedTypeHint))
+       ~f:(fun l -> Hint_Decomp (l, base_t, ExpectedTypeHint))
 
 let string_of_hint_eval_result cx = function
-  | Type.HintAvailable t -> Ty_normalizer.debug_string_of_t cx t
+  | Type.HintAvailable (t, _) -> Ty_normalizer.debug_string_of_t cx t
   | Type.NoHint -> "NoHint"
   | Type.EncounteredPlaceholder -> "EncounteredPlaceholder"
   | Type.DecompositionError -> "DecompositionError"

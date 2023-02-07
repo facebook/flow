@@ -7,13 +7,13 @@
 
 open Reason
 open Type
-open Hint_api
+open Hint
 open Utils_js
 module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 module PinTypes = Implicit_instantiation.PinTypes (Flow_js.FlowJs)
 
 let with_hint_result ~ok ~error = function
-  | HintAvailable t -> ok t
+  | HintAvailable (t, _) -> ok t
   | _ -> error ()
 
 exception UnconstrainedTvarException
@@ -164,7 +164,7 @@ let rec get_t cx ~depth = function
 let get_t = get_t ~depth:3
 
 let rec instantiate_callee cx fn instantiation_hint =
-  let { Hint_api.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
+  let { Hint.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
   let resolve_overload_and_targs fn =
     let t =
       match get_t cx (simplify_callee cx reason unknown_use fn) with
@@ -227,7 +227,7 @@ let rec instantiate_callee cx fn instantiation_hint =
         let call_targs = Lazy.force targs in
         let return_hint =
           match evaluate_hints cx reason return_hints with
-          | HintAvailable t -> Some t
+          | HintAvailable (t, k) -> Some (t, k)
           | _ -> None
         in
         let check =
@@ -267,7 +267,7 @@ and instantiate_component cx component instantiation_hint =
   | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ })
     when Context.jsx cx = Options.Jsx_react ->
     let {
-      Hint_api.jsx_reason = reason;
+      Hint.jsx_reason = reason;
       jsx_name = _;
       jsx_props = config;
       jsx_children = children;
@@ -277,7 +277,7 @@ and instantiate_component cx component instantiation_hint =
     in
     let return_hint =
       match evaluate_hints cx reason jsx_hints with
-      | HintAvailable t -> Some t
+      | HintAvailable (t, k) -> Some (t, k)
       | _ -> None
     in
     let check =
@@ -576,7 +576,7 @@ and type_of_hint_decomposition cx op reason t =
         )
   )
 
-and fully_resolve_final_result cx t =
+and fully_resolve_final_result cx t kind =
   if Tvar_resolver.has_placeholders cx t then (
     Debug_js.Verbose.print_if_verbose_lazy
       cx
@@ -586,9 +586,9 @@ and fully_resolve_final_result cx t =
     let no_lowers _ = raise UnconstrainedTvarException in
     match Tvar_resolver.resolved_t cx ~no_lowers t with
     | exception UnconstrainedTvarException -> DecompositionError
-    | t -> HintAvailable t
+    | t -> HintAvailable (t, kind)
 
-and evaluate_hint_ops cx reason t ops =
+and evaluate_hint_ops cx reason t kind ops =
   let rec loop t = function
     | [] -> Some t
     | (id, op) :: ops ->
@@ -609,13 +609,15 @@ and evaluate_hint_ops cx reason t ops =
      unsolved tvars in the final result will fail the evaluation. *)
   match Context.run_in_synthesis_mode cx (fun () -> loop t ops) with
   | (_, None) -> DecompositionError
-  | (_, Some t) -> fully_resolve_final_result cx t
+  | (_, Some t) -> fully_resolve_final_result cx t kind
 
 and evaluate_hint cx reason hint =
   match hint with
-  | Hint_Placeholder -> HintAvailable (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none))
-  | Hint_t t -> fully_resolve_final_result cx t
-  | Hint_Decomp (ops, t) -> ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t
+  | Hint_Placeholder ->
+    HintAvailable (AnyT.annot (mk_reason (RCustom "placeholder hint") ALoc.none), ExpectedTypeHint)
+  | Hint_t (t, kind) -> fully_resolve_final_result cx t kind
+  | Hint_Decomp (ops, t, kind) ->
+    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t kind
 
 and evaluate_hints cx reason hints =
   Base.List.fold_until
@@ -624,5 +626,5 @@ and evaluate_hints cx reason hints =
     ~finish:(fun r -> r)
     ~f:(fun _ hint ->
       match evaluate_hint cx reason hint with
-      | HintAvailable t -> Base.Continue_or_stop.Stop (HintAvailable t)
+      | HintAvailable (t, kind) -> Base.Continue_or_stop.Stop (HintAvailable (t, kind))
       | r -> Base.Continue_or_stop.Continue r)

@@ -3925,7 +3925,7 @@ module Make
 
       method private add_sentinel_check_writes =
         SMap.iter (fun _ -> function
-          | Hint_api.Member reason ->
+          | Hint.Member reason ->
             let write_entries =
               EnvMap.add
                 (Env_api.ExpressionLoc, aloc_of_reason reason)

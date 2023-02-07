@@ -618,9 +618,9 @@ struct
         | BuiltinType _ -> state
       in
       let rec depends_of_hint state = function
-        | Hint_api.Hint_Placeholder -> state
-        | Hint_api.Hint_t hint_node -> depends_of_hint_node state hint_node
-        | Hint_api.Hint_Decomp (ops, hint_node) ->
+        | Hint.Hint_Placeholder -> state
+        | Hint.Hint_t (hint_node, _) -> depends_of_hint_node state hint_node
+        | Hint.Hint_Decomp (ops, hint_node, _) ->
           let depends_on_synthesizable_toplevel_expressions acc ~collect =
             let collector = new toplevel_expression_collector in
             collect collector;
@@ -634,16 +634,16 @@ struct
           Nel.fold_left
             (fun acc (_id, op) ->
               match op with
-              | Hint_api.Decomp_ObjComputed r ->
+              | Hint.Decomp_ObjComputed r ->
                 let loc = aloc_of_reason r in
                 depends_of_node
                   (fun visitor -> visitor#add ~why:loc (Env_api.ExpressionLoc, loc))
                   acc
-              | Hint_api.Decomp_SentinelRefinement checks ->
+              | Hint.Decomp_SentinelRefinement checks ->
                 SMap.fold
                   (fun _ check acc ->
                     match check with
-                    | Hint_api.Member r ->
+                    | Hint.Member r ->
                       let loc = aloc_of_reason r in
                       depends_of_node
                         (fun visitor -> visitor#add ~why:loc (Env_api.ExpressionLoc, loc))
@@ -651,14 +651,14 @@ struct
                     | _ -> acc)
                   checks
                   acc
-              | Hint_api.Instantiate_Component { Hint_api.jsx_props; jsx_children; _ } ->
+              | Hint.Instantiate_Component { Hint.jsx_props; jsx_children; _ } ->
                 depends_on_synthesizable_toplevel_expressions acc ~collect:(fun collector ->
                     Base.List.iter jsx_props ~f:(fun prop ->
                         ignore @@ collector#jsx_opening_attribute prop
                     );
                     ignore @@ collector#jsx_children jsx_children
                 )
-              | Hint_api.Instantiate_Callee { Hint_api.return_hints; arg_list; arg_index; _ } ->
+              | Hint.Instantiate_Callee { Hint.return_hints; arg_list; arg_index; _ } ->
                 let rec loop acc i = function
                   | [] -> acc
                   | arg :: rest when i >= arg_index ->

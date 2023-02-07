@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hint_api
+open Hint
 open Reason
 open Flow_ast_mapper
 open Loc_collections
@@ -118,8 +118,9 @@ end = struct
     | Expression _ -> default
 
   and pattern_hint = function
-    | (loc, Ast.Pattern.Identifier _) -> [Hint_t (WriteLocHint (Env_api.OrdinaryNameLoc, loc))]
-    | (loc, _) -> [Hint_t (WriteLocHint (Env_api.PatternLoc, loc))]
+    | (loc, Ast.Pattern.Identifier _) ->
+      [Hint_t (WriteLocHint (Env_api.OrdinaryNameLoc, loc), ExpectedTypeHint)]
+    | (loc, _) -> [Hint_t (WriteLocHint (Env_api.PatternLoc, loc), ExpectedTypeHint)]
 
   and array_elements
       ~record_identifier
@@ -920,7 +921,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                    annot;
                  }
               ),
-            [Hint_t (AnnotationHint (ALocMap.empty, annot))]
+            [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
           )
         | ( None,
             Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
@@ -1006,7 +1007,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             default_expression
             ~f:
               (this#visit_expression
-                 ~hints:[Hint_t (AnnotationHint (tparams, annot))]
+                 ~hints:[Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
                  ~cond:NonConditionalContext
               );
           Annotation
@@ -1316,7 +1317,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           let return_hint =
             let base_hint =
               match return with
-              | Ast.Type.Available annot -> [Hint_t (AnnotationHint (tparams, annot))]
+              | Ast.Type.Available annot ->
+                [Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
               | Ast.Type.Missing _ -> decompose_hints Decomp_FuncReturn func_hints
             in
             match scope_kind with
@@ -1466,7 +1468,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       ignore @@ this#type_annotation_hint annot;
       let hints =
         match annot with
-        | Ast.Type.Available annot -> [Hint_t (AnnotationHint (ALocMap.empty, annot))]
+        | Ast.Type.Available annot ->
+          [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
         | Ast.Type.Missing _ -> []
       in
       this#visit_class_property_value ~hints value;
@@ -1480,7 +1483,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       ignore @@ this#type_annotation_hint annot;
       let hints =
         match annot with
-        | Ast.Type.Available annot -> [Hint_t (AnnotationHint (ALocMap.empty, annot))]
+        | Ast.Type.Available annot ->
+          [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
         | Ast.Type.Missing _ -> []
       in
       this#visit_class_property_value ~hints value;
@@ -1566,21 +1570,21 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                )
             |> Nel.of_list
             |> Base.Option.value_map ~default:[] ~f:(fun providers ->
-                   [Hint_t (ProvidersHint providers)]
+                   [Hint_t (ProvidersHint providers, ExpectedTypeHint)]
                )
           | Ast.Pattern.Expression
               (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
             ->
             (match property with
             | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
-              decompose_hints (Decomp_ObjProp name) [Hint_t (ValueHint _object)]
+              decompose_hints (Decomp_ObjProp name) [Hint_t (ValueHint _object, ExpectedTypeHint)]
             | Ast.Expression.Member.PropertyPrivateName _ ->
               (* TODO create a hint based on the current class. *)
               []
             | Ast.Expression.Member.PropertyExpression expr ->
               decompose_hints
                 (Decomp_ObjComputed (mk_expression_reason expr))
-                [Hint_t (ValueHint _object)])
+                [Hint_t (ValueHint _object, ExpectedTypeHint)])
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
             [Hint_Placeholder]
@@ -1948,7 +1952,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
               )
               when (* Use the type of the callee directly as hint if the member access is refined *)
                    not (Loc_sig.ALocS.LMap.mem loc env_values) ->
-              let base_hint = [Hint_t (ValueHint _object)] in
+              let base_hint = [Hint_t (ValueHint _object, ExpectedTypeHint)] in
               (match property with
               | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
                 ->
@@ -1958,7 +1962,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                 decompose_hints (Decomp_MethodPrivateName (name, class_stack)) base_hint
               | Ast.Expression.Member.PropertyExpression _ ->
                 decompose_hints Decomp_MethodElem base_hint)
-            | _ -> [Hint_t (ValueHint callee)]
+            | _ -> [Hint_t (ValueHint callee, ExpectedTypeHint)]
           in
           let call_reason = mk_expression_reason (loc, Ast.Expression.Call expr) in
           this#visit_call_arguments
@@ -1980,7 +1984,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             |> decompose_hints
                  (Instantiate_Callee
                     {
-                      Hint_api.reason = call_reason;
+                      Hint.reason = call_reason;
                       return_hints;
                       targs = lazy targs;
                       arg_list = lazy arg_list;
@@ -2017,7 +2021,9 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       let { Ast.Expression.New.callee; targs; arguments; comments = _ } = expr in
       this#visit_expression ~hints:[] ~cond:NonConditionalContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
-      let call_argumemts_hints = decompose_hints Decomp_CallNew [Hint_t (ValueHint callee)] in
+      let call_argumemts_hints =
+        decompose_hints Decomp_CallNew [Hint_t (ValueHint callee, ExpectedTypeHint)]
+      in
       let arg_list =
         Base.Option.value
           arguments
@@ -2074,7 +2080,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       let open Ast.Expression.TypeCast in
       let { expression; annot; comments = _ } = expr in
       this#visit_expression
-        ~hints:[Hint_t (AnnotationHint (ALocMap.empty, annot))]
+        ~hints:[Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
         ~cond:NonConditionalContext
         expression;
       ignore @@ this#type_annotation annot;
@@ -2119,10 +2125,12 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           else if name = String.capitalize_ascii name then
             [
               Hint_t
-                (ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })));
+                ( ValueHint (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })),
+                  ExpectedTypeHint
+                );
             ]
           else
-            [Hint_t (StringLiteralType name)]
+            [Hint_t (StringLiteralType name, ExpectedTypeHint)]
         | Ast.JSX.NamespacedName _ -> []
         | Ast.JSX.MemberExpression member ->
           let rec jsx_title_member_to_expression member =
@@ -2151,7 +2159,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                 }
             )
           in
-          [Hint_t (ValueHint (jsx_title_member_to_expression member))]
+          [Hint_t (ValueHint (jsx_title_member_to_expression member), ExpectedTypeHint)]
       in
       let hints =
         let rec jsx_title_member_to_string (_, { Ast.JSX.MemberExpression._object; property; _ }) =
@@ -2258,7 +2266,10 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       let hints =
         decompose_hints
           (Decomp_ObjProp "children")
-          (decompose_hints (Decomp_FuncParam 0) [Hint_t (BuiltinType "React$FragmentType")])
+          (decompose_hints
+             (Decomp_FuncParam 0)
+             [Hint_t (BuiltinType "React$FragmentType", ExpectedTypeHint)]
+          )
       in
       this#visit_jsx_children ~hints frag_children;
       expr
@@ -2441,7 +2452,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
       this#visit_expression ~hints ~cond:NonConditionalContext consequent;
       this#visit_expression
-        ~hints:(Base.List.append hints [Hint_t (ValueHint consequent)])
+        ~hints:(Base.List.append hints [Hint_t (ValueHint consequent, BestEffortHint)])
         ~cond:NonConditionalContext
         alternate
 
@@ -2498,10 +2509,13 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         | Or ->
           ( OtherConditionalTest,
             decompose_hints Comp_MaybeT hints,
-            Base.List.append hints [Hint_t (ValueHint left)]
+            Base.List.append hints [Hint_t (ValueHint left, BestEffortHint)]
           )
         | NullishCoalesce ->
-          (cond, decompose_hints Comp_MaybeT hints, Base.List.append hints [Hint_t (ValueHint left)])
+          ( cond,
+            decompose_hints Comp_MaybeT hints,
+            Base.List.append hints [Hint_t (ValueHint left, BestEffortHint)]
+          )
       in
       this#visit_expression ~hints:left_hints ~cond:left_cond left;
       this#visit_expression ~hints:right_hints ~cond right

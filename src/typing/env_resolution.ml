@@ -7,7 +7,7 @@
 
 open Name_def
 open Type
-open Hint_api
+open Hint
 open Reason
 open Loc_collections
 open Utils_js
@@ -197,7 +197,7 @@ let resolve_hint cx loc hint =
         Hashtbl.add cache key result;
         result
     in
-    Hint_api.map hint ~map_base_hint ~map_targs ~map_arg_list ~map_jsx
+    Hint.map hint ~map_base_hint ~map_targs ~map_arg_list ~map_jsx
   else
     Hint_Placeholder
 
@@ -608,7 +608,7 @@ let resolve_binding_partial cx reason loc b =
       if contextual_typing_enabled then (
         let (has_hint, lazy_hint) = lazily_resolve_hints cx loc hints in
         match lazy_hint reason with
-        | HintAvailable t -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
+        | HintAvailable (t, _) -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
         | NoHint
         | DecompositionError
         | EncounteredPlaceholder ->

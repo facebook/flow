@@ -54,7 +54,7 @@ module type S = sig
     Context.t ->
     use_op:Type.use_op ->
     ?allow_underconstrained:bool ->
-    ?return_hint:Type.t ->
+    ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
     output Subst_name.Map.t
 

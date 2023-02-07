@@ -5,6 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type hint_kind =
+  | ExpectedTypeHint
+  | BestEffortHint
+
 type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
   return_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
@@ -57,8 +61,9 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_Promise
 
 and ('t, 'targs, 'args, 'props, 'children) hint =
-  | Hint_t of 't
-  | Hint_Decomp of (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't
+  | Hint_t of 't * hint_kind
+  | Hint_Decomp of
+      (int * ('t, 'targs, 'args, 'props, 'children) hint_decomposition) Nel.t * 't * hint_kind
   | Hint_Placeholder
 
 val string_of_hint_unknown_kind :

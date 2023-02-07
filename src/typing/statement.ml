@@ -2288,7 +2288,7 @@ module Make
         ()
       else
         match lazy_hint element_reason with
-        | HintAvailable hint -> Flow.flow_t cx (hint, elemt)
+        | HintAvailable (hint, _) -> Flow.flow_t cx (hint, elemt)
         | DecompositionError ->
           (* A hint is available, but cannot be used to provide a type for this
            * array element. In this case, the element type of the array is likely

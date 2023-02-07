@@ -16,7 +16,7 @@ val evaluate_hint :
     Type.t,
     Type.t list * Type.t option
   )
-  Hint_api.hint ->
+  Hint.hint ->
   Type.hint_eval_result
 
 val evaluate_hints :
@@ -28,6 +28,6 @@ val evaluate_hints :
     Type.t,
     Type.t list * Type.t option
   )
-  Hint_api.hint
+  Hint.hint
   list ->
   Type.hint_eval_result

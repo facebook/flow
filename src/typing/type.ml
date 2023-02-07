@@ -249,7 +249,7 @@ module rec TypeTerm : sig
     | EnumObjectT of enum_t
 
   and hint_eval_result =
-    | HintAvailable of t
+    | HintAvailable of t * Hint.hint_kind
     | NoHint
     | EncounteredPlaceholder
     | DecompositionError

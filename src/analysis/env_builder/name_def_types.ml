@@ -6,7 +6,7 @@
  *)
 
 module Ast = Flow_ast
-open Hint_api
+open Hint
 open Reason
 open Loc_collections
 
