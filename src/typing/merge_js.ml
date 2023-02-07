@@ -611,68 +611,79 @@ let detect_literal_subtypes =
       checks
 
 let check_constrained_writes init_cx master_cx =
+  let prepare_checks ~resolve_t checks =
+    Base.List.map
+      ~f:(fun (t, use_op, u_def) ->
+        let open Type in
+        let open Constraint in
+        let u_def = resolve_t u_def in
+        let (mk_use_op, use_op) =
+          let rec loop = function
+            | Frame ((ConstrainedAssignment _ as frame), op) ->
+              (TypeUtil.mod_use_op_of_use_t (fun op -> Frame (frame, op)), op)
+            | Op _ as op -> ((fun x -> x), op)
+            | Frame (frame, op) ->
+              let (f, op) = loop op in
+              (f, Frame (frame, op))
+          in
+          loop use_op
+        in
+        let u = UseT (use_op, u_def) in
+        match t with
+        | OpenT (_, id) ->
+          let (_, constraints) = Context.find_constraints init_cx id in
+          begin
+            match constraints with
+            | Unresolved { lower; _ } ->
+              TypeMap.bindings lower
+              |> Base.List.map ~f:(fun (t, (_, use_op)) ->
+                     let t = resolve_t t in
+                     (t, mk_use_op (Flow_js.flow_use_op init_cx use_op u))
+                 )
+            | Resolved (use_op, _)
+            | FullyResolved (use_op, _) ->
+              let t = resolve_t t in
+              [(t, mk_use_op (Flow_js.flow_use_op init_cx use_op u))]
+          end
+        | _ ->
+          let t = resolve_t t in
+          [(t, mk_use_op u)])
+      checks
+    |> List.flatten
+  in
+
   let checks = Context.constrained_writes init_cx in
   if not @@ Base.List.is_empty checks then (
-    let reducer =
-      let mk_reason =
-        let open Reason in
-        let open Utils_js in
-        update_desc_reason (function
-            | RIdentifier (OrdinaryName name) -> RCustom (spf "variable `%s` of unknown type" name)
-            | RParameter (Some name)
-            | RRestParameter (Some name) ->
-              RUnknownParameter name
-            | RTypeParam (name, _, _) ->
-              RCustom
-                (spf "unknown implicit instantiation of `%s`" (Subst_name.string_of_subst_name name))
-            | desc -> desc
-            )
-      in
-      new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
-          Type.EmptyT.make (mk_reason r) (Type.bogus_trust ())
-      )
-    in
     let (cx, checks) =
-      create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
-          Base.List.map
-            ~f:(fun (t, use_op, u_def) ->
-              let open Type in
-              let open Constraint in
-              let u_def = reducer#type_ init_cx Polarity.Neutral u_def in
-              let (mk_use_op, use_op) =
-                let rec loop = function
-                  | Frame ((ConstrainedAssignment _ as frame), op) ->
-                    (TypeUtil.mod_use_op_of_use_t (fun op -> Frame (frame, op)), op)
-                  | Op _ as op -> ((fun x -> x), op)
-                  | Frame (frame, op) ->
-                    let (f, op) = loop op in
-                    (f, Frame (frame, op))
-                in
-                loop use_op
-              in
-              let u = UseT (use_op, u_def) in
-              match t with
-              | OpenT (_, id) ->
-                let (_, constraints) = Context.find_constraints init_cx id in
-                begin
-                  match constraints with
-                  | Unresolved { lower; _ } ->
-                    TypeMap.bindings lower
-                    |> Base.List.map ~f:(fun (t, (_, use_op)) ->
-                           let t = reducer#type_ init_cx Polarity.Neutral t in
-                           (t, mk_use_op (Flow_js.flow_use_op init_cx use_op u))
-                       )
-                  | Resolved (use_op, _)
-                  | FullyResolved (use_op, _) ->
-                    let t = reducer#type_ init_cx Polarity.Neutral t in
-                    [(t, mk_use_op (Flow_js.flow_use_op init_cx use_op u))]
-                end
-              | _ ->
-                let t = reducer#type_ init_cx Polarity.Neutral t in
-                [(t, mk_use_op u)])
-            checks
-          |> List.flatten
-      )
+      if Context.lti init_cx then
+        (init_cx, prepare_checks ~resolve_t:(fun t -> t) checks)
+      else
+        let reducer =
+          let mk_reason =
+            let open Reason in
+            let open Utils_js in
+            update_desc_reason (function
+                | RIdentifier (OrdinaryName name) ->
+                  RCustom (spf "variable `%s` of unknown type" name)
+                | RParameter (Some name)
+                | RRestParameter (Some name) ->
+                  RUnknownParameter name
+                | RTypeParam (name, _, _) ->
+                  RCustom
+                    (spf
+                       "unknown implicit instantiation of `%s`"
+                       (Subst_name.string_of_subst_name name)
+                    )
+                | desc -> desc
+                )
+          in
+          new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
+              Type.EmptyT.make (mk_reason r) (Type.bogus_trust ())
+          )
+        in
+        create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
+            prepare_checks ~resolve_t:(reducer#type_ init_cx Polarity.Neutral) checks
+        )
     in
     Base.List.iter ~f:(Flow_js.flow cx) checks;
 
