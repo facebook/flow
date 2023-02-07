@@ -414,11 +414,7 @@ let mk_check_file options ~reader () =
       let requires =
         let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
         let resolved_modules =
-          Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe
-            ~reader
-            Parsing_heaps.read_dependency
-            file
-            parse
+          Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
         in
         let f mref locs acc =
           let m = SMap.find mref resolved_modules in
@@ -499,11 +495,7 @@ let check_contents_context ~reader options file ast docblock file_sig =
     let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
     let node_modules_containers = !Files.node_modules_containers in
     let f mref locs acc =
-      let m =
-        match Module_js.imported_module ~options ~reader ~node_modules_containers file mref with
-        | Ok m -> Ok (Parsing_heaps.read_dependency m)
-        | Error _ as err -> err
-      in
+      let m = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in
       (mref, locs, m) :: acc
     in
     SMap.fold f require_loc_map []

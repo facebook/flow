@@ -7,11 +7,11 @@
 
 type module_ref = string
 
-type require = module_ref * ALoc.t Nel.t * Parsing_heaps.resolved_module
+type 'a require = module_ref * ALoc.t Nel.t * 'a Parsing_heaps.resolved_module'
 
-type check_file =
+type 'a check_file =
   File_key.t ->
-  require list ->
+  'a require list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   Loc.t Flow_ast.Comment.t list ->
   File_sig.With_ALoc.t ->
@@ -24,9 +24,13 @@ module type READER = sig
 
   type typed_parse
 
+  type dependency
+
+  val read_dependency : dependency -> Modulename.t
+
   val get_master_cx : unit -> Context.master_context
 
-  val get_provider : Modulename.t -> provider option
+  val get_provider : dependency -> provider option
 
   val get_file_key : provider -> File_key.t
 
@@ -40,10 +44,15 @@ module type READER = sig
 
   val get_type_sig_buf : typed_parse -> Type_sig_bin.buf
 
-  val get_resolved_modules : typed_parse -> Parsing_heaps.resolved_module SMap.t
+  val get_resolved_modules : typed_parse -> dependency Parsing_heaps.resolved_module' SMap.t
 end
 
-val mk_heap_reader : Abstract_state_reader.t -> (module READER)
+val mk_heap_reader :
+  Abstract_state_reader.t -> (module READER with type dependency = Parsing_heaps.dependency_addr)
 
 val mk_check_file :
-  (module READER) -> options:Options.t -> cache:Check_cache.t -> unit -> check_file
+  (module READER with type dependency = 'a) ->
+  options:Options.t ->
+  cache:Check_cache.t ->
+  unit ->
+  'a check_file

@@ -7,11 +7,11 @@
 
 type module_ref = string
 
-type require = module_ref * ALoc.t Nel.t * Parsing_heaps.resolved_module
+type 'a require = module_ref * ALoc.t Nel.t * 'a Parsing_heaps.resolved_module'
 
-type check_file =
+type 'a check_file =
   File_key.t ->
-  require list ->
+  'a require list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   Loc.t Flow_ast.Comment.t list ->
   File_sig.With_ALoc.t ->
@@ -165,9 +165,13 @@ module type READER = sig
 
   type typed_parse
 
+  type dependency
+
+  val read_dependency : dependency -> Modulename.t
+
   val get_master_cx : unit -> Context.master_context
 
-  val get_provider : Modulename.t -> provider option
+  val get_provider : dependency -> provider option
 
   val get_file_key : provider -> File_key.t
 
@@ -181,7 +185,7 @@ module type READER = sig
 
   val get_type_sig_buf : typed_parse -> Type_sig_bin.buf
 
-  val get_resolved_modules : typed_parse -> Parsing_heaps.resolved_module SMap.t
+  val get_resolved_modules : typed_parse -> dependency Parsing_heaps.resolved_module' SMap.t
 end
 
 let mk_heap_reader reader =
@@ -192,11 +196,14 @@ let mk_heap_reader reader =
 
     type typed_parse = File_key.t * [ `typed ] Parsing_heaps.parse_addr
 
+    type dependency = Parsing_heaps.dependency_addr
+
+    let read_dependency = Parsing_heaps.read_dependency
+
     let get_master_cx () = Context_heaps.Reader_dispatcher.find_master ~reader
 
     let get_provider m =
-      let dependency = Parsing_heaps.get_dependency_unsafe m in
-      match Parsing_heaps.Reader_dispatcher.get_provider ~reader dependency with
+      match Parsing_heaps.Reader_dispatcher.get_provider ~reader m with
       | None -> None
       | Some dep_addr ->
         let file_key =
@@ -207,7 +214,7 @@ let mk_heap_reader reader =
               (Failure
                  (Printf.sprintf
                     "Invalid provider for %s: %s"
-                    (Modulename.to_string m)
+                    (Parsing_heaps.read_dependency_name m)
                     (Exception.get_ctor_string exn)
                  )
               )
@@ -233,19 +240,16 @@ let mk_heap_reader reader =
     let get_type_sig_buf (_, parse) = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse))
 
     let get_resolved_modules (file_key, parse) =
-      Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe
-        ~reader
-        Parsing_heaps.read_dependency
-        file_key
-        parse
+      Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe ~reader Fun.id file_key parse
   end in
-  (module Reader : READER)
+  (module Reader : READER with type dependency = Parsing_heaps.dependency_addr)
 
 (* This function is designed to be applied up to the unit argument and returns a
  * function which can be called repeatedly. The returned function closes over an
  * environment which defines caches that can be re-used when checking multiple
  * files. *)
-let mk_check_file (module Reader : READER) ~options ~cache () =
+let mk_check_file (type a) (module Reader : READER with type dependency = a) ~options ~cache () :
+    a check_file =
   let open Type_sig_collections in
   let module ConsGen = Annotation_inference.ConsGen in
   let module Merge = Type_sig_merge in
@@ -264,7 +268,7 @@ let mk_check_file (module Reader : READER) ~options ~cache () =
       unknown_module_t cx mref (Modulename.String m)
     | Ok m ->
       (match Reader.get_provider m with
-      | None -> unknown_module_t cx mref m
+      | None -> unknown_module_t cx mref (Reader.read_dependency m)
       | Some provider ->
         (match Reader.get_file_key provider with
         | File_key.ResourceFile f -> Merge.merge_resource_module_t cx f
