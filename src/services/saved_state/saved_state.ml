@@ -225,7 +225,9 @@ end = struct
     let requires = Parsing_heaps.read_requires parse in
     let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
     let resolved_modules =
-      Parsing_heaps.read_resolved_modules Parsing_heaps.read_resolved_module resolved_requires
+      Parsing_heaps.read_resolved_modules
+        (Parsing_heaps.read_resolved_module Parsing_heaps.read_dependency)
+        resolved_requires
     in
     let file_data =
       {

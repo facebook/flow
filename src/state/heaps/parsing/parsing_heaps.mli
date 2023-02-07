@@ -25,7 +25,9 @@ type dependency_addr = SharedMem.NewAPI.dependency SharedMem.addr
 
 type resolved_module_addr = SharedMem.NewAPI.resolved_module SharedMem.addr
 
-type resolved_module = (Modulename.t, string option) Result.t
+type 'a resolved_module' = ('a, string option) Result.t
+
+type resolved_module = Modulename.t resolved_module'
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 
@@ -72,7 +74,7 @@ val read_package_info : [ `package ] parse_addr -> (Package_json.t, unit) result
 
 val read_dependency : dependency_addr -> Modulename.t
 
-val read_resolved_module : resolved_module_addr -> resolved_module
+val read_resolved_module : (dependency_addr -> 'a) -> resolved_module_addr -> 'a resolved_module'
 
 val read_resolved_modules : (resolved_module_addr -> 'a) -> resolved_requires_addr -> 'a array
 

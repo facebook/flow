@@ -91,7 +91,9 @@ type dependency_addr = Heap.dependency SharedMem.addr
 
 type resolved_module_addr = Heap.resolved_module SharedMem.addr
 
-type resolved_module = (Modulename.t, string option) Result.t
+type 'a resolved_module' = ('a, string option) Result.t
+
+type resolved_module = Modulename.t resolved_module'
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 
@@ -286,9 +288,9 @@ let read_dependency =
     (fun addr -> Modulename.String (get_haste_name addr |> read_string))
     (fun addr -> Modulename.Filename (read_file_key addr))
 
-let read_resolved_module addr =
+let read_resolved_module f addr =
   match Heap.read_resolved_module addr with
-  | Ok dependency -> Ok (read_dependency dependency)
+  | Ok dependency -> Ok (f dependency)
   | Error mapped_name -> Error (Option.map Heap.read_string mapped_name)
 
 let read_resolved_modules f resolved_requires =
@@ -313,13 +315,15 @@ let read_phantom_dependencies_set resolved_requires : Modulename.Set.t =
   Heap.read_addr_tbl_generic read_dependency addr init
 
 let read_resolved_requires resolved_requires =
-  ( read_resolved_modules read_resolved_module resolved_requires,
+  ( read_resolved_modules (read_resolved_module read_dependency) resolved_requires,
     read_phantom_dependencies_set resolved_requires
   )
 
 let read_resolved_modules_map parse resolved_requires =
   let requires = read_requires parse in
-  let resolved_modules = read_resolved_modules read_resolved_module resolved_requires in
+  let resolved_modules =
+    read_resolved_modules (read_resolved_module read_dependency) resolved_requires
+  in
   let n = Array.length requires in
   let i = ref 0 in
   let f () =
