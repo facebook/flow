@@ -227,6 +227,8 @@ module NewAPI : sig
 
   val prepare_opt : ('a -> 'b prep) -> 'a option -> 'b option prep
 
+  val prepare_all : ('a -> 'b prep) -> 'a array -> 'b array prep
+
   val prepare_iter : ('a -> unit prep) -> 'a array -> unit prep
 
   module Prepare_syntax : sig

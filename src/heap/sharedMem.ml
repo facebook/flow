@@ -879,6 +879,14 @@ module NewAPI = struct
       let+ x = prep x in
       Some x
 
+  let prepare_all prep xs =
+    let f size_acc x =
+      let (size, write) = prep x in
+      (size_acc + size, write)
+    in
+    let (size, writes) = Array.fold_left_map f 0 xs in
+    (size, (fun chunk -> Array.map (fun write -> write chunk) writes))
+
   let prepare_iter prep xs =
     let f size_acc x =
       let (size, write) = prep x in
