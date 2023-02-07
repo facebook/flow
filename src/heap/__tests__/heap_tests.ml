@@ -202,7 +202,7 @@ let collect_test _ctxt =
   let ((size, _) as prepare) =
     let+ foo = prepare_foo
     and+ tbl2 =
-      prepare_write_addr_tbl [| prepare_write_addr_tbl [| prepare_write_string "bar" |] |]
+      prepare_write_addr_tbl (prepare_write_addr_tbl prepare_write_string) [| [| "bar" |] |]
     in
     assert (foo = H1.add foo_key foo);
     assert (tbl2 = H3.add tbl2_key tbl2)
@@ -464,7 +464,7 @@ let entity_barrier_test _ =
   let () =
     let ent = Option.get (Ent.get ent_key) in
     let addr = Option.get (entity_read_latest ent) in
-    let tbl = alloc (prepare_write_addr_tbl [| prepare_const addr |]) in
+    let tbl = alloc (prepare_write_addr_tbl prepare_const [| addr |]) in
     assert (tbl = H2.add tbl_key tbl);
     entity_advance ent None
   in

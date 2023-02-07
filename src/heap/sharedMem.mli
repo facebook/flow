@@ -251,7 +251,7 @@ module NewAPI : sig
 
   (* addr tbl *)
 
-  val prepare_write_addr_tbl : 'k addr prep array -> 'k tbl addr prep
+  val prepare_write_addr_tbl : ('a -> 'k addr prep) -> 'a array -> 'k tbl addr prep
 
   val read_addr_tbl_generic : ('k addr -> 'a) -> 'k tbl addr -> (int -> (int -> 'a) -> 'b) -> 'b
 

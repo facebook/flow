@@ -1136,21 +1136,27 @@ module NewAPI = struct
 
   (** Address tables *)
 
-  let prepare_write_addr_tbl preps =
-    let n = Array.length preps in
+  let prepare_write_addr_tbl prep xs =
+    let n = Array.length xs in
     if n = 0 then
       prepare_const null_addr
     else
       let tbl_size = addr_size * n in
-      let elems_size = Array.fold_left (fun acc (size, _) -> acc + size) 0 preps in
+      let (elems_size, writes) =
+        let f size_acc x =
+          let (size, write) = prep x in
+          (size_acc + size, write)
+        in
+        Array.fold_left_map f 0 xs
+      in
       let write chunk =
         let map = write_header chunk Addr_tbl_tag tbl_size in
         chunk.next_addr <- addr_offset chunk.next_addr tbl_size;
         Array.iteri
-          (fun i (_, write) ->
+          (fun i write ->
             let addr = write chunk in
             unsafe_write_addr_at chunk.heap (addr_offset map (header_size + i)) addr)
-          preps;
+          writes;
         map
       in
       (header_size + tbl_size + elems_size, write)

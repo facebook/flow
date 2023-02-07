@@ -426,23 +426,14 @@ let prepare_write_resolved_modules resolved_modules =
     | Error None -> Heap.prepare_const (SharedMem.null_addr :> resolved_module_addr)
     | Error (Some name) -> (Heap.prepare_write_string name :> resolved_module_addr Heap.prep)
   in
-  Array.map f resolved_modules |> Heap.prepare_write_addr_tbl
+  Heap.prepare_write_addr_tbl f resolved_modules
 
 let prepare_write_phantom_dependencies phantom_dependencies =
-  let f mname acc =
-    let prep =
-      match mname with
-      | Modulename.String name ->
-        (prepare_find_or_add_haste_module name :> dependency_addr Heap.prep)
-      | Modulename.Filename key ->
-        (prepare_find_or_add_phantom_file key :> dependency_addr Heap.prep)
-    in
-    prep :: acc
+  let f = function
+    | Modulename.String name -> (prepare_find_or_add_haste_module name :> dependency_addr Heap.prep)
+    | Modulename.Filename key -> (prepare_find_or_add_phantom_file key :> dependency_addr Heap.prep)
   in
-  Modulename.Set.fold f phantom_dependencies []
-  |> List.rev
-  |> Array.of_list
-  |> Heap.prepare_write_addr_tbl
+  Modulename.Set.elements phantom_dependencies |> Array.of_list |> Heap.prepare_write_addr_tbl f
 
 let prepare_write_resolved_requires (resolved_modules, phantom_dependencies) =
   let+ write_resolved_requires = Heap.prepare_write_resolved_requires
