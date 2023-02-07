@@ -21,6 +21,8 @@ type provider_addr = [ `file ] SharedMem.NewAPI.entity SharedMem.addr
 
 type resolved_requires_addr = [ `resolved_requires ] SharedMem.addr
 
+type dependency_addr = SharedMem.NewAPI.dependency SharedMem.addr
+
 type resolved_module_addr = SharedMem.NewAPI.resolved_module SharedMem.addr
 
 type resolved_module = (Modulename.t, string option) Result.t
@@ -68,11 +70,15 @@ val read_cas_digest : [ `typed ] parse_addr -> Cas_digest.t option
 
 val read_package_info : [ `package ] parse_addr -> (Package_json.t, unit) result
 
+val read_dependency : dependency_addr -> Modulename.t
+
 val read_resolved_module : resolved_module_addr -> resolved_module
 
 val read_resolved_modules : (resolved_module_addr -> 'a) -> resolved_requires_addr -> 'a array
 
-val read_phantom_dependencies : resolved_requires_addr -> Modulename.Set.t
+val read_phantom_dependencies : (dependency_addr -> 'a) -> resolved_requires_addr -> 'a array
+
+val read_phantom_dependencies_set : resolved_requires_addr -> Modulename.Set.t
 
 module type READER = sig
   type reader

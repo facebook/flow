@@ -234,7 +234,7 @@ end = struct
           {
             requires;
             resolved_modules;
-            phantom_dependencies = Parsing_heaps.read_phantom_dependencies resolved_requires;
+            phantom_dependencies = Parsing_heaps.read_phantom_dependencies_set resolved_requires;
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
             imports;

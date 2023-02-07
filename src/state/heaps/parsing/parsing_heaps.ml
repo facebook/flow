@@ -295,7 +295,11 @@ let read_resolved_modules f resolved_requires =
   let addr = Heap.get_resolved_modules resolved_requires in
   Heap.read_addr_tbl f addr
 
-let read_phantom_dependencies resolved_requires : Modulename.Set.t =
+let read_phantom_dependencies f resolved_requires =
+  let addr = Heap.get_phantom_dependencies resolved_requires in
+  Heap.read_addr_tbl f addr
+
+let read_phantom_dependencies_set resolved_requires : Modulename.Set.t =
   let addr = Heap.get_phantom_dependencies resolved_requires in
   let init n f =
     let i = ref 0 in
@@ -310,7 +314,7 @@ let read_phantom_dependencies resolved_requires : Modulename.Set.t =
 
 let read_resolved_requires resolved_requires =
   ( read_resolved_modules read_resolved_module resolved_requires,
-    read_phantom_dependencies resolved_requires
+    read_phantom_dependencies_set resolved_requires
   )
 
 let read_resolved_modules_map parse resolved_requires =
@@ -923,11 +927,11 @@ let rollback_resolved_requires file ent =
   if Heap.entity_changed ent then (
     let old_resolved_requires =
       let* addr = Heap.entity_read_committed ent in
-      Some (read_resolved_modules read_resolved_module addr, read_phantom_dependencies addr)
+      Some (read_resolved_requires addr)
     in
     let new_resolved_requires =
       let* addr = Heap.entity_read_latest ent in
-      Some (read_resolved_modules read_resolved_module addr, read_phantom_dependencies addr)
+      Some (read_resolved_requires addr)
     in
     Heap.alloc
       (let+ update_revdeps = prepare_update_revdeps new_resolved_requires old_resolved_requires in
