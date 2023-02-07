@@ -1915,7 +1915,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
           module_name
           exports
           requires
-          (resolved_modules, phantom_dependencies)
+          resolved_modules
+          phantom_dependencies
           imports
           cas_digest
       in

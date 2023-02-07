@@ -93,8 +93,6 @@ type resolved_module_addr = Heap.resolved_module SharedMem.addr
 
 type resolved_module = (Modulename.t, string option) Result.t
 
-type resolved_requires = resolved_module array * Modulename.Set.t
-
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 
 let ( let* ) = Option.bind
@@ -1664,10 +1662,12 @@ module Resolved_requires_mutator = struct
     in
     Transaction.add ~commit ~rollback transaction
 
-  let add_resolved_requires () file parse resolved_requires =
+  let add_resolved_requires () file parse resolved_modules phantom_dependencies =
     let prepare =
       let+ update_resolved_requires =
-        prepare_update_resolved_requires_if_changed (Some parse) (Some resolved_requires)
+        prepare_update_resolved_requires_if_changed
+          (Some parse)
+          (Some (resolved_modules, phantom_dependencies))
       in
       update_resolved_requires file parse
     in
@@ -2141,7 +2141,17 @@ module Saved_state_mutator = struct
   let not_found_files = ref FilenameSet.empty
 
   let add_parsed
-      () file_key file_opt hash module_name exports requires resolved_requires imports cas_digest =
+      ()
+      file_key
+      file_opt
+      hash
+      module_name
+      exports
+      requires
+      resolved_modules
+      phantom_dependents
+      imports
+      cas_digest =
     WorkerCancel.with_no_cancellations @@ fun () ->
     Heap.alloc
       (prepare_add_checked_file
@@ -2158,7 +2168,7 @@ module Saved_state_mutator = struct
          exports
          imports
          cas_digest
-         (Some (Some resolved_requires))
+         (Some (Some (resolved_modules, phantom_dependents)))
       )
 
   let add_unparsed () = add_unparsed

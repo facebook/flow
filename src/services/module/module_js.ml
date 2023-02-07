@@ -607,7 +607,8 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
     mutator
     file_addr
     parse
-    (resolved_modules, !phantom_acc)
+    resolved_modules
+    !phantom_acc
 
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.

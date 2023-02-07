@@ -23,8 +23,6 @@ type resolved_requires_addr = [ `resolved_requires ] SharedMem.addr
 
 type resolved_module = (Modulename.t, string option) Result.t
 
-type resolved_requires = resolved_module array * Modulename.Set.t
-
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 
 val get_file_addr : File_key.t -> file_addr option
@@ -234,7 +232,8 @@ module Resolved_requires_mutator : sig
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> t
 
-  val add_resolved_requires : t -> file_addr -> [ `typed ] parse_addr -> resolved_requires -> unit
+  val add_resolved_requires :
+    t -> file_addr -> [ `typed ] parse_addr -> resolved_module array -> Modulename.Set.t -> unit
 end
 
 module Merge_context_mutator : sig
@@ -260,7 +259,8 @@ module Saved_state_mutator : sig
     string option ->
     Exports.t ->
     string array ->
-    resolved_requires ->
+    resolved_module array ->
+    Modulename.Set.t ->
     Imports.t ->
     Cas_digest.t option ->
     Modulename.Set.t
