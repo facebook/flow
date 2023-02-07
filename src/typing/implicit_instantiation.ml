@@ -1120,7 +1120,19 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
           })
         inferred_targ_map
     in
-    let subst_map = Subst_name.Map.map (fun { inferred; _ } -> inferred) inferred_targ_map in
+    let subst_map =
+      Subst_name.Map.map
+        (fun { inferred; _ } ->
+          match inferred with
+          | OpenT _
+          | GenericT _ ->
+            inferred
+          | _ ->
+            (* This indirection is added for performance purposes, since it prevents
+             * unnecessary deep substitution traversals. *)
+            Tvar.mk_resolved cx use_op (TypeUtil.reason_of_t inferred) inferred)
+        inferred_targ_map
+    in
     inferred_targ_map
     |> Subst_name.Map.iter (fun _ { inferred; tparam } ->
            let frame = Frame (TypeParamBound { name = tparam.name }, use_op) in
