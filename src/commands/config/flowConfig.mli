@@ -98,7 +98,7 @@ val inference_mode_lti_includes : config -> string list
 
 val estimate_recheck_time : config -> bool option
 
-val exact_by_default : config -> bool
+val exact_by_default : config -> bool option
 
 val facebook_fbs : config -> string option
 

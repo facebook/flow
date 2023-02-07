@@ -60,7 +60,7 @@ module Opts = struct
     inference_mode: Options.inference_mode;
     inference_mode_lti_includes: string list;
     estimate_recheck_time: bool option;
-    exact_by_default: bool;
+    exact_by_default: bool option;
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
@@ -185,7 +185,7 @@ module Opts = struct
       inference_mode = Options.ConstrainWrites;
       inference_mode_lti_includes = [];
       estimate_recheck_time = None;
-      exact_by_default = false;
+      exact_by_default = None;
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;
@@ -758,7 +758,7 @@ module Opts = struct
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
-      ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
+      ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
       ("experimental.abstract_locations", abstract_locations_parser);
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
