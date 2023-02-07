@@ -7,6 +7,7 @@
 
 struct MatcherOptions {
   bool smart_case = false;
+  bool first_match_can_be_weak = true;
   size_t num_threads = 0;
   size_t max_results = 0;
 };
@@ -76,4 +77,5 @@ private:
   std::vector<CandidateData> candidates_;
   std::unordered_map<std::string, size_t> lookup_;
   std::string lastQuery_;
+  bool lastQueryFirstMatchCanBeWeak_;
 };

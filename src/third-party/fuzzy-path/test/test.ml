@@ -33,6 +33,8 @@ let values = List.map (fun { Fuzzy_path.value; _ } -> value)
 let assert_values ?ctxt expected actual =
   assert_equal ?ctxt ~printer:string_list_printer expected (values actual)
 
+let options = Fuzzy_path.default_options
+
 let tests = "fuzzy-path" >::: [
   "can_match_strings" >:: (fun ctxt ->
     let matcher = Fuzzy_path.init candidates in
@@ -48,6 +50,17 @@ let tests = "fuzzy-path" >::: [
       ~ctxt
       ["/this/is/a/test/dir"]
       result;
+  );
+
+  "finds_strong_match" >:: (fun ctxt ->
+    let candidates = ["xabcabc"; "xAbcabc"; "xabcAbc"] in
+    let matcher = Fuzzy_path.init candidates in
+    let result = Fuzzy_path.search ~options "abc" matcher in
+    assert_values ~ctxt ["xAbcabc"; "xabcAbc"; "xabcabc"] result;
+
+    let options = { options with Fuzzy_path.first_match_can_be_weak = false } in
+    let result = Fuzzy_path.search ~options "abc" matcher in
+    assert_values ~ctxt ["xAbcabc"; "xabcAbc"] result
   );
 
   "prefers_exact_over_abbr_over_others" >:: (fun ctxt ->

@@ -131,8 +131,12 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   if (max_results == 0) {
     max_results = std::numeric_limits<size_t>::max();
   }
+
+  bool first_match_can_be_weak = options.first_match_can_be_weak;
+
   MatchOptions matchOptions;
   matchOptions.smart_case = false;
+  matchOptions.first_match_can_be_weak = first_match_can_be_weak;
 
   std::string new_query;
   // Ignore all whitespace in the query.
@@ -149,8 +153,10 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
 
   // If our current query is just an extension of the last query,
   // quickly ignore all previous non-matches as an optimization.
-  bool use_last_match = query_case.substr(0, lastQuery_.size()) == lastQuery_;
+  bool use_last_match = query_case.substr(0, lastQuery_.size()) == lastQuery_ &&
+      first_match_can_be_weak == lastQueryFirstMatchCanBeWeak_;
   lastQuery_ = query_case;
+  lastQueryFirstMatchCanBeWeak_ = first_match_can_be_weak;
 
   ResultHeap combined;
   std::atomic<float> min_score(0);

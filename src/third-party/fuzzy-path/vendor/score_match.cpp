@@ -37,6 +37,7 @@ struct MatchInfo {
   int* last_match;
   float *memo;
   bool smart_case;
+  bool first_match_can_be_weak;
   float min_score;
 };
 
@@ -104,6 +105,9 @@ float recursive_match(const MatchInfo &m,
           char_score = 0.7;
         } else if (needle_idx == 0) {
           char_score = BASE_DISTANCE_PENALTY;
+          if (!m.first_match_can_be_weak) {
+            continue;
+          }
         } else {
           char_score = std::max(
             MIN_DISTANCE_PENALTY,
@@ -169,6 +173,7 @@ float score_match(const char *haystack,
   m.haystack_case = haystack_lower;
   m.needle_case = needle_lower;
   m.smart_case = options.smart_case;
+  m.first_match_can_be_weak = options.first_match_can_be_weak;
   m.min_score = min_score;
 
 #ifdef _WIN32

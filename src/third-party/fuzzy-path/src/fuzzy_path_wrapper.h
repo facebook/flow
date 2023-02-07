@@ -20,6 +20,7 @@ typedef struct matcher matcher_t;
 
 typedef struct matcher_options {
   bool smart_case;
+  bool first_match_can_be_weak;
   size_t num_threads;
   size_t max_results;
 } matcher_options_t;
