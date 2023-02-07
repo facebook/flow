@@ -1600,7 +1600,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             (MemberAssign { member_loc; member; rhs = right })
         | (None, _) ->
           let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
-          this#add_destructure_bindings (Value { hints; expr = right }) left
+          this#add_destructure_bindings (Value { hints = []; expr = right }) left
         | ( Some operator,
             Ast.Pattern.Identifier
               { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }

@@ -190,7 +190,6 @@ Error --------------------------------------------------------------------------
 
 The following definitions recursively depend on each other, and Flow cannot compute their types:
  - `f` [1] depends on other definition [2]
- - `f` [2] depends on other definition [1]
 Please add type annotations to these definitions [definition-cycle]
 
    provider_edge_cases.js:8:1
