@@ -163,6 +163,10 @@ function custom_ast_types(fork) {
     .bases('Expression')
     .build('expression')
     .field('expression', def('Expression'));
+  def('JSXOpeningElement').field(
+    'typeArguments',
+    or(undefined, def('TypeParameterInstantiation')),
+  );
 }
 
 module.exports = custom_ast_types;

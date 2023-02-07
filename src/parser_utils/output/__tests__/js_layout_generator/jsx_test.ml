@@ -308,4 +308,8 @@ let tests =
         "<A>\n  <B />\n  \n  <C />\n</A>"
         (expression_of_string "<A>\n  <B />\n  \n  \n  <C />\n</A>")
     );
+    ( "type_args" >:: fun ctxt ->
+      assert_expression_string ~ctxt "<A<string>/>";
+      assert_expression_string ~ctxt "<A<string>><div/></A>"
+    );
   ]

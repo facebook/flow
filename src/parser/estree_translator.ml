@@ -1844,15 +1844,20 @@ with type t = Impl.t = struct
           ("children", array_of_list jsx_child frag_children);
           ("closingFragment", jsx_closing_fragment frag_closing_element);
         ]
-    and jsx_opening (loc, { JSX.Opening.name; attributes; self_closing }) =
+    and jsx_opening (loc, { JSX.Opening.name; targs; attributes; self_closing }) =
       node
         "JSXOpeningElement"
         loc
-        [
-          ("name", jsx_name name);
-          ("attributes", array_of_list jsx_opening_attribute attributes);
-          ("selfClosing", bool self_closing);
-        ]
+        ([
+           ("name", jsx_name name);
+           ("attributes", array_of_list jsx_opening_attribute attributes);
+           ("selfClosing", bool self_closing);
+         ]
+        @
+        match targs with
+        | Some targs -> [("typeArguments", call_type_args targs)]
+        | None -> []
+        )
     and jsx_opening_fragment loc = node "JSXOpeningFragment" loc []
     and jsx_opening_attribute =
       JSX.Opening.(

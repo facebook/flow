@@ -1453,10 +1453,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method jsx_opening_element (elem : ('M, 'T) Ast.JSX.Opening.t) : ('N, 'U) Ast.JSX.Opening.t =
       let open Ast.JSX.Opening in
-      let (annot, { name; self_closing; attributes }) = elem in
+      let (annot, { name; targs; self_closing; attributes }) = elem in
       let name' = this#jsx_element_name name in
+      let targs' = Option.map ~f:this#call_type_args targs in
       let attributes' = List.map ~f:this#jsx_opening_attribute attributes in
-      (this#on_loc_annot annot, { name = name'; self_closing; attributes = attributes' })
+      ( this#on_loc_annot annot,
+        { name = name'; targs = targs'; self_closing; attributes = attributes' }
+      )
 
     method jsx_closing_element (elem : ('M, 'T) Ast.JSX.Closing.t) : ('N, 'U) Ast.JSX.Closing.t =
       let open Ast.JSX.Closing in

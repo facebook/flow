@@ -11,7 +11,7 @@ open Parser_common
 open Parser_env
 open Flow_ast
 
-module JSX (Parse : Parser_common.PARSER) = struct
+module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRESSION) = struct
   (* Consumes and returns the trailing comments after the end of a JSX tag name,
      attribute, or spread attribute.
 
@@ -273,9 +273,23 @@ module JSX (Parse : Parser_common.PARSER) = struct
             Ok `Fragment
           | T_JSX_IDENTIFIER _ ->
             let name = name env in
+            let targs =
+              (* Don't attempt to parse type args if what follows is a closing tag.
+                 E.g. in the situation of adding a child `<C><A </C>`
+                 Doing so would always be wrong, and having this check improves errors.
+              *)
+              if
+                should_parse_types env
+                && Peek.token env = T_LESS_THAN
+                && Peek.ith_token ~i:1 env <> T_DIV
+              then
+                Try.or_else env ~fallback:None Expression.call_type_args
+              else
+                None
+            in
             let attributes = attributes env [] in
             let self_closing = Eat.maybe env T_DIV in
-            let element = `Element { JSX.Opening.name; self_closing; attributes } in
+            let element = `Element { JSX.Opening.name; targs; self_closing; attributes } in
             if Eat.maybe env T_GREATER_THAN then
               Ok element
             else (

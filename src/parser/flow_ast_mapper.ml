@@ -1941,13 +1941,14 @@ class ['loc] mapper =
 
     method jsx_opening_element (elem : ('loc, 'loc) Ast.JSX.Opening.t) =
       let open Ast.JSX.Opening in
-      let (loc, { name; self_closing; attributes }) = elem in
+      let (loc, { name; targs; self_closing; attributes }) = elem in
       let name' = this#jsx_element_name name in
+      let targs' = map_opt this#call_type_args targs in
       let attributes' = map_list this#jsx_opening_attribute attributes in
-      if name == name' && attributes == attributes' then
+      if name == name' && targs == targs' && attributes == attributes' then
         elem
       else
-        (loc, { name = name'; self_closing; attributes = attributes' })
+        (loc, { name = name'; targs = targs'; self_closing; attributes = attributes' })
 
     method jsx_closing_element (elem : ('loc, 'loc) Ast.JSX.Closing.t) =
       let open Ast.JSX.Closing in

@@ -1,0 +1,34 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:18:11
+
+Flow doesn't support JSX type arguments. [unsupported-syntax]
+
+   18| <Component<string> prop="foo" />;
+                 ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:19:11
+
+Flow doesn't support JSX type arguments. [unsupported-syntax]
+
+   19| <Component<_> prop="foo" />;
+                 ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:20:23
+
+Flow doesn't support JSX type arguments. [unsupported-syntax]
+
+   20| <ComponentWithChildren<string> prop="foo" ><div /></ComponentWithChildren>;
+                             ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:23
+
+Flow doesn't support JSX type arguments. [unsupported-syntax]
+
+   21| <ComponentMultipleArgs<string, number, boolean> r="foo" s={1} t={true} />;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors

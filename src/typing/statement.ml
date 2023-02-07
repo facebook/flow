@@ -5236,7 +5236,14 @@ module Make
     let open Ast.JSX in
     let make_trust = Context.trust_constructor cx in
     let (loc_element, _, _) = locs in
-    let (loc, { Opening.name; attributes; self_closing }) = opening_element in
+    let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
+    let targs =
+      Base.Option.map targs ~f:(fun targs ->
+          let (targs_loc, _) = targs in
+          Flow.add_output cx Error_message.(EUnsupportedSyntax (targs_loc, JSXTypeArgs));
+          Tast_utils.error_mapper#call_type_args targs
+      )
+    in
     let facebook_fbs = Context.facebook_fbs cx in
     let facebook_fbt = Context.facebook_fbt cx in
     let jsx_mode = Context.jsx cx in
@@ -5328,7 +5335,7 @@ module Make
         Some (c_loc, { Closing.name = jsx_match_closing_element name cname })
       | None -> None
     in
-    (t, (loc, { Opening.name; self_closing; attributes }), children, closing_element)
+    (t, (loc, { Opening.name; targs; self_closing; attributes }), children, closing_element)
 
   and jsx_match_closing_element =
     let match_identifiers o_id c_id =

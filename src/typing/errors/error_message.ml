@@ -579,6 +579,7 @@ and 'loc unsupported_syntax =
   | CatchParameterDeclaration
   | DestructuringObjectPropertyLiteralNonString
   | DestructuringExpressionPattern
+  | JSXTypeArgs
   | PredicateDeclarationForImplementation
   | PredicateDeclarationWithoutExpression
   | PredicateDeclarationAnonymousParameters
@@ -686,7 +687,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
       | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
       | RequireDynamicArgument | CatchParameterDeclaration
-      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern
+      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern | JSXTypeArgs
       | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
       | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
       | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
@@ -2604,6 +2605,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | DestructuringObjectPropertyLiteralNonString ->
         [text "Unsupported non-string literal object property in destructuring."]
       | DestructuringExpressionPattern -> [text "Unsupported expression pattern in destructuring."]
+      | JSXTypeArgs -> [text "Flow doesn't support JSX type arguments."]
       | PredicateDeclarationForImplementation ->
         [text "Cannot declare predicate when a function body is present."]
       | PredicateDeclarationWithoutExpression ->

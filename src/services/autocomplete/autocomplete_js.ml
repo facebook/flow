@@ -290,7 +290,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
 
     method! jsx_opening_element elt =
       let open Flow_ast.JSX in
-      let (_, Opening.{ name = component_name; attributes; self_closing = _ }) = elt in
+      let (_, Opening.{ name = component_name; targs = _; attributes; self_closing = _ }) = elt in
 
       (match component_name with
       | Identifier ((loc, type_), { Identifier.name; comments = _ }) ->

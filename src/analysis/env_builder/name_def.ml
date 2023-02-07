@@ -2097,7 +2097,14 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       let open Ast.JSX in
       let {
         opening_element =
-          (_, { Opening.name = opening_name; self_closing = _; attributes = opening_attributes });
+          ( _,
+            {
+              Opening.name = opening_name;
+              targs = _;
+              self_closing = _;
+              attributes = opening_attributes;
+            }
+          );
         closing_element = _;
         children;
         comments = _;

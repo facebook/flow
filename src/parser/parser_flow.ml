@@ -173,7 +173,7 @@ module rec Parse : PARSER = struct
   module Statement =
     Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Pattern_cover)
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
-  module JSX = Jsx_parser.JSX (Parse)
+  module JSX = Jsx_parser.JSX (Parse) (Expression)
 
   let annot = Type.annotation
 

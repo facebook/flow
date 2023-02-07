@@ -1537,14 +1537,19 @@ let program
       (elem1 : (Loc.t, Loc.t) Ast.JSX.Opening.t) (elem2 : (Loc.t, Loc.t) Ast.JSX.Opening.t) :
       node change list option =
     let open Ast.JSX.Opening in
-    let (_, { name = name1; self_closing = self_close1; attributes = attrs1 }) = elem1 in
-    let (_, { name = name2; self_closing = self_close2; attributes = attrs2 }) = elem2 in
+    let (_, { name = name1; targs = targs1; self_closing = self_close1; attributes = attrs1 }) =
+      elem1
+    in
+    let (_, { name = name2; targs = targs2; self_closing = self_close2; attributes = attrs2 }) =
+      elem2
+    in
     if self_close1 != self_close2 then
       None
     else
       let name_diff = diff_if_changed_ret_opt jsx_element_name name1 name2 in
+      let targs_diff = diff_if_changed_ret_opt (diff_if_changed_opt call_type_args) targs1 targs2 in
       let attrs_diff = diff_and_recurse_no_trivial jsx_opening_attribute attrs1 attrs2 in
-      join_diff_list [name_diff; attrs_diff]
+      join_diff_list [name_diff; targs_diff; attrs_diff]
   and jsx_element_name (name1 : (Loc.t, Loc.t) Ast.JSX.name) (name2 : (Loc.t, Loc.t) Ast.JSX.name) :
       node change list option =
     let open Ast.JSX in

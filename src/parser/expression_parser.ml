@@ -29,6 +29,8 @@ module type EXPRESSION = sig
 
   val sequence :
     env -> start_loc:Loc.t -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
+
+  val call_type_args : env -> (Loc.t, Loc.t) Expression.CallTypeArgs.t option
 end
 
 module Expression

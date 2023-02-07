@@ -2776,12 +2776,12 @@ and jsx_opening_attr ~opts = function
   | Ast.JSX.Opening.Attribute attr -> jsx_attribute ~opts attr
   | Ast.JSX.Opening.SpreadAttribute attr -> jsx_spread_attribute ~opts attr
 
-and jsx_opening ~opts (loc, { Ast.JSX.Opening.name; attributes; self_closing = _ }) =
-  jsx_opening_helper ~opts loc (Some name) attributes
+and jsx_opening ~opts (loc, { Ast.JSX.Opening.name; targs; attributes; self_closing = _ }) =
+  jsx_opening_helper ~opts loc (Some name) targs attributes
 
-and jsx_fragment_opening ~opts loc = jsx_opening_helper ~opts loc None []
+and jsx_fragment_opening ~opts loc = jsx_opening_helper ~opts loc None None []
 
-and jsx_opening_helper ~opts loc nameOpt attributes =
+and jsx_opening_helper ~opts loc nameOpt targs attributes =
   source_location_with_comments
     ( loc,
       group
@@ -2790,6 +2790,7 @@ and jsx_opening_helper ~opts loc nameOpt attributes =
           (match nameOpt with
           | Some name -> jsx_element_name name
           | None -> Empty);
+          option (call_type_args ~opts ~less_than:"<") targs;
           ( if attributes <> [] then
             Layout.Indent
               (fuse [line; join pretty_line (Base.List.map ~f:(jsx_opening_attr ~opts) attributes)])
@@ -2800,7 +2801,7 @@ and jsx_opening_helper ~opts loc nameOpt attributes =
         ]
     )
 
-and jsx_self_closing ~opts (loc, { Ast.JSX.Opening.name; attributes; self_closing = _ }) =
+and jsx_self_closing ~opts (loc, { Ast.JSX.Opening.name; targs; attributes; self_closing = _ }) =
   let attributes = Base.List.map ~f:(jsx_opening_attr ~opts) attributes in
   source_location_with_comments
     ( loc,
@@ -2808,6 +2809,7 @@ and jsx_self_closing ~opts (loc, { Ast.JSX.Opening.name; attributes; self_closin
         [
           Atom "<";
           jsx_element_name name;
+          option (call_type_args ~opts ~less_than:"<") targs;
           ( if attributes <> [] then
             fuse [Layout.Indent (fuse [line; join pretty_line attributes]); pretty_line]
           else

@@ -1648,6 +1648,7 @@ and JSX : sig
 
     and ('M, 'T) t' = {
       name: ('M, 'T) name;
+      targs: ('M, 'T) Expression.CallTypeArgs.t option;
       self_closing: bool;
       attributes: ('M, 'T) attribute list;
     }
