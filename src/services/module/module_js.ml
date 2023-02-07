@@ -183,7 +183,7 @@ module type MODULE_SYSTEM = sig
     File_key.t ->
     ?phantom_acc:phantom_acc ->
     string ->
-    Parsing_heaps.resolved_module
+    Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
   (* for a given module name, choose a provider from among a set of
      files with that exported name. also check for duplicates and
@@ -220,7 +220,7 @@ module Node = struct
     let mname = Files.eponymous_module (Files.filename_from_string ~options:file_options path) in
     let dependency = Parsing_heaps.get_dependency mname in
     match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
-    | Some _ -> Some mname
+    | Some _ -> dependency
     | None ->
       record_phantom_dependency mname phantom_acc;
       None
@@ -488,7 +488,7 @@ module Haste : MODULE_SYSTEM = struct
 
         let path = Files.construct_path package_dir subpath in
         Node.resolve_relative ~options ~reader ?phantom_acc dir path
-      | (None, []) -> Some mname
+      | (None, []) -> dependency
       | (None, _ :: _) ->
         (* if r = foo/bar and foo is a regular module, don't resolve.
            TODO: could we provide a better error than just failing to resolve?

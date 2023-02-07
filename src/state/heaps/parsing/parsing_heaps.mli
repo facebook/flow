@@ -257,7 +257,12 @@ module Resolved_requires_mutator : sig
   val create : Transaction.t -> Utils_js.FilenameSet.t -> t
 
   val add_resolved_requires :
-    t -> file_addr -> [ `typed ] parse_addr -> resolved_module array -> Modulename.Set.t -> unit
+    t ->
+    file_addr ->
+    [ `typed ] parse_addr ->
+    dependency_addr resolved_module' array ->
+    Modulename.Set.t ->
+    unit
 end
 
 module Merge_context_mutator : sig

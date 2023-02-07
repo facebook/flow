@@ -776,8 +776,7 @@ let find_module ~options ~reader (moduleref, filename) =
   in
   let provider =
     match resolved_module with
-    | Ok m ->
-      Option.bind (Parsing_heaps.get_dependency m) (Parsing_heaps.Reader.get_provider ~reader)
+    | Ok m -> Parsing_heaps.Reader.get_provider ~reader m
     | Error _ ->
       (* TODO: We reach this codepath for requires that might resolve to
        * builtin modules. During check we check the master context, which we

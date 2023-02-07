@@ -177,27 +177,26 @@ let unchecked_dependencies ~options ~reader file file_sig =
     SMap.fold
       (fun r _locs acc ->
         match Module_js.imported_module ~options ~reader ~node_modules_containers file r with
-        | Ok m -> Modulename.Set.add m acc
+        | Ok m -> m :: acc
         | Error _ -> acc)
       require_loc_map
-      Modulename.Set.empty
+      []
   in
   let unchecked_dependency m =
     let ( let* ) = Option.bind in
-    let* dependency = Parsing_heaps.get_dependency m in
-    let* file = Parsing_heaps.Reader.get_provider ~reader dependency in
+    let* file = Parsing_heaps.Reader.get_provider ~reader m in
     let* parse = Parsing_heaps.Reader.get_typed_parse ~reader file in
     match Parsing_heaps.Reader.get_leader ~reader parse with
     | None -> Some (Parsing_heaps.read_file_key file)
     | Some _ -> None
   in
-  Modulename.Set.fold
-    (fun m acc ->
+  List.fold_left
+    (fun acc m ->
       match unchecked_dependency m with
       | Some f -> FilenameSet.add f acc
       | None -> acc)
-    resolved_requires
     FilenameSet.empty
+    resolved_requires
 
 (** Ensures that dependencies are checked; schedules them to be checked and cancels the
     Lwt thread to abort the command if not.

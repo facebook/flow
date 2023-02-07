@@ -1663,8 +1663,7 @@ module Resolved_requires_mutator = struct
 
   let add_resolved_requires () file parse resolved_modules phantom_dependencies =
     let prepare_resolved_requires =
-      let+ resolved_modules = prepare_write_resolved_modules resolved_modules
-      and+ phantom_dependencies =
+      let+ phantom_dependencies =
         Modulename.Set.elements phantom_dependencies
         |> Array.of_list
         |> prepare_write_phantom_dependencies

@@ -23,7 +23,7 @@ val imported_module :
   File_key.t ->
   ?phantom_acc:phantom_acc ->
   string ->
-  Parsing_heaps.resolved_module
+  Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
 (* repick providers for dirty modules *)
 val commit_modules :
