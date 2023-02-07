@@ -1964,7 +1964,49 @@ let autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc =
     )
     |> filter_by_token_and_sort token
 
-let autocomplete_comment ~reader ~cx ~trigger_character ~ac_loc ~token ~text ~word_loc =
+let autocomplete_jsdoc ~cx ~edit_locs ~token ~typed_ast ~file_sig ~ac_loc =
+  let open Base.Result in
+  let open Base.Result.Let_syntax in
+  let (before, _after) = Autocomplete_sigil.remove token in
+  if before <> "*" then
+    return []
+  else
+    let%bind target = of_option ~error:[] (Find_doc_target.find typed_ast ac_loc) in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
+    let%bind target_ty =
+      Ty_normalizer.from_type ~options:ty_normalizer_options ~genv target
+      |> map_error ~f:(fun err -> [Ty_normalizer.error_to_string err])
+    in
+    match target_ty with
+    | Ty.Type target_ty ->
+      let%bind stub = of_option ~error:[] (Jsdoc_stub.stub_for_ty target_ty) in
+      let name = "/** */" in
+      let insert_text = Jsdoc_stub.string_of_stub stub in
+      let edit_locs = (snd edit_locs, snd edit_locs) in
+      return
+        ([
+           {
+             ServerProt.Response.Completion.kind = Some Lsp.Completion.Text;
+             name;
+             labelDetail = None;
+             description = None;
+             itemDetail = Some "JSDoc Comment";
+             text_edit = Some (text_edit ~insert_text name edit_locs);
+             additional_text_edits = [];
+             sort_text = sort_text_of_rank 0;
+             preselect = false;
+             documentation = None;
+             tags = None;
+             log_info = "jsdoc";
+             insert_text_format = Lsp.Completion.SnippetFormat;
+           };
+         ]
+        |> filter_by_token_and_sort token
+        )
+    | _ -> return []
+
+let autocomplete_comment
+    ~reader ~cx ~edit_locs ~trigger_character ~ac_loc ~token ~typed_ast ~file_sig ~text ~word_loc =
   let (items, errors_to_log) =
     if Base.Option.is_some trigger_character then
       (* Only suggest things if autocomplete was triggered manually. We don't
@@ -1972,7 +2014,12 @@ let autocomplete_comment ~reader ~cx ~trigger_character ~ac_loc ~token ~text ~wo
       ([], [])
     else
       let items_fixme = autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc in
-      (items_fixme, [])
+      let (items_jsdoc, errors_jsdoc) =
+        match autocomplete_jsdoc ~cx ~edit_locs ~token ~typed_ast ~file_sig ~ac_loc with
+        | Ok items -> (items, [])
+        | Error errs -> ([], errs)
+      in
+      (items_fixme @ items_jsdoc, errors_jsdoc)
   in
   AcResult
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
@@ -2036,7 +2083,17 @@ let autocomplete_get_results
       | Ac_binding -> AcEmpty "Binding"
       | Ac_ignored -> AcEmpty "Ignored"
       | Ac_comment { text; word_loc } ->
-        autocomplete_comment ~reader ~cx ~trigger_character ~ac_loc ~token ~text ~word_loc
+        autocomplete_comment
+          ~reader
+          ~cx
+          ~edit_locs
+          ~trigger_character
+          ~ac_loc
+          ~token
+          ~typed_ast
+          ~file_sig
+          ~text
+          ~word_loc
       | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
         autocomplete_class_key

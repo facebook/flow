@@ -9723,3 +9723,90 @@ Flags: --lsp
   }
 }
 
+jsdoc_comment.js:3:4
+Flags: --lsp
+{
+  "label":"/** */",
+  "kind":1,
+  "detail":"JSDoc Comment",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":2,"character":0},"end":{"line":2,"character":6}},
+    "newText":"/**\n * $0\n * @param x $1\n * @param y $2\n */"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsdoc",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"/** */"
+      }
+    ]
+  }
+}
+
+jsdoc_comment.js:8:4
+Flags: --lsp
+{
+  "label":"/** */",
+  "kind":1,
+  "detail":"JSDoc Comment",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":0},"end":{"line":7,"character":6}},
+    "newText":"/**\n * $0\n * @param x $1\n * @param y $2\n */"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsdoc",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"/** */"
+      }
+    ]
+  }
+}
+
+jsdoc_comment.js:11:4
+Flags: --lsp
+{
+  "label":"/** */",
+  "kind":1,
+  "detail":"JSDoc Comment",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":0},"end":{"line":10,"character":6}},
+    "newText":"/**\n * $0\n */"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsdoc",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"/** */"
+      }
+    ]
+  }
+}
+

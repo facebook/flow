@@ -142,3 +142,6 @@ query_at_pos autocomplete "fixme.js" 8 5 --lsp
 query_at_pos autocomplete "fixme.js" 14 8 --lsp
 query_at_pos autocomplete "fixme.js" 18 12 --pretty
 query_at_pos autocomplete "fixme.js" 21 10 --lsp
+query_at_pos autocomplete "jsdoc_comment.js" 3 4 --lsp
+query_at_pos autocomplete "jsdoc_comment.js" 8 4 --lsp
+query_at_pos autocomplete "jsdoc_comment.js" 11 4 --lsp
