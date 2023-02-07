@@ -8,7 +8,7 @@
 type parse_artifacts =
   | Parse_artifacts of {
       docblock: Docblock.t;
-      docblock_errors: Parsing_service_js.docblock_error list;
+      docblock_errors: Docblock_parser.docblock_error list;
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;

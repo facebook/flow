@@ -6,10 +6,10 @@
  *)
 
 val error_of_docblock_error :
-  source_file:File_key.t -> Parsing_service_js.docblock_error -> ALoc.t Flow_error.t
+  source_file:File_key.t -> Docblock_parser.docblock_error -> ALoc.t Flow_error.t
 
 val set_of_docblock_errors :
-  source_file:File_key.t -> Parsing_service_js.docblock_error list -> Flow_error.ErrorSet.t
+  source_file:File_key.t -> Docblock_parser.docblock_error list -> Flow_error.ErrorSet.t
 
 val error_of_parse_error : source_file:File_key.t -> Loc.t * Parse_error.t -> ALoc.t Flow_error.t
 

@@ -10,7 +10,9 @@ open OUnit2
 let run ctxt expected name content =
   let open Parsing_service_js in
   let file = File_key.SourceFile "/dummy.js" in
-  let (_docblock_errors, info) = parse_docblock ~max_tokens:docblock_max_tokens file content in
+  let (_docblock_errors, info) =
+    Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens file content)
+  in
   let parse_options =
     {
       parse_types_mode = TypesAllowed;

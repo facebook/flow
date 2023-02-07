@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open Docblock_parser
 
 type types_mode =
   | TypesAllowed
@@ -43,17 +44,6 @@ and parse_failure =
   | Uncaught_exception of Exception.t
   | Docblock_errors of docblock_error list
   | Parse_error of parse_error
-
-and docblock_error = Loc.t * docblock_error_kind
-
-and docblock_error_kind =
-  | MultipleFlowAttributes
-  | InvalidFlowMode of string
-  | MultipleProvidesModuleAttributes
-  | MultipleJSXAttributes
-  | InvalidJSXAttribute of string option
-  | MultipleJSXRuntimeAttributes
-  | InvalidJSXRuntimeAttribute
 
 (* results of parse job, returned by parse and reparse *)
 type results = {
@@ -96,8 +86,6 @@ type parse_options = {
 val make_parse_options :
   ?types_mode:types_mode -> ?use_strict:bool -> Docblock.t -> Options.t -> parse_options
 
-val docblock_max_tokens : int
-
 (* Use default values for the various settings that parse takes. Each one can be overridden
    individually *)
 val parse_with_defaults :
@@ -126,13 +114,6 @@ val ensure_parsed :
   MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
   FilenameSet.t Lwt.t
-
-val parse_docblock :
-  max_tokens:int ->
-  (* how many tokens to check in the beginning of the file *)
-  File_key.t ->
-  string ->
-  docblock_error list * Docblock.t
 
 val parse_package_json_file :
   node_main_fields:string list -> string -> File_key.t -> (Package_json.t, parse_error) Result.t

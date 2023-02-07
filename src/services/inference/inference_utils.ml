@@ -12,16 +12,15 @@ let error_of_docblock_error ~source_file (loc, err) =
     Error_message.EDocblockError
       ( ALoc.of_loc loc,
         match err with
-        | Parsing_service_js.MultipleFlowAttributes -> Error_message.MultipleFlowAttributes
-        | Parsing_service_js.InvalidFlowMode s -> Error_message.InvalidFlowMode s
-        | Parsing_service_js.MultipleProvidesModuleAttributes ->
+        | Docblock_parser.MultipleFlowAttributes -> Error_message.MultipleFlowAttributes
+        | Docblock_parser.InvalidFlowMode s -> Error_message.InvalidFlowMode s
+        | Docblock_parser.MultipleProvidesModuleAttributes ->
           Error_message.MultipleProvidesModuleAttributes
-        | Parsing_service_js.MultipleJSXAttributes -> Error_message.MultipleJSXAttributes
-        | Parsing_service_js.InvalidJSXAttribute first_error ->
+        | Docblock_parser.MultipleJSXAttributes -> Error_message.MultipleJSXAttributes
+        | Docblock_parser.InvalidJSXAttribute first_error ->
           Error_message.InvalidJSXAttribute first_error
-        | Parsing_service_js.MultipleJSXRuntimeAttributes ->
-          Error_message.MultipleJSXRuntimeAttributes
-        | Parsing_service_js.InvalidJSXRuntimeAttribute -> Error_message.InvalidJSXRuntimeAttribute
+        | Docblock_parser.MultipleJSXRuntimeAttributes -> Error_message.MultipleJSXRuntimeAttributes
+        | Docblock_parser.InvalidJSXRuntimeAttribute -> Error_message.InvalidJSXRuntimeAttribute
       )
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err

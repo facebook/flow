@@ -24,9 +24,7 @@ let do_parse_wrapper ~options filename contents =
       Parsing_service_js.TypesForbiddenByDefault
   in
   let max_tokens = Options.max_header_tokens options in
-  let (docblock_errors, docblock) =
-    Parsing_service_js.parse_docblock ~max_tokens filename contents
-  in
+  let (docblock_errors, docblock) = Docblock_parser.parse_docblock ~max_tokens filename contents in
   let parse_options = Parsing_service_js.make_parse_options ~types_mode docblock options in
   let parse_result = Parsing_service_js.do_parse ~parse_options ~info:docblock contents filename in
   match parse_result with
