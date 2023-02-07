@@ -224,13 +224,16 @@ end = struct
     let imports = Parsing_heaps.read_imports parse in
     let requires = Parsing_heaps.read_requires parse in
     let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
+    let resolved_modules =
+      Parsing_heaps.read_resolved_modules Parsing_heaps.read_resolved_module resolved_requires
+    in
     let file_data =
       {
         module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
         normalized_file_data =
           {
             requires;
-            resolved_modules = Parsing_heaps.read_resolved_modules resolved_requires;
+            resolved_modules;
             phantom_dependencies = Parsing_heaps.read_phantom_dependencies resolved_requires;
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;

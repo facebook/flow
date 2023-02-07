@@ -291,9 +291,9 @@ let read_resolved_module addr =
   | Ok dependency -> Ok (read_dependency dependency)
   | Error mapped_name -> Error (Option.map Heap.read_string mapped_name)
 
-let read_resolved_modules resolved_requires : resolved_module array =
+let read_resolved_modules f resolved_requires =
   let addr = Heap.get_resolved_modules resolved_requires in
-  Heap.read_addr_tbl read_resolved_module addr
+  Heap.read_addr_tbl f addr
 
 let read_phantom_dependencies resolved_requires : Modulename.Set.t =
   let addr = Heap.get_phantom_dependencies resolved_requires in
@@ -309,11 +309,13 @@ let read_phantom_dependencies resolved_requires : Modulename.Set.t =
   Heap.read_addr_tbl_generic read_dependency addr init
 
 let read_resolved_requires resolved_requires =
-  (read_resolved_modules resolved_requires, read_phantom_dependencies resolved_requires)
+  ( read_resolved_modules read_resolved_module resolved_requires,
+    read_phantom_dependencies resolved_requires
+  )
 
 let read_resolved_modules_map parse resolved_requires =
   let requires = read_requires parse in
-  let resolved_modules = read_resolved_modules resolved_requires in
+  let resolved_modules = read_resolved_modules read_resolved_module resolved_requires in
   let n = Array.length requires in
   let i = ref 0 in
   let f () =
@@ -921,11 +923,11 @@ let rollback_resolved_requires file ent =
   if Heap.entity_changed ent then (
     let old_resolved_requires =
       let* addr = Heap.entity_read_committed ent in
-      Some (read_resolved_modules addr, read_phantom_dependencies addr)
+      Some (read_resolved_modules read_resolved_module addr, read_phantom_dependencies addr)
     in
     let new_resolved_requires =
       let* addr = Heap.entity_read_latest ent in
-      Some (read_resolved_modules addr, read_phantom_dependencies addr)
+      Some (read_resolved_modules read_resolved_module addr, read_phantom_dependencies addr)
     in
     Heap.alloc
       (let+ update_revdeps = prepare_update_revdeps new_resolved_requires old_resolved_requires in
