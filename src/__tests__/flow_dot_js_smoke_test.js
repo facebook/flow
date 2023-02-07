@@ -29,3 +29,14 @@ if (
 ) {
   throw 'Referring to non-existent global should be an error.';
 }
+if (
+  flow.checkContent(
+    'test.js',
+    `// @jsx Foo
+const Bar = '123';
+function Foo(x: string) {}
+<Bar />; // ok`,
+  ).length > 0
+) {
+  throw 'There should be no errors if jsx pragma is correctly parsed.';
+}

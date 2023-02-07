@@ -170,11 +170,11 @@ let init_builtins filenames =
   in
   master_cx_ref := Some (root, master_cx)
 
-let infer_and_merge ~root filename ast file_sig =
+let infer_and_merge ~root filename docblock ast file_sig =
   (* create cx *)
   let master_cx = get_master_cx root in
   let ccx = Context.make_ccx master_cx in
-  let metadata = stub_metadata ~root ~checked:true in
+  let metadata = stub_metadata ~root ~checked:true |> Context.docblock_overrides docblock in
   (* flow.js does not use abstract locations, so this is not used *)
   let aloc_table = lazy (ALoc.empty_table filename) in
   let cx = Context.make ccx metadata filename aloc_table Context.Checking in
@@ -210,7 +210,10 @@ let check_content ~filename ~content =
     match parse_content filename content with
     | Ok (ast, file_sig) ->
       let file_sig = File_sig.abstractify_locs file_sig in
-      let (cx, _) = infer_and_merge ~root filename ast file_sig in
+      let (_, docblock) =
+        Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
+      in
+      let (cx, _) = infer_and_merge ~root filename docblock ast file_sig in
       let suppressions = Error_suppressions.empty in
       (* TODO: support suppressions *)
       let errors = Context.errors cx in
@@ -289,7 +292,10 @@ let infer_type filename content line col : Loc.t * (string, string) result =
   | Error _ -> failwith "parse error"
   | Ok (ast, file_sig) ->
     let file_sig = File_sig.abstractify_locs file_sig in
-    let (cx, typed_ast) = infer_and_merge ~root filename ast file_sig in
+    let (_, docblock) =
+      Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
+    in
+    let (cx, typed_ast) = infer_and_merge ~root filename docblock ast file_sig in
     let file = Context.file cx in
     let loc = mk_loc filename line col in
     Query_types.(
@@ -338,7 +344,10 @@ let dump_types js_file js_content =
   | Error _ -> failwith "parse error"
   | Ok (ast, file_sig) ->
     let file_sig = File_sig.abstractify_locs file_sig in
-    let (cx, typed_ast) = infer_and_merge ~root filename ast file_sig in
+    let (_, docblock) =
+      Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
+    in
+    let (cx, typed_ast) = infer_and_merge ~root filename docblock ast file_sig in
     let printer = Ty_printer.string_of_elt_single_line ~exact_by_default:true in
     let types =
       Query_types.dump_types
