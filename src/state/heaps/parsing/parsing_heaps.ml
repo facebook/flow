@@ -202,6 +202,11 @@ let read_module_name info =
   let open Heap in
   get_haste_module info |> get_haste_name |> read_string
 
+let read_dependency_name =
+  let haste_name m = Heap.read_string (Heap.get_haste_name m) in
+  let file_name m = Heap.read_string (Heap.get_file_name m) in
+  Heap.read_dependency haste_name file_name
+
 let read_ast file_key parse =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
@@ -315,8 +320,8 @@ let read_phantom_dependencies_set resolved_requires : Modulename.Set.t =
   Heap.read_addr_tbl_generic read_dependency addr init
 
 let read_resolved_requires resolved_requires =
-  ( read_resolved_modules (read_resolved_module read_dependency) resolved_requires,
-    read_phantom_dependencies_set resolved_requires
+  ( read_resolved_modules (read_resolved_module Fun.id) resolved_requires,
+    read_phantom_dependencies Fun.id resolved_requires
   )
 
 let read_resolved_modules_map parse resolved_requires =
@@ -417,28 +422,33 @@ let prepare_write_file_sig (file_sig : File_sig.With_Loc.tolerable_t) =
 let prepare_write_imports (imports : Imports.t) =
   Marshal.to_string imports [] |> Heap.prepare_write_serialized_imports
 
+let prepare_find_or_add_dependency = function
+  | Modulename.String name -> (prepare_find_or_add_haste_module name :> dependency_addr Heap.prep)
+  | Modulename.Filename key -> (prepare_find_or_add_phantom_file key :> dependency_addr Heap.prep)
+
 let prepare_write_resolved_modules resolved_modules =
   let f = function
-    | Ok (Modulename.String name) ->
-      (prepare_find_or_add_haste_module name :> resolved_module_addr Heap.prep)
-    | Ok (Modulename.Filename key) ->
-      (prepare_find_or_add_phantom_file key :> resolved_module_addr Heap.prep)
-    | Error None -> Heap.prepare_const (SharedMem.null_addr :> resolved_module_addr)
-    | Error (Some name) -> (Heap.prepare_write_string name :> resolved_module_addr Heap.prep)
+    | Ok mname ->
+      let+ dependency = prepare_find_or_add_dependency mname in
+      Ok dependency
+    | Error _ as error -> Heap.prepare_const error
   in
-  Heap.prepare_write_addr_tbl f resolved_modules
+  Heap.prepare_all f resolved_modules
 
 let prepare_write_phantom_dependencies phantom_dependencies =
-  let f = function
-    | Modulename.String name -> (prepare_find_or_add_haste_module name :> dependency_addr Heap.prep)
-    | Modulename.Filename key -> (prepare_find_or_add_phantom_file key :> dependency_addr Heap.prep)
-  in
-  Modulename.Set.elements phantom_dependencies |> Array.of_list |> Heap.prepare_write_addr_tbl f
+  Modulename.Set.elements phantom_dependencies
+  |> Array.of_list
+  |> Heap.prepare_all prepare_find_or_add_dependency
+
+let prepare_write_resolved_module = function
+  | Ok dependency -> Heap.prepare_const (dependency :> resolved_module_addr)
+  | Error None -> Heap.prepare_const (SharedMem.null_addr :> resolved_module_addr)
+  | Error (Some name) -> (Heap.prepare_write_string name :> resolved_module_addr Heap.prep)
 
 let prepare_write_resolved_requires (resolved_modules, phantom_dependencies) =
   let+ write_resolved_requires = Heap.prepare_write_resolved_requires
-  and+ resolved_modules = prepare_write_resolved_modules resolved_modules
-  and+ phantom_dependencies = prepare_write_phantom_dependencies phantom_dependencies in
+  and+ resolved_modules = Heap.prepare_write_addr_tbl prepare_write_resolved_module resolved_modules
+  and+ phantom_dependencies = Heap.prepare_write_addr_tbl Heap.prepare_const phantom_dependencies in
   write_resolved_requires resolved_modules phantom_dependencies
 
 let prepare_write_type_sig type_sig =
@@ -524,10 +534,11 @@ let prepare_update_revdeps =
     | None -> []
     | Some (resolved_modules, phantom_dependencies) ->
       let f acc = function
-        | Ok m -> MSet.add m acc
+        | Ok dependency -> dependency :: acc
         | Error _ -> acc
       in
-      MSet.elements (Array.fold_left f phantom_dependencies resolved_modules)
+      Array.fold_left f (Array.to_list phantom_dependencies) resolved_modules
+      |> List.sort_uniq Stdlib.compare
   in
   (* Partition two sorted lists. Elements in both `xs` and `ys` are skipped.
    * Otherwise, elements in `xs` are passed to `f` while elements in `ys` are
@@ -549,7 +560,12 @@ let prepare_update_revdeps =
       else
         partition_fold cmp f g (g acc y) (x :: xs, ys)
   in
-  (* Remove `file` from the dependents of `mname`.
+  let get_dependents =
+    let haste_dependents m = Heap.get_haste_dependents m in
+    let file_dependents m = Option.get (Heap.get_file_dependents m) in
+    Heap.read_dependency haste_dependents file_dependents
+  in
+  (* Remove `file` from the dependents of `m`.
    *
    * TODO: Clean up modules which have no dependents and no providers. This is a
    * bit tricky because we might remove the last dependent in one step, then add
@@ -558,45 +574,36 @@ let prepare_update_revdeps =
    * leaking these modules is not too bad.
    *
    * X-ref commit modules where a module can be updated to have no providers. *)
-  let remove_old_dependent acc mname =
-    let dependents =
-      match mname with
-      | Modulename.String name -> Heap.get_haste_dependents (get_haste_module_unsafe name)
-      | Modulename.Filename key -> Option.get (Heap.get_file_dependents (get_file_addr_unsafe key))
-    in
+  let remove_old_dependent acc m =
     let+ acc = acc in
     fun file ->
       acc file;
+      let dependents = get_dependents m in
       if not (Heap.file_set_remove dependents file) then
         Printf.ksprintf
           failwith
           "remove_old_dependent failed: %s is not in dependents of module %s"
           (read_file_name file)
-          (Modulename.to_string mname)
+          (read_dependency_name m)
   in
-  (* Add `file` to the dependents of `mname`. *)
-  let add_new_dependent acc mname =
+  (* Add `file` to the dependents of `m`. *)
+  let add_new_dependent acc m =
     let+ sknode = Heap.prepare_write_sknode () and+ acc = acc in
     fun file ->
       acc file;
-      let dependents =
-        match mname with
-        | Modulename.String name -> get_haste_module_unsafe name |> Heap.get_haste_dependents
-        | Modulename.Filename key ->
-          get_file_addr_unsafe key |> Heap.get_file_dependents |> Option.get
-      in
+      let dependents = get_dependents m in
       if not (Heap.file_set_add dependents (sknode file)) then
         Printf.ksprintf
           failwith
           "add_new_dependent failed: could not add %s to dependents of module %s"
           (read_file_name file)
-          (Modulename.to_string mname)
+          (read_dependency_name m)
   in
   fun old_resolved_requires new_resolved_requires ->
     let old_dependencies = all_dependencies old_resolved_requires in
     let new_dependencies = all_dependencies new_resolved_requires in
     partition_fold
-      Modulename.compare
+      Stdlib.compare
       remove_old_dependent
       add_new_dependent
       (Heap.prepare_const (fun _ -> ()))
@@ -605,9 +612,8 @@ let prepare_update_revdeps =
 let resolved_requires_equal
     (old_resolved_modules, old_phantom_dependencies) (new_resolved_modules, new_phantom_dependencies)
     =
-  Int.equal (Array.length old_resolved_modules) (Array.length new_resolved_modules)
-  && Array.for_all2 ( = ) old_resolved_modules new_resolved_modules
-  && Modulename.Set.equal old_phantom_dependencies new_phantom_dependencies
+  Base.Array.equal ( = ) old_resolved_modules new_resolved_modules
+  && Base.Array.equal ( = ) old_phantom_dependencies new_phantom_dependencies
 
 (** The writer returns whether the resolved requires changed. *)
 let prepare_update_resolved_requires_if_changed old_parse resolved_requires_opt =
@@ -1664,15 +1670,20 @@ module Resolved_requires_mutator = struct
     Transaction.add ~commit ~rollback transaction
 
   let add_resolved_requires () file parse resolved_modules phantom_dependencies =
-    let prepare =
+    let prepare_resolved_requires =
+      let+ resolved_modules = prepare_write_resolved_modules resolved_modules
+      and+ phantom_dependencies = prepare_write_phantom_dependencies phantom_dependencies in
+      (resolved_modules, phantom_dependencies)
+    in
+    let prepare_update resolved_requires =
       let+ update_resolved_requires =
-        prepare_update_resolved_requires_if_changed
-          (Some parse)
-          (Some (resolved_modules, phantom_dependencies))
+        prepare_update_resolved_requires_if_changed (Some parse) (Some resolved_requires)
       in
       update_resolved_requires file parse
     in
-    WorkerCancel.with_no_cancellations @@ fun () -> Heap.alloc prepare
+    WorkerCancel.with_no_cancellations @@ fun () ->
+    let resolved_requires = Heap.alloc prepare_resolved_requires in
+    Heap.alloc (prepare_update resolved_requires)
 end
 
 module Merge_context_mutator = struct
@@ -2150,10 +2161,16 @@ module Saved_state_mutator = struct
       exports
       requires
       resolved_modules
-      phantom_dependents
+      phantom_dependencies
       imports
       cas_digest =
+    let prepare_resolved_requires =
+      let+ resolved_modules = prepare_write_resolved_modules resolved_modules
+      and+ phantom_dependencies = prepare_write_phantom_dependencies phantom_dependencies in
+      (resolved_modules, phantom_dependencies)
+    in
     WorkerCancel.with_no_cancellations @@ fun () ->
+    let resolved_requires = Heap.alloc prepare_resolved_requires in
     Heap.alloc
       (prepare_add_checked_file
          file_key
@@ -2169,7 +2186,7 @@ module Saved_state_mutator = struct
          exports
          imports
          cas_digest
-         (Some (Some (resolved_modules, phantom_dependents)))
+         (Some (Some resolved_requires))
       )
 
   let add_unparsed () = add_unparsed
