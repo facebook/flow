@@ -911,9 +911,7 @@ struct
           implicitly_instantiate cx check
         in
         let errors_before_using_return_hint = Context.errors cx in
-        let has_new_errors =
-          not @@ Flow_error.ErrorSet.equal init_errors errors_before_using_return_hint
-        in
+        let has_new_errors = init_errors != errors_before_using_return_hint in
         Base.Option.iter return_hint ~f:(fun (hint, _kind) -> Flow.flow_t cx (tout, hint));
         Context.reset_errors cx Flow_error.ErrorSet.empty;
         let restore () =

@@ -454,7 +454,7 @@ let check_implicit_instantiations cx typed_ast file_sig =
                 Tvar_resolver.resolve cx t1;
                 Tvar_resolver.resolve cx t2;
                 Flow_js.unify cx t1 t2;
-                if not @@ Flow_error.ErrorSet.equal (Context.errors cx) errors_before then
+                if Context.errors cx != errors_before then
                   Flow_js_utils.add_output
                     cx
                     Error_message.(
