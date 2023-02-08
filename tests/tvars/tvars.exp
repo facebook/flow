@@ -1,0 +1,28 @@
+Error ------------------------------------------------------------------------------- fully_resolved_unification.js:16:5
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   16| let x = []; // ERROR
+           ^
+
+
+Error ------------------------------------------------------------------------------- fully_resolved_unification.js:20:2
+
+Cannot cast `x` to array type because unknown element of empty array [1] is incompatible with object type [2] in array
+element. [incompatible-cast]
+
+   fully_resolved_unification.js:20:2
+   20| (x: Array<{bar: string}>); // ERROR
+        ^
+
+References:
+   fully_resolved_unification.js:16:5
+   16| let x = []; // ERROR
+           ^ [1]
+   fully_resolved_unification.js:20:11
+   20| (x: Array<{bar: string}>); // ERROR
+                 ^^^^^^^^^^^^^ [2]
+
+
+
+Found 2 errors

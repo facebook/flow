@@ -8232,16 +8232,20 @@ struct
     point to the other. Ranks are used to keep chains short. *)
   and merge_ids cx trace ~use_op id1 id2 =
     let ((id1, root1), (id2, root2)) = (Context.find_root cx id1, Context.find_root cx id2) in
-    if id1 = id2 then
-      ()
-    else if root1.rank < root2.rank then
-      goto cx trace ~use_op (id1, root1) (id2, root2)
-    else if root2.rank < root1.rank then
-      goto cx trace ~use_op:(unify_flip use_op) (id2, root2) (id1, root1)
-    else (
-      Context.add_tvar cx id2 (Root { root2 with rank = root1.rank + 1 });
-      goto cx trace ~use_op (id1, root1) (id2, root2)
-    )
+    match (root1.Constraint.constraints, root2.Constraint.constraints) with
+    | (FullyResolved (_, (lazy t1)), FullyResolved (_, (lazy t2))) ->
+      rec_unify cx trace ~use_op t1 t2
+    | _ ->
+      if id1 = id2 then
+        ()
+      else if root1.rank < root2.rank then
+        goto cx trace ~use_op (id1, root1) (id2, root2)
+      else if root2.rank < root1.rank then
+        goto cx trace ~use_op:(unify_flip use_op) (id2, root2) (id1, root1)
+      else (
+        Context.add_tvar cx id2 (Root { root2 with rank = root1.rank + 1 });
+        goto cx trace ~use_op (id1, root1) (id2, root2)
+      )
 
   (** Resolve a type variable to a type. This involves finding its root, and
     resolving to that type. *)
