@@ -237,12 +237,15 @@ let detect_unnecessary_invariants cx =
 
 let detect_unused_promises cx =
   Base.List.iter
-    ~f:(fun (loc, t) ->
+    ~f:(fun (loc, t, async) ->
       let no_lowers r = Type.(AnyT.make Untyped r) in
       let t = Tvar_resolver.resolved_t ~no_lowers cx t in
       Flow_js.flow
         cx
-        (t, Type.CheckUnusedPromiseT (Reason.mk_reason (Reason.RCustom "unused promise lint") loc)))
+        ( t,
+          Type.CheckUnusedPromiseT
+            { reason = Reason.mk_reason (Reason.RCustom "unused promise lint") loc; async }
+        ))
     (Context.maybe_unused_promises cx)
 
 let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors

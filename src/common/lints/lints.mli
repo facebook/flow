@@ -51,6 +51,7 @@ type lint_kind =
   | MixedImportAndRequire
   | ExportRenamedDefault
   | UnusedPromiseInAsyncScope
+  | UnusedPromiseInSyncScope
 
 val string_of_kind : lint_kind -> string
 

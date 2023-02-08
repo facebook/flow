@@ -145,7 +145,7 @@ type component_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
-  mutable maybe_unused_promises: (ALoc.t * Type.t) list;
+  mutable maybe_unused_promises: (ALoc.t * Type.t * bool) list;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (subst_cache_err list * Type.t) Type.SubstCacheMap.t ref;
   instantiation_cache: Type.t Reason.ImplicitInstantiationReasonMap.t ref;
@@ -1001,8 +1001,8 @@ let unnecessary_invariants cx =
     cx.ccx.invariants_useful
     []
 
-let mark_maybe_unused_promise cx loc t =
-  cx.ccx.maybe_unused_promises <- (loc, t) :: cx.ccx.maybe_unused_promises
+let mark_maybe_unused_promise cx loc t ~async =
+  cx.ccx.maybe_unused_promises <- (loc, t, async) :: cx.ccx.maybe_unused_promises
 
 let maybe_unused_promises cx = cx.ccx.maybe_unused_promises
 

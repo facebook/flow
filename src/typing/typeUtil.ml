@@ -158,7 +158,7 @@ and reason_of_use_t = function
   | DestructuringT (reason, _, _, _, _) -> reason
   | CreateObjWithComputedPropT { reason; reason_obj = _; value = _; tout_tvar = _ } -> reason
   | ResolveUnionT { reason; _ } -> reason
-  | CheckUnusedPromiseT reason -> reason
+  | CheckUnusedPromiseT { reason; _ } -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -218,7 +218,7 @@ and mod_reason_of_defer_use_t f = function
 
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
-  | CheckUnusedPromiseT reason -> CheckUnusedPromiseT (f reason)
+  | CheckUnusedPromiseT { reason; async } -> CheckUnusedPromiseT { reason = f reason; async }
   | ArithT { use_op; reason; flip; rhs_t; result_t; kind } ->
     ArithT { use_op; reason = f reason; flip; rhs_t; result_t; kind }
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)

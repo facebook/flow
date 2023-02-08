@@ -86,6 +86,24 @@ References:
                       ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:10:1
+
+Cannot instantiate `React.Element` because number [1] is incompatible with string [2] in type argument `ElementType`.
+[incompatible-type-arg]
+
+   test.js:10:1
+    10| React.createElement(...arr, ...arr); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:4:14
+     4| const arr = [1,2,3];  // badly-positioned error
+                     ^ [1]
+   <BUILTINS>/react.js:162:5
+   162|   | string
+            ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:13:67
 
 A spread argument is unsupported here. [unsupported-syntax]
@@ -157,7 +175,7 @@ References:
 
 
 
-Found 14 errors
+Found 15 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -3883,6 +3883,20 @@ References:
                    ^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- utility-types.js:24:7
+
+enum `E` [1] is not an object. [not-an-object]
+
+   utility-types.js:24:7
+   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
+             ^^^^^^^^^^^^^^^
+
+References:
+   utility-types.js:24:13
+   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
+                   ^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- utility-types.js:27:11
 
 Cannot instantiate `$Values` because enum `E` [1] is not an object. You can use the enum's name `E` as the type of its
@@ -3943,7 +3957,7 @@ References:
 
 
 
-Found 236 errors
+Found 237 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

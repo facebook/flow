@@ -182,6 +182,24 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
 
+Cannot instantiate `React.Element` because `D` [1] is incompatible with `React.Component` [2] in type argument
+`ElementType`. [incompatible-type-arg]
+
+   subclassComponent.js:29:2
+   29| <D></D>; // error
+        ^
+
+References:
+   subclassComponent.js:21:15
+   21| declare class D extends React$Component2<Props2, void> {}
+                     ^ [1]
+   <BUILTINS>/react.js:44:15
+   44| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
+
 `D` [1] is incompatible with `React.Component` [2]. [incompatible-type]
 
    subclassComponent.js:29:2
@@ -191,6 +209,24 @@ Error --------------------------------------------------------------------------
 References:
    subclassComponent.js:21:15
    21| declare class D extends React$Component2<Props2, void> {}
+                     ^ [1]
+   <BUILTINS>/react.js:44:15
+   44| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
+
+Cannot instantiate `React.Element` because `E` [1] is incompatible with `React.Component` [2] in type argument
+`ElementType`. [incompatible-type-arg]
+
+   subclassComponent.js:30:2
+   30| <E></E>; // error
+        ^
+
+References:
+   subclassComponent.js:23:15
+   23| declare class E extends D {}
                      ^ [1]
    <BUILTINS>/react.js:44:15
    44| declare class React$Component<Props, State = void> {
@@ -216,6 +252,24 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
 
+Cannot instantiate `React.Element` because `F` [1] is incompatible with `React.Component` [2] in type argument
+`ElementType`. [incompatible-type-arg]
+
+   subclassComponent.js:31:2
+   31| <F></F>; // error
+        ^
+
+References:
+   subclassComponent.js:25:15
+   25| declare class F {
+                     ^ [1]
+   <BUILTINS>/react.js:44:15
+   44| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
+
 `F` [1] is incompatible with `React.Component` [2]. [incompatible-type]
 
    subclassComponent.js:31:2
@@ -232,4 +286,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

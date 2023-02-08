@@ -1,5 +1,7 @@
 [lints]
 unused-promise-in-async-scope=error
+unused-promise-in-sync-scope=error
 
 [options]
 all=true
+no_flowlib=false

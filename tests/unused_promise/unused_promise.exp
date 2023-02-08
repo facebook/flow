@@ -1,18 +1,45 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:12:5
+Error ------------------------------------------------------------------------------------------------------ test.js:8:5
 
 `Promise` in async scope is unused. Did you mean to `await` it? [unused-promise-in-async-scope]
 
-   12|     foo(); // error
-           ^^^^^^
+   8|     foo(); // error
+          ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:14:5
+Error ----------------------------------------------------------------------------------------------------- test.js:10:5
 
 `Promise` in async scope is unused. Did you mean to `await` it? [unused-promise-in-async-scope]
 
-   14|     bar(); // error
+   10|     bar(); // error
            ^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:31:5
 
-Found 2 errors
+`Promise` in sync scope is unused.Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise-in-sync-scope]
+
+   31|     foo(); // error
+           ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:32:5
+
+`Promise` in sync scope is unused.Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise-in-sync-scope]
+
+   32|     foo().then(() => {}); // error
+           ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:5
+
+`Promise` in sync scope is unused.Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise-in-sync-scope]
+
+   33|     foo().then(() => {}).then(() => {}); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors

@@ -478,7 +478,10 @@ and 'loc t' =
       static: bool;
     }
   | EEmptyArrayNoProvider of { loc: 'loc }
-  | EUnusedPromise of { loc: 'loc }
+  | EUnusedPromise of {
+      loc: 'loc;
+      async: bool;
+    }
   | EBigIntRShift3 of 'loc virtual_reason
   | EBigIntNumCoerce of 'loc virtual_reason
   | EInvalidCatchParameterAnnotation of 'loc
@@ -1161,7 +1164,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDuplicateClassMember { loc; name; static } ->
     EDuplicateClassMember { loc = f loc; name; static }
   | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
-  | EUnusedPromise { loc } -> EUnusedPromise { loc = f loc }
+  | EUnusedPromise { loc; async } -> EUnusedPromise { loc = f loc; async }
   | EBigIntRShift3 r -> EBigIntRShift3 (map_reason r)
   | EBigIntNumCoerce r -> EBigIntNumCoerce (map_reason r)
   | EInvalidCatchParameterAnnotation loc -> EInvalidCatchParameterAnnotation (f loc)
@@ -1601,7 +1604,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
   | EDuplicateClassMember { loc; _ } -> Some loc
   | EEmptyArrayNoProvider { loc } -> Some loc
-  | EUnusedPromise { loc } -> Some loc
+  | EUnusedPromise { loc; _ } -> Some loc
   | EUnableToSpread _
   | ECannotSpreadInterface _
   | ECannotSpreadIndexerOnRight _
@@ -1675,7 +1678,11 @@ let kind_of_msg =
     | EThisInExportedFunction _ -> LintError Lints.ThisInExportedFunction
     | EMixedImportAndRequire _ -> LintError Lints.MixedImportAndRequire
     | EExportRenamedDefault _ -> LintError Lints.ExportRenamedDefault
-    | EUnusedPromise _ -> LintError Lints.UnusedPromiseInAsyncScope
+    | EUnusedPromise { async; _ } ->
+      if async then
+        LintError Lints.UnusedPromiseInAsyncScope
+      else
+        LintError Lints.UnusedPromiseInSyncScope
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -4249,16 +4256,25 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         features
     in
     Normal { features }
-  | EUnusedPromise { loc = _ } ->
+  | EUnusedPromise { async; _ } ->
     Normal
       {
         features =
-          [
-            code "Promise";
-            text " in async scope is unused. Did you mean to ";
-            code "await";
-            text " it?";
-          ];
+          ( if async then
+            [
+              code "Promise";
+              text " in async scope is unused. Did you mean to ";
+              code "await";
+              text " it?";
+            ]
+          else
+            [
+              code "Promise";
+              text " in sync scope is unused.";
+              text
+                "Promises must be handled by calling .then with a rejection handler, .catch, or .finally.";
+            ]
+          );
       }
   | EBigIntRShift3 reason ->
     Normal

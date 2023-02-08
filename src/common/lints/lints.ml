@@ -51,6 +51,7 @@ type lint_kind =
   | MixedImportAndRequire
   | ExportRenamedDefault
   | UnusedPromiseInAsyncScope
+  | UnusedPromiseInSyncScope
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -96,6 +97,7 @@ let string_of_kind = function
   | MixedImportAndRequire -> "mixed-import-and-require"
   | ExportRenamedDefault -> "export-renamed-default"
   | UnusedPromiseInAsyncScope -> "unused-promise-in-async-scope"
+  | UnusedPromiseInSyncScope -> "unused-promise-in-sync-scope"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -139,6 +141,7 @@ let kinds_of_string = function
   | "mixed-import-and-require" -> Some [MixedImportAndRequire]
   | "export-renamed-default" -> Some [ExportRenamedDefault]
   | "unused-promise-in-async-scope" -> Some [UnusedPromiseInAsyncScope]
+  | "unused-promise-in-sync-scope" -> Some [UnusedPromiseInSyncScope]
   | _ -> None
 
 module LintKind = struct

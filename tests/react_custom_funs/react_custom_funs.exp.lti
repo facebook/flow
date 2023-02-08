@@ -367,6 +367,21 @@ Cannot call `React.createElement` because number [1] is not a React component. [
                           ^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- create_element.js:7:21
+
+Cannot instantiate `React.Element` because number [1] is incompatible with string [2] in type argument `ElementType`.
+[incompatible-type-arg]
+
+   create_element.js:7:21
+     7| React.createElement(42); // Error: Number is not a valid component type.
+                            ^^ [1]
+
+References:
+   <BUILTINS>/react.js:162:5
+   162|   | string
+            ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- create_element.js:9:21
 
 Cannot call `React.createElement` because number [1] is not a React component. [not-a-component]
@@ -375,12 +390,42 @@ Cannot call `React.createElement` because number [1] is not a React component. [
                           ^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- create_element.js:9:21
+
+Cannot instantiate `React.Element` because number [1] is incompatible with string [2] in type argument `ElementType`.
+[incompatible-type-arg]
+
+   create_element.js:9:21
+     9| React.createElement(42, {}); // Error: Number is not a valid component type.
+                            ^^ [1]
+
+References:
+   <BUILTINS>/react.js:162:5
+   162|   | string
+            ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ create_element.js:10:21
 
 Cannot call `React.createElement` because object literal [1] is not a React component. [not-a-component]
 
    10| React.createElement({}, {}); // Error: Object is not a valid component type.
                            ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:10:21
+
+Cannot instantiate `React.Element` because object literal [1] is incompatible with AbstractComponent [2] in type
+argument `ElementType`. [incompatible-type-arg]
+
+   create_element.js:10:21
+    10| React.createElement({}, {}); // Error: Object is not a valid component type.
+                            ^^ [1]
+
+References:
+   <BUILTINS>/react.js:163:5
+   163|   | React$AbstractComponent<empty, mixed>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- create_element.js:20:8
@@ -3297,7 +3342,7 @@ References:
 
 
 
-Found 201 errors
+Found 204 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

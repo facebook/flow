@@ -5450,14 +5450,19 @@ struct
                  use_op;
                }
             )
-        | (DefT (_, _, InstanceT (_, super, _, { class_id; _ })), CheckUnusedPromiseT r) ->
+        | ( DefT (_, _, InstanceT (_, super, _, { class_id; _ })),
+            CheckUnusedPromiseT { reason; async }
+          ) ->
           (match Flow_js_utils.builtin_promise_class_id cx with
           | None -> () (* Promise has some unexpected type *)
           | Some promise_class_id ->
             if ALoc.equal_id promise_class_id class_id then
-              add_output cx ~trace (Error_message.EUnusedPromise { loc = aloc_of_reason r })
+              add_output
+                cx
+                ~trace
+                (Error_message.EUnusedPromise { loc = aloc_of_reason reason; async })
             else
-              rec_flow cx trace (super, CheckUnusedPromiseT r))
+              rec_flow cx trace (super, CheckUnusedPromiseT { reason; async }))
         | (_, CheckUnusedPromiseT _) -> ()
         | _ ->
           add_output

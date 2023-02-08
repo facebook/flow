@@ -285,6 +285,44 @@ module Make
         | _ -> ()
         )
 
+  let is_promise_handled =
+    let open Flow_ast.Expression in
+    function
+    | Assignment _
+    (* Call to `catch` or `finally` with one argument *)
+    | Call
+        {
+          Call.callee =
+            ( _,
+              Member
+                {
+                  Member.property =
+                    Member.PropertyIdentifier
+                      (_, { Flow_ast.Identifier.name = "catch" | "finally"; _ });
+                  _;
+                }
+            );
+          arguments = (_, { ArgList.arguments = _ :: _; _ });
+          _;
+        }
+    (* Call to `then` with two arguments *)
+    | Call
+        {
+          Call.callee =
+            ( _,
+              Member
+                {
+                  Member.property =
+                    Member.PropertyIdentifier (_, { Flow_ast.Identifier.name = "then"; _ });
+                  _;
+                }
+            );
+          arguments = (_, { ArgList.arguments = _ :: _ :: _; _ });
+          _;
+        } ->
+      true
+    | _ -> false
+
   module Func_stmt_params =
     Func_params.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params_types)
   module Func_stmt_sig =
@@ -401,12 +439,8 @@ module Make
     | (loc, Expression { Expression.expression = e; directive; comments }) ->
       let expr = expression cx e in
       let ((_, expr_t), expr_ast) = expr in
-      begin
-        if Env.in_async_scope cx then
-          match expr_ast with
-          | Flow_ast.Expression.Assignment _ -> ()
-          | _ -> Context.mark_maybe_unused_promise cx loc expr_t
-      end;
+      if not (is_promise_handled expr_ast) then
+        Context.mark_maybe_unused_promise cx loc expr_t ~async:(Env.in_async_scope cx);
       (loc, Expression { Expression.expression = expr; directive; comments })
     (* Refinements for `if` are derived by the following Hoare logic rule:
 

@@ -876,7 +876,10 @@ module rec TypeTerm : sig
         index: optional_indexed_access_index;
         tout_tvar: tvar;
       }
-    | CheckUnusedPromiseT of reason
+    | CheckUnusedPromiseT of {
+        reason: reason;
+        async: bool;
+      }
 
   and enum_check_t =
     | EnumCheck of {

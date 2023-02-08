@@ -456,22 +456,28 @@ let ast_transforms_of_error ?loc = function
       ]
     else
       []
-  | Error_message.EUnusedPromise { loc = error_loc } ->
+  | Error_message.EUnusedPromise { loc = error_loc; async } ->
     if loc_opt_intersects ~error_loc ~loc then
-      [
+      let insert_async =
         {
           title = "Insert `await`";
           diagnostic_title = "insert_await";
           transform = Autofix_unused_promise.insert_await;
           target_loc = error_loc;
-        };
+        }
+      in
+      let insert_void =
         {
           title = "Insert `void`";
           diagnostic_title = "insert_void";
           transform = Autofix_unused_promise.insert_void;
           target_loc = error_loc;
-        };
-      ]
+        }
+      in
+      if async then
+        [insert_async; insert_void]
+      else
+        [insert_void]
     else
       []
   | Error_message.ETSSyntax { kind = Error_message.TSUnknown; loc = error_loc } ->

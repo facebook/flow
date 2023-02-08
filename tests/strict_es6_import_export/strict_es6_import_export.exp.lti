@@ -252,6 +252,23 @@ References:
 
 Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2
 
+Cannot instantiate `React.Element` because module `./foo` [1] is incompatible with AbstractComponent [2] in type
+argument `ElementType`. [incompatible-type-arg]
+
+   import_star_invalid_use.js:9:2
+     9| <Foo></Foo>;
+         ^^^
+
+References:
+   foo.js
+   ^^^^^^ [1]
+   <BUILTINS>/react.js:163:5
+   163|   | React$AbstractComponent<empty, mixed>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2
+
 `import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
 [invalid-import-star-use]
 
@@ -591,4 +608,7 @@ export please `import` and then `export default` instead. [export-renamed-defaul
 
 
 
-Found 52 errors
+Found 53 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
