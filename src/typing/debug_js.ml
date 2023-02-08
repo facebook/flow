@@ -540,9 +540,9 @@ and dump_use_t_ (depth, tvars) cx t =
     in
     let xs =
       NameUtils.Map.fold
-        (fun k (t, _, _) xs ->
+        (fun k { Object.prop_t; _ } xs ->
           let opt =
-            match t with
+            match prop_t with
             | OptionalT _ -> "?"
             | _ -> ""
           in
@@ -562,7 +562,7 @@ and dump_use_t_ (depth, tvars) cx t =
           match (Type.Property.read_t p, Type.Property.write_t p) with
           | (Some t, _)
           | (_, Some t) ->
-            NameUtils.Map.add k (t, true, false) acc
+            NameUtils.Map.add k { Object.prop_t = t; is_own = true; is_method = false } acc
           | _ -> acc)
         prop_map
         NameUtils.Map.empty

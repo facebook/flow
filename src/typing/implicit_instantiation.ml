@@ -414,7 +414,11 @@ struct
         ~frozen:s.Object.flags.frozen
         ~obj_kind:s.Object.flags.obj_kind
         ~props:
-          (NameUtils.Map.map (fun (t, _, _) -> Field (None, t, Polarity.Neutral)) s.Object.props)
+          (NameUtils.Map.map
+             (fun { Object.prop_t; is_own = _; is_method = _ } ->
+               Field (None, prop_t, Polarity.Neutral))
+             s.Object.props
+          )
         (ObjProtoT r)
     in
     let operand_to_t = function

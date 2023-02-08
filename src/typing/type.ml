@@ -2516,9 +2516,12 @@ and Object : sig
 
   and props = prop NameUtils.Map.t
 
-  and prop = TypeTerm.t * bool * (* method *) bool
+  and prop = {
+    prop_t: TypeTerm.t;
+    is_own: bool;
+    is_method: bool;
+  }
 
-  (* own *)
   and dict = TypeTerm.dicttype option
 
   module Spread : sig

@@ -135,7 +135,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let polarity = Polarity.Neutral in
         let props =
           NameUtils.Map.map
-            (fun (t, _, is_method) ->
+            (fun { Object.prop_t = t; is_own = _; is_method } ->
               if is_method then
                 Method (None, t)
               else
@@ -180,7 +180,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let polarity = Polarity.Neutral in
         let props =
           NameUtils.Map.map
-            (fun (t, _, is_method) ->
+            (fun { Object.prop_t = t; is_own = _; is_method } ->
               if is_method then
                 Method (None, t)
               else
@@ -260,7 +260,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 let p2 = get_prop slice.Object.reason p2 slice_dict in
                 match (p1, p2) with
                 | (None, None) -> None
-                | (None, Some ((_, _, m) as t)) ->
+                | (None, Some ({ Object.is_method = m; _ } as t)) ->
                   let (t', opt, missing_prop) = type_optionality_and_missing_property t in
                   let t' =
                     if opt && not missing_prop then
@@ -269,7 +269,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       possibly_missing_prop propname widest.Object.reason t'
                   in
                   Some ((t', m), true)
-                | (Some ((_, _, m) as t), None) ->
+                | (Some ({ Object.is_method = m; _ } as t), None) ->
                   let (t', opt, missing_prop) = type_optionality_and_missing_property t in
                   let t' =
                     if opt && not missing_prop then
@@ -278,7 +278,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       possibly_missing_prop propname slice.Object.reason t'
                   in
                   Some ((t', m), not opt)
-                | (Some ((_, _, m1) as t1), Some ((_, _, m2) as t2)) ->
+                | ( Some ({ Object.is_method = m1; _ } as t1),
+                    Some ({ Object.is_method = m2; _ } as t2)
+                  ) ->
                   let (t1', opt1, missing_prop1) = type_optionality_and_missing_property t1 in
                   let (t2', opt2, missing_prop2) = type_optionality_and_missing_property t2 in
                   let (t, changed) = widen_type cx trace obj_reason ~use_op t1' t2' in
@@ -339,7 +341,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               | _ -> Inexact
             in
             let flags = { obj_kind; frozen = false } in
-            let props = NameUtils.Map.map (fun (t, m) -> (t, true, m)) pmap' in
+            let props =
+              NameUtils.Map.map
+                (fun (t, m) -> { Object.prop_t = t; is_own = true; is_method = m })
+                pmap'
+            in
             let slice' =
               {
                 Object.reason = slice.Object.reason;
@@ -383,7 +389,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            * to our config props. *)
           let config_props =
             Base.Option.value_map children ~default:config_props ~f:(fun children ->
-                NameUtils.Map.add (OrdinaryName "children") (children, true, false) config_props
+                NameUtils.Map.add
+                  (OrdinaryName "children")
+                  { Object.prop_t = children; is_own = true; is_method = false }
+                  config_props
             )
           in
           (* Remove the key and ref props from our config. We check key and ref
@@ -418,8 +427,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     let p2 = Slice_utils.get_prop defaults_reason p2 defaults_dict in
                     match (p1, p2) with
                     | (None, None) -> None
-                    | (Some (t, _, m), None) -> Some (t, m)
-                    | (None, Some (t, _, m)) -> Some (t, m)
+                    | (Some { Object.prop_t = t; is_own = _; is_method = m }, None) -> Some (t, m)
+                    | (None, Some { Object.prop_t = t; is_own = _; is_method = m }) -> Some (t, m)
                     (* If a property is defined in both objects, and the first property's
                      * type includes void then we want to replace every occurrence of void
                      * with the second property's type. This is consistent with the behavior
@@ -427,7 +436,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                      * `f(undefined)` and there is a default value for the first argument,
                      * then we will ignore the void type and use the type for the default
                      * parameter instead. *)
-                    | (Some (t1, _, m1), Some (t2, _, m2)) ->
+                    | ( Some { Object.prop_t = t1; is_own = _; is_method = m1 },
+                        Some { Object.prop_t = t2; is_own = _; is_method = m2 }
+                      ) ->
                       (* Use CondT to replace void with t1. *)
                       let t =
                         Tvar.mk_where cx reason (fun tvar ->
@@ -482,7 +493,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             (* Otherwise turn our slice props map into an object props. *)
             | None ->
               let props =
-                NameUtils.Map.map (fun (t, _, is_method) -> (t, is_method)) config_props
+                NameUtils.Map.map
+                  (fun { Object.prop_t = t; is_own = _; is_method } -> (t, is_method))
+                  config_props
               in
               (* Create a new dictionary from our config's dictionary with a
                * positive polarity. *)
