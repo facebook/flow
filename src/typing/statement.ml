@@ -405,10 +405,7 @@ module Make
         if Env.in_async_scope cx then
           match expr_ast with
           | Flow_ast.Expression.Assignment _ -> ()
-          | _ ->
-            Flow_js.flow
-              cx
-              (expr_t, CheckUnusedPromiseT (mk_reason (RCustom "unused promise lint") loc))
+          | _ -> Context.mark_maybe_unused_promise cx loc expr_t
       end;
       (loc, Expression { Expression.expression = expr; directive; comments })
     (* Refinements for `if` are derived by the following Hoare logic rule:

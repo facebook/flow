@@ -235,6 +235,16 @@ let detect_unnecessary_invariants cx =
       Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason)))
     (Context.unnecessary_invariants cx)
 
+let detect_unused_promises cx =
+  Base.List.iter
+    ~f:(fun (loc, t) ->
+      let no_lowers r = Type.(AnyT.make Untyped r) in
+      let t = Tvar_resolver.resolved_t ~no_lowers cx t in
+      Flow_js.flow
+        cx
+        (t, Type.CheckUnusedPromiseT (Reason.mk_reason (Reason.RCustom "unused promise lint") loc)))
+    (Context.maybe_unused_promises cx)
+
 let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors
 
 let detect_escaped_generics results =
@@ -720,7 +730,8 @@ let post_merge_checks cx master_cx ast tast metadata file_sig =
   detect_es6_import_export_errors cx metadata results;
   detect_escaped_generics results;
   detect_matching_props_violations cx master_cx;
-  detect_literal_subtypes cx
+  detect_literal_subtypes cx;
+  detect_unused_promises cx
 
 let optimize_builtins cx =
   let reducer =

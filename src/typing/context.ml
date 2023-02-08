@@ -145,6 +145,7 @@ type component_t = {
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
+  mutable maybe_unused_promises: (ALoc.t * Type.t) list;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (subst_cache_err list * Type.t) Type.SubstCacheMap.t ref;
   instantiation_cache: Type.t Reason.ImplicitInstantiationReasonMap.t ref;
@@ -357,6 +358,7 @@ let make_ccx master_cx =
     spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
+    maybe_unused_promises = [];
     constraint_cache = ref Type.FlowSet.empty;
     subst_cache = ref Type.SubstCacheMap.empty;
     instantiation_cache = ref Reason.ImplicitInstantiationReasonMap.empty;
@@ -998,6 +1000,11 @@ let unnecessary_invariants cx =
         (loc, r) :: acc)
     cx.ccx.invariants_useful
     []
+
+let mark_maybe_unused_promise cx loc t =
+  cx.ccx.maybe_unused_promises <- (loc, t) :: cx.ccx.maybe_unused_promises
+
+let maybe_unused_promises cx = cx.ccx.maybe_unused_promises
 
 let add_hint_eval_cache_entry cx id result =
   cx.hint_eval_cache <- IMap.add id result cx.hint_eval_cache
