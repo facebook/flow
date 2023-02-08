@@ -60,21 +60,27 @@ type 'loc def_kind =
           of the property. *)
   | Obj_def of 'loc * (* name *) string
       (** In an object type. Includes the location of the property definition and its name. *)
-  | Use_in_literal of Type.t Nel.t * (* name *) string
-      (** List of types that the object literal flows into directly, as well as the name of the
-          property. *)
+  | Obj_literal of 'loc * (* type of the object *) Type.t * (* name *) string
+      (** In an object literal. Includes the location of the property definition, the object type,
+          and the prop name. This object does not necessarily contain the desired property/method *)
 
 let map_def_kind_loc ~f = function
   | Use (t, name) -> Use (t, name)
   | Class_def (t, name, static) -> Class_def (t, name, static)
   | Obj_def (loc, name) -> Obj_def (f loc, name)
-  | Use_in_literal (ts, name) -> Use_in_literal (ts, name)
+  | Obj_literal (loc, t, name) -> Obj_literal (f loc, t, name)
 
 module Def_kind_search = struct
   exception
     Found_class_def of {
       name: string;
       static: bool;
+    }
+
+  exception
+    Found_obj_prop of {
+      loc: ALoc.t;
+      name: string;
     }
 
   exception Found_import of { name: string }
@@ -97,6 +103,9 @@ module Def_kind_search = struct
           | Class _ ->
             (try super#expression x with
             | Found_class_def { name; static } -> raise (Found (Class_def (t, name, static))))
+          | Object _ ->
+            (try super#expression x with
+            | Found_obj_prop { name; loc = _ } -> raise (Found (Obj_literal (l, t, name))))
           | _ -> super#expression x
         else
           x
@@ -206,6 +215,23 @@ module Def_kind_search = struct
         | PropertyExpression _ -> ());
         super#member expr
 
+      method! object_property prop =
+        let open Flow_ast.Expression.Object.Property in
+        let (_prop_loc, prop') = prop in
+        let key =
+          match prop' with
+          | Init { key; _ }
+          | Method { key; _ }
+          | Get { key; _ }
+          | Set { key; _ } ->
+            key
+        in
+        match key with
+        | Identifier ((id_loc, _), { Flow_ast.Identifier.name; comments = _ })
+          when covers_target id_loc ->
+          raise (Found_obj_prop { loc = id_loc; name })
+        | _ -> super#object_property prop
+
       method! object_property_type prop =
         let open Flow_ast.Expression.Object.Property in
         let (_, { Flow_ast.Type.Object.Property.key; _ }) = prop in
@@ -225,31 +251,26 @@ module Def_kind_search = struct
     | Found def_kind -> Some def_kind
 end
 
-let set_obj_to_obj_hook ~reader ~loc ~name prop_access_info =
-  let set_prop_access_info new_info =
-    let set_ok info = prop_access_info := Ok (Some info) in
-    let set_err err = prop_access_info := Error err in
-    match !prop_access_info with
-    | Error _ -> ()
-    | Ok None -> prop_access_info := Ok (Some new_info)
-    | Ok (Some (types, name)) -> begin
-      let (new_types, new_name) = new_info in
-      if name = new_name then
-        set_ok (Nel.rev_append new_types types, name)
-      else
-        set_err "Names did not match"
-    end
-  in
+let set_obj_to_obj_hook ~reader () =
+  let obj_to_obj_map = ref Loc_collections.LocMap.empty in
   let obj_to_obj_hook _ctxt obj1 obj2 =
     match get_object_literal_loc obj1 with
-    | Some obj_aloc when loc_of_aloc ~reader obj_aloc = loc ->
+    | Some obj_aloc ->
       let open Type in
-      (match obj2 with
-      | DefT (_, _, ObjT _) -> set_prop_access_info (Nel.one obj2, name)
+      (match (obj1, obj2) with
+      | (DefT (_, _, ObjT _), DefT (_, _, ObjT { props_tmap = obj2_props_id; _ })) ->
+        obj_to_obj_map :=
+          Loc_collections.LocMap.adjust
+            (loc_of_aloc ~reader obj_aloc)
+            (function
+              | None -> Properties.Set.singleton obj2_props_id
+              | Some ids -> Properties.Set.add obj2_props_id ids)
+            !obj_to_obj_map
       | _ -> ())
     | _ -> ()
   in
-  Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
+  Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook;
+  obj_to_obj_map
 
 let unset_hooks () = Type_inference_hooks_js.reset_hooks ()
 
@@ -409,7 +430,7 @@ and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
     )
   )
 
-let def_info_of_typecheck_results ~reader cx props_access_info =
+let def_info_of_typecheck_results ~reader cx obj_to_obj_map props_access_info =
   let def_info_of_class_member_locs locs =
     (* We want to include the immediate implementation as well as all superclass implementations.
      * If we wanted a mode where superclass implementations were not included, for example, we
@@ -428,6 +449,14 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
         None
     in
     extract_def_loc ~reader cx ty name >>| def_info_of_def_loc
+  in
+  let get_loc_of_prop ~reader props name =
+    match NameUtils.Map.find_opt (Reason.OrdinaryName name) props with
+    | Some prop ->
+      (match Type.Property.read_loc prop with
+      | Some aloc -> Some (loc_of_aloc ~reader aloc)
+      | None -> None)
+    | None -> None
   in
   match props_access_info with
   | Obj_def (loc, name) -> Ok (Some (Nel.one (Object loc), name))
@@ -448,12 +477,35 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
       | _ -> Error "Unexpectedly failed to extract definition from known type" )
   | Use (ty, name) ->
     def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
-  | Use_in_literal (types, name) ->
-    let def_infos_result = Nel.map (def_info_of_type name) types |> Nel.result_all in
-    def_infos_result >>| fun def_infos ->
-    Nel.cat_maybes def_infos
-    |> Base.Option.map ~f:Nel.concat
-    |> Base.Option.map ~f:(fun def_info -> (def_info, name))
+  | Obj_literal (loc, ty, name) ->
+    (match ty with
+    | Type.(DefT (_, _, ObjT { props_tmap = literal_obj_props_tmap_id; _ })) ->
+      let literal_props = Context.find_props cx literal_obj_props_tmap_id in
+      let literal_result =
+        match get_loc_of_prop ~reader literal_props name with
+        | Some loc -> Ok (Nel.one (Object loc))
+        | None -> Error "Expected to find property on object definition"
+      in
+      let result =
+        literal_result >>= fun literal_result ->
+        (* Look up the objects that this object maps to *)
+        match Loc_collections.LocMap.find_opt loc obj_to_obj_map with
+        | Some obj_prop_tmap_ids ->
+          Type.Properties.Set.fold
+            (fun props_tmap_set acc ->
+              let props = Context.find_props cx props_tmap_set in
+              (* Get the loc of the specific prop def *)
+              match get_loc_of_prop ~reader props name with
+              | Some loc -> Base.Result.map ~f:(fun acc' -> Nel.cons (Object loc) acc') acc
+              | None -> Error "Expected to find property on object definition")
+            obj_prop_tmap_ids
+            (Ok literal_result)
+        | None ->
+          (* object literal has no upper bound objects *)
+          Ok literal_result
+      in
+      Base.Result.map ~f:(fun res -> Some (res, name)) result
+    | _ -> Error "Expected to find an object")
 
 let add_literal_properties literal_key_info def_info =
   (* If we happen to be on an object property, include the location of that
@@ -475,40 +527,29 @@ let add_literal_properties literal_key_info def_info =
 
 let get_def_info ~reader ~options profiling file_key ast_info loc : (def_info option, string) result
     =
-  let props_access_info = ref (Ok None) in
   let (ast, file_sig, info) = ast_info in
-  let literal_key_info : (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
   let do_check () =
     Merge_service.check_contents_context ~reader options file_key ast info file_sig
   in
-  let (cx, typed_ast) =
+  let (cx, typed_ast, obj_to_obj_map) =
     Profiling_js.with_timer profiling ~timer:"MergeContents" ~f:(fun () ->
         let () = Type_contents.ensure_checked_dependencies ~options ~reader file_key file_sig in
-        match literal_key_info with
-        | Some (loc, _, name) ->
-          set_obj_to_obj_hook ~reader ~loc ~name props_access_info;
-          let result = do_check () in
-          unset_hooks ();
-          result
-        | None -> do_check () (* TODO: replace with typed AST *)
+        let obj_to_obj_map_ref = set_obj_to_obj_hook ~reader () in
+        let (cx, typed_ast) = do_check () in
+        unset_hooks ();
+        (cx, typed_ast, !obj_to_obj_map_ref)
     )
   in
   let def_kind =
-    match !props_access_info with
-    (* If props_access_info is set, it must be from the obj_to_obj hook *)
-    | Ok (Some (types, name)) -> Some (Use_in_literal (types, name))
-    | _ ->
-      Def_kind_search.search
-        ~f:(fun aloc ->
-          let l = loc_of_aloc ~reader aloc in
-          Loc.contains l loc)
-        typed_ast
-      |> Base.Option.map ~f:(map_def_kind_loc ~f:(loc_of_aloc ~reader))
+    Def_kind_search.search
+      ~f:(fun aloc ->
+        let l = loc_of_aloc ~reader aloc in
+        Loc.contains l loc)
+      typed_ast
+    |> Base.Option.map ~f:(map_def_kind_loc ~f:(loc_of_aloc ~reader))
   in
 
-  let def_info =
+  Base.Option.value_map
+    ~f:(def_info_of_typecheck_results ~reader cx obj_to_obj_map)
+    ~default:(Ok None)
     def_kind
-    |> Base.Option.value_map ~f:(def_info_of_typecheck_results ~reader cx) ~default:(Ok None)
-    >>= add_literal_properties literal_key_info
-  in
-  def_info
