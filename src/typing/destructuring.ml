@@ -116,19 +116,6 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       | None -> Some parent_loc
     in
     let has_parent = Base.Option.is_some parent_loc in
-    let () =
-      match parent_loc with
-      | None -> () (* TODO: get-def when object property is refined *)
-      | Some l ->
-        (*
-         * We are within a destructuring pattern and a `get-def` on this identifier should
-         * point at the "def" of the original property. To accompish this, we emit the type
-         * of the parent pattern so that get-def can dive in to that type and extract the
-         * location of the "def" of this property.
-         *)
-        let t = Env.find_write cx Env_api.PatternLoc (mk_reason RDestructuring l) in
-        Type_inference_hooks_js.dispatch_lval_hook cx x loc (Type_inference_hooks_js.Parent t)
-    in
     { has_parent; init; default }
 
   let object_computed_property cx acc e =
@@ -180,19 +167,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key)
 
   let identifier cx ~f acc name_loc name =
-    let { has_parent; init; default } = acc in
-    let () =
-      if has_parent then
-        (* If there was a parent pattern, we already dispatched the hook if relevant. *)
-        ()
-      else
-        (*
-         * If there was no parent_pattern, we must not be within a destructuring
-         * pattern and a `get-def` on this identifier should point at the
-         * location where the binding is introduced.
-         *)
-        Type_inference_hooks_js.dispatch_lval_hook cx name name_loc Type_inference_hooks_js.Id
-    in
+    let { init; default; _ } = acc in
     let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
     let current =
       mod_reason_of_t

@@ -2220,7 +2220,6 @@ module Make
             init_var cx ~use_op init_t id_loc
           | None -> ()
         end;
-        Type_inference_hooks_js.(dispatch_lval_hook cx name id_loc (Val annot_t));
         let ast_t = Env.constraining_type ~default:annot_t cx id_loc in
         ( (ploc, ast_t),
           Ast.Pattern.Identifier

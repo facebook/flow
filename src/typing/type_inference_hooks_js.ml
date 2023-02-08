@@ -9,8 +9,6 @@ let id_nop _ _ _ = false
 
 let literal_nop _ _ = false
 
-let lval_nop _ _ _ _ = ()
-
 let member_nop _ _ _ _ = false
 
 let call_nop _ _ _ _ = ()
@@ -61,7 +59,6 @@ type def =
 type hook_state_t = {
   id_hook: Context.t -> string -> ALoc.t -> bool;
   literal_hook: Context.t -> ALoc.t -> bool;
-  lval_hook: Context.t -> string -> ALoc.t -> def -> unit;
   member_hook: Context.t -> string -> ALoc.t -> Type.t -> bool;
   (* TODO: This is inconsistent with the way the id/member hooks work, but we
      currently don't need a way to override call types, so it simplifies
@@ -79,7 +76,6 @@ let nop_hook_state =
   {
     id_hook = id_nop;
     literal_hook = literal_nop;
-    lval_hook = lval_nop;
     member_hook = member_nop;
     call_hook = call_nop;
     jsx_hook = jsx_nop;
@@ -93,8 +89,6 @@ let hook_state = ref nop_hook_state
 let set_id_hook hook = hook_state := { !hook_state with id_hook = hook }
 
 let set_literal_hook hook = hook_state := { !hook_state with literal_hook = hook }
-
-let set_lval_hook hook = hook_state := { !hook_state with lval_hook = hook }
 
 let set_member_hook hook = hook_state := { !hook_state with member_hook = hook }
 
@@ -113,8 +107,6 @@ let reset_hooks () = hook_state := nop_hook_state
 let dispatch_id_hook cx name loc = !hook_state.id_hook cx name loc
 
 let dispatch_literal_hook cx loc = !hook_state.literal_hook cx loc
-
-let dispatch_lval_hook cx name lhs_loc rhs_loc = !hook_state.lval_hook cx name lhs_loc rhs_loc
 
 let dispatch_member_hook cx name loc this_t = !hook_state.member_hook cx name loc this_t
 

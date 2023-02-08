@@ -39,20 +39,92 @@ end = struct
     builder#eval builder#program ast
 end
 
-let set_get_refs_hook potential_refs potential_matching_literals target_name =
-  let hook ret _ctxt name loc ty =
-    if name = target_name then
-      (* Replace previous bindings of `loc`. We should always use the result of the last call to
-       * the hook for a given location (this may no longer be relevant with the removal of
-         generate-tests) *)
-      potential_refs := ALocMap.add loc ty !potential_refs;
-    ret
-  in
-  let lval_hook cx name loc = function
-    (* Treat destructuring as a property access *)
-    | Type_inference_hooks_js.Parent ty -> hook () cx name loc ty
-    | _ -> ()
-  in
+module Potential_refs_search = struct
+  exception Found_import
+
+  class searcher ~(target_name : string) ~(potential_refs : Type.t ALocMap.t ref) =
+    object (_this)
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      method on_loc_annot x = x
+
+      method on_type_annot x = x
+
+      method! import_declaration loc decl =
+        let open Flow_ast.Statement.ImportDeclaration in
+        try super#import_declaration loc decl with
+        | Found_import ->
+          let { source = ((_, module_t), _); _ } = decl in
+          (* Replace previous bindings of `loc`. We should always use the result of the last call to
+             the hook for a given location (this may no longer be relevant with the removal of
+             generate-tests) *)
+          potential_refs := ALocMap.add loc module_t !potential_refs;
+          decl
+
+      method! import_named_specifier ~import_kind:_ specifier =
+        let open Flow_ast.Statement.ImportDeclaration in
+        let { kind = _; local; remote } = specifier in
+        let (_, { Flow_ast.Identifier.name; _ }) = Base.Option.value ~default:remote local in
+        if name = target_name then
+          raise Found_import
+        else
+          specifier
+
+      method! member expr =
+        let open Flow_ast.Expression.Member in
+        let { _object = ((_, ty), _); property; comments = _ } = expr in
+        (match property with
+        | PropertyIdentifier ((loc, _), { Flow_ast.Identifier.name; _ })
+        | PropertyPrivateName (loc, { Flow_ast.PrivateName.name; _ })
+          when name = target_name ->
+          potential_refs := ALocMap.add loc ty !potential_refs
+        | PropertyIdentifier _
+        | PropertyPrivateName _
+        | PropertyExpression _ ->
+          ());
+        super#member expr
+
+      method! pattern ?kind expr =
+        let ((_, ty), patt) = expr in
+        let _ =
+          match patt with
+          | Ast.Pattern.Object { Ast.Pattern.Object.properties; _ } ->
+            List.iter
+              (fun prop ->
+                let open Ast.Pattern.Object in
+                match prop with
+                | Property (_, { Property.key; _ }) ->
+                  (match key with
+                  | Property.Identifier ((loc, _), { Ast.Identifier.name; _ })
+                  | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
+                    if name = target_name then potential_refs := ALocMap.add loc ty !potential_refs;
+                    ()
+                  | Property.Computed _
+                  | Property.Literal _ ->
+                    ())
+                | RestElement _ -> ())
+              properties
+          | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
+            let ((loc, ty), { Flow_ast.Identifier.name = id_name; _ }) = name in
+            (* If the location is already in the map, it was set by a parent *)
+            if id_name = target_name && (not @@ ALocMap.mem loc !potential_refs) then
+              potential_refs := ALocMap.add loc ty !potential_refs;
+            ()
+          | Ast.Pattern.Array _
+          | Ast.Pattern.Expression _ ->
+            ()
+        in
+        super#pattern ?kind expr
+    end
+
+  let search ~target_name ~potential_refs ast =
+    let s = new searcher ~target_name ~potential_refs in
+    let _ = s#program ast in
+    ()
+end
+
+let set_get_refs_hook potential_matching_literals =
   let obj_to_obj_hook _ctxt obj1 obj2 =
     let open Type in
     match (get_object_literal_loc obj1, obj2) with
@@ -60,9 +132,6 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
       potential_matching_literals := (aloc, obj2) :: !potential_matching_literals
     | _ -> ()
   in
-  Type_inference_hooks_js.set_member_hook (hook false);
-  Type_inference_hooks_js.set_call_hook (hook ());
-  Type_inference_hooks_js.set_lval_hook lval_hook;
   Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
 
 (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
@@ -124,9 +193,12 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   if not has_symbol then
     Ok local_defs
   else (
-    set_get_refs_hook potential_refs potential_matching_literals name;
-    let (cx, _) = Merge_service.check_contents_context ~reader options file_key ast info file_sig in
+    set_get_refs_hook potential_matching_literals;
+    let (cx, typed_ast) =
+      Merge_service.check_contents_context ~reader options file_key ast info file_sig
+    in
     unset_hooks ();
+    Potential_refs_search.search ~target_name:name ~potential_refs typed_ast;
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
        * examine *)
