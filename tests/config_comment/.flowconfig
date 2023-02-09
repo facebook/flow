@@ -14,6 +14,7 @@
   # Spaces before comment is allowed
 [options]
 all=true
+exact_by_default=false
 
 # I can write whatever I like here
   # Spaces before comment is allowed

@@ -8,5 +8,6 @@
 
 [options]
 all=true
+exact_by_default=false
 include_warnings=true
 no_flowlib=true

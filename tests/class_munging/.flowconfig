@@ -1,3 +1,4 @@
 [options]
 all=true
+exact_by_default=false
 munge_underscores=true

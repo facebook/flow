@@ -1,4 +1,5 @@
 [options]
 all=true
+exact_by_default=false
 module.file_ext=.js.es6
 no_flowlib=false

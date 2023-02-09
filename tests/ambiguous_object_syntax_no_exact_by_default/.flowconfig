@@ -1,5 +1,6 @@
 [options]
 all=true
+exact_by_default=false
 
 [lints]
 ambiguous-object-type=error

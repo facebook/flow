@@ -1,2 +1,3 @@
 [options]
+exact_by_default=false
 autoimports=false

@@ -14,5 +14,5 @@ assert_ok "$FLOW" codemod annotate-exports --strip-root .
 echo
 echo "exact_by_default=true (should print: {f: number, ...} for inexact)"
 echo
-echo "exact_by_default=true" >> .flowconfig
+mv flowconfig_exact_by_default_true .flowconfig
 assert_ok "$FLOW" codemod annotate-exports --strip-root .

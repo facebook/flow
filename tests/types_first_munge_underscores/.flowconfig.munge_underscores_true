@@ -7,6 +7,8 @@
 [lints]
 
 [options]
+all=true
+exact_by_default=true
 munge_underscores=true
 
 [strict]

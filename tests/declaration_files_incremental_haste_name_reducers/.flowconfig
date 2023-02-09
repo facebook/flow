@@ -5,3 +5,4 @@ module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\)\.js\(\.flow\)?$' -> 
 module.system.haste.paths.includes=<PROJECT_ROOT>/.*
 module.system.haste.paths.excludes=.*/node_modules/.*
 all=true
+exact_by_default=false

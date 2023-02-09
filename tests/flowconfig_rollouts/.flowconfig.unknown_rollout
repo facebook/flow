@@ -1,2 +1,3 @@
 [options]
+exact_by_default=false
 (short_literals=on) max_literal_length=10

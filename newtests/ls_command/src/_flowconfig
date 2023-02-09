@@ -9,3 +9,4 @@ explicit_lib.js
 
 [options]
 all=true
+exact_by_default=false

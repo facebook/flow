@@ -7,6 +7,8 @@
 LONG="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 mkdir "$LONG"
 touch "$LONG/.flowconfig"
+echo "[options]" >> "$LONG/.flowconfig"
+echo "exact_by_default=false" >> "$LONG/.flowconfig"
 assert_ok "$FLOW" start "$LONG"
 assert_ok "$FLOW" stop "$LONG"
 

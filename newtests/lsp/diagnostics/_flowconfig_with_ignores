@@ -1,2 +1,5 @@
 [ignore]
 .*/ignoreme.js
+
+[options]
+exact_by_default=false

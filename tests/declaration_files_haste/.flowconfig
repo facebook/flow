@@ -7,3 +7,4 @@
 [options]
 module.system=haste
 all=false
+exact_by_default=false

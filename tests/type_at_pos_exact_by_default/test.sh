@@ -13,5 +13,5 @@ assert_ok "$FLOW" stop
 echo
 echo "exact_by_default=true"
 echo
-echo "exact_by_default=true" >> .flowconfig
+mv flowconfig_exact_by_default_true .flowconfig
 queries_in_file "type-at-pos" "file.js"

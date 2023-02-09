@@ -11,5 +11,6 @@ Default .flowconfig looks like this:
 [lints]
 
 [options]
+exact_by_default=false
 
 [strict]

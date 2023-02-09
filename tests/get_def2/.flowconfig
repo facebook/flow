@@ -3,6 +3,7 @@ lib
 
 [options]
 all=true
+exact_by_default=false
 module.system=haste
 module.system.haste.module_ref_prefix=m#
 no_flowlib=false

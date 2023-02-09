@@ -2,6 +2,7 @@
 lib/
 
 [options]
+exact_by_default=false
 autoimports=true
 autoimports_ranked_by_usage=false
 

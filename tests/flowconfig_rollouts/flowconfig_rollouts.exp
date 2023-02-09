@@ -40,10 +40,10 @@ Found 1 error
 Found 0 errors
 
 Unknown rollout:
-.flowconfig:2 Unknown rollout "short_literals"
+.flowconfig:3 Unknown rollout "short_literals"
 
 Unknown group:
-.flowconfig:5 Unknown group "potato" in rollout "short_literals"
+.flowconfig:6 Unknown group "potato" in rollout "short_literals"
 
 Disable a .*.js ignore via rollout:
 Error ------------------------------------------------------------------------------------- error_short_literals.js:3:24

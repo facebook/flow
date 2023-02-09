@@ -5,6 +5,7 @@
 [libs]
 
 [options]
+exact_by_default=false
 all=true
 module.system=node
 module.system.node.main_field=main

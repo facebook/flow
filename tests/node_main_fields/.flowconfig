@@ -2,3 +2,4 @@
 module.system.node.main_field=foo
 module.system.node.main_field=bar
 all=true
+exact_by_default=false

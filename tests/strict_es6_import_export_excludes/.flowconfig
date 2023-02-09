@@ -1,5 +1,6 @@
 [options]
 all=true
+exact_by_default=false
 experimental.strict_es6_import_export=true
 experimental.strict_es6_import_export.excludes=<PROJECT_ROOT>/excluded1/.*
 experimental.strict_es6_import_export.excludes=<PROJECT_ROOT>/excluded2/.*

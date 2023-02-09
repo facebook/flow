@@ -1,4 +1,5 @@
 [options]
+exact_by_default=false
 enums=true
 
 [lints]

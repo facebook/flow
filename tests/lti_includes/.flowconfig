@@ -1,4 +1,5 @@
 [options]
 all=true
+exact_by_default=false
 inference_mode.lti.includes=<PROJECT_ROOT>/include.js
 no_flowlib=false

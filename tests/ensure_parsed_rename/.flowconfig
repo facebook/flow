@@ -1,4 +1,5 @@
 [options]
 all=true
+exact_by_default=false
 lazy_mode=true
 module.system=haste

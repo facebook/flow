@@ -1,5 +1,6 @@
 [options]
 all=true
+exact_by_default=false
 invalid_option1=foo
 invalid_option2=bar
 invalid_option2=baz

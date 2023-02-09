@@ -1,4 +1,5 @@
 [options]
 all=true
+exact_by_default=false
 no_flowlib=false
 experimental.run_post_inference_implicit_instantiation=true

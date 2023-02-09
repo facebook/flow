@@ -1,2 +1,5 @@
 [version]
 0.50.0
+
+[options]
+exact_by_default=false

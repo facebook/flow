@@ -3,3 +3,4 @@ libs/
 
 [options]
 all=false
+exact_by_default=false

@@ -1,3 +1,4 @@
 [options]
 all=false
+exact_by_default=false
 max_header_tokens=3

@@ -8,4 +8,5 @@
 !.*/newtests/.*/test.js
 
 [options]
+exact_by_default=false
 emoji=true

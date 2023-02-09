@@ -1,3 +1,4 @@
 [options]
 all=true
+exact_by_default=false
 module.name_mapper.extension='css' -> '<PROJECT_ROOT>/CSSModule.js.flow'

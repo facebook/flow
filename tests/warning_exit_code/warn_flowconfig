@@ -11,3 +11,4 @@ sketchy-null-number=warn
 sketchy-null-mixed=warn
 
 [options]
+exact_by_default=false

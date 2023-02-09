@@ -1,6 +1,7 @@
 [options]
 include_warnings=true
 all=true
+exact_by_default=false
 
 [lints]
 all=error
