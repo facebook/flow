@@ -616,6 +616,7 @@ struct
           depends_of_node (fun visitor -> visitor#add ~why:loc (kind, loc)) state
         | StringLiteralType _ -> state
         | BuiltinType _ -> state
+        | AnyErrorHint _ -> state
       in
       let rec depends_of_hint state = function
         | Hint.Hint_Placeholder -> state
