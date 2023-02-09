@@ -1,3 +1,4 @@
 [options]
-inference_mode=experimental.lti
 all=true
+exact_by_default=false
+inference_mode=experimental.lti
