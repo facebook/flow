@@ -36,7 +36,6 @@ struct MatchInfo {
   size_t needle_len;
   int* last_match;
   float *memo;
-  bool smart_case;
   bool first_match_can_be_weak;
   float min_score;
 };
@@ -117,12 +116,6 @@ float recursive_match(const MatchInfo &m,
         }
       }
 
-      // Apply a severe penalty if the case doesn't match.
-      // This should always hoist the exact case matches above all others.
-      if (m.smart_case && m.needle[needle_idx] != m.haystack[j]) {
-        char_score *= 0.001;
-      }
-
       float multiplier = char_score;
       // Scale the score based on how much of the path was actually used.
       // (We measure this via # of characters since the last slash.)
@@ -172,7 +165,6 @@ float score_match(const char *haystack,
   m.needle_len = strlen(needle);
   m.haystack_case = haystack_lower;
   m.needle_case = needle_lower;
-  m.smart_case = options.smart_case;
   m.first_match_can_be_weak = options.first_match_can_be_weak;
   m.min_score = min_score;
 

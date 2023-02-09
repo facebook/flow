@@ -25,7 +25,6 @@ type search_results = {
 [@@deriving show]
 
 type search_options = Fuzzy_path.options = {
-  smart_case: bool;
   first_match_can_be_weak: bool;
   num_threads: int;
   max_results: int;

@@ -135,7 +135,6 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   bool first_match_can_be_weak = options.first_match_can_be_weak;
 
   MatchOptions matchOptions;
-  matchOptions.smart_case = false;
   matchOptions.first_match_can_be_weak = first_match_can_be_weak;
 
   std::string new_query;
@@ -143,9 +142,6 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   for (auto c : query) {
     if (!isspace(c)) {
       new_query += c;
-    }
-    if (options.smart_case && isupper(c)) {
-      matchOptions.smart_case = true;
     }
   }
 

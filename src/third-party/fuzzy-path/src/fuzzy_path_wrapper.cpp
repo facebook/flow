@@ -46,7 +46,6 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
   obj = static_cast<MatcherBase *>(m->obj);
 
   MatcherOptions cpp_options;
-  cpp_options.smart_case = options.smart_case;
   cpp_options.first_match_can_be_weak = options.first_match_can_be_weak;
   cpp_options.num_threads = options.num_threads;
   cpp_options.max_results = options.max_results;

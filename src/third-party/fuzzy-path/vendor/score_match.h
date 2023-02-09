@@ -4,7 +4,6 @@
 #include <string>
 
 struct MatchOptions {
-  bool smart_case;
   /* If false, the first character of the needle must be a "strong" match:
      it must be the first character of the haystack, or immediately following
      a word boundary. */

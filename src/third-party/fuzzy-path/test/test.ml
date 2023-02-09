@@ -45,6 +45,12 @@ let tests = "fuzzy-path" >::: [
       ["abC"; "abcd"; "AlphaBetaCappa"; "alphabetacappa"]
       result;
 
+    let result = Fuzzy_path.search "ABC" matcher in
+    assert_values
+      ~ctxt
+      ["abC"; "abcd"; "AlphaBetaCappa"; "alphabetacappa"]
+      result;
+
     let result = Fuzzy_path.search "t/i/a/t/d" matcher in
     assert_values
       ~ctxt
@@ -73,21 +79,6 @@ let tests = "fuzzy-path" >::: [
         "/this/is/a/test/dir";
         "/////ThisIsATestDir";
         "thisisatestdir";
-      ]
-      result;
-  );
-
-  "defaults_case_insensitive" >:: (fun ctxt ->
-    let matcher = Fuzzy_path.init candidates in
-    let options = Fuzzy_path.{ default_options with smart_case = true } in
-    let result = Fuzzy_path.search ~options "ABC" matcher in
-    assert_values
-      ~ctxt
-      [
-        "AlphaBetaCappa";
-        "abC";
-        "abcd";
-        "alphabetacappa";
       ]
       result;
   );

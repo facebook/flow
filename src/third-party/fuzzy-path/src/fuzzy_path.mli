@@ -6,9 +6,6 @@
  *)
 
 type options = {
-  (** Prefers case-sensitive matches when the query contains an uppercase letter. *)
-  smart_case: bool;
-
   first_match_can_be_weak: bool;
 
   num_threads: int;
