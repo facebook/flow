@@ -562,7 +562,10 @@ and dump_use_t_ (depth, tvars) cx t =
           match (Type.Property.read_t p, Type.Property.write_t p) with
           | (Some t, _)
           | (_, Some t) ->
-            NameUtils.Map.add k { Object.prop_t = t; is_own = true; is_method = false } acc
+            NameUtils.Map.add
+              k
+              { Object.prop_t = t; is_own = true; is_method = false; polarity = Polarity.Neutral }
+              acc
           | _ -> acc)
         prop_map
         NameUtils.Map.empty

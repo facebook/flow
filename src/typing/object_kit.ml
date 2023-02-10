@@ -135,7 +135,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let polarity = Polarity.Neutral in
         let props =
           NameUtils.Map.map
-            (fun { Object.prop_t = t; is_own = _; is_method } ->
+            (fun { Object.prop_t = t; is_own = _; is_method; polarity = _ } ->
               if is_method then
                 Method (None, t)
               else
@@ -180,7 +180,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let polarity = Polarity.Neutral in
         let props =
           NameUtils.Map.map
-            (fun { Object.prop_t = t; is_own = _; is_method } ->
+            (fun { Object.prop_t = t; is_own = _; is_method; polarity = _ } ->
               if is_method then
                 Method (None, t)
               else
@@ -343,7 +343,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let flags = { obj_kind; frozen = false } in
             let props =
               NameUtils.Map.map
-                (fun (t, m) -> { Object.prop_t = t; is_own = true; is_method = m })
+                (fun (t, m) ->
+                  { Object.prop_t = t; is_own = true; is_method = m; polarity = Polarity.Neutral })
                 pmap'
             in
             let slice' =
@@ -391,7 +392,12 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             Base.Option.value_map children ~default:config_props ~f:(fun children ->
                 NameUtils.Map.add
                   (OrdinaryName "children")
-                  { Object.prop_t = children; is_own = true; is_method = false }
+                  {
+                    Object.prop_t = children;
+                    is_own = true;
+                    is_method = false;
+                    polarity = prop_polarity;
+                  }
                   config_props
             )
           in
@@ -427,8 +433,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     let p2 = Slice_utils.get_prop defaults_reason p2 defaults_dict in
                     match (p1, p2) with
                     | (None, None) -> None
-                    | (Some { Object.prop_t = t; is_own = _; is_method = m }, None) -> Some (t, m)
-                    | (None, Some { Object.prop_t = t; is_own = _; is_method = m }) -> Some (t, m)
+                    | (Some { Object.prop_t = t; is_own = _; is_method = m; polarity = _ }, None) ->
+                      Some (t, m)
+                    | (None, Some { Object.prop_t = t; is_own = _; is_method = m; polarity = _ }) ->
+                      Some (t, m)
                     (* If a property is defined in both objects, and the first property's
                      * type includes void then we want to replace every occurrence of void
                      * with the second property's type. This is consistent with the behavior
@@ -436,8 +444,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                      * `f(undefined)` and there is a default value for the first argument,
                      * then we will ignore the void type and use the type for the default
                      * parameter instead. *)
-                    | ( Some { Object.prop_t = t1; is_own = _; is_method = m1 },
-                        Some { Object.prop_t = t2; is_own = _; is_method = m2 }
+                    | ( Some { Object.prop_t = t1; is_own = _; is_method = m1; polarity = _ },
+                        Some { Object.prop_t = t2; is_own = _; is_method = m2; polarity = _ }
                       ) ->
                       (* Use CondT to replace void with t1. *)
                       let t =
@@ -494,7 +502,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | None ->
               let props =
                 NameUtils.Map.map
-                  (fun { Object.prop_t = t; is_own = _; is_method } -> (t, is_method))
+                  (fun { Object.prop_t = t; is_own = _; is_method; polarity = _ } -> (t, is_method))
                   config_props
               in
               (* Create a new dictionary from our config's dictionary with a

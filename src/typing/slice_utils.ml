@@ -109,7 +109,12 @@ let read_prop r flags x p =
       let t = DefT (reason, bogus_trust (), MixedT Mixed_everything) in
       t
   in
-  { Object.prop_t = t; is_own = Obj_type.is_exact flags.obj_kind; is_method }
+  {
+    Object.prop_t = t;
+    is_own = Obj_type.is_exact flags.obj_kind;
+    is_method;
+    polarity = Polarity.Neutral;
+  }
 
 let read_dict r { value; dict_polarity; _ } =
   if Polarity.compat (dict_polarity, Polarity.Positive) then
@@ -144,7 +149,13 @@ let get_prop r p dict =
   match (p, dict) with
   | (Some _, _) -> p
   | (None, Some d) ->
-    Some { Object.prop_t = TypeUtil.optional (read_dict r d); is_own = true; is_method = false }
+    Some
+      {
+        Object.prop_t = TypeUtil.optional (read_dict r d);
+        is_own = true;
+        is_method = false;
+        polarity = Polarity.Neutral;
+      }
   | (None, None) -> None
 
 (* Lift a pairwise function to a function over a resolved list *)
@@ -290,7 +301,7 @@ let spread2
       let (t1, opt1, missing_prop1) = type_optionality_and_missing_property t1 in
       let (t2, opt2, missing_prop2) = type_optionality_and_missing_property t2 in
       if not opt2 then
-        { Object.prop_t = t2; is_own = true; is_method = method2 }
+        { Object.prop_t = t2; is_own = true; is_method = method2; polarity = Polarity.Neutral }
       else if opt1 && opt2 then
         let prop_t =
           make_optional_with_possible_missing_props
@@ -303,10 +314,15 @@ let spread2
         (* Since we cannot be sure which is spread, if either
          * are methods we must treat the result as a method *)
         let is_method = method2 || method1 in
-        { Object.prop_t; is_own = true; is_method }
+        { Object.prop_t; is_own = true; is_method; polarity = Polarity.Neutral }
       (* In this case, we know opt2 is true and opt1 is false *)
       else
-        { Object.prop_t = union t1 t2; is_own = true; is_method = method1 || method2 }
+        {
+          Object.prop_t = union t1 t2;
+          is_own = true;
+          is_method = method1 || method2;
+          polarity = Polarity.Neutral;
+        }
     in
     let props =
       try
@@ -315,12 +331,12 @@ let spread2
              (fun x p1 p2 ->
                match (p1, p2) with
                | (None, None) -> None
-               | (_, Some { Object.prop_t = p2; is_method; is_own = _ }) when inline2 ->
-                 Some { Object.prop_t = p2; is_own = true; is_method }
+               | (_, Some { Object.prop_t = p2; is_method; is_own = _; polarity }) when inline2 ->
+                 Some { Object.prop_t = p2; is_own = true; is_method; polarity }
                | (Some p1, Some p2) -> Some (merge_props x p1 p2)
-               | (Some { Object.prop_t = p1; is_method; is_own = _ }, None) ->
+               | (Some { Object.prop_t = p1; is_method; is_own = _; polarity }, None) ->
                  if exact2 || inline2 then
-                   Some { Object.prop_t = p1; is_own = true; is_method }
+                   Some { Object.prop_t = p1; is_own = true; is_method; polarity }
                  else
                    raise
                      (CannotSpreadError
@@ -353,7 +369,7 @@ let spread2
                 *  The if statement below handles 1. and 2., and the else statement
                 *  handles 3. and the case when p2 is not optional.
                 *)
-               | (None, Some ({ Object.prop_t = t; is_method; is_own = _ } as p2)) ->
+               | (None, Some ({ Object.prop_t = t; is_method; is_own = _; polarity } as p2)) ->
                  let (_, opt2, _) = type_optionality_and_missing_property p2 in
                  (match flags1.obj_kind with
                  | Indexed _
@@ -386,7 +402,7 @@ let spread2
                            }
                         )
                      )
-                 | _ -> Some { Object.prop_t = t; is_own = true; is_method }))
+                 | _ -> Some { Object.prop_t = t; is_own = true; is_method; polarity }))
              props1
              props2
           )
@@ -449,7 +465,7 @@ let spread_mk_object cx reason target { Object.reason = _; props; flags; generic
   let open Object.Spread in
   let props =
     NameUtils.Map.map
-      (fun { Object.prop_t; is_method; is_own = _ } ->
+      (fun { Object.prop_t; is_method; is_own = _; polarity = _ } ->
         if is_method then
           Method (None, prop_t)
         else
@@ -647,17 +663,17 @@ let object_rest
            * subtracted and so is optional. If props2 is not exact then we may
            * optionally have some undocumented prop. *)
           | ( (Sound | IgnoreExactAndOwn),
-              Some { Object.prop_t = t1; is_method; is_own = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _ },
               Some { Object.prop_t = OptionalT _ as t2; _ },
               _
             )
           | ( Sound,
-              Some { Object.prop_t = t1; is_method; is_own = _ },
-              Some { Object.prop_t = t2; is_own = false; is_method = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _ },
+              Some { Object.prop_t = t2; is_own = false; is_method = _; polarity = _ },
               _
             )
           | ( Sound,
-              Some { Object.prop_t = t1; is_method; is_own = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _ },
               Some { Object.prop_t = t2; _ },
               false
             ) ->
@@ -686,7 +702,8 @@ let object_rest
           (* If we have some property in our first object and none in our second
            * object, but our second object is inexact then we want to make our
            * property optional and flow that type to mixed. *)
-          | (Sound, Some { Object.prop_t = t1; is_method; is_own = _ }, None, false) ->
+          | (Sound, Some { Object.prop_t = t1; is_method; is_own = _; polarity = _ }, None, false)
+            ->
             subt_check ~use_op cx (t1, MixedT.make r2 |> with_trust bogus_trust);
             let p =
               if is_method then
@@ -702,7 +719,11 @@ let object_rest
            * prop then we will copy over that prop. If the first object's prop is
            * non-own then sometimes we may not copy it over so we mark it
            * as optional. *)
-          | (IgnoreExactAndOwn, Some { Object.prop_t = t; is_method; is_own = _ }, None, _) ->
+          | ( IgnoreExactAndOwn,
+              Some { Object.prop_t = t; is_method; is_own = _; polarity = _ },
+              None,
+              _
+            ) ->
             let p =
               if is_method then
                 Method (None, t)
@@ -710,8 +731,11 @@ let object_rest
                 Field (None, t, Polarity.Neutral)
             in
             Some p
-          | ((Omit | ReactConfigMerge _), Some { Object.prop_t = t; is_method; is_own = _ }, None, _)
-            ->
+          | ( (Omit | ReactConfigMerge _),
+              Some { Object.prop_t = t; is_method; is_own = _; polarity = _ },
+              None,
+              _
+            ) ->
             let p =
               if is_method then
                 Method (None, t)
@@ -719,7 +743,7 @@ let object_rest
                 Field (None, t, Polarity.Positive)
             in
             Some p
-          | (Sound, Some { Object.prop_t = t; is_own = true; is_method }, None, _) ->
+          | (Sound, Some { Object.prop_t = t; is_own = true; is_method; polarity = _ }, None, _) ->
             let p =
               if is_method then
                 Method (None, t)
@@ -727,7 +751,7 @@ let object_rest
                 Field (None, t, Polarity.Neutral)
             in
             Some p
-          | (Sound, Some { Object.prop_t = t; is_own = false; is_method }, None, _) ->
+          | (Sound, Some { Object.prop_t = t; is_own = false; is_method; polarity = _ }, None, _) ->
             let p =
               if is_method then
                 Method (None, optional t)
@@ -752,7 +776,7 @@ let object_rest
            * the behavior of other object rest merge modes implemented in this
            * pattern match. *)
           | ( ReactConfigMerge _,
-              Some { Object.prop_t = t1; is_method; is_own = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _ },
               Some { Object.prop_t = OptionalT { reason = _; type_ = t2; use_desc = _ }; _ },
               _
             ) ->
@@ -779,7 +803,7 @@ let object_rest
            * {|p?|} is the best solution since it accepts more valid
            * programs then {||}. *)
           | ( ReactConfigMerge _,
-              Some { Object.prop_t = t1; is_method; is_own = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _ },
               Some { Object.prop_t = t2; _ },
               _
             ) ->
@@ -888,7 +912,7 @@ let object_read_only =
     let { Object.reason = r; props; flags; generics; interface } = slice in
     let props =
       NameUtils.Map.map
-        (fun { Object.prop_t; is_method; is_own = _ } ->
+        (fun { Object.prop_t; is_method; is_own = _; polarity = _ } ->
           if is_method then
             Method (None, prop_t)
           else
@@ -932,7 +956,7 @@ let object_partial =
     let { Object.reason = r; props; flags; generics; interface } = slice in
     let props =
       NameUtils.Map.map
-        (fun { Object.prop_t; is_method; is_own = _ } ->
+        (fun { Object.prop_t; is_method; is_own = _; polarity = _ } ->
           if is_method then
             Method (None, prop_t)
           else
@@ -994,8 +1018,8 @@ let intersect2
       IntersectionT (reason, InterRep.make t1 t2 [])
   in
   let merge_props
-      { Object.prop_t = t1; is_own = own1; is_method = m1 }
-      { Object.prop_t = t2; is_own = own2; is_method = m2 } =
+      { Object.prop_t = t1; is_own = own1; is_method = m1; polarity = p1 }
+      { Object.prop_t = t2; is_own = own2; is_method = m2; polarity = p2 } =
     let (t1, t2, opt) =
       match (t1, t2) with
       | ( OptionalT { reason = _; type_ = t1; use_desc = _ },
@@ -1014,13 +1038,23 @@ let intersect2
       else
         t
     in
-    { Object.prop_t = t; is_own = own1 || own2; is_method = m1 || m2 }
+    {
+      Object.prop_t = t;
+      is_own = own1 || own2;
+      is_method = m1 || m2;
+      polarity = Polarity.mult (p1, p2);
+    }
   in
   let props =
     NameUtils.Map.merge
       (fun _ p1 p2 ->
         let read_dict r d =
-          { Object.prop_t = optional (read_dict r d); is_own = true; is_method = false }
+          {
+            Object.prop_t = optional (read_dict r d);
+            is_own = true;
+            is_method = false;
+            polarity = Polarity.Neutral;
+          }
         in
         match (p1, p2) with
         | (None, None) -> None

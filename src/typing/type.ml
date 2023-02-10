@@ -2520,6 +2520,7 @@ and Object : sig
     prop_t: TypeTerm.t;
     is_own: bool;
     is_method: bool;
+    polarity: Polarity.t;
   }
 
   and dict = TypeTerm.dicttype option

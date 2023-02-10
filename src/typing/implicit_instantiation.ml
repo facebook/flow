@@ -415,7 +415,7 @@ struct
         ~obj_kind:s.Object.flags.obj_kind
         ~props:
           (NameUtils.Map.map
-             (fun { Object.prop_t; is_own = _; is_method = _ } ->
+             (fun { Object.prop_t; is_own = _; is_method = _; polarity = _ } ->
                Field (None, prop_t, Polarity.Neutral))
              s.Object.props
           )
