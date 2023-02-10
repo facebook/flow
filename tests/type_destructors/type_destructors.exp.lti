@@ -104,48 +104,6 @@ References:
                                  ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ non_maybe_type.js:52:21
-
-Cannot assign `y.filter(...)` to `z` because number [1] is incompatible with string [2] in type argument `T` [3].
-[incompatible-type-arg]
-
-   non_maybe_type.js:52:21
-   52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
-                           ^^^^^^^^^^^^^^^^^
-
-References:
-   non_maybe_type.js:42:27
-   42| declare function bar () : Node
-                                 ^^^^ [1]
-   non_maybe_type.js:52:13
-   52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
-                   ^^^^ [2]
-   non_maybe_type.js:35:17
-   35| declare class A<T> {
-                       ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------ non_maybe_type.js:52:21
-
-Cannot assign `y.filter(...)` to `z` because string [1] is incompatible with number [2] in type argument `T` [3].
-[incompatible-type-arg]
-
-   non_maybe_type.js:52:21
-   52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
-                           ^^^^^^^^^^^^^^^^^
-
-References:
-   non_maybe_type.js:42:27
-   42| declare function bar () : Node
-                                 ^^^^ [1]
-   non_maybe_type.js:52:13
-   52|   let z : A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
-                   ^^^^ [2]
-   non_maybe_type.js:35:17
-   35| declare class A<T> {
-                       ^ [3]
-
-
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:55:2
 
 Cannot cast `'hi'` to `$NonMaybeType` because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -176,21 +134,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:60:2
 
-Cannot cast `undefined` to `NonMaybeNumber` because: [incompatible-cast]
- - Either undefined [1] is incompatible with empty [2].
- - Or undefined [1] is incompatible with number [3].
+Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    non_maybe_type.js:60:2
    60| (undefined: NonMaybeNumber); // Error
         ^^^^^^^^^ [1]
 
 References:
-   non_maybe_type.js:57:60
-   57| type NonMaybeNumber = $NonMaybeType<$Values<{a: number, b: void}>>;
-                                                                  ^^^^ [2]
    non_maybe_type.js:57:49
    57| type NonMaybeNumber = $NonMaybeType<$Values<{a: number, b: void}>>;
-                                                       ^^^^^^ [3]
+                                                       ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- property_type.js:1:18
@@ -248,8 +201,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar3.js:21:10
 
-Cannot cast `fn2(...)` to function type because `A` [1] is incompatible with `B` [2] in the first parameter.
-[incompatible-cast]
+Cannot call `fn2` with function bound to `x` because `A` [1] is incompatible with `B` [2] in the first parameter.
+[incompatible-call]
 
    tvar3.js:21:10
    21| (fn2((a: A) => {}): B => void); // Error
@@ -278,27 +231,40 @@ References:
                               ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:22:6
+Error --------------------------------------------------------------------------------------------------- tvar3.js:22:13
 
-Cannot call `fn3` with `a` bound to `x` because `A` [1] is incompatible with `B` [2]. [incompatible-call]
+Cannot call `fn3` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
+[incompatible-call]
 
-   tvar3.js:22:6
+   tvar3.js:22:13
    22| (fn3(a, (b: B) => {}): C); // Error
-            ^
+                   ^ [1]
 
 References:
    tvar3.js:6:16
     6| declare var a: A;
-                      ^ [1]
-   tvar3.js:22:13
-   22| (fn3(a, (b: B) => {}): C); // Error
-                   ^ [2]
+                      ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tvar3.js:23:13
 
-Cannot cast `fn4(...)` to function type because `B` [1] is incompatible with `C` [2] in the first parameter.
-[incompatible-cast]
+Cannot call `fn4` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
+[incompatible-call]
+
+   tvar3.js:23:13
+   23| (fn4(a, (b: B) => {}): C => void); // Error
+                   ^ [1]
+
+References:
+   tvar3.js:6:16
+    6| declare var a: A;
+                      ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- tvar3.js:23:13
+
+Cannot call `fn4` with function bound to `y` because `B` [1] is incompatible with `C` [2] in the first parameter.
+[incompatible-call]
 
    tvar3.js:23:13
    23| (fn4(a, (b: B) => {}): C => void); // Error
@@ -308,23 +274,6 @@ References:
    tvar3.js:23:24
    23| (fn4(a, (b: B) => {}): C => void); // Error
                               ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:23:6
-
-Cannot call `fn4` with `a` bound to `x` because `A` [1] is incompatible with `B` [2]. [incompatible-call]
-
-   tvar3.js:23:6
-   23| (fn4(a, (b: B) => {}): C => void); // Error
-            ^
-
-References:
-   tvar3.js:6:16
-    6| declare var a: A;
-                      ^ [1]
-   tvar3.js:23:13
-   23| (fn4(a, (b: B) => {}): C => void); // Error
-                   ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:25:2
@@ -379,23 +328,6 @@ References:
                               ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:27:6
-
-Cannot call `fn7` with `a` bound to `x` because `A` [1] is incompatible with `B` [2]. [incompatible-call]
-
-   tvar3.js:27:6
-   27| (fn7(a, (b: B) => {}): C); // Error
-            ^
-
-References:
-   tvar3.js:6:16
-    6| declare var a: A;
-                      ^ [1]
-   tvar3.js:27:13
-   27| (fn7(a, (b: B) => {}): C); // Error
-                   ^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- tvar3.js:27:13
 
 Cannot call `fn7` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
@@ -413,7 +345,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:2
 
-Cannot cast `fn8(...)` to function type because `B` [1] is incompatible with `C` [2] in the first parameter.
+Cannot cast `fn8(...)` to function type because `A` [1] is incompatible with `C` [2] in the first parameter.
 [incompatible-cast]
 
    tvar3.js:28:2
@@ -421,29 +353,12 @@ Cannot cast `fn8(...)` to function type because `B` [1] is incompatible with `C`
         ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   tvar3.js:28:13
-   28| (fn8(a, (b: B) => {}): C => void); // Error
-                   ^ [1]
-   tvar3.js:28:24
-   28| (fn8(a, (b: B) => {}): C => void); // Error
-                              ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:6
-
-Cannot call `fn8` with `a` bound to `x` because `A` [1] is incompatible with `B` [2]. [incompatible-call]
-
-   tvar3.js:28:6
-   28| (fn8(a, (b: B) => {}): C => void); // Error
-            ^
-
-References:
    tvar3.js:6:16
     6| declare var a: A;
                       ^ [1]
-   tvar3.js:28:13
+   tvar3.js:28:24
    28| (fn8(a, (b: B) => {}): C => void); // Error
-                   ^ [2]
+                              ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tvar3.js:28:13
@@ -461,32 +376,19 @@ References:
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar4.js:24:1
+Error --------------------------------------------------------------------------------------------------- tvar4.js:25:29
 
-Cannot call `fn1` because property `p` is missing in object type [1]. [prop-missing]
+Cannot call `fn2(...)` with `'foo'` bound to the first parameter because string [1] is incompatible with number [2].
+[incompatible-call]
 
-   tvar4.js:24:1
-   24| fn1({p: 42}, (x: {}) => {}); // over-restrictive in classic, not in LTI
-       ^^^
+   tvar4.js:25:29
+   25| fn2({p: 42}, (x: {}) => {})('foo');
+                                   ^^^^^ [1]
 
 References:
-   tvar4.js:24:18
-   24| fn1({p: 42}, (x: {}) => {}); // over-restrictive in classic, not in LTI
-                        ^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- tvar4.js:25:1
-
-Cannot call `fn2` because property `p` is missing in object type [1]. [prop-missing]
-
-   tvar4.js:25:1
+   tvar4.js:25:9
    25| fn2({p: 42}, (x: {}) => {})('foo');
-       ^^^
-
-References:
-   tvar4.js:25:18
-   25| fn2({p: 42}, (x: {}) => {})('foo');
-                        ^^ [1]
+               ^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tvar4.js:33:48
@@ -516,6 +418,21 @@ References:
    tvar4.js:27:57
    27| function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
                                                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- tvar4.js:38:9
+
+Cannot call `fn3` because property `p` is missing in object type [1] but exists in object type [2] in type argument `T`.
+[prop-missing]
+
+   tvar4.js:38:9
+   38| fn3((x: {foo: number}) => {})({foo: 42});
+               ^^^^^^^^^^^^^ [1]
+
+References:
+   tvar4.js:27:17
+   27| function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
+                       ^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tvar4.js:43:17
@@ -562,9 +479,25 @@ References:
                ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- tvar4.js:51:9
+
+Cannot call `fn4` because property `p` is missing in object type [1] but exists in object type [2] in type argument `T`.
+[prop-missing]
+
+   tvar4.js:51:9
+   51| fn4((x: {||}) => {})(42);
+               ^^^^ [1]
+
+References:
+   tvar4.js:40:17
+   40| function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
+                       ^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- tvar5.js:5:13
 
-Cannot cast `unReadOnly(...)` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot call `unReadOnly` with `foo` bound to `thing` because object type [1] is incompatible with empty [2].
+[incompatible-call]
 
    tvar5.js:5:13
    5| (unReadOnly(foo): empty); // error
@@ -637,7 +570,4 @@ References:
 
 
 
-Found 41 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
+Found 38 errors

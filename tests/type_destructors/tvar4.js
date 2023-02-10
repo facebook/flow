@@ -21,7 +21,7 @@ function fn2<T: {p: any}>(a: T, b: T => void): ($PropertyType<T, 'p'>) => void {
 // As we show in the following examples, there are some cases where we do need
 // our type destructor to be restrictive. However, in this case we are
 // over-restrictive.
-fn1({p: 42}, (x: {}) => {});
+fn1({p: 42}, (x: {}) => {}); // over-restrictive in classic, not in LTI
 fn2({p: 42}, (x: {}) => {})('foo');
 
 function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
@@ -44,8 +44,8 @@ function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
 }
 
 // Here is an error we need to catch.
-fn4((x: {p: string}) => {})(42);
+fn4((x: {|p: string|}) => {})(42);
 
 // However, we are overly restrictive and error here. This would be an OK
 // program to accept.
-fn4((x: {}) => {})(42);
+fn4((x: {||}) => {})(42);
