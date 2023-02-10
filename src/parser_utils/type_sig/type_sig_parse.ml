@@ -1731,6 +1731,13 @@ and maybe_special_generic opts scope tbls xs loc g =
 and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   let open Ast.Type.TypeArgs in
   function
+  | name when SSet.mem name opts.suppress_types -> Annot (Any loc)
+  | name when SSet.mem name xs ->
+    (* TODO: error if targs <> None *)
+    Annot (Bound { ref_loc; name })
+  | name when Option.is_some (Scope.lookup scope name) ->
+    let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
+    nominal_type opts scope tbls xs loc name targs
   | "Array" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->
@@ -2159,14 +2166,9 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (Private (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | name when SSet.mem name opts.suppress_types -> Annot (Any loc)
   | name ->
-    if SSet.mem name xs then
-      (* TODO: error if targs <> None *)
-      Annot (Bound { ref_loc; name })
-    else
-      let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
-      nominal_type opts scope tbls xs loc name targs
+    let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
+    nominal_type opts scope tbls xs loc name targs
 
 and tparams =
   let module T = T.TypeParam in

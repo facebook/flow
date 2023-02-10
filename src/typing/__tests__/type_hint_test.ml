@@ -95,7 +95,29 @@ end = struct
     let (_, info) =
       NameResolver.program_with_scope
         cx
-        (program_loc, { Flow_ast.Program.statements = []; comments = None; all_comments = [] })
+        ( program_loc,
+          {
+            Flow_ast.Program.statements =
+              [
+                (* We construct a fake program `type _ = annot` with locations of annot will line
+                   up with location of `annot` when it's parsed without `type _ = `. This will
+                   allow name_resolver to correctly find the name-def relation to decide what's
+                   globals and what's not. *)
+                ( ALoc.none,
+                  Flow_ast.Statement.TypeAlias
+                    {
+                      Flow_ast.Statement.TypeAlias.id =
+                        (ALoc.none, { Flow_ast.Identifier.name = "_"; comments = None });
+                      tparams = None;
+                      right = t_ast;
+                      comments = None;
+                    }
+                );
+              ];
+            comments = None;
+            all_comments = [];
+          }
+        )
     in
     let env = Loc_env.with_info Name_def.Global Loc_collections.ALocMap.empty info in
     Context.set_environment cx env;

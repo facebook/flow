@@ -472,9 +472,58 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             }
         )
       in
+
       let use_op reason = Op (TypeApplication { type' = reason }) in
+      let local_generic_type () =
+        let reason = mk_reason (RType (OrdinaryName name)) loc in
+        let c = type_identifier cx name name_loc in
+        let (t, targs) = mk_nominal_type cx reason tparams_map (c, targs) in
+        reconstruct_ast t ~id_t:c targs
+      in
       begin
         match name with
+        | "this" ->
+          if Subst_name.Map.mem (Subst_name.Name "this") tparams_map then
+            (* We model a this type like a type parameter. The bound on a this
+               type reflects the interface of `this` exposed in the current
+               environment. Currently, we only support this types in a class
+               environment: a this type in class C is bounded by C. *)
+            check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+                reconstruct_ast
+                  (ConsGen.reposition
+                     cx
+                     loc
+                     ~annot_loc:loc
+                     (Subst_name.Map.find (Subst_name.Name "this") tparams_map)
+                  )
+                  None
+            )
+          else (
+            Flow_js_utils.add_output cx (Error_message.EUnexpectedThisType loc);
+            Tast_utils.error_mapper#type_ t_ast
+          )
+        (* TODO move these to type aliases once optional type args
+           work properly in type aliases: #7007731 *)
+        | type_name when is_suppress_type cx type_name ->
+          (* Optional type params are info-only, validated then forgotten. *)
+          let (_, targs) = convert_type_params () in
+          reconstruct_ast (AnyT.at AnnotatedAny loc) targs
+        (* in-scope type vars *)
+        | _ when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
+          check_type_arg_arity cx loc t_ast targs 0 (fun () ->
+              let t =
+                ConsGen.reposition
+                  cx
+                  loc
+                  ~annot_loc:loc
+                  (Subst_name.Map.find (Subst_name.Name name) tparams_map)
+              in
+              reconstruct_ast t None
+          )
+        | _
+          when Env.local_scope_entry_exists cx name_loc
+               && Context.current_phase cx <> Context.InitLib ->
+          local_generic_type ()
         (* Temporary base types with literal information *)
         | "$TEMPORARY$number" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -856,26 +905,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   )
               | _ -> error_type cx loc (Error_message.ECharSetAnnot loc) t_ast
           )
-        | "this" ->
-          if Subst_name.Map.mem (Subst_name.Name "this") tparams_map then
-            (* We model a this type like a type parameter. The bound on a this
-               type reflects the interface of `this` exposed in the current
-               environment. Currently, we only support this types in a class
-               environment: a this type in class C is bounded by C. *)
-            check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-                reconstruct_ast
-                  (ConsGen.reposition
-                     cx
-                     loc
-                     ~annot_loc:loc
-                     (Subst_name.Map.find (Subst_name.Name "this") tparams_map)
-                  )
-                  None
-            )
-          else (
-            Flow_js_utils.add_output cx (Error_message.EUnexpectedThisType loc);
-            Tast_utils.error_mapper#type_ t_ast
-          )
         (* Class<T> is the type of the class whose instances are of type T *)
         | "Class" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -1078,24 +1107,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
          *
          * var x: $FlowFixMe<number> = 123;
          *)
-        (* TODO move these to type aliases once optional type args
-           work properly in type aliases: #7007731 *)
-        | type_name when is_suppress_type cx type_name ->
-          (* Optional type params are info-only, validated then forgotten. *)
-          let (_, targs) = convert_type_params () in
-          reconstruct_ast (AnyT.at AnnotatedAny loc) targs
-        (* in-scope type vars *)
-        | _ when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
-          check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-              let t =
-                ConsGen.reposition
-                  cx
-                  loc
-                  ~annot_loc:loc
-                  (Subst_name.Map.find (Subst_name.Name name) tparams_map)
-              in
-              reconstruct_ast t None
-          )
         | "$Pred" ->
           let fun_reason = mk_annot_reason (RCustom "abstract predicate function") loc in
           let static_reason = mk_reason (RCustom "abstract predicate static") loc in
@@ -1171,11 +1182,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | _ -> error_type cx loc (Error_message.EPrivateAnnot loc) t_ast
           )
         (* other applications with id as head expr *)
-        | _ ->
-          let reason = mk_reason (RType (OrdinaryName name)) loc in
-          let c = type_identifier cx name name_loc in
-          let (t, targs) = mk_nominal_type cx reason tparams_map (c, targs) in
-          reconstruct_ast t ~id_t:c targs
+        | _ -> local_generic_type ()
       end
     | ( loc,
         Function

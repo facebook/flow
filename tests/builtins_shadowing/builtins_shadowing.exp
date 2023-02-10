@@ -1,0 +1,36 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
+
+Cannot cast `v1` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:3:2
+   3| (v1: empty); // error: string ~> empty
+       ^^
+
+References:
+   test.js:2:11
+   2| const v1: Array = "";
+                ^^^^^ [1]
+   test.js:3:6
+   3| (v1: empty); // error: string ~> empty
+           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:2
+
+Cannot cast `v2` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:7:2
+   7| (v2: empty); // error: number ~> empty
+       ^^
+
+References:
+   test.js:6:11
+   6| const v2: $Call = 3;
+                ^^^^^ [1]
+   test.js:7:6
+   7| (v2: empty); // error: number ~> empty
+           ^^^^^ [2]
+
+
+
+Found 2 errors
