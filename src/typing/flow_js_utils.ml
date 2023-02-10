@@ -2065,7 +2065,7 @@ let any_mod_src_keep_placeholder new_src = function
   | Placeholder -> Placeholder
   | _ -> new_src
 
-let flow_unary_arith l reason kind add_output =
+let flow_unary_arith cx ?trace l reason kind =
   let open UnaryArithKind in
   match (kind, l) with
   | (Minus, DefT (_, trust, NumT (Literal (_, (value, raw))))) ->
@@ -2077,7 +2077,7 @@ let flow_unary_arith l reason kind add_output =
     DefT (replace_desc_reason RBigInt reason, trust, BigIntT (Literal (None, (value, raw))))
   | (Minus, DefT (_, _, BigIntT (AnyLiteral | Truthy))) -> l
   | (Plus, DefT (reason_bigint, _, BigIntT _)) ->
-    add_output (Error_message.EBigIntNumCoerce reason_bigint);
+    add_output cx ?trace (Error_message.EBigIntNumCoerce reason_bigint);
     AnyT.error reason
   | (Plus, _) -> NumT.why reason (bogus_trust ())
   | (BitNot, DefT (_, _, NumT _)) -> NumT.why reason (bogus_trust ())
@@ -2088,10 +2088,10 @@ let flow_unary_arith l reason kind add_output =
     let src = any_mod_src_keep_placeholder Untyped src in
     AnyT.why src reason
   | (_, _) ->
-    add_output (Error_message.EArithmeticOperand (reason_of_t l));
+    add_output cx ?trace (Error_message.EArithmeticOperand (reason_of_t l));
     AnyT.error reason
 
-let flow_arith reason l r kind add_output =
+let flow_arith cx ?trace reason l r kind =
   let open ArithKind in
   let (_, op) = kind in
   match (op, l, r) with
@@ -2108,7 +2108,7 @@ let flow_arith reason l r kind add_output =
   (* num <> num *)
   | (_, DefT (_, _, NumT _), DefT (_, _, NumT _)) -> NumT.why reason |> with_trust bogus_trust
   | (RShift3, DefT (reason, _, BigIntT _), _) ->
-    add_output (Error_message.EBigIntRShift3 reason);
+    add_output cx ?trace (Error_message.EBigIntRShift3 reason);
     AnyT.error reason
   (* bigint <> bigint *)
   | (_, DefT (_, _, BigIntT _), DefT (_, _, BigIntT _)) ->
@@ -2122,6 +2122,8 @@ let flow_arith reason l r kind add_output =
     StrT.why reason |> with_trust bogus_trust
   | _ ->
     add_output
+      cx
+      ?trace
       (Error_message.EInvalidBinaryArith
          { reason_out = reason; reason_l = reason_of_t l; reason_r = reason_of_t r; kind }
       );

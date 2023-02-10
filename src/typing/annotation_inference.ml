@@ -1040,12 +1040,11 @@ module rec ConsGen : S = struct
           else
             (lhs_t, rhs_t)
         in
-        Flow_js_utils.flow_arith reason lhs_t rhs_t kind (Flow_js_utils.add_output cx)
+        Flow_js_utils.flow_arith cx reason lhs_t rhs_t kind
     (*************************)
     (* Unary arith operators *)
     (*************************)
-    | (l, Annot_UnaryArithT (reason, kind)) ->
-      Flow_js_utils.flow_unary_arith l reason kind (Flow_js_utils.add_output cx)
+    | (l, Annot_UnaryArithT (reason, kind)) -> Flow_js_utils.flow_unary_arith cx l reason kind
     (********************)
     (* Function Statics *)
     (********************)

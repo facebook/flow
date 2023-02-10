@@ -4618,7 +4618,7 @@ struct
         (* unary arithmetic operators *)
         (******************************)
         | (l, UnaryArithT { reason; result_t; kind }) ->
-          let t = flow_unary_arith l reason kind (add_output cx ~trace) in
+          let t = flow_unary_arith ~trace cx l reason kind in
           rec_flow_t cx trace ~use_op:unknown_use (t, result_t)
         (************************)
         (* binary `in` operator *)
@@ -5507,7 +5507,7 @@ struct
         else
           (l, r)
       in
-      let t = Flow_js_utils.flow_arith reason l r kind (add_output cx ~trace) in
+      let t = Flow_js_utils.flow_arith cx ~trace reason l r kind in
       rec_flow_t cx trace ~use_op:unknown_use (t, u)
 
   (**
