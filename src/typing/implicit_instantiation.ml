@@ -8,6 +8,7 @@
 open Type
 open Reason
 open Polarity
+open Utils_js
 module TypeParamMarked = Marked.Make (Subst_name)
 module Marked = TypeParamMarked
 module Check = Implicit_instantiation_check
@@ -1034,15 +1035,36 @@ module Observer : OBSERVER with type output = inferred_targ = struct
   let mod_inferred_default =
     TypeUtil.mod_reason_of_t (Reason.update_desc_reason (fun desc -> RTypeParamDefault desc))
 
-  let on_constant_tparam_missing_bounds _cx _name tparam =
+  let on_constant_tparam_missing_bounds cx name tparam =
     let inferred =
       match tparam.default with
       | None -> mod_inferred_bound tparam.Type.bound
       | Some t -> mod_inferred_default t
     in
+    Debug_js.Verbose.print_if_verbose_lazy
+      cx
+      ( lazy
+        [
+          spf
+            "Constant type parameter %s is pinned to %s"
+            (Subst_name.string_of_subst_name name)
+            (Debug_js.dump_t cx ~depth:3 inferred);
+        ]
+        );
     { tparam; inferred }
 
-  let on_pinned_tparam _cx _name tparam inferred = { tparam; inferred }
+  let on_pinned_tparam cx name tparam inferred =
+    Debug_js.Verbose.print_if_verbose_lazy
+      cx
+      ( lazy
+        [
+          spf
+            "Type parameter %s is pinned to %s"
+            (Subst_name.string_of_subst_name name)
+            (Debug_js.dump_t cx ~depth:3 inferred);
+        ]
+        );
+    { tparam; inferred }
 
   let on_missing_bounds cx ~use_op name tparam ~tparam_binder_reason ~instantiation_reason =
     match tparam.default with
