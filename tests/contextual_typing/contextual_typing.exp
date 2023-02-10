@@ -550,21 +550,6 @@ Cannot resolve name `unbound_type`. [cannot-resolve-name]
                                ^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------- poly_class_static_sanity_test.js:15:7
-
-Cannot call `Map` because an index signature declaring the expected key / value type is missing in `$Iterable` [1].
-[incompatible-call]
-
-   poly_class_static_sanity_test.js:15:7
-   15| List([Map({name: "abc"})]); // expected error
-             ^^^
-
-References:
-   poly_class_static_sanity_test.js:4:20
-    4|   static <T>(iter: immutable$JSIterable<T>): List<T>;
-                          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------- react_tests.js:19:6
 
 Cannot cast `props` to empty because props [1] is incompatible with empty [2]. [incompatible-cast]
@@ -916,4 +901,4 @@ References:
 
 
 
-Found 68 errors
+Found 67 errors

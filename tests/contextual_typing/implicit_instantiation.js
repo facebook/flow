@@ -179,3 +179,9 @@ function test16() {
   const safeParse = <T>(json: ?string): ?T => null;
   const foo: Array<string> = safeParse('') ?? []; // ok
 }
+
+function test17() {
+  declare function magic<T>(null): T;
+  declare function magic<T>(): T;
+  const _: interface {[key: string]: any} = { foo: magic() }; // ok
+}
