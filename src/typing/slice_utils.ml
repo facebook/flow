@@ -113,7 +113,7 @@ let read_prop r flags x p =
     Object.prop_t = t;
     is_own = Obj_type.is_exact flags.obj_kind;
     is_method;
-    polarity = Polarity.Neutral;
+    polarity = Property.polarity p;
   }
 
 let read_dict r { value; dict_polarity; _ } =
@@ -956,17 +956,17 @@ let object_partial =
     let { Object.reason = r; props; flags; generics; interface } = slice in
     let props =
       NameUtils.Map.map
-        (fun { Object.prop_t; is_method; is_own = _; polarity = _ } ->
+        (fun { Object.prop_t; is_method; is_own = _; polarity } ->
           if is_method then
             Method (None, prop_t)
           else
             match prop_t with
-            | OptionalT _ -> Field (None, prop_t, Polarity.Neutral)
+            | OptionalT _ -> Field (None, prop_t, polarity)
             | _ ->
               Field
                 ( None,
                   OptionalT { reason = reason_of_t prop_t; type_ = prop_t; use_desc = false },
-                  Polarity.Neutral
+                  polarity
                 ))
         props
     in

@@ -182,8 +182,24 @@ References:
                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- variance.js:11:5
 
-Found 13 errors
+Cannot assign `1` to `x.r` because property `r` is not writable. [cannot-write]
+
+   11|   x.r = 1; // ERROR
+           ^
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:13:6
+
+Cannot get `x.w` because property `w` is not readable. [cannot-read]
+
+   13|   (x.w: number | void); // ERROR
+            ^
+
+
+
+Found 15 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
