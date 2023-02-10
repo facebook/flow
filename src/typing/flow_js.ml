@@ -6858,6 +6858,7 @@ struct
             )
           | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
           | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
+          | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
           | ValuesType -> GetValuesT (reason, OpenT tout)
           | CallType args ->
             let args = Base.List.map ~f:(fun arg -> Arg arg) args in

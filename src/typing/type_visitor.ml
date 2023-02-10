@@ -200,6 +200,7 @@ class ['a] t =
       | ValuesType
       | ReadOnlyType
       | PartialType
+      | RequiredType
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType

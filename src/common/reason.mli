@@ -173,6 +173,7 @@ type 'loc virtual_reason_desc =
   | RSpreadOf of 'loc virtual_reason_desc
   | RShapeOf of 'loc virtual_reason_desc
   | RPartialOf of 'loc virtual_reason_desc
+  | RRequiredOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string

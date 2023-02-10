@@ -213,6 +213,7 @@ and utility =
   | Values of t
   | ReadOnly of t
   | Partial of t
+  | Required of t
   | Exact of t
   | Diff of t * t
   | Rest of t * t
@@ -583,8 +584,9 @@ class ['A] comparator_ty =
       | ReactConfigType _ -> 21
       | ObjKeyMirror _ -> 22
       | Partial _ -> 23
-      | ObjMapConst _ -> 24
-      | IdxUnwrapType _ -> 25
+      | Required _ -> 24
+      | ObjMapConst _ -> 25
+      | IdxUnwrapType _ -> 26
 
     method tag_of_polarity _ =
       function
@@ -711,6 +713,7 @@ let string_of_utility_ctor = function
   | Values _ -> "$Values"
   | ReadOnly _ -> "$ReadOnly"
   | Partial _ -> "$Partial"
+  | Required _ -> "$Required"
   | Exact _ -> "$Exact"
   | Diff _ -> "$Diff"
   | Rest _ -> "$Rest"
@@ -735,6 +738,7 @@ let types_of_utility = function
   | Values t -> Some [t]
   | ReadOnly t -> Some [t]
   | Partial t -> Some [t]
+  | Required t -> Some [t]
   | Exact t -> Some [t]
   | Diff (t1, t2) -> Some [t1; t2]
   | Rest (t1, t2) -> Some [t1; t2]

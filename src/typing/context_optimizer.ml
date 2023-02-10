@@ -199,7 +199,9 @@ class context_optimizer ~no_lowers =
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ } -> t
       | OptionalIndexedAccessResultType _ -> t
       | ReadOnlyType -> t
-      | PartialType -> t
+      | RequiredType
+      | PartialType ->
+        t
       | SpreadType (options, tlist, acc) ->
         let tlist' = ListUtils.ident_map (self#object_kit_spread_operand cx map_cx) tlist in
         let acc' = OptionUtils.ident_map (self#object_kit_spread_operand_slice cx map_cx) acc in

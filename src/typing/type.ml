@@ -1417,6 +1417,7 @@ module rec TypeTerm : sig
     | OptionalIndexedAccessResultType of { void_reason: reason }
     | ReadOnlyType
     | PartialType
+    | RequiredType
     | SpreadType of
         Object.Spread.target * Object.Spread.operand list * Object.Spread.operand_slice option
     | RestType of Object.Rest.merge_mode * t
@@ -2593,6 +2594,7 @@ and Object : sig
   type tool =
     | ReadOnly
     | Partial
+    | Required
     | Spread of Spread.target * Spread.state
     | Rest of Rest.merge_mode * Rest.state
     | ReactConfig of ReactConfig.state
@@ -3074,6 +3076,7 @@ module AConstraint = struct
             match tool with
             | ReadOnly -> "readonly"
             | Partial -> "partial"
+            | Required -> "required"
             | Spread _ -> "spread"
             | Rest _ -> "rest"
             | ReactConfig _ -> "react config"

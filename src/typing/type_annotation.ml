@@ -599,6 +599,16 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (EvalT (t, TypeDestructorT (use_op reason, reason, PartialType), mk_eval_id cx loc))
                 targs
           )
+        (* $Required<T> makes all of `T`'s optional properties required. *)
+        | "$Required" ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              let reason = mk_reason (RRequiredOf (desc_of_t t)) (loc_of_t t) in
+              reconstruct_ast
+                (EvalT (t, TypeDestructorT (use_op reason, reason, RequiredType), mk_eval_id cx loc))
+                targs
+          )
         (* $Shape<T> matches the shape of T *)
         | "$Shape" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->

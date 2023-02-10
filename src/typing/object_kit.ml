@@ -123,8 +123,17 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     let object_read_only cx trace _use_op reason x tout =
       rec_flow_t ~use_op:unknown_use cx trace (Slice_utils.object_read_only cx reason x, tout)
     in
+    (******************)
+    (* Object Partial *)
+    (******************)
     let object_partial cx trace use_op reason x tout =
-      rec_flow_t ~use_op cx trace (Slice_utils.object_partial cx reason x, tout)
+      rec_flow_t ~use_op cx trace (Slice_utils.object_update_optionality `Partial cx reason x, tout)
+    in
+    (*******************)
+    (* Object Required *)
+    (*******************)
+    let object_required cx trace use_op reason x tout =
+      rec_flow_t ~use_op cx trace (Slice_utils.object_update_optionality `Required cx reason x, tout)
     in
     (**************)
     (* Object Rep *)
@@ -645,6 +654,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       | ReactConfig state -> react_config state
       | ReadOnly -> object_read_only
       | Partial -> object_partial
+      | Required -> object_required
       | ObjectRep -> object_rep
       | ObjectWiden id -> object_widen id
     in

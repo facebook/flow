@@ -237,7 +237,9 @@ and collect_of_destructor ?log_unresolved cx acc = function
     collect_of_type ?log_unresolved cx acc index_type
   | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ } -> acc
   | ReadOnlyType -> acc
-  | PartialType -> acc
+  | RequiredType
+  | PartialType ->
+    acc
   | SpreadType (_, ts, head_slice) ->
     let acc = collect_of_object_kit_spread_operands ?log_unresolved cx acc ts in
     begin

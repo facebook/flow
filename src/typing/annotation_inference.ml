@@ -1320,13 +1320,15 @@ module rec ConsGen : S = struct
       Slice_utils.object_rest ~add_output ~return ~recurse ~subt_check options state cx
     in
     let object_read_only cx _use_op = Slice_utils.object_read_only cx in
-    let object_partial cx _use_op = Slice_utils.object_partial cx in
+    let object_partial cx _use_op = Slice_utils.object_update_optionality `Partial cx in
+    let object_required cx _use_op = Slice_utils.object_update_optionality `Required cx in
     let next op cx use_op tool reason x =
       Object.(
         match tool with
         | Spread (options, state) -> object_spread options state cx use_op reason x
         | Rest (options, state) -> object_rest options state cx use_op reason x
         | Partial -> object_partial cx use_op reason x
+        | Required -> object_required cx use_op reason x
         | ReadOnly -> object_read_only cx use_op reason x
         | ReactConfig _ -> error_internal cx "ReactConfig" op
         | ObjectRep -> error_internal cx "ObjectRep" op

@@ -372,6 +372,7 @@ end = struct
           true
         | ReadOnlyType
         | PartialType
+        | RequiredType
         | SpreadType _
         | RestType _
         | ValuesType
@@ -1525,6 +1526,7 @@ end = struct
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
       | T.PartialType -> return (Ty.Utility (Ty.Partial ty))
+      | T.RequiredType -> return (Ty.Utility (Ty.Required ty))
       | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
       | T.ElementType { index_type } ->
         let%map index = type__ ~env index_type in

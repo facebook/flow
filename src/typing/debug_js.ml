@@ -38,6 +38,7 @@ let string_of_destructor = function
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
   | ReadOnlyType -> "ReadOnly"
   | PartialType -> "PartialType"
+  | RequiredType -> "RequiredType"
   | SpreadType _ -> "Spread"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
@@ -660,6 +661,7 @@ and dump_use_t_ (depth, tvars) cx t =
       let tool = function
         | ReadOnly -> "ReadOnly"
         | Partial -> "Partial"
+        | Required -> "Required"
         | ObjectRep -> "ObjectRep"
         | ObjectWiden id -> spf "ObjectWiden (%s)" (string_of_int id)
         | Spread (options, state) -> spread options state

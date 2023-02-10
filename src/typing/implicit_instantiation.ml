@@ -214,6 +214,7 @@ struct
         |> bind_use_t_result ~f:(fun t -> UpperT (MaybeT (r, t)))
       | ReadOnlyType
       | PartialType
+      | RequiredType
       | ReactConfigType _ ->
         merge_lower_or_upper_bounds r (OpenT tout)
       | SpreadType (_, todo_rev, head_slice) ->
@@ -368,7 +369,7 @@ struct
       t_of_use_t cx tvar u
     | ObjKitT (_, r, _, tool, tout) ->
       (match tool with
-      | Object.(ReadOnly | Partial | ObjectRep | ObjectWiden _ | Object.ReactConfig _) ->
+      | Object.(ReadOnly | Partial | Required | ObjectRep | ObjectWiden _ | Object.ReactConfig _) ->
         identity_reverse_upper_bound cx tvar r tout
       | Object.Spread (_, { Object.Spread.todo_rev; acc; _ }) ->
         let solution = merge_upper_bounds cx r tout in

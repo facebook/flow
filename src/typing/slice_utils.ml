@@ -951,8 +951,8 @@ let object_read_only =
     | (t, []) -> t
     | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
 
-let object_partial =
-  let mk_partial_object cx reason slice =
+let object_update_optionality kind =
+  let mk_object cx reason slice =
     let { Object.reason = r; props; flags; generics; interface } = slice in
     let props =
       NameUtils.Map.map
@@ -960,22 +960,25 @@ let object_partial =
           if is_method then
             Method (None, prop_t)
           else
-            match prop_t with
-            | OptionalT _ -> Field (None, prop_t, polarity)
-            | _ ->
+            match (prop_t, kind) with
+            | (OptionalT _, `Partial) -> Field (None, prop_t, polarity)
+            | (_, `Partial) ->
               Field
                 ( None,
                   OptionalT { reason = reason_of_t prop_t; type_ = prop_t; use_desc = false },
                   polarity
-                ))
+                )
+            | (OptionalT { type_; _ }, `Required) -> Field (None, type_, polarity)
+            | (_, `Required) -> Field (None, prop_t, polarity))
         props
     in
     let call = None in
     let id = Context.generate_property_map cx props in
     let proto = ObjProtoT reason in
     let def_reason =
-      match desc_of_reason ~unwrap:false reason with
-      | RPartialOf _ -> r
+      match (desc_of_reason ~unwrap:false reason, kind) with
+      | (RPartialOf _, `Partial) -> r
+      | (RRequiredOf _, `Required) -> r
       | _ -> reason
     in
     mk_object_type
@@ -990,7 +993,7 @@ let object_partial =
       generics
   in
   fun cx reason x ->
-    match Nel.map (mk_partial_object cx reason) x with
+    match Nel.map (mk_object cx reason) x with
     | (t, []) -> t
     | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
 
@@ -1232,8 +1235,9 @@ let resolve
     let (t, todo) = InterRep.members_nel rep in
     let resolve_tool = Resolve (List0 (todo, (intersection_loc, And))) in
     recurse cx use_op reason resolve_tool tool t
-  (* Null and Void should pass through $Partial, since we would like $Partial<?Foo> to be equivalent to ?$Partial<Foo> *)
-  | DefT (_, _, (NullT | VoidT)) when tool = Partial -> return cx use_op t
+  (* `null` and `void` should pass through $Partial and $Required,
+     since we would like e.g. $Partial<?Foo> to be equivalent to ?$Partial<Foo> *)
+  | DefT (_, _, (NullT | VoidT)) when tool = Partial || tool = Required -> return cx use_op t
   (* Mirroring Object.assign() and {...null} semantics, treat null/void as
    * empty objects. *)
   | DefT (_, _, (NullT | VoidT)) ->
