@@ -620,11 +620,32 @@ and evaluate_hint cx reason hint =
     ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t kind
 
 and evaluate_hints cx reason hints =
-  Base.List.fold_until
-    hints
-    ~init:NoHint
-    ~finish:(fun r -> r)
-    ~f:(fun _ hint ->
-      match evaluate_hint cx reason hint with
-      | HintAvailable (t, kind) -> Base.Continue_or_stop.Stop (HintAvailable (t, kind))
-      | r -> Base.Continue_or_stop.Continue r)
+  Debug_js.Verbose.print_if_verbose_lazy
+    cx
+    (lazy [spf "Evaluating hint %s" (string_of_hints ~on_hint:(Debug_js.dump_t cx ~depth:3) hints)]);
+  let result =
+    Base.List.fold_until
+      hints
+      ~init:NoHint
+      ~finish:(fun r -> r)
+      ~f:(fun _ hint ->
+        match evaluate_hint cx reason hint with
+        | HintAvailable (t, kind) -> Base.Continue_or_stop.Stop (HintAvailable (t, kind))
+        | r -> Base.Continue_or_stop.Continue r)
+  in
+  Debug_js.Verbose.print_if_verbose_lazy
+    cx
+    ( lazy
+      [
+        spf "Hint %s evalutes to" (string_of_hints ~on_hint:(Debug_js.dump_t cx ~depth:3) hints);
+        (match result with
+        | HintAvailable (t, ExpectedTypeHint) ->
+          spf "ExpectedTypeHint: %s" (Debug_js.dump_t cx ~depth:3 t)
+        | HintAvailable (t, BestEffortHint) ->
+          spf "BestEffortHint: %s" (Debug_js.dump_t cx ~depth:3 t)
+        | NoHint -> "NoHint"
+        | EncounteredPlaceholder -> "EncounteredPlaceholder"
+        | DecompositionError -> "DecompositionError");
+      ]
+      );
+  result
