@@ -12,8 +12,8 @@ ReposLowerTRegressionTest({}) // Error: T under constrained.
 
 declare function ReadOnly<T>($ReadOnly<T>): T;
 ReadOnly({foo: 3}); // ok
-declare function Partial<T>($Partial<T>): T;
-Partial({foo: 3}); // ok
+declare function partial<T>(Partial<T>): T;
+partial({foo: 3}); // ok
 declare function NonMaybeType<T>($NonMaybeType<T>): T;
 NonMaybeType(1); // ok
 

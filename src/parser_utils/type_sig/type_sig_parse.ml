@@ -1881,14 +1881,15 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReadOnly (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "$Partial" -> begin
+  | "$Partial"
+  | "Partial" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->
       let t = annot opts scope tbls xs t in
       Annot (Partial (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "$Required" -> begin
+  | "Required" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->
       let t = annot opts scope tbls xs t in

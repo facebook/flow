@@ -638,8 +638,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (EvalT (t, TypeDestructorT (use_op reason, reason, NonMaybeType), mk_eval_id cx loc))
                 targs
           )
-        (* $Partial<T> makes all of `T`'s properties optional *)
-        | "$Partial" ->
+        (* Partial<T> makes all of `T`'s properties optional *)
+        | "$Partial"
+        | "Partial" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
@@ -648,8 +649,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (EvalT (t, TypeDestructorT (use_op reason, reason, PartialType), mk_eval_id cx loc))
                 targs
           )
-        (* $Required<T> makes all of `T`'s optional properties required. *)
-        | "$Required" ->
+        (* Required<T> makes all of `T`'s optional properties required. *)
+        | "Required" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in

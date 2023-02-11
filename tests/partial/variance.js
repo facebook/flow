@@ -5,7 +5,7 @@ type A = {
 };
 
 {
-  declare const x: $Partial<A>;
+  declare const x: Partial<A>;
 
   (x.r: number | void); // OK
   x.r = 1; // ERROR

@@ -1,11 +1,11 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:9:31
+Error ----------------------------------------------------------------------------------------------------- test.js:9:30
 
 Cannot assign object literal to `b7` because null [1] is incompatible with string [2] in property `x`.
 [incompatible-type]
 
-   test.js:9:31
-   9| let b7 : $Partial<Foo> = {x : null}; // error
-                                    ^^^^ [1]
+   test.js:9:30
+   9| let b7 : Partial<Foo> = {x : null}; // error
+                                   ^^^^ [1]
 
 References:
    test.js:1:19
@@ -13,14 +13,14 @@ References:
                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:10:31
+Error ---------------------------------------------------------------------------------------------------- test.js:10:30
 
 Cannot assign object literal to `b8` because number [1] is incompatible with string [2] in property `x`.
 [incompatible-type]
 
-   test.js:10:31
-   10| let b8 : $Partial<Foo> = {x : 3}; // error
-                                     ^ [1]
+   test.js:10:30
+   10| let b8 : Partial<Foo> = {x : 3}; // error
+                                    ^ [1]
 
 References:
    test.js:1:19
@@ -28,19 +28,19 @@ References:
                          ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:11:26
+Error ---------------------------------------------------------------------------------------------------- test.js:11:25
 
 Cannot assign object literal to `b9` because property `z` is missing in `Foo` [1] but exists in object literal [2].
 [prop-missing]
 
-   test.js:11:26
-   11| let b9 : $Partial<Foo> = {z : ""}; // error
-                                ^^^^^^^^ [2]
+   test.js:11:25
+   11| let b9 : Partial<Foo> = {z : ""}; // error
+                               ^^^^^^^^ [2]
 
 References:
-   test.js:11:19
-   11| let b9 : $Partial<Foo> = {z : ""}; // error
-                         ^^^ [1]
+   test.js:11:18
+   11| let b9 : Partial<Foo> = {z : ""}; // error
+                        ^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:16:17
@@ -94,27 +94,27 @@ Cannot assign `3` to `p6` because number [1] is incompatible with `PFoo` [2]. [i
                        ^ [1]
 
 References:
-   test.js:22:22
-   22| type PFoo = $Partial<?Foo>;
-                            ^^^^ [2]
+   test.js:22:21
+   22| type PFoo = Partial<?Foo>;
+                           ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:30:21
+Error ---------------------------------------------------------------------------------------------------- test.js:30:20
 
 Cannot instantiate partial number because number [1] is not an object. [not-an-object]
 
-   30| type Err = $Partial<number> // error
-                           ^^^^^^ [1]
+   30| type Err = Partial<number> // error
+                          ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:45:33
+Error ---------------------------------------------------------------------------------------------------- test.js:45:32
 
 Cannot assign object literal to `d7` because null [1] is incompatible with string [2] in property `x`.
 [incompatible-type]
 
-   test.js:45:33
-   45| let d7 : $Partial<IFace> = {x : null}; // error
-                                       ^^^^ [1]
+   test.js:45:32
+   45| let d7 : Partial<IFace> = {x : null}; // error
+                                      ^^^^ [1]
 
 References:
    test.js:34:9
@@ -122,14 +122,14 @@ References:
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:46:33
+Error ---------------------------------------------------------------------------------------------------- test.js:46:32
 
 Cannot assign object literal to `d8` because number [1] is incompatible with string [2] in property `x`.
 [incompatible-type]
 
-   test.js:46:33
-   46| let d8 : $Partial<IFace> = {x : 3}; // error
-                                       ^ [1]
+   test.js:46:32
+   46| let d8 : Partial<IFace> = {x : 3}; // error
+                                      ^ [1]
 
 References:
    test.js:34:9
@@ -137,14 +137,14 @@ References:
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:62:33
+Error ---------------------------------------------------------------------------------------------------- test.js:62:32
 
 Cannot assign object literal to `f9` because null [1] is incompatible with string [2] in property `x`.
 [incompatible-type]
 
-   test.js:62:33
-   62| let f9 : $Partial<JFace> = {x : null}; // error
-                                       ^^^^ [1]
+   test.js:62:32
+   62| let f9 : Partial<JFace> = {x : null}; // error
+                                      ^^^^ [1]
 
 References:
    test.js:34:9
@@ -152,14 +152,14 @@ References:
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:63:34
+Error ---------------------------------------------------------------------------------------------------- test.js:63:33
 
 Cannot assign object literal to `f10` because number [1] is incompatible with string [2] in property `z`.
 [incompatible-type]
 
-   test.js:63:34
-   63| let f10 : $Partial<JFace> = {z : 3}; // error
-                                        ^ [1]
+   test.js:63:33
+   63| let f10 : Partial<JFace> = {z : 3}; // error
+                                       ^ [1]
 
 References:
    test.js:50:9
@@ -167,14 +167,14 @@ References:
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:64:34
+Error ---------------------------------------------------------------------------------------------------- test.js:64:33
 
 Cannot assign object literal to `f11` because number [1] is incompatible with string [2] in property `x`.
 [incompatible-type]
 
-   test.js:64:34
-   64| let f11 : $Partial<JFace> = {x : 3}; // error
-                                        ^ [1]
+   test.js:64:33
+   64| let f11 : Partial<JFace> = {x : 3}; // error
+                                       ^ [1]
 
 References:
    test.js:34:9

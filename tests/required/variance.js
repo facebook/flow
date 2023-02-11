@@ -5,7 +5,7 @@ type A = {
 };
 
 {
-  declare const x: $Required<A>;
+  declare const x: Required<A>;
 
   (x.r: number); // OK
   x.r = 1; // ERROR
