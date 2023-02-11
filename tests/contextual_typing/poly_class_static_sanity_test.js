@@ -12,4 +12,4 @@ declare export class Map<K, +V> {
 
 declare var unused_var: unbound_type; // sanity check: should surface this error
 
-List([Map({name: "abc"})]); // expected error
+List([Map({name: "abc"})]); // no error
