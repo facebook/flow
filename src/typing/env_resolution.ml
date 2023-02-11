@@ -148,6 +148,7 @@ let resolve_hint cx loc hint =
     | BuiltinType name ->
       let reason = mk_reason (RCustom name) loc in
       Flow_js.get_builtin_type cx reason (OrdinaryName name)
+    | AnyErrorHint reason -> AnyT.error reason
   in
   if Context.lti cx then
     let map_base_hint = resolve_hint_node in

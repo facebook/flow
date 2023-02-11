@@ -41,6 +41,7 @@ type hint_node =
   | WriteLocHint of Env_api.With_ALoc.def_loc_type * ALoc.t
   | StringLiteralType of string
   | BuiltinType of string
+  | AnyErrorHint of Reason.t
 
 type ast_hints =
   ( hint_node,
@@ -263,6 +264,7 @@ module Print = struct
     | WriteLocHint _ -> "write loc hint"
     | StringLiteralType s -> "string literal hint: " ^ s
     | BuiltinType _ -> "builtin type hint"
+    | AnyErrorHint _ -> "any type hint"
 
   let string_of_source = function
     | Binding b -> string_of_binding b

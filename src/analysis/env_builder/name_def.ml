@@ -1585,6 +1585,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
               decompose_hints
                 (Decomp_ObjComputed (mk_expression_reason expr))
                 [Hint_t (ValueHint _object, ExpectedTypeHint)])
+          | Ast.Pattern.Expression _ ->
+            [Hint_t (AnyErrorHint (mk_reason RDestructuring lhs_loc), ExpectedTypeHint)]
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
             [Hint_Placeholder]
