@@ -1551,14 +1551,30 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
     method private visit_assignment_expression ~is_function_statics_assignment loc expr =
       let open Ast.Expression.Assignment in
       let { operator; left = (lhs_loc, lhs_node) as left; right; comments = _ } = expr in
-      let is_provider =
-        Flow_ast_utils.fold_bindings_of_pattern
-          (fun acc (loc, _) -> acc || Env_api.Provider_api.is_provider providers loc)
-          false
-          left
+      let expression_pattern_hints = function
+        | (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
+          when not is_function_statics_assignment ->
+          (match property with
+          | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
+            decompose_hints (Decomp_ObjProp name) [Hint_t (ValueHint _object, ExpectedTypeHint)]
+          | Ast.Expression.Member.PropertyPrivateName _ ->
+            (* TODO create a hint based on the current class. *)
+            []
+          | Ast.Expression.Member.PropertyExpression expr ->
+            decompose_hints
+              (Decomp_ObjComputed (mk_expression_reason expr))
+              [Hint_t (ValueHint _object, ExpectedTypeHint)])
+        | (_, Ast.Expression.Member _) -> []
+        | _ -> [Hint_t (AnyErrorHint (mk_reason RDestructuring lhs_loc), ExpectedTypeHint)]
       in
-      let hints =
-        if is_provider || is_function_statics_assignment then
+      let other_pattern_hints () =
+        let is_provider =
+          Flow_ast_utils.fold_bindings_of_pattern
+            (fun acc (loc, _) -> acc || Env_api.Provider_api.is_provider providers loc)
+            false
+            left
+        in
+        if is_provider then
           []
         else
           match lhs_node with
@@ -1572,64 +1588,55 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             |> Base.Option.value_map ~default:[] ~f:(fun providers ->
                    [Hint_t (ProvidersHint providers, ExpectedTypeHint)]
                )
-          | Ast.Pattern.Expression
-              (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
-            ->
-            (match property with
-            | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
-              decompose_hints (Decomp_ObjProp name) [Hint_t (ValueHint _object, ExpectedTypeHint)]
-            | Ast.Expression.Member.PropertyPrivateName _ ->
-              (* TODO create a hint based on the current class. *)
-              []
-            | Ast.Expression.Member.PropertyExpression expr ->
-              decompose_hints
-                (Decomp_ObjComputed (mk_expression_reason expr))
-                [Hint_t (ValueHint _object, ExpectedTypeHint)])
-          | Ast.Pattern.Expression _ ->
-            [Hint_t (AnyErrorHint (mk_reason RDestructuring lhs_loc), ExpectedTypeHint)]
+          | Ast.Pattern.Expression e -> expression_pattern_hints e
           | _ ->
             (* TODO create a hint based on the lhs pattern *)
             [Hint_Placeholder]
       in
-      let () =
-        match (operator, lhs_node) with
-        | (None, Ast.Pattern.Expression (member_loc, Ast.Expression.Member member)) ->
-          (* Use super member to visit sub-expressions to avoid record a read of the member. *)
-          ignore @@ super#member member_loc member;
-          this#add_ordinary_binding
-            member_loc
-            (mk_pattern_reason left)
-            (MemberAssign { member_loc; member; rhs = right })
-        | (None, _) ->
-          let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
-          this#add_destructure_bindings (Value { hints = []; expr = right }) left
-        | ( Some operator,
-            Ast.Pattern.Identifier
-              { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
-          ) ->
-          this#add_ordinary_binding
-            id_loc
-            (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
-        | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
-          (* In op_assign, the LHS will also be read. *)
-          let cond =
-            match operator with
-            | AndAssign
-            | OrAssign ->
-              OtherConditionalTest
-            | _ -> NonConditionalContext
-          in
-          this#visit_expression ~cond ~hints:[] e;
-          this#add_ordinary_binding
-            def_loc
-            (mk_pattern_reason left)
-            (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right })
-        | _ ->
-          let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
-          ()
-      in
-      this#visit_expression ~hints ~cond:NonConditionalContext right
+      match (operator, lhs_node) with
+      | (None, Ast.Pattern.Expression ((member_loc, Ast.Expression.Member member) as e)) ->
+        (* Use super member to visit sub-expressions to avoid record a read of the member. *)
+        ignore @@ super#member member_loc member;
+        this#add_ordinary_binding
+          member_loc
+          (mk_pattern_reason left)
+          (MemberAssign { member_loc; member; rhs = right });
+        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NonConditionalContext right
+      | (None, Ast.Pattern.Expression e) ->
+        let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
+        this#add_destructure_bindings (Value { hints = []; expr = right }) left;
+        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NonConditionalContext right
+      | (None, _) ->
+        let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
+        this#add_destructure_bindings (Value { hints = []; expr = right }) left;
+        this#visit_expression ~hints:(other_pattern_hints ()) ~cond:NonConditionalContext right
+      | ( Some operator,
+          Ast.Pattern.Identifier
+            { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
+        ) ->
+        this#add_ordinary_binding
+          id_loc
+          (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
+          (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right });
+        this#visit_expression ~hints:(other_pattern_hints ()) ~cond:NonConditionalContext right
+      | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
+        (* In op_assign, the LHS will also be read. *)
+        let cond =
+          match operator with
+          | AndAssign
+          | OrAssign ->
+            OtherConditionalTest
+          | _ -> NonConditionalContext
+        in
+        this#visit_expression ~cond ~hints:[] e;
+        this#add_ordinary_binding
+          def_loc
+          (mk_pattern_reason left)
+          (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right });
+        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NonConditionalContext right
+      | (Some _operator, (Ast.Pattern.Array _ | Ast.Pattern.Object _)) ->
+        let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
+        this#visit_expression ~hints:(other_pattern_hints ()) ~cond:NonConditionalContext right
 
     method! update_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
       let open Ast.Expression.Update in
