@@ -18,7 +18,7 @@ declare var func_tuple : [
     (x: boolean) => number
 ];
 [mixed, ...func_tuple] = [
-    (x) => 1, // TODO should need an annotation
+    (x) => 1, // Error in LTI: need an annotation
     (x) => 1,
     (x) => 1,
     (x) => 1,

@@ -22,25 +22,6 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
-Error ------------------------------------------------------------------------------------------------ assignment.js:6:6
-
-Cannot assign function to `y` because parameter `x` of unknown type [1] is incompatible with number [2] (consider adding
-a type annotation to `x` [1]) in the first parameter. All writes to `y` must be compatible with the type of its
-initializer [3]. Add an annotation to `y` [3] if a different type is desired. [incompatible-type]
-
-   assignment.js:6:6
-   6| y = (x) => 3; // No missing annot
-           ^ [1]
-
-References:
-   assignment.js:5:13
-   5| let y = (x: number) => 3;
-                  ^^^^^^ [2]
-   assignment.js:5:5
-   5| let y = (x: number) => 3;
-          ^ [3]
-
-
 Error ----------------------------------------------------------------------------------------------- assignment.js:13:6
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -85,6 +66,14 @@ References:
    <BUILTINS>/core.js:1677:11
    1677| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:31:12
+
+An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   31|     super((x) => 3); // no annot
+                  ^
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
@@ -395,122 +384,20 @@ Missing an annotation on `x`. [missing-local-annot]
                     ^
 
 
+Error --------------------------------------------------------------------------------------- destructuring_init.js:21:6
+
+An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   21|     (x) => 1, // Error in LTI: need an annotation
+            ^
+
+
 Error -------------------------------------------------------------------------------------- destructuring_init.js:28:14
 
 Missing an annotation on `x`. [missing-local-annot]
 
    28| [null_1] = [(x) => 1]; // error needs annotation because `null_1` pattern is a provider
                     ^
-
-
-Error --------------------------------------------------------------------------------------- destructuring_init.js:33:2
-
-Cannot assign `[...][0]` to `k` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
-adding a type annotation to `x` [1]) in the first parameter. All writes to `k` must be compatible with the type of its
-initializer [3]. Add an annotation to `k` [3] if a different type is desired. [incompatible-type]
-
-   destructuring_init.js:33:2
-   33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
-        ^
-
-References:
-   destructuring_init.js:33:17
-   33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
-                       ^ [1]
-   destructuring_init.js:30:13
-   30| var k = (x: string) => 1;
-                   ^^^^^^ [2]
-   destructuring_init.js:30:5
-   30| var k = (x: string) => 1;
-           ^ [3]
-
-
-Error --------------------------------------------------------------------------------------- destructuring_init.js:33:6
-
-Cannot assign `[...][1][0]` to `l` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
-adding a type annotation to `x` [1]) in the first parameter. All writes to `l` must be compatible with the type of its
-initializer [3]. Add an annotation to `l` [3] if a different type is desired. [incompatible-type]
-
-   destructuring_init.js:33:6
-   33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
-            ^
-
-References:
-   destructuring_init.js:33:28
-   33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
-                                  ^ [1]
-   destructuring_init.js:31:13
-   31| var l = (x: string) => 1;
-                   ^^^^^^ [2]
-   destructuring_init.js:31:5
-   31| var l = (x: string) => 1;
-           ^ [3]
-
-
-Error --------------------------------------------------------------------------------------- destructuring_init.js:33:9
-
-Cannot assign `[...][1][1]` to `m` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
-adding a type annotation to `x` [1]) in the first parameter. All writes to `m` must be compatible with the type of its
-initializer [3]. Add an annotation to `m` [3] if a different type is desired. [incompatible-type]
-
-   destructuring_init.js:33:9
-   33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
-               ^
-
-References:
-   destructuring_init.js:33:38
-   33| [k, [l, m]] = [(x) => 1, [(x) => 1, (x) => 1]]; // okay
-                                            ^ [1]
-   destructuring_init.js:32:13
-   32| var m = (x: string) => 1;
-                   ^^^^^^ [2]
-   destructuring_init.js:32:5
-   32| var m = (x: string) => 1;
-           ^ [3]
-
-
-Error --------------------------------------------------------------------------------------- destructuring_init.js:38:2
-
-Cannot assign `[...][0]` to `n` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
-adding a type annotation to `x` [1]) in the first parameter. All writes to `n` must be compatible with the type of its
-initializer [3]. Add an annotation to `n` [3] if a different type is desired. [incompatible-type]
-
-   destructuring_init.js:38:2
-   38| [n, [o, null_2]] = [
-        ^
-
-References:
-   destructuring_init.js:39:6
-   39|     (x) => 1, // TODO should not need annotation
-            ^ [1]
-   destructuring_init.js:35:13
-   35| var n = (x: string) => 1;
-                   ^^^^^^ [2]
-   destructuring_init.js:35:5
-   35| var n = (x: string) => 1;
-           ^ [3]
-
-
-Error --------------------------------------------------------------------------------------- destructuring_init.js:38:6
-
-Cannot assign `[...][1][0]` to `o` because parameter `x` of unknown type [1] is incompatible with string [2] (consider
-adding a type annotation to `x` [1]) in the first parameter. All writes to `o` must be compatible with the type of its
-initializer [3]. Add an annotation to `o` [3] if a different type is desired. [incompatible-type]
-
-   destructuring_init.js:38:6
-   38| [n, [o, null_2]] = [
-            ^
-
-References:
-   destructuring_init.js:41:10
-   41|         (x) => 1, // TODO should not need annotation
-                ^ [1]
-   destructuring_init.js:36:13
-   36| var o = (x: string) => 1;
-                   ^^^^^^ [2]
-   destructuring_init.js:36:5
-   36| var o = (x: string) => 1;
-           ^ [3]
 
 
 Error --------------------------------------------------------------------------------------- destructuring_init.js:39:6
@@ -960,4 +847,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 106 errors
+Found 102 errors
