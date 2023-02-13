@@ -13,3 +13,6 @@ const z = (
     <Component />
   </Wrapper>
 );
+
+function ComponentWithBound<T: number>(pprops: {a:T}): React$Node {}
+<div><ComponentWithBound a={true} /></div>; // error: bool ~> number

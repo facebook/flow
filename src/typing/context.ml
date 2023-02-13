@@ -906,7 +906,9 @@ let run_in_synthesis_mode cx f =
   cx.ccx.speculation_state := [];
   cx.ccx.produced_placeholders <- false;
   cx.in_synthesis_mode <- true;
+  let cache_snapshot = take_cache_snapshot cx in
   let result = Base.Result.try_with f in
+  restore_cache_snapshot cx cache_snapshot;
   cx.ccx.speculation_state := saved_speculation_state;
   cx.in_synthesis_mode <- old_synthesis_mode;
   let produced_placeholders = cx.ccx.produced_placeholders in
