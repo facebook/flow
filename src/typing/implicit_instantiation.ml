@@ -944,26 +944,8 @@ struct
           )
         in
         Context.reset_errors cx Flow_error.ErrorSet.empty;
-        let restore () =
-          let implicit_instantiation_errors =
-            Context.errors cx
-            |> Flow_error.ErrorSet.filter (fun error ->
-                   match Flow_error.msg_of_error error with
-                   | Error_message.EImplicitInstantiationUnderconstrainedError _
-                   | Error_message.EInternal _ ->
-                     true
-                   | _ -> false
-               )
-          in
-          (* Since we will be performing the same check again using the solution
-           * of the implicit instantiation, we only need to keep errors related
-           * to pinning types, eg. [underconstrained-implicit-instantiation]. *)
-          Context.reset_errors
-            cx
-            (Flow_error.ErrorSet.union init_errors implicit_instantiation_errors)
-        in
-        try
-          let output =
+        Exception.protect
+          ~f:(fun () ->
             pin_types
               cx
               ~use_op
@@ -972,15 +954,24 @@ struct
               inferred_targ_list
               marked_tparams
               tparams_map
-              check
-          in
-          restore ();
-          output
-        with
-        | exn ->
-          let exn = Exception.wrap exn in
-          restore ();
-          Exception.reraise exn
+              check)
+          ~finally:(fun () ->
+            let implicit_instantiation_errors =
+              Context.errors cx
+              |> Flow_error.ErrorSet.filter (fun error ->
+                     match Flow_error.msg_of_error error with
+                     | Error_message.EImplicitInstantiationUnderconstrainedError _
+                     | Error_message.EInternal _ ->
+                       true
+                     | _ -> false
+                 )
+            in
+            (* Since we will be performing the same check again using the solution
+             * of the implicit instantiation, we only need to keep errors related
+             * to pinning types, eg. [underconstrained-implicit-instantiation]. *)
+            Context.reset_errors
+              cx
+              (Flow_error.ErrorSet.union init_errors implicit_instantiation_errors))
     )
 
   let run cx check ~on_completion =

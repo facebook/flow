@@ -176,35 +176,39 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           uses <- [];
           current_scope_opt <- Some child;
           env <- Env.mk_env (fun () -> this#next) old_env bindings;
-          let result = Base.Result.try_with (fun () -> visit node) in
-          this#update_acc (fun acc ->
-              let defs = Env.defs env in
-              let locals =
-                SMap.fold
-                  (fun _ def locals ->
-                    Nel.fold_left (fun locals loc -> L.LMap.add loc def locals) locals def.Def.locs)
-                  defs
-                  L.LMap.empty
-              in
-              let (locals, globals) =
-                List.fold_left
-                  (fun (locals, globals) (loc, { Ast.Identifier.name = x; comments = _ }) ->
-                    match Env.get x env with
-                    | Some def -> (L.LMap.add loc def locals, globals)
-                    | None -> (locals, SSet.add x globals))
-                  (locals, SSet.empty)
-                  uses
-              in
-              let scopes =
-                IMap.add child { Scope.lexical; parent; defs; locals; globals; loc } acc.scopes
-              in
-              { acc with scopes }
-          );
-          uses <- save_uses;
-          current_scope_opt <- parent;
-          env <- old_env;
-          counter <- save_counter;
-          Base.Result.ok_exn result
+          Exception.protect
+            ~f:(fun () -> visit node)
+            ~finally:(fun () ->
+              this#update_acc (fun acc ->
+                  let defs = Env.defs env in
+                  let locals =
+                    SMap.fold
+                      (fun _ def locals ->
+                        Nel.fold_left
+                          (fun locals loc -> L.LMap.add loc def locals)
+                          locals
+                          def.Def.locs)
+                      defs
+                      L.LMap.empty
+                  in
+                  let (locals, globals) =
+                    List.fold_left
+                      (fun (locals, globals) (loc, { Ast.Identifier.name = x; comments = _ }) ->
+                        match Env.get x env with
+                        | Some def -> (L.LMap.add loc def locals, globals)
+                        | None -> (locals, SSet.add x globals))
+                      (locals, SSet.empty)
+                      uses
+                  in
+                  let scopes =
+                    IMap.add child { Scope.lexical; parent; defs; locals; globals; loc } acc.scopes
+                  in
+                  { acc with scopes }
+              );
+              uses <- save_uses;
+              current_scope_opt <- parent;
+              env <- old_env;
+              counter <- save_counter)
 
       method! identifier (expr : (L.t, L.t) Ast.Identifier.t) =
         uses <- expr :: uses;

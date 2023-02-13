@@ -802,16 +802,12 @@ let set_graph cx graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 let run_in_implicit_instantiation_mode cx f =
   let saved = in_implicit_instantiation cx in
   cx.ccx.in_implicit_instantiation <- true;
-  let result = Base.Result.try_with f in
-  cx.ccx.in_implicit_instantiation <- saved;
-  Base.Result.ok_exn result
+  Exception.protect ~f ~finally:(fun () -> cx.ccx.in_implicit_instantiation <- saved)
 
 let run_in_post_inference_mode cx f =
   let saved = cx.phase in
   cx.phase <- PostInference;
-  let result = Base.Result.try_with f in
-  cx.phase <- saved;
-  Base.Result.ok_exn result
+  Exception.protect ~f ~finally:(fun () -> cx.phase <- saved)
 
 let set_trust_graph cx trust_graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
@@ -891,9 +887,7 @@ let restore_cache_snapshot cx snapshot =
 
 let run_and_rolled_back_cache cx f =
   let cache_snapshot = take_cache_snapshot cx in
-  let result = Base.Result.try_with f in
-  restore_cache_snapshot cx cache_snapshot;
-  Base.Result.ok_exn result
+  Exception.protect ~f ~finally:(fun () -> restore_cache_snapshot cx cache_snapshot)
 
 let run_in_synthesis_mode cx f =
   let old_synthesis_mode = cx.in_synthesis_mode in
@@ -907,13 +901,17 @@ let run_in_synthesis_mode cx f =
   cx.ccx.produced_placeholders <- false;
   cx.in_synthesis_mode <- true;
   let cache_snapshot = take_cache_snapshot cx in
-  let result = Base.Result.try_with f in
-  restore_cache_snapshot cx cache_snapshot;
-  cx.ccx.speculation_state := saved_speculation_state;
-  cx.in_synthesis_mode <- old_synthesis_mode;
-  let produced_placeholders = cx.ccx.produced_placeholders in
-  cx.ccx.produced_placeholders <- old_produced_placeholders;
-  (produced_placeholders, Base.Result.ok_exn result)
+  let produced_placeholders = ref false in
+  let result =
+    Exception.protect ~f ~finally:(fun () ->
+        restore_cache_snapshot cx cache_snapshot;
+        cx.ccx.speculation_state := saved_speculation_state;
+        cx.in_synthesis_mode <- old_synthesis_mode;
+        produced_placeholders := cx.ccx.produced_placeholders;
+        cx.ccx.produced_placeholders <- old_produced_placeholders
+    )
+  in
+  (!produced_placeholders, result)
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
