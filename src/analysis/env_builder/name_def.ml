@@ -2004,6 +2004,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                 decompose_hints (Decomp_MethodPrivateName (name, class_stack)) base_hint
               | Ast.Expression.Member.PropertyExpression _ ->
                 decompose_hints Decomp_MethodElem base_hint)
+            | (_, Ast.Expression.Super _) ->
+              decompose_hints Decomp_CallSuper [Hint_t (ValueHint callee, ExpectedTypeHint)]
             | _ -> [Hint_t (ValueHint callee, ExpectedTypeHint)]
           in
           let call_reason = mk_expression_reason (loc, Ast.Expression.Call expr) in

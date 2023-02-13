@@ -68,14 +68,6 @@ References:
                    ^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:31:12
-
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
-
-   31|     super((x) => 3); // no annot
-                  ^
-
-
 Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -847,4 +839,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 102 errors
+Found 101 errors
