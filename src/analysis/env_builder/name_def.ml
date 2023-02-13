@@ -1567,31 +1567,64 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         | (_, Ast.Expression.Member _) -> []
         | _ -> [Hint_t (AnyErrorHint (mk_reason RDestructuring lhs_loc), ExpectedTypeHint)]
       in
-      let other_pattern_hints () =
-        let is_provider =
-          Flow_ast_utils.fold_bindings_of_pattern
-            (fun acc (loc, _) -> acc || Env_api.Provider_api.is_provider providers loc)
-            false
-            left
-        in
-        if is_provider then
-          []
-        else
-          match lhs_node with
-          | Ast.Pattern.Identifier _ ->
-            Env_api.Provider_api.providers_of_def providers lhs_loc
-            |> Base.Option.value_map ~f:(fun x -> x.Env_api.Provider_api.providers) ~default:[]
-            |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } ->
-                   Reason.aloc_of_reason reason
-               )
-            |> Nel.of_list
-            |> Base.Option.value_map ~default:[] ~f:(fun providers ->
-                   [Hint_t (ProvidersHint providers, ExpectedTypeHint)]
-               )
-          | Ast.Pattern.Expression e -> expression_pattern_hints e
-          | _ ->
-            (* TODO create a hint based on the lhs pattern *)
-            [Hint_Placeholder]
+      let rec other_pattern_hint_opt = function
+        | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ })
+          when not @@ Env_api.Provider_api.is_provider providers id_loc ->
+          Env_api.Provider_api.providers_of_def providers id_loc
+          |> Base.Option.value_map ~f:(fun x -> x.Env_api.Provider_api.providers) ~default:[]
+          |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } ->
+                 Reason.aloc_of_reason reason
+             )
+          |> Nel.of_list
+          |> Base.Option.map ~f:(fun providers -> ProvidersHint providers)
+        | (_, Ast.Pattern.Identifier _) -> None
+        | (_, Ast.Pattern.Expression (l, _)) ->
+          (* Unsupported syntax like [foo.bar] = expr *)
+          Some (AnyErrorHint (mk_reason (RCustom "unsupported syntax") l))
+        | (loc, Ast.Pattern.Array { Ast.Pattern.Array.elements; _ }) ->
+          Base.List.fold_until
+            elements
+            ~init:[]
+            ~finish:(fun elements -> Some (ComposedArrayPatternHint (loc, List.rev elements)))
+            ~f:
+              (fun acc -> function
+                | Ast.Pattern.Array.Element (_, { Ast.Pattern.Array.Element.argument; _ }) ->
+                  other_pattern_hint_opt argument
+                  |> Base.Option.value_map ~default:(Base.Continue_or_stop.Stop None) ~f:(fun h ->
+                         Base.Continue_or_stop.Continue (ArrayElementPatternHint h :: acc)
+                     )
+                | Ast.Pattern.Array.RestElement (_, { Ast.Pattern.RestElement.argument; _ }) ->
+                  other_pattern_hint_opt argument
+                  |> Base.Option.value_map ~default:(Base.Continue_or_stop.Stop None) ~f:(fun h ->
+                         Base.Continue_or_stop.Continue (ArrayRestElementPatternHint h :: acc)
+                     )
+                | Ast.Pattern.Array.Hole _ -> Base.Continue_or_stop.Stop None)
+        | (loc, Ast.Pattern.Object { Ast.Pattern.Object.properties; _ }) ->
+          Base.List.fold_until
+            properties
+            ~init:[]
+            ~finish:(fun props -> Some (ComposedObjectPatternHint (loc, List.rev props)))
+            ~f:
+              (fun acc -> function
+                | Ast.Pattern.Object.Property (_, { Ast.Pattern.Object.Property.key; pattern; _ })
+                  ->
+                  (match (key, other_pattern_hint_opt pattern) with
+                  | (Ast.Pattern.Object.Property.Identifier (l, { Ast.Identifier.name; _ }), Some h)
+                  | ( Ast.Pattern.Object.Property.Literal
+                        (l, { Ast.Literal.value = Ast.Literal.String name; _ }),
+                      Some h
+                    ) ->
+                    Base.Continue_or_stop.Continue (ObjectPropPatternHint (name, l, h) :: acc)
+                  | _ -> Base.Continue_or_stop.Stop None)
+                | Ast.Pattern.Object.RestElement (_, { Ast.Pattern.RestElement.argument; _ }) ->
+                  other_pattern_hint_opt argument
+                  |> Base.Option.value_map ~default:(Base.Continue_or_stop.Stop None) ~f:(fun h ->
+                         Base.Continue_or_stop.Continue (ObjectSpreadPropPatternHint h :: acc)
+                     ))
+      in
+      let other_pattern_hints p =
+        other_pattern_hint_opt p
+        |> Base.Option.value_map ~default:[] ~f:(fun h -> [Hint_t (h, ExpectedTypeHint)])
       in
       match (operator, lhs_node) with
       | (None, Ast.Pattern.Expression ((member_loc, Ast.Expression.Member member) as e)) ->
@@ -1609,7 +1642,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       | (None, _) ->
         let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
         this#add_destructure_bindings (Value { hints = []; expr = right }) left;
-        this#visit_expression ~hints:(other_pattern_hints ()) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NonConditionalContext right
       | ( Some operator,
           Ast.Pattern.Identifier
             { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
@@ -1618,7 +1651,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           id_loc
           (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
           (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right });
-        this#visit_expression ~hints:(other_pattern_hints ()) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NonConditionalContext right
       | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
         (* In op_assign, the LHS will also be read. *)
         let cond =
@@ -1636,7 +1669,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NonConditionalContext right
       | (Some _operator, (Ast.Pattern.Array _ | Ast.Pattern.Object _)) ->
         let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
-        this#visit_expression ~hints:(other_pattern_hints ()) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NonConditionalContext right
 
     method! update_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
       let open Ast.Expression.Update in
