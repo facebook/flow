@@ -3238,7 +3238,6 @@ module Make
         let meth_generic_this = Tvar.mk cx reason in
         let (targts, targs) = convert_call_targs_opt cx targs in
         let (argts, arguments_ast) = arg_list cx arguments in
-        Type_inference_hooks_js.dispatch_call_hook cx name ploc super_t;
         let prop_t = Tvar.mk cx reason_prop in
         let lhs_t =
           Tvar.mk_no_wrap_where cx reason (fun t ->
@@ -4016,7 +4015,6 @@ module Make
               )
             in
             let get_mem_t argts reason obj_t =
-              Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
               Tvar.mk_no_wrap_where cx reason_call (fun t ->
                   let use = apply_opt_use (get_opt_use argts reason obj_t) t in
                   Flow.flow cx (obj_t, use)
@@ -4270,7 +4268,6 @@ module Make
   (* returns (type of method itself, type returned from method) *)
   and method_call
       cx reason ~use_op ?(call_strict_arity = true) prop_loc (expr, obj_t, name) targts argts =
-    Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
     let (expr_loc, _) = expr in
     match Refinement.get ~allow_optional:true cx expr (aloc_of_reason reason) with
     | Some f ->

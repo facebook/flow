@@ -1421,9 +1421,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         DefT (ureason, _, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; _ })
       ) ->
       add_output cx ~trace (Error_message.EClassToObject (lreason, ureason, use_op));
-      let u_deft = u in
-      Type_inference_hooks_js.dispatch_instance_to_obj_hook cx l u_deft;
-
       let lflds =
         let own_props = Context.find_props cx lown in
         let proto_props = Context.find_props cx lproto in
