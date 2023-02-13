@@ -115,7 +115,7 @@ let synth_arg_list cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ })
   )
 
 let resolve_hint cx loc hint =
-  let resolve_hint_node = function
+  let rec resolve_hint_node = function
     | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
     | ValueHint exp -> expression cx exp
     | ProvidersHint (loc, []) ->
@@ -149,6 +149,45 @@ let resolve_hint cx loc hint =
       let reason = mk_reason (RCustom name) loc in
       Flow_js.get_builtin_type cx reason (OrdinaryName name)
     | AnyErrorHint reason -> AnyT.error reason
+    | ComposedArrayPatternHint (loc, elements) ->
+      let reason = mk_reason RDestructuring loc in
+      let elem_spread_list =
+        Base.List.map elements ~f:(function
+            | ArrayElementPatternHint h -> UnresolvedArg (resolve_hint_node h, None)
+            | ArrayRestElementPatternHint h -> UnresolvedSpreadArg (resolve_hint_node h)
+            )
+      in
+      Tvar.mk_where cx reason (fun tout ->
+          let reason_op = reason in
+          let element_reason =
+            replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
+          in
+          let elem_t = Tvar.mk cx element_reason in
+          Flow_js.resolve_spread_list
+            cx
+            ~use_op:unknown_use
+            ~reason_op
+            elem_spread_list
+            (ResolveSpreadsToArrayLiteral (Reason.mk_id (), elem_t, tout))
+      )
+    | ComposedObjectPatternHint (loc, properties) ->
+      let acc =
+        Base.List.fold properties ~init:(Statement.ObjectExpressionAcc.empty ()) ~f:(fun acc -> function
+          | ObjectPropPatternHint (n, l, h) ->
+            Statement.ObjectExpressionAcc.add_prop
+              (Properties.add_field (OrdinaryName n) Polarity.Neutral (Some l) (resolve_hint_node h))
+              acc
+          | ObjectSpreadPropPatternHint h ->
+            Statement.ObjectExpressionAcc.add_spread (resolve_hint_node h) acc
+        )
+      in
+      let reason = mk_reason RDestructuring loc in
+      Statement.ObjectExpressionAcc.mk_object_from_spread_acc
+        cx
+        acc
+        reason
+        ~frozen:false
+        ~default_proto:(ObjProtoT reason)
   in
   if Context.lti cx then
     let map_base_hint = resolve_hint_node in

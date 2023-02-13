@@ -42,6 +42,16 @@ type hint_node =
   | StringLiteralType of string
   | BuiltinType of string
   | AnyErrorHint of Reason.t
+  | ComposedArrayPatternHint of ALoc.t * array_element_pattern_hint list
+  | ComposedObjectPatternHint of ALoc.t * object_prop_pattern_hint list
+
+and array_element_pattern_hint =
+  | ArrayElementPatternHint of hint_node
+  | ArrayRestElementPatternHint of hint_node
+
+and object_prop_pattern_hint =
+  | ObjectPropPatternHint of string * ALoc.t * hint_node
+  | ObjectSpreadPropPatternHint of hint_node
 
 type ast_hints =
   ( hint_node,
@@ -257,7 +267,7 @@ module Print = struct
     | Namespace -> "namespace"
     | Default _ -> "default"
 
-  let on_hint = function
+  let rec on_hint = function
     | AnnotationHint _ -> "annot hint"
     | ValueHint _ -> "value hint"
     | ProvidersHint _ -> "providers hint"
@@ -265,6 +275,26 @@ module Print = struct
     | StringLiteralType s -> "string literal hint: " ^ s
     | BuiltinType _ -> "builtin type hint"
     | AnyErrorHint _ -> "any type hint"
+    | ComposedArrayPatternHint (_, elements) ->
+      spf
+        "[%s]"
+        (elements
+        |> Base.List.map ~f:(function
+               | ArrayElementPatternHint h -> spf "(%s)" (on_hint h)
+               | ArrayRestElementPatternHint h -> spf "...(%s)" (on_hint h)
+               )
+        |> Base.String.concat ~sep:", "
+        )
+    | ComposedObjectPatternHint (_, props) ->
+      spf
+        "{%s}"
+        (props
+        |> Base.List.map ~f:(function
+               | ObjectPropPatternHint (n, _, h) -> spf "%s: %s" n (on_hint h)
+               | ObjectSpreadPropPatternHint h -> spf "...(%s)" (on_hint h)
+               )
+        |> Base.String.concat ~sep:", "
+        )
 
   let string_of_source = function
     | Binding b -> string_of_binding b

@@ -80,6 +80,150 @@ References:
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------- destructuring_assignment.js:7:12
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   destructuring_assignment.js:7:12
+   7|    (n) => (n: empty), // error: num ~> empty
+                 ^
+
+References:
+   destructuring_assignment.js:1:17
+   1| declare var a: (number) => mixed;
+                      ^^^^^^ [1]
+   destructuring_assignment.js:7:15
+   7|    (n) => (n: empty), // error: num ~> empty
+                    ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- destructuring_assignment.js:9:15
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   destructuring_assignment.js:9:15
+   9|       (n) => (n: empty), // error: num ~> empty
+                    ^
+
+References:
+   destructuring_assignment.js:2:17
+   2| declare var b: (number) => mixed;
+                      ^^^^^^ [1]
+   destructuring_assignment.js:9:18
+   9|       (n) => (n: empty), // error: num ~> empty
+                       ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- destructuring_assignment.js:11:17
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   destructuring_assignment.js:11:17
+   11|         (n) => (n: empty), // error: num ~> empty
+                       ^
+
+References:
+   destructuring_assignment.js:3:17
+    3| declare var c: (number) => mixed;
+                       ^^^^^^ [1]
+   destructuring_assignment.js:11:20
+   11|         (n) => (n: empty), // error: num ~> empty
+                          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- destructuring_assignment.js:12:21
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   destructuring_assignment.js:12:21
+   12|         {d: (n) => (n: empty)} // error: num ~> empty
+                           ^
+
+References:
+   destructuring_assignment.js:4:17
+    4| declare var d: (number) => mixed;
+                       ^^^^^^ [1]
+   destructuring_assignment.js:12:24
+   12|         {d: (n) => (n: empty)} // error: num ~> empty
+                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- destructuring_assignment.js:17:14
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   destructuring_assignment.js:17:14
+   17|   a: (n) => (n: empty), // error: num ~> empty
+                    ^
+
+References:
+   destructuring_assignment.js:1:17
+    1| declare var a: (number) => mixed;
+                       ^^^^^^ [1]
+   destructuring_assignment.js:17:17
+   17|   a: (n) => (n: empty), // error: num ~> empty
+                       ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- destructuring_assignment.js:18:14
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   destructuring_assignment.js:18:14
+   18|   b: (n) => (n: empty), // error: num ~> empty
+                    ^
+
+References:
+   destructuring_assignment.js:2:17
+    2| declare var b: (number) => mixed;
+                       ^^^^^^ [1]
+   destructuring_assignment.js:18:17
+   18|   b: (n) => (n: empty), // error: num ~> empty
+                       ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- destructuring_assignment.js:23:19
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   destructuring_assignment.js:23:19
+   23| [...e] = [(n) => (n: empty)]; // error: num ~> empty
+                         ^
+
+References:
+   destructuring_assignment.js:21:23
+   21| declare var e: Array<(number) => mixed>;
+                             ^^^^^^ [1]
+   destructuring_assignment.js:23:22
+   23| [...e] = [(n) => (n: empty)]; // error: num ~> empty
+                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- destructuring_assignment.js:24:27
+
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   destructuring_assignment.js:24:27
+   24| ({...f} = {hello: (n) => (n: empty)}); // error: num ~> empty
+                                 ^
+
+References:
+   destructuring_assignment.js:22:28
+   22| declare var f: {[string]: (number) => mixed};
+                                  ^^^^^^ [1]
+   destructuring_assignment.js:24:30
+   24| ({...f} = {hello: (n) => (n: empty)}); // error: num ~> empty
+                                    ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- destructuring_assignment.js:26:14
+
+Missing an annotation on `n`. [missing-local-annot]
+
+   26| [, b] = [1, (n) => {}]; // error: missing-local-annot (array hole pattern is unsupported)
+                    ^
+
+
 Error --------------------------------------------------------------------------- encountered_placeholder_failure.js:8:5
 
 An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
@@ -901,4 +1045,4 @@ References:
 
 
 
-Found 67 errors
+Found 76 errors

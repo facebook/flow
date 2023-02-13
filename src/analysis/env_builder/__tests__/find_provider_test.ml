@@ -373,6 +373,22 @@ for (x in {a: 'a'}) { };
 
          "
                "[(2, 10) to (2, 11)]";
+         "destructuring_1"
+         >:: mk_provider_loc_test
+               (mk_loc (2, 1) (2, 2))
+               "
+         var [a,b]: ?number = [];
+         [a] = null;
+         "
+               "[(1, 5) to (1, 6)]";
+         "destructuring_2"
+         >:: mk_provider_loc_test
+               (mk_loc (2, 2) (2, 3))
+               "
+         var [a,b]: ?number = [];
+         {[a] = null};
+         "
+               "[(1, 5) to (1, 6)]";
          "nested1"
          >:: mk_provider_loc_test
                (mk_loc (1, 4) (1, 5))

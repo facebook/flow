@@ -601,7 +601,7 @@ struct
               ignore @@ visitor#expression expr
         )
       in
-      let depends_of_hint_node state = function
+      let rec depends_of_hint_node state = function
         | AnnotationHint (tparams_map, anno) -> depends_of_annotation tparams_map anno state
         | ValueHint e -> depends_of_expression e state
         | ProvidersHint providers ->
@@ -617,6 +617,18 @@ struct
         | StringLiteralType _ -> state
         | BuiltinType _ -> state
         | AnyErrorHint _ -> state
+        | ComposedArrayPatternHint (_, elements) ->
+          Base.List.fold elements ~init:state ~f:(fun state -> function
+            | ArrayElementPatternHint h
+            | ArrayRestElementPatternHint h ->
+              depends_of_hint_node state h
+          )
+        | ComposedObjectPatternHint (_, props) ->
+          Base.List.fold props ~init:state ~f:(fun state -> function
+            | ObjectPropPatternHint (_, _, h)
+            | ObjectSpreadPropPatternHint h ->
+              depends_of_hint_node state h
+          )
       in
       let rec depends_of_hint state = function
         | Hint.Hint_Placeholder -> state
