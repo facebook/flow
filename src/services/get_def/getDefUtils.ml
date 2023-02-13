@@ -14,6 +14,12 @@ let ( >>| ) = Result.( >>| )
 
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
+type cache_data = {
+  obj_to_obj_map: Type.Properties.Set.t Loc_collections.LocMap.t;
+  cx: Context.t;
+  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
+}
+
 module ObjectKeyAtLoc : sig
   (* Given a location, returns Some (enclosing_literal_loc, prop_loc, name) if the given location
    * points to an object literal key. The first location returned is the location for the entire
@@ -255,15 +261,15 @@ let set_obj_to_obj_hook ~reader () =
   let obj_to_obj_map = ref Loc_collections.LocMap.empty in
   let obj_to_obj_hook _ctxt obj1 obj2 =
     match get_object_literal_loc obj1 with
-    | Some obj_aloc ->
+    | Some obj1_aloc ->
       let open Type in
       (match (obj1, obj2) with
       | (DefT (_, _, ObjT _), DefT (_, _, ObjT { props_tmap = obj2_props_id; _ })) ->
         obj_to_obj_map :=
           Loc_collections.LocMap.adjust
-            (loc_of_aloc ~reader obj_aloc)
+            (loc_of_aloc ~reader obj1_aloc)
             (function
-              | None -> Properties.Set.singleton obj2_props_id
+              | None -> Properties.Set.add obj2_props_id Properties.Set.empty
               | Some ids -> Properties.Set.add obj2_props_id ids)
             !obj_to_obj_map
       | _ -> ())
@@ -430,6 +436,14 @@ and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
     )
   )
 
+let get_loc_of_prop ~reader props name =
+  match NameUtils.Map.find_opt (Reason.OrdinaryName name) props with
+  | Some prop ->
+    (match Type.Property.read_loc prop with
+    | Some aloc -> Some (loc_of_aloc ~reader aloc)
+    | None -> None)
+  | None -> None
+
 let def_info_of_typecheck_results ~reader cx obj_to_obj_map props_access_info =
   let def_info_of_class_member_locs locs =
     (* We want to include the immediate implementation as well as all superclass implementations.
@@ -449,14 +463,6 @@ let def_info_of_typecheck_results ~reader cx obj_to_obj_map props_access_info =
         None
     in
     extract_def_loc ~reader cx ty name >>| def_info_of_def_loc
-  in
-  let get_loc_of_prop ~reader props name =
-    match NameUtils.Map.find_opt (Reason.OrdinaryName name) props with
-    | Some prop ->
-      (match Type.Property.read_loc prop with
-      | Some aloc -> Some (loc_of_aloc ~reader aloc)
-      | None -> None)
-    | None -> None
   in
   match props_access_info with
   | Obj_def (loc, name) -> Ok (Some (Nel.one (Object loc), name))
@@ -525,8 +531,8 @@ let add_literal_properties literal_key_info def_info =
     else
       Ok (Some (Nel.cons (Object loc) defs, name1))
 
-let get_def_info ~reader ~options profiling file_key ast_info loc : (def_info option, string) result
-    =
+let get_def_info ~reader ~options profiling file_key ast_info loc :
+    (def_info option * cache_data, string) result =
   let (ast, file_sig, info) = ast_info in
   let do_check () =
     Merge_service.check_contents_context ~reader options file_key ast info file_sig
@@ -553,3 +559,4 @@ let get_def_info ~reader ~options profiling file_key ast_info loc : (def_info op
     ~f:(def_info_of_typecheck_results ~reader cx obj_to_obj_map)
     ~default:(Ok None)
     def_kind
+  >>| fun def_info -> (def_info, { obj_to_obj_map; cx; typed_ast })
