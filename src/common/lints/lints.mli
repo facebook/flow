@@ -50,8 +50,7 @@ type lint_kind =
   | ThisInExportedFunction
   | MixedImportAndRequire
   | ExportRenamedDefault
-  | UnusedPromiseInAsyncScope
-  | UnusedPromiseInSyncScope
+  | UnusedPromise
 
 val string_of_kind : lint_kind -> string
 

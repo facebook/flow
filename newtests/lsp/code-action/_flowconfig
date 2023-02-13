@@ -3,4 +3,4 @@ exact_by_default=false
 enums=true
 
 [lints]
-unused-promise-in-async-scope=error
+unused-promise=error

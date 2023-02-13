@@ -9666,13 +9666,13 @@ Flags: --lsp
 fixme.js:14:8
 Flags: --lsp
 {
-  "label":"$FlowFixMe[unused-promise-in-async-scope]",
+  "label":"$FlowFixMe[unused-promise]",
   "kind":1,
   "sortText":"00000000000000000000",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":13,"character":7},"end":{"line":13,"character":7}},
-    "newText":"\\$FlowFixMe[unused-promise-in-async-scope] ${1:reason for suppression}"
+    "newText":"\\$FlowFixMe[unused-promise] ${1:reason for suppression}"
   },
   "command":{
     "title":"",
@@ -9685,7 +9685,7 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[unused-promise-in-async-scope]"
+        "completion":"$FlowFixMe[unused-promise]"
       }
     ]
   }

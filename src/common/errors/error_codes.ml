@@ -162,8 +162,7 @@ type error_code =
   | DefinitionCycle
   | RecursiveDefinition
   | LogicalAssignmentOperatorsNotSupported
-  | UnusedPromiseInAsyncScope
-  | UnusedPromiseInSyncScope
+  | UnusedPromise
   | BigIntRShift3
   | BigIntNumCoerce
 
@@ -192,8 +191,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ThisInExportedFunction -> ThisInExportedFunction
   | Lints.MixedImportAndRequire -> MixedImportAndRequire
   | Lints.ExportRenamedDefault -> ExportRenamedDefault
-  | Lints.UnusedPromiseInAsyncScope -> UnusedPromiseInAsyncScope
-  | Lints.UnusedPromiseInSyncScope -> UnusedPromiseInSyncScope
+  | Lints.UnusedPromise -> UnusedPromise
 
 let string_of_code : error_code -> string = function
   | AmbiguousObjectType -> "ambiguous-object-type"
@@ -352,7 +350,6 @@ let string_of_code : error_code -> string = function
   | DefinitionCycle -> "definition-cycle"
   | RecursiveDefinition -> "recursive-definition"
   | LogicalAssignmentOperatorsNotSupported -> "logical-assignment-operators-not-supported"
-  | UnusedPromiseInAsyncScope -> "unused-promise-in-async-scope"
-  | UnusedPromiseInSyncScope -> "unused-promise-in-sync-scope"
+  | UnusedPromise -> "unused-promise"
   | BigIntRShift3 -> "bigint-unsigned-right-shift"
   | BigIntNumCoerce -> "bigint-num-coerce"

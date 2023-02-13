@@ -1678,11 +1678,7 @@ let kind_of_msg =
     | EThisInExportedFunction _ -> LintError Lints.ThisInExportedFunction
     | EMixedImportAndRequire _ -> LintError Lints.MixedImportAndRequire
     | EExportRenamedDefault _ -> LintError Lints.ExportRenamedDefault
-    | EUnusedPromise { async; _ } ->
-      if async then
-        LintError Lints.UnusedPromiseInAsyncScope
-      else
-        LintError Lints.UnusedPromiseInSyncScope
+    | EUnusedPromise _ -> LintError Lints.UnusedPromise
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
