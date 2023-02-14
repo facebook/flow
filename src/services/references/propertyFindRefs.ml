@@ -201,9 +201,9 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
      )
   >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyAccess
 
-let property_find_refs_in_file ~reader ~cache_data ast_info file_key def_info name =
-  let { obj_to_obj_map; cx; typed_ast } = cache_data in
+let property_find_refs_in_file ~reader ast_info type_info file_key def_info name =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
+  let (cx, typed_ast, obj_to_obj_map) = type_info in
   let (ast, _file_sig, _info) = ast_info in
   let local_defs =
     Nel.to_list (all_locs_of_property_def_info def_info)
@@ -230,10 +230,10 @@ let property_find_refs_in_file ~reader ~cache_data ast_info file_key def_info na
     >>| ( @ ) literal_prop_refs_result
   )
 
-let find_local_refs ~reader ~options ~profiling file_key ast_info loc =
-  match get_def_info ~reader ~options profiling file_key ast_info loc with
+let find_local_refs ~reader file_key ast_info type_info loc =
+  match get_def_info ~reader type_info loc with
   | Error _ as err -> err
-  | Ok (None, _) -> Ok None
-  | Ok (Some (def_info, name), cache_data) ->
-    property_find_refs_in_file ~reader ~cache_data ast_info file_key def_info name >>= fun refs ->
+  | Ok None -> Ok None
+  | Ok (Some (def_info, name)) ->
+    property_find_refs_in_file ~reader ast_info type_info file_key def_info name >>= fun refs ->
     Ok (Some (name, refs))
