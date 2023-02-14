@@ -5405,7 +5405,7 @@ module Make
         MemberExpression (match_member_expressions o_mexp c_mexp)
       | (_, _) -> Tast_utils.error_mapper#jsx_element_name c_name
 
-  and jsx_mk_props cx reason name attributes children =
+  and jsx_mk_props cx reason ?(check_expression = expression ?cond:None) name attributes children =
     let open Ast.JSX in
     let is_react = Context.jsx cx = Options.Jsx_react in
     let reason_props =
@@ -5451,7 +5451,7 @@ module Make
                       }
                     )
                     ) ->
-                let (((_, t), _) as e) = expression cx (loc, e) in
+                let (((_, t), _) as e) = check_expression cx (loc, e) in
                 ( t,
                   Some
                     (Attribute.ExpressionContainer
@@ -5497,7 +5497,7 @@ module Make
             (acc, atts)
           (* <element {...spread} /> *)
           | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) ->
-            let (((_, spread), _) as argument) = expression cx argument in
+            let (((_, spread), _) as argument) = check_expression cx argument in
             let acc = ObjectExpressionAcc.add_spread spread acc in
             let att =
               Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments })

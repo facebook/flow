@@ -65,6 +65,8 @@ module type S = sig
   val jsx_mk_props :
     Context.t ->
     Reason.reason ->
+    ?check_expression:
+      (Context.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t) ->
     string ->
     (ALoc.t, ALoc.t) Ast.JSX.Opening.attribute list ->
     ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list ->
