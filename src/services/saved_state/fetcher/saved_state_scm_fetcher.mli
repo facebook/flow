@@ -6,3 +6,5 @@
  *)
 
 include Saved_state_fetcher.FETCHER
+
+val output_filename : Options.t -> (string, string) result Lwt.t

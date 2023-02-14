@@ -29,15 +29,16 @@ let get_changes_since vcs vcs_root hash =
   | Vcs.Hg -> Hg.files_changed_since ~cwd hash
   | Vcs.Git -> Git.files_changed_since ~cwd hash
 
-let saved_states options root =
+let saved_states_dir options root =
   let root_str = Path.to_string root in
-  let saved_states_dir =
-    let saved_states_dir = Filename.concat root_str ".flow.saved_states" in
-    match Options.root_name options with
-    | Some name -> Filename.concat saved_states_dir (String_utils.filename_escape name)
-    | None -> saved_states_dir
-  in
-  match Sys.readdir saved_states_dir with
+  let dir = Filename.concat root_str ".flow.saved_states" in
+  match Options.root_name options with
+  | Some name -> Filename.concat dir (String_utils.filename_escape name)
+  | None -> dir
+
+let saved_states options root =
+  let dir = saved_states_dir options root in
+  match Sys.readdir dir with
   | exception Sys_error _ -> None
   | entries ->
     let regex = Str.regexp "\\([0-9]+\\)_\\([a-f0-9]+\\)" in
@@ -53,7 +54,7 @@ let saved_states options root =
             None
       )
     in
-    Some (saved_states_dir, entries)
+    Some (dir, entries)
 
 let pick_saved_state options root merge_base timestamp =
   let ( let* ) = Option.bind in
@@ -158,3 +159,15 @@ let fetch ~options =
               Hh_logger.error "Failed to fetch files changed since the saved state: %s" msg;
               Lwt.return Saved_state_fetcher.Saved_state_error)))
   )
+
+let output_filename options =
+  let root = Options.root options in
+  match Vcs.find_root root with
+  | None -> Lwt.return (Error "Unable to detect a source control root: no .git or .hg folder")
+  | Some (vcs, vcs_root) ->
+    (match%lwt merge_base_and_timestamp vcs vcs_root with
+    | Error msg -> Lwt.return (Error msg)
+    | Ok (merge_base, timestamp) ->
+      let dir = saved_states_dir options root in
+      let file = Printf.sprintf "%10d_%s" timestamp merge_base in
+      Lwt.return (Ok (Filename.concat dir file)))

@@ -95,7 +95,7 @@ module Request = struct
         omit_targ_defaults: bool;
       }
     | RAGE of { files: string list }
-    | SAVE_STATE of { outfile: Path.t }
+    | SAVE_STATE of { out: [ `File of Path.t | `Scm ] }
     | STATUS of { include_warnings: bool }
 
   let to_string = function
@@ -169,7 +169,13 @@ module Request = struct
       )
     | RAGE { files } -> Printf.sprintf "rage %s" (String.concat " " files)
     | STATUS { include_warnings = _ } -> "status"
-    | SAVE_STATE { outfile } -> Printf.sprintf "save-state %s" (Path.to_string outfile)
+    | SAVE_STATE { out } ->
+      let out =
+        match out with
+        | `Scm -> "--scm"
+        | `File file -> Path.to_string file
+      in
+      Printf.sprintf "save-state %s" out
 
   type command_with_context = {
     client_logging_context: FlowEventLogger.logging_context;
@@ -294,7 +300,7 @@ module Response = struct
         status_response: status_response;
         lazy_stats: lazy_stats;
       }
-    | SAVE_STATE of (unit, string) result
+    | SAVE_STATE of (string, string) result
 
   let to_string = function
     | AUTOCOMPLETE _ -> "autocomplete response"

@@ -375,6 +375,7 @@ end = struct
 
     let%lwt data = collect_data ~genv ~env ~profiling in
     let filename = Path.to_string saved_state_filename in
+    Files.mkdirp (Filename.dirname filename) 0o777;
     let%lwt fd = Lwt_unix.openfile filename [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
     let%lwt header_bytes_written = write_version fd in
     Hh_logger.info "Compressing saved state with lz4";

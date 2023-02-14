@@ -1058,9 +1058,28 @@ let handle_status ~reader ~options ~profiling ~env =
   let (status_response, lazy_stats) = get_status ~profiling ~reader ~options env in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
 
-let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
+let handle_save_state ~options ~out ~genv ~profiling ~env =
+  let%lwt saved_state_filename =
+    match out with
+    | `Scm ->
+      (match%lwt Saved_state_scm_fetcher.output_filename options with
+      | Ok file -> Lwt.return_ok (Path.make file)
+      | Error err -> Lwt.return_error err)
+    | `File file -> Lwt.return_ok file
+  in
   let%lwt result =
-    try_with_lwt (fun () -> save_state ~saved_state_filename ~genv ~env ~profiling)
+    match saved_state_filename with
+    | Ok saved_state_filename ->
+      let out_str = Path.to_string saved_state_filename in
+      (match%lwt
+         try_with_lwt (fun () -> save_state ~saved_state_filename ~genv ~env ~profiling)
+       with
+      | Ok () -> Lwt.return_ok (Printf.sprintf "Created saved-state file `%s`\n%!" out_str)
+      | Error err ->
+        Lwt.return_error
+          (Printf.sprintf "Failed to create saved-state file `%s`:\n%s\n%!" out_str err))
+    | Error err ->
+      Lwt.return_error (Printf.sprintf "Failed to determine saved-state output file: %s" err)
   in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
@@ -1330,10 +1349,10 @@ let get_ephemeral_handler genv command =
      * for the current recheck to finish. So even though we could technically make `flow status`
      * parallelizable, we choose to make it nonparallelizable *)
     Handle_nonparallelizable (handle_status ~reader ~options)
-  | ServerProt.Request.SAVE_STATE { outfile } ->
+  | ServerProt.Request.SAVE_STATE { out } ->
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)
-    Handle_nonparallelizable (handle_save_state ~saved_state_filename:outfile ~genv)
+    Handle_nonparallelizable (handle_save_state ~options ~out ~genv)
 
 let send_command_summary profiling name =
   MonitorRPC.send_telemetry

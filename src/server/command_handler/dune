@@ -14,6 +14,7 @@
   flow_service_inference
   flow_service_inference_module
   flow_service_jsdoc
+  flow_service_saved_state_fetcher
   flow_service_type_info
   flow_typing
   flow_code_action)
