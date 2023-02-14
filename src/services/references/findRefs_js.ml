@@ -17,20 +17,13 @@ let local_variable_refs scope_info loc =
   | None -> (None, loc)
   | Some (var_refs, local_def_loc) -> (Some var_refs, local_def_loc)
 
-let parse_contents ~options ~profiling content file_key =
-  match Type_contents.parse_contents ~options ~profiling content file_key with
-  | (Some (Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ }), _errs) ->
-    Ok (ast, file_sig, docblock)
-  | (None, errs) ->
-    if Flow_error.ErrorSet.is_empty errs then
-      Error "Parse skipped"
-    else
-      Error "Parse unexpectedly failed"
-
-let find_local_refs ~reader ~options ~profiling ~file_key ~content ~line ~col =
+let find_local_refs ~reader ~options ~profiling ~file_key ~parse_artifacts ~line ~col =
   let open Base.Result.Let_syntax in
   let loc = Loc.cursor (Some file_key) line col in
-  let%bind ast_info = parse_contents ~options ~profiling content file_key in
+  let ast_info =
+    match parse_artifacts with
+    | Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ } -> (ast, file_sig, docblock)
+  in
   (* Start by running local variable find references *)
   let (ast, _, _) = ast_info in
   let scope_info =
