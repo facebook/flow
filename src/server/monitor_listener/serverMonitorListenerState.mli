@@ -28,9 +28,6 @@ val push_files_to_force_focused_and_recheck : SSet.t -> unit
 
 val push_dependencies_to_prioritize : Utils_js.FilenameSet.t -> unit
 
-val push_files_to_resync_after_file_watcher_restart :
-  ?metadata:MonitorProt.file_watcher_metadata -> SSet.t -> unit
-
 val cancellation_requests : Lsp.IdSet.t ref
 
 type recheck_workload = {
