@@ -67,11 +67,17 @@ echo
 # Force things to get merged
 assert_ok "$FLOW" force-recheck --focus dependent.js
 
+# Wait for recheck
+printf "No new errors:\n"
+assert_ok "$FLOW" status --no-auto-start
+echo
+
 # Move to commit2
 printf "Moving to commit 2\n"
 git checkout -f "$COMMIT2" --quiet
 echo
 
+# Trigger a reinit from saved state
 assert_ok "$FLOW" force-recheck --missed-changes --changed-mergebase dummy.js
 
 # Wait for reinit

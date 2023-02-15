@@ -12,6 +12,12 @@ Moving back to initial commit
 
 Found correct merge base hash: Yes
 
+No new errors:
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 2/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
 Moving to commit 2
 
 No new errors:
