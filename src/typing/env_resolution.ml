@@ -86,33 +86,34 @@ let mk_selector_reason_has_default cx loc = function
     (Type.Elem t, mk_reason (RProperty None) loc, has_default)
   | Name_def.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
 
+let synthesize_expression_for_instantiation cx e =
+  let original_errors = Context.errors cx in
+  Context.reset_errors cx Flow_error.ErrorSet.empty;
+  let (produced_placeholders, e) =
+    Context.run_in_synthesis_mode cx (fun () -> Statement.expression cx e)
+  in
+  let can_cache =
+    (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
+       we can cache the result *)
+    (not produced_placeholders) && Flow_error.ErrorSet.is_empty (Context.errors cx)
+  in
+  Context.reset_errors cx original_errors;
+  if can_cache then Node_cache.set_expression (Context.node_cache cx) e;
+  e
+
 let synth_arg_list cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ }) =
-  Base.List.map arguments ~f:(fun e ->
-      let original_errors = Context.errors cx in
-      Context.reset_errors cx Flow_error.ErrorSet.empty;
-      let (produced_placeholders, e) =
-        Context.run_in_synthesis_mode cx (fun () ->
-            let ((_t, _) as e') = Statement.expression_or_spread cx e in
-            e'
-        )
-      in
-      let can_cache =
-        (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
-           we can cache the result *)
-        (not produced_placeholders) && Flow_error.ErrorSet.is_empty (Context.errors cx)
-      in
-      Context.reset_errors cx original_errors;
-      let cached_exp =
-        let open Ast.Expression in
-        match e with
-        | (_, Expression e) -> e
-        | (_, Spread (_, { SpreadElement.argument = e; comments = _ })) -> e
-      in
-      if can_cache then Node_cache.set_expression (Context.node_cache cx) cached_exp;
-      let (t, _) = e in
-      let ((loc, _), _) = cached_exp in
-      (loc, t)
-  )
+  Base.List.map
+    arguments
+    ~f:
+      (let open Ast.Expression in
+      function
+      | Expression e ->
+        let ((loc, t), _) = synthesize_expression_for_instantiation cx e in
+        (loc, Arg t)
+      | Spread (_, { SpreadElement.argument = e; comments = _ }) ->
+        let ((loc, t), _) = synthesize_expression_for_instantiation cx e in
+        (loc, SpreadArg t)
+      )
 
 let resolve_hint cx loc hint =
   let rec resolve_hint_node = function
@@ -222,7 +223,13 @@ let resolve_hint cx loc hint =
         Context.reset_errors cx Flow_error.ErrorSet.empty;
         let (_, (props, _, unresolved_params, _)) =
           Context.run_in_synthesis_mode cx (fun () ->
-              Statement.jsx_mk_props cx reason name props children
+              Statement.jsx_mk_props
+                cx
+                reason
+                ~check_expression:synthesize_expression_for_instantiation
+                name
+                props
+                children
           )
         in
         Context.reset_errors cx original_errors;
