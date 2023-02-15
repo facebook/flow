@@ -66,11 +66,6 @@ and recheck_files =
               in the files changed since mergebase. *)
     }
   | DependenciesToPrioritize of FilenameSet.t
-  | FilesToResync of SSet.t
-      (** When the file watcher restarts, it can miss changes so we need to recheck
-          all of these files. This differs subtly from [ChangedFiles] because they
-          didn't necessarily change, and we want to run the recheck even if they
-          didn't, because we also need to recheck ServerEnv's checked files. *)
 
 (* Files which have changed *)
 let (recheck_stream, push_recheck_msg) = Lwt_stream.create ()
@@ -94,9 +89,6 @@ let push_lazy_init ?metadata files =
 
 let push_dependencies_to_prioritize dependencies =
   push_recheck_msg (DependenciesToPrioritize dependencies)
-
-let push_files_to_resync_after_file_watcher_restart ?metadata changed_since_mergebase =
-  push_recheck_msg ?metadata (FilesToResync changed_since_mergebase)
 
 let pop_next_workload () = WorkloadStream.pop workload_stream
 
@@ -246,9 +238,6 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
                  | Priority -> CheckedSet.diff to_prioritize (get_forced ())
                in
                update ~files_to_force workload
-             | FilesToResync changed_since_mergebase ->
-               let updates = process_updates ~skip_incompatible:false changed_since_mergebase in
-               update ~files_to_recheck:updates workload
            in
            match file_watcher_metadata with
            | None -> workload
