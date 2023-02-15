@@ -8,7 +8,7 @@ function f() {
     return 42;
 }
 
-var x = (function h() { (h(): empty); return 42 }); // err
+var x = (function h() { (h(): empty); return 42 }); // err in old inference, no err in LTI
 
 (f(): empty); // err
 (g(): empty); // err

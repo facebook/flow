@@ -26,8 +26,8 @@ class Unannotated {
 }
 
 const a1 = new Unannotated();
-(a1: empty);
+(a1: empty); // error
 const b1 = a1.x;
-(b1: empty);
+(b1: empty); // error
 const c1 = a1.foo(b1);
-(c1: empty);
+(c1: empty); // error in old inference, no error in LTI
