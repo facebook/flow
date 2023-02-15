@@ -2390,26 +2390,36 @@ let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checke
         ~env
         options
     in
-    let%lwt env =
-      handle_updates_since_saved_state
-        ~profiling
-        ~workers
-        ~options
-        ~libs_ok
-        updates_since_saved_state
-        env
-    in
     (* TODO: what do we do if they're not? exit? *)
     ignore libs_ok;
-    recheck_impl
-      ~profiling
-      ~options
-      ~workers
-      ~updates
+
+    let updates_since_saved_state =
+      (* In lazy mode, we just want to merge the upstream changes since saved
+         state (as dependencies), so downgrade them. *)
+      let should_force_recheck = Options.saved_state_force_recheck options in
+      if (not (Options.lazy_mode options)) || should_force_recheck then
+        updates_since_saved_state
+      else
+        CheckedSet.(add ~dependencies:(all updates_since_saved_state) empty)
+    in
+
+    (* schedule a recheck of all changes since saved state -- both the upstream
+       changes between when the saved state was generated and master, and local
+       updates since master. *)
+    let updates = CheckedSet.union updates_since_saved_state updates in
+    will_be_checked_files := CheckedSet.union updates files_to_force;
+    ServerMonitorListenerState.push_after_reinit
+      ~files_to_prioritize:(CheckedSet.dependencies updates)
+      ~files_to_recheck:(CheckedSet.focused updates)
       ~files_to_force
-      ~changed_mergebase:None
-      ~will_be_checked_files
-      env
+      ();
+
+    (* TODO: these are stubbed out because we didn't actually recheck *)
+    let log_recheck_event ~profiling:_ = Lwt.return_unit in
+    let recheck_stats =
+      { LspProt.dependent_file_count = 0; changed_file_count = 0; top_cycle = None }
+    in
+    Lwt.return (log_recheck_event, recheck_stats, env)
 
 let recheck
     ~profiling
