@@ -58,12 +58,6 @@ module type S = sig
     Check.t ->
     output Subst_name.Map.t
 
-  val run :
-    Context.t ->
-    Check.t ->
-    on_completion:(Context.t -> output Subst_name.Map.t -> 'result) ->
-    'result
-
   val fold :
     implicit_instantiation_cx:Context.t ->
     cx:Context.t ->

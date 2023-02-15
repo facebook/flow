@@ -70,12 +70,6 @@ module type S = sig
     Check.t ->
     output Subst_name.Map.t
 
-  val run :
-    Context.t ->
-    Check.t ->
-    on_completion:(Context.t -> output Subst_name.Map.t -> 'result) ->
-    'result
-
   val fold :
     implicit_instantiation_cx:Context.t ->
     cx:Context.t ->
@@ -973,11 +967,6 @@ struct
               cx
               (Flow_error.ErrorSet.union init_errors implicit_instantiation_errors))
     )
-
-  let run cx check ~on_completion =
-    let { Implicit_instantiation_check.operation = (use_op, _, _); _ } = check in
-    let subst_map = solve_targs ~use_op cx check in
-    on_completion cx subst_map
 
   let fold ~implicit_instantiation_cx ~cx ~f ~init ~post implicit_instantiation_checks =
     let r =
