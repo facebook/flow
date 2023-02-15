@@ -422,7 +422,16 @@ function foo<T: mixed>(x: T) {
     f: (x: mixed)
   }
 }
-No errors!
+Error -------------------------------------------------------------------------------------------------- tmp/out.js:3:29
+
+Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
+
+   3| function foo<T: mixed>(x: T) {
+                                  
+
+
+
+Found 1 error
 react-0.js 5 21
 // @flow
 

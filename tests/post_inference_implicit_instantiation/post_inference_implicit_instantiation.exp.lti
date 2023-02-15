@@ -78,14 +78,6 @@ References:
                          ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- jsx_fragment_context.js:5:53
-
-Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
-
-   5| function PolyComponent<TItem>(props: {item?: TItem}) { return null }
-                                                          
-
-
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:2:7
 
 Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
@@ -978,4 +970,4 @@ References:
 
 
 
-Found 63 errors
+Found 62 errors

@@ -126,8 +126,8 @@ class finder cx =
         async = _;
         generator = _;
         predicate;
-        return;
         tparams;
+        return = _;
         sig_loc = _;
         comments = _;
       } =
@@ -154,9 +154,6 @@ class finder cx =
       let _ = Base.Option.map ~f:this#function_this_param this_ in
 
       let (_ : (ml, tl) Ast.Identifier.t option) = map_opt this#t_function_identifier ident in
-      let (_ : (ml, tl) Ast.Type.annotation_or_hint) =
-        this#labeled_type_annotation_hint "return" return
-      in
       let (_ : (ml, tl) Ast.Type.Predicate.t option) = map_opt this#type_predicate predicate in
       (* Check the function body in a scope that contains both the function's parameters and also any
          class type parameters if we're inside a class toplevel. *)
@@ -218,13 +215,10 @@ class finder cx =
       meth
 
     method! class_property prop =
-      let { Ast.Class.Property.key; value; annot; static; variance = _; comments = _ } = prop in
-      let (label, is_munged) = this#object_key_label key in
+      let { Ast.Class.Property.key; value; static; annot = _; variance = _; comments = _ } = prop in
+      let (_, is_munged) = this#object_key_label key in
       let check_prop () =
         let (_ : (ml, tl) Ast.Expression.Object.Property.key) = this#object_key key in
-        let (_ : (ml, tl) Ast.Type.annotation_or_hint) =
-          this#labeled_type_annotation_hint label annot
-        in
         ()
       in
       ( if is_munged && not static then
@@ -263,21 +257,11 @@ class finder cx =
       | Ast.Expression.Object.Property.Computed _ -> ("computed property", false)
 
     method! class_private_field field =
-      let {
-        Ast.Class.PrivateField.key = (_, { Ast.PrivateName.name = label; _ }) as key;
-        value;
-        annot;
-        static;
-        variance = _;
-        comments = _;
-      } =
+      let { Ast.Class.PrivateField.key; value; static; annot = _; variance = _; comments = _ } =
         field
       in
       let check_prop () =
         let (_ : ml Ast.PrivateName.t) = this#private_name key in
-        let (_ : (ml, tl) Ast.Type.annotation_or_hint) =
-          this#labeled_type_annotation_hint label annot
-        in
         ()
       in
       ( if not static then
@@ -309,17 +293,6 @@ class finder cx =
     method! pattern_object_property_identifier_key ?kind:_ key =
       (* Don't explore object property identifier keys, only value identifiers. *)
       key
-
-    method labeled_type_annotation_hint name node =
-      let open Ast.Type in
-      begin
-        match node with
-        | Missing (loc, ty) ->
-          let (_ : ALoc.t * Type.t) = this#on_type_annot (loc, ty) in
-          this#blame (mk_reason (RCustom name) loc) ty
-        | Available _annot -> ()
-      end;
-      node
 
     method! binding_pattern ?(kind = Ast.Variable.Var) ((_, patt) as expr) =
       (* We can only suggest annotations for bare variable declarations, not destructurings. *)
