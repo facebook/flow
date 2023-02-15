@@ -261,7 +261,7 @@ val literal_subtypes : t -> (ALoc.t * Env_api.literal_check) list
 
 val constrained_writes : t -> (Type.t * Type.use_op * Type.t) list
 
-val call_arg_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
+val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
 val verbose : t -> Verbose.t option
 
@@ -337,7 +337,7 @@ val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
 
 val add_constrained_write : t -> Type.t * Type.use_op * Type.t -> unit
 
-val add_call_arg_lower_bound : t -> ALoc.t -> Type.t -> unit
+val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 

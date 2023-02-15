@@ -11,14 +11,14 @@ module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
 let map_of_fixable_missing_local_params cx =
   let all_errors = Context.errors cx in
   let aloc_tables = Context.aloc_tables cx in
-  let arg_types = Context.call_arg_lower_bounds cx in
+  let missing_local_annot_lower_bounds = Context.missing_local_annot_lower_bounds cx in
   let add_fixable_missing_local_annot_loc err acc =
     match Flow_error.msg_of_error err with
     | Error_message.EMissingLocalAnnotation _ ->
       Base.Option.fold
         ~f:(fun acc aloc ->
           let loc = ALoc.to_loc_with_tables aloc_tables aloc in
-          match ALocFuzzyMap.find_opt aloc arg_types with
+          match ALocFuzzyMap.find_opt aloc missing_local_annot_lower_bounds with
           | None -> acc
           | Some (t1, ts) ->
             let reason = TypeUtil.reason_of_t t1 in

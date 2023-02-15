@@ -1902,6 +1902,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           fparams;
           body = None;
           return_t = Annotated return_t;
+          ret_annot_loc = loc_of_t return_t;
           statics = None;
         },
         {

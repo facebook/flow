@@ -885,6 +885,9 @@ module Make
     Env.in_class_scope cx x.class_loc (fun () ->
         let method_ ~set_asts f =
           let (params_ast, body_ast, init_ast) = F.toplevels cx f in
+          Base.Option.iter init_ast ~f:(fun ((_, t), _) ->
+              Context.add_missing_local_annot_lower_bound cx f.F.Types.ret_annot_loc t
+          );
           set_asts (params_ast, body_ast, init_ast)
         in
         let field _name (_, _, value) =

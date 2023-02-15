@@ -61,9 +61,9 @@ let autofix_exports_code_actions
   else
     []
 
-let autofix_missing_func_param_types_code_actions
+let autofix_missing_local_annot_code_actions
     ~options ~full_cx ~ast ~file_sig ~tolerable_errors:_ ~typed_ast ~diagnostics uri loc =
-  let open Autofix_missing_local_param_annots in
+  let open Autofix_missing_local_annots in
   let fixable_locs = map_of_fixable_missing_local_params full_cx in
   let entry =
     Base.List.find ~f:(fun (err_loc, _) -> Loc.contains err_loc loc) (LocMap.elements fixable_locs)
@@ -864,7 +864,7 @@ let code_actions_at_loc
         ~only
         uri
         loc
-    @ autofix_missing_func_param_types_code_actions
+    @ autofix_missing_local_annot_code_actions
         ~options
         ~full_cx:cx
         ~ast
