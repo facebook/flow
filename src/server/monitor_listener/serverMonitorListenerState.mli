@@ -28,6 +28,13 @@ val push_files_to_force_focused_and_recheck : SSet.t -> unit
 
 val push_dependencies_to_prioritize : Utils_js.FilenameSet.t -> unit
 
+val push_after_reinit :
+  ?files_to_prioritize:Utils_js.FilenameSet.t ->
+  ?files_to_recheck:Utils_js.FilenameSet.t ->
+  ?files_to_force:CheckedSet.t ->
+  unit ->
+  unit
+
 val cancellation_requests : Lsp.IdSet.t ref
 
 type recheck_workload = {

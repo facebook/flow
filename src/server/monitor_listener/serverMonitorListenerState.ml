@@ -66,6 +66,11 @@ and recheck_files =
               in the files changed since mergebase. *)
     }
   | DependenciesToPrioritize of FilenameSet.t
+  | FilesToReinit of {
+      files_to_prioritize: FilenameSet.t;
+      files_to_recheck: FilenameSet.t;
+      files_to_force: CheckedSet.t;
+    }
 
 (* Files which have changed *)
 let (recheck_stream, push_recheck_msg) = Lwt_stream.create ()
@@ -89,6 +94,13 @@ let push_lazy_init ?metadata files =
 
 let push_dependencies_to_prioritize dependencies =
   push_recheck_msg (DependenciesToPrioritize dependencies)
+
+let push_after_reinit
+    ?(files_to_prioritize = FilenameSet.empty)
+    ?(files_to_recheck = FilenameSet.empty)
+    ?(files_to_force = CheckedSet.empty)
+    () =
+  push_recheck_msg (FilesToReinit { files_to_prioritize; files_to_recheck; files_to_force })
 
 let pop_next_workload () = WorkloadStream.pop workload_stream
 
@@ -120,6 +132,7 @@ let recheck_acc = ref empty_recheck_workload
 
 (** Updates [workload] while maintaining physical equality if there's nothing to do *)
 let update ?files_to_prioritize ?files_to_recheck ?files_to_force ?metadata workload =
+  let orig_workload = workload in
   let workload =
     match files_to_prioritize with
     | Some new_files_to_prioritize ->
@@ -173,7 +186,7 @@ let update ?files_to_prioritize ?files_to_recheck ?files_to_force ?metadata work
         { workload with metadata }
     | None -> workload
   in
-  workload
+  (workload, orig_workload != workload)
 
 type workload_changes = {
   num_files_to_prioritize: int;
@@ -220,11 +233,13 @@ let summarize_changes a b =
  * it.
  *)
 let recheck_fetch ~process_updates ~get_forced ~priority =
-  recheck_acc :=
+  let (acc, changed) =
     Lwt_stream.get_available recheck_stream
     (* Get all the files which have changed *)
-    |> Base.List.fold_left ~init:!recheck_acc ~f:(fun workload { files; file_watcher_metadata } ->
-           let workload =
+    |> Base.List.fold
+         ~init:(!recheck_acc, false)
+         ~f:(fun (workload, changed_acc) { files; file_watcher_metadata } ->
+           let (workload, changed) =
              match files with
              | ChangedFiles (changed_files, urgent) ->
                let updates = process_updates ~skip_incompatible:false changed_files in
@@ -249,11 +264,26 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
                  | Priority -> CheckedSet.diff to_prioritize (get_forced ())
                in
                update ~files_to_force workload
+             | FilesToReinit { files_to_prioritize; files_to_recheck; files_to_force } ->
+               let (workload, _changed) =
+                 update ~files_to_prioritize ~files_to_recheck ~files_to_force workload
+               in
+               (* pushing files to reinit should not trigger a "change", because
+                  these files are not caused by a distinct event, like a file
+                  watcher event; they're a continuation of the existing reinit
+                  event. *)
+               (workload, false)
            in
-           match file_watcher_metadata with
-           | None -> workload
-           | Some metadata -> update ~metadata workload
+           let (workload, metadata_changed) =
+             match file_watcher_metadata with
+             | None -> (workload, false)
+             | Some metadata -> update ~metadata workload
+           in
+           (workload, changed_acc || changed || metadata_changed)
        )
+  in
+  recheck_acc := acc;
+  changed
 
 let requeue_workload workload =
   Hh_logger.info
@@ -273,7 +303,7 @@ let requeue_workload workload =
   recheck_acc := next
 
 let get_and_clear_recheck_workload ~process_updates ~get_forced =
-  recheck_fetch ~process_updates ~get_forced ~priority:Normal;
+  let _changed = recheck_fetch ~process_updates ~get_forced ~priority:Normal in
   let recheck_workload = !recheck_acc in
   let { files_to_force; files_to_prioritize; files_to_recheck; _ } = recheck_workload in
   (* if there are any dependencies to force, then we will return them first and leave everything
@@ -330,9 +360,8 @@ let wait_for_parallelizable_workload () =
 let rec wait_for_updates_for_recheck ~process_updates ~get_forced ~priority =
   let%lwt () = wait_for recheck_stream in
   let workload_before = !recheck_acc in
-  recheck_fetch ~process_updates ~get_forced ~priority;
-  let workload_after = !recheck_acc in
-  if workload_before != workload_after then
+  if recheck_fetch ~process_updates ~get_forced ~priority then
+    let workload_after = !recheck_acc in
     Lwt.return (summarize_changes workload_before workload_after)
   else
     wait_for_updates_for_recheck ~process_updates ~get_forced ~priority
