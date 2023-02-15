@@ -67,6 +67,13 @@ val autofix_exports :
   file_content:string ->
   (Replacement_printer.patch * string list, string) result
 
+val autofix_missing_local_annot :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  file_key:File_key.t ->
+  file_content:string ->
+  (Replacement_printer.patch, string) result
+
 val insert_type :
   options:Options.t ->
   env:ServerEnv.env ->

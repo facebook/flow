@@ -563,6 +563,11 @@ let autofix_exports ~options ~profiling ~input =
   File_input.content_of_file_input input >>= fun file_content ->
   Code_action_service.autofix_exports ~options ~profiling ~file_key ~file_content
 
+let autofix_missing_local_annot ~options ~profiling ~input =
+  let file_key = file_key_of_file_input ~options input in
+  File_input.content_of_file_input input >>= fun file_content ->
+  Code_action_service.autofix_missing_local_annot ~options ~profiling ~file_key ~file_content
+
 let collect_rage ~profiling ~options ~reader ~env ~files =
   let items = [] in
   (* options *)
@@ -921,6 +926,10 @@ let handle_autofix_exports ~options ~input ~profiling ~env:_ =
   let result = try_with (fun () -> autofix_exports ~options ~profiling ~input) in
   Lwt.return (ServerProt.Response.AUTOFIX_EXPORTS result, None)
 
+let handle_autofix_missing_local_annot ~options ~input ~profiling ~env:_ =
+  let result = try_with (fun () -> autofix_missing_local_annot ~options ~profiling ~input) in
+  Lwt.return (ServerProt.Response.AUTOFIX_MISSING_LOCAL_ANNOT result, None)
+
 let handle_check_file ~options ~force ~input ~profiling ~env =
   let response = check_file ~options ~env ~force ~profiling input in
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
@@ -1222,6 +1231,9 @@ let get_ephemeral_handler genv command =
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
     mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options)
+  | ServerProt.Request.AUTOFIX_MISSING_LOCAL_ANNOT { input; verbose; wait_for_recheck } ->
+    let options = { options with Options.opt_verbose = verbose } in
+    mk_parallelizable ~wait_for_recheck ~options (handle_autofix_missing_local_annot ~input ~options)
   | ServerProt.Request.CHECK_FILE { input; verbose; force; include_warnings; wait_for_recheck } ->
     let options =
       {

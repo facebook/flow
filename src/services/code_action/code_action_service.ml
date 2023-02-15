@@ -1017,6 +1017,27 @@ let autofix_exports ~options ~profiling ~file_key ~file_content =
     Ok (Insert_type.mk_patch ~opts ast new_ast file_content, it_errs)
   | Error _ -> Error "Failed to type-check file"
 
+let autofix_missing_local_annot ~options ~profiling ~file_key ~file_content =
+  let open Autofix_missing_local_annots in
+  let file_artifacts =
+    let ((_, parse_errs) as intermediate_result) =
+      Type_contents.parse_contents ~options ~profiling file_content file_key
+    in
+    if not (Flow_error.ErrorSet.is_empty parse_errs) then
+      Error parse_errs
+    else
+      Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
+  in
+  match file_artifacts with
+  | Ok
+      ( Parse_artifacts { ast; file_sig; _ },
+        Typecheck_artifacts { cx = full_cx; typed_ast; obj_to_obj_map = _ }
+      ) ->
+    let new_ast = fix_all_missing_param_annot_errors_in_file ~cx:full_cx ~file_sig ~typed_ast ast in
+    let opts = layout_options options in
+    Ok (Insert_type.mk_patch ~opts ast new_ast file_content)
+  | Error _ -> Error "Failed to type-check file"
+
 let insert_type
     ~options
     ~env

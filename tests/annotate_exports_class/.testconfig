@@ -1,2 +1,2 @@
 cmd: annotate-exports
-TODO_LTI: true
+skip_lti: true
