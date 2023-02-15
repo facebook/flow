@@ -37,6 +37,8 @@ module type S = sig
     (* type params map *)
     Reason.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+    (* annot loc *)
+    ALoc.t ->
     (* init *)
     Type.annotated_or_inferred ->
     (* return *)

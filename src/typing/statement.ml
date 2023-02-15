@@ -6247,6 +6247,12 @@ module Make
     let mk_field cx tparams_map reason annot init =
       let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
       let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
+      let annot_loc =
+        match annot with
+        | Ast.Type.Missing loc
+        | Ast.Type.Available (loc, _) ->
+          loc
+      in
       let (field, get_init) =
         match init with
         | Ast.Class.Property.Declared -> (Annot annot_t, Fun.const Ast.Class.Property.Declared)
@@ -6305,12 +6311,6 @@ module Make
               in
               Flow.flow_t cx (t, annot_t)
             | (_, Inferred _) ->
-              let annot_loc =
-                match annot with
-                | Ast.Type.Missing loc
-                | Ast.Type.Available (loc, _) ->
-                  loc
-              in
               Flow.add_output
                 cx
                 (Error_message.EMissingLocalAnnotation
@@ -6326,7 +6326,7 @@ module Make
           end;
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
           ( Infer
-              ( Func_stmt_sig.field_initializer tparams_map reason expr annot_or_inferred,
+              ( Func_stmt_sig.field_initializer tparams_map reason expr annot_loc annot_or_inferred,
                 (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
               ),
             fun () ->
@@ -7248,6 +7248,7 @@ module Make
             fparams;
             body;
             return_t;
+            ret_annot_loc = ret_loc;
             statics = Some statics_t;
           },
           fun params body fun_type ->

@@ -8661,7 +8661,7 @@ struct
           let reason = reason_of_use_t tout in
           def_aloc_of_reason reason
         in
-        Context.add_call_arg_lower_bound cx par_def_loc tin;
+        Context.add_missing_local_annot_lower_bound cx par_def_loc tin;
         ((tin, tout) :: used_pairs, unused_arglist, unused_parlist)
     in
     fun cx ~trace ~use_op ~is_strict ~def_reason ~spread_arg ~rest_param reason_op (arglist, parlist)

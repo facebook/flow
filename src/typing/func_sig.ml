@@ -12,7 +12,8 @@ open Type
 open TypeUtil
 include Func_sig_intf
 
-class func_scope_visitor cx ~has_return_annot ~return_t ~yield_t ~next_t ~body_loc kind exhaust =
+class func_scope_visitor
+  cx ~has_return_annot ~ret_annot_loc ~return_t ~yield_t ~next_t ~body_loc kind exhaust =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -166,6 +167,7 @@ class func_scope_visitor cx ~has_return_annot ~return_t ~yield_t ~next_t ~body_l
              }
           )
       in
+      if not has_return_annot then Context.add_missing_local_annot_lower_bound cx ret_annot_loc t;
       Flow.flow cx (t, UseT (use_op, return_t));
       no_return <- false
   end
@@ -192,10 +194,11 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
+      ret_annot_loc = Reason.aloc_of_reason reason;
       statics = None;
     }
 
-  let field_initializer tparams_map reason expr return_annot_or_inferred =
+  let field_initializer tparams_map reason expr annot_loc return_annot_or_inferred =
     {
       T.reason;
       kind = FieldInit expr;
@@ -204,6 +207,7 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = return_annot_or_inferred;
+      ret_annot_loc = annot_loc;
       statics = None;
     }
 
@@ -278,7 +282,9 @@ struct
     | [] -> AnyT.error reason
 
   let toplevels cx x =
-    let { T.reason = reason_fn; kind; tparams_map; fparams; body; return_t; _ } = x in
+    let { T.reason = reason_fn; kind; tparams_map; fparams; body; ret_annot_loc; return_t; _ } =
+      x
+    in
     let body_loc =
       let open Ast.Function in
       match body with
@@ -524,7 +530,17 @@ struct
     in
 
     let () =
-      (new func_scope_visitor cx ~has_return_annot ~return_t ~yield_t ~next_t ~body_loc kind exhaust)
+      (new func_scope_visitor
+         cx
+         ~has_return_annot
+         ~ret_annot_loc
+         ~return_t
+         ~yield_t
+         ~next_t
+         ~body_loc
+         kind
+         exhaust
+      )
         #visit
         statements_ast
     in
