@@ -140,6 +140,7 @@ let kinds_of_string = function
   | "this-in-exported-function" -> Some [ThisInExportedFunction]
   | "mixed-import-and-require" -> Some [MixedImportAndRequire]
   | "export-renamed-default" -> Some [ExportRenamedDefault]
+  | "unused-promise" -> Some [UnusedPromiseInAsyncScope; UnusedPromiseInSyncScope]
   | "unused-promise-in-async-scope" -> Some [UnusedPromiseInAsyncScope]
   | "unused-promise-in-sync-scope" -> Some [UnusedPromiseInSyncScope]
   | _ -> None

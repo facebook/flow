@@ -1,6 +1,5 @@
 [lints]
-unused-promise-in-async-scope=error
-unused-promise-in-sync-scope=error
+unused-promise=error
 
 [options]
 all=true
