@@ -25,9 +25,13 @@ let merge_base_and_timestamp vcs vcs_root =
 
 let get_changes_since vcs vcs_root hash =
   let cwd = Path.to_string vcs_root in
-  match vcs with
-  | Vcs.Hg -> Hg.files_changed_since ~cwd hash
-  | Vcs.Git -> Git.files_changed_since ~cwd hash
+  match%lwt
+    match vcs with
+    | Vcs.Hg -> Hg.files_changed_since ~cwd hash
+    | Vcs.Git -> Git.files_changed_since ~cwd hash
+  with
+  | Ok files -> Lwt.return_ok (Base.List.map ~f:(Filename.concat cwd) files)
+  | Error err -> Lwt.return_error err
 
 let saved_states_dir options root =
   let root_str = Path.to_string root in
