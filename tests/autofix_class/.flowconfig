@@ -8,6 +8,7 @@
 
 [options]
 all=true
+inference_mode=lti
 exact_by_default=false
 
 [strict]

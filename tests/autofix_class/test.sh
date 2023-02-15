@@ -8,7 +8,19 @@ mkdir tmp || rm tmp/*
 cp .flowconfig tmp/.flowconfig
 start_flow tmp
 
-do_file () {
+fix_missing_local_annot() {
+  FILE=$1; shift
+
+  cp "$FILE" "tmp/$FILE"
+
+  echo "> flow autofix missing-local-annot $FILE"
+  assert_ok "$FLOW" autofix missing-local-annot --in-place "$FILE"
+  assert_ok "$FLOW" force-recheck "$FILE"
+  echo "> cat $FILE"
+  cat "$FILE"
+}
+
+insert_type () {
   FILE=$1; shift
 
   cp "$FILE" "tmp/$FILE"
@@ -26,9 +38,11 @@ do_file () {
   cat "$FILE"
 }
 
-do_file a.js 6 3 6 14    7 3 7 11
-do_file b.js 4 6 4 6
-do_file c.js 4 3 4 24    9 17 9 17
+fix_missing_local_annot a.js
+insert_type a.js 7 3 7 11
+fix_missing_local_annot b.js
+fix_missing_local_annot c.js
+insert_type c.js 4 3 4 32    9 17 9 17
 
 echo "> flow status"
 assert_ok "$FLOW" status

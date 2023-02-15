@@ -158,6 +158,88 @@ module InsertType = struct
   let command = CommandSpec.command spec main
 end
 
+module MissingLocalAnnot = struct
+  let spec =
+    {
+      name = "missing-local-annot";
+      doc = "[EXPERIMENTAL] automatically fix missing-local-annot errors";
+      usage = Printf.sprintf "Usage: %s autofix missing-local-annot [OPTION]... [FILE]\n" exe_name;
+      args =
+        ArgSpec.(
+          empty
+          |> base_flags
+          |> connect_and_json_flags
+          |> root_flag
+          |> strip_root_flag
+          |> verbose_flags
+          |> from_flag
+          |> path_flag
+          |> wait_for_recheck_flag
+          |> flag
+               "--in-place"
+               truthy
+               ~doc:"Overwrite the input file or file specified by the path flag"
+          |> anon "file" (required string)
+        );
+    }
+
+  let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
+
+  let select_output_channel in_place path source_path =
+    match (in_place, path, source_path) with
+    | (false, _, _) -> stdout
+    | (true, Some p, _)
+    | (true, None, p) -> begin
+      try open_out p with
+      | _ ->
+        handle_error ~code:Exit.Path_is_not_a_file
+        @@ Printf.sprintf "failed to open output file: %s" p
+    end
+
+  let avg_error_size = 100
+
+  let handle_ok patch input in_place path source_path =
+    let write_patch content =
+      let out = select_output_channel in_place path source_path in
+      output_string out @@ Replacement_printer.print patch content;
+      close_out out
+    in
+    match File_input.content_of_file_input input with
+    | Ok content -> write_patch content
+    | Error msg -> handle_error msg
+
+  let main
+      base_flags
+      option_values
+      json
+      _pretty
+      root_arg
+      _strip_root_arg
+      verbose
+      path
+      wait_for_recheck
+      in_place
+      source_path
+      () =
+    let source_path = expand_path source_path in
+    let input = get_file_from_filename_or_stdin ~cmd:spec.name path (Some source_path) in
+    let root = get_the_root ~base_flags ~input root_arg in
+    let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+    if (not json) && verbose <> None then
+      prerr_endline "NOTE: --verbose writes to the server log file";
+    let request =
+      ServerProt.Request.AUTOFIX_MISSING_LOCAL_ANNOT { input; verbose; wait_for_recheck }
+    in
+    let result = connect_and_make_request flowconfig_name option_values root request in
+    match result with
+    | ServerProt.Response.AUTOFIX_MISSING_LOCAL_ANNOT (Error err) -> handle_error err
+    | ServerProt.Response.AUTOFIX_MISSING_LOCAL_ANNOT (Ok patch) ->
+      handle_ok patch input in_place path source_path
+    | _ -> handle_error "Flow: invalid server response"
+
+  let command = CommandSpec.command spec main
+end
+
 module Exports = struct
   let spec =
     {
@@ -257,6 +339,10 @@ let command =
     CommandUtils.subcommand_spec
       ~name:"autofix"
       ~doc:""
-      [("insert-type", InsertType.command); ("exports", Exports.command)]
+      [
+        ("insert-type", InsertType.command);
+        ("missing-local-annot", MissingLocalAnnot.command);
+        ("exports", Exports.command);
+      ]
   in
   CommandSpec.command spec main
