@@ -118,8 +118,8 @@ let empty_recheck_workload =
 
 let recheck_acc = ref empty_recheck_workload
 
-(** Updates [workload] while maintaining physical equality of each key if there's nothing to do *)
-let update ?files_to_prioritize ?files_to_recheck ?files_to_force workload =
+(** Updates [workload] while maintaining physical equality if there's nothing to do *)
+let update ?files_to_prioritize ?files_to_recheck ?files_to_force ?metadata workload =
   let workload =
     match files_to_prioritize with
     | Some new_files_to_prioritize ->
@@ -128,7 +128,10 @@ let update ?files_to_prioritize ?files_to_recheck ?files_to_force workload =
         |> FilenameSet.diff new_files_to_prioritize
         |> FilenameSet.union workload.files_to_prioritize
       in
-      { workload with files_to_prioritize }
+      if workload.files_to_prioritize == files_to_prioritize then
+        workload
+      else
+        { workload with files_to_prioritize }
     | None -> workload
   in
   let workload =
@@ -139,7 +142,10 @@ let update ?files_to_prioritize ?files_to_recheck ?files_to_force workload =
         |> FilenameSet.diff new_files_to_recheck
         |> FilenameSet.union workload.files_to_recheck
       in
-      { workload with files_to_recheck }
+      if workload.files_to_recheck == files_to_recheck then
+        workload
+      else
+        { workload with files_to_recheck }
     | None -> workload
   in
   let workload =
@@ -150,7 +156,21 @@ let update ?files_to_prioritize ?files_to_recheck ?files_to_force workload =
         |> CheckedSet.diff new_files_to_force
         |> CheckedSet.union workload.files_to_force
       in
-      { workload with files_to_force }
+      if workload.files_to_force == files_to_force then
+        workload
+      else
+        { workload with files_to_force }
+    | None -> workload
+  in
+  let workload =
+    match metadata with
+    | Some new_metadata ->
+      let metadata = MonitorProt.merge_file_watcher_metadata new_metadata workload.metadata in
+      (* merge_file_watcher_metadata doesn't maintain physical equality so use =, not == *)
+      if workload.metadata = metadata then
+        workload
+      else
+        { workload with metadata }
     | None -> workload
   in
   workload
@@ -161,12 +181,12 @@ type workload_changes = {
   num_files_to_force: int;
 }
 
-let workload_changed a b =
+let summarize_changes a b =
   let {
     files_to_prioritize = files_to_prioritize_a;
     files_to_recheck = files_to_recheck_a;
     files_to_force = files_to_force_a;
-    metadata = { MonitorProt.changed_mergebase = _; missed_changes = missed_changes_a };
+    _;
   } =
     a
   in
@@ -174,29 +194,20 @@ let workload_changed a b =
     files_to_prioritize = files_to_prioritize_b;
     files_to_recheck = files_to_recheck_b;
     files_to_force = files_to_force_b;
-    metadata = { MonitorProt.changed_mergebase = _; missed_changes = missed_changes_b };
+    _;
   } =
     b
   in
-  let changed =
-    files_to_prioritize_a != files_to_prioritize_b
-    || files_to_recheck_a != files_to_recheck_b
-    || files_to_force_a != files_to_force_b
-    || missed_changes_a != missed_changes_b
+  let num_files_to_prioritize =
+    FilenameSet.cardinal files_to_prioritize_b - FilenameSet.cardinal files_to_prioritize_a
   in
-  if changed then
-    let num_files_to_prioritize =
-      FilenameSet.cardinal files_to_prioritize_b - FilenameSet.cardinal files_to_prioritize_a
-    in
-    let num_files_to_recheck =
-      FilenameSet.cardinal files_to_recheck_b - FilenameSet.cardinal files_to_recheck_a
-    in
-    let num_files_to_force =
-      CheckedSet.cardinal files_to_force_b - CheckedSet.cardinal files_to_force_a
-    in
-    Some { num_files_to_prioritize; num_files_to_recheck; num_files_to_force }
-  else
-    None
+  let num_files_to_recheck =
+    FilenameSet.cardinal files_to_recheck_b - FilenameSet.cardinal files_to_recheck_a
+  in
+  let num_files_to_force =
+    CheckedSet.cardinal files_to_force_b - CheckedSet.cardinal files_to_force_a
+  in
+  { num_files_to_prioritize; num_files_to_recheck; num_files_to_force }
 
 (* Process the messages which are currently in the recheck stream and return the resulting workload
  *
@@ -241,9 +252,7 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
            in
            match file_watcher_metadata with
            | None -> workload
-           | Some metadata ->
-             let metadata = MonitorProt.merge_file_watcher_metadata metadata workload.metadata in
-             { workload with metadata }
+           | Some metadata -> update ~metadata workload
        )
 
 let requeue_workload workload =
@@ -323,9 +332,10 @@ let rec wait_for_updates_for_recheck ~process_updates ~get_forced ~priority =
   let workload_before = !recheck_acc in
   recheck_fetch ~process_updates ~get_forced ~priority;
   let workload_after = !recheck_acc in
-  match workload_changed workload_before workload_after with
-  | Some changes -> Lwt.return changes
-  | None -> wait_for_updates_for_recheck ~process_updates ~get_forced ~priority
+  if workload_before != workload_after then
+    Lwt.return (summarize_changes workload_before workload_after)
+  else
+    wait_for_updates_for_recheck ~process_updates ~get_forced ~priority
 
 (* Block until any stream receives something *)
 let wait_for_anything ~process_updates ~get_forced =
