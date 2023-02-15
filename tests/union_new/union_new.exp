@@ -293,6 +293,14 @@ References:
                                             ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- test19.js:5:16
+
+Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
+
+   5| function m<X>() {
+                     
+
+
 Error -------------------------------------------------------------------------------------------------- test20.js:14:26
 
 Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
@@ -464,7 +472,7 @@ References:
 
 
 
-Found 24 errors
+Found 25 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

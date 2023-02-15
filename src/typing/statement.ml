@@ -7125,9 +7125,7 @@ module Make
               return
           in
           let from_generic_function = Base.Option.is_some tparams in
-          let require_return_annot =
-            require_return_annot || (Context.lti cx && from_generic_function)
-          in
+          let require_return_annot = require_return_annot || from_generic_function in
           begin
             match return with
             | (Inferred t, _) when has_nonvoid_return && require_return_annot ->
