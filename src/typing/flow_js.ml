@@ -3872,10 +3872,14 @@ struct
         (*************************)
         (* objects can be copied *)
         (*************************)
-        | (DefT (reason_obj, _, ObjT { props_tmap; flags; _ }), ObjRestT (reason, xs, t, id)) ->
+        | ( DefT (reason_obj, _, ObjT { props_tmap; flags = { obj_kind; _ }; _ }),
+            ObjRestT (reason_op, xs, t, id)
+          ) ->
           ConstFoldExpansion.guard id (reason_obj, 0) (function
               | 0 ->
-                let o = Flow_js_utils.objt_to_obj_rest cx props_tmap flags reason xs in
+                let o =
+                  Flow_js_utils.objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs
+                in
                 rec_flow_t cx trace ~use_op:unknown_use (o, t)
               | _ -> ()
               )
@@ -3887,26 +3891,22 @@ struct
                 rec_flow cx trace (super, ReposLowerT (reason, false, u))
             )
           in
-          (* Spread own props from the instance into another object *)
-          let props = Context.find_props cx insttype.own_props in
-          let props =
-            List.fold_left (fun props x -> NameUtils.Map.remove (OrdinaryName x) props) props xs
+          let o =
+            Flow_js_utils.objt_to_obj_rest
+              cx
+              insttype.own_props
+              ~obj_kind:Exact
+              ~reason_op
+              ~reason_obj:reason
+              xs
           in
+          (* Combine super and own props. *)
           let use_op = Op (ObjectSpread { op = reason_op }) in
           let spread_tool = Object.Resolve Object.Next in
           let spread_target = Object.Spread.Value { make_seal = Obj_type.mk_seal ~frozen:false } in
           let spread_state =
             {
-              Object.Spread.todo_rev =
-                [
-                  Object.Spread.Slice
-                    {
-                      Object.Spread.reason = reason_op;
-                      prop_map = props;
-                      generics = Generic.spread_empty;
-                      dict = None;
-                    };
-                ];
+              Object.Spread.todo_rev = [Object.Spread.Type o];
               acc = [];
               spread_id = Reason.mk_id ();
               union_reason = None;
@@ -7919,6 +7919,7 @@ struct
               | UpdateProperty _
               | JSXCreateElement _
               | ObjectSpread _
+              | ObjectRest _
               | ObjectChain _
               | TypeApplication _
               | Speculation _

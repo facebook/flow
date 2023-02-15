@@ -384,6 +384,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             | Op (Type.Speculation _) when speculation -> `UnknownRoot true
             | Op (Type.Speculation use) -> `Next use
             | Op (ObjectSpread { op }) -> `Root (op, None, [text "Cannot spread "; desc op])
+            | Op (ObjectRest { op }) -> `Root (op, None, [text "Cannot get rest of "; desc op])
             | Op (ObjectChain { op }) ->
               `Root (op, None, [text "Incorrect arguments passed to "; desc op])
             | Op (Arith { op; left; right }) ->

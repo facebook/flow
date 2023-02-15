@@ -1970,16 +1970,37 @@ let keylist_of_props props reason_op =
     props
     []
 
-let objt_to_obj_rest cx props_tmap flags reason xs =
+let objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs =
   let props = Context.find_props cx props_tmap in
   let props = List.fold_left (fun map x -> NameUtils.Map.remove (OrdinaryName x) map) props xs in
   (* Remove shadow properties from rest result *)
   (* TODO consider converting to SMap here so downstream code doesn't need to
    * handle internal names *)
   let props = NameUtils.Map.filter (fun x _ -> not (is_internal_name x)) props in
-  let proto = ObjProtoT reason in
-  let obj_kind = flags.obj_kind in
-  Obj_type.mk_with_proto cx reason ~props proto ~obj_kind
+  let use_op = Op (ObjectRest { op = replace_desc_reason (desc_of_reason reason_obj) reason_op }) in
+  let props =
+    NameUtils.Map.mapi
+      (fun name -> function
+        | Field (loc, t, polarity) ->
+          if not @@ Polarity.compat (polarity, Polarity.Positive) then
+            add_output
+              cx
+              (Error_message.EPropNotReadable
+                 { reason_prop = reason_of_t t; prop_name = Some name; use_op }
+              );
+          Field (loc, t, Polarity.Neutral)
+        | Set (_, t) as p ->
+          add_output
+            cx
+            (Error_message.EPropNotReadable
+               { reason_prop = reason_of_t t; prop_name = Some name; use_op }
+            );
+          p
+        | p -> p)
+      props
+  in
+  let proto = ObjProtoT reason_op in
+  Obj_type.mk_with_proto cx reason_op ~props proto ~obj_kind
 
 (* $Values *)
 

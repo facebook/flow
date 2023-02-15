@@ -1761,8 +1761,74 @@ References:
                    ^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- value.js:60:4
 
-Found 106 errors
+Cannot cast `rest.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   value.js:60:4
+   60|   (rest.a: empty); // ERROR
+          ^^^^^^
+
+References:
+   value.js:54:9
+   54|     +a: number,
+               ^^^^^^ [1]
+   value.js:60:12
+   60|   (rest.a: empty); // ERROR
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- value.js:72:4
+
+Cannot cast `rest.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   value.js:72:4
+   72|   (rest.a: empty); // ERROR
+          ^^^^^^
+
+References:
+   value.js:66:9
+   66|     +a: number;
+               ^^^^^^ [1]
+   value.js:72:12
+   72|   (rest.a: empty); // ERROR
+                  ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- value.js:81:19
+
+Cannot get rest of object type because property `a` is not readable. [cannot-read]
+
+   81|   const {b: _, ...rest} = x; // ERROR
+                         ^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- value.js:89:19
+
+Cannot get rest of interface type because property `a` is not readable. [cannot-read]
+
+   89|   const {b: _, ...rest} = x; // ERROR
+                         ^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- value.js:97:19
+
+Cannot get rest of object type because property `a` is not readable. [cannot-read]
+
+   97|   const {b: _, ...rest} = x; // ERROR
+                         ^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- value.js:105:19
+
+Cannot get rest of object type because property `a` is not readable. [cannot-read]
+
+   105|   const {b: _, ...rest} = x; // ERROR
+                          ^^^^
+
+
+
+Found 112 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

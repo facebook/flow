@@ -519,6 +519,7 @@ let rec mod_loc_of_virtual_use_op f =
   let mod_loc_of_root_use_op f = function
     | InitField { op; body } -> InitField { op = mod_reason op; body = mod_reason body }
     | ObjectSpread { op } -> ObjectSpread { op = mod_reason op }
+    | ObjectRest { op } -> ObjectRest { op = mod_reason op }
     | ObjectChain { op } -> ObjectChain { op = mod_reason op }
     | Arith { op; left; right } ->
       Arith { op = mod_reason op; left = mod_reason left; right = mod_reason right }

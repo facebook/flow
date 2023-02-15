@@ -48,3 +48,59 @@
     (others: {|a: number, b: string|}); // OK
   }
 }
+{
+  // Read-only prop of obj
+  declare const x: {
+    +a: number,
+    b: number,
+  };
+  const {b: _, ...rest} = x;
+
+  (rest.a: number); // OK
+  (rest.a: empty); // ERROR
+  rest.a = 1; // OK
+}
+{
+  // Read-only prop of interface
+  declare const x: interface {
+    +a: number;
+    b: number;
+  };
+  const {b: _, ...rest} = x;
+
+  (rest.a: number); // OK
+  (rest.a: empty); // ERROR
+  rest.a = 1; // OK
+}
+{
+  // Write-only prop of obj
+  declare const x: {
+    -a: number,
+    b: number,
+  };
+  const {b: _, ...rest} = x; // ERROR
+}
+{
+  // Write-only prop of interface
+  declare const x: interface {
+    -a: number,
+    b: number,
+  };
+  const {b: _, ...rest} = x; // ERROR
+}
+{
+  // Setters of obj
+  declare const x: {
+    set a(number): void,
+    b: number,
+  };
+  const {b: _, ...rest} = x; // ERROR
+}
+{
+  // Setters of interface
+  declare const x: {
+    set a(number): void,
+    b: number,
+  };
+  const {b: _, ...rest} = x; // ERROR
+}

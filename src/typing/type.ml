@@ -282,6 +282,7 @@ module rec TypeTerm : sig
 
   and 'loc virtual_root_use_op =
     | ObjectSpread of { op: 'loc virtual_reason }
+    | ObjectRest of { op: 'loc virtual_reason }
     | ObjectChain of { op: 'loc virtual_reason }
     | Arith of {
         op: 'loc virtual_reason;
@@ -3503,6 +3504,7 @@ let replace_speculation_root_use_op =
 let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | InitField { op; _ }
   | ObjectSpread { op }
+  | ObjectRest { op }
   | ObjectChain { op }
   | Arith { op; _ }
   | AssignVar { init = op; _ }
@@ -3643,6 +3645,7 @@ let string_of_internal_use_op = function
 let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | InitField _ -> "InitField"
   | ObjectSpread _ -> "ObjectSpread"
+  | ObjectRest _ -> "ObjectRest"
   | ObjectChain _ -> "ObjectChain"
   | Arith _ -> "Arith"
   | AssignVar _ -> "AssignVar"

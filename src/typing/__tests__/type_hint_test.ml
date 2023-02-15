@@ -509,9 +509,7 @@ let eval_hint_tests =
     "obj_rest_from_record_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"{foo: number}" "{foo: number}" [Decomp_ObjSpread];
     "obj_rest_from_record_positive_polarity"
-    >:: mk_eval_hint_test ~expected:"{+foo: number}" "{+foo: number}" [Decomp_ObjSpread];
-    "obj_rest_from_record_negative_polarity"
-    >:: mk_eval_hint_test ~expected:"{-foo: number}" "{-foo: number}" [Decomp_ObjSpread];
+    >:: mk_eval_hint_test ~expected:"{foo: number}" "{+foo: number}" [Decomp_ObjSpread];
     "obj_rest_from_dict_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"{[string]: number}" "{[string]: number}" [Decomp_ObjSpread];
     "obj_rest_from_dict_positive_polarity"
@@ -622,7 +620,7 @@ let eval_hint_tests =
           [Decomp_ObjProp "foo"; Decomp_JsxProps];
     "jsx_props_spread"
     >:: mk_eval_hint_test
-          ~expected:"{+bar: string, +foo: number}"
+          ~expected:"{bar: string, foo: number}"
           "({bar: string, foo: number}) => number"
           [Decomp_ObjSpread; Decomp_JsxProps];
     "jsx_ref_function"
