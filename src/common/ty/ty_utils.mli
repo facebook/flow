@@ -15,3 +15,5 @@ val simplify_type : merge_kinds:bool -> ?sort:bool -> Ty.t -> Ty.t
 val simplify_elt : merge_kinds:bool -> ?sort:bool -> Ty.elt -> Ty.elt
 
 val symbols_of_type : Ty.t -> Ty_symbol.symbol list
+
+val elt_equal : Ty.elt -> Ty.elt -> bool

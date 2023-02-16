@@ -344,6 +344,13 @@ class ['A] comparator_ty =
       with
       | Difference n -> n
 
+    method compare_elt (env : 'A) (elt1 : elt) (elt2 : elt) =
+      try
+        this#on_elt env elt1 elt2;
+        0
+      with
+      | Difference n -> n
+
     (* Take advantage of pointer equality at type nodes to short circut *)
     method! private on_t env x y =
       if x == y then

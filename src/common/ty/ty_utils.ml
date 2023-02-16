@@ -252,3 +252,5 @@ end
 let simplify_type ~merge_kinds ?(sort = false) = Simplify.run_type ~merge_kinds ~sort
 
 let simplify_elt ~merge_kinds ?(sort = false) = Simplify.run_elt ~merge_kinds ~sort
+
+let elt_equal elt1 elt2 = (new Ty.comparator_ty)#compare_elt () elt1 elt2 = 0
