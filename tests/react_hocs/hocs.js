@@ -1,5 +1,3 @@
-// @flow
-
 import * as React from 'react';
 
 declare export var compose: $Compose;

@@ -1,4 +1,4 @@
 [options]
-all=false
+all=true
 exact_by_default=false
 no_flowlib=false
