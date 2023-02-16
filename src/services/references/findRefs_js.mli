@@ -8,9 +8,9 @@
 val find_local_refs :
   reader:State_reader.t ->
   options:Options.t ->
-  profiling:Profiling_js.running ->
   file_key:File_key.t ->
   parse_artifacts:Types_js_types.parse_artifacts ->
+  typecheck_artifacts:Types_js_types.typecheck_artifacts ->
   line:int ->
   col:int ->
   (FindRefsTypes.find_refs_ok, string) result

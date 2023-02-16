@@ -19,6 +19,7 @@ type typecheck_artifacts =
   | Typecheck_artifacts of {
       cx: Context.t;
       typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
+      obj_to_obj_map: Type.Properties.Set.t Loc_collections.LocMap.t;
     }
 
 type file_artifacts = parse_artifacts * typecheck_artifacts

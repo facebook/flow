@@ -14,12 +14,6 @@ let ( >>| ) = Result.( >>| )
 
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
-type cache_data = {
-  obj_to_obj_map: Type.Properties.Set.t Loc_collections.LocMap.t;
-  cx: Context.t;
-  typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
-}
-
 module ObjectKeyAtLoc : sig
   (* Given a location, returns Some (enclosing_literal_loc, prop_loc, name) if the given location
    * points to an object literal key. The first location returned is the location for the entire
@@ -256,29 +250,6 @@ module Def_kind_search = struct
     with
     | Found def_kind -> Some def_kind
 end
-
-let set_obj_to_obj_hook ~reader () =
-  let obj_to_obj_map = ref Loc_collections.LocMap.empty in
-  let obj_to_obj_hook _ctxt obj1 obj2 =
-    match get_object_literal_loc obj1 with
-    | Some obj1_aloc ->
-      let open Type in
-      (match (obj1, obj2) with
-      | (DefT (_, _, ObjT _), DefT (_, _, ObjT { props_tmap = obj2_props_id; _ })) ->
-        obj_to_obj_map :=
-          Loc_collections.LocMap.adjust
-            (loc_of_aloc ~reader obj1_aloc)
-            (function
-              | None -> Properties.Set.add obj2_props_id Properties.Set.empty
-              | Some ids -> Properties.Set.add obj2_props_id ids)
-            !obj_to_obj_map
-      | _ -> ())
-    | _ -> ()
-  in
-  Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook;
-  obj_to_obj_map
-
-let unset_hooks () = Type_inference_hooks_js.reset_hooks ()
 
 type single_def_info =
   | Class of Loc.t
@@ -531,21 +502,8 @@ let add_literal_properties literal_key_info def_info =
     else
       Ok (Some (Nel.cons (Object loc) defs, name1))
 
-let get_def_info ~reader ~options profiling file_key ast_info loc :
-    (def_info option * cache_data, string) result =
-  let (ast, file_sig, info) = ast_info in
-  let do_check () =
-    Merge_service.check_contents_context ~reader options file_key ast info file_sig
-  in
-  let (cx, typed_ast, obj_to_obj_map) =
-    Profiling_js.with_timer profiling ~timer:"MergeContents" ~f:(fun () ->
-        let () = Type_contents.ensure_checked_dependencies ~options ~reader file_key file_sig in
-        let obj_to_obj_map_ref = set_obj_to_obj_hook ~reader () in
-        let (cx, typed_ast) = do_check () in
-        unset_hooks ();
-        (cx, typed_ast, !obj_to_obj_map_ref)
-    )
-  in
+let get_def_info ~reader type_info loc : (def_info option, string) result =
+  let (cx, typed_ast, obj_to_obj_map) = type_info in
   let def_kind =
     Def_kind_search.search
       ~f:(fun aloc ->
@@ -559,4 +517,3 @@ let get_def_info ~reader ~options profiling file_key ast_info loc :
     ~f:(def_info_of_typecheck_results ~reader cx obj_to_obj_map)
     ~default:(Ok None)
     def_kind
-  >>| fun def_info -> (def_info, { obj_to_obj_map; cx; typed_ast })

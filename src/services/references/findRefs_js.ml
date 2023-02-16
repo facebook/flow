@@ -17,12 +17,17 @@ let local_variable_refs scope_info loc =
   | None -> (None, loc)
   | Some (var_refs, local_def_loc) -> (Some var_refs, local_def_loc)
 
-let find_local_refs ~reader ~options ~profiling ~file_key ~parse_artifacts ~line ~col =
+let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artifacts ~line ~col =
   let open Base.Result.Let_syntax in
   let loc = Loc.cursor (Some file_key) line col in
   let ast_info =
     match parse_artifacts with
     | Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ } -> (ast, file_sig, docblock)
+  in
+  let type_info =
+    match typecheck_artifacts with
+    | Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map } ->
+      (cx, typed_ast, obj_to_obj_map)
   in
   (* Start by running local variable find references *)
   let (ast, _, _) = ast_info in
@@ -33,7 +38,7 @@ let find_local_refs ~reader ~options ~profiling ~file_key ~parse_artifacts ~line
   let%bind refs =
     match var_refs with
     | Some _ -> Ok var_refs
-    | None -> PropertyFindRefs.find_local_refs ~reader ~options ~profiling file_key ast_info loc
+    | None -> PropertyFindRefs.find_local_refs ~reader file_key ast_info type_info loc
   in
   let refs = Base.Option.map ~f:(fun (name, refs) -> (name, sort_and_dedup refs)) refs in
   Ok refs

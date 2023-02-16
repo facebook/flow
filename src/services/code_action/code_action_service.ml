@@ -1007,7 +1007,7 @@ let autofix_exports ~options ~profiling ~file_key ~file_content =
   match file_artifacts with
   | Ok
       ( Parse_artifacts { ast; file_sig; tolerable_errors; _ },
-        Typecheck_artifacts { cx = full_cx; typed_ast }
+        Typecheck_artifacts { cx = full_cx; typed_ast; obj_to_obj_map = _ }
       ) ->
     let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
     let (new_ast, it_errs) =
@@ -1062,7 +1062,10 @@ let insert_type
       Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
   in
   match file_artifacts with
-  | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx = full_cx; typed_ast }) ->
+  | Ok
+      ( Parse_artifacts { ast; file_sig; _ },
+        Typecheck_artifacts { cx = full_cx; typed_ast; obj_to_obj_map = _ }
+      ) ->
     (try
        let new_ast =
          Insert_type.insert_type

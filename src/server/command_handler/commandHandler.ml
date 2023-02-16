@@ -302,7 +302,7 @@ let autocomplete
       (Error err_str, Some json_data_to_log)
     | Ok
         ( Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ },
-          Typecheck_artifacts { cx; typed_ast }
+          Typecheck_artifacts { cx; typed_ast; _ }
         ) ->
       Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
           let open AutocompleteService_js in
@@ -403,8 +403,9 @@ let check_file ~options ~env ~profiling ~force file_input =
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
   Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
       let loc = Loc.cursor (Some file) line col in
-      let (Parse_artifacts { ast; file_sig; parse_errors; _ }, Typecheck_artifacts { cx; typed_ast })
-          =
+      let ( Parse_artifacts { ast; file_sig; parse_errors; _ },
+            Typecheck_artifacts { cx; typed_ast; _ }
+          ) =
         check_result
       in
       let file_sig = File_sig.abstractify_locs file_sig in
@@ -486,7 +487,8 @@ let infer_type
       let err_str = "Couldn't parse file in parse_artifacts" in
       let json_props = add_cache_hit_data_to_json [] did_hit_cache in
       (Error err_str, Some (Hh_json.JSON_Object json_props))
-    | Ok ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as check_result)
+    | Ok
+        ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) as check_result)
       ->
       let evaluate_type_destructors =
         if evaluate_type_destructors then
@@ -657,7 +659,7 @@ let dump_types ~options ~profiling ~evaluate_type_destructors file_input =
   in
   match file_artifacts_result with
   | Error _parse_errors -> Error "Couldn't parse file in parse_contents"
-  | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
+  | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
     Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast)
 
 let coverage ~options ~profiling ~type_parse_artifacts_cache ~force ~trust file_key content =
@@ -681,7 +683,7 @@ let coverage ~options ~profiling ~type_parse_artifacts_cache ~force ~trust file_
       Hh_json.JSON_Object json_props
     in
     match file_artifacts_result with
-    | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
+    | Ok (_, Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }) ->
       let coverage =
         Profiling_js.with_timer profiling ~timer:"Coverage" ~f:(fun () ->
             Type_info_service.coverage ~cx ~typed_ast ~force ~trust file_key content
@@ -1102,7 +1104,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
       | Error _ -> (Ok [], None)
       | Ok
           ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
-            Typecheck_artifacts { cx; typed_ast }
+            Typecheck_artifacts { cx; typed_ast; _ }
           ) ->
         let uri = TextDocumentIdentifier.(textDocument.uri) in
         let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
@@ -1160,7 +1162,8 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
     in
     (match file_artifacts_result with
     | Error _ -> Lwt.return (Ok [])
-    | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; typed_ast = _ }) ->
+    | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; typed_ast = _; obj_to_obj_map = _ })
+      ->
       Lwt.return (Ok (Code_action_service.autofix_imports ~options ~env ~reader ~cx ~ast ~uri)))
 
 let organize_imports ~options ~profiling ~client textDocument =
@@ -1934,7 +1937,7 @@ let handle_persistent_signaturehelp_lsp
            ~reason:"Couldn't parse file in parse_artifacts"
            metadata
         )
-    | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
+    | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
         let cursor_loc = Loc.cursor (Some path) line col in
@@ -1992,15 +1995,15 @@ let handle_persistent_document_highlight
         let err_str = "Couldn't parse file in parse_artifacts" in
         let json_props = add_cache_hit_data_to_json [] did_hit_cache in
         (Error err_str, Some (Hh_json.JSON_Object json_props))
-      | Ok (parse_artifacts, _) ->
+      | Ok (parse_artifacts, typecheck_artifacts) ->
         let (line, col) = Flow_lsp_conversions.position_of_document_position params in
         let local_refs =
           FindRefs_js.find_local_refs
             ~reader
             ~options
-            ~profiling
             ~file_key
             ~parse_artifacts
+            ~typecheck_artifacts
             ~line
             ~col
         in
