@@ -6957,6 +6957,16 @@ Flags: --pretty
   ]
 }
 
+upper_bounds_18.js:10:13
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"k","type":"K"}
+  ]
+}
+
 indexed-access-1.js:8:12
 Flags: --lsp
 {
