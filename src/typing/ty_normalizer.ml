@@ -734,9 +734,25 @@ end = struct
           )
       | ThisClassT (_, t, _, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
-      | KeysT (_, t) ->
-        let%map ty = type__ ~env t in
-        Ty.Utility (Ty.Keys ty)
+      | KeysT (r, t) ->
+        let default () =
+          let%map ty = type__ ~env t in
+          Ty.Utility (Ty.Keys ty)
+        in
+        begin
+          match Env.evaluate_type_destructors env with
+          | Env.EvaluateNone -> default ()
+          | _ ->
+            let cx = Env.get_cx env in
+            let trace = Trace.dummy_trace in
+            let tout = Flow_js.eval_keys cx ~trace r t in
+            begin
+              match Lookahead.peek cx tout with
+              | Lookahead.LowerBounds [t] ->
+                type__ ~env (TypeUtil.mod_reason_of_t (replace_desc_reason (RCustom "get keys")) t)
+              | _ -> default ()
+            end
+        end
       | OpaqueT (r, o) -> opaque_t ~env r o
       | ShapeT (_, t) ->
         let%map t = type__ ~env t in

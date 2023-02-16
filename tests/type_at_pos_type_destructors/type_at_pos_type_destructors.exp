@@ -249,6 +249,7 @@ spread.js:70:6,70:10
 type-destructor.js:20:6
 Flags:
 type Country = $Keys<{|FR: string, IT: string, US: string|}>
+= "US" | "IT" | "FR"
 type-destructor.js:20:6,20:12
 
 type-destructor.js:23:6
@@ -520,6 +521,7 @@ type-destructor.js:193:14,193:14
 type-destructor.js:20:6
 Flags:
 type Country = $Keys<{|FR: string, IT: string, US: string|}>
+= "US" | "IT" | "FR"
 type-destructor.js:20:6,20:12
 
 type-destructor.js:23:6

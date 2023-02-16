@@ -262,6 +262,8 @@ module type EVAL = sig
     Type.destructor ->
     Type.Eval.id ->
     bool * Type.t
+
+  val eval_keys : Context.t -> trace:Type.trace -> Reason.reason -> Type.t -> Type.t
 end
 
 module type REACT = sig

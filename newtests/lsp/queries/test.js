@@ -197,6 +197,25 @@ module.exports = (suite(
         ],
         [...lspIgnoreStatusAndCancellation],
       ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover_evaluate.js'},
+        position: {line: 22, character: 6}, // T7
+      }).verifyAllLSPMessagesInStep(
+        [['textDocument/hover', 'type T7 = $Keys<Foo>\n= "bar"']],
+        ['window/showStatus', '$/cancelRequest'],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover_evaluate.js'},
+        position: {line: 24, character: 6}, // T8
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/hover',
+            'type T8 = $Keys<{bar: number, baz: bigint, foo: string, ...}>\n= "foo" | "baz" | "bar"',
+          ],
+        ],
+        ['window/showStatus', '$/cancelRequest'],
+      ),
     ]),
 
     test('textDocument/documentHighlight', [

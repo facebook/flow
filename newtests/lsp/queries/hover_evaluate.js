@@ -19,3 +19,7 @@ type T4 = Foo["bar"]["baz"]?.["qux"];
 type T5 = Foo["bar"]["baz"]?.["qux"][number];
 
 type T6 = $NonMaybeType<Foo["bar"]["baz"]?.["qux"][number]>;
+
+type T7 = $Keys<Foo>;
+
+type T8 = $Keys<{foo: string, bar: number, baz: bigint}>;

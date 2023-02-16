@@ -6894,6 +6894,11 @@ struct
           | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
         )
 
+  and eval_keys cx ~trace reason t =
+    Tvar.mk_where cx reason (fun tout ->
+        rec_flow cx trace (t, GetKeysT (reason, UseT (unknown_use, tout)))
+    )
+
   and variance_check cx ?trace tparams polarity = function
     | ([], _)
     | (_, []) ->

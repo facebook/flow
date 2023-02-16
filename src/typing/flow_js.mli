@@ -116,6 +116,8 @@ val mk_type_destructor :
   Type.Eval.id ->
   bool * Type.t
 
+val eval_keys : Context.t -> trace:Type.trace -> Reason.reason -> Type.t -> Type.t
+
 (* ... *)
 
 val mk_default : Context.t -> reason -> Type.t Default.t -> Type.t
