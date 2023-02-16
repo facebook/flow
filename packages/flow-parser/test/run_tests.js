@@ -86,14 +86,6 @@ function get_esprima_tests() {
 
   var sections = {};
   for (var section_name in spec.sections) {
-    // Remove TODO sections
-    if (
-      !spec.sections.hasOwnProperty(section_name) ||
-      spec.todo[section_name] === true
-    ) {
-      continue;
-    }
-
     var section = spec.sections[section_name];
     if (Array.isArray(section)) {
       section = {
