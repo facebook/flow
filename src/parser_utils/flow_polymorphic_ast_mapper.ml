@@ -310,11 +310,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_property (prop : ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t' =
       let open Ast.Class.Property in
-      let { key; value; annot; static; variance; comments } = prop in
+      let { key; value; annot; static; variance; decorators; comments } = prop in
       let key' = this#class_property_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = Option.map ~f:this#variance variance in
+      let decorators' = List.map ~f:this#class_decorator decorators in
       let comments' = Option.map ~f:this#syntax comments in
       {
         key = key';
@@ -322,6 +323,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         annot = annot';
         static;
         variance = variance';
+        decorators = decorators';
         comments = comments';
       }
 
@@ -337,11 +339,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_private_field (prop : ('M, 'T) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static; variance; comments } = prop in
+      let { key; value; annot; static; variance; decorators; comments } = prop in
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = Option.map ~f:this#variance variance in
+      let decorators' = List.map ~f:this#class_decorator decorators in
       let comments' = Option.map ~f:this#syntax comments in
       {
         key = key';
@@ -349,6 +352,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         annot = annot';
         static;
         variance = variance';
+        decorators = decorators';
         comments = comments';
       }
 

@@ -476,17 +476,19 @@ class ['loc] mapper =
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
-      let { key; value; annot; static = _; variance; comments } = prop in
+      let { key; value; annot; static = _; variance; decorators; comments } = prop in
       let key' = this#object_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = this#variance_opt variance in
+      let decorators' = map_list this#class_decorator decorators in
       let comments' = this#syntax_opt comments in
       if
         key == key'
         && value == value'
         && annot' == annot
         && variance' == variance
+        && decorators' == decorators
         && comments' == comments
       then
         prop
@@ -497,6 +499,7 @@ class ['loc] mapper =
           value = value';
           annot = annot';
           variance = variance';
+          decorators = decorators';
           comments = comments';
         }
 
@@ -514,17 +517,19 @@ class ['loc] mapper =
 
     method class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static = _; variance; comments } = prop in
+      let { key; value; annot; static = _; variance; decorators; comments } = prop in
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = this#variance_opt variance in
+      let decorators' = map_list this#class_decorator decorators in
       let comments' = this#syntax_opt comments in
       if
         key == key'
         && value == value'
         && annot' == annot
         && variance' == variance
+        && decorators' == decorators
         && comments' == comments
       then
         prop
@@ -535,6 +540,7 @@ class ['loc] mapper =
           value = value';
           annot = annot';
           variance = variance';
+          decorators = decorators';
           comments = comments';
         }
 

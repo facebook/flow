@@ -215,9 +215,22 @@ class finder cx =
       meth
 
     method! class_property prop =
-      let { Ast.Class.Property.key; value; static; annot = _; variance = _; comments = _ } = prop in
+      let {
+        Ast.Class.Property.key;
+        value;
+        static;
+        decorators;
+        annot = _;
+        variance = _;
+        comments = _;
+      } =
+        prop
+      in
       let (_, is_munged) = this#object_key_label key in
       let check_prop () =
+        let (_ : (ml, tl) Ast.Class.Decorator.t list) =
+          Base.List.map ~f:this#class_decorator decorators
+        in
         let (_ : (ml, tl) Ast.Expression.Object.Property.key) = this#object_key key in
         ()
       in
@@ -257,10 +270,21 @@ class finder cx =
       | Ast.Expression.Object.Property.Computed _ -> ("computed property", false)
 
     method! class_private_field field =
-      let { Ast.Class.PrivateField.key; value; static; annot = _; variance = _; comments = _ } =
+      let {
+        Ast.Class.PrivateField.key;
+        value;
+        static;
+        decorators;
+        annot = _;
+        variance = _;
+        comments = _;
+      } =
         field
       in
       let check_prop () =
+        let (_ : (ml, tl) Ast.Class.Decorator.t list) =
+          Base.List.map ~f:this#class_decorator decorators
+        in
         let (_ : ml Ast.PrivateName.t) = this#private_name key in
         ()
       in

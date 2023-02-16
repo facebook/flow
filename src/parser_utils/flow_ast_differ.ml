@@ -1219,6 +1219,7 @@ let program
             annot = annot1;
             static = s1;
             variance = var1;
+            decorators = decorators1;
             comments = comments1;
           }
         ) =
@@ -1231,6 +1232,7 @@ let program
             annot = annot2;
             static = s2;
             variance = var2;
+            decorators = decorators2;
             comments = comments2;
           }
         ) =
@@ -1241,8 +1243,9 @@ let program
     else
       let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
+      let decorators = diff_and_recurse_no_trivial class_decorator decorators1 decorators2 in
       let comments = syntax_opt loc1 comments1 comments2 in
-      join_diff_list [vals; annots; comments]
+      join_diff_list [vals; annots; decorators; comments]
     )
     |> Base.Option.value ~default:[replace loc1 (ClassProperty prop1) (ClassProperty prop2)]
   and class_property_value val1 val2 : node change list option =

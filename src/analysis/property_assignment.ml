@@ -224,6 +224,7 @@ let eval_property_assignment class_body =
                 static = false;
                 annot = _;
                 variance = _;
+                decorators = _;
                 comments = _;
               }
             ) ->
@@ -236,6 +237,7 @@ let eval_property_assignment class_body =
                 static = false;
                 annot = _;
                 variance = _;
+                decorators = _;
                 comments = _;
               }
             ) ->

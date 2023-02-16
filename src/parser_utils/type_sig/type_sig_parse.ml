@@ -3226,6 +3226,7 @@ and class_def =
                 value = _;
                 static;
                 variance;
+                decorators = _;
                 comments = _;
               }
             ) ->

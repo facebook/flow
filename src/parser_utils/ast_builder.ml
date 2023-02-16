@@ -319,8 +319,14 @@ module Classes = struct
 
   let implements ?targs id = (Loc.none, { Implements.Interface.id; targs })
 
-  let property ?comments ?(annot = Ast.Type.Missing Loc.none) ?(static = false) ?variance ~id value
-      =
+  let property
+      ?comments
+      ?(annot = Ast.Type.Missing Loc.none)
+      ?(static = false)
+      ?variance
+      ?(decorators = [])
+      ~id
+      value =
     Body.Property
       ( Loc.none,
         {
@@ -329,6 +335,7 @@ module Classes = struct
           annot;
           static;
           variance;
+          decorators;
           comments;
         }
       )

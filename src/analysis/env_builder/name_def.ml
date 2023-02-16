@@ -1463,7 +1463,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     method! class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
-      let { key; value; annot; static = _; variance; comments = _ } = prop in
+      let { key; value; annot; static = _; variance; decorators; comments = _ } = prop in
+      let (_ : _ list) = map_list this#class_decorator decorators in
       ignore @@ this#object_key key;
       ignore @@ this#type_annotation_hint annot;
       let hints =
@@ -1478,7 +1479,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     method! class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static = _; variance; comments = _ } = prop in
+      let { key; value; annot; static = _; variance; decorators; comments = _ } = prop in
+      let (_ : _ list) = map_list this#class_decorator decorators in
       ignore @@ this#private_name key;
       ignore @@ this#type_annotation_hint annot;
       let hints =

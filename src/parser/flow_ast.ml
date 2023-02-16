@@ -1826,6 +1826,7 @@ and Class : sig
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
+      decorators: ('M, 'T) Class.Decorator.t list;
       comments: ('M, unit) Syntax.t option;
     }
 
@@ -1845,6 +1846,7 @@ and Class : sig
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
+      decorators: ('M, 'T) Class.Decorator.t list;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

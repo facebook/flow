@@ -2114,7 +2114,7 @@ and class_method
         ]
     )
 
-and class_property_helper ~opts loc key value static annot variance_ comments =
+and class_property_helper ~opts loc key value static annot variance_ decorators comments =
   let (declare, value) =
     match value with
     | Ast.Class.Property.Declared -> (true, None)
@@ -2127,6 +2127,7 @@ and class_property_helper ~opts loc key value static annot variance_ comments =
       with_semicolon
         (fuse
            [
+             decorators_list ~opts decorators;
              ( if declare then
                fuse [Atom "declare"; space]
              else
@@ -2156,8 +2157,8 @@ and class_property_helper ~opts loc key value static annot variance_ comments =
         )
     )
 
-and class_property ~opts (loc, { Ast.Class.Property.key; value; static; annot; variance; comments })
-    =
+and class_property
+    ~opts (loc, { Ast.Class.Property.key; value; static; annot; variance; decorators; comments }) =
   class_property_helper
     ~opts
     loc
@@ -2166,6 +2167,7 @@ and class_property ~opts (loc, { Ast.Class.Property.key; value; static; annot; v
     static
     annot
     variance
+    decorators
     comments
 
 and class_private_field
@@ -2177,6 +2179,7 @@ and class_private_field
         static;
         annot;
         variance;
+        decorators;
         comments;
       }
     ) =
@@ -2186,7 +2189,7 @@ and class_private_field
       key_comments
       (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
   in
-  class_property_helper ~opts loc key value static annot variance comments
+  class_property_helper ~opts loc key value static annot variance decorators comments
 
 and class_body ~opts (loc, { Ast.Class.Body.body; comments }) =
   let elements =

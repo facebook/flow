@@ -995,7 +995,17 @@ with type t = Impl.t = struct
           ("decorators", array_of_list class_decorator decorators);
         ]
     and class_private_field
-        (loc, { Class.PrivateField.key; value; annot; static; variance = variance_; comments }) =
+        ( loc,
+          {
+            Class.PrivateField.key;
+            value;
+            annot;
+            static;
+            variance = variance_;
+            decorators;
+            comments;
+          }
+        ) =
       let (value, declare) =
         match value with
         | Class.Property.Declared -> (None, true)
@@ -1011,6 +1021,11 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("variance", option variance variance_);
         ]
+        @ ( if decorators = [] then
+            []
+          else
+            [("decorators", array_of_list class_decorator decorators)]
+          )
         @
         if declare then
           [("declare", bool declare)]
@@ -1019,7 +1034,9 @@ with type t = Impl.t = struct
       in
       node ?comments "PropertyDefinition" loc props
     and class_property
-        (loc, { Class.Property.key; value; annot; static; variance = variance_; comments }) =
+        ( loc,
+          { Class.Property.key; value; annot; static; variance = variance_; decorators; comments }
+        ) =
       let (key, computed, comments) =
         match key with
         | Expression.Object.Property.Literal lit -> (literal lit, false, comments)
@@ -1045,6 +1062,11 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("variance", option variance variance_);
         ]
+        @ ( if decorators = [] then
+            []
+          else
+            [("decorators", array_of_list class_decorator decorators)]
+          )
         @
         if declare then
           [("declare", bool declare)]

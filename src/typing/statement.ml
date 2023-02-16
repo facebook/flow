@@ -6743,11 +6743,15 @@ module Make
                       value;
                       static;
                       variance;
+                      decorators;
                       comments;
                     }
                   ) ->
                 let reason = mk_reason (RPrivateProperty name) loc in
                 let polarity = Anno.polarity cx variance in
+                let decorators =
+                  Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
+                in
                 let (field, annot_t, annot_ast, get_value) =
                   mk_field cx tparams_map_with_this reason annot value
                 in
@@ -6760,6 +6764,7 @@ module Make
                         value = get_value ();
                         static;
                         variance;
+                        decorators;
                         comments;
                       }
                     )
@@ -6787,11 +6792,15 @@ module Make
                       value;
                       static;
                       variance;
+                      decorators;
                       comments;
                     }
                   ) ->
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity cx variance in
+                let decorators =
+                  Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
+                in
                 let (field, annot_t, annot, get_value) =
                   mk_field cx tparams_map_with_this reason annot value
                 in
@@ -6805,6 +6814,7 @@ module Make
                         value = get_value ();
                         static;
                         variance;
+                        decorators;
                         comments;
                       }
                     )

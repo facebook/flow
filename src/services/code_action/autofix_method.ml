@@ -79,7 +79,7 @@ class mapper target =
       let open Flow_ast in
       let open Flow_ast.Class in
       match elem with
-      | Body.Method (loc, { Method.value = (mloc, value); key; static; comments; _ })
+      | Body.Method (loc, { Method.value = (mloc, value); key; static; decorators; comments; _ })
         when this#is_target loc ->
         if
           this#is_constructor key
@@ -91,7 +91,15 @@ class mapper target =
           let value = Property.Initialized (mloc, Expression.ArrowFunction value) in
           Body.Property
             ( loc,
-              { Property.key; static; variance = None; comments; annot = Type.Missing loc; value }
+              {
+                Property.key;
+                value;
+                static;
+                variance = None;
+                annot = Type.Missing loc;
+                decorators;
+                comments;
+              }
             )
       | _ -> super#class_element elem
   end

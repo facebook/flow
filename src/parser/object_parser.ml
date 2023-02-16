@@ -722,7 +722,7 @@ module Object
         in
         (key, annot, value, [])
     in
-    let property env start_loc key static declare variance leading =
+    let property env start_loc decorators key static declare variance leading =
       let (loc, (key, annot, value, comments)) =
         with_loc
           ~start_loc
@@ -745,13 +745,13 @@ module Object
             (key, annot, value, Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
           env
       in
+      let open Ast.Class in
       match key with
-      | Ast.Expression.Object.Property.PrivateName private_name ->
-        let open Ast.Class in
+      | Ast.Expression.Object.Property.PrivateName key ->
         Body.PrivateField
-          (loc, { PrivateField.key = private_name; value; annot; static; variance; comments })
+          (loc, { PrivateField.key; value; annot; static; variance; decorators; comments })
       | _ ->
-        Ast.Class.(Body.Property (loc, { Property.key; value; annot; static; variance; comments }))
+        Body.Property (loc, { Property.key; value; annot; static; variance; decorators; comments })
     in
     let is_asi env =
       match Peek.token env with
@@ -767,7 +767,7 @@ module Object
       | T_SEMICOLON
       | T_RCURLY
         when (not async) && not generator ->
-        property env start_loc key static declare variance leading
+        property env start_loc decorators key static declare variance leading
       | T_PLING ->
         (* TODO: add support for optional class properties *)
         error_unexpected env;
@@ -775,7 +775,7 @@ module Object
         init env start_loc decorators key ~async ~generator ~static ~declare variance leading
       | _ when is_asi env ->
         (* an uninitialized, unannotated property *)
-        property env start_loc key static declare variance leading
+        property env start_loc decorators key static declare variance leading
       | _ ->
         error_unsupported_declare env declare;
         error_unsupported_variance env variance;

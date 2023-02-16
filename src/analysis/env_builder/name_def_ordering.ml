@@ -519,7 +519,8 @@ struct
 
         method class_property_annotated (prop : ('loc, 'loc) Ast.Class.Property.t') =
           let open Ast.Class.Property in
-          let { key; value; annot; static = _; variance = _; comments = _ } = prop in
+          let { key; value; annot; static = _; variance = _; decorators; comments = _ } = prop in
+          let _ = Base.List.map ~f:this#class_decorator decorators in
           let _ = this#object_key key in
           let _ = this#type_annotation_hint annot in
           let _ =
@@ -531,7 +532,8 @@ struct
 
         method class_private_field_annotated (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
           let open Ast.Class.PrivateField in
-          let { key; value; annot; static = _; variance = _; comments = _ } = prop in
+          let { key; value; annot; static = _; variance = _; decorators; comments = _ } = prop in
+          let _ = Base.List.map ~f:this#class_decorator decorators in
           let _ = this#private_name key in
           let _ = this#type_annotation_hint annot in
           let _ =
