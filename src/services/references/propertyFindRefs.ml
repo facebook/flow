@@ -124,16 +124,6 @@ module Potential_refs_search = struct
     ()
 end
 
-let set_get_refs_hook potential_matching_literals =
-  let obj_to_obj_hook _ctxt obj1 obj2 =
-    let open Type in
-    match (get_object_literal_loc obj1, obj2) with
-    | (Some aloc, DefT (_, _, ObjT _)) ->
-      potential_matching_literals := (aloc, obj2) :: !potential_matching_literals
-    | _ -> ()
-  in
-  Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
-
 (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
 let type_matches_locs ~reader cx ty prop_def_info name =
   let rec def_loc_matches_locs = function
@@ -163,6 +153,37 @@ let type_matches_locs ~reader cx ty prop_def_info name =
   in
   extract_def_loc ~reader cx ty name >>| def_loc_matches_locs
 
+let get_loc_of_def_info ~cx ~reader ~obj_to_obj_map prop_def_info =
+  (* let prop_loc_map = build_prop_location_map ~cx ~reader obj_to_obj_map in *)
+  let prop_obj_locs =
+    Nel.fold_left
+      (fun acc def_info ->
+        match def_info with
+        | Class _ -> acc
+        | Object def_loc -> Loc_collections.LocSet.add def_loc acc)
+      Loc_collections.LocSet.empty
+      prop_def_info
+  in
+  (* Iterates all the map prop values. If any match prop_def_info, add the obj loc to the result *)
+  Loc_collections.LocMap.fold
+    (fun loc props_tmap_set result ->
+      Type.Properties.Set.fold
+        (fun props_id result' ->
+          let props = Context.find_props cx props_id in
+          NameUtils.Map.fold
+            (fun _name prop result'' ->
+              match Type.Property.read_loc prop with
+              | Some aloc when Loc_collections.LocSet.mem (loc_of_aloc ~reader aloc) prop_obj_locs
+                ->
+                loc :: result''
+              | _ -> result'')
+            props
+            result')
+        props_tmap_set
+        result)
+    obj_to_obj_map
+    []
+
 let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
   potential_refs
   |> ALocMap.bindings
@@ -180,10 +201,10 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
      )
   >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyAccess
 
-let property_find_refs_in_file ~reader options ast_info file_key def_info name =
+let property_find_refs_in_file ~reader ~cache_data ast_info file_key def_info name =
+  let { obj_to_obj_map; cx; typed_ast } = cache_data in
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
-  let potential_matching_literals : (ALoc.t * Type.t) list ref = ref [] in
-  let (ast, file_sig, info) = ast_info in
+  let (ast, _file_sig, _info) = ast_info in
   let local_defs =
     Nel.to_list (all_locs_of_property_def_info def_info)
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
@@ -193,27 +214,17 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   if not has_symbol then
     Ok local_defs
   else (
-    set_get_refs_hook potential_matching_literals;
-    let (cx, typed_ast) =
-      Merge_service.check_contents_context ~reader options file_key ast info file_sig
-    in
-    unset_hooks ();
     Potential_refs_search.search ~target_name:name ~potential_refs typed_ast;
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
        * examine *)
       let prop_loc_map = lazy (LiteralToPropLoc.make ast ~prop_name:name) in
-      let get_prop_loc_if_relevant (obj_aloc, into_type) =
-        type_matches_locs ~reader cx into_type def_info name >>| function
-        | false -> None
-        | true ->
-          let obj_loc = loc_of_aloc ~reader obj_aloc in
-          LocMap.find_opt obj_loc (Lazy.force prop_loc_map)
-      in
-      !potential_matching_literals |> Base.List.map ~f:get_prop_loc_if_relevant |> Result.all
-      >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyDefinition
+
+      get_loc_of_def_info ~cx ~reader ~obj_to_obj_map def_info
+      |> List.filter_map (fun obj_loc -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map))
+      |> add_ref_kind FindRefsTypes.PropertyDefinition
     in
-    literal_prop_refs_result >>= fun literal_prop_refs_result ->
+
     process_prop_refs ~reader cx !potential_refs file_key def_info name
     >>| ( @ ) local_defs
     >>| ( @ ) literal_prop_refs_result
@@ -222,7 +233,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
 let find_local_refs ~reader ~options ~profiling file_key ast_info loc =
   match get_def_info ~reader ~options profiling file_key ast_info loc with
   | Error _ as err -> err
-  | Ok None -> Ok None
-  | Ok (Some (def_info, name)) ->
-    property_find_refs_in_file ~reader options ast_info file_key def_info name >>= fun refs ->
+  | Ok (None, _) -> Ok None
+  | Ok (Some (def_info, name), cache_data) ->
+    property_find_refs_in_file ~reader ~cache_data ast_info file_key def_info name >>= fun refs ->
     Ok (Some (name, refs))
