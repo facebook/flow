@@ -61,6 +61,7 @@ type t =
       member_name: string;
     }
   | EnumStringMemberInconsistentlyInitailized of { enum_name: string }
+  | EnumInvalidConstPrefix
   | ExpectedJSXClosingTag of string
   | ExpectedPatternFoundExpression
   | ExportSpecifierMissingComma
@@ -299,6 +300,8 @@ module PP = struct
       Printf.sprintf
         "String enum members need to consistently either all use initializers, or use no initializers, in enum %s."
         enum_name
+    | EnumInvalidConstPrefix ->
+      "`const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be part of the build system (whatever you use) rather than Flow itself."
     | ExpectedJSXClosingTag name ->
       Printf.sprintf "Expected corresponding JSX closing tag for %s" name
     | ExpectedPatternFoundExpression ->

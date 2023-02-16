@@ -411,6 +411,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
   let declarations token env =
     let leading = Peek.comments env in
     Expect.token env token;
+    if (parse_options env).enums && token = T_CONST && Peek.token env = T_ENUM then
+      error env Parse_error.EnumInvalidConstPrefix;
     let (declarations, errs) = variable_declaration_list env in
     (declarations, leading, errs)
 
