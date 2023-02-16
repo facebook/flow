@@ -1,3 +1,43 @@
+### 0.200.0
+
+Likely to cause new Flow errors:
+* We now require all generic functions to be fully annotated to prevent [generic-escape](https://medium.com/flow-type/flows-improved-handling-of-generic-types-b5909cc5e3c5) issues. Some escaped-generic errors will be removed with `missing-local-annot` errors on return type annotation positions.
+* Under LTI, we will no longer silently give unannotated parameters in destructuring assignment `any` type. Instead, they will be properly contextually typed. e.g. [try Flow example](https://flow.org/try/#0CYUwxgNghgTiAEA3W8oC54AoB2BXAtgEYgwCU8AvAHzz4CWAHiMANwBQA2lALqXwc5y1LNgwh8ABwAuAT1LcW8APRL4AdzoQI8EjAD2MIA).
+* Some additional errors might be revealed after a correctness fix in implicit instantiation. e.g. [try Flow example](https://flow.org/try/#0PQKgBAAgZgNg9gdzCYAoVBLAtgBzgJwBcwAlAUwEMBjYqfOLMAcn0pqYG5UoBXAOxoY4fMAGEGePmT6EAPABUAXGD48sAIzL4AfAAocOejgDOygN4VF8gL4BKZeWqEAJADk4AEzJgz19MGAwKAoMGFRZDwwAN21ZcVxhaWIKAF4zQnweMmswYFjgSJiuIA)
+* The `exact_by_default` option is now required to be set in the `[options]` section of the `.flowconfig`. Add either `exact_by_default=true` or `exact_by_default=false` to your `[options]` section. Previously the absence of the option was equivalent to `exact_by_default=false`. In the future, we will make the absence of the option equivalent to `exact_by_default=true`. Read more about the option here: https://flow.org/en/docs/config/options/#toc-exact-by-default-boolean. To create a valid new `.flowconfig`, use `flow init`.
+* Changes to type variable unification may cause new errors to surface or old errors to be shifted to new locations.
+* Fixed a bug where an unannotated parameter does not cause a `missing-local-annot` error under LTI. e.g. [try Flow example](https://flow.org/try/#0CYUwxgNghgTiAEAzArgOzAFwJYHtX1ACMc0wQAeAFQEEYBzAZwC54ASAJRCmAHlUIAnrRhQB5ALZYAHiGAA+OQApFAOjU16DAJTwAvHPgA3HFmBaWq9bUY79Rk8ADcAKCIl0IZYhw5bBgN4AvlqO8AD0YfAgMDA4MEA)
+* Flow will stop emitting some spurious errors and uncover some hidden bugs under local type inference, as a result of removing a cache that no longer makes sense.
+* The `this` type of exported classes' methods are no longer unsoundly typed as `any`. As a result, more underconstrained implicit instantiation errors might show up in LTI.
+* Relational comparisons between dates and numbers are no longer allowed.
+
+New Features:
+* We added `flow autofix missing-local-annot` command that will try to add annotations to autofix all `missing-local-annot` errors in a given file.
+* We now provide autofixes in IDE for all `missing-local-annot` errors where we can locally infer a type. Previously, this kind of autofix is only provided for unannotated parameters.
+* Added an `unused-promise-in-sync-scope` lint which will detect unused promises in sync scopes (like `unused-promise-in-async-scope` does for async scopes). Enabling `unused-promise` will enable both of these rules. The individual rules will be removed in a future release.
+* Pragmas (e.g. `// @flow strict`, `// @jsx custom_jsx_fun`) are now supported in try-flow.
+
+IDE:
+* Added autocomplete for jsdoc comments on functions.
+* Added autocomplete for `$FlowFixMe` comments.
+* Autocomplete will no longer suggest existing type names for type binding identifiers (e.g., in the name of a type alias).
+
+Notable bug fixes:
+* We will no longer warn about `missing-local-annot` when there is a proper typing context in `super` call. e.g. `super(x => x)` will now pass type checking under LTI if the super constructor call expects such function.
+* Builtin types like `$ReadOnly` will no longer shadow your local definitions with the same name.
+* We will no longer emit spurious errors when we are doing contextual typing while trying to resolve an overload. e.g. [try Flow example](https://flow.org/try/#0CYUwxgNghgTiAEAzArgOzAFwJYHtXwFsoBzLMAHgBUA+AClWQggEoAueSgbgChRJYEKdNjyESZKnTYce3APRz4AZwAOyGLmRL4IGDBwx4cAjgBuIYOwDCUVKhwZ4YKEzGkw8AEbgoWhCv0VXQwATyQcHHgsbQJopSxUYij8BIxdRCgwBFCg+ABtAEYAXQA6fISwHAIVKGxPCBAAWmcmIu5K1CVHAH12VPTMhABvPIBrEBD2Lo1EovZbEIBfeABeeCHwnHYid1pmeEWeIA)
+* We fixed a bug that over-zealously uses contextual type information from sibling nodes to type generic function calls. As a result, examples like the following no longer error: [try Flow example](https://flow.org/try/#0CYUwxgNghgTiAEkoGdnwJIB4AqA+eA3gL4BQoSc8AZgK4B2YALgJYD2d8AtgNZZ4AUADwBc8bAEpRfXAG4SEEI3gBPeAF54jGDQQB+Lr34BGcfFE90-AERXxM+AHoH8Oq3gR2AcxAx4PmKwwyACEQA)
+* fixed a bug where optional chaining on a value typed as a type application would not filter out the null or undefined value. e.g. [try Flow example](https://flow.org/try/#0C4TwDgpgBAYgPAFQHxQLxQPwINwChSRQCCascAzsAE4CWAdgOZJ4AmEAxgDYCGV0AbryjcAXMTzcMAOk4RGwABbYoAehVQ6AewDuUAGY0AHhBa584aAEkWiFOhznCAIVLW4GSrUbNcbLrwEhACMxJzwg6Vl5JVV1LV0DY1NHaABhUg9qegZWDh4+KEEqKHYxVLx2SLkGRWU1KG1NKgBrclwgA)
+* Some spurious errors might be removed as a result of Flow doing proper cache invalidation.
+* Fix sorting of auto-imports with the same similarity score and length.
+
+Parser:
+* Parse and error on JSX type arguments.
+* Add custom parse error for abstract classes.
+* Add custom parse error when attempting to use template literal types in Flow.
+* Add custom parse errors for TS class visibility modifiers public/private/protected.
+* Remove `function` as an alias to `Function`, and don't allow `function` as a type name in general. (closes [issue #9000](https://github.com/facebook/flow/issues/9000)).
+
 ### 0.199.1
 
 Notable bug fixes:
