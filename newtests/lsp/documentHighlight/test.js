@@ -72,6 +72,7 @@ module.exports = (suite(
         snapshot('locals.js', 36, 10, 'destructuring_2.json'),
         snapshot('locals.js', 36, 26, 'destructuring_3.json'),
         snapshot('locals.js', 37, 7, 'destructuring_4.json'),
+        snapshot('locals.js', 36, 7, 'destructuring_5.json'),
       ]),
       // test('Not in scope', [
       //   addFiles(...fixtures),

@@ -240,6 +240,28 @@ module Def_kind_search = struct
           if covers_target loc then raise (Found (Obj_def (loc, name)))
         | _ -> ());
         super#object_property_type prop
+
+      method! pattern ?kind expr =
+        let open Flow_ast.Pattern in
+        let ((_, ty), patt) = expr in
+        (match patt with
+        | Object { Object.properties; _ } ->
+          List.iter
+            (function
+              | Object.Property
+                  ( _,
+                    {
+                      Object.Property.key =
+                        Object.Property.Identifier ((loc, _), { Flow_ast.Identifier.name; _ });
+                      _;
+                    }
+                  )
+                when covers_target loc ->
+                raise (Found (Use (ty, name)))
+              | _ -> ())
+            properties
+        | _ -> ());
+        super#pattern ?kind expr
     end
 
   let search ~f ast =
