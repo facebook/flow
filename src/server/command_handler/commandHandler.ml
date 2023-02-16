@@ -1974,37 +1974,63 @@ let handle_persistent_document_highlight
     | Error (Failed reason) -> (Error reason, None)
     | Error (Skipped reason) -> (Ok [], json_of_skipped reason)
     | Ok (file_key, content) ->
-      let (line, col) = Flow_lsp_conversions.position_of_document_position params in
-      let local_refs =
-        FindRefs_js.find_local_refs ~reader ~options ~profiling ~file_key ~content ~line ~col
-      in
-      let extra_data =
-        Some
-          (Hh_json.JSON_Object
-             [
-               ( "result",
-                 Hh_json.JSON_String
-                   (match local_refs with
-                   | Ok _ -> "SUCCESS"
-                   | _ -> "FAILURE")
-               );
-             ]
-          )
-      in
-      (match local_refs with
-      | Ok (Some (_name, refs)) ->
-        (* All the locs are implicitly in the same file *)
-        let ref_to_highlight (_, loc) =
-          {
-            DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
-            kind = Some DocumentHighlight.Text;
-          }
+      let (file_artifacts_result, did_hit_cache) =
+        let type_parse_artifacts_cache =
+          Some (Persistent_connection.type_parse_artifacts_cache client)
         in
-        (Ok (Base.List.map ~f:ref_to_highlight refs), extra_data)
-      | Ok None ->
-        (* e.g. if it was requested on a place that's not even an identifier *)
-        (Ok [], extra_data)
-      | Error _ as err -> (err, extra_data))
+        let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
+        type_parse_artifacts_with_cache
+          ~options
+          ~profiling
+          ~type_parse_artifacts_cache
+          file_key
+          parse_result
+      in
+
+      (match file_artifacts_result with
+      | Error _parse_errors ->
+        let err_str = "Couldn't parse file in parse_artifacts" in
+        let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+        (Error err_str, Some (Hh_json.JSON_Object json_props))
+      | Ok (parse_artifacts, _) ->
+        let (line, col) = Flow_lsp_conversions.position_of_document_position params in
+        let local_refs =
+          FindRefs_js.find_local_refs
+            ~reader
+            ~options
+            ~profiling
+            ~file_key
+            ~parse_artifacts
+            ~line
+            ~col
+        in
+        let extra_data =
+          Some
+            (Hh_json.JSON_Object
+               [
+                 ( "result",
+                   Hh_json.JSON_String
+                     (match local_refs with
+                     | Ok _ -> "SUCCESS"
+                     | _ -> "FAILURE")
+                 );
+               ]
+            )
+        in
+        (match local_refs with
+        | Ok (Some (_name, refs)) ->
+          (* All the locs are implicitly in the same file *)
+          let ref_to_highlight (_, loc) =
+            {
+              DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
+              kind = Some DocumentHighlight.Text;
+            }
+          in
+          (Ok (Base.List.map ~f:ref_to_highlight refs), extra_data)
+        | Ok None ->
+          (* e.g. if it was requested on a place that's not even an identifier *)
+          (Ok [], extra_data)
+        | Error _ as err -> (err, extra_data)))
   in
   let metadata = with_data ~extra_data metadata in
   match result with
