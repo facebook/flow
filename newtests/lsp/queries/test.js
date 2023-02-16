@@ -127,6 +127,78 @@ module.exports = (suite(
       ),
     ]),
 
+    test('textDocument/hover evaluate', [
+      addFile('hover_evaluate.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover_evaluate.js'},
+        position: {line: 10, character: 6}, // T1
+      }).verifyAllLSPMessagesInStep(
+        [['textDocument/hover', '{type T1 = Foo}']],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover_evaluate.js'},
+        position: {line: 12, character: 6}, // T2
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/hover',
+            'type T2 = Foo["bar"]\n= {baz: ?{qux: $ReadOnlyArray<string>, ...}, ...}',
+          ],
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover_evaluate.js'},
+        position: {line: 14, character: 6}, // T3
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/hover',
+            'type T3 = Foo["bar"]["baz"]\n= ?{qux: $ReadOnlyArray<string>, ...}',
+          ],
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover_evaluate.js'},
+        position: {line: 16, character: 6}, // T4
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/hover',
+            'type T4 = Foo["bar"]["baz"]?.["qux"]\n= $ReadOnlyArray<string> | void',
+          ],
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover_evaluate.js'},
+        position: {line: 18, character: 6}, // T5
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/hover',
+            'type T5 = Foo["bar"]["baz"]?.["qux"][number]\n= string | void',
+          ],
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover_evaluate.js'},
+        position: {line: 20, character: 6}, // T6
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/hover',
+            'type T6 = $NonMaybeType<Foo["bar"]["baz"]?.["qux"][number]>\n= string',
+          ],
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+
     test('textDocument/documentHighlight', [
       addFiles('references.js', 'references2.js'),
       lspStartAndConnect(),

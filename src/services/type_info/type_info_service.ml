@@ -11,19 +11,10 @@ let json_data_of_error str acc = ("error", Hh_json.JSON_String str) :: acc
 
 let json_data_of_loc loc acc = ("loc", Reason.json_of_loc ~offset_table:None loc) :: acc
 
-let json_data_of_type str acc = ("type", Hh_json.JSON_String str) :: acc
+let json_data_of_type key str acc = (key, Hh_json.JSON_String str) :: acc
 
 let type_at_pos
-    ~cx
-    ~file_sig
-    ~typed_ast
-    ~omit_targ_defaults
-    ~evaluate_type_destructors
-    ~max_depth
-    ~verbose_normalizer
-    file
-    line
-    col =
+    ~cx ~file_sig ~typed_ast ~omit_targ_defaults ~max_depth ~verbose_normalizer file line col =
   let loc = Loc.cursor (Some file) line col in
   let (json_data, loc, ty) =
     Query_types.(
@@ -34,7 +25,6 @@ let type_at_pos
           ~file
           ~file_sig:(File_sig.abstractify_locs file_sig)
           ~omit_targ_defaults
-          ~evaluate_type_destructors
           ~verbose_normalizer
           ~max_depth
           ~typed_ast
@@ -48,21 +38,27 @@ let type_at_pos
           |> json_data_of_result "FAILURE_UNPARSEABLE"
           |> json_data_of_error msg
           |> json_data_of_loc loc
-          |> json_data_of_type (Type.string_of_ctor gt)
+          |> json_data_of_type "type" (Type.string_of_ctor gt)
         in
         (json_data, loc, None)
-      | Success (loc, ty) ->
+      | Success (loc, ({ Ty.unevaluated; evaluated } as tys)) ->
         let json_data =
           []
           |> json_data_of_result "SUCCESS"
           |> json_data_of_loc loc
           |> json_data_of_type
+               "type"
                ((* TODO use Ty_debug.json_of_t after making it faster using count_calls *)
                 let exact_by_default = Context.exact_by_default cx in
-                Ty_printer.string_of_elt ~exact_by_default ty
+                Ty_printer.string_of_elt ~exact_by_default unevaluated
+               )
+          |> json_data_of_type
+               "type_evaluated"
+               (let exact_by_default = Context.exact_by_default cx in
+                Ty_printer.string_of_elt ~exact_by_default evaluated
                )
         in
-        (json_data, loc, Some ty)
+        (json_data, loc, Some tys)
     )
   in
   ((loc, ty), json_data)

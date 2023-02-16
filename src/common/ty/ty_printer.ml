@@ -410,7 +410,6 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     in
     fuse [Atom "type"; space; identifier name; tparams; body]
   in
-
   let variable_decl ~depth name t =
     fuse
       [Atom "declare"; space; Atom "var"; space; identifier name; Atom ":"; space; type_ ~depth t]
@@ -436,6 +435,24 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   match elt with
   | Type t -> type_ ~depth:0 t
   | Decl d -> decl ~depth:0 d
+
+let layout_of_type_at_pos_result
+    ~prefer_single_quotes ?size ?with_comments ~exact_by_default { Ty.unevaluated; evaluated } =
+  let layout_unevaluated =
+    layout_of_elt ~prefer_single_quotes ?size ?with_comments ~exact_by_default unevaluated
+  in
+  if Ty_utils.elt_equal unevaluated evaluated then
+    layout_unevaluated
+  else
+    let layout_evaluated =
+      let evaluated =
+        match evaluated with
+        | Decl (TypeAliasDecl { type_ = Some t; _ }) -> Type t
+        | x -> x
+      in
+      layout_of_elt ~prefer_single_quotes ?size ?with_comments ~exact_by_default evaluated
+    in
+    fuse [layout_unevaluated; hardline; Atom "="; space; layout_evaluated]
 
 (* Same as Compact_printer with the exception of locations *)
 let print_single_line ~source_maps node =
@@ -484,3 +501,9 @@ let string_of_decl_single_line
     ?(prefer_single_quotes = false) ?(with_comments = true) (d : Ty.decl) ~exact_by_default : string
     =
   string_of_elt_single_line ~prefer_single_quotes ~with_comments ~exact_by_default (Ty.Decl d)
+
+let string_of_type_at_pos_result
+    ?(prefer_single_quotes = false) ?(with_comments = true) ~exact_by_default result : string =
+  layout_of_type_at_pos_result ~prefer_single_quotes ~with_comments ~exact_by_default result
+  |> print_pretty ~source_maps:None
+  |> Source.contents

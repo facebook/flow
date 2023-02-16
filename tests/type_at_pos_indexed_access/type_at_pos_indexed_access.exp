@@ -1,10 +1,12 @@
 test.js:5:6
 Flags:
 type T = O["a"]
+= number
 test.js:5:6,5:6
 
 test.js:10:6
 Flags:
 type S = M?.["a"]
+= number | void
 test.js:10:6,10:6
 

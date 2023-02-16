@@ -41,10 +41,6 @@ let spec =
              "--omit-typearg-defaults"
              truthy
              ~doc:"Omit type arguments when defaults exist and match the provided type argument"
-        |> flag
-             "--evaluate-type-destructors"
-             truthy
-             ~doc:"Use the result of type destructor evaluation if available"
         |> flag "--max-depth" (required ~default:50 int) ~doc:"Maximum depth of type (default 50)"
         |> flag "--verbose-normalizer" truthy ~doc:"Print verbose info during normalization"
         |> anon "args" (required (list_of string))
@@ -52,17 +48,8 @@ let spec =
   }
 
 let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response =
-  let (ServerProt.Response.Infer_type_response { loc; ty = t; exact_by_default; documentation }) =
+  let (ServerProt.Response.Infer_type_response { loc; tys; exact_by_default; documentation }) =
     response
-  in
-  let ty =
-    match t with
-    | None -> "(unknown)"
-    | Some ty ->
-      if json then
-        Ty_printer.string_of_elt_single_line ~exact_by_default ty
-      else
-        Ty_printer.string_of_elt ~exact_by_default ty
   in
   if json then
     let open Hh_json in
@@ -70,22 +57,29 @@ let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response 
     let offset_table =
       Base.Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
     in
+    let type_json t =
+      let json =
+        [("type", JSON_String (Ty_printer.string_of_elt_single_line ~exact_by_default t))]
+      in
+      let json =
+        if expanded then
+          ("expanded", Ty_debug.json_of_elt ~strip_root t) :: json
+        else
+          json
+      in
+      JSON_Object json
+    in
+    let types_json =
+      match tys with
+      | Some { Ty.unevaluated; evaluated } ->
+        JSON_Object [("unevaluated", type_json unevaluated); ("evaluated", type_json evaluated)]
+      | _ -> JSON_Null
+    in
     let json_assoc =
-      ("type", JSON_String ty)
+      ("types", types_json)
       :: ("reasons", JSON_Array [])
       :: ("loc", json_of_loc ~strip_root ~offset_table loc)
       :: Errors.deprecated_json_props_of_loc ~strip_root loc
-    in
-    let json_assoc =
-      if expanded then
-        ( "expanded_type",
-          match t with
-          | Some ty -> Ty_debug.json_of_elt ~strip_root ty
-          | None -> JSON_Null
-        )
-        :: json_assoc
-      else
-        json_assoc
     in
     let json_assoc =
       match documentation with
@@ -95,6 +89,11 @@ let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response 
     let json = JSON_Object json_assoc in
     print_json_endline ~pretty json
   else
+    let ty =
+      match tys with
+      | Some result -> Ty_printer.string_of_type_at_pos_result ~exact_by_default result
+      | _ -> "(unknown)"
+    in
     let doc =
       match documentation with
       | Some doc -> doc ^ "\n"
@@ -129,7 +128,6 @@ let main
     wait_for_recheck
     expanded
     omit_targ_defaults
-    evaluate_type_destructors
     max_depth
     verbose_normalizer
     args
@@ -155,7 +153,6 @@ let main
         char = column;
         verbose;
         omit_targ_defaults;
-        evaluate_type_destructors;
         wait_for_recheck;
         verbose_normalizer;
         max_depth;

@@ -1,0 +1,21 @@
+// @flow
+
+type Foo = {
+    bar: {
+        baz: ?{
+            qux: $ReadOnlyArray<string>;
+        }
+    }
+}
+
+type T1 = Foo;
+
+type T2 = Foo["bar"];
+
+type T3 = Foo["bar"]["baz"]
+
+type T4 = Foo["bar"]["baz"]?.["qux"];
+
+type T5 = Foo["bar"]["baz"]?.["qux"][number];
+
+type T6 = $NonMaybeType<Foo["bar"]["baz"]?.["qux"][number]>;

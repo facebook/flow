@@ -319,6 +319,11 @@ and elt =
       },
     show]
 
+type type_at_pos_result = {
+  unevaluated: elt;
+  evaluated: elt;
+}
+
 exception Difference of int
 
 let assert0 i =

@@ -298,24 +298,25 @@ let infer_type filename content line col : Loc.t * (string, string) result =
     let (cx, typed_ast) = infer_and_merge ~root filename docblock ast file_sig in
     let file = Context.file cx in
     let loc = mk_loc filename line col in
-    Query_types.(
-      let result =
-        type_at_pos_type
-          ~full_cx:cx
-          ~file
-          ~file_sig
-          ~omit_targ_defaults:false
-          ~typed_ast
-          ~evaluate_type_destructors:Ty_normalizer_env.EvaluateNone
-          ~verbose_normalizer:false
-          ~max_depth:50
-          loc
-      in
-      (match result with
+    let open Query_types in
+    let result =
+      type_at_pos_type
+        ~full_cx:cx
+        ~file
+        ~file_sig
+        ~omit_targ_defaults:false
+        ~typed_ast
+        ~verbose_normalizer:false
+        ~max_depth:50
+        loc
+    in
+    begin
+      match result with
       | FailureNoMatch -> (Loc.none, Error "No match")
       | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
-      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_elt_single_line ~exact_by_default:true t)))
-    )
+      | Success (loc, result) ->
+        (loc, Ok (Ty_printer.string_of_type_at_pos_result ~exact_by_default:true result))
+    end
 
 let types_to_json types ~strip_root =
   Hh_json.(

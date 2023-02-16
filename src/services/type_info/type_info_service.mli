@@ -10,13 +10,12 @@ val type_at_pos :
   file_sig:File_sig.With_Loc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
-  evaluate_type_destructors:Ty_normalizer_env.evaluate_type_destructors_mode ->
   max_depth:int ->
   verbose_normalizer:bool ->
   File_key.t ->
   int ->
   int ->
-  (Loc.t * Ty.elt option) * (string * Hh_json.json) list
+  (Loc.t * Ty.type_at_pos_result option) * (string * Hh_json.json) list
 
 val dump_types :
   evaluate_type_destructors:Ty_normalizer_env.evaluate_type_destructors_mode ->

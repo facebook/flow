@@ -3,21 +3,37 @@ lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<{|+default: (x: Props) => Element<(x: Props) => Node>|}>
 lazy_ref.js:19:9,19:9
 react_component.js:3:9 = module "react"
+= module "react"
 react_component.js:3:7,3:11
 react_component.js:13:33 = class React$Component<Props, State = void>
 react_component.js:13:29,13:37
 react_component.js:18:17 = State
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
-  "expanded_type":{
-    "kind":"Generic",
-    "type":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:214:14-31"},
-      "name":"React$FragmentType"
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "type":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:214:14-31"},
+          "name":"React$FragmentType"
+        },
+        "generic_kind":"type alias"
+      },
+      "type":"React$FragmentType"
     },
-    "generic_kind":"type alias"
+    "evaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "type":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:214:14-31"},
+          "name":"React$FragmentType"
+        },
+        "generic_kind":"type alias"
+      },
+      "type":"React$FragmentType"
+    }
   },
-  "type":"React$FragmentType",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
@@ -32,16 +48,32 @@ react_component.js:31:7 = {
   "end":14
 }
 react_component.js:32:13 = {
-  "expanded_type":{
-    "kind":"Generic",
-    "typeArgs":[{"kind":"Num"}],
-    "type":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:248:23-35"},
-      "name":"ComponentType"
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "typeArgs":[{"kind":"Num"}],
+        "type":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:248:23-35"},
+          "name":"ComponentType"
+        },
+        "generic_kind":"type alias"
+      },
+      "type":"ComponentType<number>"
     },
-    "generic_kind":"type alias"
+    "evaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "typeArgs":[{"kind":"Num"}],
+        "type":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:248:23-35"},
+          "name":"ComponentType"
+        },
+        "generic_kind":"type alias"
+      },
+      "type":"ComponentType<number>"
+    }
   },
-  "type":"ComponentType<number>",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
@@ -56,24 +88,48 @@ react_component.js:32:13 = {
   "end":20
 }
 react_component.js:32:29 = {
-  "expanded_type":{
-    "kind":"TypeAlias",
-    "name":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:248:23-35"},
-      "name":"ComponentType"
-    },
-    "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
-    "body":{
-      "kind":"Generic",
-      "typeArgs":[{"kind":"Bound","bound":"P"}],
-      "type":{
-        "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:151:14-32"},
-        "name":"React$ComponentType"
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"TypeAlias",
+        "name":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:248:23-35"},
+          "name":"ComponentType"
+        },
+        "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
+        "body":{
+          "kind":"Generic",
+          "typeArgs":[{"kind":"Bound","bound":"P"}],
+          "type":{
+            "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:151:14-32"},
+            "name":"React$ComponentType"
+          },
+          "generic_kind":"type alias"
+        }
       },
-      "generic_kind":"type alias"
+      "type":"type ComponentType<-P> = React$ComponentType<P>"
+    },
+    "evaluated":{
+      "expanded":{
+        "kind":"TypeAlias",
+        "name":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:248:23-35"},
+          "name":"ComponentType"
+        },
+        "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
+        "body":{
+          "kind":"Generic",
+          "typeArgs":[{"kind":"Bound","bound":"P"}],
+          "type":{
+            "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:151:14-32"},
+            "name":"React$ComponentType"
+          },
+          "generic_kind":"type alias"
+        }
+      },
+      "type":"type ComponentType<-P> = React$ComponentType<P>"
     }
   },
-  "type":"type ComponentType<-P> = React$ComponentType<P>",
   "reasons":[],
   "loc":{
     "source":"react_component.js",

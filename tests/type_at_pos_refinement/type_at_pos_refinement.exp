@@ -1,5 +1,5 @@
 predicates.js - undefined: {
-  "type":"void",
+  "types":{"unevaluated":{"type":"void"},"evaluated":{"type":"void"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -14,7 +14,7 @@ predicates.js - undefined: {
   "end":18
 }
 predicates.js - Array: {
-  "type":"class Array<T>",
+  "types":{"unevaluated":{"type":"class Array<T>"},"evaluated":{"type":"class Array<T>"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -29,7 +29,7 @@ predicates.js - Array: {
   "end":9
 }
 predicates.js - isArray: {
-  "type":"any (implicit)",
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -44,7 +44,10 @@ predicates.js - isArray: {
   "end":17
 }
 predicates.js - y (refined obj): {
-  "type":"{|FOO: string|}",
+  "types":{
+    "unevaluated":{"type":"{|FOO: string|}"},
+    "evaluated":{"type":"{|FOO: string|}"}
+  },
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -59,7 +62,10 @@ predicates.js - y (refined obj): {
   "end":5
 }
 predicates.js - if (y.FOO) obj: {
-  "type":"{|FOO: string|}",
+  "types":{
+    "unevaluated":{"type":"{|FOO: string|}"},
+    "evaluated":{"type":"{|FOO: string|}"}
+  },
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -74,7 +80,7 @@ predicates.js - if (y.FOO) obj: {
   "end":5
 }
 predicates.js - if (y.FOO) prop: {
-  "type":"string",
+  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -89,7 +95,10 @@ predicates.js - if (y.FOO) prop: {
   "end":9
 }
 predicates.js - if (y.FOO == '') obj: {
-  "type":"{|FOO: string|}",
+  "types":{
+    "unevaluated":{"type":"{|FOO: string|}"},
+    "evaluated":{"type":"{|FOO: string|}"}
+  },
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -104,7 +113,7 @@ predicates.js - if (y.FOO == '') obj: {
   "end":5
 }
 predicates.js - if (y.FOO == '') prop: {
-  "type":"string",
+  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -119,7 +128,10 @@ predicates.js - if (y.FOO == '') prop: {
   "end":9
 }
 predicates.js - if (y.FOO === '') obj: {
-  "type":"{|FOO: string|}",
+  "types":{
+    "unevaluated":{"type":"{|FOO: string|}"},
+    "evaluated":{"type":"{|FOO: string|}"}
+  },
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -134,7 +146,7 @@ predicates.js - if (y.FOO === '') obj: {
   "end":5
 }
 predicates.js - if (y.FOO === '') prop: {
-  "type":"string",
+  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -149,7 +161,7 @@ predicates.js - if (y.FOO === '') prop: {
   "end":9
 }
 predicates.js - if (y.FOO == null) prop: {
-  "type":"string",
+  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -164,7 +176,7 @@ predicates.js - if (y.FOO == null) prop: {
   "end":9
 }
 predicates.js - if (y.FOO == undefined) prop: {
-  "type":"string",
+  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -179,7 +191,7 @@ predicates.js - if (y.FOO == undefined) prop: {
   "end":9
 }
 predicates.js - if (Array.isArray(y.FOO)): {
-  "type":"string",
+  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -194,7 +206,7 @@ predicates.js - if (Array.isArray(y.FOO)): {
   "end":23
 }
 refinement.js:7:25 = {
-  "type":"() => void",
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
   "reasons":[],
   "loc":{
     "source":"refinement.js",
@@ -209,7 +221,7 @@ refinement.js:7:25 = {
   "end":26
 }
 refinement.js:8:25 = {
-  "type":"() => void",
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
   "reasons":[],
   "loc":{
     "source":"refinement.js",

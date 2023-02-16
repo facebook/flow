@@ -33,7 +33,7 @@ module.exports = (suite(({addFiles, flowCmd}) => [
       .stdout(
         `
           {
-            "type": "(unknown)",
+            "types": null,
             "reasons": [],
             "loc": {
               "source": null,
@@ -86,7 +86,7 @@ module.exports = (suite(({addFiles, flowCmd}) => [
       .stdout(
         `
           {
-            "type": "(unknown)",
+            "types": null,
             "reasons": [],
             "loc": {
               "source": null,

@@ -1,5 +1,5 @@
 {
-  "type":"ID",
+  "types":{"unevaluated":{"type":"ID"},"evaluated":{"type":"ID"}},
   "reasons":[],
   "loc":{
     "source":"test.js",
@@ -14,7 +14,7 @@
   "end":12
 }
 {
-  "type":"ID",
+  "types":{"unevaluated":{"type":"ID"},"evaluated":{"type":"ID"}},
   "reasons":[],
   "loc":{
     "source":"importtest.js",
@@ -29,7 +29,7 @@
   "end":12
 }
 {
-  "type":"LDefId",
+  "types":{"unevaluated":{"type":"LDefId"},"evaluated":{"type":"LDefId"}},
   "reasons":[],
   "loc":{
     "source":"importtest.js",

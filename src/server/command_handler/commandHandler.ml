@@ -438,7 +438,6 @@ type infer_type_input = {
   query_position: Loc.position;
   verbose: Verbose.t option;
   omit_targ_defaults: bool;
-  evaluate_type_destructors: bool;
   verbose_normalizer: bool;
   max_depth: int;
 }
@@ -455,7 +454,6 @@ let infer_type
     query_position = { Loc.line; column };
     verbose;
     omit_targ_defaults;
-    evaluate_type_destructors;
     max_depth;
     verbose_normalizer;
   } =
@@ -467,7 +465,7 @@ let infer_type
     let response =
       (* TODO: wow, this is a shady way to return no result! *)
       ServerProt.Response.Infer_type_response
-        { loc = Loc.none; ty = None; exact_by_default = true; documentation = None }
+        { loc = Loc.none; tys = None; exact_by_default = true; documentation = None }
     in
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
@@ -490,19 +488,12 @@ let infer_type
     | Ok
         ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) as check_result)
       ->
-      let evaluate_type_destructors =
-        if evaluate_type_destructors then
-          Ty_normalizer_env.EvaluateAll
-        else
-          Ty_normalizer_env.EvaluateNone
-      in
-      let ((loc, ty), type_at_pos_json_props) =
+      let ((loc, tys), type_at_pos_json_props) =
         Type_info_service.type_at_pos
           ~cx
           ~file_sig
           ~typed_ast
           ~omit_targ_defaults
-          ~evaluate_type_destructors
           ~max_depth
           ~verbose_normalizer
           file_key
@@ -532,7 +523,7 @@ let infer_type
       in
       let exact_by_default = Options.exact_by_default options in
       let response =
-        ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }
+        ServerProt.Response.Infer_type_response { loc; tys; exact_by_default; documentation }
       in
       (Ok response, Some (Hh_json.JSON_Object json_props)))
 
@@ -1010,7 +1001,6 @@ let handle_infer_type
     ~char
     ~verbose
     ~omit_targ_defaults
-    ~evaluate_type_destructors
     ~max_depth
     ~verbose_normalizer
     ~profiling
@@ -1021,7 +1011,6 @@ let handle_infer_type
       query_position = { Loc.line; column = char };
       verbose;
       omit_targ_defaults;
-      evaluate_type_destructors;
       verbose_normalizer;
       max_depth;
     }
@@ -1306,7 +1295,6 @@ let get_ephemeral_handler genv command =
         char;
         verbose;
         omit_targ_defaults;
-        evaluate_type_destructors;
         wait_for_recheck;
         verbose_normalizer;
         max_depth;
@@ -1322,7 +1310,6 @@ let get_ephemeral_handler genv command =
          ~char
          ~verbose
          ~omit_targ_defaults
-         ~evaluate_type_destructors
          ~max_depth
          ~verbose_normalizer
       )
@@ -1747,7 +1734,6 @@ let handle_persistent_infer_type
       query_position = { Loc.line; column };
       verbose = None;
       omit_targ_defaults = false;
-      evaluate_type_destructors = false;
       verbose_normalizer = false;
       max_depth = 50;
     }
@@ -1757,7 +1743,7 @@ let handle_persistent_infer_type
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok (ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }) ->
+  | Ok (ServerProt.Response.Infer_type_response { loc; tys; exact_by_default; documentation }) ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
     let default_uri = params.textDocument.TextDocumentIdentifier.uri in
@@ -1769,21 +1755,19 @@ let handle_persistent_infer_type
         Some location.Lsp.Location.range
     in
     let contents =
-      match
-        Base.List.concat
-          [
-            Base.Option.to_list ty
-            |> List.map (fun elt ->
-                   MarkedCode ("flow", Ty_printer.string_of_elt elt ~exact_by_default)
-               );
-            Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc);
-          ]
-      with
+      let types =
+        match tys with
+        | Some result ->
+          [MarkedCode ("flow", Ty_printer.string_of_type_at_pos_result ~exact_by_default result)]
+        | _ -> []
+      in
+      let docs = Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc) in
+      match Base.List.concat [types; docs] with
       | [] -> [MarkedString "?"]
       | _ :: _ as contents -> contents
     in
     let r =
-      match (range, ty) with
+      match (range, tys) with
       | (None, None) -> None
       | (_, _) -> Some { Lsp.Hover.contents; range }
     in

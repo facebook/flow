@@ -8,50 +8,53 @@
 module Ast = Flow_ast
 open Typed_ast_utils
 
-type result =
+type 'a result =
   | FailureNoMatch
   | FailureUnparseable of Loc.t * Type.t * string
-  | Success of Loc.t * Ty.elt
+  | Success of Loc.t * 'a
 
 let concretize_loc_pairs pair_list =
   Base.List.map ~f:(fun (loc, x) -> (ALoc.to_loc_exn loc, x)) pair_list
 
 let sort_loc_pairs pair_list = List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
 
-let type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme =
-  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
-  match Ty_normalizer.from_scheme ~options ~genv scheme with
-  | Ok elt -> Success (loc, elt)
-  | Error err ->
-    let msg = Ty_normalizer.error_to_string err in
-    FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)
+let result_of_normalizer_error loc scheme err =
+  let msg = Ty_normalizer.error_to_string err in
+  FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)
 
 let type_at_pos_type
-    ~full_cx
-    ~file
-    ~file_sig
-    ~omit_targ_defaults
-    ~evaluate_type_destructors
-    ~verbose_normalizer
-    ~max_depth
-    ~typed_ast
-    loc =
-  let options =
-    {
-      Ty_normalizer_env.expand_internal_types = false;
-      flag_shadowed_type_params = false;
-      preserve_inferred_literal_types = false;
-      evaluate_type_destructors;
-      optimize_types = true;
-      omit_targ_defaults;
-      merge_bot_and_any_kinds = true;
-      verbose_normalizer;
-      max_depth = Some max_depth;
-    }
-  in
+    ~full_cx ~file ~file_sig ~omit_targ_defaults ~verbose_normalizer ~max_depth ~typed_ast loc :
+    Ty.type_at_pos_result result =
   match find_type_at_pos_annotation full_cx typed_ast loc with
   | None -> FailureNoMatch
-  | Some (loc, scheme) -> type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme
+  | Some (loc, scheme) ->
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
+    let from_scheme evaluate_type_destructors =
+      Ty_normalizer.from_scheme
+        ~options:
+          {
+            Ty_normalizer_env.expand_internal_types = false;
+            flag_shadowed_type_params = false;
+            preserve_inferred_literal_types = false;
+            evaluate_type_destructors;
+            optimize_types = true;
+            omit_targ_defaults;
+            merge_bot_and_any_kinds = true;
+            verbose_normalizer;
+            max_depth = Some max_depth;
+          }
+        ~genv
+        scheme
+    in
+    let unevaluated = from_scheme Ty_normalizer_env.EvaluateNone in
+    let evaluated = from_scheme Ty_normalizer_env.EvaluateAll in
+    begin
+      match (unevaluated, evaluated) with
+      | (Ok unevaluated, Ok evaluated) -> Success (loc, { Ty.unevaluated; evaluated })
+      | (Error err, _)
+      | (_, Error err) ->
+        result_of_normalizer_error loc scheme err
+    end
 
 let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   let options =
@@ -69,7 +72,8 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   Base.List.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
 
 let insert_type_normalize
-    ~full_cx ?(file = Context.file full_cx) ~file_sig ~omit_targ_defaults ~typed_ast loc scheme =
+    ~full_cx ?(file = Context.file full_cx) ~file_sig ~omit_targ_defaults ~typed_ast loc scheme :
+    Ty.elt result =
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
@@ -90,4 +94,7 @@ let insert_type_normalize
       max_depth = None;
     }
   in
-  type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme
+  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
+  match Ty_normalizer.from_scheme ~options ~genv scheme with
+  | Ok elt -> Success (loc, elt)
+  | Error err -> result_of_normalizer_error loc scheme err

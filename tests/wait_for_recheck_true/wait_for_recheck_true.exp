@@ -78,7 +78,7 @@ get-imports with --wait-for-recheck false runs immediately:
 
 type-at-pos with --wait-for-recheck false runs immediately:
 {
-  "type":"number",
+  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
   "reasons":[],
   "loc":{
     "source":"focused.js",

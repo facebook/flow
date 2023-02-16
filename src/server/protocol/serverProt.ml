@@ -85,7 +85,6 @@ module Request = struct
         char: int;
         verbose: Verbose.t option;
         omit_targ_defaults: bool;
-        evaluate_type_destructors: bool;
         wait_for_recheck: bool option;
         verbose_normalizer: bool;
         max_depth: int;
@@ -158,7 +157,6 @@ module Request = struct
           char;
           verbose = _;
           omit_targ_defaults = _;
-          evaluate_type_destructors = _;
           wait_for_recheck = _;
           verbose_normalizer = _;
           max_depth = _;
@@ -261,7 +259,7 @@ module Response = struct
   type infer_type_response_ok =
     | Infer_type_response of {
         loc: Loc.t;
-        ty: Ty.elt option;
+        tys: Ty.type_at_pos_result option;
         exact_by_default: bool;
         documentation: string option;
       }
