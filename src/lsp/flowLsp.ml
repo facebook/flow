@@ -792,6 +792,7 @@ let do_initialize params : Initialize.result =
                   "\"" (* JSX attribute value *);
                   "'" (* JSX attribute value *);
                   "#" (* private identifiers *);
+                  "*" (* JSDoc opening /** *);
                 ];
               completionItem = { CompletionOptions.labelDetailsSupport = true };
             };

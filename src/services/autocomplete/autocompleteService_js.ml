@@ -2008,11 +2008,9 @@ let autocomplete_jsdoc ~cx ~edit_locs ~token ~typed_ast ~file_sig ~ac_loc =
 let autocomplete_comment
     ~reader ~cx ~edit_locs ~trigger_character ~ac_loc ~token ~typed_ast ~file_sig ~text ~word_loc =
   let (items, errors_to_log) =
-    if Base.Option.is_some trigger_character then
-      (* Only suggest things if autocomplete was triggered manually. We don't
-         want to be annoying when someone is trying to write comments. *)
-      ([], [])
-    else
+    match trigger_character with
+    | Some "*"
+    | None ->
       let items_fixme = autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc in
       let (items_jsdoc, errors_jsdoc) =
         match autocomplete_jsdoc ~cx ~edit_locs ~token ~typed_ast ~file_sig ~ac_loc with
@@ -2020,6 +2018,7 @@ let autocomplete_comment
         | Error errs -> ([], errs)
       in
       (items_fixme @ items_jsdoc, errors_jsdoc)
+    | _ -> ([], [])
   in
   AcResult
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
