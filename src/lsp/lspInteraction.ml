@@ -34,6 +34,7 @@ type trigger =
   | SignatureHelp of Lsp.lsp_id
   | TypeCoverage of Lsp.lsp_id
   | ExecuteCommand of Lsp.lsp_id
+  | AutoCloseJsx of Lsp.lsp_id
   | UnknownTrigger
 
 (* Source of the trigger *)
@@ -100,6 +101,7 @@ let string_of_trigger = function
   | SignatureHelp _ -> "SignatureHelp"
   | TypeCoverage _ -> "TypeCoverage"
   | ExecuteCommand _ -> "ExecuteCommand"
+  | AutoCloseJsx _ -> "AutoCloseJsx"
   | UnknownTrigger -> "UnknownTrigger"
 
 let lsp_id_of_trigger = function
@@ -115,7 +117,8 @@ let lsp_id_of_trigger = function
   | SelectionRange lsp_id
   | SignatureHelp lsp_id
   | TypeCoverage lsp_id
-  | ExecuteCommand lsp_id ->
+  | ExecuteCommand lsp_id
+  | AutoCloseJsx lsp_id ->
     Some lsp_id
   | DidChange
   | DidClose
@@ -170,7 +173,8 @@ let source_of_trigger = function
   | SelectionRange _
   | SignatureHelp _
   | TypeCoverage _
-  | ExecuteCommand _ ->
+  | ExecuteCommand _
+  | AutoCloseJsx _ ->
     Client
   | PushedErrorsEndOfRecheck
   | PushedErrorsEnvChange
@@ -330,6 +334,7 @@ let trigger_of_lsp_msg =
   | RequestMessage (lsp_id, SelectionRangeRequest _) -> Some (SelectionRange lsp_id)
   | RequestMessage (lsp_id, SignatureHelpRequest _) -> Some (SignatureHelp lsp_id)
   | RequestMessage (lsp_id, ExecuteCommandRequest _) -> Some (ExecuteCommand lsp_id)
+  | RequestMessage (lsp_id, AutoCloseJsxRequest _) -> Some (AutoCloseJsx lsp_id)
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
      * the client *)
   | RequestMessage (_, ApplyWorkspaceEditRequest _)
@@ -380,7 +385,8 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, RageResult _)
   | ResponseMessage (_, RenameResult _)
   | ResponseMessage (_, ErrorResult _)
-  | ResponseMessage (_, CodeActionResult _) ->
+  | ResponseMessage (_, CodeActionResult _)
+  | ResponseMessage (_, AutoCloseJsxResult _) ->
     None
   (* Only a few notifications can trigger an interaction *)
   | NotificationMessage (DidOpenNotification _) -> Some DidOpen

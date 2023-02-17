@@ -417,6 +417,7 @@ module Initialize : sig
   and experimentalServerCapabilities = {
     server_snippetTextEdit: bool;
     strictCompletionOrder: bool;
+    autoCloseJsx: bool;
   }
 
   and server_capabilities = {
@@ -1090,6 +1091,12 @@ module RegisterCapability : sig
   val make_registration : options -> registration
 end
 
+module AutoCloseJsx : sig
+  type params = TextDocumentPositionParams.t
+
+  and result = string option
+end
+
 type lsp_request =
   | InitializeRequest of Initialize.params
   | RegisterCapabilityRequest of RegisterCapability.params
@@ -1119,6 +1126,7 @@ type lsp_request =
   | DocumentCodeLensRequest of DocumentCodeLens.params
   | ExecuteCommandRequest of ExecuteCommand.params
   | ApplyWorkspaceEditRequest of ApplyWorkspaceEdit.params
+  | AutoCloseJsxRequest of AutoCloseJsx.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -1151,6 +1159,7 @@ type lsp_result =
   | ExecuteCommandResult of ExecuteCommand.result
   | ApplyWorkspaceEditResult of ApplyWorkspaceEdit.result
   | RegisterCapabilityResult
+  | AutoCloseJsxResult of AutoCloseJsx.result
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 

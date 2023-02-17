@@ -1376,19 +1376,20 @@ let print_initialize ~key (r : Initialize.result) : json =
     let cap = r.server_capabilities in
     let sync = cap.textDocumentSync in
     let experimental =
-      let { server_snippetTextEdit; strictCompletionOrder } = cap.server_experimental in
-      let props = [] in
-      let props =
-        if server_snippetTextEdit then
-          ("snippetTextEdit", JSON_Bool true) :: props
+      let { server_snippetTextEdit; strictCompletionOrder; autoCloseJsx } =
+        cap.server_experimental
+      in
+      let addCapability capability name json =
+        if capability then
+          (name, JSON_Bool true) :: json
         else
-          props
+          json
       in
       let props =
-        if strictCompletionOrder then
-          ("strictCompletionOrder", JSON_Bool true) :: props
-        else
-          props
+        []
+        |> addCapability server_snippetTextEdit "snippetTextEdit"
+        |> addCapability strictCompletionOrder "strictCompletionOrder"
+        |> addCapability autoCloseJsx "autoCloseJsx"
       in
       if Base.List.is_empty props then
         None
@@ -1544,6 +1545,12 @@ module RegisterCapabilityFmt = struct
       ]
 end
 
+module AutoCloseJsxFmt = struct
+  let params_of_json = parse_textDocumentPositionParams
+
+  let json_of_result = Base.Option.value_map ~default:JSON_Null ~f:(fun text -> JSON_String text)
+end
+
 (************************************************************************)
 (* error response                                                       *)
 (************************************************************************)
@@ -1627,6 +1634,7 @@ let request_name_to_string (request : lsp_request) : string =
   | DocumentCodeLensRequest _ -> "textDocument/codeLens"
   | ExecuteCommandRequest _ -> "workspace/executeCommand"
   | ApplyWorkspaceEditRequest _ -> "workspace/applyEdit"
+  | AutoCloseJsxRequest _ -> "flow/autoCloseJsx"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result : lsp_result) : string =
@@ -1660,6 +1668,7 @@ let result_name_to_string (result : lsp_result) : string =
   | ExecuteCommandResult _ -> "workspace/executeCommand"
   | ApplyWorkspaceEditResult _ -> "workspace/applyEdit"
   | RegisterCapabilityResult -> "client/registerCapability"
+  | AutoCloseJsxResult _ -> "flow/autoCloseJsx"
   | ErrorResult (e, _stack) -> "ERROR/" ^ e.Error.message
 
 let notification_name_to_string (notification : lsp_notification) : string =
@@ -1726,6 +1735,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "telemetry/rage" -> RageRequest
   | "workspace/executeCommand" -> ExecuteCommandRequest (ExecuteCommandFmt.params_of_json params)
   | "workspace/configuration" -> ConfigurationRequest (ConfigurationFmt.params_of_json params)
+  | "flow/autoCloseJsx" -> AutoCloseJsxRequest (AutoCloseJsxFmt.params_of_json params)
   | "completionItem/resolve"
   | "window/showMessageRequest" (* server -> client, we should never receive this *)
   | "window/showStatus" (* server -> client, we should never receive this *)
@@ -1788,6 +1798,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | RenameRequest _
   | DocumentCodeLensRequest _
   | ExecuteCommandRequest _
+  | AutoCloseJsxRequest _
   | UnknownRequest _ ->
     raise
       (Error.LspException
@@ -1853,6 +1864,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | RenameRequest _
     | DocumentCodeLensRequest _
     | ExecuteCommandRequest _
+    | AutoCloseJsxRequest _
     | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
@@ -1893,6 +1905,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | ApplyWorkspaceEditResult r -> ApplyWorkspaceEditFmt.json_of_result r
     | SelectionRangeResult r -> SelectionRangeFmt.json_of_result r
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
+    | AutoCloseJsxResult r -> AutoCloseJsxFmt.json_of_result r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _

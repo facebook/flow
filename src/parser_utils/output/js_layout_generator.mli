@@ -108,6 +108,8 @@ val jsx_identifier : (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t -> Layout.layout_n
 val jsx_child :
   opts:opts -> (Loc.t, Loc.t) Flow_ast.JSX.child -> (Loc.t * Layout.layout_node) option
 
+val jsx_closing : (Loc.t, Loc.t) Flow_ast.JSX.Closing.t -> Layout.layout_node
+
 val function_params :
   ?ctxt:expression_context ->
   opts:opts ->

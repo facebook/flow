@@ -823,7 +823,8 @@ let do_initialize params : Initialize.result =
         selectionRangeProvider = true;
         typeCoverageProvider = true;
         rageProvider = true;
-        server_experimental = { server_snippetTextEdit; strictCompletionOrder = true };
+        server_experimental =
+          { server_snippetTextEdit; strictCompletionOrder = true; autoCloseJsx = true };
       };
     server_info = { name = "Flow"; version = Flow_version.version };
   }

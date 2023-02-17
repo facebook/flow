@@ -398,6 +398,8 @@ module JSXs = struct
 
   let child_element ?(loc = Loc.none) ?selfclosing ?attrs ?children name =
     (loc, Element (element ?selfclosing ?attrs ?children name))
+
+  let closing ?(loc = Loc.none) name = (loc, { Closing.name })
 end
 
 module Statements = struct

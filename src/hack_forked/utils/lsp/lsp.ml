@@ -554,6 +554,7 @@ module Initialize = struct
     strictCompletionOrder: bool;
         (** true if the server strictly orders completion results. when set, the editor
             should not do its own sorting. *)
+    autoCloseJsx: bool;
   }
 
   (** What capabilities the server provides *)
@@ -1319,6 +1320,14 @@ module RegisterCapability = struct
     { id; method_; registerOptions }
 end
 
+(** Auto close jsx tag request, method="flow/autoCloseJsx"
+    This is a non-standard LSP extension. *)
+module AutoCloseJsx = struct
+  type params = TextDocumentPositionParams.t
+
+  and result = string option
+end
+
 (**
  * Here are gathered-up ADTs for all the messages we handle
  *)
@@ -1352,6 +1361,7 @@ type lsp_request =
   | DocumentCodeLensRequest of DocumentCodeLens.params
   | ExecuteCommandRequest of ExecuteCommand.params
   | ApplyWorkspaceEditRequest of ApplyWorkspaceEdit.params
+  | AutoCloseJsxRequest of AutoCloseJsx.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -1384,6 +1394,7 @@ type lsp_result =
   | ExecuteCommandResult of ExecuteCommand.result
   | ApplyWorkspaceEditResult of ApplyWorkspaceEdit.result
   | RegisterCapabilityResult
+  | AutoCloseJsxResult of AutoCloseJsx.result
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 

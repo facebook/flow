@@ -10,6 +10,8 @@ open Lsp
 type t = {
   of_apply_workspace_edit_params: t -> ApplyWorkspaceEdit.params -> ApplyWorkspaceEdit.params;
   of_apply_workspace_edit_result: t -> ApplyWorkspaceEdit.result -> ApplyWorkspaceEdit.result;
+  of_auto_close_jsx_params: t -> AutoCloseJsx.params -> AutoCloseJsx.params;
+  of_auto_close_jsx_result: t -> AutoCloseJsx.result -> AutoCloseJsx.result;
   of_cancel_request_params: t -> CancelRequest.params -> CancelRequest.params;
   of_code_action: t -> CodeAction.t -> CodeAction.t;
   of_code_action_context:
@@ -118,6 +120,9 @@ let default_mapper =
     of_apply_workspace_edit_result =
       (fun _mapper { ApplyWorkspaceEdit.applied; failureReason; failedChange } ->
         { ApplyWorkspaceEdit.applied; failureReason; failedChange });
+    of_auto_close_jsx_params =
+      (fun mapper params -> mapper.of_text_document_position_params mapper params);
+    of_auto_close_jsx_result = (fun _mapper result -> result);
     of_cancel_request_params = (fun _mapper { CancelRequest.id } -> { CancelRequest.id });
     of_code_action =
       (fun mapper { CodeAction.title; kind; diagnostics; action } ->
@@ -489,6 +494,8 @@ let default_mapper =
           ExecuteCommandResult (mapper.of_execute_command_result mapper result)
         | ApplyWorkspaceEditResult result ->
           ApplyWorkspaceEditResult (mapper.of_apply_workspace_edit_result mapper result)
+        | AutoCloseJsxResult result ->
+          AutoCloseJsxResult (mapper.of_auto_close_jsx_result mapper result)
         | ErrorResult (err, str) -> ErrorResult (err, str));
     of_lsp_request =
       (fun mapper request ->
@@ -542,6 +549,8 @@ let default_mapper =
           ExecuteCommandRequest (mapper.of_execute_command_params mapper params)
         | ApplyWorkspaceEditRequest params ->
           ApplyWorkspaceEditRequest (mapper.of_apply_workspace_edit_params mapper params)
+        | AutoCloseJsxRequest params ->
+          AutoCloseJsxRequest (mapper.of_auto_close_jsx_params mapper params)
         | UnknownRequest (req, json) -> UnknownRequest (req, json));
     of_location =
       (fun mapper { Location.uri; range } ->

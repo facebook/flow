@@ -883,6 +883,28 @@ let save_state ~saved_state_filename ~genv ~env ~profiling =
   let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (Ok ())
 
+let auto_close_jsx ~options ~env ~profiling ~params ~client =
+  let text_document = params.TextDocumentPositionParams.textDocument in
+  let file_input = file_input_of_text_document_identifier ~client text_document in
+  match of_file_input ~options ~env file_input with
+  | Error (Failed e) -> (Error e, None)
+  | Error (Skipped reason) ->
+    let extra_data = json_of_skipped reason in
+    (Ok None, extra_data)
+  | Ok (filename, contents) ->
+    let (parse_result, _) = Type_contents.parse_contents ~options ~profiling contents filename in
+    begin
+      match parse_result with
+      | None -> (Ok None, None)
+      | Some (Parse_artifacts { ast; _ }) ->
+        let target_pos =
+          Flow_lsp_conversions.lsp_position_to_flow_position
+            params.TextDocumentPositionParams.position
+        in
+        let edit = Auto_close_jsx.get_snippet ast target_pos in
+        (Ok edit, None)
+    end
+
 let handle_autocomplete
     ~trigger_character
     ~reader
@@ -2233,6 +2255,15 @@ let handle_persistent_organize_imports_command
     let edit = { WorkspaceEdit.changes = Lsp.UriMap.singleton uri edits } in
     send_workspace_edit ~client ~id ~metadata ~on_response ~on_error label edit
 
+let handle_persistent_auto_close_jsx ~options ~id ~params ~metadata ~client ~profiling ~env =
+  let (result, extra_data) = auto_close_jsx ~options ~env ~profiling ~params ~client in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
+  | Ok text_opt ->
+    Lwt.return
+      (LspProt.LspFromServer (Some (ResponseMessage (id, AutoCloseJsxResult text_opt))), metadata)
+
 let handle_persistent_malformed_command ~id ~metadata ~client:_ ~profiling:_ =
   mk_lsp_error_response ~id:(Some id) ~reason:"Malformed command" metadata
 
@@ -2608,6 +2639,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
           (handle_persistent_organize_imports_command ~options ~id ~metadata ~textDocument)
       | _ -> Handle_persistent_immediately (handle_persistent_malformed_command ~id ~metadata))
     | _ -> Handle_persistent_immediately (handle_persistent_malformed_command ~id ~metadata))
+  | LspToServer (RequestMessage (id, AutoCloseJsxRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_auto_close_jsx ~options ~id ~params ~metadata)
   | LspToServer (ResponseMessage (id, result)) ->
     Handle_persistent_immediately (handle_result_from_client ~id ~result ~metadata)
   | LspToServer unhandled ->
