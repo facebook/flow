@@ -65,13 +65,16 @@ executors:
 
 commands:
   install-opam-mac:
+    parameters:
+      arch:
+        type: string
     steps:
       - run:
           name: Install opam
           command: |
             if ! [ -x "$(command -v opam)" ]; then
               TMP=${TMPDIR:-/tmp}
-              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/2.0.10/opam-2.0.10-x86_64-macos"
+              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/2.0.10/opam-2.0.10-<<parameters.arch>>-macos"
               install -m 755 "$TMP/opam" "/usr/local/bin/opam"
               rm -f "$TMP/opam"
             fi
@@ -266,7 +269,8 @@ jobs:
           name: Update curl cacerts
           command: |
             echo "cacert /Users/$USER/flow/.circleci/cacert.pem" >> ~/.curlrc
-      - install-opam-mac
+      - install-opam-mac:
+          arch: x86_64
       - make-opam-cachebreaker
       - restore-opam-cache
       - run:
@@ -299,6 +303,51 @@ jobs:
       - store_artifacts:
           path: src/parser/dist/libflowparser.zip
           destination: libflowparser-osx.zip
+
+  build_macos_arm64:
+    executor: mac
+    resource_class: macos.m1.large.gen1
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Update curl cacerts
+          command: |
+            echo "cacert /Users/$USER/flow/.circleci/cacert.pem" >> ~/.curlrc
+      - install-opam-mac:
+          arch: arm64
+      - make-opam-cachebreaker
+      - restore-opam-cache
+      - run:
+          name: Init opam
+          command: .circleci/opam_init.sh
+      - create-opam-switch
+      - save-opam-cache
+      - run:
+          name: Build flow
+          command: |
+            opam exec -- make bin/flow dist/flow.zip
+            mkdir -p bin/macos-arm64 && cp bin/flow bin/macos-arm64/flow
+      - run:
+          name: Build libflowparser
+          command: opam exec -- make -C src/parser dist/libflowparser.zip
+      - run:
+          name: Create artifacts
+          command: |
+            cp dist/flow.zip dist/flow-osx-arm64.zip
+            cp src/parser/dist/libflowparser.zip dist/libflowparser-osx-arm64.zip
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/macos-arm64/flow
+            - dist/flow-osx-arm64.zip
+            - dist/libflowparser-osx-arm64.zip
+      - store_artifacts:
+          path: dist/flow-osx-arm64.zip
+          destination: flow-osx-arm64.zip
+      - store_artifacts:
+          path: src/parser/dist/libflowparser-arm64.zip
+          destination: libflowparser-osx-arm64.zip
 
   build_win:
     executor:
@@ -481,7 +530,8 @@ jobs:
           name: Update curl cacerts
           command: |
             echo "cacert /Users/$USER/flow/.circleci/cacert.pem" >> ~/.curlrc
-      - install-opam-mac
+      - install-opam-mac:
+          arch: x86_64
       - make-opam-cachebreaker
       - restore-opam-cache
       - run:
@@ -608,6 +658,18 @@ jobs:
         name: Upload Mac libflowparser
         command: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-$CIRCLE_TAG.zip"
 
+  github_macos_arm64:
+    executor: curl
+    steps:
+    - attach_workspace:
+        at: /flow
+    - run:
+        name: Upload Mac binary
+        command: .circleci/github_upload.sh dist/flow-osx-arm64.zip "flow-osx-arm64-$CIRCLE_TAG.zip"
+    - run:
+        name: Upload Mac libflowparser
+        command: .circleci/github_upload.sh dist/libflowparser-osx-arm64.zip "libflowparser-osx-arm64-$CIRCLE_TAG.zip"
+
   github_win:
     executor: curl
     steps:
@@ -695,6 +757,9 @@ workflows:
       - build_macos:
           requires:
             - checkout
+      - build_macos_arm64:
+          requires:
+            - checkout
       - build_win:
           requires:
             - checkout
@@ -767,6 +832,10 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - checkout
+      - build_macos_arm64:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
       - build_win:
           <<: *run_on_release_tags
           requires:
@@ -794,6 +863,10 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - build_macos
+      - github_macos_arm64:
+          <<: *run_on_release_tags
+          requires:
+            - build_macos_arm64
       - github_win:
           <<: *run_on_release_tags
           requires:
