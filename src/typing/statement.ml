@@ -2157,11 +2157,11 @@ module Make
     (t, List.rev rev_prop_asts)
 
   and variable cx kind ?if_uninitialized id init =
-    let (init_var, declare_var) =
+    let init_var =
       match kind with
-      | Ast.Variable.Const -> (Env.init_const, (fun _ _ _ -> ()))
-      | Ast.Variable.Let -> (Env.init_let, (fun _ _ _ -> ()))
-      | Ast.Variable.Var -> (Env.init_var, (fun _ _ _ -> ()))
+      | Ast.Variable.Const -> Env.init_const
+      | Ast.Variable.Let -> Env.init_let
+      | Ast.Variable.Var -> Env.init_var
     in
     let annot = Destructuring.type_of_pattern id in
     let has_anno =
@@ -2205,8 +2205,6 @@ module Make
       match id with
       | (ploc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot = _; optional }) ->
         let (id_loc, { Ast.Identifier.name; comments }) = name in
-        (* move const/let bindings from undeclared to declared *)
-        declare_var cx (OrdinaryName name) id_loc;
         if has_anno then
           ()
         else if Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized then
@@ -2245,7 +2243,6 @@ module Make
         in
         Destructuring.pattern cx init id ~f:(fun ~use_op ~name_loc name default t ->
             let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-            declare_var cx (OrdinaryName name) name_loc;
 
             (* If this is a variable declaration without a type annotation
                constraining writes, we need the type of the identifier to be the
