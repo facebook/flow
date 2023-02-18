@@ -692,7 +692,7 @@ struct
                     loop acc (i + 1) rest
                 in
                 let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = Lazy.force arg_list in
-                loop (depends_of_hints acc return_hints) 0 arguments
+                loop (depends_of_hints acc (Lazy.force return_hints)) 0 arguments
               | _ -> acc)
             (depends_of_hint_node state hint_node)
             ops

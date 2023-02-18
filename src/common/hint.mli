@@ -11,7 +11,7 @@ type hint_kind =
 
 type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
-  return_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
+  return_hints: ('t, 'targs, 'args, 'props, 'children) hint list Lazy.t;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
   arg_index: int;
@@ -22,7 +22,7 @@ and ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints = {
   jsx_name: string;
   jsx_props: 'props;
   jsx_children: 'children;
-  jsx_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
+  jsx_hints: ('t, 'targs, 'args, 'props, 'children) hint list Lazy.t;
 }
 
 and sentinel_refinement =

@@ -226,7 +226,7 @@ let rec instantiate_callee cx fn instantiation_hint =
         in
         let call_targs = Lazy.force targs in
         let return_hint =
-          match evaluate_hints cx reason return_hints with
+          match evaluate_hints cx reason (Lazy.force return_hints) with
           | HintAvailable (t, k) -> Some (t, k)
           | _ -> None
         in
@@ -276,7 +276,7 @@ and instantiate_component cx component instantiation_hint =
       instantiation_hint
     in
     let return_hint =
-      match evaluate_hints cx reason jsx_hints with
+      match evaluate_hints cx reason (Lazy.force jsx_hints) with
       | HintAvailable (t, k) -> Some (t, k)
       | _ -> None
     in

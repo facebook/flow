@@ -21,7 +21,7 @@ type hint_kind =
 
 type ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints = {
   reason: Reason.t;
-  return_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
+  return_hints: ('t, 'targs, 'args, 'props, 'children) hint list Lazy.t;
   targs: 'targs Lazy.t;
   arg_list: 'args Lazy.t;
   arg_index: int;
@@ -32,7 +32,7 @@ and ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints = {
   jsx_name: string;
   jsx_props: 'props;
   jsx_children: 'children;
-  jsx_hints: ('t, 'targs, 'args, 'props, 'children) hint list;
+  jsx_hints: ('t, 'targs, 'args, 'props, 'children) hint list Lazy.t;
 }
 
 and sentinel_refinement =
@@ -182,14 +182,17 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
     Instantiate_Callee
       {
         reason;
-        return_hints = List.map (map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx) return_hints;
+        return_hints =
+          Lazy.map (List.map (map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx)) return_hints;
         targs = Lazy.map map_targs targs;
         arg_list = Lazy.map map_arg_list arg_list;
         arg_index;
       }
   | Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hints } ->
     let (jsx_props, jsx_children) = map_jsx jsx_reason jsx_name jsx_props jsx_children in
-    let jsx_hints = List.map (map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx) jsx_hints in
+    let jsx_hints =
+      Lazy.map (List.map (map ~map_base_hint ~map_targs ~map_arg_list ~map_jsx)) jsx_hints
+    in
     Instantiate_Component { jsx_reason; jsx_name; jsx_props; jsx_children; jsx_hints }
   | Decomp_Promise -> Decomp_Promise
 

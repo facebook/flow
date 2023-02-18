@@ -2031,7 +2031,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                  (Instantiate_Callee
                     {
                       Hint.reason = call_reason;
-                      return_hints;
+                      return_hints = lazy return_hints;
                       targs = lazy targs;
                       arg_list = lazy arg_list;
                       arg_index = i;
@@ -2237,7 +2237,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                jsx_props = opening_attributes;
                jsx_children = children;
                (* TODO: thread hint *)
-               jsx_hints = [];
+               jsx_hints = lazy [];
              }
           )
           hints
