@@ -542,28 +542,33 @@ and type_of_hint_decomposition cx op reason t =
         (match SMap.elements checks with
         | [] -> t
         | hd :: tl ->
-          let predicate_of_check (prop, literal_check) =
-            let other_t =
-              match literal_check with
-              | SingletonBool b -> DefT (reason, bogus_trust (), SingletonBoolT b)
-              | SingletonNum n -> DefT (reason, bogus_trust (), SingletonNumT (n, string_of_float n))
-              | SingletonStr s -> DefT (reason, bogus_trust (), SingletonStrT (OrdinaryName s))
-              | SingletonBigInt n ->
-                DefT (reason, bogus_trust (), SingletonBigIntT (Some n, Int64.to_string n))
-              | Null -> DefT (reason, bogus_trust (), NullT)
-              | Void -> DefT (reason, bogus_trust (), VoidT)
-              | Member reason -> Env.find_write cx Env_api.ExpressionLoc reason
+          (match SpeculationFlow.possible_concrete_types cx reason t with
+          | [] -> t
+          | [t] -> t
+          | _ ->
+            let predicate_of_check (prop, literal_check) =
+              let other_t =
+                match literal_check with
+                | SingletonBool b -> DefT (reason, bogus_trust (), SingletonBoolT b)
+                | SingletonNum n ->
+                  DefT (reason, bogus_trust (), SingletonNumT (n, string_of_float n))
+                | SingletonStr s -> DefT (reason, bogus_trust (), SingletonStrT (OrdinaryName s))
+                | SingletonBigInt n ->
+                  DefT (reason, bogus_trust (), SingletonBigIntT (Some n, Int64.to_string n))
+                | Null -> DefT (reason, bogus_trust (), NullT)
+                | Void -> DefT (reason, bogus_trust (), VoidT)
+                | Member reason -> Env.find_write cx Env_api.ExpressionLoc reason
+              in
+              LeftP (SentinelProp prop, other_t)
             in
-            LeftP (SentinelProp prop, other_t)
-          in
-          let predicate =
-            Base.List.fold tl ~init:(predicate_of_check hd) ~f:(fun acc check ->
-                AndP (acc, predicate_of_check check)
-            )
-          in
-          Tvar.mk_no_wrap_where cx reason (fun tvar ->
-              SpeculationFlow.resolved_lower_flow cx reason (t, PredicateT (predicate, tvar))
-          ))
+            let predicate =
+              Base.List.fold tl ~init:(predicate_of_check hd) ~f:(fun acc check ->
+                  AndP (acc, predicate_of_check check)
+              )
+            in
+            Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                Flow_js.flow cx (t, PredicateT (predicate, tvar))
+            )))
       | Instantiate_Callee instantiation_hint -> instantiate_callee cx t instantiation_hint
       | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint
       | Decomp_Promise ->
