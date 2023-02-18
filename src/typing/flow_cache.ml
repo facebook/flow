@@ -61,10 +61,9 @@ module PolyInstantiation = struct
       ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp
     else
       let cache = Context.instantiation_cache cx in
-      let in_synthesis_mode = Context.in_synthesis_mode cx in
       match
         Reason.ImplicitInstantiationReasonMap.find_opt
-          (reason_tapp, typeparam.reason, op_reason, in_synthesis_mode)
+          (reason_tapp, typeparam.reason, op_reason)
           !cache
       with
       | Some t -> t
@@ -72,7 +71,7 @@ module PolyInstantiation = struct
         let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
         cache :=
           Reason.ImplicitInstantiationReasonMap.add
-            (reason_tapp, typeparam.reason, op_reason, in_synthesis_mode)
+            (reason_tapp, typeparam.reason, op_reason)
             t
             !cache;
         t
