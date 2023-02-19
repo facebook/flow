@@ -119,13 +119,11 @@ module Make
     | Flow_ast.Literal.String s -> Some (SingletonStr s)
     | Flow_ast.Literal.Boolean b -> Some (SingletonBool b)
     | Flow_ast.Literal.Number n -> Some (SingletonNum n)
-    | Flow_ast.Literal.Null -> Some Null
     | _ -> None
 
   let literal_check_of_expr ((_loc, expr) as e) =
     match expr with
     | Flow_ast.Expression.Literal l -> literal_check_of_literal l
-    | Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; _ }) -> Some Void
     | Flow_ast.Expression.Member mem ->
       if Base.Option.is_some @@ RefinementKey.lookup_of_member ~allow_optional:false mem then
         Some (Member (Reason.mk_expression_reason e))

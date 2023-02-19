@@ -40,8 +40,6 @@ and sentinel_refinement =
   | SingletonBool of bool
   | SingletonStr of string
   | SingletonBigInt of int64
-  | Null
-  | Void
   | Member of Reason.t
 
 and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =

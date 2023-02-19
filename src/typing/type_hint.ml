@@ -555,8 +555,6 @@ and type_of_hint_decomposition cx op reason t =
                 | SingletonStr s -> DefT (reason, bogus_trust (), SingletonStrT (OrdinaryName s))
                 | SingletonBigInt n ->
                   DefT (reason, bogus_trust (), SingletonBigIntT (Some n, Int64.to_string n))
-                | Null -> DefT (reason, bogus_trust (), NullT)
-                | Void -> DefT (reason, bogus_trust (), VoidT)
                 | Member reason -> Env.find_write cx Env_api.ExpressionLoc reason
               in
               LeftP (SentinelProp prop, other_t)
