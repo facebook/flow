@@ -1924,8 +1924,15 @@ struct
            without preparation (see below). This is because in these cases, the
            return type is intended to be 0-1, whereas preparation (as implemented
            currently) destroys 0-1 behavior. *)
-        | (IntersectionT (r, rep), CallT { use_op = _; reason; call_action = _; return_hint = _ })
-          when is_calltype_reason reason ->
+        | ( IntersectionT (r, rep),
+            CallT
+              {
+                use_op = _;
+                reason = _;
+                call_action = Funcalltype { call_kind = CallTypeKind | MapTypeKind; _ };
+                return_hint = _;
+              }
+          ) ->
           SpeculationKit.try_intersection cx trace u r rep
         (* All other pairs with an intersection lower bound come here. Before
            further processing, we ensure that the upper bound is concretized. See
@@ -2620,9 +2627,15 @@ struct
            without fearing regressions in termination guarantees.
         *)
         | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
-            CallT { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint }
+            CallT
+              {
+                use_op;
+                reason = reason_op;
+                call_action = Funcalltype ({ call_kind; _ } as calltype);
+                return_hint;
+              }
           )
-          when not (is_typemap_reason reason_op) ->
+          when call_kind <> MapTypeKind ->
           let arg_reasons =
             Base.List.map
               ~f:(function
@@ -2905,6 +2918,7 @@ struct
             call_tout = t2;
             call_strict_arity;
             call_speculation_hint_state = _;
+            call_kind = _;
           } =
             calltype
           in
@@ -2952,6 +2966,7 @@ struct
             call_tout;
             call_strict_arity = _;
             call_speculation_hint_state = _;
+            call_kind = _;
           } =
             calltype
           in
@@ -3132,6 +3147,7 @@ struct
             call_this_t = _;
             call_strict_arity = _;
             call_speculation_hint_state = _;
+            call_kind = _;
           } =
             calltype
           in
@@ -4238,7 +4254,11 @@ struct
         | (DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout)) ->
           let f x =
             let use_op = Frame (TupleMapFunCompatibility { value = reason_of_t x }, use_op) in
-            EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), Eval.generate_id ())
+            EvalT
+              ( funt,
+                TypeDestructorT (use_op, reason_op, CallType { from_maptype = true; args = [x] }),
+                Eval.generate_id ()
+              )
           in
           let arrtype =
             match arrtype with
@@ -4263,7 +4283,11 @@ struct
         | (_, MapTypeT (use_op, reason, TupleMap funt, tout)) ->
           let iter = get_builtin cx ~trace (OrdinaryName "$iterate") reason in
           let elemt =
-            EvalT (iter, TypeDestructorT (use_op, reason, CallType [l]), Eval.generate_id ())
+            EvalT
+              ( iter,
+                TypeDestructorT (use_op, reason, CallType { from_maptype = true; args = [l] }),
+                Eval.generate_id ()
+              )
           in
           let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT elemt)) in
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
@@ -4276,7 +4300,11 @@ struct
             in
             let use_op = Frame (ObjMapFunCompatibility { value = reason_of_t t }, use_op) in
             let t =
-              EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [t]), Eval.generate_id ())
+              EvalT
+                ( funt,
+                  TypeDestructorT (use_op, reason_op, CallType { from_maptype = true; args = [t] }),
+                  Eval.generate_id ()
+                )
             in
             if opt then
               optional t
@@ -4299,7 +4327,11 @@ struct
             in
             let t =
               EvalT
-                (funt, TypeDestructorT (use_op, reason_op, CallType [key; t]), Eval.generate_id ())
+                ( funt,
+                  TypeDestructorT
+                    (use_op, reason_op, CallType { from_maptype = true; args = [key; t] }),
+                  Eval.generate_id ()
+                )
             in
             if opt then
               optional t
@@ -4508,6 +4540,7 @@ struct
             call_tout;
             call_strict_arity = _;
             call_speculation_hint_state = _;
+            call_kind = _;
           } =
             calltype
           in
@@ -4531,6 +4564,7 @@ struct
             call_tout;
             call_strict_arity = _;
             call_speculation_hint_state = _;
+            call_kind = _;
           } =
             calltype
           in
@@ -6860,9 +6894,15 @@ struct
           | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
           | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
           | ValuesType -> GetValuesT (reason, OpenT tout)
-          | CallType args ->
+          | CallType { from_maptype; args } ->
             let args = Base.List.map ~f:(fun arg -> Arg arg) args in
-            let call = mk_functioncalltype reason None args tout in
+            let call_kind =
+              if from_maptype then
+                MapTypeKind
+              else
+                CallTypeKind
+            in
+            let call = mk_functioncalltype ~call_kind reason None args tout in
             let call = { call with call_strict_arity = false } in
             let use_op =
               match use_op with

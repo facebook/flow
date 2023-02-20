@@ -1561,7 +1561,7 @@ end = struct
         in
         Ty.IndexedAccess { _object = ty; index = index'; optional = true }
       | T.OptionalIndexedAccessResultType _ -> return ty
-      | T.CallType ts ->
+      | T.CallType { from_maptype = _; args = ts } ->
         let%map tys = mapM (type__ ~env) ts in
         Ty.Utility (Ty.Call (ty, tys))
       | T.TypeMap (T.ObjectMap t') ->

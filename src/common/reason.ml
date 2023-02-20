@@ -853,25 +853,6 @@ let is_constant_reason r =
     helper x
   | _ -> false
 
-let is_typemap_reason r =
-  match desc_of_reason r with
-  | RTupleMap
-  | RObjectMap
-  | RObjectMapi
-  | RObjectKeyMirror
-  | RObjectMapConst ->
-    true
-  | _ -> false
-
-let is_calltype_reason r =
-  match desc_of_reason r with
-  | RTupleMap
-  | RObjectMap
-  | RObjectMapi
-  | RFunctionCallType ->
-    true
-  | _ -> false
-
 let is_literal_object_reason r =
   match desc_of_reason r with
   | RObjectLit

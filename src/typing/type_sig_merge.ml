@@ -709,7 +709,7 @@ and merge_annot tps file = function
     let fn = merge tps file fn in
     let args = List.map (merge tps file) args in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
-    Type.(EvalT (fn, TypeDestructorT (use_op, reason, CallType args), id))
+    Type.(EvalT (fn, TypeDestructorT (use_op, reason, CallType { from_maptype = false; args }), id))
   | TupleMap { loc; tup; fn } ->
     let reason = Reason.(mk_reason RTupleMap loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in

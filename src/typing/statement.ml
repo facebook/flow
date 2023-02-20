@@ -2770,7 +2770,7 @@ module Make
           let exprs_t = Base.List.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           Arg quasi_t :: exprs_t
         in
-        let ft = mk_functioncalltype reason None args ret in
+        let ft = mk_functioncalltype ~call_kind:RegularCallKind reason None args ret in
         let use_op =
           Op
             (FunCall
@@ -3976,7 +3976,15 @@ module Make
             in
             let handle_refined_callee argts obj_t f =
               Tvar.mk_no_wrap_where cx reason_call (fun t ->
-                  let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity:true in
+                  let app =
+                    mk_boundfunctioncalltype
+                      ~call_kind:RegularCallKind
+                      obj_t
+                      targts
+                      argts
+                      t
+                      ~call_strict_arity:true
+                  in
                   Flow.unify cx f prop_t;
                   let call_t =
                     match opt_state with
@@ -4276,7 +4284,15 @@ module Make
          performed by the flow algorithm itself. *)
       ( f,
         Tvar.mk_no_wrap_where cx reason (fun t ->
-            let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity in
+            let app =
+              mk_boundfunctioncalltype
+                ~call_kind:RegularCallKind
+                obj_t
+                targts
+                argts
+                t
+                ~call_strict_arity
+            in
             Flow.flow
               cx
               ( f,
@@ -5571,7 +5587,9 @@ module Make
             )
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
-        let call_action = Funcalltype (mk_functioncalltype reason_jsx None args tvar) in
+        let call_action =
+          Funcalltype (mk_functioncalltype ~call_kind:RegularCallKind reason_jsx None args tvar)
+        in
         Flow.flow cx (jsx_fun, CallT { use_op; reason; call_action; return_hint })
       | Options.ReactRuntimeClassic ->
         let reason_createElement =

@@ -780,7 +780,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           | (fn :: args, targs) ->
             let reason = mk_reason RFunctionCallType loc in
             reconstruct_ast
-              (EvalT (fn, TypeDestructorT (use_op reason, reason, CallType args), mk_eval_id cx loc))
+              (EvalT
+                 ( fn,
+                   TypeDestructorT (use_op reason, reason, CallType { from_maptype = false; args }),
+                   mk_eval_id cx loc
+                 )
+              )
               targs
           | _ -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast)
         | "$TupleMap" ->

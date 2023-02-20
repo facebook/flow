@@ -115,7 +115,14 @@ class func_scope_visitor
               [
                 Tvar.mk_where cx reason (fun tvar ->
                     let funt = Flow.get_builtin cx (OrdinaryName "$await") reason in
-                    let callt = mk_functioncalltype reason None [Arg t] (open_tvar tvar) in
+                    let callt =
+                      mk_functioncalltype
+                        ~call_kind:RegularCallKind
+                        reason
+                        None
+                        [Arg t]
+                        (open_tvar tvar)
+                    in
                     let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
                     Flow.flow
                       cx

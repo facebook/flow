@@ -1124,6 +1124,11 @@ module rec TypeTerm : sig
     | Speculation_hint_invalid
     | Speculation_hint_set of (int list * t)
 
+  and call_kind =
+    | MapTypeKind
+    | CallTypeKind
+    | RegularCallKind
+
   (* Used by CallT and similar constructors *)
   and funcalltype = {
     call_this_t: t;
@@ -1132,6 +1137,7 @@ module rec TypeTerm : sig
     call_tout: tvar;
     call_strict_arity: bool;
     call_speculation_hint_state: speculation_hint_state ref option;
+    call_kind: call_kind;
   }
 
   and methodcalltype = {
@@ -1423,7 +1429,10 @@ module rec TypeTerm : sig
         Object.Spread.target * Object.Spread.operand list * Object.Spread.operand_slice option
     | RestType of Object.Rest.merge_mode * t
     | ValuesType
-    | CallType of t list
+    | CallType of {
+        from_maptype: bool;
+        args: t list;
+      }
     | TypeMap of type_map
     | ReactElementPropsType
     | ReactElementConfigType
@@ -3987,7 +3996,7 @@ let mk_boundfunctiontype ~this = mk_methodtype this
   then we create a methodtype with a specific `this` type. *)
 let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
-let mk_boundfunctioncalltype this targs args ?(call_strict_arity = true) tout =
+let mk_boundfunctioncalltype ~call_kind this targs args ?(call_strict_arity = true) tout =
   {
     call_this_t = this;
     call_targs = targs;
@@ -3995,9 +4004,10 @@ let mk_boundfunctioncalltype this targs args ?(call_strict_arity = true) tout =
     call_tout = tout;
     call_strict_arity;
     call_speculation_hint_state = None;
+    call_kind;
   }
 
-let mk_functioncalltype reason = mk_boundfunctioncalltype (global_this reason)
+let mk_functioncalltype ~call_kind reason = mk_boundfunctioncalltype ~call_kind (global_this reason)
 
 let mk_opt_functioncalltype reason targs args strict = (global_this reason, targs, args, strict)
 
@@ -4025,6 +4035,7 @@ let apply_opt_funcalltype (this, targs, args, strict) t_out =
       call_tout = t_out;
       call_strict_arity = strict;
       call_speculation_hint_state = None;
+      call_kind = RegularCallKind;
     }
 
 let apply_opt_methodcalltype
@@ -4090,6 +4101,7 @@ let call_of_method_app
     call_tout = meth_tout;
     call_strict_arity = meth_strict_arity;
     call_speculation_hint_state = None;
+    call_kind = RegularCallKind;
   }
 
 module TypeParams : sig

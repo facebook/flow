@@ -214,7 +214,7 @@ class ['a] t =
         let acc = self#list (self#object_kit_spread_operand cx) acc ts in
         self#opt (self#object_kit_spread_operand_slice cx) acc head_slice
       | RestType (_, t) -> self#type_ cx pole_TODO acc t
-      | CallType args -> self#list (self#type_ cx pole_TODO) acc args
+      | CallType { from_maptype = _; args } -> self#list (self#type_ cx pole_TODO) acc args
       | TypeMap map -> self#type_map cx acc map
 
     method private custom_fun_kind cx acc =

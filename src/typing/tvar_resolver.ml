@@ -91,6 +91,7 @@ class resolver ~no_lowers =
         call_tout = (r, id);
         call_strict_arity = _;
         call_speculation_hint_state = _;
+        call_kind = _;
       } =
         t
       in

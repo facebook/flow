@@ -272,10 +272,6 @@ val is_instantiable_reason : 'loc virtual_reason -> bool
 
 val is_constant_reason : 'loc virtual_reason -> bool
 
-val is_typemap_reason : 'loc virtual_reason -> bool
-
-val is_calltype_reason : 'loc virtual_reason -> bool
-
 val is_nullish_reason : 'loc virtual_reason -> bool
 
 val is_scalar_reason : 'loc virtual_reason -> bool

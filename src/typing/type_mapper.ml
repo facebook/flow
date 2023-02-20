@@ -505,12 +505,12 @@ class virtual ['a] t =
         else
           RestType (options, x')
       | ValuesType -> t
-      | CallType args ->
+      | CallType { from_maptype; args } ->
         let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
         if args' == args then
           t
         else
-          CallType args'
+          CallType { from_maptype; args = args' }
       | TypeMap tmap ->
         let tmap' = self#type_map cx map_cx tmap in
         if tmap' == tmap then
@@ -848,6 +848,7 @@ class virtual ['a] t =
         call_tout;
         call_strict_arity;
         call_speculation_hint_state;
+        call_kind;
       } =
         t
       in
@@ -872,5 +873,6 @@ class virtual ['a] t =
           call_tout = call_tout';
           call_strict_arity;
           call_speculation_hint_state;
+          call_kind;
         }
   end
