@@ -227,34 +227,43 @@ module Functions = struct
 
   let pattern_of_param param =
     let (_, { Ast.Type.Function.Param.name; annot; optional }) = param in
-    ( Loc.none,
-      Ast.Pattern.Identifier
-        {
-          Ast.Pattern.Identifier.name = Base.Option.value_exn name;
-          annot = Ast.Type.Available (Loc.none, annot);
-          optional;
-        }
+    Base.Option.map name ~f:(fun name ->
+        ( Loc.none,
+          Ast.Pattern.Identifier
+            { Ast.Pattern.Identifier.name; annot = Ast.Type.Available (Loc.none, annot); optional }
+        )
     )
 
   let param_of_type param =
-    (Loc.none, { Ast.Function.Param.argument = pattern_of_param param; default = None })
+    let argument = pattern_of_param param in
+    Base.Option.map argument ~f:(fun argument ->
+        (Loc.none, { Ast.Function.Param.argument; default = None })
+    )
 
   let rest_param_of_type rest =
     let (_, { Ast.Type.Function.RestParam.argument; comments }) = rest in
-    (Loc.none, { Ast.Function.RestParam.argument = pattern_of_param argument; comments })
+    let argument = pattern_of_param argument in
+    Base.Option.map argument ~f:(fun argument ->
+        (Loc.none, { Ast.Function.RestParam.argument; comments })
+    )
 
   let this_param_of_type (loc, { Ast.Type.Function.ThisParam.annot; comments }) =
     (loc, { Ast.Function.ThisParam.annot; comments })
 
   let params_of_type (loc, { Ast.Type.Function.Params.this_; params; rest; comments }) =
-    ( loc,
-      {
-        Ast.Function.Params.this_ = Base.Option.map ~f:this_param_of_type this_;
-        params = Base.List.map ~f:param_of_type params;
-        rest = Base.Option.map ~f:rest_param_of_type rest;
-        comments;
-      }
-    )
+    params
+    |> Base.List.map ~f:param_of_type
+    |> Base.Option.all
+    |> Base.Option.map ~f:(fun params ->
+           ( loc,
+             {
+               Ast.Function.Params.this_ = Base.Option.map ~f:this_param_of_type this_;
+               params;
+               rest = Base.Option.bind ~f:rest_param_of_type rest;
+               comments;
+             }
+           )
+       )
 
   let of_type
       ?id
@@ -262,23 +271,26 @@ module Functions = struct
       ?(async = false)
       ?body:body_
       { Ast.Type.Function.tparams; params; return; _ } =
-    let body =
-      match body_ with
-      | Some body_ -> body_
-      | None -> body []
-    in
-    {
-      id;
-      params = params_of_type params;
-      body;
-      async;
-      generator;
-      predicate = None;
-      return = Ast.Type.Available (Loc.none, return);
-      tparams;
-      sig_loc = Loc.none;
-      comments = None;
-    }
+    let params = params_of_type params in
+    Base.Option.map params ~f:(fun params ->
+        let body =
+          match body_ with
+          | Some body_ -> body_
+          | None -> body []
+        in
+        {
+          id;
+          params;
+          body;
+          async;
+          generator;
+          predicate = None;
+          return = Ast.Type.Available (Loc.none, return);
+          tparams;
+          sig_loc = Loc.none;
+          comments = None;
+        }
+    )
 end
 
 module Classes = struct

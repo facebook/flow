@@ -31,3 +31,12 @@ const o: O = {
     
 // ^
 }
+
+interface I2 {
+    f: string => number
+};
+  
+class C implements I2 {
+    
+// ^
+}

@@ -9177,6 +9177,9 @@ Flags: --lsp
   }
 }
 
+method_signature.js:40:4
+Flags: --lsp
+
 last_empty_line.js:5:0
 Flags: --pretty
 {"result":[{"name":"foo","type":"string"}]}

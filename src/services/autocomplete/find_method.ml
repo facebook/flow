@@ -55,17 +55,19 @@ let empty_method_of_property_type prop =
   | Init (_, Flow_ast.Type.Function f)
   | Get (_, f)
   | Set (_, f) ->
-    Some
-      ( Loc.none,
-        {
-          Flow_ast.Class.Method.kind = Flow_ast.Class.Method.Method;
-          key;
-          value = (Loc.none, Ast_builder.Functions.of_type f);
-          static;
-          decorators = [];
-          comments = None;
-        }
-      )
+    let value = Ast_builder.Functions.of_type f in
+    Base.Option.map value ~f:(fun value ->
+        ( Loc.none,
+          {
+            Flow_ast.Class.Method.kind = Flow_ast.Class.Method.Method;
+            key;
+            value = (Loc.none, value);
+            static;
+            decorators = [];
+            comments = None;
+          }
+        )
+    )
   | _ -> None
 
 let find reader target_loc =
