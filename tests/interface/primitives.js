@@ -16,3 +16,9 @@
 
   (new Boolean(x): interface {toString(): string}); // OK
 }
+{
+  declare const x: symbol;
+  (x: interface {}); // ERROR
+
+  // `new Symbol` is not allowed at runtime
+}

@@ -1793,10 +1793,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       then
         rec_flow_t cx trace ~use_op (statics, u)
-    (**********************************************************************)
-    (* classes, strings, arrays, and symbols can implement some interface *)
-    (**********************************************************************)
-    | ( DefT (_, _, (ClassT _ | StrT _ | ArrT _ | SymbolT)),
+    (*********************************************************)
+    (* classes, strings, arrays can implement some interface *)
+    (*********************************************************)
+    | ( DefT (_, _, (ClassT _ | StrT _ | ArrT _)),
         (DefT (_, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ })) as i)
       ) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))

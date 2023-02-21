@@ -507,6 +507,23 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- primitives.js:21:4
+
+Cannot cast `x` to interface type because symbol [1] is incompatible with interface type [2]. [incompatible-cast]
+
+   primitives.js:21:4
+   21|   (x: interface {}); // ERROR
+          ^
+
+References:
+   primitives.js:20:20
+   20|   declare const x: symbol;
+                          ^^^^^^ [1]
+   primitives.js:21:7
+   21|   (x: interface {}); // ERROR
+             ^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- string.js:4:2
 
 Cannot cast `s` to interface type because string [1] is incompatible with boolean [2] in the return value of property
@@ -596,42 +613,6 @@ References:
    subtyping.js:74:21
    74| interface N extends M {
                            ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- symbol.js:4:2
-
-Cannot cast `s` to interface type because string [1] is incompatible with boolean [2] in property `description`.
-[incompatible-cast]
-
-   symbol.js:4:2
-     4| (s: interface {+description: boolean}); // ERROR
-         ^
-
-References:
-   <BUILTINS>/core.js:279:17
-   279|   +description: string | void;
-                        ^^^^^^ [1]
-   symbol.js:4:30
-     4| (s: interface {+description: boolean}); // ERROR
-                                     ^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- symbol.js:4:2
-
-Cannot cast `s` to interface type because undefined [1] is incompatible with boolean [2] in property `description`.
-[incompatible-cast]
-
-   symbol.js:4:2
-     4| (s: interface {+description: boolean}); // ERROR
-         ^
-
-References:
-   <BUILTINS>/core.js:279:26
-   279|   +description: string | void;
-                                 ^^^^ [1]
-   symbol.js:4:30
-     4| (s: interface {+description: boolean}); // ERROR
-                                     ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:17
@@ -919,7 +900,7 @@ References:
 
 
 
-Found 58 errors
+Found 57 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
