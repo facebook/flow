@@ -1670,6 +1670,12 @@ let dump_error_message =
     | ESignatureVerification sve ->
       let msg = string_of_signature_error ALoc.debug_to_string sve in
       spf "ESignatureVerification (%s)" msg
+    | EPrimitiveAsInterface { use_op; reason; interface_reason; kind = _ } ->
+      spf
+        "EPrimitiveAsInterface (%s) (%s) (%s)"
+        (string_of_use_op use_op)
+        (dump_reason cx reason)
+        (dump_reason cx interface_reason)
     | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
       spf
         "ECannotSpreadInterface (%s) (%s) (%s)"

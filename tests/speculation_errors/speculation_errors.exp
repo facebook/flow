@@ -2529,9 +2529,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:42:1
 
-Cannot call `e` because: [incompatible-call]
- - Either number [1] is incompatible with `X` [2].
- - Or number [1] is incompatible with interface type [3].
+Cannot call `e` because number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-call]
 
    intersection-function.js:42:1
    42| e(42);
@@ -2541,12 +2540,9 @@ References:
    intersection-function.js:42:3
    42| e(42);
          ^^ [1]
-   intersection-function.js:40:23
-   40| declare function e(x: X): void;
-                             ^ [2]
    intersection-function.js:41:23
    41| declare function e(x: interface {p: string}): void;
-                             ^^^^^^^^^^^^^^^^^^^^^ [3]
+                             ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:44:1
@@ -2607,10 +2603,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:51:1
 
-Cannot call `f` because: [incompatible-call]
- - Either number [1] is incompatible with interface type [2].
- - Or number [1] is incompatible with read-only array type [3].
- - Or number [1] is incompatible with tuple type [4].
+Cannot call `f` because number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-call]
 
    intersection-function.js:51:1
    51| f(42);
@@ -2623,12 +2617,6 @@ References:
    intersection-function.js:48:23
    48| declare function f(x: interface {p: string}): void;
                              ^^^^^^^^^^^^^^^^^^^^^ [2]
-   intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   intersection-function.js:50:23
-   50| declare function f(x: [string, string]): void;
-                             ^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:52:1
@@ -3267,21 +3255,18 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:34:2
 
-Cannot cast `42` to `E` because: [incompatible-cast]
- - Either number [1] is incompatible with `X` [2].
- - Or number [1] is incompatible with interface type [3].
+Cannot cast `42` to `E` because number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap
+it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-cast]
 
    union.js:34:2
    34| (42: E);
         ^^ [1]
 
 References:
-   union.js:33:10
-   33| type E = X | interface {p: string};
-                ^ [2]
    union.js:33:14
    33| type E = X | interface {p: string};
-                    ^^^^^^^^^^^^^^^^^^^^^ [3]
+                    ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:36:2
@@ -3340,10 +3325,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:41:2
 
-Cannot cast `42` to `F` because: [incompatible-cast]
- - Either number [1] is incompatible with interface type [2].
- - Or number [1] is incompatible with read-only array type [3].
- - Or number [1] is incompatible with tuple type [4].
+Cannot cast `42` to `F` because number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap
+it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-cast]
 
    union.js:41:2
    41| (42: F);
@@ -3353,12 +3337,6 @@ References:
    union.js:40:10
    40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
                 ^^^^^^^^^^^^^^^^^^^^^ [2]
-   union.js:40:34
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                        ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:42:2

@@ -1800,6 +1800,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (DefT (_, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ })) as i)
       ) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
+    | ( DefT (reason, _, BoolT _),
+        DefT (interface_reason, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ }))
+      ) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Boolean })
+    | ( DefT (reason, _, NumT _),
+        DefT (interface_reason, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ }))
+      ) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Number })
     (**************************)
     (* opaque types supertype *)
     (**************************)

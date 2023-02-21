@@ -1,6 +1,8 @@
 Error ------------------------------------------------------------------------------------------------- builtin.js:11:31
 
-Cannot assign `123` to `lengthTest3` because number [1] is incompatible with `IHasLength` [2]. [incompatible-type]
+Cannot assign `123` to `lengthTest3` because number [1], a primitive, cannot be used as a subtype of `IHasLength` [2].
+You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    builtin.js:11:31
    11| var lengthTest3: IHasLength = 123; // number doesn't have length
@@ -14,7 +16,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- builtin.js:12:31
 
-Cannot assign `true` to `lengthTest4` because boolean [1] is incompatible with `IHasLength` [2]. [incompatible-type]
+Cannot assign `true` to `lengthTest4` because boolean [1], a primitive, cannot be used as a subtype of `IHasLength` [2].
+You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    builtin.js:12:31
    12| var lengthTest4: IHasLength = true; // boolean doesn't have length

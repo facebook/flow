@@ -2203,8 +2203,10 @@ References:
 Error ------------------------------------------------------------------------------------------- stream/stream.js:86:22
 
 Cannot call `stream.Readable.from` with `101` bound to `iterable` because: [incompatible-call]
- - Either number [1] is incompatible with `$Iterable` [2].
- - Or number [1] is incompatible with `$AsyncIterable` [3].
+ - Either number [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new Number(...))`
+   to turn it into an object and attempt to use it as a subtype of an interface.
+ - Or number [1], a primitive, cannot be used as a subtype of `$AsyncIterable` [3]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 
    stream/stream.js:86:22
      86| stream.Readable.from(101); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received type number (101)

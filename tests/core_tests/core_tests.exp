@@ -220,106 +220,94 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:23
 
-Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`: [incompatible-call]
- - Either number [2] is incompatible with interface type [3].
- - Or number [2] is incompatible with read-only array type [4].
+Cannot call `WeakSet` with array literal bound to `iterable` because number [1], a primitive, cannot be used as a
+subtype of interface type [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as
+a subtype of an interface in type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
    weakset.js:17:23
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1671:22
-   1671| interface $Iterator<+Yield,+Return,-Next> {
-                              ^^^^^ [1]
    weakset.js:17:24
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                                ^ [2]
+                                ^ [1]
    <BUILTINS>/core.js:1823:26
    1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                  ^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1823:41
-   1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [4]
+                                  ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:23
 
-Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`: [incompatible-call]
- - Either number [2] is incompatible with interface type [3].
- - Or number [2] is incompatible with read-only array type [4].
+Cannot call `WeakSet` with array literal bound to `iterable` because number [1], a primitive, cannot be used as a
+subtype of interface type [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as
+a subtype of an interface in type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
    weakset.js:17:23
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1671:22
-   1671| interface $Iterator<+Yield,+Return,-Next> {
-                              ^^^^^ [1]
    weakset.js:17:27
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                                   ^ [2]
+                                   ^ [1]
    <BUILTINS>/core.js:1823:26
    1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                  ^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1823:41
-   1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [4]
+                                  ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:23
 
-Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
-property `@@iterator`: [incompatible-call]
- - Either number [2] is incompatible with interface type [3].
- - Or number [2] is incompatible with read-only array type [4].
+Cannot call `WeakSet` with array literal bound to `iterable` because number [1], a primitive, cannot be used as a
+subtype of interface type [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as
+a subtype of an interface in type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
    weakset.js:17:23
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1671:22
-   1671| interface $Iterator<+Yield,+Return,-Next> {
-                              ^^^^^ [1]
    weakset.js:17:30
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                                      ^ [2]
+                                      ^ [1]
    <BUILTINS>/core.js:1823:26
    1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                  ^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1823:41
-   1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [4]
+                                  ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1671:22
+   1671| interface $Iterator<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:34:23
 
-Cannot call `WeakSet` with `numbers()` bound to `iterable` because in type argument `Yield` [1]: [incompatible-call]
- - Either number [2] is incompatible with interface type [3].
- - Or number [2] is incompatible with read-only array type [4].
+Cannot call `WeakSet` with `numbers()` bound to `iterable` because number [1], a primitive, cannot be used as a subtype
+of interface type [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a
+subtype of an interface in type argument `Yield` [3]. [incompatible-call]
 
    weakset.js:34:23
      34| let ws5 = new WeakSet(numbers()); // error, must be objects
                                ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1677:22
-   1677| interface $Iterable<+Yield,+Return,-Next> {
-                              ^^^^^ [1]
    weakset.js:27:31
      27| function* numbers(): Iterable<number> {
-                                       ^^^^^^ [2]
+                                       ^^^^^^ [1]
    <BUILTINS>/core.js:1823:26
    1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                  ^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1823:41
-   1823| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [4]
+                                  ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1677:22
+   1677| interface $Iterable<+Yield,+Return,-Next> {
+                              ^^^^^ [3]
 
 
 
 Found 16 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -330,6 +330,12 @@ and 'loc t' =
   | EUnexpectedTemporaryBaseType of 'loc
   | ECannotDelete of 'loc * 'loc virtual_reason
   | ESignatureVerification of 'loc Signature_error.t
+  | EPrimitiveAsInterface of {
+      use_op: 'loc virtual_use_op;
+      reason: 'loc virtual_reason;
+      interface_reason: 'loc virtual_reason;
+      kind: [ `Boolean | `Number ];
+    }
   | ECannotSpreadInterface of {
       spread_reason: 'loc virtual_reason;
       interface_reason: 'loc virtual_reason;
@@ -986,6 +992,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | ESignatureVerification sve -> ESignatureVerification (Signature_error.map f sve)
+  | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
+    EPrimitiveAsInterface
+      {
+        use_op = map_use_op use_op;
+        reason = map_reason reason;
+        interface_reason = map_reason interface_reason;
+        kind;
+      }
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     ECannotSpreadInterface
       {
@@ -1263,6 +1277,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EInvalidReactPropType { reason; use_op; tool })
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
+  | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
+    util use_op (fun use_op -> EPrimitiveAsInterface { use_op; reason; interface_reason; kind })
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     util use_op (fun use_op -> ECannotSpreadInterface { spread_reason; interface_reason; use_op })
   | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
@@ -1649,7 +1665,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ECannotResolveOpenTvar _
   | EMethodUnbinding _
   | EImplicitInstantiationUnderconstrainedError _
-  | EClassToObject _ ->
+  | EClassToObject _
+  | EPrimitiveAsInterface _ ->
     None
 
 let kind_of_msg =
@@ -3557,6 +3574,24 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
+    let kind_str =
+      match kind with
+      | `Boolean -> "Boolean"
+      | `Number -> "Number"
+    in
+    let features =
+      [
+        ref reason;
+        text ", a primitive, cannot be used as a subtype of ";
+        ref interface_reason;
+        text ". ";
+        text "You can wrap it in ";
+        code (spf "new %s(...))" kind_str);
+        text " to turn it into an object and attempt to use it as a subtype of an interface";
+      ]
+    in
+    UseOp { loc = loc_of_reason reason; features; use_op }
   | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
     let features =
       [
@@ -4713,6 +4748,7 @@ let error_code_of_message err : error_code option =
   | EParseError (_, _) -> None
   | EPolarityMismatch _ -> Some IncompatibleVariance
   | EPredAnnot _ -> Some InvalidPredTypeArg
+  | EPrimitiveAsInterface _ -> Some IncompatibleType
   | EPrivateAnnot _ -> Some InvalidPrivateTypeArg
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
   | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
