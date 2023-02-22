@@ -65,8 +65,13 @@ module type S = sig
   val jsx_mk_props :
     Context.t ->
     Reason.reason ->
-    ?check_expression:
+    check_expression:
       (Context.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t) ->
+    collapse_children:
+      (Context.t ->
+      ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list ->
+      Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list)
+      ) ->
     string ->
     (ALoc.t, ALoc.t) Ast.JSX.Opening.attribute list ->
     ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list ->
@@ -74,6 +79,11 @@ module type S = sig
     * (ALoc.t, ALoc.t * Type.t) Ast.JSX.Opening.attribute list
     * Type.unresolved_param list
     * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list)
+
+  val collapse_children :
+    Context.t ->
+    ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list ->
+    Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list)
 
   val statement :
     Context.t -> (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t

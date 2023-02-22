@@ -15,6 +15,11 @@ val set_annotation : t -> ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t -> 
 
 val set_expression : t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t -> unit
 
+val set_jsx_children :
+  t ->
+  Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.JSX.child list) ->
+  unit
+
 val set_function : t -> ALoc.t -> Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.t -> unit
 
 val set_function_sig :
@@ -60,6 +65,11 @@ val set_tparam :
 val get_annotation : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation option
 
 val get_expression : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option
+
+val get_jsx_children :
+  t ->
+  ALoc.t ->
+  (Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.JSX.child list)) option
 
 val get_function_sig :
   t ->

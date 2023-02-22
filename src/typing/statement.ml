@@ -5212,19 +5212,23 @@ module Make
 
   and collapse_children cx (children_loc, children) :
       Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list) =
-    let (unresolved_params, children') =
-      children
-      |> Base.List.fold ~init:([], []) ~f:(fun (unres_params, children) child ->
-             let (unres_param_opt, child) = jsx_body cx child in
-             ( Base.Option.value_map unres_param_opt ~default:unres_params ~f:(fun x ->
-                   x :: unres_params
-               ),
-               child :: children
-             )
-         )
-      |> map_pair List.rev List.rev
-    in
-    (unresolved_params, (children_loc, children'))
+    let cache = Context.node_cache cx in
+    match Node_cache.get_jsx_children cache children_loc with
+    | Some result -> result
+    | None ->
+      let (unresolved_params, children') =
+        children
+        |> Base.List.fold ~init:([], []) ~f:(fun (unres_params, children) child ->
+               let (unres_param_opt, child) = jsx_body cx child in
+               ( Base.Option.value_map unres_param_opt ~default:unres_params ~f:(fun x ->
+                     x :: unres_params
+                 ),
+                 child :: children
+               )
+           )
+        |> map_pair List.rev List.rev
+      in
+      (unresolved_params, (children_loc, children'))
 
   and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
     let open Ast.JSX in
@@ -5300,7 +5304,16 @@ module Make
         let fbt_reason = mk_reason RFbt loc_element in
         let t = Flow.get_builtin_type cx fbt_reason (OrdinaryName custom_jsx_type) in
         (* TODO check attribute types against an fbt API *)
-        let (_, attributes, _, children) = jsx_mk_props cx fbt_reason name attributes children in
+        let (_, attributes, _, children) =
+          jsx_mk_props
+            cx
+            fbt_reason
+            ~check_expression:(Statement.expression ?cond:None)
+            ~collapse_children
+            name
+            attributes
+            children
+        in
         let name = Identifier ((loc_id, t), id) in
         (t, name, attributes, children)
       | (Identifier (loc, { Identifier.name; comments }), _, _) ->
@@ -5331,7 +5344,14 @@ module Make
               DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, make_trust (), strt)
           in
           let (o, attributes', unresolved_params, children) =
-            jsx_mk_props cx reason name attributes children
+            jsx_mk_props
+              cx
+              reason
+              ~check_expression:(Statement.expression ?cond:None)
+              ~collapse_children
+              name
+              attributes
+              children
           in
           let t = jsx_desugar cx name c o attributes unresolved_params locs in
           let name = Identifier ((loc, c), { Identifier.name; comments }) in
@@ -5344,7 +5364,14 @@ module Make
         let ((m_loc, t), m_expr') = expression cx m_expr in
         let c = mod_reason_of_t (replace_desc_reason (RIdentifier (OrdinaryName name))) t in
         let (o, attributes', unresolved_params, children) =
-          jsx_mk_props cx reason name attributes children
+          jsx_mk_props
+            cx
+            reason
+            ~check_expression:(Statement.expression ?cond:None)
+            ~collapse_children
+            name
+            attributes
+            children
         in
         let t = jsx_desugar cx name c o attributes unresolved_params locs in
         let member' =
@@ -5358,7 +5385,16 @@ module Make
         let name' = Tast_utils.error_mapper#jsx_element_name name in
         let el_name = jsx_title_member_to_string member in
         let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
-        let (_o, attributes', _, children) = jsx_mk_props cx reason el_name attributes children in
+        let (_o, attributes', _, children) =
+          jsx_mk_props
+            cx
+            reason
+            ~check_expression:(Statement.expression ?cond:None)
+            ~collapse_children
+            el_name
+            attributes
+            children
+        in
         (t, name', attributes', children)
       | (NamespacedName namespace, _, _) ->
         (* TODO? covers namespaced names as element names *)
@@ -5366,7 +5402,16 @@ module Make
         let name' = Tast_utils.error_mapper#jsx_element_name name in
         let el_name = jsx_title_namespaced_name_to_string namespace in
         let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
-        let (_o, attributes', _, children) = jsx_mk_props cx reason el_name attributes children in
+        let (_o, attributes', _, children) =
+          jsx_mk_props
+            cx
+            reason
+            ~check_expression:(Statement.expression ?cond:None)
+            ~collapse_children
+            el_name
+            attributes
+            children
+        in
         (t, name', attributes', children)
     in
     let closing_element =
@@ -5418,7 +5463,7 @@ module Make
         MemberExpression (match_member_expressions o_mexp c_mexp)
       | (_, _) -> Tast_utils.error_mapper#jsx_element_name c_name
 
-  and jsx_mk_props cx reason ?(check_expression = expression ?cond:None) name attributes children =
+  and jsx_mk_props cx reason ~check_expression ~collapse_children name attributes children =
     let open Ast.JSX in
     let is_react = Context.jsx cx = Options.Jsx_react in
     let reason_props =

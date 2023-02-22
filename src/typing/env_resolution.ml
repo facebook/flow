@@ -101,6 +101,21 @@ let synthesize_expression_for_instantiation cx e =
   if can_cache then Node_cache.set_expression (Context.node_cache cx) e;
   e
 
+let synthesize_jsx_children_for_instantiation cx children =
+  let original_errors = Context.errors cx in
+  Context.reset_errors cx Flow_error.ErrorSet.empty;
+  let (produced_placeholders, result) =
+    Context.run_in_synthesis_mode cx (fun () -> Statement.collapse_children cx children)
+  in
+  let can_cache =
+    (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
+       we can cache the result *)
+    (not produced_placeholders) && Flow_error.ErrorSet.is_empty (Context.errors cx)
+  in
+  Context.reset_errors cx original_errors;
+  if can_cache then Node_cache.set_jsx_children (Context.node_cache cx) result;
+  result
+
 let synth_arg_list cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ }) =
   Base.List.map
     arguments
@@ -227,6 +242,7 @@ let resolve_hint cx loc hint =
                 cx
                 reason
                 ~check_expression:synthesize_expression_for_instantiation
+                ~collapse_children:synthesize_jsx_children_for_instantiation
                 name
                 props
                 children
