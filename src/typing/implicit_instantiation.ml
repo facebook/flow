@@ -1241,27 +1241,38 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   let run
       cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
+    let is_utility_type_call =
+      match check.Check.operation with
+      | (_, _, Check.Call { call_kind = MapTypeKind | CallTypeKind; _ }) -> true
+      | (_, _, Check.Call _)
+      | (_, _, Check.Constructor _)
+      | (_, _, Check.Jsx _) ->
+        false
+    in
     if Context.lti cx then
-      let (allow_underconstrained, return_hint) =
-        match lazy_hint reason_op with
-        | HintAvailable (t, kind) -> (true, Some (t, kind))
-        | DecompositionError -> (true, None)
-        | NoHint
-        | EncounteredPlaceholder ->
-          (false, None)
-      in
-      Context.run_in_implicit_instantiation_mode cx (fun () ->
-          run_pierce
-            cx
-            ~allow_underconstrained
-            ~return_hint
-            check
-            ?cache
-            trace
-            ~use_op
-            ~reason_op
-            ~reason_tapp
-      )
+      if Context.in_implicit_instantiation cx && is_utility_type_call then
+        run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
+      else
+        let (allow_underconstrained, return_hint) =
+          match lazy_hint reason_op with
+          | HintAvailable (t, kind) -> (true, Some (t, kind))
+          | DecompositionError -> (true, None)
+          | NoHint
+          | EncounteredPlaceholder ->
+            (false, None)
+        in
+        Context.run_in_implicit_instantiation_mode cx (fun () ->
+            run_pierce
+              cx
+              ~allow_underconstrained
+              ~return_hint
+              check
+              ?cache
+              trace
+              ~use_op
+              ~reason_op
+              ~reason_tapp
+        )
     else
       run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
 end
