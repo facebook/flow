@@ -29,8 +29,8 @@ Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with
                           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1092:33
-   1092| type RegExp$matchResult = Array<string> & {
+   <BUILTINS>/core.js:1097:33
+   1097| type RegExp$matchResult = Array<string> & {
                                          ^^^^^^ [1]
    overload.js:7:9
       7| var x1: number = "".match(0)[0];
@@ -46,8 +46,8 @@ Cannot get `"".match(...)[0]` because null [1] does not have properties. [incomp
                                       ^
 
 References:
-   <BUILTINS>/core.js:1176:58
-   1176|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1181:58
+   1181|     match(regexp: string | RegExp): RegExp$matchResult | null;
                                                                   ^^^^ [1]
 
 
@@ -61,8 +61,8 @@ Cannot call `"".match` with `0` bound to `regexp` because number [1] is incompat
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:1176:19
-   1176|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1181:19
+   1181|     match(regexp: string | RegExp): RegExp$matchResult | null;
                            ^^^^^^ [2]
 
 
@@ -75,8 +75,8 @@ Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1092:33
-   1092| type RegExp$matchResult = Array<string> & {
+   <BUILTINS>/core.js:1097:33
+   1097| type RegExp$matchResult = Array<string> & {
                                          ^^^^^^ [1]
    overload.js:8:9
       8| var x2: number = "".match(/pattern/)[0];
@@ -92,8 +92,8 @@ Cannot get `"".match(...)[0]` because null [1] does not have properties. [incomp
                                               ^
 
 References:
-   <BUILTINS>/core.js:1176:58
-   1176|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1181:58
+   1181|     match(regexp: string | RegExp): RegExp$matchResult | null;
                                                                   ^^^^ [1]
 
 
@@ -106,8 +106,8 @@ Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1249:63
-   1249|     split(separator?: string | RegExp, limit?: number): Array<string>;
+   <BUILTINS>/core.js:1254:63
+   1254|     split(separator?: string | RegExp, limit?: number): Array<string>;
                                                                        ^^^^^^ [1]
    overload.js:10:9
      10| var x4: number = "".split(/pattern/)[0];

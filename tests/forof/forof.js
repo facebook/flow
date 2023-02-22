@@ -21,8 +21,8 @@ function testIterable2(iterable: Iterable<any>): void {
 }
 
 function testString(str: string): void {
-  for (var x of str) {
-    (x: number); // Error - string ~> number
+  for (var x of str) { // ERROR
+
   }
 }
 

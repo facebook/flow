@@ -334,7 +334,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       reason: 'loc virtual_reason;
       interface_reason: 'loc virtual_reason;
-      kind: [ `Boolean | `Number ];
+      kind: [ `Boolean | `Number | `String ];
     }
   | ECannotSpreadInterface of {
       spread_reason: 'loc virtual_reason;
@@ -3579,6 +3579,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       match kind with
       | `Boolean -> "Boolean"
       | `Number -> "Number"
+      | `String -> "String"
     in
     let features =
       [

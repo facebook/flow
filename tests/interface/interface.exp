@@ -526,20 +526,39 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:4:2
 
-Cannot cast `s` to interface type because string [1] is incompatible with boolean [2] in the return value of property
-`charAt`. [incompatible-cast]
+Cannot cast `s` to interface type because string [1], a primitive, cannot be used as a subtype of interface type [2].
+You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    string.js:4:2
-      4| (s: interface {charAt(pos: number): boolean}); // ERROR
-          ^
+   4| (s: interface {charAt(pos: number): string}); // ERROR
+       ^
 
 References:
-   <BUILTINS>/core.js:1117:26
-   1117|     charAt(pos: number): string;
-                                  ^^^^^^ [1]
-   string.js:4:37
-      4| (s: interface {charAt(pos: number): boolean}); // ERROR
-                                             ^^^^^^^ [2]
+   string.js:1:18
+   1| declare const s: string;
+                       ^^^^^^ [1]
+   string.js:4:5
+   4| (s: interface {charAt(pos: number): string}); // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- string.js:5:17
+
+string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn
+it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+
+   string.js:5:17
+      5| for (const c of s) {} // ERROR
+                         ^
+
+References:
+   string.js:1:18
+      1| declare const s: string;
+                          ^^^^^^ [1]
+   <BUILTINS>/core.js:1682:11
+   1682| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:35:2
@@ -900,7 +919,7 @@ References:
 
 
 
-Found 57 errors
+Found 58 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

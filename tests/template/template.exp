@@ -49,8 +49,8 @@ Cannot cast `quasis.raw` to empty because read-only array type [1] is incompatib
               ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1100:9
-   1100|   +raw: $ReadOnlyArray<string>;
+   <BUILTINS>/core.js:1105:9
+   1105|   +raw: $ReadOnlyArray<string>;
                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    tagged_template.js:25:18
      25|     (quasis.raw: empty); // ERROR
@@ -66,8 +66,8 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   <BUILTINS>/core.js:1309:110
-   1309|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
+   <BUILTINS>/core.js:1314:110
+   1314|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
                                                                                                                       ^^^^^^ [1]
    tagged_template.js:34:7
      34|   (x: empty); // ERROR
@@ -76,16 +76,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tagged_template.js:36:14
 
-Cannot call `String.raw` with `'foo'` bound to `callSite` because property `raw` is missing in string [1] but exists in
-interface type [2]. [prop-missing]
+Cannot call `String.raw` with `'foo'` bound to `callSite` because string [1], a primitive, cannot be used as a subtype
+of interface type [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
 
    tagged_template.js:36:14
      36|   String.raw('foo'); // ERROR
                       ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1309:26
-   1309|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
+   <BUILTINS>/core.js:1314:26
+   1314|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -98,8 +99,8 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   <BUILTINS>/core.js:1309:110
-   1309|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
+   <BUILTINS>/core.js:1314:110
+   1314|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
                                                                                                                       ^^^^^^ [1]
    tagged_template.js:45:7
      45|   (x: empty); // ERROR

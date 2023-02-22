@@ -154,22 +154,19 @@ References:
                   ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:63:2
+Error ----------------------------------------------------------------------------------------------------- test.js:63:6
 
-Cannot cast array literal to array type because string [1] is incompatible with number [2] in array element.
-[incompatible-cast]
+string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn
+it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
-   test.js:63:2
-   63| ([..."hello"]: Array<number>); // error: String is an Iterable<string>
-        ^^^^^^^^^^^^
+   test.js:63:6
+   63| ([..."hello"]: Array<number>); // ERROR
+            ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/prelude.js:21:26
-   21|   @@iterator(): Iterator<string>;
-                                ^^^^^^ [1]
-   test.js:63:22
-   63| ([..."hello"]: Array<number>); // error: String is an Iterable<string>
-                            ^^^^^^ [2]
+   <BUILTINS>/prelude.js:54:11
+   54| interface $Iterable<+Yield,+Return,-Next> {
+                 ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:70:30

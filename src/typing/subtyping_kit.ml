@@ -1793,10 +1793,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       then
         rec_flow_t cx trace ~use_op (statics, u)
-    (*********************************************************)
-    (* classes, strings, arrays can implement some interface *)
-    (*********************************************************)
-    | ( DefT (_, _, (ClassT _ | StrT _ | ArrT _)),
+    (***************************************************)
+    (* classes and arrays can implement some interface *)
+    (***************************************************)
+    | ( DefT (_, _, (ClassT _ | ArrT _)),
         (DefT (_, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ })) as i)
       ) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
@@ -1814,6 +1814,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
         cx
         ~trace
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Number })
+    | ( DefT (reason, _, StrT _),
+        DefT (interface_reason, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ }))
+      ) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `String })
     (**************************)
     (* opaque types supertype *)
     (**************************)

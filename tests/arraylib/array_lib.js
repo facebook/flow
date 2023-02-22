@@ -54,6 +54,9 @@ function from_test() {
   var b: Array<string> = Array.from([1, 2, 3], function(val) {
     return String(val);
   });
+
+  (Array.from("abcd"): Array<string>); // OK
+  (Array.from("abcd"): Array<empty>); // ERROR
 }
 
 function of_test() {

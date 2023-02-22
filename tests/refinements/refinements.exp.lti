@@ -3027,8 +3027,8 @@ expected type. [underconstrained-implicit-instantiation]
                       ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1937:25
-   1937| declare function $await<T>(p: Promise<T> | T): T;
+   <BUILTINS>/core.js:1942:25
+   1942| declare function $await<T>(p: Promise<T> | T): T;
                                  ^ [1]
    issue-7104.js:20:7
      20|       return (box: empty).value; // underconstrained-implicit-instantiation error in LTI due to lack of empty propagation

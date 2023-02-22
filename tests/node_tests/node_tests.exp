@@ -2200,6 +2200,27 @@ References:
                  ^^^^^^^^^^^^^ [6]
 
 
+Error ------------------------------------------------------------------------------------------- stream/stream.js:85:22
+
+Cannot call `stream.Readable.from` with `'banana'` bound to `iterable` because: [incompatible-call]
+ - Either string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))`
+   to turn it into an object and attempt to use it as a subtype of an interface.
+ - Or string [1], a primitive, cannot be used as a subtype of `$AsyncIterable` [3]. You can wrap it in
+   `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+
+   stream/stream.js:85:22
+     85| stream.Readable.from('banana'); // ERROR
+                              ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/node.js:2010:25
+   2010|   static from(iterable: Iterable<any> | AsyncIterable<any>, options?: readableStreamOptions): stream$Readable;
+                                 ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:2010:41
+   2010|   static from(iterable: Iterable<any> | AsyncIterable<any>, options?: readableStreamOptions): stream$Readable;
+                                                 ^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------- stream/stream.js:86:22
 
 Cannot call `stream.Readable.from` with `101` bound to `iterable` because: [incompatible-call]
@@ -2343,7 +2364,7 @@ References:
 
 
 
-Found 125 errors
+Found 126 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

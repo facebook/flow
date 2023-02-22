@@ -60,7 +60,7 @@ function test(arr: [1] | [2, 3]): [1, 10] | [2, 3, 10] {
 }
 
 // Spreading a string
-([..."hello"]: Array<number>); // error: String is an Iterable<string>
+([..."hello"]: Array<number>); // ERROR
 
 // Spreading a generator
 {
