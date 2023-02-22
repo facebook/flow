@@ -53,6 +53,7 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_JsxProps
   | Decomp_JsxRef
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
+  | Simplify_Callee of Reason.t
   | Instantiate_Callee of
       ('t, 'targs, 'args, 'props, 'children) fun_call_implicit_instantiation_hints
   | Instantiate_Component of ('t, 'targs, 'args, 'props, 'children) jsx_implicit_instantiation_hints

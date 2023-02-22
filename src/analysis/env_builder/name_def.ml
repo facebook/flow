@@ -2024,6 +2024,9 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         ~return_hints
         ((_, { Ast.Expression.ArgList.arguments; comments = _ }) as arg_list)
         targs =
+      let call_argumemts_hints =
+        decompose_hints (Simplify_Callee call_reason) call_argumemts_hints
+      in
       Base.List.iteri arguments ~f:(fun i arg ->
           let hints =
             call_argumemts_hints

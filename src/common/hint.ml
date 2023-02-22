@@ -84,6 +84,8 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Type of C in `<C ref={ref} ... />` becomes hint on `ref` *)
   | Decomp_JsxRef
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
+  (* Type of a callee is concretized so that we can inspect its structure. *)
+  | Simplify_Callee of Reason.t
   (* Type of f in f(...) is instantiated with arguments and return hint.
      Returns f if the type of f is not polymorphic. *)
   | Instantiate_Callee of
@@ -124,6 +126,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_JsxRef -> "Decomp_JsxRef"
   | Decomp_SentinelRefinement _ -> "Decomp_SentinelRefinement"
   | Decomp_Await -> "Decomp_Await"
+  | Simplify_Callee _ -> "Simplify_Callee"
   | Instantiate_Callee _ -> "Instantiate_Callee"
   | Instantiate_Component _ -> "Instantiate_Component"
   | Decomp_Promise -> "Decomp_Promise"
@@ -176,6 +179,7 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_JsxProps -> Decomp_JsxProps
   | Decomp_JsxRef -> Decomp_JsxRef
   | Decomp_SentinelRefinement checks -> Decomp_SentinelRefinement checks
+  | Simplify_Callee r -> Simplify_Callee r
   | Instantiate_Callee { reason; return_hints; targs; arg_list; arg_index } ->
     Instantiate_Callee
       {

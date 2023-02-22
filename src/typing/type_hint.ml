@@ -168,7 +168,7 @@ let rec instantiate_callee cx fn instantiation_hint =
   let { Hint.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
   let resolve_overload_and_targs fn =
     let t =
-      match get_t cx (simplify_callee cx reason unknown_use fn) with
+      match fn with
       | IntersectionT (r, rep) ->
         synthesis_speculation_call
           cx
@@ -258,10 +258,8 @@ let rec instantiate_callee cx fn instantiation_hint =
     in
     handle_poly (get_t cx t)
   in
-  match get_t cx (simplify_callee cx reason unknown_use fn) with
+  match fn with
   | UnionT (_, rep) -> UnionT (reason, UnionRep.ident_map resolve_overload_and_targs rep)
-  | MaybeT (_, t) -> resolve_overload_and_targs t
-  | OptionalT { type_; _ } -> resolve_overload_and_targs type_
   | fn -> resolve_overload_and_targs fn
 
 and instantiate_component cx component instantiation_hint =
@@ -569,6 +567,13 @@ and type_of_hint_decomposition cx op reason t =
             Tvar.mk_no_wrap_where cx reason (fun tvar ->
                 Flow_js.flow cx (t, PredicateT (predicate, tvar))
             )))
+      | Simplify_Callee reason ->
+        let simplify fn = get_t cx (simplify_callee cx reason unknown_use fn) in
+        (match simplify t with
+        | UnionT (_, rep) -> UnionT (reason, UnionRep.ident_map simplify rep)
+        | MaybeT (_, t) -> simplify t
+        | OptionalT { type_; _ } -> simplify type_
+        | fn -> fn)
       | Instantiate_Callee instantiation_hint -> instantiate_callee cx t instantiation_hint
       | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint
       | Decomp_Promise ->
