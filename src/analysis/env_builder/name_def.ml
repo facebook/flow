@@ -444,22 +444,25 @@ class returned_expression_collector =
   end
 
 let function_params_all_annotated
-    ((_, { Ast.Function.Params.params = parameters; rest; this_; _ }) as params) body =
+    ~allow_unannotated_this
+    ((_, { Ast.Function.Params.params = parameters; rest; this_; _ }) as params)
+    body =
   Base.List.for_all parameters ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
       argument |> Destructure.type_of_pattern |> Base.Option.is_some
   )
   && Base.Option.value_map rest ~default:true ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
          argument |> Destructure.type_of_pattern |> Base.Option.is_some
      )
-  && (Base.Option.is_some this_
+  && (allow_unannotated_this
+     || Base.Option.is_some this_
      || not (Signature_utils.This_finder.found_this_in_body_or_params body params)
      )
 
 let expression_is_definitely_synthesizable ~autocomplete_hooks =
   let rec synthesizable (loc, expr) =
-    let func_is_synthesizable fn =
+    let func_is_synthesizable ~allow_unannotated_this fn =
       let { Ast.Function.params; body; return; _ } = fn in
-      if function_params_all_annotated params body then (
+      if function_params_all_annotated ~allow_unannotated_this params body then (
         match (return, body) with
         | (Ast.Type.Available _, _) -> true
         | (Ast.Type.Missing _, Ast.Function.BodyExpression e) -> synthesizable e
@@ -471,9 +474,8 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
         false
     in
     match expr with
-    | Ast.Expression.ArrowFunction x
-    | Ast.Expression.Function x ->
-      func_is_synthesizable x
+    | Ast.Expression.ArrowFunction x -> func_is_synthesizable ~allow_unannotated_this:true x
+    | Ast.Expression.Function x -> func_is_synthesizable ~allow_unannotated_this:false x
     | Ast.Expression.Array expr ->
       let { Ast.Expression.Array.elements; comments = _ } = expr in
       Base.List.for_all elements ~f:(function
@@ -502,7 +504,7 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
             | (_, Get { key = _; value = (_, fn); comments = _ })
             | (_, Set { key = _; value = (_, fn); comments = _ })
             | (_, Method { key = _; value = (_, fn) }) ->
-              func_is_synthesizable fn)
+              func_is_synthesizable ~allow_unannotated_this:true fn)
           | SpreadProperty s ->
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in
             synthesizable argument
@@ -519,9 +521,17 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
       (match operator with
       | Await -> synthesizable argument
       | _ -> true)
-    | Ast.Expression.Call _
-    | Ast.Expression.OptionalCall _
-    | Ast.Expression.New _
+    | Ast.Expression.Call { Flow_ast.Expression.Call.targs; _ }
+    | Ast.Expression.OptionalCall
+        { Flow_ast.Expression.OptionalCall.call = { Flow_ast.Expression.Call.targs; _ }; _ }
+    | Ast.Expression.New { Flow_ast.Expression.New.targs; _ } ->
+      (match targs with
+      | Some (_, { Flow_ast.Expression.CallTypeArgs.arguments; _ }) ->
+        Base.List.for_all arguments ~f:(function
+            | Flow_ast.Expression.CallTypeArg.Explicit _ -> true
+            | Flow_ast.Expression.CallTypeArg.Implicit _ -> false
+            )
+      | None -> false)
     | Ast.Expression.JSXElement _ ->
       (* Implicit instantiation might happen in these nodes, and we might have underconstrained targs. *)
       false
