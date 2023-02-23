@@ -1386,6 +1386,19 @@ import * as React from 'react';
       (2, 12) to (2, 17) =>
       (3, 9) to (3, 35) |}]
 
+let%expect_test "synthesis depends on annot" =
+  print_order_test {|
+poly((foo: a1, bar): a2 => {})
+type a1 = string;
+type a2 = number;
+|};
+    [%expect {|
+      (3, 5) to (3, 7) =>
+      (2, 6) to (2, 9) =>
+      (4, 5) to (4, 7) =>
+      (2, 15) to (2, 18) =>
+      (2, 5) to (2, 29) |}]
+
 let%expect_test "fwd ref provider" =
   print_order_test {|
 let cc;

@@ -393,6 +393,16 @@ struct
           end;
           expr
 
+        method visit_annotation_in_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
+          let open Ast.Pattern in
+          let (_, patt) = expr in
+          match patt with
+          | Object { Object.properties = _; annot; comments = _ }
+          | Array { Array.elements = _; annot; comments = _ }
+          | Identifier { Identifier.name = _; annot; optional = _ } ->
+            ignore @@ this#type_annotation_hint annot
+          | Expression _ -> ()
+
         method function_param_pattern_object_p_annotated
             (p : ('loc, 'loc) Ast.Pattern.Object.property) =
           let open Ast.Pattern.Object in
@@ -474,15 +484,31 @@ struct
           expr
 
         method! function_ loc expr =
-          let { Ast.Function.id; _ } = expr in
+          let { Ast.Function.id; params; return; _ } = expr in
           if not named_only_for_synthesis then (
             (match id with
             | Some _ -> ()
             | None -> this#add ~why:loc (Env_api.OrdinaryNameLoc, loc));
 
             super#function_ loc expr
-          ) else
+          ) else (
+            (* Even if we skip the body of the function,
+               we still need to collect dependencies on the signature of a function. *)
+            ignore @@ this#type_annotation_hint return;
+            let (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ }) =
+              params
+            in
+            Base.List.iter params_list ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
+                this#visit_annotation_in_pattern argument
+            );
+            Base.Option.iter rest ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
+                this#visit_annotation_in_pattern argument
+            );
+            Base.Option.iter this_ ~f:(fun (_, { Ast.Function.ThisParam.annot; _ }) ->
+                ignore @@ this#type_annotation annot
+            );
             expr
+          )
 
         method class_body_annotated (cls_body : ('loc, 'loc) Ast.Class.Body.t) =
           let open Ast.Class.Body in
