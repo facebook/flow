@@ -1,0 +1,47 @@
+test.js:11:6
+Flags:
+type T1 = Foo
+test.js:11:6,11:7
+
+test.js:14:6
+Flags:
+type T2 = Foo["bar"]
+= {baz: ?{qux: $ReadOnlyArray<string>}}
+test.js:14:6,14:7
+
+test.js:17:6
+Flags:
+type T3 = Foo["bar"]["baz"]
+= ?{qux: $ReadOnlyArray<string>}
+test.js:17:6,17:7
+
+test.js:20:6
+Flags:
+type T4 = Foo["bar"]["baz"]?.["qux"]
+= $ReadOnlyArray<string> | void
+test.js:20:6,20:7
+
+test.js:23:6
+Flags:
+type T5 = Foo["bar"]["baz"]?.["qux"][number]
+= string | void
+test.js:23:6,23:7
+
+test.js:26:6
+Flags:
+type T6 = $NonMaybeType<Foo["bar"]["baz"]?.["qux"][number]>
+= string
+test.js:26:6,26:7
+
+test.js:29:6
+Flags:
+type T7 = $Keys<Foo>
+= "bar"
+test.js:29:6,29:7
+
+test.js:32:6
+Flags:
+type T8 = $Keys<{bar: number, baz: bigint, foo: string}>
+= "foo" | "baz" | "bar"
+test.js:32:6,32:7
+
