@@ -47,13 +47,13 @@ let type_at_pos_type
         scheme
     in
     let unevaluated = from_scheme Ty_normalizer_env.EvaluateNone in
-    let evaluated = from_scheme Ty_normalizer_env.EvaluateAll in
+    let evaluated = Some (from_scheme Ty_normalizer_env.EvaluateAll) in
     begin
       match (unevaluated, evaluated) with
-      | (Ok unevaluated, Ok evaluated) -> Success (loc, { Ty.unevaluated; evaluated })
-      | (Error err, _)
-      | (_, Error err) ->
-        result_of_normalizer_error loc scheme err
+      | (Ok unevaluated, Some (Ok evaluated)) ->
+        Success (loc, { Ty.unevaluated; evaluated = Some evaluated })
+      | (Ok unevaluated, _) -> Success (loc, { Ty.unevaluated; evaluated = None })
+      | (Error err, _) -> result_of_normalizer_error loc scheme err
     end
 
 let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =

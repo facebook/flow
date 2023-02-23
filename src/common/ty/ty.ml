@@ -321,7 +321,7 @@ and elt =
 
 type type_at_pos_result = {
   unevaluated: elt;
-  evaluated: elt;
+  evaluated: elt option; (* Evaluation may not be possible *)
 }
 
 exception Difference of int
