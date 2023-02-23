@@ -1428,6 +1428,8 @@ let make_options
     opt_distributed = options_flags.distributed;
     opt_trust_mode =
       Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
+    opt_use_mixed_in_catch_variables =
+      Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
     opt_react_server_component_exts = FlowConfig.react_server_component_exts flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;

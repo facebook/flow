@@ -704,7 +704,13 @@ let resolve_binding_partial cx reason loc b =
     in
     (t, mk_use_op t)
   | Root CatchUnannotated ->
-    let t = AnyT.annot (mk_reason (RCustom "unannotated catch parameter") loc) in
+    let reason = mk_reason (RCustom "unannotated catch parameter") loc in
+    let t =
+      if Context.use_mixed_in_catch_variables cx then
+        MixedT.why reason |> with_trust bogus_trust
+      else
+        AnyT.annot reason
+    in
     (t, mk_use_op t)
   | Root (For (kind, exp)) ->
     let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in

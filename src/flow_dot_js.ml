@@ -143,6 +143,7 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
+    use_mixed_in_catch_variables = false;
   }
 
 let master_cx_ref : (Path.t * Context.master_context) option ref = ref None
