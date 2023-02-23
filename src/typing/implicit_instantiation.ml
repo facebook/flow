@@ -22,14 +22,13 @@ and union_flatten = function
 module type OBSERVER = sig
   type output
 
-  val on_pinned_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
+  val on_pinned_tparam : Context.t -> Type.typeparam -> Type.t -> output
 
-  val on_constant_tparam_missing_bounds : Context.t -> Subst_name.t -> Type.typeparam -> output
+  val on_constant_tparam_missing_bounds : Context.t -> Type.typeparam -> output
 
   val on_missing_bounds :
     Context.t ->
     use_op:Type.use_op ->
-    Subst_name.t ->
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
@@ -38,7 +37,6 @@ module type OBSERVER = sig
   val on_upper_non_t :
     Context.t ->
     use_op:Type.use_op ->
-    Subst_name.t ->
     Type.use_t ->
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
@@ -54,7 +52,6 @@ module type S = sig
   val pin_type :
     Context.t ->
     use_op:Type.use_op ->
-    Subst_name.t ->
     Type.typeparam ->
     Polarity.t option ->
     default_bound:Type.t option ->
@@ -563,17 +560,16 @@ struct
           |> TypeUtil.union_of_ts_opt r)
     | t -> Some t
 
-  let on_missing_bounds
-      cx ~use_op name tparam ~default_bound ~tparam_binder_reason ~instantiation_reason =
+  let on_missing_bounds cx ~use_op tparam ~default_bound ~tparam_binder_reason ~instantiation_reason
+      =
     match default_bound with
-    | Some t -> Observer.on_pinned_tparam cx name tparam t
+    | Some t -> Observer.on_pinned_tparam cx tparam t
     | None ->
-      Observer.on_missing_bounds ~use_op cx name tparam ~tparam_binder_reason ~instantiation_reason
+      Observer.on_missing_bounds ~use_op cx tparam ~tparam_binder_reason ~instantiation_reason
 
   let use_upper_bounds
       cx
       ~use_op
-      name
       tparam
       tvar
       ~default_bound
@@ -582,10 +578,10 @@ struct
       instantiation_reason =
     let upper_t = merge_upper_bounds cx tparam_binder_reason tvar in
     match upper_t with
-    | UpperEmpty -> on_upper_empty cx name tparam ~tparam_binder_reason ~instantiation_reason
+    | UpperEmpty -> on_upper_empty cx tparam ~tparam_binder_reason ~instantiation_reason
     | UpperNonT u ->
-      Observer.on_upper_non_t cx ~use_op name ~tparam_binder_reason ~instantiation_reason u tparam
-    | UpperT inferred -> Observer.on_pinned_tparam cx name tparam inferred
+      Observer.on_upper_non_t cx ~use_op ~tparam_binder_reason ~instantiation_reason u tparam
+    | UpperT inferred -> Observer.on_pinned_tparam cx tparam inferred
 
   let check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation =
     let { Check.lhs; operation = (use_op, reason_op, op); poly_t = (tparams_loc, _, _) } =
@@ -712,27 +708,26 @@ struct
     Flow.flow cx (lhs, use_t);
     (inferred_targ_list, marked_tparams, tout)
 
-  let pin_type cx ~use_op name tparam polarity ~default_bound instantiation_reason t =
+  let pin_type cx ~use_op tparam polarity ~default_bound instantiation_reason t =
     let tparam_binder_reason = TypeUtil.reason_of_t t in
-    let pin_tparam inferred = Observer.on_pinned_tparam cx name tparam inferred in
+    let pin_tparam inferred = Observer.on_pinned_tparam cx tparam inferred in
     match polarity with
     | None ->
       (match merge_lower_bounds cx t with
       | None ->
-        let on_upper_empty cx name tparam ~tparam_binder_reason:_ ~instantiation_reason:_ =
-          Observer.on_constant_tparam_missing_bounds cx name tparam
+        let on_upper_empty cx tparam ~tparam_binder_reason:_ ~instantiation_reason:_ =
+          Observer.on_constant_tparam_missing_bounds cx tparam
         in
         use_upper_bounds
           cx
           ~use_op
-          name
           tparam
           t
           ~default_bound
           ~on_upper_empty
           tparam_binder_reason
           instantiation_reason
-      | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred)
+      | Some inferred -> Observer.on_pinned_tparam cx tparam inferred)
     | Some Neutral ->
       (* TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
        * to avoid cluttering the output we are actually interested in from this module,
@@ -744,7 +739,6 @@ struct
         use_upper_bounds
           cx
           ~use_op
-          name
           tparam
           t
           ~default_bound
@@ -757,7 +751,6 @@ struct
         use_upper_bounds
           cx
           ~use_op
-          name
           tparam
           t
           ~default_bound
@@ -765,23 +758,21 @@ struct
           instantiation_reason
       | Some inferred -> pin_tparam inferred)
     | Some Negative ->
-      let on_upper_empty cx name tparam ~tparam_binder_reason ~instantiation_reason =
+      let on_upper_empty cx tparam ~tparam_binder_reason ~instantiation_reason =
         match merge_lower_bounds cx t with
         | None ->
           on_missing_bounds
             cx
             ~use_op
-            name
             tparam
             ~default_bound
             ~tparam_binder_reason
             ~instantiation_reason
-        | Some inferred -> Observer.on_pinned_tparam cx name tparam inferred
+        | Some inferred -> Observer.on_pinned_tparam cx tparam inferred
       in
       use_upper_bounds
         cx
         ~use_op
-        name
         tparam
         t
         ~default_bound
@@ -819,7 +810,6 @@ struct
             pin_type
               cx
               ~use_op
-              name
               tparam
               polarity
               ~default_bound:
@@ -827,7 +817,7 @@ struct
               instantiation_reason
               t
           else
-            Observer.on_pinned_tparam cx name tparam t
+            Observer.on_pinned_tparam cx tparam t
         in
         let bound_t = Subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);
@@ -986,7 +976,7 @@ module PinTypes (Flow : Flow_common.S) = struct
   module Observer : OBSERVER with type output = Type.t = struct
     type output = Type.t
 
-    let on_constant_tparam_missing_bounds cx _name tparam =
+    let on_constant_tparam_missing_bounds cx tparam =
       Flow_js_utils.add_output
         cx
         Error_message.(
@@ -997,31 +987,30 @@ module PinTypes (Flow : Flow_common.S) = struct
         );
       Type.AnyT.error tparam.Type.reason
 
-    let on_pinned_tparam _cx _name _tparam inferred = inferred
+    let on_pinned_tparam _cx _tparam inferred = inferred
 
-    let on_missing_bounds cx ~use_op:_ _name _tparam ~tparam_binder_reason ~instantiation_reason:_ =
+    let on_missing_bounds cx ~use_op:_ _tparam ~tparam_binder_reason ~instantiation_reason:_ =
       Tvar.mk cx tparam_binder_reason
 
-    let on_upper_non_t cx ~use_op:_ _name _u _tparam ~tparam_binder_reason ~instantiation_reason:_ =
+    let on_upper_non_t cx ~use_op:_ _u _tparam ~tparam_binder_reason ~instantiation_reason:_ =
       Tvar.mk cx tparam_binder_reason
   end
 
   module M : S with type output = Type.t with module Flow = Flow = Make (Observer) (Flow)
 
   let pin_type cx ~use_op reason t =
-    let name = Subst_name.Name "" in
     let polarity = Polarity.Neutral in
     let tparam =
       {
         reason;
-        name;
+        name = Subst_name.Name "";
         bound = MixedT.why reason |> with_trust bogus_trust;
         polarity;
         default = None;
         is_this = false;
       }
     in
-    M.pin_type cx ~use_op name tparam (Some polarity) ~default_bound:None reason t
+    M.pin_type cx ~use_op tparam (Some polarity) ~default_bound:None reason t
 end
 
 type inferred_targ = {
@@ -1040,7 +1029,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
   let mod_inferred_default =
     TypeUtil.mod_reason_of_t (Reason.update_desc_reason (fun desc -> RTypeParamDefault desc))
 
-  let on_constant_tparam_missing_bounds cx name tparam =
+  let on_constant_tparam_missing_bounds cx tparam =
     let inferred =
       match tparam.default with
       | None -> mod_inferred_bound tparam.Type.bound
@@ -1052,26 +1041,26 @@ module Observer : OBSERVER with type output = inferred_targ = struct
         [
           spf
             "Constant type parameter %s is pinned to %s"
-            (Subst_name.string_of_subst_name name)
+            (Subst_name.string_of_subst_name tparam.name)
             (Debug_js.dump_t cx ~depth:3 inferred);
         ]
         );
     { tparam; inferred }
 
-  let on_pinned_tparam cx name tparam inferred =
+  let on_pinned_tparam cx tparam inferred =
     Debug_js.Verbose.print_if_verbose_lazy
       cx
       ( lazy
         [
           spf
             "Type parameter %s is pinned to %s"
-            (Subst_name.string_of_subst_name name)
+            (Subst_name.string_of_subst_name tparam.name)
             (Debug_js.dump_t cx ~depth:3 inferred);
         ]
         );
     { tparam; inferred }
 
-  let on_missing_bounds cx ~use_op name tparam ~tparam_binder_reason ~instantiation_reason =
+  let on_missing_bounds cx ~use_op tparam ~tparam_binder_reason ~instantiation_reason =
     match tparam.default with
     | Some inferred -> { tparam; inferred = mod_inferred_default inferred }
     | None ->
@@ -1082,7 +1071,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
           cx
           (Error_message.EImplicitInstantiationUnderconstrainedError
              {
-               bound = Subst_name.string_of_subst_name name;
+               bound = Subst_name.string_of_subst_name tparam.name;
                reason_call = instantiation_reason;
                reason_tparam = tparam_binder_reason;
                use_op;
@@ -1091,7 +1080,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
         { tparam; inferred = any_error tparam_binder_reason }
       )
 
-  let on_upper_non_t cx ~use_op name _u tparam ~tparam_binder_reason ~instantiation_reason =
+  let on_upper_non_t cx ~use_op _u tparam ~tparam_binder_reason ~instantiation_reason =
     if Context.in_synthesis_mode cx then
       { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
     else (
@@ -1099,7 +1088,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
         cx
         (Error_message.EImplicitInstantiationUnderconstrainedError
            {
-             bound = Subst_name.string_of_subst_name name;
+             bound = Subst_name.string_of_subst_name tparam.name;
              reason_call = instantiation_reason;
              reason_tparam = tparam_binder_reason;
              use_op;
