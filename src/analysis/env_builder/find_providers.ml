@@ -38,6 +38,7 @@ module FindProviders (L : Loc_sig.S) : sig
     declare_locs: L.LSet.t;
     def_locs: L.LSet.t;
     provider_locs: 'locs;
+    possible_generic_escape_locs: L.LSet.t;
     binding_kind: Bindings.kind;
   }
 
@@ -120,6 +121,7 @@ end = struct
   type kind =
     | Var
     | Lex
+    | Polymorphic
 
   (* Scope entry for a single variable, recording both its declaration site(s) and providers.
       * state is the overall current state of the variable. While we're computing the providers,
@@ -146,6 +148,7 @@ end = struct
     declare_locs: L.LSet.t;
     def_locs: L.LSet.t;
     provider_locs: 'locs;
+    possible_generic_escape_locs: L.LSet.t;
     binding_kind: Bindings.kind;
   }
 
@@ -322,6 +325,7 @@ end = struct
       provider_locs = L.LMap.empty;
       declare_locs = L.LSet.empty;
       def_locs = L.LSet.empty;
+      possible_generic_escape_locs = L.LSet.empty;
       binding_kind;
     }
 
@@ -342,7 +346,7 @@ end = struct
     let rec loop env rev_head =
       match (env, kind) with
       | (({ entries; kind = Lex; _ } as hd) :: tl, Ast.Variable.(Let | Const))
-      | (({ entries; kind = Var; _ } as hd) :: tl, _) ->
+      | (({ entries; kind = Var | Polymorphic; _ } as hd) :: tl, _) ->
         ( entries,
           fun entries ->
             (* This produces a version of the existing overall env with a new set of entries, replacing
@@ -364,6 +368,7 @@ end = struct
       | ({ entries; _ } as hd) :: tl when SMap.mem var entries ->
         ( SMap.find var entries,
           var_scopes_off,
+          hd :: tl,
           fun entry ->
             List.append
               (List.rev rev_head)
@@ -374,11 +379,13 @@ end = struct
       | [({ entries; kind = Var; _ } as hd)] ->
         ( empty_entry var Bindings.Var,
           var_scopes_off,
+          [hd],
           fun entry ->
             List.append (List.rev rev_head) [{ hd with entries = SMap.add var entry entries }]
             |> Nel.of_list_exn
         )
-      | [{ kind = Lex; _ }] -> env_invariant_violated "Root environment should always be Var"
+      | [{ kind = Lex | Polymorphic; _ }] ->
+        env_invariant_violated "Root environment should always be in Var"
       | ({ kind = Var; _ } as hd) :: tl -> loop (var_scopes_off + 1) tl (hd :: rev_head)
       | hd :: tl -> loop var_scopes_off tl (hd :: rev_head)
       | [] -> env_invariant_violated "Unreachable"
@@ -390,7 +397,8 @@ end = struct
       match env with
       | { entries; _ } :: _ when SMap.mem var entries -> Some (SMap.find var entries).state
       | [{ kind = Var; _ }] -> None
-      | [{ kind = Lex; _ }] -> env_invariant_violated "Root environment should always be Var"
+      | [{ kind = Lex | Polymorphic; _ }] ->
+        env_invariant_violated "Root environment should always be Var"
       | _ :: tl -> loop tl
       | [] -> env_invariant_violated "Unreachable"
     in
@@ -412,6 +420,7 @@ end = struct
               provider_locs = providers1;
               declare_locs = declares1;
               def_locs = defs1;
+              possible_generic_escape_locs = possible_generic_escape_locs1;
               binding_kind = binding_kind1;
             },
             {
@@ -421,6 +430,7 @@ end = struct
               provider_locs = providers2;
               declare_locs = declares2;
               def_locs = defs2;
+              possible_generic_escape_locs = possible_generic_escape_locs2;
               binding_kind = binding_kind2;
             }
           ) ->
@@ -440,6 +450,8 @@ end = struct
                 providers2;
             declare_locs = L.LSet.union declares1 declares2;
             def_locs = L.LSet.union defs1 defs2;
+            possible_generic_escape_locs =
+              L.LSet.union possible_generic_escape_locs1 possible_generic_escape_locs2;
             binding_kind =
               (* We care about the binding kind so that we can report declared functions as
                * providers. Declared functions aren't typically declared inside a branching
@@ -528,6 +540,14 @@ end = struct
           this#set_acc (exit_lex_child loc env', cx);
           res
 
+      method enter_possibly_polymorphic_scope
+          : 'a. is_polymorphic:bool -> kind:kind -> (L.t -> 'a -> 'a) -> L.t -> 'a -> 'a =
+        fun ~is_polymorphic ~kind meth ->
+          if is_polymorphic then
+            this#enter_scope Polymorphic (this#enter_scope kind meth)
+          else
+            this#enter_scope kind meth
+
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
         | Some stmt ->
@@ -554,12 +574,37 @@ end = struct
       method! class_body ((loc, _) as body) =
         this#enter_scope Var (fun _ body -> super#class_body body) loc body
 
-      method! class_expression = this#enter_scope Lex super#class_expression
+      method! class_expression loc c =
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some c.Ast.Class.tparams)
+          ~kind:Lex
+          super#class_expression
+          loc
+          c
 
-      method! arrow_function = this#enter_scope Var super#arrow_function
+      method! class_ loc c =
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some c.Ast.Class.tparams)
+          ~kind:Lex
+          super#class_
+          loc
+          c
 
-      method! function_expression_or_method =
-        this#enter_scope Var super#function_expression_or_method
+      method! arrow_function loc func =
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some func.Ast.Function.tparams)
+          ~kind:Var
+          super#arrow_function
+          loc
+          func
+
+      method! function_expression_or_method loc func =
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some func.Ast.Function.tparams)
+          ~kind:Var
+          super#function_expression_or_method
+          loc
+          func
 
       (* The identifier of a function declaration belongs to the outer scope, but its parameters and body belong to its own scope--hence the annoying
          need to write out the full visitor and only enter a var scope for its parameters and body *)
@@ -580,8 +625,9 @@ end = struct
           expr
         in
         let _ident' = map_opt this#function_identifier ident in
-        this#enter_scope
-          Var
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some tparams)
+          ~kind:Var
           (fun _ _ ->
             let _params' = this#function_params params in
             let _return' = this#type_annotation_hint return in
@@ -847,8 +893,9 @@ end = struct
                 (fun () -> this#function_identifier id))
             ident
         in
-        this#enter_scope
-          Var
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some tparams)
+          ~kind:Var
           (fun _ _ ->
             let _params' = this#function_params params in
             let _return' = this#type_annotation_hint return in
@@ -1042,22 +1089,58 @@ end = struct
       (* Add a new variable provider to the scope, which is not a declaration. *)
       method add_provider var loc =
         let (env, ({ mk_state } as cx)) = this#acc in
+        let find_polymorphic_scope scopes =
+          Base.List.find scopes ~f:(fun scope -> scope.kind = Polymorphic)
+        in
         let ( ({ state = cur_state; provider_locs; def_locs; _ } as entry),
               var_scopes_off,
+              def_scopes_stack,
               reconstruct_env
             ) =
           find_entry_for_existing_variable var env
         in
+        (* Adding providers in generic functions can potentially cause generic-escape issues,
+           so we consevatively prevent them from being providers. *)
+        let possible_generic_escape =
+          match
+            (find_polymorphic_scope (Nel.to_list env), find_polymorphic_scope def_scopes_stack)
+          with
+          | (Some _, None) -> true
+          | (Some assign_scope, Some declare_scope)
+            when assign_scope.kind = Polymorphic && assign_scope != declare_scope ->
+            true
+          | _ -> false
+        in
         let write_state = mk_state var_scopes_off in
-        let extended_state = extended_state_opt ~state:cur_state ~write_state in
+        let extended_state =
+          if possible_generic_escape then
+            Some cur_state
+          else
+            extended_state_opt ~state:cur_state ~write_state
+        in
         let def_locs = L.LSet.add loc def_locs in
         let (state, provider_locs) =
           Base.Option.value_map
-            ~f:(fun state -> (state, L.LMap.add loc write_state provider_locs))
+            ~f:(fun state ->
+              ( state,
+                if possible_generic_escape then
+                  provider_locs
+                else
+                  L.LMap.add loc write_state provider_locs
+              ))
             ~default:(cur_state, provider_locs)
             extended_state
         in
-        let env = reconstruct_env { entry with state; provider_locs; def_locs } in
+        let possible_generic_escape_locs =
+          if possible_generic_escape then
+            L.LSet.add loc entry.possible_generic_escape_locs
+          else
+            entry.possible_generic_escape_locs
+        in
+        let env =
+          reconstruct_env
+            { entry with state; provider_locs; def_locs; possible_generic_escape_locs }
+        in
         this#set_acc (env, cx)
 
       method! assignment

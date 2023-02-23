@@ -331,6 +331,128 @@ References:
            ^ [3]
 
 
+Error -------------------------------------------------------------------------------------- invalid_declarations.js:1:5
+
+Variable `esc1` [1] should be annotated, because it is only initialized in a generic context [2] [invalid-declaration]
+
+   invalid_declarations.js:1:5
+   1| let esc1; // error
+          ^^^^ [1]
+
+References:
+   invalid_declarations.js:3:3
+   3|   esc1 = 1;
+        ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- invalid_declarations.js:7:5
+
+Variable `esc2` [1] should be annotated, because it is only initialized in a generic context [2], [3]
+[invalid-declaration]
+
+   invalid_declarations.js:7:5
+    7| let esc2; // error
+           ^^^^ [1]
+
+References:
+   invalid_declarations.js:9:3
+    9|   esc2 = 1;
+         ^^^^ [2]
+   invalid_declarations.js:12:3
+   12|   esc2 = 2;
+         ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------- invalid_declarations.js:16:5
+
+Variable `esc3` [1] should be annotated, because it is only ever assigned to by `null` and in generic context [2]
+[invalid-declaration]
+
+   invalid_declarations.js:16:5
+   16| let esc3 = null; // error
+           ^^^^ [1]
+
+References:
+   invalid_declarations.js:18:3
+   18|   esc3 = 1;
+         ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ invalid_declarations.js:18:10
+
+Cannot assign `1` to `esc3` because number [1] is incompatible with null [2]. All writes to `esc3` must be compatible
+with the type of its initializer [3]. Add an annotation to `esc3` [3] if a different type is desired.
+[incompatible-type]
+
+   invalid_declarations.js:18:10
+   18|   esc3 = 1;
+                ^ [1]
+
+References:
+   invalid_declarations.js:16:12
+   16| let esc3 = null; // error
+                  ^^^^ [2]
+   invalid_declarations.js:16:5
+   16| let esc3 = null; // error
+           ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------- invalid_declarations.js:22:5
+
+Variable `esc4` [1] should be annotated, because it is only ever assigned to by `null` and in generic context [2], [3]
+[invalid-declaration]
+
+   invalid_declarations.js:22:5
+   22| let esc4 = null; // error
+           ^^^^ [1]
+
+References:
+   invalid_declarations.js:24:3
+   24|   esc4 = 1;
+         ^^^^ [2]
+   invalid_declarations.js:27:3
+   27|   esc4 = 2;
+         ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ invalid_declarations.js:24:10
+
+Cannot assign `1` to `esc4` because number [1] is incompatible with null [2]. All writes to `esc4` must be compatible
+with the type of its initializer [3]. Add an annotation to `esc4` [3] if a different type is desired.
+[incompatible-type]
+
+   invalid_declarations.js:24:10
+   24|   esc4 = 1;
+                ^ [1]
+
+References:
+   invalid_declarations.js:22:12
+   22| let esc4 = null; // error
+                  ^^^^ [2]
+   invalid_declarations.js:22:5
+   22| let esc4 = null; // error
+           ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ invalid_declarations.js:27:10
+
+Cannot assign `2` to `esc4` because number [1] is incompatible with null [2]. All writes to `esc4` must be compatible
+with the type of its initializer [3]. Add an annotation to `esc4` [3] if a different type is desired.
+[incompatible-type]
+
+   invalid_declarations.js:27:10
+   27|   esc4 = 2;
+                ^ [1]
+
+References:
+   invalid_declarations.js:22:12
+   22| let esc4 = null; // error
+                  ^^^^ [2]
+   invalid_declarations.js:22:5
+   22| let esc4 = null; // error
+           ^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- misc.js:7:12
 
 Cannot assign `x` to `e[n]` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
@@ -671,44 +793,22 @@ Missing an annotation on return because generic functions must be fully annotate
                                    
 
 
-Error --------------------------------------------------------------------------------------------------- spreads.js:5:9
+Error --------------------------------------------------------------------------------------------------- spreads.js:3:5
 
-Cannot spread object literal because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `esc` [3]). [escaped-generic]
+Variable `esc` [1] should be annotated, because it is only initialized in a generic context [2] [invalid-declaration]
 
-   spreads.js:5:9
-   5|   esc = {...x, ...y};
-              ^^^^^^^^^^^^ [1]
+   spreads.js:3:5
+   3| var esc; // error
+          ^^^ [1]
 
 References:
-   spreads.js:4:13
-   4| function hh<X: {}, Y: {}>(x: X, y: Y) {
-                  ^ [2]
-   spreads.js:3:5
-   3| var esc;
-          ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------------------- spreads.js:5:9
-
-Cannot spread object literal because type variable `Y` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `esc` [3]). [escaped-generic]
-
-   spreads.js:5:9
+   spreads.js:5:3
    5|   esc = {...x, ...y};
-              ^^^^^^^^^^^^ [1]
-
-References:
-   spreads.js:4:20
-   4| function hh<X: {}, Y: {}>(x: X, y: Y) {
-                         ^ [2]
-   spreads.js:3:5
-   3| var esc;
-          ^^^ [3]
+        ^^^ [2]
 
 
 
-Found 38 errors
+Found 44 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

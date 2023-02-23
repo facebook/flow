@@ -21,6 +21,7 @@ module type S = sig
     state: Find_providers.state;
     providers: provider list;
     array_providers: L.LSet.t;
+    possible_generic_escape_locs: L.LSet.t;
   }
 
   val empty : info
@@ -54,6 +55,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
     state: Find_providers.state;
     providers: provider list;
     array_providers: L.LSet.t;
+    possible_generic_escape_locs: L.LSet.t;
   }
 
   type info = {
@@ -119,7 +121,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
 
   let all_providers_of_writes set =
     EntrySet.fold
-      (fun { declare_locs; def_locs; provider_locs; name; state; _ } ->
+      (fun { declare_locs; def_locs; provider_locs; possible_generic_escape_locs; name; state; _ } ->
         let providers =
           L.LMap.fold
             (fun loc write_kind acc ->
@@ -139,7 +141,14 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
         in
         L.LSet.fold
           (fun loc ->
-            L.LMap.add loc { state; providers; array_providers = provider_locs.array_writes })
+            L.LMap.add
+              loc
+              {
+                state;
+                providers;
+                array_providers = provider_locs.array_writes;
+                possible_generic_escape_locs;
+              })
           (L.LSet.union def_locs declare_locs))
       set
       L.LMap.empty

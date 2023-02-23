@@ -1190,7 +1190,7 @@ module Make
     in
 
     let valid_declaration_check name loc =
-      let error null_write =
+      let error null_write possible_generic_escape_locs =
         let null_write =
           Base.Option.map
             ~f:(fun null_loc -> Error_message.{ null_loc; initialized = ALoc.equal loc null_loc })
@@ -1198,13 +1198,20 @@ module Make
         in
         add_output
           Error_message.(
-            EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
+            EInvalidDeclaration
+              {
+                declaration = mk_reason (RIdentifier name) loc;
+                null_write;
+                possible_generic_escape_locs = L.LSet.elements possible_generic_escape_locs;
+              }
           )
       in
       match Invalidation_api.declaration_validity prepass_info prepass_values provider_info loc with
       | Invalidation_api.Valid -> ()
-      | Invalidation_api.NotWritten -> error None
-      | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
+      | Invalidation_api.NotWritten { possible_generic_escape_locs } ->
+        error None possible_generic_escape_locs
+      | Invalidation_api.NullWritten { null_provider_loc; possible_generic_escape_locs } ->
+        error (Some null_provider_loc) possible_generic_escape_locs
     in
 
     let is_def_loc_predicate_function loc =

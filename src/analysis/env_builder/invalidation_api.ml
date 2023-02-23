@@ -45,8 +45,11 @@ struct
 
   type initialization_valid =
     | Valid
-    | NotWritten
-    | NullWritten of L.t
+    | NotWritten of { possible_generic_escape_locs: L.LSet.t }
+    | NullWritten of {
+        null_provider_loc: L.t;
+        possible_generic_escape_locs: L.LSet.t;
+      }
 
   let declaration_validity info values providers loc =
     match Provider_api.providers_of_def providers loc with
@@ -54,7 +57,7 @@ struct
     | Some { Provider_api.state = provider_state; providers = _ :: _; _ }
       when Provider_api.is_provider_state_fully_initialized provider_state ->
       Valid
-    | Some { Provider_api.providers; _ } ->
+    | Some { Provider_api.providers; possible_generic_escape_locs; _ } ->
       (try
          let null_providers =
            (* Since this variable is not fully initialized, if there are any providers then
@@ -70,8 +73,10 @@ struct
          in
          match (reads_exist, not (L.LSet.is_empty null_providers)) with
          | (false, _) -> Valid
-         | (true, false) -> NotWritten
-         | (true, true) -> NullWritten (L.LSet.min_elt null_providers)
+         | (true, false) -> NotWritten { possible_generic_escape_locs }
+         | (true, true) ->
+           NullWritten
+             { null_provider_loc = L.LSet.min_elt null_providers; possible_generic_escape_locs }
        with
       (* TODO: anywhere where we would raise a Missing_def
          error is likely a bug with the Scope_builder that

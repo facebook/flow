@@ -468,6 +468,7 @@ and 'loc t' =
   | EInvalidDeclaration of {
       declaration: 'loc virtual_reason;
       null_write: 'loc null_write option;
+      possible_generic_escape_locs: 'loc list;
     }
   | EInvalidGraphQL of 'loc * Graphql.error
   | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason * string option
@@ -1134,7 +1135,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_prop = map_reason reason_prop;
       }
   | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
-  | EInvalidDeclaration { declaration; null_write } ->
+  | EInvalidDeclaration { declaration; null_write; possible_generic_escape_locs } ->
     EInvalidDeclaration
       {
         declaration = map_reason declaration;
@@ -1142,6 +1143,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
           Base.Option.map
             ~f:(fun ({ null_loc; _ } as nw) -> { nw with null_loc = f null_loc })
             null_write;
+        possible_generic_escape_locs = List.map f possible_generic_escape_locs;
       }
   | EInvalidGraphQL (loc, err) -> EInvalidGraphQL (f loc, err)
   | EAnnotationInference (loc, r1, r2, suggestion) ->
@@ -4019,13 +4021,34 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         features =
           [text "Cannot determine type of empty array literal. Please provide an annotation."];
       }
-  | EInvalidDeclaration { declaration = reason; null_write = None } ->
+  | EInvalidDeclaration
+      { declaration = reason; null_write = None; possible_generic_escape_locs = [] } ->
     Normal
       {
         features =
           [text "Variable "; ref reason; text " is never initialized, annotated, or assigned to."];
       }
-  | EInvalidDeclaration { declaration = reason; null_write = Some { null_loc; initialized } } ->
+  | EInvalidDeclaration { declaration = reason; null_write = None; possible_generic_escape_locs } ->
+    Normal
+      {
+        features =
+          [
+            text "Variable ";
+            ref reason;
+            text " should be annotated, because it is only initialized in a generic context";
+          ]
+          @ (Base.List.map possible_generic_escape_locs ~f:(fun loc ->
+                 ref (mk_reason (RCustom "") loc)
+             )
+            |> Base.List.intersperse ~sep:(text ",")
+            );
+      }
+  | EInvalidDeclaration
+      {
+        declaration = reason;
+        null_write = Some { null_loc; initialized };
+        possible_generic_escape_locs = [];
+      } ->
     let null_ref =
       if initialized then
         code "null"
@@ -4046,6 +4069,34 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             code ": null";
             text " to disambiguate.";
           ];
+      }
+  | EInvalidDeclaration
+      {
+        declaration = reason;
+        null_write = Some { null_loc; initialized };
+        possible_generic_escape_locs;
+      } ->
+    let null_ref =
+      if initialized then
+        code "null"
+      else
+        ref (mk_reason (RCode "null") null_loc)
+    in
+    Normal
+      {
+        features =
+          [
+            text "Variable ";
+            ref reason;
+            text " should be annotated, because it is only ever assigned to by ";
+            null_ref;
+            text " and in generic context";
+          ]
+          @ (Base.List.map possible_generic_escape_locs ~f:(fun loc ->
+                 ref (mk_reason (RCustom "") loc)
+             )
+            |> Base.List.intersperse ~sep:(text ",")
+            );
       }
   | EImportInternalReactServerModule _ ->
     Normal
