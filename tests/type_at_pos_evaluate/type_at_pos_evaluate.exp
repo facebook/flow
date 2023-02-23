@@ -45,3 +45,13 @@ type T8 = $Keys<{bar: number, baz: bigint, foo: string}>
 = "foo" | "baz" | "bar"
 test.js:32:6,32:7
 
+test.js:35:6
+Flags:
+type ValuesPoly<X> = $Values<X>
+test.js:35:6,35:15
+
+test.js:38:22
+Flags:
+$Values<X>
+test.js:38:22,38:28
+

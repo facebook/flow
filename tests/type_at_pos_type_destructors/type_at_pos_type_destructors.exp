@@ -135,55 +135,46 @@ spread.js:32:6,32:7
 spread.js:34:6
 Flags:
 type B3<T: {...}> = {o: O, ...T, ...}
-= any (implicit)
 spread.js:34:6,34:7
 
 spread.js:36:6
 Flags:
 type B4<T: {...}> = {o: O, ...T, oo: O, ...}
-= any (implicit)
 spread.js:36:6,36:7
 
 spread.js:38:6
 Flags:
 type B5<T: {...}> = {u: O, w: T, v: O, x: O, ...T, y: O, ...}
-= any (implicit)
 spread.js:38:6,38:7
 
 spread.js:40:6
 Flags:
 type EB1<T: {...}, S: {...}> = {|...T, ...S, o: O|}
-= {|o: O|}
 spread.js:40:6,40:8
 
 spread.js:42:6
 Flags:
 type EB2<T: {...}> = {|...T, o: O|}
-= {|o: O|}
 spread.js:42:6,42:8
 
 spread.js:44:6
 Flags:
 type EB3<T: {...}> = {|o: O, ...T|}
-= any (implicit)
 spread.js:44:6,44:8
 
 spread.js:46:6
 Flags:
 type EB4<T: {...}> = {|o: O, ...T, oo: O|}
-= any (implicit)
 spread.js:46:6,46:8
 
 spread.js:48:6
 Flags:
 type EB5<T: {...}> = {|u: O, w: T, v: O, x: O, ...T, y: O|}
-= any (implicit)
 spread.js:48:6,48:8
 
 spread.js:50:6
 Flags:
 type PTA1<T: {...}> = {...B2<T>, ...T, ...}
-= any (implicit)
 spread.js:50:6,50:9
 
 spread.js:52:6
@@ -195,25 +186,21 @@ spread.js:52:6,52:9
 spread.js:54:6
 Flags:
 type EP1<T> = {|...P<T>, o: O|}
-= {|o: O, p: T|}
 spread.js:54:6,54:8
 
 spread.js:56:6
 Flags:
 type EP2<T> = {|o: O, ...P<T>|}
-= any (implicit)
 spread.js:56:6,56:8
 
 spread.js:58:6
 Flags:
 type ECtor1 = {|...Ctor, o: O|}
-= {|name: string, o: O|}
 spread.js:58:6,58:11
 
 spread.js:60:6
 Flags:
 type ECtor2 = {|o: O, ...Ctor|}
-= any (implicit)
 spread.js:60:6,60:11
 
 spread.js:62:6
@@ -225,7 +212,6 @@ spread.js:62:6,62:9
 spread.js:64:6
 Flags:
 type IP1<T: {...}> = {...B1<T>, ...} & {...B2<T>, ...}
-= any & {o: O, ...}
 spread.js:64:6,64:8
 
 spread.js:66:6
@@ -272,7 +258,6 @@ type-destructor.js:31:6,31:25
 type-destructor.js:34:6
 Flags:
 type ValuesPoly<X> = $Values<X>
-= any (implicit)
 type-destructor.js:34:6,34:15
 
 type-destructor.js:37:6
@@ -296,7 +281,6 @@ type-destructor.js:50:6,50:18
 type-destructor.js:53:6
 Flags:
 type DiffFromEmptyObjectError = $Diff<{...}, {nope: number, ...}>
-= {...}
 type-destructor.js:53:6,53:29
 
 type-destructor.js:55:6
@@ -338,7 +322,6 @@ type-destructor.js:67:6,67:14
 type-destructor.js:70:6
 Flags:
 type RestObj = $Rest<{|y: O1|}, {[string]: O2}>
-= {|y?: O1|}
 type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
@@ -368,7 +351,6 @@ type-destructor.js:82:6,82:21
 type-destructor.js:84:6
 Flags:
 type ElementTypePropsPoly<K> = Props[K]
-= any (implicit)
 type-destructor.js:84:6,84:25
 
 type-destructor.js:86:6
@@ -380,7 +362,6 @@ type-destructor.js:86:6,86:32
 type-destructor.js:88:6
 Flags:
 type ElementTypePropsPolyBoundedEmpty<K: "phone"> = Props[K]
-= any (implicit)
 type-destructor.js:88:6,88:37
 
 type-destructor.js:92:6
@@ -484,13 +465,11 @@ type-destructor.js:165:6,165:13
 type-destructor.js:169:18
 Flags:
 <T: {...}, K: T>() => T[K]
-= <T: {...}, K: T>() => any
 type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags:
 <K: any, T: {...}>() => T[K]
-= <K: any, T: {...}>() => any
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
@@ -544,7 +523,6 @@ type-destructor.js:31:6,31:25
 type-destructor.js:34:6
 Flags:
 type ValuesPoly<X> = $Values<X>
-= any (implicit)
 type-destructor.js:34:6,34:15
 
 type-destructor.js:37:6
@@ -568,7 +546,6 @@ type-destructor.js:50:6,50:18
 type-destructor.js:53:6
 Flags:
 type DiffFromEmptyObjectError = $Diff<{...}, {nope: number, ...}>
-= {...}
 type-destructor.js:53:6,53:29
 
 type-destructor.js:55:6
@@ -610,7 +587,6 @@ type-destructor.js:67:6,67:14
 type-destructor.js:70:6
 Flags:
 type RestObj = $Rest<{|y: O1|}, {[string]: O2}>
-= {|y?: O1|}
 type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
@@ -640,7 +616,6 @@ type-destructor.js:82:6,82:21
 type-destructor.js:84:6
 Flags:
 type ElementTypePropsPoly<K> = Props[K]
-= any (implicit)
 type-destructor.js:84:6,84:25
 
 type-destructor.js:86:6
@@ -652,7 +627,6 @@ type-destructor.js:86:6,86:32
 type-destructor.js:88:6
 Flags:
 type ElementTypePropsPolyBoundedEmpty<K: "phone"> = Props[K]
-= any (implicit)
 type-destructor.js:88:6,88:37
 
 type-destructor.js:92:6
@@ -756,13 +730,11 @@ type-destructor.js:165:6,165:13
 type-destructor.js:169:18
 Flags:
 <T: {...}, K: T>() => T[K]
-= <T: {...}, K: T>() => any
 type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags:
 <K: any, T: {...}>() => T[K]
-= <K: any, T: {...}>() => any
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
