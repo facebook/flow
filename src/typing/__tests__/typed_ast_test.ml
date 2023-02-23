@@ -58,6 +58,7 @@ let metadata =
     strip_root = true;
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
+    use_mixed_in_catch_variables = false;
   }
 
 (* somewhat copied from Flow_dot_js *)

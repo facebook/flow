@@ -1,0 +1,5 @@
+[options]
+all=true
+exact_by_default=true
+
+use_mixed_in_catch_variables=true

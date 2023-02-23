@@ -378,7 +378,12 @@ module Make
           let (t, ast_annot) =
             match annot with
             | Ast.Type.Missing mloc ->
-              let t = AnyT.why CatchAny r in
+              let t =
+                if Context.use_mixed_in_catch_variables cx then
+                  MixedT.why r |> with_trust bogus_trust
+                else
+                  AnyT.why CatchAny r
+              in
               (t, Ast.Type.Missing (mloc, t))
             | Ast.Type.Available ((_, (_, (Ast.Type.Any _ | Ast.Type.Mixed _))) as annot) ->
               (* Not relevant with our limited accepted annotations. *)

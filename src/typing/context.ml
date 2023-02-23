@@ -70,6 +70,7 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
+  use_mixed_in_catch_variables: bool;
 }
 
 type test_prop_hit_or_miss =
@@ -267,6 +268,7 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     trust_mode = Options.trust_mode options;
+    use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
 
 let docblock_overrides docblock_info metadata =
@@ -597,6 +599,8 @@ let type_graph cx = cx.ccx.type_graph
 let matching_props cx = cx.ccx.matching_props
 
 let trust_mode cx = cx.metadata.trust_mode
+
+let use_mixed_in_catch_variables cx = cx.metadata.use_mixed_in_catch_variables
 
 let verbose cx = cx.metadata.verbose
 

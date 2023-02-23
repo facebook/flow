@@ -90,6 +90,7 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
+  use_mixed_in_catch_variables: bool;
 }
 
 type phase =
@@ -574,3 +575,5 @@ type cache_snapshot
 val take_cache_snapshot : t -> cache_snapshot
 
 val restore_cache_snapshot : t -> cache_snapshot -> unit
+
+val use_mixed_in_catch_variables : t -> bool
