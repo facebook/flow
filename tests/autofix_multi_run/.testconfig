@@ -1,2 +1,2 @@
 shell: test.sh
-TODO_LTI: true
+skip_lti: true
