@@ -101,18 +101,18 @@ Set this to `true` to indicate that Flow should interpret object types as exact 
 
 When this flag is `false`, Flow has the following behavior:
 
-```js
-{foo: number} // inexact
-{| foo: number |} // exact
-{foo: number, ...} // inexact
+```js flow-check
+type O1 = {foo: number} // inexact
+type O2 = {| foo: number |} // exact
+type O3 = {foo: number, ...} // inexact
 ```
 
 When this flag is `true`, Flow has the following behavior:
 
-```js
-{foo: number} // exact
-{| foo: number |} // exact
-{foo: number, ...} // inexact
+```js flow-check
+type O1 = {foo: number} // exact
+type O2 = {| foo: number |} // exact
+type O3 = {foo: number, ...} // inexact
 ```
 
 From inception to Flow version 0.199, the default value of the flag was `false`.

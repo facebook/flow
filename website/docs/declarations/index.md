@@ -29,15 +29,13 @@ Now let's see an example of the first case documented above. Suppose we have the
 following code in a file `src/LookBeforeYouLeap.js`:
 
 ```js
-// @flow
 import { isLeapYear } from "./Misc";
 if (isLeapYear("2020")) console.log("Yay!");
 ```
 
 and suppose that `src/Misc.js` has an incompatible implementation of `isLeapYear`:
 
-```js
-// @flow
+```js flow-check
 export function isLeapYear(year: number): boolean {
   return year % 4 == 0; // yeah, this is approximate
 }
@@ -50,8 +48,7 @@ following declarations in `src/Misc.js.flow`.
 > NOTE: The syntax for declarations in a declaration file is the same as we've seen in
 >       [Creating Library Definitions section](../libdefs/creation).
 
-```js
-// @flow
+```js flow-check
 declare export function isLeapYear(year: string): boolean;
 ```
 
@@ -76,7 +73,7 @@ function `foo` that takes a `number` and returns a `string`, and a class
 `List` that has a `map` method. You can do this by including declarations for
 `List` and `foo`:
 
-```js
+```js flow-check
 declare class List<T> {
   map<U>(f: (x: T) => U): List<U>;
 }

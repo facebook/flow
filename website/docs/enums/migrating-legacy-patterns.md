@@ -18,7 +18,7 @@ If you are using `Object.freeze`, you can migrate to an enum if the values of th
 
 Replace
 
-```js
+```js flow-check
 const Status = Object.freeze({
   Active: 1,
   Paused: 2,
@@ -31,7 +31,7 @@ export default Status;
 ```
 
 with
-```js
+```js flow-check
 export default enum Status {
   Active = 1,
   Paused = 2,
@@ -67,7 +67,7 @@ export default Status;
 
 with
 
-```js
+```js flow-check
 export default enum Status {
   Active,
   Paused,
@@ -90,7 +90,7 @@ Flow Enums are both types and values (like a class), so you just need to export 
 Read more about [exporting enums](../using-enums/#toc-exporting-enums) and [importing enums](../using-enums/#toc-importing-enums).
 
 If you previously had:
-```js
+```js flow-check
 const Status = Object.freeze({
   Active: 1,
   Paused: 2,
@@ -101,7 +101,7 @@ export default Status;
 ```
 
 And you've replaced it with:
-```js
+```js flow-check
 export default enum Status {
   Active = 1,
   Paused = 2,

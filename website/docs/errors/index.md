@@ -55,12 +55,12 @@ Suppressible Flow errors will also have an error code associated with them (afte
 
 In order to prevent suppressions from suppressing different kinds of type errors on the same line (by default suppressions without codes suppress every error on the following line), you can add an error code to your suppression. For example: `// $FlowFixMe[incompatible-type]` would only suppress errors with the `incompatible-type` code. So:
 
-```js
+```js flow-check
 //$FlowFixMe[incompatible-type]
 (3 : string);
 ```
 would report no errors, but
-```js
+```js flow-check
 //$FlowFixMe[prop-missing]
 (3 : string);
 ```
@@ -68,7 +68,7 @@ would still report a type incompatibility.
 
 To suppress multiple error codes on the same line, you can stack suppression comments one after another, and they will all apply to the first non-comment line like so:
 
-```js
+```js flow-check
 let y : number | { x : number }  = 1;
 
 // $FlowFixMe[incompatible-type]

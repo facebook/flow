@@ -45,7 +45,7 @@ This command first starts a background process that will check all [Flow files](
 
 The Flow background process monitors all Flow files. However, how does it know which files are Flow files and, thus, should be checked? Placing the following **before any code** in a JavaScript file is the flag the process uses to answer that question.
 
-```js
+```js flow-check
 // @flow
 ```
 

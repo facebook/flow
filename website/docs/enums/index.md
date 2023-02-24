@@ -27,7 +27,7 @@ Enums provide several benefits over existing patterns:
 #### [Defining enums](./defining-enums) {#toc-defining-enums-defining-enums}
 An enum named `Status` with three members: `Active`, `Paused`, and `Off`.
 
-```js
+```js flow-check
 enum Status {
   Active,
   Paused,
@@ -35,7 +35,7 @@ enum Status {
 }
 ```
 By default, enums define members with string values which mirror their names. You can also explicitly set values:
-```js
+```js flow-check
 enum Status {
   Active = 'active',
   Paused = 'paused',
@@ -43,7 +43,7 @@ enum Status {
 }
 ```
 You can use numbers as well:
-```js
+```js flow-check
 enum Status {
   Active = 1,
   Paused = 2,
@@ -100,7 +100,7 @@ Check out the [the full docs on using enums](./using-enums/) to learn more.
 ## When to use Flow Enums {#toc-when-to-use-flow-enums}
 If you previously defined a union type of literals, you can use an enum to define that type instead. Instead of
 
-```js
+```js flow-check
 type Status =
   | 'Active'
   | 'Paused'
@@ -110,7 +110,7 @@ const x: Status = 'Active';
 ```
 
 or
-```js
+```js flow-check
 const Status = Object.freeze({
   Active: 'Active',
   Paused: 'Paused',
@@ -121,7 +121,7 @@ const x: StatusType = Status.Active;
 ```
 
 you can use:
-```js
+```js flow-check
 enum Status {
   Active,
   Paused,
