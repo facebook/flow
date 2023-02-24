@@ -1,3 +1,8 @@
+### 0.200.1
+
+Notable bug fixes:
+We fixed a bug that causes spurious `Array is not an array` errors in try-flow. [Example](https://flow.org/try/#0PQKgBAAgZgNg9gdzCYAoVAXAngBwKZgCGATsWALxgCCphWAPAHYCuAtgEZ7EB8A3OjDwYiALiKkKYANoBdfqkIA6HMwDOACwAUARgCUvIA)
+
 ### 0.200.0
 
 Likely to cause new Flow errors:
