@@ -1,0 +1,31 @@
+{
+  "method": "textDocument/references",
+  "result": [
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
+      "range": {
+        "start": {
+          "line": 10,
+          "character": 11
+        },
+        "end": {
+          "line": 10,
+          "character": 14
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
+      "range": {
+        "start": {
+          "line": 12,
+          "character": 2
+        },
+        "end": {
+          "line": 12,
+          "character": 5
+        }
+      }
+    }
+  ]
+}

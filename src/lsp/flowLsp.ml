@@ -799,7 +799,7 @@ let do_initialize params : Initialize.result =
         signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
         definitionProvider = true;
         typeDefinitionProvider = false;
-        referencesProvider = false;
+        referencesProvider = true;
         documentHighlightProvider = true;
         documentSymbolProvider = true;
         workspaceSymbolProvider = false;
