@@ -1,5 +1,3 @@
-//@flow
-
 // This test exercises the instantiation cache when explicit type arguments are provided.
 // Prior to the introduction of `_`, there were no known ways to introduce non-termination
 // when explicit type arguments are supplied. Since `_` is equivalent to omitting the type
