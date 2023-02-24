@@ -2448,6 +2448,27 @@ module Make
       method! assignment _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
         let { operator; left = (left_loc, _) as left; right; comments = _ } = expr in
+        (match left with
+        | ( _,
+            Ast.Pattern.Expression
+              ( _,
+                Ast.Expression.Member
+                  {
+                    Ast.Expression.Member.property = Ast.Expression.Member.PropertyExpression expr;
+                    _;
+                  }
+              )
+          ) ->
+          let (loc, _) = expr in
+          let reason = Reason.mk_expression_reason expr in
+          let write_entries =
+            EnvMap.add
+              (Env_api.ExpressionLoc, loc)
+              (Env_api.AssigningWrite reason)
+              env_state.write_entries
+          in
+          env_state <- { env_state with write_entries }
+        | _ -> ());
         begin
           match operator with
           | None ->

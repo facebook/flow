@@ -1018,7 +1018,8 @@ function test(arr, i) {
     (2, 14) to (2, 17) =>
     (2, 19) to (2, 20) =>
     (2, 9) to (2, 13) =>
-    (3, 6) to (3, 7) |}]
+    (3, 6) to (3, 7) =>
+    (3, 6) to (3, 9) |}]
 
 let%expect_test "this" =
   print_order_test {|
