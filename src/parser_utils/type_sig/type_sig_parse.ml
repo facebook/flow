@@ -1225,6 +1225,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Annot (SingletonBoolean (loc, value))
     | T.Nullable { T.Nullable.argument; _ } -> Annot (Maybe (loc, annot opts scope tbls xs argument))
     | T.Array { T.Array.argument; _ } -> Annot (Array (loc, annot opts scope tbls xs argument))
+    | T.Conditional _ -> Annot (Any loc) (* TODO: properly support conditional type *)
     | T.Function f ->
       let def = function_type opts scope tbls xs f in
       Annot (FunAnnot (loc, def))

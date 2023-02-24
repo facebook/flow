@@ -577,6 +577,7 @@ and internal_error =
 and 'loc unsupported_syntax =
   | AnnotationInsideDestructuring
   | ComprehensionExpression
+  | ConditionalType
   | GeneratorExpression
   | MetaPropertyExpression
   | ObjectPropertyLiteralNonString
@@ -693,7 +694,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   in
   let map_unsupported_syntax = function
     | PredicateInvalidParameter reason -> PredicateInvalidParameter (map_reason reason)
-    | ( ComprehensionExpression | GeneratorExpression | MetaPropertyExpression
+    | ( ComprehensionExpression | ConditionalType | GeneratorExpression | MetaPropertyExpression
       | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
       | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
       | RequireDynamicArgument | CatchParameterDeclaration
@@ -2602,6 +2603,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | GeneratorExpression
       | MetaPropertyExpression ->
         [text "Not supported."]
+      | ConditionalType -> [text "Conditional types are not yet supported."]
       | AnnotationInsideDestructuring ->
         [
           text "Annotations inside of destructuring are not supported. ";

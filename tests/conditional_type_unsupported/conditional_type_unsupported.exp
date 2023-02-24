@@ -1,0 +1,10 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:1:29
+
+Conditional types are not yet supported. [unsupported-syntax]
+
+   1| type BasicConditionalType = 1 extends number ? string : number; // error: unsupported
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error

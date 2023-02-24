@@ -145,6 +145,17 @@ end =
   Variable
 
 and Type : sig
+  module Conditional : sig
+    type ('M, 'T) t = {
+      check_type: ('M, 'T) Type.t;
+      extends_type: ('M, 'T) Type.t;
+      true_type: ('M, 'T) Type.t;
+      false_type: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Function : sig
     module Param : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -467,6 +478,7 @@ and Type : sig
     | Object of ('M, 'T) Object.t
     | Interface of ('M, 'T) Interface.t
     | Array of ('M, 'T) Array.t
+    | Conditional of ('M, 'T) Conditional.t
     | Generic of ('M, 'T) Generic.t
     | IndexedAccess of ('M, 'T) IndexedAccess.t
     | OptionalIndexedAccess of ('M, 'T) OptionalIndexedAccess.t
