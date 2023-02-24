@@ -389,6 +389,16 @@ for (x in {a: 'a'}) { };
          {[a] = null};
          "
                "[(1, 5) to (1, 6)]";
+         "same_generic_scope"
+         >:: mk_provider_loc_test
+               (mk_loc (2, 10) (2, 11))
+               "
+function f() {
+      var x;
+      x = 42; // provider
+}
+         "
+               "[(3, 6) to (3, 7)]";
          "nested1"
          >:: mk_provider_loc_test
                (mk_loc (1, 4) (1, 5))
@@ -399,6 +409,16 @@ function f() {
 }
          "
                "[(3, 6) to (3, 7)]";
+         "nested1_generic"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+function f<T>() {
+      x = 42; // provider
+}
+         "
+               "[]";
          "nested2"
          >:: mk_provider_loc_test
                (mk_loc (1, 4) (1, 5))
@@ -409,6 +429,16 @@ function f() {
 }
          "
                "[(1, 4) to (1, 5)], [(3, 6) to (3, 7)]";
+         "nested2_generic"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x = null; // provider
+function f<T>() {
+      x = 42; // provider
+}
+         "
+               "[(1, 4) to (1, 5)]";
          "nested3"
          >:: mk_provider_loc_test
                (mk_loc (1, 4) (1, 5))
@@ -541,6 +571,28 @@ if (condition) {
     }
          "
                "[(3, 12) to (3, 13)]";
+         "generic_class_1"
+         >:: mk_provider_loc_test
+               (mk_loc (3, 12) (3, 13))
+               "
+    let w;
+    class C<T> {
+      meth() { w = 1; }
+    }
+         "
+               "[]";
+         "generic_class_2"
+         >:: mk_provider_loc_test
+               (mk_loc (4, 4) (4, 5))
+               "
+    class C<T> {
+      meth() {
+        let w;
+        w = 1;
+      }
+    }
+         "
+               "[(4, 4) to (4, 5)]";
          "extend_state_opt1" >:: mk_provider_test "x" "
 var x;
          " "[]";
@@ -817,4 +869,24 @@ function foo() {
 }
          "
                "[(2, 6) to (2, 7)] array providers: [(3, 9) to (3, 11)]";
+         "arr10"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x = [];
+function foo() {
+  x.push(42);
+}
+         "
+               "[(1, 4) to (1, 5)] array providers: [(3, 9) to (3, 11)]";
+         "arr11"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x = [];
+function foo<T>() {
+  x.push(42);
+}
+         "
+               "[(1, 4) to (1, 5)]";
        ]

@@ -35,6 +35,7 @@ module FindProviders (L : Loc_sig.S) : sig
     declare_locs: L.LSet.t;
     def_locs: L.LSet.t;
     provider_locs: 'locs;
+    possible_generic_escape_locs: L.LSet.t;
     binding_kind: Bindings.kind;
   }
 
