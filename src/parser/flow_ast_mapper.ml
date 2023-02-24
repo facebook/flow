@@ -1401,6 +1401,31 @@ class ['loc] mapper =
       else
         { argument = argument'; comments = comments' }
 
+    method conditional_type (t : ('loc, 'loc) Ast.Type.Conditional.t) =
+      let open Ast.Type.Conditional in
+      let { check_type; extends_type; true_type; false_type; comments } = t in
+      let check_type' = this#type_ check_type in
+      let extends_type' = this#type_ extends_type in
+      let true_type' = this#type_ true_type in
+      let false_type' = this#type_ false_type in
+      let comments' = this#syntax_opt comments in
+      if
+        check_type == check_type'
+        && extends_type == extends_type'
+        && true_type == true_type'
+        && false_type == false_type'
+        && comments == comments'
+      then
+        t
+      else
+        {
+          check_type = check_type';
+          extends_type = extends_type';
+          true_type = true_type';
+          false_type = false_type';
+          comments = comments';
+        }
+
     method typeof_type (t : ('loc, 'loc) Ast.Type.Typeof.t) =
       let open Ast.Type.Typeof in
       let { argument; comments } = t in
@@ -1554,6 +1579,7 @@ class ['loc] mapper =
         id this#syntax_opt comments t (fun comments -> (loc, Undefined comments))
       | (loc, Nullable t') -> id this#nullable_type t' t (fun t' -> (loc, Nullable t'))
       | (loc, Array t') -> id this#array_type t' t (fun t' -> (loc, Array t'))
+      | (loc, Conditional t') -> id this#conditional_type t' t (fun t' -> (loc, Conditional t'))
       | (loc, Typeof t') -> id this#typeof_type t' t (fun t' -> (loc, Typeof t'))
       | (loc, Keyof t') -> id this#keyof_type t' t (fun t' -> (loc, Keyof t'))
       | (loc, ReadOnly t') -> id this#readonly_type t' t (fun t' -> (loc, ReadOnly t'))

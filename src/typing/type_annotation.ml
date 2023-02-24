@@ -369,6 +369,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))),
         Array { Array.argument = t_ast; comments }
       )
+    | (loc, Conditional { Conditional.check_type; extends_type; true_type; false_type; comments })
+      as t_ast ->
+      if Context.conditional_type cx then
+        let check_type = convert cx tparams_map check_type in
+        let extends_type = convert cx tparams_map extends_type in
+        let true_type = convert cx tparams_map true_type in
+        let false_type = convert cx tparams_map false_type in
+        let t = AnyT.annot (mk_reason (RCustom "experimental conditional type") loc) in
+        ( (loc, t),
+          Conditional { Conditional.check_type; extends_type; true_type; false_type; comments }
+        )
+      else
+        error_type cx loc Error_message.(EUnsupportedSyntax (loc, ConditionalType)) t_ast
     | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
       let t =
         if Type_inference_hooks_js.dispatch_literal_hook cx loc then

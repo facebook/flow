@@ -1894,6 +1894,20 @@ let tests =
            assert_statement_string ~ctxt "type a<a>=a;";
            assert_statement_string ~ctxt ~pretty:true "type a = a;"
          );
+         ( "conditional_types" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "type conditional = a extends b ? c : d;";
+           assert_statement_string ~ctxt ~pretty:false "type conditional=a extends b?c:d;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "type conditional = a extends (a extends b ? c : d) ? c : d;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             {|type conditional = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa extends bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  ? ccccccccccccc
+  : dddddd;|}
+         );
          ( "opaque_type_alias_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "opaque type a=a;";
            assert_statement_string ~ctxt "opaque type a:b=a;";

@@ -1,0 +1,19 @@
+{
+  "body": {
+    "6": {
+      "declarations": {
+        "0": {
+          "id": {
+            "typeAnnotation": {
+              "typeAnnotation": {
+                "checkType": {
+                  "leadingComments": undefined
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

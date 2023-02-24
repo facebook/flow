@@ -1444,6 +1444,7 @@ with type t = Impl.t = struct
         | Object o -> object_type ~include_inexact:true (loc, o)
         | Interface i -> interface_type (loc, i)
         | Array t -> array_type loc t
+        | Conditional t -> conditional_type loc t
         | Generic g -> generic_type (loc, g)
         | IndexedAccess ia -> indexed_access (loc, ia)
         | OptionalIndexedAccess ia -> optional_indexed_access (loc, ia)
@@ -1658,6 +1659,18 @@ with type t = Impl.t = struct
         ]
     and array_type loc { Type.Array.argument; comments } =
       node ?comments "ArrayTypeAnnotation" loc [("elementType", _type argument)]
+    and conditional_type
+        loc { Type.Conditional.check_type; extends_type; true_type; false_type; comments } =
+      node
+        ?comments
+        "ConditionalType"
+        loc
+        [
+          ("checkType", _type check_type);
+          ("extendsType", _type extends_type);
+          ("trueType", _type true_type);
+          ("falseType", _type false_type);
+        ]
     and generic_type_qualified_identifier (loc, { Type.Generic.Identifier.id; qualification }) =
       let qualification =
         match qualification with

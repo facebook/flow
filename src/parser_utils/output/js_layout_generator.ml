@@ -3867,6 +3867,34 @@ and type_tuple_spread_element ~opts loc { Ast.Type.Tuple.SpreadElement.name; ann
 and type_array ~opts loc { Ast.Type.Array.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "Array<"; type_ ~opts argument; Atom ">"])
 
+and type_conditional
+    ~opts loc { Ast.Type.Conditional.check_type; extends_type; true_type; false_type; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ group
+       [
+         fuse
+           [
+             type_with_parens ~opts check_type;
+             space;
+             Atom "extends";
+             space;
+             type_with_parens ~opts extends_type;
+           ];
+         Indent
+           (fuse
+              [
+                pretty_line;
+                Atom "?";
+                pretty_space;
+                type_ ~opts true_type;
+                pretty_line;
+                Atom ":";
+                pretty_space;
+                type_ ~opts false_type;
+              ]
+           );
+       ]
+
 and type_union ~opts loc { Ast.Type.Union.types = (t0, t1, ts); comments } =
   layout_node_with_comments_opt
     loc
@@ -3884,7 +3912,8 @@ and type_with_parens ~opts t =
   match t with
   | (_, T.Function _)
   | (_, T.Union _)
-  | (_, T.Intersection _) ->
+  | (_, T.Intersection _)
+  | (_, T.Conditional _) ->
     wrap_in_parens (type_ ~opts t)
   | _ -> type_ ~opts t
 
@@ -3917,6 +3946,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Object obj -> type_object ~opts loc obj
       | T.Interface i -> type_interface ~opts loc i
       | T.Array t -> type_array ~opts loc t
+      | T.Conditional t -> type_conditional ~opts loc t
       | T.Generic generic -> type_generic ~opts loc generic
       | T.IndexedAccess indexed_access -> type_indexed_access ~opts loc indexed_access
       | T.OptionalIndexedAccess { T.OptionalIndexedAccess.indexed_access; optional } ->

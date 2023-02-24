@@ -20,6 +20,14 @@ function custom_ast_types(fork) {
   /////////
   // flow
   /////////
+  def('ConditionalType')
+    .bases('FlowType')
+    .build('checkType', 'extendsType', 'trueType', 'falseType')
+    .field('checkType', def('FlowType'))
+    .field('extendsType', def('FlowType'))
+    .field('trueType', def('FlowType'))
+    .field('falseType', def('FlowType'));
+
   def('ObjectTypeIndexer').field('id', or(def('Identifier'), null));
 
   def('TupleTypeLabeledElement')

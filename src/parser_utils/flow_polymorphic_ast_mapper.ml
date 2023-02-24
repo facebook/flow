@@ -1088,6 +1088,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Option.map ~f:this#syntax comments in
       { argument = argument'; comments = comments' }
 
+    method conditional_type (t : ('M, 'T) Ast.Type.Conditional.t) : ('N, 'U) Ast.Type.Conditional.t
+        =
+      let open Ast.Type.Conditional in
+      let { check_type; extends_type; true_type; false_type; comments } = t in
+      let check_type' = this#type_ check_type in
+      let extends_type' = this#type_ extends_type in
+      let true_type' = this#type_ true_type in
+      let false_type' = this#type_ false_type in
+      let comments' = Option.map ~f:this#syntax comments in
+      {
+        check_type = check_type';
+        extends_type = extends_type';
+        true_type = true_type';
+        false_type = false_type';
+        comments = comments';
+      }
+
     method union_type (t : ('M, 'T) Ast.Type.Union.t) : ('N, 'U) Ast.Type.Union.t =
       let open Ast.Type.Union in
       let { types = (t0, t1, ts); comments } = t in
@@ -1152,6 +1169,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Undefined comments -> Undefined (Option.map ~f:this#syntax comments)
         | Nullable t' -> Nullable (this#nullable_type t')
         | Array t' -> Array (this#array_type t')
+        | Conditional t' -> Conditional (this#conditional_type t')
         | Typeof t' -> Typeof (this#typeof_type t')
         | Keyof t' -> Keyof (this#keyof_type t')
         | ReadOnly t' -> ReadOnly (this#readonly_type t')

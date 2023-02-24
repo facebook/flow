@@ -1,0 +1,58 @@
+{
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":36}},
+      "message":"Unexpected token `extends`, expected the token `?`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":36}},
+      "message":"Unexpected reserved type"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":43}},
+      "message":"Unexpected token `string`, expected the token `:`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":45}},
+      "message":"Unexpected token `?`, expected the token `;`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":45}},
+      "message":"Unexpected token `?`"
+    },
+    {
+       "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":35}},
+       "message":"Unexpected token `number`, expected the token `?`"
+    },
+    {
+       "loc":{"source":null,"start":{"line":2,"column":68},"end":{"line":2,"column":69}},
+       "message":"Unexpected token `;`, expected the token `:`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":68},"end":{"line":2,"column":69}},
+      "message":"Unexpected token `;`, expected a type"
+    }
+  ],
+  "type": "Program",
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "kind": "let",
+      "declarations": [{"type": "VariableDeclarator","id":{"type":"Identifier","name":"x"}}]
+    },
+    {
+      "type": "ExpressionStatement",
+      "expression": {
+        "type": "ConditionalExpression",
+        "test": {"type":"Literal", "raw":"null"},
+        "consequent": {"type":"Identifier","name":"string"},
+        "alternate": {"type":"Identifier","name":"string"}
+      }
+    },
+    {
+      "type": "VariableDeclaration",
+      "kind": "let",
+      "declarations": [{"type": "VariableDeclarator","id":{"type":"Identifier","name":"x"}}]
+    }
+  ]
+}

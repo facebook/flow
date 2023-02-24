@@ -94,7 +94,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         )
     | _ -> None
 
-  let rec _type env = union env
+  let rec _type env = conditional env
 
   and annotation env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
@@ -103,6 +103,35 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Expect.token env T_COLON;
         _type env)
       env
+
+  and conditional env =
+    let start_loc = Peek.loc env in
+    let check_type = union env in
+    conditional_with env ~start_loc check_type
+
+  and conditional_with env ~start_loc check_type =
+    match Peek.token env with
+    | T_EXTENDS ->
+      with_loc
+        ~start_loc
+        (fun env ->
+          Expect.token env T_EXTENDS;
+          let extends_type = union env in
+          Expect.token_opt env T_PLING;
+          let true_type = _type env in
+          Expect.token_opt env T_COLON;
+          let false_type = _type env in
+          let trailing = Eat.trailing_comments env in
+          Type.Conditional
+            {
+              Type.Conditional.check_type;
+              extends_type;
+              true_type;
+              false_type;
+              comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+            })
+        env
+    | _ -> check_type
 
   and union env =
     let leading =
@@ -750,6 +779,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         |> anon_function_without_parens_with env
         |> intersection_with env
         |> union_with env
+        |> conditional_with env ~start_loc:(fst id)
         )
 
   and function_or_group env =
@@ -1565,6 +1595,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Interface { t with Interface.comments = merge_comments comments }
       | Array ({ Array.comments; _ } as t) ->
         Array { t with Array.comments = merge_comments comments }
+      | Conditional ({ Conditional.comments; _ } as t) ->
+        Conditional { t with Conditional.comments = merge_comments comments }
       | Generic ({ Generic.comments; _ } as t) ->
         Generic { t with Generic.comments = merge_comments comments }
       | IndexedAccess ({ IndexedAccess.comments; _ } as t) ->
