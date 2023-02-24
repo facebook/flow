@@ -1236,7 +1236,7 @@ end = struct
           let msg = "PolyT:" ^ Type.string_of_ctor t in
           terr ~kind:BadTypeApp ~msg None
       in
-      let singleton ~env targs t =
+      let rec singleton ~env targs t =
         let open Type in
         match t with
         | AnyT _ -> type__ ~env t
@@ -1250,6 +1250,12 @@ end = struct
           (* For example see tests/type-at-pos_class/FluxStore.js *)
           let%map t = type__ ~env t in
           Ty.Utility (Ty.Class t)
+        | UnionT (_, union_rep) ->
+          (* This case targeting UnionTs created during tvar_resolution. *)
+          let%map tys = mapM (singleton ~env targs) (union_rep |> T.UnionRep.members) in
+          (match tys with
+          | [] -> Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper)
+          | t :: ts -> Ty.mk_union ~from_bounds:true (t, ts))
         | _ ->
           (* This is most likely already a Flow error: E.g.
            *
