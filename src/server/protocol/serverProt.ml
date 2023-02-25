@@ -14,6 +14,7 @@ module Request = struct
         wait_for_recheck: bool option;
         imports: bool;  (** include auto-import suggestions *)
         imports_ranked_usage: bool;
+        show_ranking_info: bool;
       }
     | AUTOFIX_EXPORTS of {
         input: File_input.t;
@@ -111,6 +112,7 @@ module Request = struct
           trigger_character = _;
           imports = _;
           imports_ranked_usage = _;
+          show_ranking_info = _;
         } ->
       Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
     | AUTOFIX_EXPORTS { input; _ } ->
