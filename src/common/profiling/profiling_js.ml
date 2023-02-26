@@ -50,14 +50,6 @@ end = struct
     duration: float;
   }
 
-  type processor_info = {
-    cpu_user: float;
-    cpu_nice_user: float;
-    cpu_system: float;
-    cpu_idle: float;
-    cpu_usage: float;
-  }
-
   type worker_wall_times = {
     worker_idle: time_measurement;
     worker_read_request: time_measurement;
@@ -76,8 +68,6 @@ end = struct
     worker_system: time_measurement;
     worker_wall_times: worker_wall_times;
     wall: time_measurement;
-    processor_totals: processor_info;
-    flow_cpu_usage: float;
     sub_results: result list;
     sample_count: int; (* If we merge a sample with 2 duplicates, this will be 3 *)
   }
@@ -100,7 +90,6 @@ end = struct
     worker_system_start: float;
     worker_wall_start_times: worker_wall_start_times;
     wall_start: float;
-    processor_info_start: Sys_utils.processor_info;
     mutable sub_results_rev: result list;
   }
 
@@ -174,7 +163,6 @@ end = struct
     let (user_start, system_start) = times () in
     let (worker_user_start, worker_system_start) = worker_times () in
     let worker_wall_start_times = worker_wall_start_times () in
-    let processor_info_start = Sys_utils.processor_info () in
     {
       timer;
       user_start;
@@ -183,31 +171,15 @@ end = struct
       worker_system_start;
       worker_wall_start_times;
       wall_start;
-      processor_info_start;
       sub_results_rev = [];
     }
 
   let flow_start_time = Unix.gettimeofday ()
 
-  let make_processor_info start end_ =
-    let cpu_user = end_.Sys_utils.cpu_user -. start.Sys_utils.cpu_user in
-    let cpu_nice_user = end_.Sys_utils.cpu_nice_user -. start.Sys_utils.cpu_nice_user in
-    let cpu_system = end_.Sys_utils.cpu_system -. start.Sys_utils.cpu_system in
-    let cpu_idle = end_.Sys_utils.cpu_idle -. start.Sys_utils.cpu_idle in
-    let cpu_busy = cpu_user +. cpu_nice_user +. cpu_system in
-    let cpu_usage =
-      if cpu_busy = 0. then
-        0.
-      else
-        cpu_busy /. (cpu_busy +. cpu_idle)
-    in
-    { cpu_user; cpu_nice_user; cpu_system; cpu_idle; cpu_usage }
-
   let stop_timer running_timer =
     let wall_end = Unix.gettimeofday () in
     let (user_end, system_end) = times () in
     let (worker_user_end, worker_system_end) = worker_times () in
-    let processor_info_end = Sys_utils.processor_info () in
     let user =
       { start_age = running_timer.user_start; duration = user_end -. running_timer.user_start }
     in
@@ -236,30 +208,6 @@ end = struct
         duration = wall_end -. running_timer.wall_start;
       }
     in
-    let processor_totals =
-      make_processor_info
-        running_timer.processor_info_start.Sys_utils.proc_totals
-        processor_info_end.Sys_utils.proc_totals
-    in
-    let flow_cpu_time =
-      user.duration +. system.duration +. worker_user.duration +. worker_system.duration
-    in
-    let total_cpu_time =
-      processor_totals.cpu_user
-      +. processor_totals.cpu_nice_user
-      +. processor_totals.cpu_system
-      +. processor_totals.cpu_idle
-    in
-    (* flow_cpu_time and total_cpu_time are calculated using slightly different systems.
-     * flow_cpu_time should always be less than total_cpu_time, so we could in theory just
-     * check the numerator. However, checking the denominator is a slightly safer way to avoid
-     * a division by zero *)
-    let flow_cpu_usage =
-      if total_cpu_time = 0. then
-        0.
-      else
-        flow_cpu_time /. total_cpu_time
-    in
     {
       timer_name = running_timer.timer;
       user;
@@ -268,8 +216,6 @@ end = struct
       worker_system;
       worker_wall_times;
       wall;
-      processor_totals;
-      flow_cpu_usage;
       sub_results = List.rev running_timer.sub_results_rev;
       sample_count = 1;
     }
@@ -307,11 +253,9 @@ end = struct
     if should_print then
       let stats =
         Printf.sprintf
-          "start_wall_age: %f; wall_duration: %f; cpu_usage: %f; flow_cpu_usage: %f"
+          "start_wall_age: %f; wall_duration: %f"
           finished_timer.wall.start_age
           finished_timer.wall.duration
-          finished_timer.processor_totals.cpu_usage
-          finished_timer.flow_cpu_usage
       in
       Hh_logger.info "TimingEvent `%s`: %s" timer stats
 
@@ -345,31 +289,6 @@ end = struct
         ]
     )
 
-  let total_cpu_time info = info.cpu_user +. info.cpu_nice_user +. info.cpu_system +. info.cpu_idle
-
-  let json_of_processor_info ~abridged info =
-    Hh_json.(
-      if abridged then
-        let total = total_cpu_time info in
-        (* We can infer enough from these two numbers
-         * busy = total * usage
-         * idle = total - busy *)
-        JSON_Object
-          [
-            ("total", JSON_Number (Dtoa.ecma_string_of_float total));
-            ("usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage));
-          ]
-      else
-        JSON_Object
-          [
-            ("user", JSON_Number (Dtoa.ecma_string_of_float info.cpu_user));
-            ("nice", JSON_Number (Dtoa.ecma_string_of_float info.cpu_nice_user));
-            ("system", JSON_Number (Dtoa.ecma_string_of_float info.cpu_system));
-            ("idle", JSON_Number (Dtoa.ecma_string_of_float info.cpu_idle));
-            ("usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage));
-          ]
-    )
-
   (* This function solves the problem of having multiple sibling timers (timers with the same
    * parent) with the same name. Our JSON representation is an object keyed by the name of the
    * timer, so we need to merge any two timers with the same name *)
@@ -388,30 +307,6 @@ end = struct
         worker_gc_major = merge_time_measurement a.worker_gc_major b.worker_gc_major;
       }
     in
-    let weighted_average values =
-      let (weight_sum, acc) =
-        List.fold_left
-          (fun (weight_sum, acc) (weight, value) ->
-            assert (weight >= 0.);
-            (weight_sum +. weight, acc +. (weight *. value)))
-          (0., 0.)
-          values
-      in
-      if weight_sum > 0. then
-        acc /. weight_sum
-      else
-        0.
-    in
-    let merge_processor_totals a b =
-      {
-        cpu_user = a.cpu_user +. b.cpu_user;
-        cpu_nice_user = a.cpu_nice_user +. b.cpu_nice_user;
-        cpu_system = a.cpu_system +. b.cpu_system;
-        cpu_idle = a.cpu_idle +. b.cpu_idle;
-        cpu_usage =
-          weighted_average [(total_cpu_time a, a.cpu_usage); (total_cpu_time b, b.cpu_usage)];
-      }
-    in
     fun ~dupes result ->
       List.fold_left
         (fun result dupe ->
@@ -424,13 +319,6 @@ end = struct
             worker_system = merge_time_measurement result.worker_system dupe.worker_system;
             worker_wall_times =
               merge_worker_wall_times result.worker_wall_times dupe.worker_wall_times;
-            processor_totals = merge_processor_totals result.processor_totals dupe.processor_totals;
-            flow_cpu_usage =
-              weighted_average
-                [
-                  (total_cpu_time result.processor_totals, result.flow_cpu_usage);
-                  (total_cpu_time dupe.processor_totals, dupe.flow_cpu_usage);
-                ];
             sub_results = result.sub_results @ dupe.sub_results;
             sample_count = result.sample_count + 1;
           })
@@ -446,8 +334,6 @@ end = struct
       worker_user;
       worker_system;
       worker_wall_times;
-      processor_totals;
-      flow_cpu_usage;
       sub_results;
       sample_count;
     } =
@@ -459,8 +345,6 @@ end = struct
         [
           ("wall", json_of_time_measurement wall);
           ("cpu", json_of_time_measurement (combine_time_measurements cpu));
-          ("flow_cpu_usage", JSON_Number (Dtoa.ecma_string_of_float flow_cpu_usage));
-          ("processor_totals", json_of_processor_info ~abridged processor_totals);
         ]
       in
       let fields =
