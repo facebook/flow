@@ -31,18 +31,10 @@ val sample_memory : ?group:string -> metric:string -> value:float -> running -> 
 val add_memory :
   ?group:string -> metric:string -> start:float -> delta:float -> hwm_delta:float -> running -> unit
 
-val get_timing_json_string : finished -> string
-
 val get_abridged_timing_json_string : finished -> string
-
-val get_abridged_legacy_timing_json_string : finished -> string
-
-val get_memory_json_string : finished -> string
 
 val get_abridged_memory_json_string : finished -> string
 
 val to_json_properties : finished -> (string * Hh_json.json) list
-
-val to_legacy_json_properties : finished -> (string * Hh_json.json) list
 
 val print_summary : finished -> unit

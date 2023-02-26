@@ -61,7 +61,7 @@ let format_errors
       in
       fun profiling ->
         let profiling_props =
-          Base.Option.value_map profiling ~default:[] ~f:Profiling_js.to_legacy_json_properties
+          Base.Option.value_map profiling ~default:[] ~f:Profiling_js.to_json_properties
         in
         finish_formatting ~profiling_props
     | Cli flags ->
