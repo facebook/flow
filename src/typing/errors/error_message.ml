@@ -396,6 +396,10 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
+  | EEnumInvalidObjectFunction of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
   | EEnumNotIterable of {
       reason: 'loc virtual_reason;
       for_in: bool;
@@ -1071,6 +1075,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
   | EEnumInvalidObjectUtilType { reason; enum_reason } ->
     EEnumInvalidObjectUtilType { reason = map_reason reason; enum_reason = map_reason enum_reason }
+  | EEnumInvalidObjectFunction { reason; enum_reason } ->
+    EEnumInvalidObjectFunction { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumNotIterable { reason; for_in } -> EEnumNotIterable { reason = map_reason reason; for_in }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     EEnumMemberAlreadyChecked
@@ -1417,6 +1423,7 @@ let util_use_op_of_msg nope util = function
   | EEnumModification _
   | EEnumMemberDuplicateValue _
   | EEnumInvalidObjectUtilType _
+  | EEnumInvalidObjectFunction _
   | EEnumNotIterable _
   | EEnumMemberAlreadyChecked _
   | EEnumAllMembersAlreadyChecked _
@@ -1503,6 +1510,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
   | EEnumInvalidObjectUtilType { reason; _ }
+  | EEnumInvalidObjectFunction { reason; _ }
   | EEnumNotIterable { reason; _ }
   | ERecursiveDefinition { reason; _ }
   | EDefinitionCycle ((reason, _, _), _)
@@ -3804,6 +3812,32 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       @ suggestion
     in
     Normal { features }
+  | EEnumInvalidObjectFunction { reason; enum_reason } ->
+    let suggestion =
+      match enum_name_of_reason enum_reason with
+      | Some enum_name ->
+        [
+          text " ";
+          text "You can use ";
+          code (spf "%s.members()" enum_name);
+          text " to get an iterator of the enum's members. ";
+          text "You can turn that into an array using ";
+          code "Array.from";
+          text ", which optionally takes a second argument if you wish to also map over the result.";
+        ]
+      | None -> []
+    in
+    let features =
+      [
+        text "Cannot call function ";
+        ref reason;
+        text " with argument ";
+        ref enum_reason;
+        text " because it is not an object.";
+      ]
+      @ suggestion
+    in
+    Normal { features }
   | EEnumNotIterable { reason; for_in } ->
     let features =
       if for_in then
@@ -4732,6 +4766,7 @@ let error_code_of_message err : error_code option =
   | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
   | EEnumInvalidObjectUtilType _ -> Some NotAnObject
+  | EEnumInvalidObjectFunction _ -> Some NotAnObject
   | EEnumNotIterable _ -> Some NotIterable
   | EEnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit

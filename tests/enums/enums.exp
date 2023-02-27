@@ -439,6 +439,22 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- enum-object.js:77:1
+
+Cannot call function `Object.values` [1] with argument enum `E` [2] because it is not an object. You can use
+`E.members()` to get an iterator of the enum's members. You can turn that into an array using `Array.from`, which
+optionally takes a second argument if you wish to also map over the result. [not-an-object]
+
+   enum-object.js:77:1
+   77| Object.values(E); // Error
+       ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   enum-object.js:3:6
+    3| enum E {
+            ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- equality.js:21:1
 
 Cannot compare string [1] to `E` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
@@ -3957,7 +3973,7 @@ References:
 
 
 
-Found 237 errors
+Found 238 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
