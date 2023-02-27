@@ -392,7 +392,7 @@ and 'loc t' =
       prev_use_loc: 'loc;
       enum_reason: 'loc virtual_reason;
     }
-  | EEnumInvalidObjectUtil of {
+  | EEnumInvalidObjectUtilType of {
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
@@ -1069,8 +1069,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
     EEnumMemberDuplicateValue
       { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
-  | EEnumInvalidObjectUtil { reason; enum_reason } ->
-    EEnumInvalidObjectUtil { reason = map_reason reason; enum_reason = map_reason enum_reason }
+  | EEnumInvalidObjectUtilType { reason; enum_reason } ->
+    EEnumInvalidObjectUtilType { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumNotIterable { reason; for_in } -> EEnumNotIterable { reason = map_reason reason; for_in }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     EEnumMemberAlreadyChecked
@@ -1416,7 +1416,7 @@ let util_use_op_of_msg nope util = function
   | EEnumInvalidMemberAccess _
   | EEnumModification _
   | EEnumMemberDuplicateValue _
-  | EEnumInvalidObjectUtil _
+  | EEnumInvalidObjectUtilType _
   | EEnumNotIterable _
   | EEnumMemberAlreadyChecked _
   | EEnumAllMembersAlreadyChecked _
@@ -1502,7 +1502,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumInvalidCheck { reason; _ }
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
-  | EEnumInvalidObjectUtil { reason; _ }
+  | EEnumInvalidObjectUtilType { reason; _ }
   | EEnumNotIterable { reason; _ }
   | ERecursiveDefinition { reason; _ }
   | EDefinitionCycle ((reason, _, _), _)
@@ -3781,7 +3781,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumInvalidObjectUtil { reason; enum_reason } ->
+  | EEnumInvalidObjectUtilType { reason; enum_reason } ->
     let suggestion =
       match enum_name_of_reason enum_reason with
       | Some enum_name ->
@@ -4731,7 +4731,7 @@ let error_code_of_message err : error_code option =
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
-  | EEnumInvalidObjectUtil _ -> Some NotAnObject
+  | EEnumInvalidObjectUtilType _ -> Some NotAnObject
   | EEnumNotIterable _ -> Some NotIterable
   | EEnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
