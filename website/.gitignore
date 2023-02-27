@@ -9,6 +9,7 @@ vendor
 .docusaurus
 .cache-loader
 src/js/flow
+flowd
 
 # Misc
 .DS_Store

@@ -10,7 +10,7 @@
 const {spawn} = require('child_process');
 
 async function checkContents(input /*: string */) {
-  const flowProcess = spawn('flow', [
+  const flowProcess = spawn(process.env.FLOW_BIN_PATH || 'flow', [
     'check-contents',
     '--json',
     '--flowconfig-name',
