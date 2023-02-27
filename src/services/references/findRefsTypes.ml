@@ -9,13 +9,11 @@ type ref_kind =
   | PropertyDefinition
   | PropertyAccess
   | Local
-  | Other
 
 let string_of_ref_kind = function
   | PropertyDefinition -> "PropertyDefinition"
   | PropertyAccess -> "PropertyAccess"
   | Local -> "Local"
-  | Other -> "Other"
 
 type single_ref = ref_kind * Loc.t
 

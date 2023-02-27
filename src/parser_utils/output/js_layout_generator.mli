@@ -74,6 +74,9 @@ val statement_list :
   (Loc.t, Loc.t) Flow_ast.Statement.t list ->
   Layout.layout_node list
 
+val import_named_specifier :
+  (Loc.t, Loc.t) Flow_ast.Statement.ImportDeclaration.named_specifier -> Layout.layout_node
+
 val object_property :
   opts:opts -> (Loc.t, Loc.t) Flow_ast.Expression.Object.property -> Layout.layout_node
 

@@ -1,0 +1,6 @@
+{
+  "method": "textDocument/rename",
+  "result": {
+    "changes": {}
+  }
+}

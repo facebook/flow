@@ -2015,7 +2015,8 @@ let handle_persistent_signaturehelp_lsp
         Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason:"Failed to normalize type" metadata)))
 
 let find_local_references ~reader ~options ~client ~profiling ~env pos :
-    (FindRefsTypes.find_refs_ok, string) result * Hh_json.json option =
+    ((FindRefsTypes.find_refs_found * Types_js_types.typecheck_artifacts) option, string) result
+    * Hh_json.json option =
   let file_input = file_input_of_text_document_position ~client pos in
   match of_file_input ~options ~env file_input with
   | Error (Failed reason) -> (Error reason, None)
@@ -2064,7 +2065,10 @@ let find_local_references ~reader ~options ~client ~profiling ~env pos :
              ]
           )
       in
-      (local_refs, extra_data))
+      (match local_refs with
+      | Ok (Some ref_info) -> (Ok (Some (ref_info, typecheck_artifacts)), extra_data)
+      | Ok None -> (Ok None, extra_data)
+      | Error s -> (Error s, extra_data)))
 
 let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~client ~profiling ~env
     =
@@ -2077,7 +2081,7 @@ let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~cl
   in
   let result =
     match local_refs with
-    | Ok (Some (_name, refs)) ->
+    | Ok (Some ((_name, refs), _typecheck_artifacts)) ->
       let ref_to_location (_, loc) =
         { Location.uri = document_uri; range = Flow_lsp_conversions.loc_to_lsp_range loc }
       in
@@ -2102,7 +2106,7 @@ let handle_persistent_document_highlight
   in
   let result =
     match local_refs with
-    | Ok (Some (_name, refs)) ->
+    | Ok (Some ((_name, refs), _typecheck_artifacts)) ->
       (* All the locs are implicitly in the same file *)
       let ref_to_highlight (_, loc) =
         {
@@ -2120,6 +2124,71 @@ let handle_persistent_document_highlight
   match result with
   | Ok result ->
     let r = DocumentHighlightResult result in
+    let response = ResponseMessage (id, r) in
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
+
+let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
+  let Rename.{ textDocument; position; newName } = params in
+  let text_doc_position = TextDocumentPositionParams.{ textDocument; position } in
+  let (local_refs, extra_data) =
+    find_local_references ~reader ~options ~client ~profiling ~env text_doc_position
+  in
+  let result =
+    match local_refs with
+    | Ok (Some ((name, refs), typecheck_artifacts)) ->
+      let typed_ast =
+        match typecheck_artifacts with
+        | Types_js_types.Typecheck_artifacts { typed_ast; _ } -> typed_ast
+      in
+      let ref_set = refs |> List.map (fun (_, loc) -> loc) |> Loc_collections.LocSet.of_list in
+      let ref_kind_map = PropertyShorthandSearcher.search ~reader ~targets:ref_set typed_ast in
+      let ref_to_edits (ref_kind, loc) =
+        let newText =
+          match Loc_collections.LocMap.find_opt loc ref_kind_map with
+          | Some PropertyShorthandSearcher.Import ->
+            (* Can only rename the local variable of an import *)
+            let expanded_named_import =
+              Ast_builder.Statements.named_import_specifier
+                ~local:(Ast_builder.Identifiers.identifier newName)
+                (Ast_builder.Identifiers.identifier name)
+            in
+            let layout = Js_layout_generator.import_named_specifier expanded_named_import in
+            Pretty_printer.print ~source_maps:None ~skip_endline:true layout |> Source.contents
+          | Some PropertyShorthandSearcher.Shorthand ->
+            let (from_name, to_name) =
+              match ref_kind with
+              | FindRefsTypes.PropertyDefinition
+              | FindRefsTypes.PropertyAccess ->
+                (newName, name)
+              | FindRefsTypes.Local -> (name, newName)
+            in
+            let expanded_obj_prop =
+              Ast_builder.Expressions.object_property
+                (Ast_builder.Expressions.object_property_key from_name)
+                (Ast_builder.Expressions.identifier to_name)
+            in
+            let layout =
+              Js_layout_generator.object_property
+                ~opts:Js_layout_generator.default_opts
+                expanded_obj_prop
+            in
+            Pretty_printer.print ~source_maps:None ~skip_endline:true layout |> Source.contents
+          | None -> newName
+        in
+        { TextEdit.range = Flow_lsp_conversions.loc_to_lsp_range loc; newText }
+      in
+      let edits = Base.List.map ~f:ref_to_edits refs in
+      Ok { WorkspaceEdit.changes = UriMap.singleton textDocument.TextDocumentIdentifier.uri edits }
+    | Ok None ->
+      (* e.g. if it was requested on a place that's not even an identifier *)
+      Ok { WorkspaceEdit.changes = UriMap.empty }
+    | Error _ as err -> err
+  in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Ok result ->
+    let r = RenameResult result in
     let response = ResponseMessage (id, r) in
     Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
@@ -2636,6 +2705,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_document_highlight ~reader ~options ~id ~params ~metadata)
+  | LspToServer (RequestMessage (id, RenameRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_rename ~reader ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, TypeCoverageRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let textDocument = params.TypeCoverage.textDocument in

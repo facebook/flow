@@ -808,7 +808,7 @@ let do_initialize params : Initialize.result =
         documentFormattingProvider = false;
         documentRangeFormattingProvider = false;
         documentOnTypeFormattingProvider = None;
-        renameProvider = false;
+        renameProvider = true;
         documentLinkProvider = None;
         executeCommandProvider =
           Some
