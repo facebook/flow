@@ -130,6 +130,8 @@ export default function TryFlowResults({
           <ul>
             {internalError ? (
               <li>TryFlow encountered an internal error: {internalError}</li>
+            ) : errors.length === 0 ? (
+              <li>No errors!</li>
             ) : (
               errors.map((error, i) => (
                 <li key={i}>
