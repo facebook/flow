@@ -419,7 +419,7 @@ val set_environment : t -> Loc_env.t -> unit
 
 val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
 
-val run_in_synthesis_mode : t -> (unit -> 'a) -> bool * 'a
+val run_in_synthesis_mode : ?reset_placeholders:bool -> t -> (unit -> 'a) -> bool * 'a
 
 val clear_master_shared : t -> master_context -> unit
 
