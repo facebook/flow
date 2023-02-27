@@ -3001,8 +3001,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nullish.js:14:2
 
-Cannot cast array literal to union type because empty array literal [1] has an arity of 0 but tuple type [2] has an
-arity of 1. [incompatible-cast]
+Cannot cast array literal to union type because empty array literal [1] has 0 elements but tuple type [2] has 1 element.
+[incompatible-cast]
 
    nullish.js:14:2
    14| ([]: [empty] | null | void); // Error: should only show array

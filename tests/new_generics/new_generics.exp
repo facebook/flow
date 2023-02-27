@@ -45,7 +45,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:27:3
 
-Cannot call `f` because rest array [1] has an arity of 1 but tuple type [2] has an arity of 2. [invalid-tuple-arity]
+Cannot call `f` because rest array [1] has 1 element but tuple type [2] has 2 elements. [invalid-tuple-arity]
 
    arr_spread.js:27:3
    27|   f(...x); // nope
@@ -79,7 +79,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:30:3
 
-Cannot call `f` because rest array [1] has an arity of 4 but tuple type [2] has an arity of 2. [invalid-tuple-arity]
+Cannot call `f` because rest array [1] has 4 elements but tuple type [2] has 2 elements. [invalid-tuple-arity]
 
    arr_spread.js:30:3
    30|   f(42, ...x, ...x); // nope
@@ -230,7 +230,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:69:10
 
-Cannot return array literal because array literal [1] has an arity of 4 but tuple type [2] has an arity of 2.
+Cannot return array literal because array literal [1] has 4 elements but tuple type [2] has 2 elements.
 [invalid-tuple-arity]
 
    arr_spread.js:69:10

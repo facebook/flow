@@ -54,8 +54,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:18:7
 
-Cannot call `apply` with `withRest1` bound to `fn` because rest array [1] has an arity of 1 but tuple type [2] has an
-arity of 2. [invalid-tuple-arity]
+Cannot call `apply` with `withRest1` bound to `fn` because rest array [1] has 1 element but tuple type [2] has 2
+elements. [invalid-tuple-arity]
 
    apply.js:18:7
    18| apply(withRest1, ['hi']); // Error - too few args
@@ -72,8 +72,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:19:7
 
-Cannot call `apply` with `withRest1` bound to `fn` because rest array [1] has an arity of 3 but tuple type [2] has an
-arity of 2. [invalid-tuple-arity]
+Cannot call `apply` with `withRest1` bound to `fn` because rest array [1] has 3 elements but tuple type [2] has 2
+elements. [invalid-tuple-arity]
 
    apply.js:19:7
    19| apply(withRest1, ['hi', 123, false]); // Error - too many args
@@ -144,8 +144,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:37:11
 
-Cannot call `applyType` with `withRest2` bound to `fn` because rest array [1] has an arity of 1 but tuple type [2] has
-an arity of 2. [invalid-tuple-arity]
+Cannot call `applyType` with `withRest2` bound to `fn` because rest array [1] has 1 element but tuple type [2] has 2
+elements. [invalid-tuple-arity]
 
    apply.js:37:11
    37| applyType(withRest2, ['hi']); // Error - too few args
@@ -162,8 +162,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:38:11
 
-Cannot call `applyType` with `withRest2` bound to `fn` because rest array [1] has an arity of 3 but tuple type [2] has
-an arity of 2. [invalid-tuple-arity]
+Cannot call `applyType` with `withRest2` bound to `fn` because rest array [1] has 3 elements but tuple type [2] has 2
+elements. [invalid-tuple-arity]
 
    apply.js:38:11
    38| applyType(withRest2, ['hi', 123, false]); // Error - too many args
@@ -252,8 +252,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:38:3
 
-Cannot create `ExpectsChildrenTuple` element because rest array [1] has an arity of 0 but tuple type [2] has an arity of
-1. [incompatible-use]
+Cannot create `ExpectsChildrenTuple` element because rest array [1] has 0 elements but tuple type [2] has 1 element.
+[incompatible-use]
 
    jsx.js:38:3
    38| (<ExpectsChildrenTuple />); // Error - missing child
@@ -288,8 +288,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:41:3
 
-Cannot create `ExpectsChildrenTuple` element because rest array [1] has an arity of 2 but tuple type [2] has an arity of
-1. [incompatible-use]
+Cannot create `ExpectsChildrenTuple` element because rest array [1] has 2 elements but tuple type [2] has 1 element.
+[incompatible-use]
 
    jsx.js:41:3
    41| (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children

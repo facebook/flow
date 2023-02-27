@@ -454,7 +454,7 @@ Error --------------------------------------------------------------------------
 Cannot call `f` because: [incompatible-call]
  - Either property `p` is missing in tuple type [1] but exists in interface type [2].
  - Or number [3] is incompatible with string [4] in array element.
- - Or tuple type [1] has an arity of 1 but tuple type [5] has an arity of 2.
+ - Or tuple type [1] has 1 element but tuple type [5] has 2 elements.
 
    intersection-function.js:56:1
    56| f(([1]: [number]));
@@ -512,7 +512,7 @@ Error --------------------------------------------------------------------------
 Cannot call `f` because: [incompatible-call]
  - Either property `p` is missing in tuple type [1] but exists in interface type [2].
  - Or number [3] is incompatible with string [4] in array element.
- - Or tuple type [1] has an arity of 3 but tuple type [5] has an arity of 2.
+ - Or tuple type [1] has 3 elements but tuple type [5] has 2 elements.
 
    intersection-function.js:58:1
    58| f(([1, 2, 3]: [number, number, number]));
@@ -1180,7 +1180,7 @@ Error --------------------------------------------------------------------------
 Cannot cast array literal to `F` because: [incompatible-cast]
  - Either property `p` is missing in tuple type [1] but exists in interface type [2].
  - Or number [3] is incompatible with string [4] in array element.
- - Or tuple type [1] has an arity of 1 but tuple type [5] has an arity of 2.
+ - Or tuple type [1] has 1 element but tuple type [5] has 2 elements.
 
    union.js:46:8
    46| (([1]: [number]): F);
@@ -1232,7 +1232,7 @@ Error --------------------------------------------------------------------------
 Cannot cast array literal to `F` because: [incompatible-cast]
  - Either property `p` is missing in tuple type [1] but exists in interface type [2].
  - Or number [3] is incompatible with string [4] in array element.
- - Or tuple type [1] has an arity of 3 but tuple type [5] has an arity of 2.
+ - Or tuple type [1] has 3 elements but tuple type [5] has 2 elements.
 
    union.js:48:14
    48| (([1, 2, 3]: [number, number, number]): F);

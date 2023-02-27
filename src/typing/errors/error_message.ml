@@ -2323,15 +2323,24 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | ETupleArityMismatch (reasons, l1, l2, use_op) ->
     let (lower, upper) = reasons in
+    let str_of_arity n =
+      if n = 1 then
+        spf "%d element" n
+      else
+        spf "%d elements" n
+    in
     UseOp
       {
         loc = loc_of_reason lower;
         features =
           [
             ref lower;
-            text (spf " has an arity of %d but " l1);
+            text " has ";
+            text (str_of_arity l1);
+            text " but ";
             ref upper;
-            text (spf " has an arity of %d" l2);
+            text " has ";
+            text (str_of_arity l2);
           ];
         use_op;
       }
