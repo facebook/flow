@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- arity.js:2:40
 
-Cannot return `x` because tuple type [1] has an arity of 2 but tuple type [2] has an arity of 1. [invalid-tuple-arity]
+Cannot return `x` because tuple type [1] has 2 elements but tuple type [2] has 1 element. [invalid-tuple-arity]
 
    arity.js:2:40
    2| function foo4(x: [1, 2]): [1] { return x; } // error
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- arity.js:3:40
 
-Cannot return `x` because tuple type [1] has an arity of 1 but tuple type [2] has an arity of 2. [invalid-tuple-arity]
+Cannot return `x` because tuple type [1] has 1 element but tuple type [2] has 2 elements. [invalid-tuple-arity]
 
    arity.js:3:40
    3| function foo5(x: [1]): [1, 2] { return x; } // error
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- arity.js:7:2
 
-Cannot cast `foo` to tuple type because tuple type [1] has an arity of 0 but tuple type [2] has an arity of 1.
+Cannot cast `foo` to tuple type because tuple type [1] has 0 elements but tuple type [2] has 1 element.
 [invalid-tuple-arity]
 
    arity.js:7:2
@@ -70,7 +70,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:13:4
 
-Cannot cast `arr` to tuple type because array literal [1] has an arity of 3 but tuple type [2] has an arity of 2.
+Cannot cast `arr` to tuple type because array literal [1] has 3 elements but tuple type [2] has 2 elements.
 [invalid-tuple-arity]
 
    array.js:13:4
@@ -88,7 +88,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:14:4
 
-Cannot cast `arr` to tuple type because array literal [1] has an arity of 3 but tuple type [2] has an arity of 4.
+Cannot cast `arr` to tuple type because array literal [1] has 3 elements but tuple type [2] has 4 elements.
 [invalid-tuple-arity]
 
    array.js:14:4
@@ -291,8 +291,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- optional.js:2:2
 
-Cannot cast array literal to tuple type because array literal [1] has an arity of 1 but tuple type [2] has an arity of
-2. [invalid-tuple-arity]
+Cannot cast array literal to tuple type because array literal [1] has 1 element but tuple type [2] has 2 elements.
+[invalid-tuple-arity]
 
    optional.js:2:2
    2| ([0]: [number, ?string]); // Error, arity is enforced
@@ -306,8 +306,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- optional.js:4:2
 
-Cannot cast array literal to tuple type because empty array literal [1] has an arity of 0 but tuple type [2] has an
-arity of 2. [invalid-tuple-arity]
+Cannot cast array literal to tuple type because empty array literal [1] has 0 elements but tuple type [2] has 2
+elements. [invalid-tuple-arity]
 
    optional.js:4:2
    4| ([]: [?number, string]); // error, since second element is not marked optional
@@ -456,8 +456,8 @@ Tuple spread is not supported. [unsupported-syntax]
 
 Error --------------------------------------------------------------------------------------------------- too-few.js:5:5
 
-Cannot call `foo` with array literal bound to `a` because array literal [1] has an arity of 1 but tuple type [2] has an
-arity of 2. [invalid-tuple-arity]
+Cannot call `foo` with array literal bound to `a` because array literal [1] has 1 element but tuple type [2] has 2
+elements. [invalid-tuple-arity]
 
    too-few.js:5:5
    5| foo([ {} ]); // error, too few elements in array passed to a tuple
@@ -539,7 +539,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:2:13
 
-Cannot assign array literal to `b` because array literal [1] has an arity of 1 but tuple type [2] has an arity of 0.
+Cannot assign array literal to `b` because array literal [1] has 1 element but tuple type [2] has 0 elements.
 [invalid-tuple-arity]
 
    tuples.js:2:13
@@ -554,8 +554,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:3:19
 
-Cannot assign array literal to `c` because empty array literal [1] has an arity of 0 but tuple type [2] has an arity of
-1. [invalid-tuple-arity]
+Cannot assign array literal to `c` because empty array literal [1] has 0 elements but tuple type [2] has 1 element.
+[invalid-tuple-arity]
 
    tuples.js:3:19
    3| var c: [number] = []; // nope

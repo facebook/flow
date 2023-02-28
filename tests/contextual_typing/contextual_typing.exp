@@ -636,8 +636,8 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ----------------------------------------------------------------------------------------------------- lits.js:8:19
 
-Cannot assign array literal to `u` because empty array literal [1] has an arity of 0 but tuple type [2] has an arity of
-1. [invalid-tuple-arity]
+Cannot assign array literal to `u` because empty array literal [1] has 0 elements but tuple type [2] has 1 element.
+[invalid-tuple-arity]
 
    lits.js:8:19
    8| let u: [number] = []; // err

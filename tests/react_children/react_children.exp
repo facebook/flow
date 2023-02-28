@@ -1414,8 +1414,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:12:8
 
-Cannot create `Tuple` element because children array [1] has an arity of 4 but tuple type [2] has an arity of 3 in
-property `children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because children array [1] has 4 elements but tuple type [2] has 3 elements in property
+`children`. [invalid-tuple-arity]
 
    tuple.js:12:8
    12| <Tuple>{true}{'foo'}{42}{null}</Tuple>; // Error: One to many.
@@ -1444,8 +1444,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:13:8
 
-Cannot create `Tuple` element because children array [1] has an arity of 4 but tuple type [2] has an arity of 3 in
-property `children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because children array [1] has 4 elements but tuple type [2] has 3 elements in property
+`children`. [invalid-tuple-arity]
 
    tuple.js:13:8
    13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
@@ -1489,8 +1489,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:14:8
 
-Cannot create `Tuple` element because children array [1] has an arity of 4 but tuple type [2] has an arity of 3 in
-property `children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because children array [1] has 4 elements but tuple type [2] has 3 elements in property
+`children`. [invalid-tuple-arity]
 
    tuple.js:14:8
    14| <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
@@ -1504,8 +1504,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:16:8
 
-Cannot create `Tuple` element because children array [1] has an arity of 2 but tuple type [2] has an arity of 3 in
-property `children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because children array [1] has 2 elements but tuple type [2] has 3 elements in property
+`children`. [invalid-tuple-arity]
 
    tuple.js:16:8
    16| <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
@@ -1549,8 +1549,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:18:9
 
-Cannot create `Tuple` element because array literal [1] has an arity of 4 but tuple type [2] has an arity of 3 in
-property `children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because array literal [1] has 4 elements but tuple type [2] has 3 elements in property
+`children`. [invalid-tuple-arity]
 
    tuple.js:18:9
    18| <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many
