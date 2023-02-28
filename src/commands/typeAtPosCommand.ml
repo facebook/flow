@@ -72,7 +72,8 @@ let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response 
     let types_json =
       match tys with
       | Some { Ty.unevaluated; evaluated } ->
-        JSON_Object [("unevaluated", type_json unevaluated); ("evaluated", type_json evaluated)]
+        let evaluated = Base.Option.value_map evaluated ~default:JSON_Null ~f:type_json in
+        JSON_Object [("unevaluated", type_json unevaluated); ("evaluated", evaluated)]
       | _ -> JSON_Null
     in
     let json_assoc =

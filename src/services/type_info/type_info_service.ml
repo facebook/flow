@@ -13,6 +13,12 @@ let json_data_of_loc loc acc = ("loc", Reason.json_of_loc ~offset_table:None loc
 
 let json_data_of_type key str acc = (key, Hh_json.JSON_String str) :: acc
 
+let json_data_of_type_opt key str_opt acc =
+  ( key,
+    Base.Option.value_map str_opt ~default:Hh_json.JSON_Null ~f:(fun str -> Hh_json.JSON_String str)
+  )
+  :: acc
+
 let type_at_pos
     ~cx ~file_sig ~typed_ast ~omit_targ_defaults ~max_depth ~verbose_normalizer file line col =
   let loc = Loc.cursor (Some file) line col in
@@ -52,10 +58,10 @@ let type_at_pos
                 let exact_by_default = Context.exact_by_default cx in
                 Ty_printer.string_of_elt ~exact_by_default unevaluated
                )
-          |> json_data_of_type
+          |> json_data_of_type_opt
                "type_evaluated"
                (let exact_by_default = Context.exact_by_default cx in
-                Ty_printer.string_of_elt ~exact_by_default evaluated
+                Base.Option.map evaluated ~f:(Ty_printer.string_of_elt ~exact_by_default)
                )
         in
         (json_data, loc, Some tys)

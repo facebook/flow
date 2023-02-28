@@ -441,9 +441,11 @@ let layout_of_type_at_pos_result
   let layout_unevaluated =
     layout_of_elt ~prefer_single_quotes ?size ?with_comments ~exact_by_default unevaluated
   in
-  if Ty_utils.elt_equal unevaluated evaluated then
+  match (unevaluated, evaluated) with
+  | (_, None) -> layout_unevaluated
+  | (unevaluated, Some evaluated) when Ty_utils.elt_equal unevaluated evaluated ->
     layout_unevaluated
-  else
+  | (_, Some evaluated) ->
     let layout_evaluated =
       let evaluated =
         match evaluated with
