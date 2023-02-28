@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+external win32_get_last_error : unit -> int = "flow_win32_get_last_error"
+
 let spf = Printf.sprintf
 
 (* So there's a bug in Unix.select on Windows. Basically, select is supposed to be
@@ -44,13 +46,15 @@ class windows_select =
   let debug_select fds_r fds_w fds_e timeout =
     try Unix.select fds_r fds_w fds_e timeout with
     | Unix.Unix_error (Unix.EACCES, _, _) ->
+      let win_err = win32_get_last_error () in
       let args =
         Printf.sprintf
-          "[%s], [%s], [%s], %f"
+          "[%s], [%s], [%s], %f, %d"
           (fds_r |> List.map info_of_fd |> String.concat "; ")
           (fds_w |> List.map info_of_fd |> String.concat "; ")
           (fds_e |> List.map info_of_fd |> String.concat "; ")
           timeout
+          win_err
       in
       raise (Unix.Unix_error (Unix.EACCES, "select", args))
   in
