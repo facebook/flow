@@ -5127,10 +5127,8 @@ module Make
         | Array _
         | ArrowFunction _
         | Class _
-        | Comprehension _
         | Conditional _
         | Function _
-        | Generator _
         | Import _
         | JSXElement _
         | JSXFragment _

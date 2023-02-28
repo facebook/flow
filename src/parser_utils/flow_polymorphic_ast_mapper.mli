@@ -100,12 +100,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method syntax_with_internal :
       ('M, 'M Ast.Comment.t list) Ast.Syntax.t -> ('N, 'N Ast.Comment.t list) Ast.Syntax.t
 
-    method comprehension :
-      ('M, 'T) Ast.Expression.Comprehension.t -> ('N, 'U) Ast.Expression.Comprehension.t
-
-    method comprehension_block :
-      ('M, 'T) Ast.Expression.Comprehension.Block.t -> ('N, 'U) Ast.Expression.Comprehension.Block.t
-
     method conditional :
       ('M, 'T) Ast.Expression.Conditional.t -> ('N, 'U) Ast.Expression.Conditional.t
 
@@ -277,8 +271,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Type.Function.ThisParam.t -> ('N, 'U) Ast.Type.Function.ThisParam.t
 
     method function_type : ('M, 'T) Ast.Type.Function.t -> ('N, 'U) Ast.Type.Function.t
-
-    method generator : ('M, 'T) Ast.Expression.Generator.t -> ('N, 'U) Ast.Expression.Generator.t
 
     method generic_identifier_type :
       ('M, 'T) Ast.Type.Generic.Identifier.t -> ('N, 'U) Ast.Type.Generic.Identifier.t

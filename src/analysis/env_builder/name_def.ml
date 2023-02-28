@@ -541,8 +541,6 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.Assignment _
     | Ast.Expression.Binary _
     | Ast.Expression.Class _
-    | Ast.Expression.Comprehension _
-    | Ast.Expression.Generator _
     | Ast.Expression.Import _
     | Ast.Expression.JSXFragment _
     | Ast.Expression.Member _
@@ -2439,8 +2437,6 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       | Ast.Expression.Unary expr -> this#visit_unary_expression ~hints expr
       | Ast.Expression.Conditional expr -> this#visit_conditional ~hints expr
       | Ast.Expression.Class _
-      | Ast.Expression.Comprehension _
-      | Ast.Expression.Generator _
       | Ast.Expression.Identifier _
       | Ast.Expression.Import _
       | Ast.Expression.JSXElement _

@@ -200,11 +200,8 @@ class ['loc] mapper =
       | (loc, Binary x) -> id_loc this#binary loc x expr (fun x -> (loc, Binary x))
       | (loc, Call x) -> id_loc this#call loc x expr (fun x -> (loc, Call x))
       | (loc, Class x) -> id_loc this#class_expression loc x expr (fun x -> (loc, Class x))
-      | (loc, Comprehension x) ->
-        id_loc this#comprehension loc x expr (fun x -> (loc, Comprehension x))
       | (loc, Conditional x) -> id_loc this#conditional loc x expr (fun x -> (loc, Conditional x))
       | (loc, Function x) -> id_loc this#function_expression loc x expr (fun x -> (loc, Function x))
-      | (loc, Generator x) -> id_loc this#generator loc x expr (fun x -> (loc, Generator x))
       | (loc, Identifier x) -> id this#identifier x expr (fun x -> (loc, Identifier x))
       | (loc, Import x) -> id (this#import loc) x expr (fun x -> (loc, Import x))
       | (loc, JSXElement x) -> id_loc this#jsx_element loc x expr (fun x -> (loc, JSXElement x))
@@ -543,9 +540,6 @@ class ['loc] mapper =
           decorators = decorators';
           comments = comments';
         }
-
-    (* TODO *)
-    method comprehension _loc (expr : ('loc, 'loc) Ast.Expression.Comprehension.t) = expr
 
     method conditional _loc (expr : ('loc, 'loc) Ast.Expression.Conditional.t) =
       let open Ast.Expression.Conditional in
@@ -1724,9 +1718,6 @@ class ['loc] mapper =
 
     method function_identifier (ident : ('loc, 'loc) Ast.Identifier.t) =
       this#pattern_identifier ~kind:Ast.Variable.Var ident
-
-    (* TODO *)
-    method generator _loc (expr : ('loc, 'loc) Ast.Expression.Generator.t) = expr
 
     method identifier (id : ('loc, 'loc) Ast.Identifier.t) =
       let open Ast.Identifier in

@@ -291,10 +291,8 @@ module ExpressionSort = struct
     | Binary
     | Call
     | Class
-    | Comprehension
     | Conditional
     | Function
-    | Generator
     | Identifier
     | Import
     | JSXElement
@@ -325,10 +323,8 @@ module ExpressionSort = struct
     | Binary -> "binary expression"
     | Call -> "call expression"
     | Class -> "class"
-    | Comprehension -> "comprehension expression"
     | Conditional -> "conditional expression"
     | Function -> "function"
-    | Generator -> "generator"
     | Identifier -> "identifier"
     | Import -> "import expression"
     | JSXElement -> "JSX element"

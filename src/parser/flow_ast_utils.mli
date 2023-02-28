@@ -95,10 +95,8 @@ module ExpressionSort : sig
     | Binary
     | Call
     | Class
-    | Comprehension
     | Conditional
     | Function
-    | Generator
     | Identifier
     | Import
     | JSXElement

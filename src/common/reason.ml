@@ -1116,10 +1116,6 @@ let rec code_desc_of_expression ~wrap (_, x) =
     do_wrap ("yield* " ^ code_desc_of_expression ~wrap:false x)
   | Yield { Yield.argument = None; delegate = false; _ } -> "yield"
   | Yield { Yield.argument = None; delegate = true; _ } -> "yield*"
-  (* TODO *)
-  | Comprehension _
-  | Generator _ ->
-    do_wrap "..."
 
 and code_desc_of_pattern (_, x) =
   let open Ast.Pattern in

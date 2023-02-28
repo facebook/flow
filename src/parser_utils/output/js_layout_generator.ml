@@ -88,8 +88,6 @@ let normal_context = { left = Normal_left; group = Normal_group }
 let context_after_token ctxt = { ctxt with left = Normal_left }
 
 (* JS layout helpers *)
-let not_supported loc message = failwith (message ^ " at " ^ Loc.debug_to_string loc)
-
 let with_semicolon node = fuse [node; Atom ";"]
 
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
@@ -200,10 +198,6 @@ let precedence_of_expression expr =
     precedence_of_assignment
   | (_, E.Yield _) -> 2
   | (_, E.Sequence _) -> 0
-  (* Expressions that always need parens (probably) *)
-  | (_, E.Comprehension _)
-  | (_, E.Generator _) ->
-    0
 
 let definitely_needs_parens =
   let module E = Ast.Expression in
@@ -1255,10 +1249,6 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.Import { E.Import.argument; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse [Atom "import"; wrap_in_parens (expression ~opts argument)]
-      (* Not supported *)
-      | E.Comprehension _
-      | E.Generator _ ->
-        not_supported loc "Comprehension not supported"
     )
 
 and call ?(optional = false) ~precedence ~ctxt ~opts call_node loc =

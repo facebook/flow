@@ -2610,23 +2610,11 @@ let rec expression opts scope tbls (loc, expr) =
       ( loc,
         SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Call))
       )
-  | E.Comprehension _ ->
-    Err
-      ( loc,
-        SigError
-          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Comprehension))
-      )
   | E.Conditional _ ->
     Err
       ( loc,
         SigError
           (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Conditional))
-      )
-  | E.Generator _ ->
-    Err
-      ( loc,
-        SigError
-          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Generator))
       )
   | E.JSXFragment _ ->
     Err

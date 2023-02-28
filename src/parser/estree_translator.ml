@@ -626,22 +626,6 @@ with type t = Impl.t = struct
           "YieldExpression"
           loc
           [("argument", option expression argument); ("delegate", bool delegate)]
-      | (loc, Comprehension { Comprehension.blocks; filter }) ->
-        node
-          "ComprehensionExpression"
-          loc
-          [
-            ("blocks", array_of_list comprehension_block blocks);
-            ("filter", option expression filter);
-          ]
-      | (loc, Generator { Generator.blocks; filter }) ->
-        node
-          "GeneratorExpression"
-          loc
-          [
-            ("blocks", array_of_list comprehension_block blocks);
-            ("filter", option expression filter);
-          ]
       | (_loc, Identifier id) -> identifier id
       | (loc, Literal lit) -> literal (loc, lit)
       | (loc, TemplateLiteral lit) -> template_literal (loc, lit)
@@ -1341,11 +1325,6 @@ with type t = Impl.t = struct
       | Hole _ -> null
       | Expression expr -> expression expr
       | Spread spread -> spread_element spread
-    and comprehension_block (loc, { Expression.Comprehension.Block.left; right; each }) =
-      node
-        "ComprehensionBlock"
-        loc
-        [("left", pattern left); ("right", expression right); ("each", bool each)]
     and number_literal (loc, { NumberLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", number value); ("raw", string raw)]
     and bigint_literal (loc, { BigIntLiteral.raw; comments; _ }) =
