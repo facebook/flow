@@ -535,6 +535,8 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.JSXElement _ ->
       (* Implicit instantiation might happen in these nodes, and we might have underconstrained targs. *)
       false
+    (* TaggedTemplates are function calls! They are not automatically synthesizable *)
+    | Ast.Expression.TaggedTemplate _ -> false
     | Ast.Expression.Identifier (name_loc, { Ast.Identifier.name; _ }) ->
       not (autocomplete_hooks.Env_api.With_ALoc.id_hook name name_loc)
     | Ast.Expression.Literal _ -> not (autocomplete_hooks.Env_api.With_ALoc.literal_hook loc)
@@ -548,7 +550,6 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.OptionalMember _
     | Ast.Expression.Sequence _
     | Ast.Expression.Super _
-    | Ast.Expression.TaggedTemplate _
     | Ast.Expression.TemplateLiteral _
     | Ast.Expression.This _
     | Ast.Expression.TypeCast _
