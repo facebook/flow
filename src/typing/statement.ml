@@ -5918,12 +5918,7 @@ module Make
     in
     let get_values ~arr_reason obj_t =
       Tvar.mk_where cx arr_reason (fun tvar ->
-          let values_reason =
-            update_desc_reason
-              (fun desc -> RCustom (spf "element of %s" (string_of_desc desc)))
-              reason
-          in
-          Flow.flow cx (obj_t, GetDictValuesT (values_reason, UseT (use_op, tvar)))
+          Flow.flow cx (obj_t, GetDictValuesT (reason, UseT (use_op, tvar)))
       )
     in
     match (m, targs, args) with
