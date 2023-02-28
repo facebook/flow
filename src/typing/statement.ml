@@ -542,8 +542,8 @@ module Make
       let ast = (loc, Continue { Continue.label = label_ast; comments }) in
       let abnormal = Abnormal.Continue label_opt in
       Abnormal.throw_stmt_control_flow_exception ast abnormal
-    | (_, With _) as s ->
-      (* TODO or disallow? *)
+    | (loc, With _) as s ->
+      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, WithStatement));
       Tast_utils.error_mapper#statement s
     | (loc, DeclareTypeAlias alias) ->
       let (_, type_alias_ast) = type_alias cx loc alias in

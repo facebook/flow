@@ -615,6 +615,7 @@ and 'loc unsupported_syntax =
       name: string;
       static: bool;
     }
+  | WithStatement
 
 and lower_kind =
   | Possibly_null
@@ -708,7 +709,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
       | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
       | ImportDynamicArgument | IllegalName | TupleOptionalElement | TupleSpreadElement
-      | UnsupportedInternalSlot _ | AnnotationInsideDestructuring ) as u ->
+      | UnsupportedInternalSlot _ | AnnotationInsideDestructuring | WithStatement ) as u ->
       u
   in
   function
@@ -2684,6 +2685,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Unsupported internal slot "; code name; text "."]
       | UnsupportedInternalSlot { name; static = true } ->
         [text "Unsupported static internal slot "; code name; text "."]
+      | WithStatement -> [text "Flow doesn't support "; code "with"; text " statements."]
     in
     Normal { features }
   | EUseArrayLiteral _ ->
