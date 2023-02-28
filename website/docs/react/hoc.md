@@ -21,8 +21,7 @@ Let's take a look at how you can type some example HOCs.
 
 Let's start with the simplest HOC:
 
-```js
-//@flow
+```js flow-check
 import * as React from 'react';
 
 function trivialHOC<Config: {}>(
@@ -48,8 +47,7 @@ To remove a prop from the config, we can take a component that includes the
 prop and return a component that does not. It's best to construct these
 types using object type spread.
 
-```js
-//@flow
+```js flow-check
 import * as React from 'react';
 
 type InjectedProps = {| foo: number |}
@@ -82,8 +80,7 @@ Recall that the instance type of a function component is `void`. Our example
 above wraps a component in a function, so the returned component has the instance
 type `void`.
 
-```js
-//@flow
+```js flow-check
 import * as React from 'react';
 
 type InjectedProps = {| foo: number |}
@@ -118,8 +115,7 @@ We get this error message because `React.AbstractComponent<Config>` doesn't set 
 parameter, so it is automatically set to `mixed`. If we wanted to preserve the instance type
 of the component, we can use [`React.forwardRef`](https://reactjs.org/docs/forwarding-refs.html):
 
-```js
-//@flow
+```js flow-check
 import * as React from 'react';
 
 type InjectedProps = {| foo: number |}
@@ -132,11 +128,11 @@ function injectAndPreserveInstance<Config, Instance>(
   );
 }
 
-class MyComponent extends React.Component<{
+class MyComponent extends React.Component<{|
   a: number,
   b: number,
   ...InjectedProps,
-}> {}
+|}> {}
 
 const MyEnhancedComponent = injectAndPreserveInstance(MyComponent);
 
@@ -149,8 +145,7 @@ const ref = React.createRef<MyComponent>();
 ### Exporting Wrapped Components {#toc-exporting-wrapped-components}
 
 If you try to export a wrapped component, chances are that you'll run into a missing annotation error:
-```js
-//@flow
+```js flow-check
 import * as React from 'react';
 
 function trivialHOC<Config: {}>(

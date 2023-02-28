@@ -12,7 +12,6 @@ possible.**
 For example, the following code will not report any errors:
 
 ```js flow-check
-// @flow
 function add(one: any, two: any): number {
   return one + two;
 }
@@ -25,7 +24,6 @@ add({}, []);   // Works.
 Even code that will cause runtime errors will not be caught by Flow:
 
 ```js flow-check
-// @flow
 function getNestedProperty(obj: any) {
   return obj.foo.bar.baz;
 }

@@ -17,7 +17,7 @@ new Array(3);       // [undefined, undefined, undefined]
 
 You can also create arrays and add values to them later on:
 
-```js
+```js flow-check
 let arr = []; // []
 arr[0] = 1;   // [1]
 arr[1] = 2;   // [1, 2]
@@ -30,13 +30,13 @@ To create an array type you can use `Array<Type>` type where `Type` is the type
 of elements in the array. For example, to create a type for an array of numbers
 you use `Array<number>`.
 
-```js
+```js flow-check
 let arr: Array<number> = [1, 2, 3];
 ```
 
 You can put any type within `Array<Type>`.
 
-```js
+```js flow-check
 let arr1: Array<boolean> = [true, false, true];
 let arr2: Array<string> = ["A", "B", "C"];
 let arr3: Array<mixed> = [1, true, "three"]
@@ -53,7 +53,6 @@ let arr: number[] = [0, 1, 2, 3];
 Just note that `?Type[]` is the equivalent of `?Array<T>` and not `Array<?T>`.
 
 ```js flow-check
-// @flow
 let arr1: ?number[] = null;   // Works!
 let arr2: ?number[] = [1, 2]; // Works!
 let arr3: ?number[] = [null]; // Error!
@@ -62,7 +61,6 @@ let arr3: ?number[] = [null]; // Error!
 If you want to make it `Array<?T>` you can use parenthesis like: `(?Type)[]`
 
 ```js flow-check
-// @flow
 let arr1: (?number)[] = null;   // Error!
 let arr2: (?number)[] = [1, 2]; // Works!
 let arr3: (?number)[] = [null]; // Works!
@@ -79,7 +77,6 @@ For example, you could be accessing an element that is out of the bounds of the
 array.
 
 ```js flow-check
-// @flow
 let array: Array<number> = [0, 1, 2];
 let value: number = array[3]; // Works.
                        // ^ undefined
@@ -89,7 +86,6 @@ Or you could be accessing an element that does not exist if it is a "sparse
 array".
 
 ```js flow-check
-// @flow
 let array: Array<number> = [];
 
 array[0] = 0;
@@ -126,7 +122,6 @@ not contain any methods that will allow an object of this type to be mutated
 (no `push()`, `pop()`, etc.).
 
 ```js flow-check
-// @flow
 const readonlyArray: $ReadOnlyArray<number> = [1, 2, 3]
 
 const first = readonlyArray[0] // OK to read
@@ -137,7 +132,6 @@ readonlyArray.push(4)          // Error!
 Note that an array of type `$ReadOnlyArray<T>` can still have mutable _elements_:
 
 ```js flow-check
-// @flow
 const readonlyArray: $ReadOnlyArray<{x: number}> = [{x: 1}];
 readonlyArray[0] = {x: 42}; // Error!
 readonlyArray[0].x = 42; // OK
@@ -151,7 +145,6 @@ type parameter is *covariant* while `Array`'s type parameter is *invariant*. Tha
 Take, for instance, the following scenario:
 
 ```js flow-check
-// @flow
 const someOperation = (arr: Array<number | string>) => {
   // Here we could do `arr.push('a string')`
 }
@@ -167,7 +160,6 @@ annotating the parameter as `$ReadOnlyArray` instead in this case, Flow can be
 sure this won't happen and no errors will occur:
 
 ```js flow-check
-// @flow
 const someOperation = (arr: $ReadOnlyArray<number | string>) => {
   // Nothing can be added to `arr`
 }

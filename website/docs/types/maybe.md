@@ -14,7 +14,6 @@ Maybe types accept the provided type as well as `null` or `undefined`. So
 `?number` would mean `number`, `null`, or `undefined`.
 
 ```js flow-check
-// @flow
 function acceptsMaybeNumber(value: ?number) {
   // ...
 }
@@ -29,7 +28,6 @@ acceptsMaybeNumber("42");      // Error!
 In the case of objects, a **missing** property is not the same thing as an explicitly `undefined` property.
 
 ```js flow-check
-// @flow
 function acceptsMaybeProp({ value }: { value: ?number }) {
   // ...
 }
@@ -47,7 +45,6 @@ Imagine we have the type `?number`, if we want to use that value as a `number`
 we'll need to first check that it is not `null` or `undefined`.
 
 ```js flow-check
-// @flow
 function acceptsMaybeNumber(value: ?number) {
   if (value !== null && value !== undefined) {
     return value * 2;
@@ -59,7 +56,6 @@ You can simplify the two checks against `null` and `undefined` using a single
 `!= null` check which will do both.
 
 ```js flow-check
-// @flow
 function acceptsMaybeNumber(value: ?number) {
   if (value != null) {
     return value * 2;
@@ -71,7 +67,6 @@ You could also flip it around, and check to make sure that the value has a type
 of `number` before using it.
 
 ```js flow-check
-// @flow
 function acceptsMaybeNumber(value: ?number) {
   if (typeof value === 'number') {
     return value * 2;

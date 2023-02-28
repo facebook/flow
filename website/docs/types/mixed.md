@@ -9,7 +9,7 @@ In general, programs have several different categories of types:
 
 Here the input value can only be a `number`.
 
-```js
+```js flow-check
 function square(n: number) {
   return n * n;
 }
@@ -19,7 +19,7 @@ function square(n: number) {
 
 Here the input value could be either a `string` or a `number`.
 
-```js
+```js flow-check
 function stringifyBasicValue(value: string | number) {
   return '' + value;
 }
@@ -30,7 +30,7 @@ function stringifyBasicValue(value: string | number) {
 Here the return type will be the same as the type of whatever value is passed
 into the function.
 
-```js
+```js flow-check
 function identity<T>(value: T): T {
   return value;
 }
@@ -46,7 +46,7 @@ However, there is also a fourth category.
 Here the passed in value is an unknown type, it could be any type and the
 function would still work.
 
-```js
+```js flow-check
 function getTypeOf(value: mixed): string {
   return typeof value;
 }
@@ -62,7 +62,6 @@ You should represent these values with `mixed`.
 anything will work.
 
 ```js flow-check
-// @flow
 function stringify(value: mixed) {
   // ...
 }
@@ -77,7 +76,6 @@ When you try to use a value of a `mixed` type you must first figure out what
 the actual type is or you'll end up with an error.
 
 ```js flow-check
-// @flow
 function stringify(value: mixed) {
   // $ExpectError
   return "" + value; // Error!
@@ -89,7 +87,6 @@ stringify("foo");
 Instead you must ensure the value is a certain type by refining it.
 
 ```js flow-check
-// @flow
 function stringify(value: mixed) {
   if (typeof value === 'string') {
     return "" + value; // Works!

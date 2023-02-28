@@ -11,7 +11,7 @@ your React component is [`React.Node`](../types/#toc-react-node).
 
 Like this:
 
-```js
+```js flow-check
 import * as React from 'react';
 
 type Props = {
@@ -241,7 +241,7 @@ See how we added `<View>` and `<SomeOtherComponent>` as children to
 `<TabBarIOS>`? This is not allowed and `<TabBarIOS>` will throw an error. How do
 we make sure Flow does not allow this pattern?
 
-```js
+```js flow-check
 import * as React from 'react';
 
 class TabBarIOSItem extends React.Component<{}> {
@@ -253,7 +253,7 @@ type Props = {
 };
 
 class TabBarIOS extends React.Component<Props> {
-  static Item = TabBarIOSItem;
+  static Item: Class<TabBarIOSItem> = TabBarIOSItem;
   // implementation...
 }
 

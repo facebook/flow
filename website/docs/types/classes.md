@@ -9,7 +9,7 @@ in Flow operate both as a value and a type.
 You write classes the same way you would without Flow, but then you can use the
 name of the class as a type.
 
-```js
+```js flow-check
 class MyClass {
   // ...
 }
@@ -29,9 +29,9 @@ types.
 Just like in functions, class methods can have annotations for both parameters
 (input) and returns (output).
 
-```js
+```js flow-check
 class MyClass {
-  method(value: string): number { /* ... */ }
+  method(value: string): number { return 0 }
 }
 ```
 
@@ -40,7 +40,7 @@ However, if one is not provided, Flow will infer the class instance type (or the
 instead of `mixed`. When an explicit `this` parameter is provided, it must be a [supertype](../../lang/subtypes/) of
 the class instance type (or class type for static methods).
 
-```js
+```js flow-check
 class MyClass {
   method(this : interface { x : string }): void { /* ... */ } // x is missing in `MyClass`
 }
@@ -136,7 +136,7 @@ class MyClass {
 
 You must first call `super(...)` in a derived class before you can access `this` and `super`.
 
-```js
+```js flow-check
 class Base {
   bar: number;
 }
@@ -157,7 +157,7 @@ class MyClass extends Base {
 
 However, Flow will not enforce that all class properties are initialized in constructors.
 
-```js
+```js flow-check
 class MyClass {
   foo: number;
   bar: number;
@@ -176,11 +176,11 @@ class MyClass {
 
 Classes can also have their own [generics](../generics).
 
-```js
+```js flow-check
 class MyClass<A, B, C> {
   property: A;
   method(val: B): C {
-    // ...
+    throw new Error();
   }
 }
 ```
@@ -189,8 +189,7 @@ Class generics are [parameterized](../generics#toc-parameterized-generics).
 When you use a class as a type you need to pass parameters for each of its
 generics.
 
-```js
-// @flow
+```js flow-check
 class MyClass<A, B, C> {
   constructor(arg1: A, arg2: B, arg3: C) {
     // ...

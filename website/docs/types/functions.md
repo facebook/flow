@@ -290,10 +290,10 @@ is passed in as an argument to the respective call.
 
 For example, consider the *inlined* refinement
 
-```js
+```js flow-check
 declare var obj: { n?: number };
 
-if (obj.n) {
+if (obj.n != null) {
   const n: number = obj.n;
 }
 ```
@@ -361,7 +361,7 @@ You could use type arguments to capture the arguments and return type, to do mor
 function func<TArgs: $ReadOnlyArray<mixed>, TReturn>(
   callback: (...TArgs) => TReturn,
 ): (boolean, ...TArgs) => Array<TReturn> {
-  return (b, ...args) => {
+  return (b, ...args): Array<TReturn> => {
     if (b) {
       return [callback(...args)];
     } else {

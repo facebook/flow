@@ -6,7 +6,7 @@ slug: /types/opaque-types
 Opaque type aliases are type aliases that do not allow access to their
 underlying type outside of the file in which they are defined.
 
-```js
+```js flow-check
 opaque type ID = string;
 ```
 
@@ -14,8 +14,7 @@ Opaque type aliases, like regular type aliases, may be used anywhere a type can
 be used.
 
 
-```js
-// @flow
+```js flow-check
 opaque type ID = string;
 
 function identity(x: ID): ID {
@@ -42,7 +41,7 @@ opaque type Alias: SuperType = Type;
 
 Any type can appear as the super type or type of an opaque type alias.
 
-```js
+```js flow-check
 opaque type StringAlias = string;
 opaque type ObjectAlias = {
   property: string,
@@ -60,8 +59,7 @@ opaque type VeryOpaque: AliasAlias = ObjectAlias;
 When in the same file the alias is defined, opaque type aliases behave exactly
 as regular [type aliases](../aliases/) do.
 
-```js
-//@flow
+```js flow-check
 opaque type NumberAlias = number;
 
 (0: NumberAlias);
@@ -125,8 +123,7 @@ function toID(x: string): ID {
 When you create an opaque type alias with a subtyping constraint, the type in
 the type position must be a subtype of the type in the super type position.
 
-```js
-//@flow
+```js flow-check
 opaque type Bad: string = number; // Error: number is not a subtype of string
 opaque type Good: {x: string} = {x: string, y: number};
 ```
@@ -136,8 +133,7 @@ opaque type Good: {x: string} = {x: string, y: number};
 Opaque type aliases can also have their own [generics](../generics/),
 and they work exactly as generics do in regular [type aliases](../aliases#toc-type-alias-generics)
 
-```js
-// @flow
+```js flow-check
 opaque type MyObject<A, B, C>: { foo: A, bar: B } = {
   foo: A,
   bar: B,
@@ -157,7 +153,7 @@ You can also declare opaque type aliases in
 [libdefs](../../libdefs). There, you omit the underlying
 type, but may still optionally include a super type.
 
-```js
+```js flow-check
 declare opaque type Foo;
 declare opaque type PositiveNumber: number;
 ```

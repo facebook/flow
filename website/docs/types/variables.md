@@ -20,7 +20,6 @@ In Flow these fall into two groups:
 - `const` - variables that **cannot** be reassigned.
 
 ```js flow-check
-// @flow
 var varVariable = 1;
 let letVariable = 1;
 const constVariable = 1;
@@ -40,7 +39,6 @@ Flow can either infer the type from the value you are assigning to it or you
 can provide it with a type.
 
 ```js flow-check
-// @flow
 const foo /* : number */ = 1;
 const bar: number = 2;
 ```
@@ -54,7 +52,6 @@ Similar to `const`, Flow can either infer the type from the value you are
 assigning to it or you can provide it with a type:
 
 ```js flow-check
-// @flow
 var fooVar /* : number */ = 1;
 let fooLet /* : number */ = 1;
 var barVar: number = 2;
@@ -65,7 +62,6 @@ When you provide a type, you will be able to re-assign the value, but it must
 always be of a compatible type.
 
 ```js flow-check
-// @flow
 let foo: number = 1;
 foo = 2;   // Works!
 // $ExpectError

@@ -13,10 +13,10 @@ in React 16.3.
 Flow will infer types from the way you use a context's `{ Provider, Consumer }`
 pair:
 
-```js
+```js flow-check
 import React from "react";
 
-const Theme = React.createContext();
+const Theme = React.createContext<?string>();
 
 <Theme.Provider value="light" />;
 
@@ -34,7 +34,7 @@ const Theme = React.createContext();
 If your context has a default value, Flow will type your consumer component
 accordingly:
 
-```js
+```js flow-check
 import React from "react";
 
 const Theme = React.createContext("light");
@@ -45,7 +45,7 @@ const Theme = React.createContext("light");
 To explicitly specify the type of a context value, pass a type parameter to
 `createContext`:
 
-```js
+```js flow-check
 import React from "react";
 
 const Theme = React.createContext<"light" | "dark">("light");
