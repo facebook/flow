@@ -310,7 +310,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
            "result": [
              {
                "name": "bar",
-               "type": "string | any"
+               "type": "any | string"
              }
            ]
          }
