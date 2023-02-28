@@ -10,14 +10,14 @@ and assign your instance to that property in your ref function.
 [`ref` functions]: https://facebook.github.io/react/docs/refs-and-the-dom.html
 [maybe instance type]: ../../types/maybe/
 
-```js
+```js flow-check
 import * as React from 'react';
 
 class MyComponent extends React.Component<{}> {
   // The `?` here is important because you may not always have the instance.
   button: ?HTMLButtonElement;
 
-  render() {
+  render(): React.Node {
     return <button ref={button => (this.button = button)}>Toggle</button>;
   }
 }

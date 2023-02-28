@@ -39,7 +39,7 @@ type Alias = Type;
 
 Any type can appear inside a type alias.
 
-```js
+```js flow-check
 type NumberAlias = number;
 type ObjectAlias = {
   property: string,

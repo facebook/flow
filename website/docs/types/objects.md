@@ -112,7 +112,7 @@ let a = {
 }
 let b = {
   x : 3,
-  foo() { return b.x; } // works!
+  foo(): number { return b.x; } // works!
 }
 ```
 

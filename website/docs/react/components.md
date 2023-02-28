@@ -43,7 +43,7 @@ class MyComponent extends React.Component {
 
 Now, let's Flowify the component we just wrote:
 
-```js
+```js flow-check
 import * as React from 'react';
 
 type Props = {
@@ -52,7 +52,7 @@ type Props = {
 };
 
 class MyComponent extends React.Component<Props> {
-  render() {
+  render(): React.Node {
     this.props.doesNotExist; // Error! You did not define a `doesNotExist` prop.
 
     return <div>{this.props.bar}</div>;
@@ -95,7 +95,7 @@ To add a type for state to your React class component then create a new object
 type, in the example below we name it `State`, and pass it as the second type
 argument to `React.Component`.
 
-```js
+```js flow-check
 import * as React from 'react';
 
 type Props = { /* ... */ };
@@ -105,7 +105,7 @@ type State = {
 };
 
 class MyComponent extends React.Component<Props, State> {
-  state = {
+  state: State = {
     count: 0,
   };
 
@@ -117,7 +117,7 @@ class MyComponent extends React.Component<Props, State> {
     }, 1000);
   }
 
-  render() {
+  render(): React.Node {
     return <div>Count: {this.state.count}</div>;
   }
 }
@@ -141,7 +141,7 @@ with a default then React will substitute that prop with its corresponding
 value from `defaultProps`. Flow supports this notion as well. To type default
 props add a `static defaultProps` property to your class.
 
-```js
+```js flow-check
 import * as React from 'react';
 
 type Props = {
@@ -150,7 +150,7 @@ type Props = {
 };
 
 class MyComponent extends React.Component<Props> {
-  static defaultProps = {
+  static defaultProps: { foo: number } = {
     foo: 42, // ...but we have a default prop for foo.
   };
 }
@@ -167,7 +167,7 @@ don't have to add any type annotations to use default props.
 
 If you would like to add a type annotation to `defaultProps` you can define the
 type as
-```js
+```js flow-check
 type DefaultProps = {|
   foo: number,
 |}
@@ -186,7 +186,7 @@ This way you avoid duplicating the properties that happen to have a default valu
 In addition to classes, React also supports stateless functional components.
 You type these components like you would type a function:
 
-```js
+```js flow-check
 import * as React from 'react';
 
 type Props = {
@@ -209,7 +209,7 @@ React also supports default props on stateless functional components. Similarly
 to class components, default props for stateless functional components will
 work without any extra type annotations.
 
-```js
+```js flow-check
 import * as React from 'react';
 
 type Props = {

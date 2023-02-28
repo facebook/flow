@@ -19,7 +19,7 @@ class MyComponent extends React.Component<{}> {
 
 To type event handlers you may use the `SyntheticEvent<T>` types like this:
 
-```js
+```js flow-check
 import * as React from 'react';
 
 class MyComponent extends React.Component<{}, { count: number }> {
@@ -32,7 +32,7 @@ class MyComponent extends React.Component<{}, { count: number }> {
     }));
   };
 
-  render() {
+  render(): React.Node {
     return (
       <div>
         <p>Count: {this.state.count}</p>

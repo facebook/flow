@@ -16,7 +16,7 @@ JavaScript has a number of different primitive types
 
 The primitive types appear in the language as either literal values.
 
-```js
+```js flow-check
 true;
 "hello";
 3.14;
@@ -157,7 +157,6 @@ concatenating them.
 Flow will only accept strings and number when concatenating them to strings.
 
 ```js flow-check
-// @flow
 "foo" + "foo"; // Works!
 "foo" + 42;    // Works!
 "foo" + {};    // Error!
