@@ -68,7 +68,7 @@ module.exports = (suite(
         snapshot('locals.js', 22, 16, 'imports_2.json'),
         snapshot('locals.js', 23, 2, 'imports_3.json'),
         snapshot('locals.js', 26, 8, 'imports_4.json'),
-        snapshot('locals.js', 27, 8, 'imports_4.json'),
+        snapshot('locals.js', 27, 8, 'imports_5.json'),
       ]),
     ];
   },

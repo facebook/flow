@@ -1,0 +1,35 @@
+{
+  "method": "textDocument/rename",
+  "result": {
+    "changes": {
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js": [
+        {
+          "range": {
+            "start": {
+              "line": 25,
+              "character": 22
+            },
+            "end": {
+              "line": 25,
+              "character": 30
+            }
+          },
+          "newText": "wutLocal as NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 27,
+              "character": 6
+            },
+            "end": {
+              "line": 27,
+              "character": 14
+            }
+          },
+          "newText": "NEW_NAME"
+        }
+      ]
+    }
+  }
+}
