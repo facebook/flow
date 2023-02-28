@@ -1361,6 +1361,10 @@ let resolve_component_type_params cx graph component =
 
 let resolve_component cx graph component =
   let open Name_def_ordering in
+  if Context.lti cx then begin
+    let cache = Context.constraint_cache cx in
+    cache := FlowSet.empty
+  end;
   let resolve_illegal entries =
     EnvSet.iter
       (fun (kind, loc) ->
