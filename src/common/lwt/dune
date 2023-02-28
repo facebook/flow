@@ -2,6 +2,9 @@
  (name flow_common_lwt)
  (wrapped false)
  (libraries base lwt lwt.unix utils_core)
+ (foreign_stubs
+  (language c)
+  (names lwtInit_stubs))
  (preprocess
   (pps lwt_ppx)))
 
