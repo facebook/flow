@@ -1994,71 +1994,107 @@ let handle_persistent_signaturehelp_lsp
       | Error _ ->
         Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason:"Failed to normalize type" metadata)))
 
+let find_local_references ~reader ~options ~client ~profiling ~env pos :
+    (FindRefsTypes.find_refs_ok, string) result * Hh_json.json option =
+  let file_input = file_input_of_text_document_position ~client pos in
+  match of_file_input ~options ~env file_input with
+  | Error (Failed reason) -> (Error reason, None)
+  | Error (Skipped reason) -> (Ok None, json_of_skipped reason)
+  | Ok (file_key, content) ->
+    let (file_artifacts_result, did_hit_cache) =
+      let type_parse_artifacts_cache =
+        Some (Persistent_connection.type_parse_artifacts_cache client)
+      in
+      let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
+      type_parse_artifacts_with_cache
+        ~options
+        ~profiling
+        ~type_parse_artifacts_cache
+        file_key
+        parse_result
+    in
+
+    (match file_artifacts_result with
+    | Error _parse_errors ->
+      let err_str = "Couldn't parse file in parse_artifacts" in
+      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+      (Error err_str, Some (Hh_json.JSON_Object json_props))
+    | Ok (parse_artifacts, typecheck_artifacts) ->
+      let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
+      let local_refs =
+        FindRefs_js.find_local_refs
+          ~reader
+          ~options
+          ~file_key
+          ~parse_artifacts
+          ~typecheck_artifacts
+          ~line
+          ~col
+      in
+      let extra_data =
+        Some
+          (Hh_json.JSON_Object
+             [
+               ( "result",
+                 Hh_json.JSON_String
+                   (match local_refs with
+                   | Ok _ -> "SUCCESS"
+                   | _ -> "FAILURE")
+               );
+             ]
+          )
+      in
+      (local_refs, extra_data))
+
+let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~client ~profiling ~env
+    =
+  let text_doc_position = params.FindReferences.loc in
+  let document_uri =
+    text_doc_position.TextDocumentPositionParams.textDocument.TextDocumentIdentifier.uri
+  in
+  let (local_refs, extra_data) =
+    find_local_references ~reader ~options ~client ~profiling ~env text_doc_position
+  in
+  let result =
+    match local_refs with
+    | Ok (Some (_name, refs)) ->
+      let ref_to_location (_, loc) =
+        { Location.uri = document_uri; range = Flow_lsp_conversions.loc_to_lsp_range loc }
+      in
+      Ok (Base.List.map ~f:ref_to_location refs)
+    | Ok None ->
+      (* e.g. if it was requested on a place that's not even an identifier *)
+      Ok []
+    | Error _ as err -> err
+  in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Ok result ->
+    let r = FindReferencesResult result in
+    let response = ResponseMessage (id, r) in
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
+
 let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
-  let file_input = file_input_of_text_document_position ~client params in
-  let (result, extra_data) =
-    match of_file_input ~options ~env file_input with
-    | Error (Failed reason) -> (Error reason, None)
-    | Error (Skipped reason) -> (Ok [], json_of_skipped reason)
-    | Ok (file_key, content) ->
-      let (file_artifacts_result, did_hit_cache) =
-        let type_parse_artifacts_cache =
-          Some (Persistent_connection.type_parse_artifacts_cache client)
-        in
-        let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
-        type_parse_artifacts_with_cache
-          ~options
-          ~profiling
-          ~type_parse_artifacts_cache
-          file_key
-          parse_result
+  let (local_refs, extra_data) =
+    find_local_references ~reader ~options ~client ~profiling ~env params
+  in
+  let result =
+    match local_refs with
+    | Ok (Some (_name, refs)) ->
+      (* All the locs are implicitly in the same file *)
+      let ref_to_highlight (_, loc) =
+        {
+          DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
+          kind = Some DocumentHighlight.Text;
+        }
       in
-
-      (match file_artifacts_result with
-      | Error _parse_errors ->
-        let err_str = "Couldn't parse file in parse_artifacts" in
-        let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-        (Error err_str, Some (Hh_json.JSON_Object json_props))
-      | Ok (parse_artifacts, typecheck_artifacts) ->
-        let (line, col) = Flow_lsp_conversions.position_of_document_position params in
-        let local_refs =
-          FindRefs_js.find_local_refs
-            ~reader
-            ~options
-            ~file_key
-            ~parse_artifacts
-            ~typecheck_artifacts
-            ~line
-            ~col
-        in
-        let extra_data =
-          Some
-            (Hh_json.JSON_Object
-               [
-                 ( "result",
-                   Hh_json.JSON_String
-                     (match local_refs with
-                     | Ok _ -> "SUCCESS"
-                     | _ -> "FAILURE")
-                 );
-               ]
-            )
-        in
-        (match local_refs with
-        | Ok (Some (_name, refs)) ->
-          (* All the locs are implicitly in the same file *)
-          let ref_to_highlight (_, loc) =
-            {
-              DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
-              kind = Some DocumentHighlight.Text;
-            }
-          in
-          (Ok (Base.List.map ~f:ref_to_highlight refs), extra_data)
-        | Ok None ->
-          (* e.g. if it was requested on a place that's not even an identifier *)
-          (Ok [], extra_data)
-        | Error _ as err -> (err, extra_data)))
+      Ok (Base.List.map ~f:ref_to_highlight refs)
+    | Ok None ->
+      (* e.g. if it was requested on a place that's not even an identifier *)
+      Ok []
+    | Error _ as err -> err
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2572,6 +2608,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_signaturehelp_lsp ~reader ~options ~id ~params ~file_input ~metadata)
+  | LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_find_references ~reader ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params)) ->
     mk_parallelizable_persistent
       ~options
