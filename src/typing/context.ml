@@ -894,7 +894,7 @@ let run_and_rolled_back_cache cx f =
   let cache_snapshot = take_cache_snapshot cx in
   Exception.protect ~f ~finally:(fun () -> restore_cache_snapshot cx cache_snapshot)
 
-let run_in_synthesis_mode cx f =
+let run_in_synthesis_mode ?(reset_placeholders = true) cx f =
   let old_synthesis_mode = cx.in_synthesis_mode in
   let old_produced_placeholders = cx.ccx.produced_placeholders in
   (* Synthesis mode is either already starting with an empty speculation state, because we are about
@@ -913,7 +913,12 @@ let run_in_synthesis_mode cx f =
         cx.ccx.speculation_state := saved_speculation_state;
         cx.in_synthesis_mode <- old_synthesis_mode;
         produced_placeholders := cx.ccx.produced_placeholders;
-        cx.ccx.produced_placeholders <- old_produced_placeholders
+        cx.ccx.produced_placeholders <-
+          ( if reset_placeholders then
+            old_produced_placeholders
+          else
+            old_produced_placeholders || cx.ccx.produced_placeholders
+          )
     )
   in
   (!produced_placeholders, result)
