@@ -1746,8 +1746,8 @@ let dump_error_message =
         (string_of_aloc loc)
         (string_of_aloc prev_use_loc)
         (dump_reason cx enum_reason)
-    | EEnumInvalidObjectUtil { reason; enum_reason } ->
-      spf "EEnumInvalidObjectUtil (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
+    | EEnumInvalidObjectUtilType { reason; enum_reason } ->
+      spf "EEnumInvalidObjectUtilType (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EEnumNotIterable { reason; for_in } ->
       spf "EEnumNotIterable (%s) (%s)" (dump_reason cx reason) (spf "for_in = %B" for_in)
     | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->

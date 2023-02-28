@@ -4865,7 +4865,7 @@ struct
           add_output
             cx
             ~trace
-            (Error_message.EEnumInvalidObjectUtil { reason = op_reason; enum_reason })
+            (Error_message.EEnumInvalidObjectUtilType { reason = op_reason; enum_reason })
         (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
         | ( DefT (enum_reason, _, EnumT enum),
             EnumExhaustiveCheckT
