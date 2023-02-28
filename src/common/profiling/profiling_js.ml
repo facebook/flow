@@ -39,8 +39,6 @@ module Timing : sig
 
   val to_json : abridged:bool -> finished -> Hh_json.json
 
-  val to_json_legacy : abridged:bool -> finished -> Hh_json.json
-
   val print_summary_timing_table : finished -> unit
 
   val merge : from:finished -> into:running -> unit
@@ -424,30 +422,7 @@ end = struct
     in
     Hh_json.JSON_Object json_results
 
-  (* There are two concerns here:
-   *
-   * 1. When abridged is set, we don't want to log too much data
-   * 2. We don't want to make breaking changes without first updating our consumers (which I think
-   *    are currently just Scuba and ServiceLab)
-   *
-   * So here's the plan:
-   *
-   * A) When abridged is set, only output the first 3 levels of the hierarchy. That should give us
-   *    totals, each timer, and each sub timer.
-   * B) The legacy graphs and profiling assumes two main things:
-   *    1) A flat object with all the timers. So we need to flatten out the results
-   *    2) The "totals" to be in a timer named "Profiling".
-   *)
   let to_json ~abridged result =
-    let max_depth =
-      if abridged then
-        1
-      else
-        100
-    in
-    json_of_results ~abridged ~max_depth [result]
-
-  let to_json_legacy ~abridged result =
     (* If we have the hierarchy
      * <Total>
      *   Foo
@@ -1094,23 +1069,8 @@ let to_json_properties profile =
     ("memory", Memory.to_json ~abridged:false profile.finished_memory);
   ]
 
-let to_legacy_json_properties profile =
-  [
-    ("timing", Timing.to_json_legacy ~abridged:false profile.finished_timing);
-    ("memory", Memory.to_json ~abridged:false profile.finished_memory);
-  ]
-
-let get_timing_json_string profile =
-  Timing.to_json ~abridged:false profile.finished_timing |> Hh_json.json_to_string
-
 let get_abridged_timing_json_string profile =
   Timing.to_json ~abridged:true profile.finished_timing |> Hh_json.json_to_string
-
-let get_abridged_legacy_timing_json_string profile =
-  Timing.to_json_legacy ~abridged:true profile.finished_timing |> Hh_json.json_to_string
-
-let get_memory_json_string profile =
-  Memory.to_json ~abridged:false profile.finished_memory |> Hh_json.json_to_string
 
 let get_abridged_memory_json_string profile =
   Memory.to_json ~abridged:true profile.finished_memory |> Hh_json.json_to_string
