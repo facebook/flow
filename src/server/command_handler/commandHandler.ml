@@ -256,7 +256,8 @@ let autocomplete
     ~input
     ~cursor
     ~imports
-    ~imports_ranked_usage =
+    ~imports_ranked_usage
+    ~show_ranking_info =
   match of_file_input ~options ~env input with
   | Error (Failed e) -> (Error e, None)
   | Error (Skipped reason) ->
@@ -317,6 +318,7 @@ let autocomplete
               ~typed_ast
               ~imports
               ~imports_ranked_usage
+              ~show_ranking_info
               trigger_character
               cursor_loc
           in
@@ -914,7 +916,8 @@ let handle_autocomplete
     ~input
     ~cursor
     ~imports
-    ~imports_ranked_usage =
+    ~imports_ranked_usage
+    ~show_ranking_info =
   let (result, json_data) =
     try_with_json (fun () ->
         autocomplete
@@ -927,6 +930,7 @@ let handle_autocomplete
           ~cursor
           ~imports
           ~imports_ranked_usage
+          ~show_ranking_info
     )
   in
   let result =
@@ -1248,7 +1252,15 @@ let get_ephemeral_handler genv command =
   let reader = State_reader.create () in
   match command with
   | ServerProt.Request.AUTOCOMPLETE
-      { input; cursor; trigger_character; wait_for_recheck; imports; imports_ranked_usage } ->
+      {
+        input;
+        cursor;
+        trigger_character;
+        wait_for_recheck;
+        imports;
+        imports_ranked_usage;
+        show_ranking_info;
+      } ->
     mk_parallelizable
       ~wait_for_recheck
       ~options
@@ -1260,6 +1272,7 @@ let get_ephemeral_handler genv command =
          ~cursor
          ~imports
          ~imports_ranked_usage
+         ~show_ranking_info
       )
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
@@ -1686,14 +1699,13 @@ let handle_persistent_did_change_configuration_notification ~params ~metadata ~c
   let { Lsp.DidChangeConfiguration.settings } = params in
   let client_config = client_config client in
   let json = Some settings in
+  let suggest = Jget.obj_opt json "suggest" in
   let client_config =
-    let suggest = Jget.obj_opt json "suggest" in
     match Jget.bool_opt suggest "autoImports" with
     | Some suggest_autoimports -> { client_config with Client_config.suggest_autoimports }
     | None -> client_config
   in
   let client_config =
-    let suggest = Jget.obj_opt json "suggest" in
     match Jget.val_opt suggest "rankAutoimportsByUsage" with
     | Some (Hh_json.JSON_String "true")
     | Some (Hh_json.JSON_Bool true) ->
@@ -1704,6 +1716,10 @@ let handle_persistent_did_change_configuration_notification ~params ~metadata ~c
     | Some _
     | None ->
       { client_config with Client_config.rank_autoimports_by_usage = `Default }
+  in
+  let client_config =
+    let show_suggest_ranking_info = Jget.bool_d suggest "showRankingInfo" ~default:false in
+    { client_config with Client_config.show_suggest_ranking_info }
   in
   client_did_change_configuration client client_config;
   (LspProt.LspFromServer None, metadata)
@@ -1848,6 +1864,9 @@ let handle_persistent_autocomplete_lsp
     && Options.autoimports options
   in
   let imports_ranked_usage = rank_autoimports_by_usage ~options client in
+  let show_ranking_info =
+    Persistent_connection.Client_config.show_suggest_ranking_info client_config
+  in
   let (result, extra_data) =
     autocomplete
       ~trigger_character
@@ -1859,6 +1878,7 @@ let handle_persistent_autocomplete_lsp
       ~cursor:(line, char)
       ~imports
       ~imports_ranked_usage
+      ~show_ranking_info
   in
   let metadata = with_data ~extra_data metadata in
   match result with

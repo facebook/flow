@@ -40,6 +40,7 @@ let spec =
         |> lsp_flag
         |> flag "--imports" truthy ~doc:"Include suggestions that can be imported from other files"
         |> flag "--imports-ranked-usage" truthy ~doc:"" (* experimental: rank imports by usage *)
+        |> flag "--show-ranking-info" truthy ~doc:"Show internal ranking info (for debugging)"
         |> anon "args" (optional (list_of string))
       );
   }
@@ -113,6 +114,7 @@ let main
     lsp
     imports
     imports_ranked_usage
+    show_ranking_info
     args
     () =
   let (input, cursor_opt) = parse_args args in
@@ -140,7 +142,15 @@ let main
   | Some cursor ->
     let request =
       ServerProt.Request.AUTOCOMPLETE
-        { input; cursor; wait_for_recheck; trigger_character = None; imports; imports_ranked_usage }
+        {
+          input;
+          cursor;
+          wait_for_recheck;
+          trigger_character = None;
+          imports;
+          imports_ranked_usage;
+          show_ranking_info;
+        }
     in
     let results =
       match connect_and_make_request flowconfig_name option_values root request with

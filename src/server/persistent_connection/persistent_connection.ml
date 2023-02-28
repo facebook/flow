@@ -17,11 +17,14 @@ module Client_config = struct
   type t = {
     rank_autoimports_by_usage: rank_autoimports_by_usage;
     suggest_autoimports: bool;
+    show_suggest_ranking_info: bool;
   }
 
   let rank_autoimports_by_usage { rank_autoimports_by_usage; _ } = rank_autoimports_by_usage
 
   let suggest_autoimports { suggest_autoimports; _ } = suggest_autoimports
+
+  let show_suggest_ranking_info { show_suggest_ranking_info; _ } = show_suggest_ranking_info
 end
 
 type single_client = {
@@ -116,7 +119,11 @@ let add_client client_id lsp_initialize_params =
       lsp_initialize_params;
       type_parse_artifacts_cache = FilenameCache.make ~max_size:cache_max_size;
       client_config =
-        { Client_config.suggest_autoimports = true; rank_autoimports_by_usage = `Default };
+        {
+          Client_config.suggest_autoimports = true;
+          rank_autoimports_by_usage = `Default;
+          show_suggest_ranking_info = false;
+        };
       outstanding_handlers = Lsp.IdMap.empty;
       token_loc = (-1, -1, None);
       autocomplete_session_length = 0;
@@ -252,6 +259,14 @@ let client_did_change_configuration (client : single_client) (new_config : Clien
       (to_string old_rank_autoimports_by_usage)
       (to_string new_rank_autoimports_by_usage)
   );
+
+  let old_show_suggest_ranking_info = Client_config.show_suggest_ranking_info old_config in
+  let new_show_suggest_ranking_info = Client_config.show_suggest_ranking_info new_config in
+  if new_show_suggest_ranking_info <> old_show_suggest_ranking_info then
+    Hh_logger.info
+      "  show_suggest_ranking_info: %b -> %b"
+      old_show_suggest_ranking_info
+      new_show_suggest_ranking_info;
 
   client.client_config <- new_config
 

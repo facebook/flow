@@ -575,17 +575,29 @@ let flow_text_edit_of_lsp_text_edit { Lsp.TextEdit.range; newText } =
   (loc, newText)
 
 let completion_item_of_autoimport
-    ~options ~reader ~src_dir ~ast ~edit_locs { Export_search.name; source; kind } rank =
+    ~options
+    ~reader
+    ~src_dir
+    ~ast
+    ~edit_locs
+    ~ranking_info
+    { Export_search.name; source; kind }
+    rank =
   match
     Code_action_service.text_edits_of_import ~options ~reader ~src_dir ~ast kind name source
   with
   | None ->
+    let itemDetail =
+      match ranking_info with
+      | Some ranking_info -> Some ("(global)\n\n" ^ ranking_info)
+      | None -> Some "(global)"
+    in
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
       labelDetail = None;
       description = None;
-      itemDetail = Some "(global)";
+      itemDetail;
       text_edit = Some (text_edit name edit_locs);
       additional_text_edits = [];
       sort_text = sort_text_of_rank rank;
@@ -596,13 +608,18 @@ let completion_item_of_autoimport
       insert_text_format = Lsp.Completion.PlainText;
     }
   | Some { Code_action_service.title; edits; from } ->
+    let itemDetail =
+      match ranking_info with
+      | Some ranking_info -> Some (title ^ "\n\n" ^ ranking_info)
+      | None -> Some title
+    in
     let additional_text_edits = Base.List.map ~f:flow_text_edit_of_lsp_text_edit edits in
     {
       ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
       name;
       labelDetail = None;
       description = Some from;
-      itemDetail = Some title;
+      itemDetail;
       text_edit = Some (text_edit name edit_locs);
       additional_text_edits;
       sort_text = sort_text_of_rank rank;
@@ -628,27 +645,42 @@ let is_reserved name kind =
     Parser_env.is_reserved_type name
 
 let append_completion_items_of_autoimports
-    ~options ~reader ~ast ~ac_loc ~locals ~imports_ranked_usage ~edit_locs auto_imports acc =
+    ~options
+    ~reader
+    ~ast
+    ~ac_loc
+    ~locals
+    ~imports_ranked_usage
+    ~show_ranking_info
+    ~edit_locs
+    auto_imports
+    acc =
   let src_dir = src_dir_of_loc ac_loc in
   let sorted_auto_imports =
     if imports_ranked_usage then
       let open Export_search in
-      (* sort by score, then base the rank on the ordering so each one has a unique rank *)
+      (* sort by score, then by name *)
       auto_imports
       |> Base.List.sort ~compare:(fun (import_a, score_a) (import_b, score_b) ->
              match Int.compare score_a score_b with
              | 0 -> String.compare import_a.name import_b.name
              | score_diff -> -1 * score_diff
          )
-      |> Base.List.mapi ~f:(fun index (autoimport, _score) -> (autoimport, index))
     else
-      (* legacy behavior is to not sort and not rank. all imports have the same
-         constant rank. *)
-      Base.List.map ~f:(fun (autoimport, _score) -> (autoimport, 0)) auto_imports
+      auto_imports
   in
-  Base.List.fold_left
+  Base.List.foldi
     ~init:acc
-    ~f:(fun acc (auto_import, rank) ->
+    ~f:(fun i acc (auto_import, score) ->
+      let rank =
+        (* after builtins *)
+        if imports_ranked_usage then
+          (* set a unique sort text per item *)
+          200 + i
+        else
+          (* if not sorted server-side, use a constant sort text *)
+          200
+      in
       let { Export_search.name; kind; source = _ } = auto_import in
       if is_reserved name kind || Base.Hash_set.mem locals name then
         (* exclude reserved words and already-defined locals, because they can't be imported
@@ -657,6 +689,12 @@ let append_completion_items_of_autoimports
            we can't auto-import another value named `foo`. *)
         acc
       else
+        let ranking_info =
+          if show_ranking_info then
+            Some (Printf.sprintf "Score: %d" score)
+          else
+            None
+        in
         let item =
           completion_item_of_autoimport
             ~options
@@ -664,8 +702,9 @@ let append_completion_items_of_autoimports
             ~src_dir
             ~ast
             ~edit_locs
+            ~ranking_info
             auto_import
-            (200 + rank (* after builtins *))
+            rank
         in
         item :: acc)
     sorted_auto_imports
@@ -734,6 +773,7 @@ let autocomplete_id
     ~include_this
     ~imports
     ~imports_ranked_usage
+    ~show_ranking_info
     ~tparams_rev
     ~edit_locs
     ~token
@@ -871,6 +911,7 @@ let autocomplete_id
             ~ac_loc
             ~locals
             ~imports_ranked_usage
+            ~show_ranking_info
             ~edit_locs
             auto_imports
             items_rev
@@ -1147,6 +1188,7 @@ let autocomplete_unqualified_type
     ~cx
     ~imports
     ~imports_ranked_usage
+    ~show_ranking_info
     ~tparams_rev
     ~file_sig
     ~ac_loc
@@ -1266,6 +1308,7 @@ let autocomplete_unqualified_type
           ~ac_loc
           ~locals
           ~imports_ranked_usage
+          ~show_ranking_info
           ~edit_locs
           auto_imports
           items_rev
@@ -1312,6 +1355,7 @@ let autocomplete_member
     ~typed_ast
     ~imports
     ~imports_ranked_usage
+    ~show_ranking_info
     ~edit_locs
     ~token
     this
@@ -1462,6 +1506,7 @@ let autocomplete_member
             ~cx
             ~imports
             ~imports_ranked_usage
+            ~show_ranking_info
             ~tparams_rev
             ~ac_loc:ac_aloc
             ~ast
@@ -1483,6 +1528,7 @@ let autocomplete_member
             ~include_this
             ~imports
             ~imports_ranked_usage
+            ~show_ranking_info
             ~tparams_rev
             ~edit_locs
             ~token
@@ -1550,6 +1596,7 @@ let autocomplete_jsx_element
     ~typed_ast
     ~imports
     ~imports_ranked_usage
+    ~show_ranking_info
     ~tparams_rev
     ~edit_locs
     ~token
@@ -1568,6 +1615,7 @@ let autocomplete_jsx_element
       ~include_this:false
       ~imports
       ~imports_ranked_usage
+      ~show_ranking_info
       ~tparams_rev
       ~edit_locs
       ~token
@@ -2054,6 +2102,7 @@ let autocomplete_get_results
     ~typed_ast
     ~imports
     ~imports_ranked_usage
+    ~show_ranking_info
     trigger_character
     cursor =
   let file_sig = File_sig.abstractify_locs file_sig in
@@ -2179,6 +2228,7 @@ let autocomplete_get_results
             ~include_this
             ~imports
             ~imports_ranked_usage
+            ~show_ranking_info
             ~tparams_rev
             ~edit_locs
             ~token
@@ -2197,6 +2247,7 @@ let autocomplete_get_results
               ~typed_ast
               ~imports
               ~imports_ranked_usage
+              ~show_ranking_info
               ~edit_locs
               ~token
               t
@@ -2249,6 +2300,7 @@ let autocomplete_get_results
           ~typed_ast
           ~imports
           ~imports_ranked_usage
+          ~show_ranking_info
           ~edit_locs
           ~token
           obj_type
@@ -2271,6 +2323,7 @@ let autocomplete_get_results
           ~typed_ast
           ~imports
           ~imports_ranked_usage
+          ~show_ranking_info
           ~tparams_rev
           ~edit_locs
           ~token
@@ -2297,6 +2350,7 @@ let autocomplete_get_results
              ~cx
              ~imports
              ~imports_ranked_usage
+             ~show_ranking_info
              ~tparams_rev
              ~ac_loc
              ~ast

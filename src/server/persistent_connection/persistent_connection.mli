@@ -20,11 +20,14 @@ module Client_config : sig
   type t = {
     rank_autoimports_by_usage: rank_autoimports_by_usage;
     suggest_autoimports: bool;
+    show_suggest_ranking_info: bool;
   }
 
   val rank_autoimports_by_usage : t -> rank_autoimports_by_usage
 
   val suggest_autoimports : t -> bool
+
+  val show_suggest_ranking_info : t -> bool
 end
 
 val empty : t
