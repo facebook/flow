@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <queue>
 #include <thread>
 
@@ -45,10 +46,11 @@ inline std::string str_to_lower(const std::string &s) {
 
 // Push a new entry on the heap while ensuring size <= max_results.
 void push_heap(ResultHeap &heap,
+               float weighted_score,
                float score,
                const std::string *value,
                size_t max_results) {
-  MatchResult result(score, value);
+  MatchResult result(weighted_score, score, value);
   if (heap.size() < max_results || result < heap.top()) {
     heap.push(std::move(result));
     if (heap.size() > max_results) {
@@ -99,8 +101,10 @@ void thread_worker(
         min_score->load()
       );
       if (score > 0) {
+        float weighted_score = candidate.weight + powf(score, 4.0) * 1000.0;
         push_heap(
           result,
+          weighted_score,
           score,
           &candidate.value,
           max_results
@@ -191,6 +195,7 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
         auto &top = thread_results[i].top();
         push_heap(
           combined,
+          top.weighted_score,
           top.score,
           top.value,
           max_results
@@ -208,7 +213,7 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   );
 }
 
-void MatcherBase::addCandidate(const std::string &candidate) {
+void MatcherBase::addCandidate(const std::string &candidate, int weight) {
   auto it = lookup_.find(candidate);
   if (it == lookup_.end()) {
     std::string lowercase = str_to_lower(candidate);
@@ -218,6 +223,7 @@ void MatcherBase::addCandidate(const std::string &candidate) {
     data.bitmask = letter_bitmask(lowercase.c_str());
     data.lowercase = std::move(lowercase);
     data.last_match = true;
+    data.weight = weight;
     candidates_.emplace_back(std::move(data));
   }
 }

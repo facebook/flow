@@ -12,28 +12,34 @@ struct MatcherOptions {
 };
 
 struct MatchResult {
+  float weighted_score;
   float score;
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.
   const std::string *value;
 
-  MatchResult(float score,
+  MatchResult(float weighted_score,
+              float score,
               const std::string *value)
-    : score(score), value(value) {}
+    : weighted_score(weighted_score), score(score), value(value) {}
 
   // Order small scores to the top of any priority queue.
   // We need a min-heap to maintain the top-N results.
   bool operator<(const MatchResult& other) const {
-    if (score == other.score) {
-      // In case of a tie, favour shorter strings.
-      int length = value->length() - other.value->length();
-      // In the case of a tie, favor lexicographically-earlier
-      if (length == 0) {
-        return *value < *other.value;
+    if (weighted_score == other.weighted_score) {
+      // In case of a tie, favor the stronger text match.
+      if (score == other.score) {
+        // In case of a tie, favour shorter strings.
+        int length = value->length() - other.value->length();
+        // In the case of a tie, favor lexicographically-earlier
+        if (length == 0) {
+          return *value < *other.value;
+        }
+        return length < 0;
       }
-      return length < 0;
+      return score > other.score;
     }
-    return score > other.score;
+    return weighted_score > other.weighted_score;
   }
 };
 
@@ -59,11 +65,15 @@ public:
      * We'll use this only if the new query strictly extends lastQuery_.
      */
     bool last_match;
+    /**
+     * Weight to give this value relative to other values.
+     */
+    int weight;
   };
 
   std::vector<MatchResult> findMatches(const std::string &query,
                                        const MatcherOptions &options);
-  void addCandidate(const std::string &candidate);
+  void addCandidate(const std::string &candidate, int weight);
   void removeCandidate(const std::string &candidate);
   void clear();
   void reserve(size_t n);

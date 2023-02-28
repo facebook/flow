@@ -45,6 +45,7 @@ static value alloc_result(match_result_t *r) {
   v = caml_alloc(2, 0);
   Store_field(v, 0, caml_copy_string(r->value));
   Store_field(v, 1, caml_copy_double(r->score));
+  // we don't currently need r->weighted_score
   CAMLreturn(v);
 }
 
@@ -57,15 +58,15 @@ value fuzzy_create(value candidates) {
   CAMLreturn(alloc_matcher(matcher));
 }
 
-value fuzzy_add_candidate(value matcher, value candidate) {
-  CAMLparam2(matcher, candidate);
-  matcher_add_candidate(Matcher_val(matcher), String_val(candidate));
+value fuzzy_add_candidate(value matcher, value candidate, value weight) {
+  CAMLparam3(matcher, candidate, weight);
+  matcher_add_candidate(Matcher_val(matcher), String_val(candidate), Int_val(weight));
   CAMLreturn (Val_unit);
 }
 
 value fuzzy_add_candidates(value matcher, value candidates) {
   CAMLparam2(matcher, candidates);
-  CAMLlocal1(head);
+  CAMLlocal2(head, pair);
   matcher_t *m = Matcher_val(matcher);
   size_t count = 0;
   head = candidates;
@@ -76,8 +77,9 @@ value fuzzy_add_candidates(value matcher, value candidates) {
   matcher_reserve(m, matcher_size(m) + count);
   head = candidates;
   while (Is_block(head)) {
-    matcher_add_candidate(m, String_val(Field(head, 0)));
+    pair = Field(head, 0);
     head = Field(head, 1);
+    matcher_add_candidate(m, String_val(Field(pair, 0)), Int_val(Field(pair, 1)));
   }
   CAMLreturn (Val_unit);
 }
