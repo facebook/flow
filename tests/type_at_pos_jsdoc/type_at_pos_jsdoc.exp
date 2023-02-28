@@ -230,7 +230,7 @@ objects-requires.js:18:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -249,7 +249,7 @@ objects-requires.js:20:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -268,7 +268,7 @@ objects-requires.js:22:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -287,7 +287,7 @@ objects-requires.js:24:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -306,7 +306,7 @@ objects-requires.js:30:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -325,7 +325,7 @@ objects-requires.js:32:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -344,7 +344,7 @@ objects-requires.js:34:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -363,7 +363,7 @@ objects-requires.js:36:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -382,7 +382,7 @@ objects-requires.js:41:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
-  "types":{"unevaluated":{"type":"1"},"evaluated":{"type":"1"}},
+  "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -401,7 +401,7 @@ objects-requires.js:43:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
-  "types":{"unevaluated":{"type":"2"},"evaluated":{"type":"2"}},
+  "types":{"unevaluated":{"type":"2"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -420,7 +420,7 @@ objects-requires.js:45:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
-  "types":{"unevaluated":{"type":"3"},"evaluated":{"type":"3"}},
+  "types":{"unevaluated":{"type":"3"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -439,7 +439,7 @@ objects-requires.js:47:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
-  "types":{"unevaluated":{"type":"4"},"evaluated":{"type":"4"}},
+  "types":{"unevaluated":{"type":"4"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -458,7 +458,7 @@ objects-requires.js:51:7
 Flags: --strip-root --pretty
 {
   "documentation":"this is a static property",
-  "types":{"unevaluated":{"type":"1"},"evaluated":{"type":"1"}},
+  "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -477,7 +477,7 @@ objects-requires.js:53:7
 Flags: --strip-root --pretty
 {
   "documentation":"this is a static method",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -496,7 +496,7 @@ objects-requires.js:56:12
 Flags: --strip-root --pretty
 {
   "documentation":"this is an instance property",
-  "types":{"unevaluated":{"type":"2"},"evaluated":{"type":"2"}},
+  "types":{"unevaluated":{"type":"2"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -515,7 +515,7 @@ objects-requires.js:58:12
 Flags: --strip-root --pretty
 {
   "documentation":"this is an instance method",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -534,7 +534,7 @@ objects-requires.js:60:12
 Flags: --strip-root --pretty
 {
   "documentation":"property with variance",
-  "types":{"unevaluated":{"type":"3"},"evaluated":{"type":"3"}},
+  "types":{"unevaluated":{"type":"3"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -553,10 +553,7 @@ objects-requires.js:63:8
 Flags: --strip-root --pretty
 {
   "documentation":"a defaulted string enum",
-  "types":{
-    "unevaluated":{"type":"enum DefaultedStringEnum"},
-    "evaluated":{"type":"enum DefaultedStringEnum"}
-  },
+  "types":{"unevaluated":{"type":"enum DefaultedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -575,10 +572,7 @@ objects-requires.js:65:23
 Flags: --strip-root --pretty
 {
   "documentation":"first member of a defaulted string enum",
-  "types":{
-    "unevaluated":{"type":"DefaultedStringEnum"},
-    "evaluated":{"type":"DefaultedStringEnum"}
-  },
+  "types":{"unevaluated":{"type":"DefaultedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -597,10 +591,7 @@ objects-requires.js:67:23
 Flags: --strip-root --pretty
 {
   "documentation":"second member of a defaulted string enum",
-  "types":{
-    "unevaluated":{"type":"DefaultedStringEnum"},
-    "evaluated":{"type":"DefaultedStringEnum"}
-  },
+  "types":{"unevaluated":{"type":"DefaultedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -619,10 +610,7 @@ objects-requires.js:69:8
 Flags: --strip-root --pretty
 {
   "documentation":"an initialized string enum",
-  "types":{
-    "unevaluated":{"type":"enum InitializedStringEnum"},
-    "evaluated":{"type":"enum InitializedStringEnum"}
-  },
+  "types":{"unevaluated":{"type":"enum InitializedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -641,10 +629,7 @@ objects-requires.js:71:25
 Flags: --strip-root --pretty
 {
   "documentation":"first member of an initialized string enum",
-  "types":{
-    "unevaluated":{"type":"InitializedStringEnum"},
-    "evaluated":{"type":"InitializedStringEnum"}
-  },
+  "types":{"unevaluated":{"type":"InitializedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -663,10 +648,7 @@ objects-requires.js:73:25
 Flags: --strip-root --pretty
 {
   "documentation":"second member of an initialized string enum",
-  "types":{
-    "unevaluated":{"type":"InitializedStringEnum"},
-    "evaluated":{"type":"InitializedStringEnum"}
-  },
+  "types":{"unevaluated":{"type":"InitializedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -685,10 +667,7 @@ objects-requires.js:75:6
 Flags: --strip-root --pretty
 {
   "documentation":"a number enum",
-  "types":{
-    "unevaluated":{"type":"enum NumberEnum"},
-    "evaluated":{"type":"enum NumberEnum"}
-  },
+  "types":{"unevaluated":{"type":"enum NumberEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -707,7 +686,7 @@ objects-requires.js:77:14
 Flags: --strip-root --pretty
 {
   "documentation":"first member of a number enum",
-  "types":{"unevaluated":{"type":"NumberEnum"},"evaluated":{"type":"NumberEnum"}},
+  "types":{"unevaluated":{"type":"NumberEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -726,7 +705,7 @@ objects-requires.js:79:14
 Flags: --strip-root --pretty
 {
   "documentation":"second member of a number enum",
-  "types":{"unevaluated":{"type":"NumberEnum"},"evaluated":{"type":"NumberEnum"}},
+  "types":{"unevaluated":{"type":"NumberEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -745,10 +724,7 @@ objects-requires.js:81:7
 Flags: --strip-root --pretty
 {
   "documentation":"a boolean enum",
-  "types":{
-    "unevaluated":{"type":"enum BooleanEnum"},
-    "evaluated":{"type":"enum BooleanEnum"}
-  },
+  "types":{"unevaluated":{"type":"enum BooleanEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -767,7 +743,7 @@ objects-requires.js:83:15
 Flags: --strip-root --pretty
 {
   "documentation":"first member of a boolean enum",
-  "types":{"unevaluated":{"type":"BooleanEnum"},"evaluated":{"type":"BooleanEnum"}},
+  "types":{"unevaluated":{"type":"BooleanEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -786,7 +762,7 @@ objects-requires.js:85:15
 Flags: --strip-root --pretty
 {
   "documentation":"second member of a boolean enum",
-  "types":{"unevaluated":{"type":"BooleanEnum"},"evaluated":{"type":"BooleanEnum"}},
+  "types":{"unevaluated":{"type":"BooleanEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -805,10 +781,7 @@ objects-requires.js:87:6
 Flags: --strip-root --pretty
 {
   "documentation":"a symbol enum",
-  "types":{
-    "unevaluated":{"type":"enum SymbolEnum"},
-    "evaluated":{"type":"enum SymbolEnum"}
-  },
+  "types":{"unevaluated":{"type":"enum SymbolEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -827,7 +800,7 @@ objects-requires.js:89:15
 Flags: --strip-root --pretty
 {
   "documentation":"first member of a boolean enum",
-  "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":{"type":"SymbolEnum"}},
+  "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -846,7 +819,7 @@ objects-requires.js:91:15
 Flags: --strip-root --pretty
 {
   "documentation":"second member of a boolean enum",
-  "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":{"type":"SymbolEnum"}},
+  "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -865,7 +838,7 @@ objects.js:163:5
 Flags: --strip-root --pretty
 {
   "documentation":"identifier property of an object literal",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects.js",
@@ -884,7 +857,7 @@ objects.js:165:5
 Flags: --strip-root --pretty
 {
   "documentation":"literal property of an object literal",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects.js",
@@ -903,7 +876,7 @@ objects.js:167:5
 Flags: --strip-root --pretty
 {
   "documentation":"computed property of an object literal",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects.js",
@@ -922,7 +895,7 @@ objects.js:169:5
 Flags: --strip-root --pretty
 {
   "documentation":"annotated getter property of an object literal",
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects.js",
@@ -941,7 +914,7 @@ objects.js:173:5
 Flags: --strip-root --pretty
 {
   "documentation":"method property of an object literal",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects.js",
@@ -960,10 +933,7 @@ objects.js:175:5
 Flags: --strip-root --pretty
 {
   "documentation":"async method property of an object literal",
-  "types":{
-    "unevaluated":{"type":"() => Promise<void>"},
-    "evaluated":{"type":"() => Promise<void>"}
-  },
+  "types":{"unevaluated":{"type":"() => Promise<void>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects.js",

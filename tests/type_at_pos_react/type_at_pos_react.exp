@@ -3,7 +3,6 @@ lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<{|+default: (x: Props) => Element<(x: Props) => Node>|}>
 lazy_ref.js:19:9,19:9
 react_component.js:3:9 = module "react"
-= module "react"
 react_component.js:3:7,3:11
 react_component.js:13:33 = class React$Component<Props, State = void>
 react_component.js:13:29,13:37
@@ -22,17 +21,7 @@ react_component.js:31:7 = {
       },
       "type":"React$FragmentType"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Generic",
-        "type":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:214:14-31"},
-          "name":"React$FragmentType"
-        },
-        "generic_kind":"type alias"
-      },
-      "type":"React$FragmentType"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -61,18 +50,7 @@ react_component.js:32:13 = {
       },
       "type":"ComponentType<number>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Generic",
-        "typeArgs":[{"kind":"Num"}],
-        "type":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:248:23-35"},
-          "name":"ComponentType"
-        },
-        "generic_kind":"type alias"
-      },
-      "type":"ComponentType<number>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -109,26 +87,7 @@ react_component.js:32:29 = {
       },
       "type":"type ComponentType<-P> = React$ComponentType<P>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:248:23-35"},
-          "name":"ComponentType"
-        },
-        "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
-        "body":{
-          "kind":"Generic",
-          "typeArgs":[{"kind":"Bound","bound":"P"}],
-          "type":{
-            "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:151:14-32"},
-            "name":"React$ComponentType"
-          },
-          "generic_kind":"type alias"
-        }
-      },
-      "type":"type ComponentType<-P> = React$ComponentType<P>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{

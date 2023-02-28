@@ -127,6 +127,69 @@ module.exports = (suite(
       ),
     ]),
 
+    test('textDocument/hover should not cache eval errors', [
+      addFile('cached_hover.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/cached_hover.js'},
+        position: {line: 2, character: 10}, // over $ValuesPoly
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/hover',
+            result: {
+              contents: [
+                {
+                  language: 'flow',
+                  value: 'type ValuesPoly<X> = $Values<X>',
+                },
+              ],
+              range: {
+                start: {
+                  line: 2,
+                  character: 5,
+                },
+                end: {
+                  line: 2,
+                  character: 15,
+                },
+              },
+            },
+          },
+        ],
+        ['window/showStatus', '$/cancelRequest'],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/cached_hover.js'},
+        position: {line: 2, character: 10}, // over $ValuesPoly again, sohuld be the same
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/hover',
+            result: {
+              contents: [
+                {
+                  language: 'flow',
+                  value: 'type ValuesPoly<X> = $Values<X>',
+                },
+              ],
+              range: {
+                start: {
+                  line: 2,
+                  character: 5,
+                },
+                end: {
+                  line: 2,
+                  character: 15,
+                },
+              },
+            },
+          },
+        ],
+        ['window/showStatus', '$/cancelRequest'],
+      ),
+    ]),
+
     test('textDocument/documentHighlight', [
       addFiles('references.js', 'references2.js'),
       lspStartAndConnect(),

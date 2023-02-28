@@ -47,7 +47,21 @@ let type_at_pos_type
         scheme
     in
     let unevaluated = from_scheme Ty_normalizer_env.EvaluateNone in
-    let evaluated = Some (from_scheme Ty_normalizer_env.EvaluateAll) in
+    let evaluated =
+      (* We need to roll back caches and errors, because server state persists
+         through IDE requests. If evaluation results in new errors, future
+         requests at the same location should also result in "new" errors. *)
+      Context.run_and_rolled_back_cache full_cx (fun () ->
+          let errors = Context.errors full_cx in
+          let evaluated = from_scheme Ty_normalizer_env.EvaluateAll in
+          let errors' = Context.errors full_cx in
+          Context.reset_errors full_cx errors;
+          if Flow_error.ErrorSet.equal errors errors' then
+            Some evaluated
+          else
+            None
+      )
+    in
     begin
       match (unevaluated, evaluated) with
       | (Ok unevaluated, Some (Ok evaluated)) ->

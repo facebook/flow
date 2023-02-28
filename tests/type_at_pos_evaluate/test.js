@@ -31,3 +31,9 @@ type T7 = $Keys<Foo>;
 
 type T8 = $Keys<{foo: string, bar: number, baz: bigint}>;
 //   ^
+
+type ValuesPoly<X> = $Values<X>
+//   ^
+
+type ValuesPoly<X> = $Values<X>
+//                   ^
