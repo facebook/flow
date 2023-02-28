@@ -1,0 +1,48 @@
+{
+  "method": "textDocument/rename",
+  "result": {
+    "changes": {
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js": [
+        {
+          "range": {
+            "start": {
+              "line": 9,
+              "character": 5
+            },
+            "end": {
+              "line": 9,
+              "character": 6
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 9
+            },
+            "end": {
+              "line": 10,
+              "character": 10
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 11,
+              "character": 5
+            },
+            "end": {
+              "line": 11,
+              "character": 6
+            }
+          },
+          "newText": "NEW_NAME"
+        }
+      ]
+    }
+  }
+}
