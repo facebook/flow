@@ -12,20 +12,20 @@ module PierceImplicitInstantiation : Implicit_instantiation.S with type output =
     (struct
       type output = Type.t
 
-      let on_pinned_tparam _ _ _ inferred = inferred
+      let on_pinned_tparam _ _ inferred = inferred
 
-      let on_constant_tparam_missing_bounds _ _ tparam =
+      let on_constant_tparam_missing_bounds _ tparam =
         match tparam.Type.default with
         | None -> tparam.Type.bound
         | Some t -> t
 
-      let on_missing_bounds cx ~use_op name tparam ~tparam_binder_reason ~instantiation_reason =
+      let on_missing_bounds cx ~use_op tparam ~tparam_binder_reason ~instantiation_reason =
         if tparam.Type.default = None then
           Flow_js.add_output
             cx
             (Error_message.EImplicitInstantiationUnderconstrainedError
                {
-                 bound = Subst_name.string_of_subst_name name;
+                 bound = Subst_name.string_of_subst_name tparam.Type.name;
                  reason_call = instantiation_reason;
                  reason_tparam = tparam_binder_reason;
                  use_op;
@@ -33,12 +33,12 @@ module PierceImplicitInstantiation : Implicit_instantiation.S with type output =
             );
         Type.AnyT.error tparam_binder_reason
 
-      let on_upper_non_t cx ~use_op name _u _ ~tparam_binder_reason ~instantiation_reason =
+      let on_upper_non_t cx ~use_op _u tparam ~tparam_binder_reason ~instantiation_reason =
         Flow_js_utils.add_output
           cx
           (Error_message.EImplicitInstantiationUnderconstrainedError
              {
-               bound = Subst_name.string_of_subst_name name;
+               bound = Subst_name.string_of_subst_name tparam.Type.name;
                reason_call = instantiation_reason;
                reason_tparam = tparam_binder_reason;
                use_op;

@@ -10,14 +10,13 @@ module Check = Implicit_instantiation_check
 module type OBSERVER = sig
   type output
 
-  val on_pinned_tparam : Context.t -> Subst_name.t -> Type.typeparam -> Type.t -> output
+  val on_pinned_tparam : Context.t -> Type.typeparam -> Type.t -> output
 
-  val on_constant_tparam_missing_bounds : Context.t -> Subst_name.t -> Type.typeparam -> output
+  val on_constant_tparam_missing_bounds : Context.t -> Type.typeparam -> output
 
   val on_missing_bounds :
     Context.t ->
     use_op:Type.use_op ->
-    Subst_name.t ->
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
@@ -26,7 +25,6 @@ module type OBSERVER = sig
   val on_upper_non_t :
     Context.t ->
     use_op:Type.use_op ->
-    Subst_name.t ->
     Type.use_t ->
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
@@ -42,7 +40,6 @@ module type S = sig
   val pin_type :
     Context.t ->
     use_op:Type.use_op ->
-    Subst_name.t ->
     Type.typeparam ->
     Polarity.t option ->
     default_bound:Type.t option ->
