@@ -105,10 +105,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Binary x -> Binary (this#binary x)
         | Call x -> Call (this#call annot x)
         | Class x -> Class (this#class_expression x)
-        | Comprehension x -> Comprehension (this#comprehension x)
         | Conditional x -> Conditional (this#conditional x)
         | Function x -> Function (this#function_expression x)
-        | Generator x -> Generator (this#generator x)
         | Identifier x -> Identifier (this#t_identifier x)
         | Import x -> Import (this#import annot x)
         | JSXElement x -> JSXElement (this#jsx_element x)
@@ -355,22 +353,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         decorators = decorators';
         comments = comments';
       }
-
-    method comprehension (expr : ('M, 'T) Ast.Expression.Comprehension.t)
-        : ('N, 'U) Ast.Expression.Comprehension.t =
-      let open Ast.Expression.Comprehension in
-      let { blocks; filter } = expr in
-      let blocks' = List.map ~f:this#comprehension_block blocks in
-      let filter' = Option.map ~f:this#expression filter in
-      { blocks = blocks'; filter = filter' }
-
-    method comprehension_block (block : ('M, 'T) Ast.Expression.Comprehension.Block.t)
-        : ('N, 'U) Ast.Expression.Comprehension.Block.t =
-      let open Ast.Expression.Comprehension.Block in
-      let (annot, { left; right; each }) = block in
-      let left' = this#pattern left in
-      let right' = this#expression right in
-      (this#on_loc_annot annot, { left = left'; right = right'; each })
 
     method conditional (expr : ('M, 'T) Ast.Expression.Conditional.t)
         : ('N, 'U) Ast.Expression.Conditional.t =
@@ -1301,14 +1283,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method t_function_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ~kind:Ast.Variable.Var ident
-
-    method generator (expr : ('M, 'T) Ast.Expression.Generator.t)
-        : ('N, 'U) Ast.Expression.Generator.t =
-      let open Ast.Expression.Generator in
-      let { blocks; filter } = expr in
-      let blocks' = List.map ~f:this#comprehension_block blocks in
-      let filter' = Option.map ~f:this#expression filter in
-      { blocks = blocks'; filter = filter' }
 
     method identifier ((annot, { Ast.Identifier.name; comments }) : ('M, 'M) Ast.Identifier.t)
         : ('N, 'N) Ast.Identifier.t =

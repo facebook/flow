@@ -1447,33 +1447,6 @@ and Expression : sig
     [@@deriving show]
   end
 
-  module Comprehension : sig
-    module Block : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
-        left: ('M, 'T) Pattern.t;
-        right: ('M, 'T) Expression.t;
-        each: bool;
-      }
-      [@@deriving show]
-    end
-
-    type ('M, 'T) t = {
-      blocks: ('M, 'T) Block.t list;
-      filter: ('M, 'T) Expression.t option;
-    }
-    [@@deriving show]
-  end
-
-  module Generator : sig
-    type ('M, 'T) t = {
-      blocks: ('M, 'T) Comprehension.Block.t list;
-      filter: ('M, 'T) Expression.t option;
-    }
-    [@@deriving show]
-  end
-
   module TypeCast : sig
     type ('M, 'T) t = {
       expression: ('M, 'T) Expression.t;
@@ -1532,10 +1505,8 @@ and Expression : sig
     | Binary of ('M, 'T) Binary.t
     | Call of ('M, 'T) Call.t
     | Class of ('M, 'T) Class.t
-    | Comprehension of ('M, 'T) Comprehension.t
     | Conditional of ('M, 'T) Conditional.t
     | Function of ('M, 'T) Function.t
-    | Generator of ('M, 'T) Generator.t
     | Identifier of ('M, 'T) Identifier.t
     | Import of ('M, 'T) Import.t
     | JSXElement of ('M, 'T) JSX.element

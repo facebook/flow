@@ -2933,13 +2933,6 @@ module Make
             result_out = (result_out, yield);
           }
       )
-    (* TODO *)
-    | Comprehension _ ->
-      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ComprehensionExpression));
-      Tast_utils.error_mapper#expression ex
-    | Generator _ ->
-      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, GeneratorExpression));
-      Tast_utils.error_mapper#expression ex
     | MetaProperty
         {
           MetaProperty.meta = (_, { Ast.Identifier.name = "new"; _ }) as meta;

@@ -580,9 +580,7 @@ and internal_error =
 
 and 'loc unsupported_syntax =
   | AnnotationInsideDestructuring
-  | ComprehensionExpression
   | ConditionalType
-  | GeneratorExpression
   | MetaPropertyExpression
   | ObjectPropertyLiteralNonString
   | ObjectPropertyGetSet
@@ -699,17 +697,17 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   in
   let map_unsupported_syntax = function
     | PredicateInvalidParameter reason -> PredicateInvalidParameter (map_reason reason)
-    | ( ComprehensionExpression | ConditionalType | GeneratorExpression | MetaPropertyExpression
-      | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
-      | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
-      | RequireDynamicArgument | CatchParameterDeclaration
-      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern | JSXTypeArgs
-      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
-      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
-      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
-      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
-      | ImportDynamicArgument | IllegalName | TupleOptionalElement | TupleSpreadElement
-      | UnsupportedInternalSlot _ | AnnotationInsideDestructuring | WithStatement ) as u ->
+    | ( ConditionalType | MetaPropertyExpression | ObjectPropertyLiteralNonString
+      | ObjectPropertyGetSet | ObjectPropertyComputedGetSet | InvariantSpreadArgument
+      | ClassPropertyLiteral | ClassPropertyComputed | RequireDynamicArgument
+      | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
+      | DestructuringExpressionPattern | JSXTypeArgs | PredicateDeclarationForImplementation
+      | PredicateDeclarationWithoutExpression | PredicateDeclarationAnonymousParameters
+      | PredicateInvalidBody | PredicateFunctionAbstractReturnType | PredicateVoidReturn
+      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
+      | SpreadArgument | ImportDynamicArgument | IllegalName | TupleOptionalElement
+      | TupleSpreadElement | UnsupportedInternalSlot _ | AnnotationInsideDestructuring
+      | WithStatement ) as u ->
       u
   in
   function
@@ -2617,10 +2615,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EUnsupportedSyntax (_, unsupported_syntax) ->
     let features =
       match unsupported_syntax with
-      | ComprehensionExpression
-      | GeneratorExpression
-      | MetaPropertyExpression ->
-        [text "Not supported."]
+      | MetaPropertyExpression -> [text "Not supported."]
       | ConditionalType -> [text "Conditional types are not yet supported."]
       | AnnotationInsideDestructuring ->
         [
