@@ -291,18 +291,3 @@ You can do that by annotating the exported constant [[example]](https://flow.org
 const array = ['a', 'b']
 export const genericArray: Array<string> = array.map(a => a)
 ```
-
-## Flow cannot understand the types of my higher order React component, how can I help it?
-
-Typings HOCs can be complicated. While you can follow the [docs about it](../react/hoc/), sometimes it can be easier to type the returned component.
-
-For instance, in this [example](https://flow.org/try/#0PTAEAEDMBsHsHcBQBLAtgB1gJwC6gFSgCGAzqAEoCmRAxnpFrKqAORbV0sDciiNsAOxJ4SlHABUAnukqgAvKABCpSgGEmmAZQF45APlDpG6MvtAAeZaPUZB2vAG8AdC6OwTAX1A5plOQCIAIwBXHBxBf1BgPR5+ITwAcW1KLGQaRVDwgXlQAAoHHxkAGlAaAAtkaAATdgEPAEp5A3MQsMFvXzkC3y9BVWg0gGsu3MazOJJYaEonOABzXJYaAZpByiqWeo89B3LKmu0Pc2BWrJjeCbwMtoEALgoOHCcbTXspGXNdiura+6paJ4AOVgVUo2xyogkvlySS0qXSmUE9S4QA), we don't type the HOC (setType), but the component created with it, `Button`. To do so, we use the type `React.ComponentType`.
-
-```js flow-check
-import * as React from 'react';
-
-const setType = BaseComponent => props => <BaseComponent {...props} type="button" />;
-const GenericButton = ({type, children}) => <button type={type} onClick={() => console.log('clicked')}>{children}</button>;
-
-const Button: React.ComponentType<{children: React.Node}> = setType(GenericButton);
-```
