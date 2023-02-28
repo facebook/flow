@@ -36,7 +36,7 @@ There are three forms of functions that each have their own slightly different s
 
 ### Function Declarations
 
-```js
+```js flow-check
 function func(str: string, bool?: boolean, ...nums: Array<number>): void {
   // ...
 }
@@ -44,7 +44,7 @@ function func(str: string, bool?: boolean, ...nums: Array<number>): void {
 
 ### Arrow Functions
 
-```js
+```js flow-check
 let func = (str: string, bool?: boolean, ...nums: Array<number>): void => {
   // ...
 };
@@ -52,19 +52,19 @@ let func = (str: string, bool?: boolean, ...nums: Array<number>): void => {
 
 ### Function Types
 
-```js
+```js flow-check
 type T = (str: string, bool?: boolean, ...nums: Array<number>) => void;
 ```
 
 You may also optionally leave out the parameter names.
 
-```js
+```js flow-check
 type T = (string, boolean | void, Array<number>) => void;
 ```
 
 You might use these functions types for something like a callback.
 
-```js
+```js flow-check
 function func(callback: (error: Error | null, value: string | null) => void) {
   // ...
 }
@@ -89,7 +89,7 @@ type H = <T>(T) => Array<T>;
 Function parameters can have types by adding a colon `:` followed by the type
 after the name of the parameter.
 
-```js
+```js flow-check
 function func(param1: string, param2: boolean) {
   // ...
 }
@@ -181,9 +181,9 @@ in the body of the function, Flow will infer `mixed` for its `this` parameter.
 Function returns can also add a type using a colon `:` followed by the type
 after the list of parameters.
 
-```js
+```js flow-check
 function func(): number {
-  // ...
+  return 1;
 }
 ```
 
@@ -321,7 +321,7 @@ This is because the only refinements supported through `bar` would be on `obj` i
 
 Callable objects can be typed, for example:
 
-```js
+```js flow-check
 type CallableObj = {
   (number, number): number,
   bar: string
@@ -373,4 +373,3 @@ function func<TArgs: $ReadOnlyArray<mixed>, TReturn>(
 const f: (boolean, string, number) => Array<string> =
   func((x: string, y: number) => x.slice(y)); // OK
 ```
-

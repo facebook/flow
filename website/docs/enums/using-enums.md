@@ -448,24 +448,24 @@ if (typeof val === 'string') {
 ### Exporting enums {#toc-exporting-enums}
 An enum is a type and a value (like a class is). To export both the type and the value, export it like a you would a value:
 
-```js
+```js flow-check
 export enum Status {}
 ```
 Or, as the default export (note: you must always specify an enum name, `export default enum {}` is not allowed):
 
-```js
+```js flow-check
 export default enum Status {}
 ```
 
 Using CommonJS:
-```js
+```js flow-check
 enum Status {}
 module.exports = Status;
 ```
 
 To export **only** its type, but not the value, you can do:
 
-```js
+```js flow-check
 enum Status {}
 export type {Status};
 ```
@@ -475,7 +475,7 @@ Other functions within the file will still have access to the enum implementatio
 ### Importing enums {#toc-importing-enums}
 If you have exported an enum like this:
 
-```js
+```js flow-check
 // status.js
 export default enum Status {
   Active,
@@ -533,7 +533,7 @@ You can’t use enum members as distinct object keys.
 
 The following pattern works because the types of `LegacyStatus.Active` and `LegacyStatus.Off` are different. One has the type `'Active'` and one has the type `'Off'`.
 
-```js
+```js flow-check
 const LegacyStatus = Object.freeze({
   Active: 'Active',
   Paused: 'Paused',
@@ -557,7 +557,7 @@ A defining feature of enums is that unlike unions, each enum member does not for
 This allows enum usage to be analyzed by Flow in a consistently fast way, however it means that in certain situations which require separate types, we can’t use enums.
 Consider the following union, following the [disjoint object union](../../types/unions/#toc-disjoint-object-unions) pattern:
 
-```js
+```js flow-check
 type Action =
   | {type: 'Upload', data: string}
   | {type: 'Delete', id: number};

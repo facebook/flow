@@ -8,7 +8,6 @@ classes you cannot use one in place of the other even when they have the same
 exact properties and methods.
 
 ```js flow-check
-// @flow
 class Foo {
   serialize(): string { return '[Foo]'; }
 }
@@ -25,7 +24,6 @@ Instead, you can use `interface` in order to declare the structure of the class
 that you are expecting.
 
 ```js flow-check
-// @flow
 interface Serializable {
   serialize(): string;
 }
@@ -45,7 +43,6 @@ const bar: Serializable = new Bar(); // Works!
 You can also declare an anonymous interface:
 
 ```js flow-check
-// @flow
 class Foo {
   a: number;
 }
@@ -58,7 +55,6 @@ interface. This prevents you from making incompatible changes when editing the
 class.
 
 ```js flow-check
-// @flow
 interface Serializable {
   serialize(): string;
 }
@@ -100,7 +96,7 @@ same features.
 You can add methods to interfaces following the same syntax as class methods. Any `this` parameters you
 provide are also subject to the same restrictions as class methods.
 
-```js
+```js flow-check
 interface MyInterface {
   method(value: string): number;
 }
@@ -113,7 +109,7 @@ Also like [class methods](../classes#toc-class-methods), interface methods must 
 You can add properties to interfaces following the same syntax as class
 properties.
 
-```js
+```js flow-check
 interface MyInterface {
   property: string;
 }
@@ -121,7 +117,7 @@ interface MyInterface {
 
 Interface properties can be optional as well.
 
-```js
+```js flow-check
 interface MyInterface {
   property?: string;
 }
@@ -132,7 +128,7 @@ interface MyInterface {
 You can create ["indexer properties"](../objects#toc-objects-as-maps) the same
 way as with objects.
 
-```js
+```js flow-check
 interface MyInterface {
   [key: string]: number;
 }
@@ -142,7 +138,7 @@ interface MyInterface {
 
 Interfaces can also have their own [generics](../generics/).
 
-```js
+```js flow-check
 interface MyInterface<A, B, C> {
   property: A;
   method(val: B): C;
@@ -152,8 +148,7 @@ interface MyInterface<A, B, C> {
 Interface generics are [parameterized](../generics#toc-parameterized-generics).
 When you use an interface you need to pass parameters for each of its generics.
 
-```js
-// @flow
+```js flow-check
 interface MyInterface<A, B, C> {
   foo: A;
   bar: B;
@@ -175,7 +170,7 @@ Interface properties are [invariant](../../lang/variance/) by default. But you
 can add modifiers to make them covariant (read-only) or contravariant
 (write-only).
 
-```js
+```js flow-check
 interface MyInterface {
   +covariant: number;     // read-only
   -contravariant: number; // write-only
@@ -187,7 +182,7 @@ interface MyInterface {
 You can make a property covariant by adding a plus symbol `+` in front of the
 property name.
 
-```js
+```js flow-check
 interface MyInterface {
   +readOnly: number | string;
 }
@@ -222,7 +217,6 @@ function method1(value: Invariant) {
 
 function method2(value: Covariant) {
   value.readOnly;        // Works!
-  // $ExpectError
   value.readOnly = 3.14; // Error!
 }
 ```

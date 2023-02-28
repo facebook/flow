@@ -71,7 +71,7 @@ Unlike the other types of enums (e.g. number enums), you can either specify valu
 
 If you don’t specify values for your enum members, they default to strings which are the same as the name of your members.
 
-```js
+```js flow-check
 enum Status {
   Active,
   Paused,
@@ -80,7 +80,7 @@ enum Status {
 ```
 Is the same as:
 
-```js
+```js flow-check
 enum Status {
   Active = 'Active',
   Paused = 'Paused',
@@ -98,7 +98,7 @@ enum Status {
 ```
 Optionally, you can use an `of` clause:
 
-```js
+```js flow-check
 enum Status of string {
   Active,
   Paused,
@@ -115,7 +115,7 @@ Number enums must have their values specified.
 
 You can specify a number enum like this:
 
-```js
+```js flow-check
 enum Status {
   Active = 1,
   Paused = 2,
@@ -124,7 +124,7 @@ enum Status {
 ```
 Optionally, you can use an `of` clause:
 
-```js
+```js flow-check
 enum Status of number {
   Active = 1,
   Paused = 2,
@@ -145,7 +145,7 @@ Boolean enums must have their values specified. Boolean enums can only have two 
 
 You can specify a boolean enum like this:
 
-```js
+```js flow-check
 enum Status {
   Active = true,
   Off = false,
@@ -153,7 +153,7 @@ enum Status {
 ```
 Optionally, you can use an `of` clause:
 
-```js
+```js flow-check
 enum Status of boolean {
   Active = true,
   Off = false,
@@ -167,7 +167,7 @@ You must use the `of` clause with symbol enums, to distinguish them from string 
 
 You can specify a symbol enum like this:
 
-```js
+```js flow-check
 enum Status of symbol {
   Active,
   Paused,
@@ -179,7 +179,7 @@ enum Status of symbol {
 ## Flow Enums with Unknown Members {#toc-flow-enums-with-unknown-members}
 You can specify that your enum contains "unknown members" by adding a `...` to the end of the declaration:
 
-```js
+```js flow-check
 enum Status {
   Active,
   Paused,

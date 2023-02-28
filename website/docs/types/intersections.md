@@ -87,7 +87,7 @@ that we want to write the type of a function that
 * returns any possible type (`mixed`), when we pass in any other string.
 
 The type of this function will be
-```js
+```js flow-check
 type Fn =
   & ((x: "string") => string)
   & ((x: "number") => number)
@@ -118,7 +118,7 @@ call site.
 
 An equivalent way to declare the same function `fn` would be by using consecutive
 "declare function" statements
-```js
+```js flow-check
 declare function fn(x: "string"): string;
 declare function fn(x: "number"): number;
 declare function fn(x: string): null;
@@ -127,8 +127,8 @@ declare function fn(x: string): null;
 A limitation in Flow is that it can't *check* the body of a function against
 an intersection type. In other words, if we provided the following implementation
 for `fn` right after the above declarations
-```js
-function fn(x) {
+```js flow-check
+function fn(x: mixed) {
   if (x === "string") { return ""; }
   else if (x === "number") { return 0; }
   else { return null; }
