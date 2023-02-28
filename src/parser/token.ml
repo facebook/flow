@@ -172,6 +172,7 @@ type t =
   | T_UNDEFINED_TYPE
   | T_KEYOF
   | T_READONLY
+  | T_INFER
 
 (* `bool` and `boolean` are equivalent annotations, but we need to track
    which one was used for when it might be an identifier, as in
@@ -327,6 +328,7 @@ let token_to_string = function
   | T_DECR -> "T_DECR"
   | T_KEYOF -> "T_KEYOF"
   | T_READONLY -> "T_READONLY"
+  | T_INFER -> "T_INFER"
   (* Extra tokens *)
   | T_ERROR _ -> "T_ERROR"
   | T_EOF -> "T_EOF"
@@ -470,6 +472,7 @@ let value_of_token = function
   | T_DECR -> "--"
   | T_KEYOF -> "keyof"
   | T_READONLY -> "readonly"
+  | T_INFER -> "infer"
   (* Extra tokens *)
   | T_ERROR raw -> raw
   | T_EOF -> ""
