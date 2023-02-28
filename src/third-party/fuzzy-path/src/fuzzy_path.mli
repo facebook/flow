@@ -25,12 +25,12 @@ type t
 
 val default_options : options
 
-val init : string list -> t
+val init : (string * int) list -> t
 
 val search : ?options:options -> string -> t -> match_result list
 
-val add_candidate : t -> string -> t
+val add_candidate : t -> string -> int -> t
 
-val add_candidates : t -> string list -> t
+val add_candidates : t -> (string * int) list -> t
 
 val remove_candidates : t -> string list -> t

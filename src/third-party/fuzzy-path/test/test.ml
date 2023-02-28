@@ -8,21 +8,21 @@
 open OUnit2
 
 let candidates = [
-  "";
-  "a";
-  "ab";
-  "abC";
-  "abcd";
-  "alphabetacappa";
-  "AlphaBetaCappa";
-  "thisisatestdir";
-  "/////ThisIsATestDir";
-  "/this/is/a/test/dir";
-  "/test/tiatd";
-  "/zzz/path2/path3/path4";
-  "/path1/zzz/path3/path4";
-  "/path1/path2/zzz/path4";
-  "/path1/path2/path3/zzz";
+  "", 0;
+  "a", 0;
+  "ab", 0;
+  "abC", 0;
+  "abcd", 0;
+  "alphabetacappa", 0;
+  "AlphaBetaCappa", 0;
+  "thisisatestdir", 0;
+  "/////ThisIsATestDir", 0;
+  "/this/is/a/test/dir", 0;
+  "/test/tiatd", 0;
+  "/zzz/path2/path3/path4", 0;
+  "/path1/zzz/path3/path4", 0;
+  "/path1/path2/zzz/path4", 0;
+  "/path1/path2/path3/zzz", 0;
 ]
 
 let string_list_printer items =
@@ -59,7 +59,7 @@ let tests = "fuzzy-path" >::: [
   );
 
   "finds_strong_match" >:: (fun ctxt ->
-    let candidates = ["xabcabc"; "xAbcabc"; "xabcAbc"] in
+    let candidates = ["xabcabc", 0; "xAbcabc", 0; "xabcAbc", 0] in
     let matcher = Fuzzy_path.init candidates in
     let result = Fuzzy_path.search ~options "abc" matcher in
     assert_values ~ctxt ["xAbcabc"; "xabcAbc"; "xabcabc"] result;
@@ -103,7 +103,7 @@ let tests = "fuzzy-path" >::: [
   );
 
   "stable_ordering" >:: (fun ctxt ->
-    let matcher = Fuzzy_path.init ["Foo"; "foo"; "far"; "foobar"] in
+    let matcher = Fuzzy_path.init ["Foo", 0; "foo", 0; "far", 0; "foobar", 0] in
     let result = Fuzzy_path.search "f" matcher in
     (* "Foo", "foo" and "far" all have the same score, which is higher than
        the score for "foobar". If the scores and the lengths are the same,

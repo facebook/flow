@@ -34,34 +34,35 @@ let default_options : search_options =
   Fuzzy_path.{ default_options with first_match_can_be_weak = false }
 
 type candidates = {
-  values: string list;
-  types: string list;
+  values: (string * int) list;
+  types: (string * int) list;
 }
 
-let kinds_of_exports (has_value, has_type) exports =
+let summarize_exports exports =
   Export_index.ExportMap.fold
-    (fun (_file, kind) _num (has_value, has_type) ->
+    (fun (_file, kind) num (has_value, has_type, max_count) ->
+      let max_count = max num max_count in
       match kind with
-      | Export_index.Default -> (true, has_type)
-      | Export_index.Named -> (true, has_type)
-      | Export_index.NamedType -> (has_value, true)
-      | Export_index.Namespace -> (true, has_type))
+      | Export_index.Default -> (true, has_type, max_count)
+      | Export_index.Named -> (true, has_type, max_count)
+      | Export_index.NamedType -> (has_value, true, max_count)
+      | Export_index.Namespace -> (true, has_type, max_count))
     exports
-    (has_value, has_type)
+    (false, false, 0)
 
 let partition_candidates index =
   Export_index.fold_names
     ~f:(fun { values; types } name exports ->
-      let (has_value, has_type) = kinds_of_exports (false, false) exports in
+      let (has_value, has_type, max_count) = summarize_exports exports in
       let values =
         if has_value then
-          name :: values
+          (name, max_count) :: values
         else
           values
       in
       let types =
         if has_type then
-          name :: types
+          (name, max_count) :: types
         else
           types
       in

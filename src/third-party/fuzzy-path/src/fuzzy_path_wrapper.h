@@ -25,6 +25,7 @@ typedef struct matcher_options {
 } matcher_options_t;
 
 typedef struct match_result {
+  float weighted_score;
   float score;
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.
@@ -38,7 +39,7 @@ typedef struct match_results {
 
 matcher_t *matcher_create();
 match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t options);
-void matcher_add_candidate(matcher_t *m, const char *candidate);
+void matcher_add_candidate(matcher_t *m, const char *candidate, int weight);
 void matcher_remove_candidate(matcher_t *m, const char *candidate);
 void matcher_clear(matcher_t *m);
 void matcher_reserve(matcher_t *m, size_t n);

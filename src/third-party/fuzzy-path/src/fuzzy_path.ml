@@ -24,8 +24,8 @@ type match_result = {
 type t
 
 external ext_create : unit -> t = "fuzzy_create"
-external ext_add_candidate : t -> string -> unit = "fuzzy_add_candidate"
-external ext_add_candidates : t -> string list -> unit = "fuzzy_add_candidates"
+external ext_add_candidate : t -> string -> int -> unit = "fuzzy_add_candidate"
+external ext_add_candidates : t -> (string * int) list -> unit = "fuzzy_add_candidates"
 external ext_remove_candidate : t -> string -> unit = "fuzzy_remove_candidate"
 external ext_match : t -> string -> options -> match_result list = "fuzzy_match"
 
@@ -38,8 +38,8 @@ let default_options = {
 let search ?(options = default_options) query t : match_result list =
   ext_match t query options
 
-let add_candidate t to_add =
-  ext_add_candidate t to_add;
+let add_candidate t name weight =
+  ext_add_candidate t name weight;
   t
 
 let add_candidates t to_add =
