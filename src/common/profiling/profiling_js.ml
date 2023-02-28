@@ -360,7 +360,6 @@ end = struct
           in
           common_fields
           @ [
-              ("wall", json_of_time_measurement wall);
               ("user", json_of_time_measurement user);
               ("system", json_of_time_measurement system);
               ("worker_user", json_of_time_measurement worker_user);
