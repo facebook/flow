@@ -30,7 +30,7 @@ value hh_processor_info(void) {
   array = caml_alloc_tuple(0);
 
   // Empty total cpu info
-  info = caml_alloc(4, Double_array_tag);
+  info = caml_alloc_float_array(4);
   Store_double_field(info, CPU_INFO_USER, 0);
   Store_double_field(info, CPU_INFO_USER_NICE, 0);
   Store_double_field(info, CPU_INFO_SYSTEM, 0);
@@ -78,7 +78,7 @@ value hh_processor_info(void) {
   array = caml_alloc_tuple(num_cpus);
 
   for (i = 0; i < num_cpus; i++) {
-    info = caml_alloc(4, Double_array_tag);
+    info = caml_alloc_float_array(4);
     Store_double_field(
         info,
         CPU_INFO_USER,
@@ -103,7 +103,7 @@ value hh_processor_info(void) {
     total_idle += cpu_load_info[i].cpu_ticks[CPU_STATE_IDLE];
   }
 
-  info = caml_alloc(4, Double_array_tag);
+  info = caml_alloc_float_array(4);
   Store_double_field(info, CPU_INFO_USER, total_user / ticks_per_second);
   Store_double_field(info, CPU_INFO_USER_NICE, total_nice / ticks_per_second);
   Store_double_field(info, CPU_INFO_SYSTEM, total_system / ticks_per_second);
@@ -131,7 +131,7 @@ value scan_line(FILE* fp, long ticks_per_second) {
 
   // Usually, ocaml will box the float type. However, arrays and records that
   // only contain floats get their own special representation which is unboxed
-  cpu_info = caml_alloc(4, Double_array_tag);
+  cpu_info = caml_alloc_float_array(4);
 
   // The numbers in /proc/stat represent clock ticks, so convert to seconds.
   Store_double_field(cpu_info, CPU_INFO_USER, user / ticks_per_second);
