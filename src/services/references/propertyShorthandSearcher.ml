@@ -9,13 +9,14 @@ module Ast = Flow_ast
 module LocMap = Loc_collections.LocMap
 module LocSet = Loc_collections.LocSet
 
-type propKind =
-  | Shorthand
+type shorthandKind =
+  | Obj
   | Import
 
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
-class searcher ~reader ~(targets : Loc_collections.LocSet.t) ~(result : propKind LocMap.t ref) =
+class searcher ~reader ~(targets : Loc_collections.LocSet.t) ~(result : shorthandKind LocMap.t ref)
+  =
   object (_this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -26,10 +27,12 @@ class searcher ~reader ~(targets : Loc_collections.LocSet.t) ~(result : propKind
 
     method! import_named_specifier ~import_kind:_ specifier =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { kind = _; local; remote } = specifier in
-      let ((aloc, _), _) = Base.Option.value ~default:remote local in
-      let loc = loc_of_aloc ~reader aloc in
-      if LocSet.mem loc targets then result := LocMap.add loc Import !result;
+      let { local; remote = ((aloc, _), _); kind = _ } = specifier in
+      (match local with
+      | Some _ -> ()
+      | None ->
+        let loc = loc_of_aloc ~reader aloc in
+        if LocSet.mem loc targets then result := LocMap.add loc Import !result);
       specifier
 
     method! pattern ?kind expr =
@@ -45,8 +48,7 @@ class searcher ~reader ~(targets : Loc_collections.LocSet.t) ~(result : propKind
                 (match key with
                 | Property.Identifier ((aloc, _), _) ->
                   let loc = loc_of_aloc ~reader aloc in
-                  if shorthand && LocSet.mem loc targets then
-                    result := LocMap.add loc Shorthand !result
+                  if shorthand && LocSet.mem loc targets then result := LocMap.add loc Obj !result
                 | Property.Computed _
                 | Property.Literal _ ->
                   ())
@@ -67,7 +69,7 @@ class searcher ~reader ~(targets : Loc_collections.LocSet.t) ~(result : propKind
         | Init { key = Identifier id; shorthand; value = _ } ->
           let ((aloc, _), _) = id in
           let loc = loc_of_aloc ~reader aloc in
-          if shorthand && LocSet.mem loc targets then result := LocMap.add loc Shorthand !result
+          if shorthand && LocSet.mem loc targets then result := LocMap.add loc Obj !result
         | _ -> ()
       in
       super#object_property prop
