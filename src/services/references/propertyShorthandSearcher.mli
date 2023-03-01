@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type propKind =
-  | Shorthand
+type shorthandKind =
+  | Obj
   | Import
 
 (**
@@ -17,4 +17,4 @@ val search :
   reader:Parsing_heaps.Reader.reader ->
   targets:Loc_collections.LocSet.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  propKind Loc_collections.LocMap.t
+  shorthandKind Loc_collections.LocMap.t

@@ -2155,7 +2155,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
             in
             let layout = Js_layout_generator.import_named_specifier expanded_named_import in
             Pretty_printer.print ~source_maps:None ~skip_endline:true layout |> Source.contents
-          | Some PropertyShorthandSearcher.Shorthand ->
+          | Some PropertyShorthandSearcher.Obj ->
             let (from_name, to_name) =
               match ref_kind with
               | FindRefsTypes.PropertyDefinition
