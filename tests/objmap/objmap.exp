@@ -59,9 +59,9 @@ Cannot return `g(...)` because object type [1] is incompatible with `T` [2]. [in
                 ^^^^
 
 References:
-   arity.js:1:26
-    1| function g<T: {}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity.js:13:28
+   13| function f3<T: Columns>(o: T): T {
+                                  ^ [1]
    arity.js:13:32
    13| function f3<T: Columns>(o: T): T {
                                       ^ [2]
@@ -176,9 +176,9 @@ Cannot return `g(...)` because object type [1] is incompatible with `T` [2]. [in
                 ^^^^
 
 References:
-   arity2.js:1:26
-    1| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity2.js:13:28
+   13| function f3<T: Columns>(o: T): T {
+                                  ^ [1]
    arity2.js:13:32
    13| function f3<T: Columns>(o: T): T {
                                       ^ [2]
@@ -859,6 +859,24 @@ References:
               ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- optional.js:11:2
+
+Cannot cast `o3.b` to array type because number [1] is incompatible with undefined [2] in array element.
+[incompatible-cast]
+
+   optional.js:11:2
+   11| (o3.b: Array<number | void>); // Error: void ~> array
+        ^^^^
+
+References:
+   optional.js:3:41
+    3| declare var o3: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;
+                                               ^^^^^^ [1]
+   optional.js:11:23
+   11| (o3.b: Array<number | void>); // Error: void ~> array
+                             ^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- optional.js:15:2
 
 Cannot cast `o6.b` to array type because undefined [1] is incompatible with array type [2]. [incompatible-cast]
@@ -876,5 +894,23 @@ References:
               ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- optional.js:15:2
 
-Found 46 errors
+Cannot cast `o6.b` to array type because number [1] is incompatible with undefined [2] in array element.
+[incompatible-cast]
+
+   optional.js:15:2
+   15| (o6.b: Array<number | void>); // Error: void ~> array
+        ^^^^
+
+References:
+   optional.js:7:42
+    7| declare var o6: $ObjMapi<{a: number, b?: number}, <T>(any, T) => Array<T>>;
+                                                ^^^^^^ [1]
+   optional.js:15:23
+   15| (o6.b: Array<number | void>); // Error: void ~> array
+                             ^^^^ [2]
+
+
+
+Found 48 errors

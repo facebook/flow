@@ -1,30 +1,3 @@
-Error ----------------------------------------------------------------------------------------------------- alias.js:9:2
-
-Cannot cast function to `Tr` because function type [1] contains type variable `Return` [2] which cannot escape from the
-scope in which it was defined [3] (try adding a type annotation to `f` [4]) in the first parameter. [escaped-generic]
-
-   alias.js:9:2
-        v-----
-    9| (f => {
-   10|   return aw(f());
-   11| }: Tr);
-       ^
-
-References:
-   alias.js:5:20
-    5| type Tr = <Return>(() => Pr<Return>) => Return;
-                          ^^^^^^^^^^^^^^^^ [1]
-   alias.js:5:29
-    5| type Tr = <Return>(() => Pr<Return>) => Return;
-                                   ^^^^^^ [2]
-   alias.js:5:12
-    5| type Tr = <Return>(() => Pr<Return>) => Return;
-                  ^^^^^^ [3]
-   alias.js:9:2
-    9| (f => {
-        ^ [4]
-
-
 Error ----------------------------------------------------------------------------------------------------- class.js:9:9
 
 Cannot assign `this.s` to `x` because `X` [1] is incompatible with number [2]. All writes to `x` must be compatible with
@@ -185,24 +158,6 @@ References:
            ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:73:18
-
-class `D` [1] contains `this` [2] which cannot escape from its class [2] (try adding a type annotation to
-`globalCtor` [3]). [escaped-generic]
-
-   class.js:73:18
-   73|     globalCtor = this.constructor;
-                        ^^^^ [1]
-
-References:
-   class.js:71:7
-   71| class D {
-             ^ [2]
-   class.js:69:5
-   69| let globalCtor;
-           ^^^^^^^^^^ [3]
-
-
 Error ------------------------------------------------------------------------------------------------------ func.js:6:7
 
 Cannot assign `a` to `x` because `X` [1] is incompatible with number [2]. All writes to `x` must be compatible with the
@@ -267,10 +222,18 @@ References:
            ^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- func.js:43:5
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   43| var xa = [];
+           ^^
+
+
 Error ---------------------------------------------------------------------------------------------------- func.js:46:13
 
-Cannot assign `a` to `xa[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `xa` [3]). [escaped-generic]
+Cannot assign `a` to `xa[0]` because `T` [1] is incompatible with unknown element of empty array [2].
+[incompatible-type]
 
    func.js:46:13
    46|     xa[0] = a;
@@ -280,12 +243,9 @@ References:
    func.js:44:19
    44| function fa<T>(a: T, b: boolean): T {
                          ^ [1]
-   func.js:44:13
-   44| function fa<T>(a: T, b: boolean): T {
-                   ^ [2]
    func.js:43:5
    43| var xa = [];
-           ^^ [3]
+           ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- import.js:9:9
@@ -453,25 +413,22 @@ References:
            ^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:7:12
+Error ----------------------------------------------------------------------------------------------------- misc.js:3:13
 
-Cannot assign `x` to `e[n]` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `e` [3]). [escaped-generic]
+Cannot call `Array` because `T` [1] is underconstrained by new `Array` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   misc.js:7:12
-   7|     e[n] = x;
-                 ^
+   misc.js:3:13
+     3| var e = new Array(10);
+                    ^^^^^
 
 References:
-   misc.js:5:19
-   5| function f1<X>(x: X, escape: boolean, n: number): X | number {
-                        ^ [1]
-   misc.js:5:13
-   5| function f1<X>(x: X, escape: boolean, n: number): X | number {
-                  ^ [2]
-   misc.js:3:5
-   3| var e = new Array(10);
-          ^ [3]
+   <BUILTINS>/core.js:891:21
+   891| declare class Array<T> extends $ReadOnlyArray<T> {
+                            ^ [1]
+   misc.js:3:9
+     3| var e = new Array(10);
+                ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:15:7
@@ -512,8 +469,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:25:11
 
-Cannot assign `x` to `a.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `a` [3]). [escaped-generic]
+Cannot assign `x` to `a.x` because `X` [1] is incompatible with number [2]. [incompatible-type]
 
    misc.js:25:11
    25|     a.x = x;
@@ -523,18 +479,14 @@ References:
    misc.js:23:19
    23| function f2<X>(x: X, escape: boolean): X | number {
                          ^ [1]
-   misc.js:23:13
-   23| function f2<X>(x: X, escape: boolean): X | number {
-                   ^ [2]
-   misc.js:21:5
+   misc.js:21:41
    21| var a = Object.create(null, {x: {value: 42}});
-           ^ [3]
+                                               ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:34:13
 
-Cannot assign `x` to `a2[n]` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `a2` [3]). [escaped-generic]
+Cannot assign `x` to `a2[n]` because `X` [1] is incompatible with string literal `x` [2]. [incompatible-type]
 
    misc.js:34:13
    34|     a2[n] = x;
@@ -544,12 +496,9 @@ References:
    misc.js:32:19
    32| function f3<X>(x: X, escape: boolean, n: number): X | string {
                          ^ [1]
-   misc.js:32:13
-   32| function f3<X>(x: X, escape: boolean, n: number): X | string {
-                   ^ [2]
-   misc.js:30:5
+   misc.js:30:10
    30| var a2 = Object.keys({x: 42});
-           ^^ [3]
+                ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:42:7
@@ -628,48 +577,41 @@ References:
                                       ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:69:9
+Error ----------------------------------------------------------------------------------------------------- misc.js:67:5
 
-Cannot assign `x` to `u` because `X` [1] is incompatible with number [2]. All writes to `u` must be compatible with the
-type of its initializer [3]. Add an annotation to `u` [3] if a different type is desired. [incompatible-type]
+Cannot compute a type for `u` because its definition includes references to itself [1]. Please add an annotation to this
+definition [2] [recursive-definition]
 
-   misc.js:69:9
-   69|     u = x;
-               ^
-
-References:
-   misc.js:67:17
-   67| var u = (<X>(x: X, escape: boolean): X => {
-                       ^ [1]
-   misc.js:72:4
-   72| })(42, true);
-          ^^ [2]
    misc.js:67:5
    67| var u = (<X>(x: X, escape: boolean): X => {
-           ^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- misc.js:71:10
-
-Cannot return `u` because number [1] is incompatible with `X` [2]. [incompatible-return]
-
-   misc.js:71:10
-   71|   return u;
-                ^
+           ^ [2]
 
 References:
-   misc.js:72:4
-   72| })(42, true);
-          ^^ [1]
-   misc.js:67:38
+   misc.js:71:10
+   71|   return u;
+                ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:67:5
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `u` [1] depends on other definition [2]
+Please add type annotations to these definitions [1] [definition-cycle]
+
+   misc.js:67:5
    67| var u = (<X>(x: X, escape: boolean): X => {
-                                            ^ [2]
+           ^ [1]
+
+References:
+   misc.js:69:5
+   69|     u = x;
+           ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:76:10
 
-Cannot assign `y` to `x0` because `X` [1] is incompatible with variable `x0` of unknown type [2]. All writes to `x0`
-must be compatible with the type of its initializer [2]. Add an annotation to `x0` [2] if a different type is desired.
+Cannot assign `y` to `x0` because `X` [1] is incompatible with unknown element of empty array [2]. All writes to `x0`
+must be compatible with the type of its initializer [3]. Add an annotation to `x0` [3] if a different type is desired.
 [incompatible-type]
 
    misc.js:76:10
@@ -680,14 +622,17 @@ References:
    misc.js:75:20
    75|   function f<X>(y: X) {
                           ^ [1]
+   misc.js:74:16
+   74| for (var x0 of []) {
+                      ^^ [2]
    misc.js:74:10
    74| for (var x0 of []) {
-                ^^ [2]
+                ^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:82:10
 
-Cannot assign `y` to `x1` because `X` [1] is incompatible with variable `x1` of unknown type [2]. All writes to `x1`
+Cannot assign `y` to `x1` because `X` [1] is incompatible with `x1` (resolved to type `empty`) [2]. All writes to `x1`
 must be compatible with the type of its initializer [2]. Add an annotation to `x1` [2] if a different type is desired.
 [incompatible-type]
 
@@ -706,7 +651,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:88:10
 
-Cannot assign `y` to `x2` because `X` [1] is incompatible with variable `x2` of unknown type [2]. All writes to `x2`
+Cannot assign `y` to `x2` because `X` [1] is incompatible with `x2` (resolved to type `empty`) [2]. All writes to `x2`
 must be compatible with the type of its initializer [2]. Add an annotation to `x2` [2] if a different type is desired.
 [incompatible-type]
 
@@ -725,7 +670,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:94:10
 
-Cannot assign `y` to `x3` because `X` [1] is incompatible with variable `x3` of unknown type [2]. All writes to `x3`
+Cannot assign `y` to `x3` because `X` [1] is incompatible with `x3` (resolved to type `empty`) [2]. All writes to `x3`
 must be compatible with the type of its initializer [2]. Add an annotation to `x3` [2] if a different type is desired.
 [incompatible-type]
 
@@ -764,10 +709,18 @@ References:
             ^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------------- misc.js:124:5
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   124| var x4 = [];
+            ^^
+
+
 Error --------------------------------------------------------------------------------------------------- misc.js:126:11
 
-Cannot assign `t` to `x4[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
-adding a type annotation to `x4` [3]). [escaped-generic]
+Cannot assign `t` to `x4[0]` because `T` [1] is incompatible with unknown element of empty array [2].
+[incompatible-type]
 
    misc.js:126:11
    126|   x4[0] = t;
@@ -777,12 +730,9 @@ References:
    misc.js:125:18
    125| function f<T>(t: T) {
                          ^ [1]
-   misc.js:125:12
-   125| function f<T>(t: T) {
-                   ^ [2]
    misc.js:124:5
    124| var x4 = [];
-            ^^ [3]
+            ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- pred.js:5:30

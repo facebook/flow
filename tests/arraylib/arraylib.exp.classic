@@ -1,0 +1,448 @@
+Error ------------------------------------------------------------------------------------------------ array_lib.js:5:34
+
+Cannot call `foo` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   array_lib.js:5:34
+   5| var b = a.map(function (x) { foo(x); return "" + x; });
+                                       ^
+
+References:
+   array_lib.js:4:10
+   4| var a = [0];
+               ^ [1]
+   array_lib.js:2:16
+   2| function foo(x:string) { }
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ array_lib.js:8:17
+
+Cannot assign `b[0]` to `d` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   array_lib.js:8:17
+   8| var d: number = b[0];
+                      ^^^^
+
+References:
+   array_lib.js:5:45
+   5| var b = a.map(function (x) { foo(x); return "" + x; });
+                                                  ^^^^^^ [1]
+   array_lib.js:8:8
+   8| var d: number = b[0];
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:10:23
+
+Cannot assign `a.reverse()` to `e` because number [1] is incompatible with string [2] in array element.
+[incompatible-type]
+
+   array_lib.js:10:23
+   10| var e:Array<string> = a.reverse();
+                             ^^^^^^^^^^^
+
+References:
+   array_lib.js:4:10
+    4| var a = [0];
+                ^ [1]
+   array_lib.js:10:13
+   10| var e:Array<string> = a.reverse();
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:21:33
+
+Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   array_lib.js:21:33
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                       ^^^ [1]
+
+References:
+   array_lib.js:21:14
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:21:38
+
+Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   array_lib.js:21:38
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                            ^^^ [1]
+
+References:
+   array_lib.js:21:14
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:21:43
+
+Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   array_lib.js:21:43
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                                 ^^^ [1]
+
+References:
+   array_lib.js:21:14
+   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:46:29
+
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+
+   array_lib.js:46:29
+     46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+                                     ^^^^^^^^^^^^^^^^
+
+References:
+   array_lib.js:46:4
+     46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+            ^^ [1]
+   <BUILTINS>/core.js:1297:13
+   1297|     length: number;
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:47:34
+
+Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+
+   array_lib.js:47:34
+     47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+                                          ^^^^^^^^^^^^^^^^
+
+References:
+   array_lib.js:47:4
+     47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+            ^^ [1]
+   <BUILTINS>/core.js:1297:13
+   1297|     length: number;
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ array_lib.js:59:4
+
+Cannot cast `Array.from(...)` to array type because string [1] is incompatible with empty [2] in array element.
+[incompatible-cast]
+
+   array_lib.js:59:4
+     59|   (Array.from("abcd"): Array<empty>); // ERROR
+            ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:1082:37
+   1082|     static from(str: string): Array<string>;
+                                             ^^^^^^ [1]
+   array_lib.js:59:30
+     59|   (Array.from("abcd"): Array<empty>); // ERROR
+                                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:66:57
+
+Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because number [1] is incompatible with string [2] in array
+element. [incompatible-type]
+
+   array_lib.js:66:57
+   66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                                               ^ [1]
+
+References:
+   array_lib.js:66:38
+   66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:66:60
+
+Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because number [1] is incompatible with string [2] in array
+element. [incompatible-type]
+
+   array_lib.js:66:60
+   66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                                                  ^ [1]
+
+References:
+   array_lib.js:66:38
+   66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- at.js:6:5
+
+Cannot call `arr.at` because function [1] requires another argument. [incompatible-call]
+
+   at.js:6:5
+     6| arr.at(); // ERROR
+            ^^
+
+References:
+   <BUILTINS>/core.js:701:5
+   701|     at(index: number): T | void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------------- at.js:7:8
+
+Cannot call `arr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   at.js:7:8
+     7| arr.at("1"); // ERROR
+               ^^^ [1]
+
+References:
+   <BUILTINS>/core.js:701:15
+   701|     at(index: number): T | void;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- at.js:14:7
+
+Cannot call `roArr.at` because function [1] requires another argument. [incompatible-call]
+
+   at.js:14:7
+    14| roArr.at(); // ERROR
+              ^^
+
+References:
+   <BUILTINS>/core.js:701:5
+   701|     at(index: number): T | void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ at.js:15:10
+
+Cannot call `roArr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2].
+[incompatible-call]
+
+   at.js:15:10
+    15| roArr.at("1"); // ERROR
+                 ^^^ [1]
+
+References:
+   <BUILTINS>/core.js:701:15
+   701|     at(index: number): T | void;
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- callback_this.js:6:25
+
+Cannot get `this.y` because property `y` is missing in undefined [1]. [incompatible-use]
+
+   callback_this.js:6:25
+   6|             return this.y; // error, function has wrong this
+                              ^
+
+References:
+   callback_this.js:5:45
+   5|         this.x = this.x.map(function (this: void, z) {
+                                                  ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- flat.js:3:34
+
+Cannot assign `arr1.flat()` to `result1_1` because number [1] is incompatible with string [2] in array element.
+[incompatible-type]
+
+   flat.js:3:34
+   3| const result1_1: Array<string> = arr1.flat(); // Error
+                                       ^^^^^^^^^^^
+
+References:
+   flat.js:1:15
+   1| const arr1 = [1];
+                    ^ [1]
+   flat.js:3:24
+   3| const result1_1: Array<string> = arr1.flat(); // Error
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- flat.js:5:43
+
+Cannot assign `arr1.flat()` to `result1_3` because number [1] is incompatible with string [2] in array element.
+[incompatible-type]
+
+   flat.js:5:43
+   5| const result1_3: $ReadOnlyArray<string> = arr1.flat(); // Error
+                                                ^^^^^^^^^^^
+
+References:
+   flat.js:1:15
+   1| const arr1 = [1];
+                    ^ [1]
+   flat.js:5:33
+   5| const result1_3: $ReadOnlyArray<string> = arr1.flat(); // Error
+                                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- flat.js:9:34
+
+Cannot assign `arr2.flat()` to `result2_1` because number [1] is incompatible with string [2] in array element.
+[incompatible-type]
+
+   flat.js:9:34
+   9| const result2_1: Array<string> = arr2.flat(); // Error
+                                       ^^^^^^^^^^^
+
+References:
+   flat.js:7:25
+   7| const arr2: Array<Array<number>> = [[1]];
+                              ^^^^^^ [1]
+   flat.js:9:24
+   9| const result2_1: Array<string> = arr2.flat(); // Error
+                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:11:34
+
+Cannot assign `arr2.flat(...)` to `result2_3` because array type [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   flat.js:11:34
+   11| const result2_3: Array<number> = arr2.flat(0); // Error
+                                        ^^^^^^^^^^^^
+
+References:
+   flat.js:7:19
+    7| const arr2: Array<Array<number>> = [[1]];
+                         ^^^^^^^^^^^^^ [1]
+   flat.js:11:24
+   11| const result2_3: Array<number> = arr2.flat(0); // Error
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:13:34
+
+Cannot assign `arr2.flat(...)` to `result2_5` because number [1] is incompatible with string [2] in array element.
+[incompatible-type]
+
+   flat.js:13:34
+   13| const result2_5: Array<string> = arr2.flat(1); // Error
+                                        ^^^^^^^^^^^^
+
+References:
+   flat.js:7:25
+    7| const arr2: Array<Array<number>> = [[1]];
+                               ^^^^^^ [1]
+   flat.js:13:24
+   13| const result2_5: Array<string> = arr2.flat(1); // Error
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:17:34
+
+Cannot assign `arr3.flat()` to `result3_1` because array type [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   flat.js:17:34
+   17| const result3_1: Array<number> = arr3.flat(); // Error
+                                        ^^^^^^^^^^^
+
+References:
+   flat.js:15:25
+   15| const arr3: Array<Array<Array<number>>> = [[[1]]];
+                               ^^^^^^^^^^^^^ [1]
+   flat.js:17:24
+   17| const result3_1: Array<number> = arr3.flat(); // Error
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:20:34
+
+Cannot assign `arr3.flat(...)` to `result3_2` because mixed [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   flat.js:20:34
+    20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
+                                         ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:832:32
+   832|     flat(depth: number): Array<mixed>;
+                                       ^^^^^ [1]
+   flat.js:20:24
+    20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
+                               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:25:34
+
+Cannot assign `arr2.flat(...)` to `result2_6` because mixed [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   flat.js:25:34
+    25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
+                                         ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:832:32
+   832|     flat(depth: number): Array<mixed>;
+                                       ^^^^^ [1]
+   flat.js:25:24
+    25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
+                               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:30:34
+
+Cannot assign `arr4.flat()` to `result4_0` because array literal [1] is incompatible with number [2] in array element.
+[incompatible-type]
+
+   flat.js:30:34
+   30| const result4_0: Array<number> = arr4.flat(); // Error - don't support this
+                                        ^^^^^^^^^^^
+
+References:
+   flat.js:28:18
+   28| const arr4 = [1, [2]];
+                        ^^^ [1]
+   flat.js:30:24
+   30| const result4_0: Array<number> = arr4.flat(); // Error - don't support this
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:31:41
+
+Cannot assign `arr4.flat()` to `result4_1` because number [1] is incompatible with array type [2] in array element.
+[incompatible-type]
+
+   flat.js:31:41
+   31| const result4_1: Array<Array<number>> = arr4.flat(); // Error - don't support this
+                                               ^^^^^^^^^^^
+
+References:
+   flat.js:28:15
+   28| const arr4 = [1, [2]];
+                     ^ [1]
+   flat.js:31:24
+   31| const result4_1: Array<Array<number>> = arr4.flat(); // Error - don't support this
+                              ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- length.js:7:3
+
+Cannot assign `6` to `r.length` because property `length` is not writable. [cannot-write]
+
+   7| r.length = 6; //ng
+        ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- length.js:10:3
+
+Cannot assign `7` to `t.length` because property `length` is not writable. [cannot-write]
+
+   10| t.length = 7; //ng
+         ^^^^^^
+
+
+
+Found 28 errors

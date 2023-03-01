@@ -60,16 +60,18 @@ References:
                                                   ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- reduce.js:8:27
+Error --------------------------------------------------------------------------------------------------- reduce.js:7:15
 
-Cannot call `nums.reduce` with function bound to `callbackfn` because number [1] is incompatible with `T` [2] in the
-return value. [incompatible-call]
+Cannot call `nums.reduce` because number [1] is incompatible with `T` [2] in the return value. [incompatible-call]
 
+   reduce.js:7:15
+   7|   return nums.reduce<T>(
+                    ^^^^^^
+
+References:
    reduce.js:8:27
    8|     ((prevnum, curnum) => curnum + prevnum),
                                 ^^^^^^^^^^^^^^^^ [1]
-
-References:
    reduce.js:7:22
    7|   return nums.reduce<T>(
                            ^ [2]
@@ -91,3 +93,6 @@ References:
 
 
 Found 6 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

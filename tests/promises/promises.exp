@@ -185,23 +185,27 @@ Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [
                                     ^^^
 
 References:
-   allSettled.js:22:84
-   22| async function test1(): Promise<[$SettledPromiseResult<Foo>, $SettledPromiseResult<Bar>]> {
-                                                                                          ^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- allSettled.js:40:30
-
-Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [prop-missing]
-
-   allSettled.js:40:30
-   40|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
-                                    ^^^
-
-References:
    allSettled.js:24:31
    24|   const bar = Promise.resolve(new Bar());
                                      ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- allSettled.js:44:28
+
+`T` [1] is underconstrained by async return [2]. Either add explicit type arguments or cast the expression to your
+expected type. [underconstrained-implicit-instantiation]
+
+   allSettled.js:44:28
+     44|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
+                                    ^^^^^
+
+References:
+   <BUILTINS>/core.js:1942:25
+   1942| declare function $await<T>(p: Promise<T> | T): T;
+                                 ^ [1]
+   allSettled.js:44:5
+     44|     return (second.status: empty); // Spurious underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19

@@ -66,32 +66,34 @@ References:
                              ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- error.js:11:20
+Error --------------------------------------------------------------------------------------------------- error.js:12:12
 
-Cannot call `fn2` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `newFn2` with function bound to the first parameter because string [1] is incompatible with number [2] in
+the first parameter. [incompatible-call]
 
-   error.js:11:20
-   11| const newFn2 = fn2(42);
-                          ^^ [1]
-
-References:
    error.js:12:12
    12| newFn2((x: string) => {});
-                  ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- error.js:15:5
-
-Cannot call `fn3` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
-
-   error.js:15:5
-   15| fn3(42, (x: string) => {}); // The error should point to 42 and not string.
-           ^^ [1]
+                  ^^^^^^ [1]
 
 References:
+   error.js:11:20
+   11| const newFn2 = fn2(42);
+                          ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- error.js:15:13
+
+Cannot call `fn3` with function bound to `y` because string [1] is incompatible with number [2] in the first parameter.
+[incompatible-call]
+
    error.js:15:13
    15| fn3(42, (x: string) => {}); // The error should point to 42 and not string.
-                   ^^^^^^ [2]
+                   ^^^^^^ [1]
+
+References:
+   error.js:15:5
+   15| fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+           ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- error.js:20:2
@@ -138,9 +140,9 @@ Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible w
               ^^ [1]
 
 References:
-   implicit_bounded_instantiation.js:5:12
+   implicit_bounded_instantiation.js:5:21
     5| class C<T: Middle = Middle> {
-                  ^^^^^^ [2]
+                           ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:18:8
@@ -153,9 +155,9 @@ Cannot call `a.meth` with `new Base()` bound to `a` because `Base` [1] is incomp
               ^^^^^^^^^^ [1]
 
 References:
-   implicit_bounded_instantiation.js:5:12
+   implicit_bounded_instantiation.js:5:21
     5| class C<T: Middle = Middle> {
-                  ^^^^^^ [2]
+                           ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- inout.js:7:2
@@ -237,39 +239,19 @@ References:
              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- poly.js:17:16
-
-Cannot assign `foo.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   poly.js:17:16
-   17| var x:string = foo.x;
-                      ^^^^^
-
-References:
-   poly.js:18:11
-   18| var z:Foo<number> = Q.bar(foo,"");
-                 ^^^^^^ [1]
-   poly.js:17:7
-   17| var x:string = foo.x;
-             ^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- poly.js:18:31
 
-Cannot assign `Q.bar(...)` to `z` because string [1] is incompatible with number [2] in type argument `T` [3].
-[incompatible-type-arg]
+Cannot call `Q.bar` with empty string bound to `y` because string [1] is incompatible with number [2].
+[incompatible-call]
 
    poly.js:18:31
    18| var z:Foo<number> = Q.bar(foo,"");
                                      ^^ [1]
 
 References:
-   poly.js:18:11
-   18| var z:Foo<number> = Q.bar(foo,"");
-                 ^^^^^^ [2]
-   poly.js:1:11
-    1| class Foo<T> {
-                 ^ [3]
+   poly.js:16:19
+   16| var foo = new Foo(0);
+                         ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:8:40
@@ -704,4 +686,4 @@ References:
 
 
 
-Found 42 errors
+Found 41 errors

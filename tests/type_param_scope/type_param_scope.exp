@@ -67,8 +67,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- method_shadow.js:43:6
 
-Cannot cast `g.m(...)` to `G` because string [1] is incompatible with number [2] in type argument `T` [3].
-[incompatible-cast]
+Cannot call `g.m` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
    method_shadow.js:43:6
    43| (g.m(""): G<number>); // err, string ~> number
@@ -78,9 +77,6 @@ References:
    method_shadow.js:43:13
    43| (g.m(""): G<number>); // err, string ~> number
                    ^^^^^^ [2]
-   method_shadow.js:34:9
-   34| class G<T> {
-               ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- method_shadow.js:51:18

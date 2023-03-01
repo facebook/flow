@@ -88,6 +88,24 @@ References:
                        ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:60:22
+
+Cannot assign object literal to `_d` because string [1] is incompatible with number [2] in property `y`.
+[incompatible-type]
+
+   test.js:60:22
+   60| let _d : $Shape<B> = { y : "4" }; // no error in old inference, error in LTI
+                            ^^^^^^^^^^^
+
+References:
+   test.js:60:28
+   60| let _d : $Shape<B> = { y : "4" }; // no error in old inference, error in LTI
+                                  ^^^ [1]
+   test.js:48:8
+   48|   +y = 4;
+              ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:61:22
 
 Cannot assign object literal to `_e` because property `z` is missing in `B` [1] but exists in object literal [2].
@@ -101,6 +119,24 @@ References:
    test.js:61:17
    61| let _e : $Shape<B> = { z : 4 }; // flow error
                        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:63:22
+
+Cannot assign object literal to `_g` because string [1] is incompatible with number [2] in property `y`.
+[incompatible-type]
+
+   test.js:63:22
+   63| let _g : $Shape<C> = { y : "4" }; // no error in old inference, error in LTI
+                            ^^^^^^^^^^^
+
+References:
+   test.js:63:28
+   63| let _g : $Shape<C> = { y : "4" }; // no error in old inference, error in LTI
+                                  ^^^ [1]
+   test.js:48:8
+   48|   +y = 4;
+              ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:65:22
@@ -151,4 +187,4 @@ References:
 
 
 
-Found 10 errors
+Found 12 errors

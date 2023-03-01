@@ -1,6 +1,6 @@
 [
   {
-    "type":"(x: empty) => empty",
+    "type":"(x: any) => any",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -15,7 +15,7 @@
     "end":20
   },
   {
-    "type":"empty",
+    "type":"any (implicit)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -30,7 +30,7 @@
     "end":22
   },
   {
-    "type":"empty",
+    "type":"any (implicit)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -45,7 +45,7 @@
     "end":22
   },
   {
-    "type":"empty",
+    "type":"any (implicit)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -60,7 +60,7 @@
     "end":22
   },
   {
-    "type":"empty",
+    "type":"any (implicit)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -75,7 +75,7 @@
     "end":23
   },
   {
-    "type":"empty",
+    "type":"any (implicit)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -90,7 +90,7 @@
     "end":11
   },
   {
-    "type":"empty",
+    "type":"any (implicit)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -105,7 +105,7 @@
     "end":10
   },
   {
-    "type":"empty",
+    "type":"any (implicit)",
     "reasons":[],
     "loc":{
       "source":"test.js",

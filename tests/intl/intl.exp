@@ -528,31 +528,19 @@ References:
                                          ^^^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- intl.js:7:45
+Error ----------------------------------------------------------------------------------------------------- intl.js:7:43
 
 Cannot call `getCanonicalLocales` with array literal bound to `locales` because number [1] is incompatible with
 string [2] in array element. [incompatible-call]
 
+   intl.js:7:43
+    7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
+                                                 ^^^^^^^^
+
+References:
    intl.js:7:45
     7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
                                                    ^ [1]
-
-References:
-   <BUILTINS>/intl.js:20:35
-   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
-                                         ^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- intl.js:7:48
-
-Cannot call `getCanonicalLocales` with array literal bound to `locales` because number [1] is incompatible with
-string [2] in array element. [incompatible-call]
-
-   intl.js:7:48
-    7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
-                                                      ^ [1]
-
-References:
    <BUILTINS>/intl.js:20:35
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                                          ^^^^^^^^^^^ [2]
@@ -1015,7 +1003,7 @@ References:
 
 
 
-Found 67 errors
+Found 66 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

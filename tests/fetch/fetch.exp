@@ -63,31 +63,19 @@ References:
                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------- headers.js:4:24
+Error -------------------------------------------------------------------------------------------------- headers.js:4:23
 
 Cannot call `Headers` with array literal bound to `init` because string [1] is incompatible with tuple type [2] in array
 element. [incompatible-call]
 
+   headers.js:4:23
+      4| const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    headers.js:4:24
       4| const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
                                 ^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/bom.js:1476:36
-   1476| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
-                                            ^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- headers.js:4:40
-
-Cannot call `Headers` with array literal bound to `init` because string [1] is incompatible with tuple type [2] in array
-element. [incompatible-call]
-
-   headers.js:4:40
-      4| const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
-                                                ^^^^^^^^^^^^ [1]
-
-References:
    <BUILTINS>/bom.js:1476:36
    1476| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
                                             ^^^^^^^^^^^^^^^^ [2]
@@ -757,31 +745,19 @@ References:
                                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ urlsearchparams.js:4:32
+Error ------------------------------------------------------------------------------------------ urlsearchparams.js:4:31
 
 Cannot call `URLSearchParams` with array literal bound to `query` because string [1] is incompatible with tuple type [2]
 in array element. [incompatible-call]
 
+   urlsearchparams.js:4:31
+      4| const b = new URLSearchParams(['key1', 'value1']); // not correct
+                                       ^^^^^^^^^^^^^^^^^^
+
+References:
    urlsearchparams.js:4:32
       4| const b = new URLSearchParams(['key1', 'value1']); // not correct
                                         ^^^^^^ [1]
-
-References:
-   <BUILTINS>/bom.js:1497:58
-   1497|     constructor(query?: string | URLSearchParams | Array<[string, string]> | { [string]: string, ... } ): void;
-                                                                  ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ urlsearchparams.js:4:40
-
-Cannot call `URLSearchParams` with array literal bound to `query` because string [1] is incompatible with tuple type [2]
-in array element. [incompatible-call]
-
-   urlsearchparams.js:4:40
-      4| const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                                ^^^^^^^^ [1]
-
-References:
    <BUILTINS>/bom.js:1497:58
    1497|     constructor(query?: string | URLSearchParams | Array<[string, string]> | { [string]: string, ... } ): void;
                                                                   ^^^^^^^^^^^^^^^^ [2]
@@ -943,7 +919,7 @@ References:
 
 
 
-Found 53 errors
+Found 51 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

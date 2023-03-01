@@ -124,8 +124,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:46:14
 
-Cannot assign `batchRequests.map(...)` to `batchRequests` because property `path` is missing in object literal [1] but
-exists in object type [2] in array element. [prop-missing]
+Cannot call `batchRequests.map` with function bound to `callbackfn` because property `path` is missing in object
+literal [1] but exists in object type [2] in the return value. [prop-missing]
 
    annot.js:46:14
                     v

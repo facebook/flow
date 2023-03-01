@@ -1,26 +1,29 @@
-Error --------------------------------------------------------------------------------------------------- apply.js:10:23
+Error ---------------------------------------------------------------------------------------------------- apply.js:10:7
 
-Cannot call `apply` with array literal bound to `args` because number [1] is incompatible with number literal `123` [2]
-in the second argument. [incompatible-call]
+Cannot call `apply` with `noRest1` bound to `fn` because number [1] is incompatible with number literal `123` [2] in the
+second argument. [incompatible-call]
 
+   apply.js:10:7
+   10| apply(noRest1, ['hi', 456]); // Error - 456 ~> 123
+             ^^^^^^^
+
+References:
    apply.js:10:23
    10| apply(noRest1, ['hi', 456]); // Error - 456 ~> 123
                              ^^^ [1]
-
-References:
    apply.js:8:30
     8| function noRest1(x: 'hi', y: 123): true { return true; }
                                     ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:11:16
+Error ---------------------------------------------------------------------------------------------------- apply.js:11:7
 
-Cannot call `apply` with array literal bound to `args` because function [1] requires another argument from function
-type [2]. [incompatible-call]
+Cannot call `apply` with `noRest1` bound to `fn` because function [1] requires another argument from function type [2].
+[incompatible-call]
 
-   apply.js:11:16
+   apply.js:11:7
    11| apply(noRest1, ['hi']); // Error - too few args
-                      ^^^^^^
+             ^^^^^^^
 
 References:
    apply.js:8:1
@@ -31,14 +34,14 @@ References:
              ^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:17:18
+Error ---------------------------------------------------------------------------------------------------- apply.js:17:7
 
-Cannot call `apply` with array literal bound to `args` because number [1] is incompatible with number literal `123` [2]
-in index 1. [incompatible-call]
+Cannot call `apply` with `withRest1` bound to `fn` because number [1] is incompatible with number literal `123` [2] in
+index 1. [incompatible-call]
 
-   apply.js:17:18
+   apply.js:17:7
    17| apply(withRest1, ['hi', 456]); // Error - 456 ~> 123
-                        ^^^^^^^^^^^
+             ^^^^^^^^^
 
 References:
    apply.js:17:25
@@ -49,14 +52,14 @@ References:
                                           ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:18:18
+Error ---------------------------------------------------------------------------------------------------- apply.js:18:7
 
-Cannot call `apply` with array literal bound to `args` because rest array [1] has 1 element but tuple type [2] has 2
+Cannot call `apply` with `withRest1` bound to `fn` because rest array [1] has 1 element but tuple type [2] has 2
 elements. [invalid-tuple-arity]
 
-   apply.js:18:18
+   apply.js:18:7
    18| apply(withRest1, ['hi']); // Error - too few args
-                        ^^^^^^
+             ^^^^^^^^^
 
 References:
    apply.js:2:7
@@ -67,14 +70,14 @@ References:
                                    ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:19:18
+Error ---------------------------------------------------------------------------------------------------- apply.js:19:7
 
-Cannot call `apply` with array literal bound to `args` because rest array [1] has 3 elements but tuple type [2] has 2
+Cannot call `apply` with `withRest1` bound to `fn` because rest array [1] has 3 elements but tuple type [2] has 2
 elements. [invalid-tuple-arity]
 
-   apply.js:19:18
+   apply.js:19:7
    19| apply(withRest1, ['hi', 123, false]); // Error - too many args
-                        ^^^^^^^^^^^^^^^^^^
+             ^^^^^^^^^
 
 References:
    apply.js:2:7
@@ -85,29 +88,32 @@ References:
                                    ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:29:27
+Error --------------------------------------------------------------------------------------------------- apply.js:29:11
 
-Cannot call `applyType` with array literal bound to `args` because number [1] is incompatible with number literal
-`123` [2] in the second argument. [incompatible-call]
+Cannot call `applyType` with `noRest2` bound to `fn` because number [1] is incompatible with number literal `123` [2] in
+the second argument. [incompatible-call]
 
+   apply.js:29:11
+   29| applyType(noRest2, ['hi', 456]); // Error - 456 ~> 123
+                 ^^^^^^^
+
+References:
    apply.js:29:27
    29| applyType(noRest2, ['hi', 456]); // Error - 456 ~> 123
                                  ^^^ [1]
-
-References:
    apply.js:27:30
    27| function noRest2(x: 'hi', y: 123): true { return true; }
                                     ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:30:20
+Error --------------------------------------------------------------------------------------------------- apply.js:30:11
 
-Cannot call `applyType` with array literal bound to `args` because function [1] requires another argument from function
+Cannot call `applyType` with `noRest2` bound to `fn` because function [1] requires another argument from function
 type [2]. [incompatible-call]
 
-   apply.js:30:20
+   apply.js:30:11
    30| applyType(noRest2, ['hi']); // Error - too few args
-                          ^^^^^^
+                 ^^^^^^^
 
 References:
    apply.js:27:1
@@ -118,14 +124,14 @@ References:
              ^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:36:22
+Error --------------------------------------------------------------------------------------------------- apply.js:36:11
 
-Cannot call `applyType` with array literal bound to `args` because number [1] is incompatible with number literal
-`123` [2] in index 1. [incompatible-call]
+Cannot call `applyType` with `withRest2` bound to `fn` because number [1] is incompatible with number literal `123` [2]
+in index 1. [incompatible-call]
 
-   apply.js:36:22
+   apply.js:36:11
    36| applyType(withRest2, ['hi', 456]); // Error - 456 ~> 123
-                            ^^^^^^^^^^^
+                 ^^^^^^^^^
 
 References:
    apply.js:36:29
@@ -136,14 +142,14 @@ References:
                                           ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:37:22
+Error --------------------------------------------------------------------------------------------------- apply.js:37:11
 
-Cannot call `applyType` with array literal bound to `args` because rest array [1] has 1 element but tuple type [2] has 2
+Cannot call `applyType` with `withRest2` bound to `fn` because rest array [1] has 1 element but tuple type [2] has 2
 elements. [invalid-tuple-arity]
 
-   apply.js:37:22
+   apply.js:37:11
    37| applyType(withRest2, ['hi']); // Error - too few args
-                            ^^^^^^
+                 ^^^^^^^^^
 
 References:
    apply.js:23:7
@@ -154,14 +160,14 @@ References:
                                    ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:38:22
+Error --------------------------------------------------------------------------------------------------- apply.js:38:11
 
-Cannot call `applyType` with array literal bound to `args` because rest array [1] has 3 elements but tuple type [2] has
-2 elements. [invalid-tuple-arity]
+Cannot call `applyType` with `withRest2` bound to `fn` because rest array [1] has 3 elements but tuple type [2] has 2
+elements. [invalid-tuple-arity]
 
-   apply.js:38:22
+   apply.js:38:11
    38| applyType(withRest2, ['hi', 123, false]); // Error - too many args
-                            ^^^^^^^^^^^^^^^^^^
+                 ^^^^^^^^^
 
 References:
    apply.js:23:7
@@ -172,13 +178,14 @@ References:
                                    ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:30:2
+Error ------------------------------------------------------------------------------------------------------ jsx.js:30:3
 
-Cannot cast `<AcceptsWhatever />` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot create `AcceptsWhatever` element because string [1] is incompatible with number [2] in the return value.
+[incompatible-use]
 
-   jsx.js:30:2
+   jsx.js:30:3
    30| (<AcceptsWhatever />: number); // Error string ~> number
-        ^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^
 
 References:
    jsx.js:29:68
@@ -189,13 +196,14 @@ References:
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:31:2
+Error ------------------------------------------------------------------------------------------------------ jsx.js:31:3
 
-Cannot cast `<AcceptsWhatever />` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot create `AcceptsWhatever` element because string [1] is incompatible with number [2] in the return value.
+[incompatible-use]
 
-   jsx.js:31:2
+   jsx.js:31:3
    31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^
 
 References:
    jsx.js:29:68
@@ -224,13 +232,14 @@ References:
                                             ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:35:2
+Error ------------------------------------------------------------------------------------------------------ jsx.js:35:3
 
-Cannot cast `<ExpectsProps />` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot create `ExpectsProps` element because string [1] is incompatible with number [2] in the return value.
+[incompatible-use]
 
-   jsx.js:35:2
+   jsx.js:35:3
    35| (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^
 
 References:
    jsx.js:33:72

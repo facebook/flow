@@ -1,0 +1,1207 @@
+Error -------------------------------------------------------------------------------------------------- aliases.js:3:14
+
+Cannot assign `"hello world"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   aliases.js:3:14
+   3| const x: T = "hello world"; // err
+                   ^^^^^^^^^^^^^ [1]
+
+References:
+   aliases.js:3:10
+   3| const x: T = "hello world"; // err
+               ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- aliases.js:7:7
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   aliases.js:7:7
+   7| const x: A = "hello world"; // err
+            ^
+
+References:
+   aliases.js:3:7
+   3| const x: T = "hello world"; // err
+            ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- async.js:4:27
+
+Cannot yield `42` because number [1], a primitive, cannot be used as a subtype of `$AsyncIterable` [2]. You can wrap it
+in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+
+   async.js:4:27
+      4|     var x = await (yield* 42); // TODO: We have a spurious underconstrained error here. To fix this, we will need any propagation for instance type and default resolve after subtyping failure.
+                                   ^^ [1]
+
+References:
+   <BUILTINS>/core.js:1704:11
+   1704| interface $AsyncIterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- bindings.js:4:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:4:2
+   4| (x: string); // num </: string
+       ^
+
+References:
+   bindings.js:3:9
+   3| var x = 42;
+              ^^ [1]
+   bindings.js:4:5
+   4| (x: string); // num </: string
+          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:6:17
+
+Cannot assign `"a"` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   bindings.js:6:17
+   6| var y: number = "a"; // error
+                      ^^^ [1]
+
+References:
+   bindings.js:6:8
+   6| var y: number = "a"; // error
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- bindings.js:7:2
+
+Cannot cast `y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:7:2
+   7| (y: string); // err
+       ^
+
+References:
+   bindings.js:6:8
+   6| var y: number = "a"; // error
+             ^^^^^^ [1]
+   bindings.js:7:5
+   7| (y: string); // err
+          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:10:2
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:10:2
+   10| (a: string); // num </: string
+        ^
+
+References:
+   bindings.js:9:22
+    9| var [a, ...rest1] = [1,2,3];
+                            ^ [1]
+   bindings.js:10:5
+   10| (a: string); // num </: string
+           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:11:2
+
+Cannot cast `rest1[0]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:11:2
+   11| (rest1[0]: string); // num </: string
+        ^^^^^^^^
+
+References:
+   bindings.js:9:24
+    9| var [a, ...rest1] = [1,2,3];
+                              ^ [1]
+   bindings.js:11:12
+   11| (rest1[0]: string); // num </: string
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:14:2
+
+Cannot cast `w` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:14:2
+   14| (w: string); // err
+        ^
+
+References:
+   bindings.js:13:26
+   13| var {w, ...rest2} = { w: 42, p: 100 };
+                                ^^ [1]
+   bindings.js:14:5
+   14| (w: string); // err
+           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:16:2
+
+Cannot cast `rest2.p` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:16:2
+   16| (rest2.p: string); //err
+        ^^^^^^^
+
+References:
+   bindings.js:13:33
+   13| var {w, ...rest2} = { w: 42, p: 100 };
+                                       ^^^ [1]
+   bindings.js:16:11
+   16| (rest2.p: string); //err
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:25:6
+
+Cannot cast `of_` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:25:6
+   25|     (of_: string); //err
+            ^^^
+
+References:
+   bindings.js:24:18
+   24| for (var of_ of [1,2,3]) {
+                        ^ [1]
+   bindings.js:25:11
+   25|     (of_: string); //err
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:25:6
+
+Cannot cast `of_` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:25:6
+   25|     (of_: string); //err
+            ^^^
+
+References:
+   bindings.js:24:20
+   24| for (var of_ of [1,2,3]) {
+                          ^ [1]
+   bindings.js:25:11
+   25|     (of_: string); //err
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:25:6
+
+Cannot cast `of_` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   bindings.js:25:6
+   25|     (of_: string); //err
+            ^^^
+
+References:
+   bindings.js:24:22
+   24| for (var of_ of [1,2,3]) {
+                            ^ [1]
+   bindings.js:25:11
+   25|     (of_: string); //err
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- bindings.js:30:6
+
+Cannot cast `in_` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   bindings.js:30:6
+   30|     (in_: number); //err
+            ^^^
+
+References:
+   bindings.js:29:10
+   29| for (var in_ in { a: 42 }) {
+                ^^^ [1]
+   bindings.js:30:11
+   30|     (in_: number); //err
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:6:10
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:6:10
+   6|         (x: empty);
+               ^
+
+References:
+   class.js:5:12
+   5|     foo(x: number): number {
+                 ^^^^^^ [1]
+   class.js:6:13
+   6|         (x: empty);
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:13:2
+
+Cannot cast `a` to empty because `Annotated` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:13:2
+   13| (a: empty);
+        ^
+
+References:
+   class.js:12:11
+   12| const a = new Annotated();
+                 ^^^^^^^^^^^^^^^ [1]
+   class.js:13:5
+   13| (a: empty);
+           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:15:2
+
+Cannot cast `b` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:15:2
+   15| (b: empty);
+        ^
+
+References:
+   class.js:4:8
+    4|     x: number;
+              ^^^^^^ [1]
+   class.js:15:5
+   15| (b: empty);
+           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:17:2
+
+Cannot cast `c` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:17:2
+   17| (c: empty);
+        ^
+
+References:
+   class.js:5:21
+    5|     foo(x: number): number {
+                           ^^^^^^ [1]
+   class.js:17:5
+   17| (c: empty);
+           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:21:19
+
+Missing an annotation on return. [missing-local-annot]
+
+   21|     foo(x: number) {
+                         
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:22:10
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:22:10
+   22|         (x: empty);
+                ^
+
+References:
+   class.js:21:12
+   21|     foo(x: number) {
+                  ^^^^^^ [1]
+   class.js:22:13
+   22|         (x: empty);
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:29:2
+
+Cannot cast `a1` to empty because `Unannotated` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:29:2
+   29| (a1: empty); // error
+        ^^
+
+References:
+   class.js:28:12
+   28| const a1 = new Unannotated();
+                  ^^^^^^^^^^^^^^^^^ [1]
+   class.js:29:6
+   29| (a1: empty); // error
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:31:2
+
+Cannot cast `b1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:31:2
+   31| (b1: empty); // error
+        ^^
+
+References:
+   class.js:20:9
+   20|     x = 42;
+               ^^ [1]
+   class.js:31:6
+   31| (b1: empty); // error
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:33:2
+
+Cannot cast `c1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   class.js:33:2
+   33| (c1: empty); // error in old inference, no error in LTI
+        ^^
+
+References:
+   class.js:21:12
+   21|     foo(x: number) {
+                  ^^^^^^ [1]
+   class.js:33:6
+   33| (c1: empty); // error in old inference, no error in LTI
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- emp_arr.js:9:2
+
+Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-cast]
+
+   emp_arr.js:9:2
+   9| (x: Array<number>);
+       ^
+
+References:
+   emp_arr.js:4:12
+   4|     x.push('a')
+                 ^^^ [1]
+   emp_arr.js:9:11
+   9| (x: Array<number>);
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- enum.js:7:12
+
+Cannot assign `10` to `y` because number [1] is incompatible with `W` [2]. [incompatible-type]
+
+   enum.js:7:12
+   7| var y: W = 10; // err
+                 ^^ [1]
+
+References:
+   enum.js:7:8
+   7| var y: W = 10; // err
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ enum.js:8:8
+
+Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `W` [1], is a type.
+[enum-value-as-type]
+
+   enum.js:8:8
+   8| var z: W.A; // err
+             ^^^
+
+References:
+   enum.js:2:6
+   2| enum W {
+           ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ function.js:11:10
+
+Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
+this definition [2] [recursive-definition]
+
+   function.js:11:10
+   11| var x = (function h() { (h(): empty); return 42 }); // err in old inference, no err in LTI
+                ^^^^^^^^^^^^
+
+References:
+   function.js:11:26
+   11| var x = (function h() { (h(): empty); return 42 }); // err in old inference, no err in LTI
+                                ^ [1]
+   function.js:11:22
+   11| var x = (function h() { (h(): empty); return 42 }); // err in old inference, no err in LTI
+                             [2]
+
+
+Error ------------------------------------------------------------------------------------------------ function.js:11:26
+
+Cannot cast `h()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:11:26
+   11| var x = (function h() { (h(): empty); return 42 }); // err in old inference, no err in LTI
+                                ^^^
+
+References:
+   function.js:11:46
+   11| var x = (function h() { (h(): empty); return 42 }); // err in old inference, no err in LTI
+                                                    ^^ [1]
+   function.js:11:31
+   11| var x = (function h() { (h(): empty); return 42 }); // err in old inference, no err in LTI
+                                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:13:2
+
+Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:13:2
+   13| (f(): empty); // err
+        ^^^
+
+References:
+   function.js:8:12
+    8|     return 42;
+                  ^^ [1]
+   function.js:13:7
+   13| (f(): empty); // err
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:14:2
+
+Cannot cast `g()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:14:2
+   14| (g(): empty); // err
+        ^^^
+
+References:
+   function.js:8:12
+    8|     return 42;
+                  ^^ [1]
+   function.js:14:7
+   14| (g(): empty); // err
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ function.js:25:34
+
+Cannot cast `k()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:25:34
+   25| var y = (function k(): number { (k(): empty); return 42 }); // err
+                                        ^^^
+
+References:
+   function.js:25:24
+   25| var y = (function k(): number { (k(): empty); return 42 }); // err
+                              ^^^^^^ [1]
+   function.js:25:39
+   25| var y = (function k(): number { (k(): empty); return 42 }); // err
+                                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:27:2
+
+Cannot cast `h()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:27:2
+   27| (h(): empty); // err
+        ^^^
+
+References:
+   function.js:17:15
+   17| function h(): number {
+                     ^^^^^^ [1]
+   function.js:27:7
+   27| (h(): empty); // err
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:28:2
+
+Cannot cast `i()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function.js:28:2
+   28| (i(): empty); // err
+        ^^^
+
+References:
+   function.js:21:15
+   21| function i(): number {
+                     ^^^^^^ [1]
+   function.js:28:7
+   28| (i(): empty); // err
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ heap_refis.js:6:6
+
+Cannot cast `x.y.z` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   heap_refis.js:6:6
+   6|     (x.y.z: empty); //err num
+           ^^^^^
+
+References:
+   heap_refis.js:3:26
+   3| declare var x: { y?: {z: number } };
+                               ^^^^^^ [1]
+   heap_refis.js:6:13
+   6|     (x.y.z: empty); //err num
+                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- heap_refis.js:17:8
+
+Cannot cast `y` to empty because `C` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   heap_refis.js:17:8
+   17|       (y: empty); // err C
+              ^
+
+References:
+   heap_refis.js:16:20
+   16|   if (y instanceof B.C) {
+                          ^^^ [1]
+   heap_refis.js:17:11
+   17|       (y: empty); // err C
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- heap_refis.js:24:18
+
+The right-hand side of an `instanceof` expression must be an object, but got undefined (result of null short-circuiting
+an optional chain) [1]. [invalid-in-rhs]
+
+   heap_refis.js:24:18
+   24| if (y instanceof B?.C) { // err invalid
+                        ^
+
+References:
+   heap_refis.js:12:9
+   12| var B = null;
+               ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- heap_refis.js:25:6
+
+Cannot cast `y` to empty because `C` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   heap_refis.js:25:6
+   25|     (y: empty); // err C
+            ^
+
+References:
+   heap_refis.js:24:18
+   24| if (y instanceof B?.C) { // err invalid
+                        ^^^^ [1]
+   heap_refis.js:25:9
+   25|     (y: empty); // err C
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:7:12
+
+Cannot assign `"a"` to `w` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   import.js:7:12
+   7| var w: T = "a"; // err
+                 ^^^ [1]
+
+References:
+   import.js:7:8
+   7| var w: T = "a"; // err
+             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:8:2
+
+Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:8:2
+   8| (y: empty); // err
+       ^
+
+References:
+   export.js:4:15
+   4| export var x: number = 42;
+                    ^^^^^^ [1]
+   import.js:8:5
+   8| (y: empty); // err
+          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:9:2
+
+Cannot cast `X` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:9:2
+   9| (X: empty); // err
+       ^
+
+References:
+   export.js:6:16
+   6| export default 42;
+                     ^^ [1]
+   import.js:9:5
+   9| (X: empty); // err
+          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:10:2
+
+Cannot cast `Y.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:10:2
+   10| (Y.x: empty); // err
+        ^^^
+
+References:
+   export.js:4:15
+    4| export var x: number = 42;
+                     ^^^^^^ [1]
+   import.js:10:7
+   10| (Y.x: empty); // err
+             ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- inter.js:21:2
+
+Cannot cast `a.foo.w()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   inter.js:21:2
+   21| (a.foo.w(): empty); // err
+        ^^^^^^^^^
+
+References:
+   inter.js:12:10
+   12|     w(): number
+                ^^^^^^ [1]
+   inter.js:21:13
+   21| (a.foo.w(): empty); // err
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- inter.js:24:2
+
+Cannot cast `c.m().w()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   inter.js:24:2
+   24| (c.m().w(): empty); // err
+        ^^^^^^^^^
+
+References:
+   inter.js:12:10
+   12|     w(): number
+                ^^^^^^ [1]
+   inter.js:24:13
+   24| (c.m().w(): empty); // err
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- member_assignments.js:8:4
+
+Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   member_assignments.js:8:4
+   8|   (foo.bar: number); // error: string is incompatible with number
+         ^^^^^^^
+
+References:
+   member_assignments.js:4:20
+   4|   type Foo = {bar: string};
+                         ^^^^^^ [1]
+   member_assignments.js:8:13
+   8|   (foo.bar: number); // error: string is incompatible with number
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:11:4
+
+Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   member_assignments.js:11:4
+   11|   (foo.bar: number); // error: string is incompatible with number
+          ^^^^^^^
+
+References:
+   member_assignments.js:9:13
+    9|   foo.bar = ""; // ok
+                   ^^ [1]
+   member_assignments.js:11:13
+   11|   (foo.bar: number); // error: string is incompatible with number
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:18:7
+
+Cannot get `foo.bar` because property `bar` is not readable. [cannot-read]
+
+   18|   foo.bar; // error: not readable
+             ^^^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:21:4
+
+Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   member_assignments.js:21:4
+   21|   (foo.bar: number); // error: string is incompatible with number
+          ^^^^^^^
+
+References:
+   member_assignments.js:19:13
+   19|   foo.bar = ""; // ok
+                   ^^ [1]
+   member_assignments.js:21:13
+   21|   (foo.bar: number); // error: string is incompatible with number
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:42:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   42|   o.p += 2; // Error: property is non-writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:43:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   43|   o.p -= 2; // Error: property is non-writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:44:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   44|   o.p *= 2; // Error: property is non-writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:45:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   45|   o.p /= 2; // Error: property is non-writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:46:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   46|   o.p **= 2; // Error: property is non-writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:47:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   47|   o.p %= 2; // Error: property is non-writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:48:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   48|   o.p &&= 2; // Error: property is non-writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:49:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   49|   o.p ||= 2; // Error: property is non-writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------- member_assignments.js:50:5
+
+Cannot update `o.p` because property `p` is not writable. [cannot-write]
+
+   50|   o.p ??= 2; // Error: property is non-writable
+           ^
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:3:26
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   3| function remove<A>(a: A, x): A {
+                               ^
+
+
+Error --------------------------------------------------------------------------------------------------- tparams.js:4:4
+
+Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tparams.js:4:4
+   4|   (a: empty);
+         ^
+
+References:
+   tparams.js:3:23
+   3| function remove<A>(a: A, x): A {
+                            ^ [1]
+   tparams.js:4:7
+   4|   (a: empty);
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- tparams.js:5:4
+
+Cannot cast `42` to `A` because number [1] is incompatible with `A` [2]. [incompatible-cast]
+
+   tparams.js:5:4
+   5|   (42: A);
+         ^^ [1]
+
+References:
+   tparams.js:5:8
+   5|   (42: A);
+             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:9:18
+
+Cannot assign `remove<...>(...)` to `o` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   tparams.js:9:18
+   9| const o: empty = remove<number>(1, 42);
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tparams.js:9:25
+   9| const o: empty = remove<number>(1, 42);
+                              ^^^^^^ [1]
+   tparams.js:9:10
+   9| const o: empty = remove<number>(1, 42);
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:10:18
+
+Cannot assign `remove(...)` to `p` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   tparams.js:10:18
+   10| const p: empty = remove(1, 42);
+                        ^^^^^^^^^^^^^
+
+References:
+   tparams.js:10:25
+   10| const p: empty = remove(1, 42);
+                               ^ [1]
+   tparams.js:10:10
+   10| const p: empty = remove(1, 42);
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:13:4
+
+Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tparams.js:13:4
+   13|   (a: empty);
+          ^
+
+References:
+   tparams.js:12:28
+   12| function remove_anno<A>(a: A): A {
+                                  ^ [1]
+   tparams.js:13:7
+   13|   (a: empty);
+             ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:14:4
+
+Cannot cast `42` to `A` because number [1] is incompatible with `A` [2]. [incompatible-cast]
+
+   tparams.js:14:4
+   14|   (42: A);
+          ^^ [1]
+
+References:
+   tparams.js:14:8
+   14|   (42: A);
+              ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:18:18
+
+Cannot assign `remove_anno<...>(...)` to `q` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   tparams.js:18:18
+   18| const q: empty = remove_anno<number>(1);
+                        ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tparams.js:18:30
+   18| const q: empty = remove_anno<number>(1);
+                                    ^^^^^^ [1]
+   tparams.js:18:10
+   18| const q: empty = remove_anno<number>(1);
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:19:18
+
+Cannot assign `remove_anno(...)` to `r` because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   tparams.js:19:18
+   19| const r: empty = remove_anno(1);
+                        ^^^^^^^^^^^^^^
+
+References:
+   tparams.js:19:30
+   19| const r: empty = remove_anno(1);
+                                    ^ [1]
+   tparams.js:19:10
+   19| const r: empty = remove_anno(1);
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:21:38
+
+Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+
+   tparams.js:21:38
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                            ^ [1]
+
+References:
+   tparams.js:21:45
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                                   ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:22:10
+
+Property `p` is missing in `A` [1]. [incompatible-use]
+
+   tparams.js:22:10
+   22|   const {p, ...o} = a;
+                ^
+
+References:
+   tparams.js:21:27
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                 ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:22:16
+
+`A` [1] is not an object. [not-an-object]
+
+   tparams.js:22:16
+   22|   const {p, ...o} = a;
+                      ^
+
+References:
+   tparams.js:21:27
+   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+                                 ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:27:2
+
+Cannot cast `ox` to object type because property `p` is missing in object type [1] but exists in object literal [2].
+[prop-missing]
+
+   tparams.js:27:2
+   27| (ox: {|x: string|});
+        ^^
+
+References:
+   tparams.js:27:6
+   27| (ox: {|x: string|});
+            ^^^^^^^^^^^^^ [1]
+   tparams.js:26:37
+   26| const [ox, px] = removex<_, number>({x: 'foo', p: 42});
+                                           ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tparams.js:27:2
+
+Cannot cast `ox` to object type because undefined [1] is incompatible with string [2] in property `x`.
+[incompatible-cast]
+
+   tparams.js:27:2
+   27| (ox: {|x: string|});
+        ^^
+
+References:
+   tparams.js:26:41
+   26| const [ox, px] = removex<_, number>({x: 'foo', p: 42});
+                                               ^^^^^ [1]
+   tparams.js:27:11
+   27| (ox: {|x: string|});
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:43:11
+
+Cannot resolve name `A`. [cannot-resolve-name]
+
+   43|     m2<B: A>() {} // Error: Cannot resolve name `A`.
+                 ^
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:46:41
+
+Cannot cast `42` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+
+   tparams.js:46:41
+   46|   function tparam_in_default<X>(x: X = (42: X)) { } // Error: cannot cast 42 to X
+                                               ^^ [1]
+
+References:
+   tparams.js:46:45
+   46|   function tparam_in_default<X>(x: X = (42: X)) { } // Error: cannot cast 42 to X
+                                                   ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- updates.js:5:2
+
+Cannot cast `++x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   updates.js:5:2
+   5| (++x: empty); // err
+       ^^^ [1]
+
+References:
+   updates.js:5:7
+   5| (++x: empty); // err
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- updates.js:6:2
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   updates.js:6:2
+   6| (x: empty); // err
+       ^
+
+References:
+   updates.js:5:2
+   5| (++x: empty); // err
+       ^^^ [1]
+   updates.js:6:5
+   6| (x: empty); // err
+          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- updates.js:8:2
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   updates.js:8:2
+   8| (x: empty); // err
+       ^
+
+References:
+   updates.js:7:1
+   7| x += 42;
+      ^^^^^^^ [1]
+   updates.js:8:5
+   8| (x: empty); // err
+          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- updates.js:10:2
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   updates.js:10:2
+   10| (x: empty); // err
+        ^
+
+References:
+   updates.js:9:1
+    9| x -= 42;
+       ^^^^^^^ [1]
+   updates.js:10:5
+   10| (x: empty); // err
+           ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- updates.js:18:9
+
+Cannot assign `3` to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   updates.js:18:9
+   18|   x &&= 3; // Error: number not assignable to boolean
+               ^ [1]
+
+References:
+   updates.js:15:10
+   15|   let x: boolean = false;
+                ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- updates.js:19:9
+
+Cannot assign `3` to `y` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   updates.js:19:9
+   19|   y ||= 3; // Error: number not assignable to boolean
+               ^ [1]
+
+References:
+   updates.js:16:10
+   16|   let y: boolean = false;
+                ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- updates.js:20:9
+
+Cannot assign `3` to `z` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   updates.js:20:9
+   20|   z ??= 3; // Error: number not assignable to boolean
+               ^ [1]
+
+References:
+   updates.js:17:11
+   17|   let z: ?boolean = false;
+                 ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- updates.js:40:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   40|   function alwaysThrows1(): number { x ??= invariant(false); } // Error
+                                   ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- updates.js:41:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   41|   function alwaysThrows2(): number { y &&= invariant(false); } // Error
+                                   ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- updates.js:42:29
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   42|   function alwaysThrows3(): number { x ||= invariant(false); } // Error
+                                   ^^^^^^ [1]
+
+
+
+Found 82 errors

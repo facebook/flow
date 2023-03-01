@@ -1,3 +1,17 @@
+Error ---------------------------------------------------------------------------------------------------- Arrays.js:8:8
+
+Cannot assign `"..."` to `a[1]` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   Arrays.js:8:8
+   8| a[1] = "..."; // no error under old inference, error under LTI
+             ^^^^^ [1]
+
+References:
+   Arrays.js:7:8
+   7| a[0] = 1;
+             ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- isarray.js:3:31
 
 Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
@@ -113,4 +127,4 @@ References:
 
 
 
-Found 7 errors
+Found 8 errors

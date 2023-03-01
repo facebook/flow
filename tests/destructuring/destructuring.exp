@@ -12,6 +12,48 @@ References:
                    ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ annot_loop.js:5:7
+
+Cannot assign `0` to `p` because number [1] is incompatible with `p` (resolved to type `empty`) [2]. [incompatible-type]
+
+   annot_loop.js:5:7
+   5|   p = 0;
+            ^ [1]
+
+References:
+   annot_loop.js:4:13
+   4| function f({p}: T) {
+                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- annot_loop.js:14:7
+
+Cannot assign `0` to `p` because number [1] is incompatible with `p` (resolved to type `empty`) [2]. [incompatible-type]
+
+   annot_loop.js:14:7
+   14|   p = 0;
+             ^ [1]
+
+References:
+   annot_loop.js:13:13
+   13| function g({p}: A) {
+                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- annot_loop.js:17:7
+
+Cannot assign `0` to `p` because number [1] is incompatible with `p` (resolved to type `empty`) [2]. [incompatible-type]
+
+   annot_loop.js:17:7
+   17|   p = 0;
+             ^ [1]
+
+References:
+   annot_loop.js:16:13
+   16| function h({p}: B) {
+                   ^ [2]
+
+
 Error ------------------------------------------------------------------------- annotations_inside_destructuring.js:4:11
 
 Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
@@ -260,6 +302,28 @@ References:
              ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- defaults.js:3:27
+
+Cannot assign `q` to `q` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   defaults.js:3:27
+   3| function obj_prop_fun({p:{q=0}={q:true}}: {p?:{q?:number|string}} = {p:{q:""}}) {
+                                ^
+
+References:
+   defaults.js:3:35
+   3| function obj_prop_fun({p:{q=0}={q:true}}: {p?:{q?:number|string}} = {p:{q:""}}) {
+                                        ^^^^ [1]
+   defaults.js:3:51
+   3| function obj_prop_fun({p:{q=0}={q:true}}: {p?:{q?:number|string}} = {p:{q:""}}) {
+                                                        ^^^^^^ [2]
+   defaults.js:3:58
+   3| function obj_prop_fun({p:{q=0}={q:true}}: {p?:{q?:number|string}} = {p:{q:""}}) {
+                                                               ^^^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------------------------- defaults.js:7:4
 
 Cannot cast `q` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
@@ -292,6 +356,28 @@ References:
    defaults.js:7:6
    7|   (q:void);
            ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ defaults.js:14:11
+
+Cannot assign `o.p.q` to `q` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   defaults.js:14:11
+   14|   var {p:{q=0}={q:true}} = o;
+                 ^
+
+References:
+   defaults.js:14:19
+   14|   var {p:{q=0}={q:true}} = o;
+                         ^^^^ [1]
+   defaults.js:13:35
+   13| function obj_prop_var(o: {p?: {q?:number|string}} = {p:{q:""}}) {
+                                         ^^^^^^ [2]
+   defaults.js:13:42
+   13| function obj_prop_var(o: {p?: {q?:number|string}} = {p:{q:""}}) {
+                                                ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:18:4
@@ -328,40 +414,6 @@ References:
             ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- defaults.js:18:4
-
-Cannot cast `q` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
-
-   defaults.js:18:4
-   18|   (q:void);
-          ^
-
-References:
-   defaults.js:14:13
-   14|   var {p:{q=0}={q:true}} = o;
-                   ^ [1]
-   defaults.js:18:6
-   18|   (q:void);
-            ^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- defaults.js:18:4
-
-Cannot cast `q` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-cast]
-
-   defaults.js:18:4
-   18|   (q:void);
-          ^
-
-References:
-   defaults.js:14:19
-   14|   var {p:{q=0}={q:true}} = o;
-                         ^^^^ [1]
-   defaults.js:18:6
-   18|   (q:void);
-            ^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ defaults.js:24:23
 
 Property `q` is missing in object type [1]. [prop-missing]
@@ -374,6 +426,23 @@ References:
    defaults.js:24:48
    24| function obj_rest({p:{q,...o}={q:0,r:0}}: {p?: {r?: string}} = {p:{q:0,r:""}}) {
                                                       ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ defaults.js:24:28
+
+Cannot assign `o` to `o` because number [1] is incompatible with string [2] in property `r`. [incompatible-type]
+
+   defaults.js:24:28
+   24| function obj_rest({p:{q,...o}={q:0,r:0}}: {p?: {r?: string}} = {p:{q:0,r:""}}) {
+                                  ^
+
+References:
+   defaults.js:24:38
+   24| function obj_rest({p:{q,...o}={q:0,r:0}}: {p?: {r?: string}} = {p:{q:0,r:""}}) {
+                                            ^ [1]
+   defaults.js:24:53
+   24| function obj_rest({p:{q,...o}={q:0,r:0}}: {p?: {r?: string}} = {p:{q:0,r:""}}) {
+                                                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:28:4
@@ -1080,6 +1149,34 @@ References:
                      ^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:3:30
+
+Cannot assign string to `defaults` because string [1] is incompatible with undefined [2]. [incompatible-type]
+
+   destructuring_missing_props.js:3:30
+   3| var {nonExistent, defaults = "hi", foo = 3} = x; // Error, missing nonExistent
+                                   ^^^^ [1]
+
+References:
+   destructuring_missing_props.js:3:19
+   3| var {nonExistent, defaults = "hi", foo = 3} = x; // Error, missing nonExistent
+                        ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:3:42
+
+Cannot assign number to `foo` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_missing_props.js:3:42
+   3| var {nonExistent, defaults = "hi", foo = 3} = x; // Error, missing nonExistent
+                                               ^ [1]
+
+References:
+   destructuring_missing_props.js:2:24
+   2| declare var x: {| foo: string |};
+                             ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------- destructuring_missing_props.js:5:2
 
 Cannot cast `foo` to number because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -1111,21 +1208,32 @@ References:
                      ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------ destructuring_missing_props.js:11:2
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:9:32
 
-Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot assign string to `defaults2` because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   destructuring_missing_props.js:11:2
-   11| (bar: string); // Error, number | string
-        ^^^
+   destructuring_missing_props.js:9:32
+   9| var {nonExistent2, defaults2 = "hi", bar = 3} = y; // Error, missing nonExistent2
+                                     ^^^^ [1]
 
 References:
+   destructuring_missing_props.js:9:20
+   9| var {nonExistent2, defaults2 = "hi", bar = 3} = y; // Error, missing nonExistent2
+                         ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ destructuring_missing_props.js:9:44
+
+Cannot assign number to `bar` because number [1] is incompatible with string [2]. [incompatible-type]
+
    destructuring_missing_props.js:9:44
-    9| var {nonExistent2, defaults2 = "hi", bar = 3} = y; // Error, missing nonExistent2
-                                                  ^ [1]
-   destructuring_missing_props.js:11:7
-   11| (bar: string); // Error, number | string
-             ^^^^^^ [2]
+   9| var {nonExistent2, defaults2 = "hi", bar = 3} = y; // Error, missing nonExistent2
+                                                 ^ [1]
+
+References:
+   destructuring_missing_props.js:8:24
+   8| declare var y: {| bar: string |};
+                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:14:7
@@ -1168,6 +1276,36 @@ References:
    destructuring_missing_props.js:20:13
    20| const obj = { __proto__ : proto, baz : "string" };
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------- destructuring_missing_props.js:21:13
+
+Cannot assign string to `qux` because string [1] is incompatible with `void` (due to access of non-existent property
+`qux`) [2]. [incompatible-type]
+
+   destructuring_missing_props.js:21:13
+   21| var { qux = "string" } = obj; // Error, qux missing
+                   ^^^^^^^^ [1]
+
+References:
+   destructuring_missing_props.js:21:7
+   21| var { qux = "string" } = obj; // Error, qux missing
+             ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- destructuring_missing_props.js:26:36
+
+Cannot assign string to `defaultProps` because string [1] is incompatible with `defaultProps` (resolved to type
+`empty`) [2]. [incompatible-type]
+
+   destructuring_missing_props.js:26:36
+   26| function Component({defaultProps = "default", regularProp}: {|regularProp?: number|}) { // Error, missing regularProp
+                                          ^^^^^^^^^ [1]
+
+References:
+   destructuring_missing_props.js:26:21
+   26| function Component({defaultProps = "default", regularProp}: {|regularProp?: number|}) { // Error, missing regularProp
+                           ^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:28:4
@@ -1283,4 +1421,7 @@ References:
 
 
 
-Found 87 errors
+Found 96 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

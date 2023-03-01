@@ -299,6 +299,22 @@ References:
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:29:12
 
+Cannot assign `Foo` to `y` because module `./foo` [1] is incompatible with undefined [2]. [incompatible-type]
+
+   import_star_invalid_use.js:29:12
+   29| const {y = Foo} = Foo;
+                  ^^^
+
+References:
+   foo.js
+   ^^^^^^ [1]
+   import_star_invalid_use.js:29:8
+   29| const {y = Foo} = Foo;
+              ^ [2]
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:29:12
+
 `import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
 [invalid-import-star-use]
 
@@ -592,7 +608,7 @@ export please `import` and then `export default` instead. [export-renamed-defaul
 
 
 
-Found 52 errors
+Found 53 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

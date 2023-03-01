@@ -189,8 +189,8 @@ runtest() {
     name=${dir##*/}
     exp_file="${name}.exp"
     # Add appropriate extension to expected file
-    if [[ "$lti" -eq 1 ]] && [ -f "${dir}/${exp_file}.lti" ]; then
-      exp_file="${exp_file}.lti"
+    if [[ "$classic" -eq 1 ]] && [ -f "${dir}/${exp_file}.classic" ]; then
+      exp_file="${exp_file}.classic"
     fi
 
     # On Windows we skip some tests as symlinks not available
@@ -288,6 +288,13 @@ runtest() {
         start_args=""
         file_watcher="none"
         wait_for_recheck="true"
+
+        if [[ "$classic" -eq 1 ]] && [[ -e ".flowconfig" ]] && \
+          grep -q "inference_mode=lti" ".flowconfig"
+        then
+            return $RUNTEST_SKIP
+        fi
+
         if [ -e ".testconfig" ]
         then
             # auto_start
@@ -344,7 +351,7 @@ runtest() {
                 return $RUNTEST_SKIP
             fi
 
-            if [[ "$lti" -eq 1 ]] && \
+            if [[ "$classic" -eq 0 ]] && \
               [ "$(awk '$1=="skip_lti:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
@@ -379,7 +386,10 @@ runtest() {
           return $RUNTEST_SKIP
         fi
 
-        if [[ "$lti" -eq 1 ]]; then
+        if [[ "$classic" -eq 1 ]]; then
+          inference_flag="--inference-mode constrain_writes"
+        fi
+        if [[ "$classic" -eq 0 ]]; then
           inference_flag="--inference-mode lti"
         fi
 

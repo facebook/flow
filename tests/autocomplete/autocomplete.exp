@@ -121,7 +121,7 @@ Flags: --pretty
 
 union.js:10:5
 Flags: --pretty
-{"result":[{"name":"bar","type":"string | any"}]}
+{"result":[{"name":"bar","type":"any | string"}]}
 
 object_builtins.js:4:5
 Flags: --pretty
@@ -882,7 +882,7 @@ Flags: --pretty
   "result":[
     {"name":"a","type":"{b: T, ...}"},
     {"name":"c","type":"T"},
-    {"name":"foo","type":"<T>(a: {b: T, ...}) => empty"},
+    {"name":"foo","type":"<T>(a: {b: T, ...}) => any"},
     {"name":"this","type":"this"}
   ]
 }

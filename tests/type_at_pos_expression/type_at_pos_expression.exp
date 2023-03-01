@@ -366,8 +366,8 @@ literals.js:9:7 = {
 }
 literals.js:10:7 = {
   "types":{
-    "unevaluated":{"type":"number | string | boolean"},
-    "evaluated":{"type":"number | string | boolean"}
+    "unevaluated":{"type":"boolean | number | string"},
+    "evaluated":{"type":"boolean | number | string"}
   },
   "reasons":[],
   "loc":{
@@ -1014,7 +1014,7 @@ object.js:35:1 = {
   "end":6
 }
 optional_chaining.js:16:7 = {
-  "types":{"unevaluated":{"type":"void | number"},"evaluated":{"type":"void | number"}},
+  "types":{"unevaluated":{"type":"number | void"},"evaluated":{"type":"number | void"}},
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",
@@ -1074,7 +1074,7 @@ optional_chaining.js:16:20 = {
   "end":22
 }
 optional_chaining.js:16:24 = {
-  "types":{"unevaluated":{"type":"void | number"},"evaluated":{"type":"void | number"}},
+  "types":{"unevaluated":{"type":"number | void"},"evaluated":{"type":"number | void"}},
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",
@@ -1110,6 +1110,6 @@ identifier.js:14:4,14:9
 
 reduce_recursive.js:16:25
 Flags:
-any | Obj
+Obj
 reduce_recursive.js:16:25,16:27
 
