@@ -2349,7 +2349,14 @@ module Make
           cx
           (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
         node
-      | None -> expression_ ~cond cx loc e
+      | None ->
+        let res = expression_ ~cond cx loc e in
+        if Context.lti cx && not (Context.in_synthesis_mode cx) then begin
+          let cache = Context.constraint_cache cx in
+          cache := FlowSet.empty;
+          Node_cache.set_expression node_cache res
+        end;
+        res
     in
     Tvar_resolver.resolve cx t;
     res
