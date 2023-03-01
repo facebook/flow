@@ -1639,8 +1639,8 @@ unions.js:15:2 = {
 }
 unions.js:24:3 = {
   "types":{
-    "unevaluated":{"type":"{+f: number, ...} | {+f: string, ...}"},
-    "evaluated":{"type":"{+f: number, ...} | {+f: string, ...}"}
+    "unevaluated":{"type":"{+f: number, ...}"},
+    "evaluated":{"type":"{+f: number, ...}"}
   },
   "reasons":[],
   "loc":{

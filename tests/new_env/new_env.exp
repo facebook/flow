@@ -537,7 +537,7 @@ Cannot assign `x` to `y` because string [1] is incompatible with number [2]. All
 the type of its initializer [3]. Add an annotation to `y` [3] if a different type is desired. [incompatible-type]
 
    test.js:11:7
-   11|   y = x;
+   11|   y = x; // error: string ~> number
              ^
 
 References:
@@ -550,23 +550,6 @@ References:
    test.js:7:5
     7| var y = 42
            ^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:14:2
-
-Cannot cast `y` to number because string [1] is incompatible with number [2]. [incompatible-cast]
-
-   test.js:14:2
-   14| (y: number);
-        ^
-
-References:
-   test.js:5:18
-    5| var x = c ? 42 : "a'";
-                        ^^^^ [1]
-   test.js:14:5
-   14| (y: number);
-           ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
@@ -775,4 +758,4 @@ References:
 
 
 
-Found 47 errors
+Found 46 errors

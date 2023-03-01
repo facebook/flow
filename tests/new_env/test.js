@@ -8,10 +8,10 @@ var y = 42
 
 if (typeof x === 'string') {
   (x: string);
-  y = x;
+  y = x; // error: string ~> number
 }
 
-(y: number);
+(y: number); // ok: y always has type number
 
 var z;
 z = 42;

@@ -1321,10 +1321,23 @@ module Make
         match def_loc with
         | Some loc ->
           (match Env_api.Provider_api.providers_of_def provider_info loc with
-          (* We only use havoc as the merge if the providers that generate the havoc val are
-             annotated. Only when the havoc val is annotated, we know for certain that it wouldn't
-             be widened in the branches we are merging together. *)
-          | Some { Env_api.Provider_api.state = Find_providers.AnnotatedVar _; _ }
+          (* We only use havoc as the merge if the variable's provider is at the declaration site.
+             i.e. annotated or initialized at declaration. This prevents us from creating large
+             union types in later if chains.
+
+             e.g.
+             let x = init; // or let x: annot = ...;
+             if (...) x = expr_1;
+             if (...) x = expr_2;
+             // ...
+             if (...) x = expr_n;
+             x should still has type of init, instead of a size-n+1 union type. *)
+          | Some
+              {
+                Env_api.Provider_api.state =
+                  Find_providers.AnnotatedVar _ | Find_providers.InitializedVar;
+                _;
+              }
             when can_merge_with_havoc v1 v2 || can_merge_with_havoc v2 v1 ->
             havoc
           | _ -> Val.merge v1 v2)
