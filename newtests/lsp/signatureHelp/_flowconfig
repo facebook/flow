@@ -1,2 +1,3 @@
 [options]
 exact_by_default=false
+inference_mode=constrain_writes
