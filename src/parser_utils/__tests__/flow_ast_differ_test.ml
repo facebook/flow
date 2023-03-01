@@ -659,7 +659,9 @@ class insert_import_and_annot_mapper =
           )
 
     method! program prog =
-      let (loc, { Ast.Program.statements = stmts; comments; all_comments }) = super#program prog in
+      let (loc, { Ast.Program.statements = stmts; interpreter; comments; all_comments }) =
+        super#program prog
+      in
       let import num =
         let imp = Printf.sprintf "new_import%d" num in
         let open Ast.Statement in
@@ -689,6 +691,7 @@ class insert_import_and_annot_mapper =
       ( loc,
         {
           Ast.Program.statements = List.hd stmts :: import 1 :: import 2 :: List.tl stmts;
+          interpreter;
           comments;
           all_comments;
         }

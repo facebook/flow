@@ -1157,7 +1157,16 @@ let parse_and_cache (state : server_state) (uri : Lsp.DocumentUri.t) :
         Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
       with
       | _ ->
-        ((Loc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] }), [])
+        ( ( Loc.none,
+            {
+              Flow_ast.Program.statements = [];
+              interpreter = None;
+              comments = None;
+              all_comments = [];
+            }
+          ),
+          []
+        )
     in
     ( program,
       if live_syntax_errors_enabled state then

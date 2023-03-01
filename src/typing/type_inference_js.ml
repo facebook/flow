@@ -433,6 +433,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
   let ( prog_aloc,
         {
           Ast.Program.statements = aloc_statements;
+          interpreter = aloc_interpreter;
           comments = aloc_comments;
           all_comments = aloc_all_comments;
         }
@@ -477,6 +478,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
       ( prog_aloc,
         {
           Ast.Program.statements = typed_statements;
+          interpreter = aloc_interpreter;
           comments = aloc_comments;
           all_comments = aloc_all_comments;
         }
@@ -492,6 +494,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
     ( prog_aloc,
       {
         Ast.Program.statements = Typed_ast_utils.error_mapper#statement_list aloc_statements;
+        interpreter = aloc_interpreter;
         comments = aloc_comments;
         all_comments = aloc_all_comments;
       }

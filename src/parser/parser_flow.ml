@@ -183,6 +183,13 @@ module rec Parse : PARSER = struct
     id
 
   let rec program env =
+    let interpreter =
+      match Peek.token env with
+      | T_INTERPRETER (loc, value) ->
+        Eat.token env;
+        Some (loc, value)
+      | _ -> None
+    in
     let leading = Eat.program_comments env in
     let stmts = module_body_with_directives env (fun _ -> false) in
     let end_loc = Peek.loc env in
@@ -197,6 +204,7 @@ module rec Parse : PARSER = struct
     ( loc,
       {
         Ast.Program.statements = stmts;
+        interpreter;
         comments = Flow_ast_utils.mk_comments_opt ~leading ();
         all_comments;
       }

@@ -208,11 +208,13 @@ let extract_docblock =
             Token.(
               (*
                * Stop looking for docblocks if we see any tokens other than a
-               * string or a semicolon (`"use babel";` or `"use strict";`).
+               * string or a semicolon (`"use babel";` or `"use strict";`) or
+               * an interpreter directive (`#!/bin/env node`)
                *)
               (match Lex_result.token lexer_result with
               | T_STRING _
-              | T_SEMICOLON ->
+              | T_SEMICOLON
+              | T_INTERPRETER _ ->
                 get_first_comment_contents ~i:(i + 1) env
               | _ -> None)
             )

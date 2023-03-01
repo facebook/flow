@@ -115,6 +115,7 @@ end = struct
                     }
                 );
               ];
+            interpreter = None;
             comments = None;
             all_comments = [];
           }

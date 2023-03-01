@@ -139,6 +139,7 @@ type t =
   | T_INCR
   | T_DECR
   (* Extra tokens *)
+  | T_INTERPRETER of Loc.t * string
   | T_ERROR of string
   | T_EOF
   (* JSX *)
@@ -330,6 +331,7 @@ let token_to_string = function
   | T_READONLY -> "T_READONLY"
   | T_INFER -> "T_INFER"
   (* Extra tokens *)
+  | T_INTERPRETER _ -> "T_INTERPRETER"
   | T_ERROR _ -> "T_ERROR"
   | T_EOF -> "T_EOF"
   | T_JSX_IDENTIFIER _ -> "T_JSX_IDENTIFIER"
@@ -474,6 +476,7 @@ let value_of_token = function
   | T_READONLY -> "readonly"
   | T_INFER -> "infer"
   (* Extra tokens *)
+  | T_INTERPRETER (_, str) -> str
   | T_ERROR raw -> raw
   | T_EOF -> ""
   | T_JSX_IDENTIFIER { raw; _ } -> raw

@@ -19,12 +19,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method program (program : ('M, 'T) Ast.Program.t) : ('N, 'U) Ast.Program.t =
       let open Ast.Program in
-      let (annot, { statements; comments; all_comments }) = program in
+      let (annot, { statements; interpreter; comments; all_comments }) = program in
       let annot' = this#on_loc_annot annot in
       let statements' = this#toplevel_statement_list statements in
+      let interpreter' = Option.map ~f:this#interpreter_directive interpreter in
       let comments' = Option.map ~f:this#syntax comments in
       let all_comments' = List.map ~f:this#comment all_comments in
-      (annot', { statements = statements'; comments = comments'; all_comments = all_comments' })
+      ( annot',
+        {
+          statements = statements';
+          interpreter = interpreter';
+          comments = comments';
+          all_comments = all_comments';
+        }
+      )
+
+    method interpreter_directive ((annot, value) : 'M * string) : 'N * string =
+      (this#on_loc_annot annot, value)
 
     method statement ((annot, stmt) : ('M, 'T) Ast.Statement.t) : ('N, 'U) Ast.Statement.t =
       let open Ast.Statement in

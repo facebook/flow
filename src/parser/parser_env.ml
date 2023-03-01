@@ -830,6 +830,7 @@ let token_is_type_identifier env t =
     | T_BIT_NOT
     | T_INCR
     | T_DECR
+    | T_INTERPRETER _
     | T_EOF ->
       false
     (* literals *)

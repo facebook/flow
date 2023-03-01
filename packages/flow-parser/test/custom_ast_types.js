@@ -138,6 +138,20 @@ function custom_ast_types(fork) {
     or(def('MethodDefinition'), def('PropertyDefinition')),
   ]);
 
+  ////////
+  // babel
+  ////////
+  def('InterpreterDirective')
+    .bases('Node')
+    .build('value')
+    .field('value', String);
+
+  def('Program').field(
+    'interpreter',
+    or(def('InterpreterDirective'), null),
+    defaults['null'],
+  );
+
   ////////////
   // ts syntax
   ////////////

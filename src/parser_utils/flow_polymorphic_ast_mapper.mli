@@ -332,6 +332,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method interface_type : ('M, 'T) Ast.Type.Interface.t -> ('N, 'U) Ast.Type.Interface.t
 
+    method interpreter_directive : 'M * string -> 'N * string
+
     method intersection_type : ('M, 'T) Ast.Type.Intersection.t -> ('N, 'U) Ast.Type.Intersection.t
 
     method jsx_attribute : ('M, 'T) Flow_ast.JSX.Attribute.t -> ('N, 'U) Ast.JSX.Attribute.t

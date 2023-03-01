@@ -185,6 +185,7 @@ let pp_diff =
       ( Loc.none,
         {
           Flow_ast.Program.statements = Base.List.map ~f:none_mapper#statement stmts;
+          interpreter = None;
           comments = None;
           all_comments = [];
         }

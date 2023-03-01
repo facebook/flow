@@ -701,8 +701,11 @@ let token (env : Lex_env.t) lexbuf : result =
    * comment at the beginning or an error elsewhere *)
   | "#!" ->
     if Sedlexing.lexeme_start lexbuf = 0 then
-      let (env, _) = line_comment env (Buffer.create 127) lexbuf in
-      Continue env
+      let start = start_pos_of_lexbuf env lexbuf in
+      let buf = Buffer.create 127 in
+      let (env, _end) = line_comment env buf lexbuf in
+      let loc = { Loc.source = Lex_env.source env; start; _end } in
+      Token (env, T_INTERPRETER (loc, Buffer.contents buf))
     else
       Token (env, T_ERROR "#!")
   (* Values *)

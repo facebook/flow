@@ -2377,7 +2377,9 @@ let expand_literal_union ~options ~genv scheme =
 
 let debug_string_of_t cx t =
   let typed_ast =
-    (ALoc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] })
+    ( ALoc.none,
+      { Flow_ast.Program.statements = []; interpreter = None; comments = None; all_comments = [] }
+    )
   in
   let module_sig = { File_sig.requires = []; module_kind = File_sig.ES } in
   let file_sig = { File_sig.module_sig; declare_modules = SMap.empty } in

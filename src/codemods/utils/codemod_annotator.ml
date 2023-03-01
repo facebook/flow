@@ -355,7 +355,9 @@ module Make (Extra : BASE_STATS) = struct
             );
 
         let prog' = super#program prog in
-        let (loc, { Ast.Program.statements = stmts; comments; all_comments }) = prog' in
+        let (loc, { Ast.Program.statements = stmts; interpreter; comments; all_comments }) =
+          prog'
+        in
 
         if prog != prog' then
           this#update_acc (fun acc ->
@@ -395,6 +397,6 @@ module Make (Extra : BASE_STATS) = struct
         let stmts =
           Insert_type.add_statement_after_directive_and_type_imports stmts generated_imports
         in
-        (loc, { Ast.Program.statements = stmts; comments; all_comments })
+        (loc, { Ast.Program.statements = stmts; interpreter; comments; all_comments })
     end
 end

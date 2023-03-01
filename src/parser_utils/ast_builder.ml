@@ -730,8 +730,9 @@ module Comments = struct
     (loc, { kind = Line; text; on_newline })
 end
 
-let mk_program ?(loc = Loc.none) ?(comments = None) ?(all_comments = []) stmts =
-  (loc, { Ast.Program.statements = stmts; comments; all_comments })
+let mk_program ?(loc = Loc.none) ?(interpreter = None) ?(comments = None) ?(all_comments = []) stmts
+    =
+  (loc, { Ast.Program.statements = stmts; interpreter; comments; all_comments })
 
 let ast_of_string ~parser str =
   let parse_options =
@@ -754,4 +755,6 @@ let statement_of_string str =
 
 let program_of_string str =
   let stmts = ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str in
-  (Loc.none, { Ast.Program.statements = stmts; comments = None; all_comments = [] })
+  ( Loc.none,
+    { Ast.Program.statements = stmts; interpreter = None; comments = None; all_comments = [] }
+  )

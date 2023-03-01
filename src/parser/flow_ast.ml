@@ -1976,6 +1976,7 @@ and Program : sig
 
   and ('M, 'T) t' = {
     statements: ('M, 'T) Statement.t list;
+    interpreter: ('M * string) option;  (** interpreter directive / shebang *)
     comments: ('M, unit) Syntax.t option;
     all_comments: 'M Comment.t list;
   }
