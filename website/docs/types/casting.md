@@ -47,7 +47,6 @@ value;
 Using type cast expressions you can assert that values are certain types.
 
 ```js flow-check
-// @flow
 let value = 42;
 
 (value: 42);     // Works!
@@ -64,7 +63,6 @@ value with the provided type. If you hold onto the resulting value, it will
 have the new type.
 
 ```js flow-check
-// @flow
 let value = 42;
 
 (value: 42);     // Works!
@@ -72,7 +70,6 @@ let value = 42;
 
 let newValue = (value: number);
 
-// $ExpectError
 (newValue: 42);     // Error!
 (newValue: number); // Works!
 ```
@@ -95,12 +92,10 @@ But you can use any to cast to whatever type you want.
 let value = 42;
 
 (value: number); // Works!
-// $ExpectError
 (value: string); // Error!
 
 let newValue = ((value: any): string);
 
-// $ExpectError
 (newValue: number); // Error!
 (newValue: string); // Works!
 ```
@@ -114,8 +109,8 @@ want to make sure that the result has the desired type.
 For example, the following function for cloning an object.
 
 ```js flow-check
-function cloneObject(obj) {
-  const clone = {};
+function cloneObject(obj: any) {
+  const clone: {[string]: mixed} = {};
 
   Object.keys(obj).forEach(key => {
     clone[key] = obj[key];
@@ -131,15 +126,14 @@ based on another object.
 If we cast through any, we can return a type which is more useful.
 
 ```js flow-check
-// @flow
-function cloneObject(obj) {
-  const clone = {};
+function cloneObject<T: { [key: string]: mixed }>(obj: T): T {
+  const clone: {[string]: mixed} = {};
 
   Object.keys(obj).forEach(key => {
     clone[key] = obj[key];
   });
 
-  return ((clone: any): typeof obj); // <<
+  return ((clone: any): T);
 }
 
 const clone = cloneObject({
@@ -151,89 +145,4 @@ const clone = cloneObject({
 (clone.foo: 1);       // Works!
 (clone.bar: true);    // Works!
 (clone.baz: 'three'); // Works!
-```
-
-### Type checking through type assertions {#toc-type-checking-through-type-assertions}
-
-If we want to validate what kinds of types are coming into our `cloneObject`
-method from before, we could write the following annotation:
-
-```js flow-check
-function cloneObject(obj: { [key: string]: mixed }) {
-  // ...
-}
-```
-
-But now we have a problem. Our `typeof obj` annotation also gets this new
-annotation which defeats the entire purpose.
-
-```js flow-check
-// @flow
-function cloneObject(obj: { [key: string]: mixed }) {
-  const clone = {};
-  // ...
-  return ((clone: any): typeof obj);
-}
-
-const clone = cloneObject({
-  foo: 1,
-  bar: true,
-  baz: 'three'
-});
-
-// $ExpectError
-(clone.foo: 1);       // Error!
-// $ExpectError
-(clone.bar: true);    // Error!
-// $ExpectError
-(clone.baz: 'three'); // Error!
-```
-
-Instead we can assert the type within the function using a type assertion and
-now we're validating our inputs.
-
-```js flow-check
-// @flow
-function cloneObject(obj) {
-  (obj: { [key: string]: mixed });
-  // ...
-}
-
-cloneObject({ foo: 1 }); // Works!
-// $ExpectError
-cloneObject([1, 2, 3]);  // Error!
-```
-
-Now type inference can keep working for `typeof obj` which returns the expected
-shape of the object.
-
-```js flow-check
-// @flow
-function cloneObject(obj) {
-  (obj: { [key: string]: mixed }); // <<
-
-  const clone = {};
-  // ...
-  return ((clone: any): typeof obj);
-}
-
-const clone = cloneObject({
-  foo: 1,
-  bar: true,
-  baz: 'three'
-});
-
-(clone.foo: 1);       // Works!
-(clone.bar: true);    // Works!
-(clone.baz: 'three'); // Works!
-```
-
-> **Note:** This is not the proper solution to the above problem, it was being
-> used for demonstration only. The correct solution is annotating the function
-> like this:
-
-```js
-function cloneObject<T: { [key: string]: mixed }>(obj: T): $Shape<T> {
- // ...
-}
 ```
