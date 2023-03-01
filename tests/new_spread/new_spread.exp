@@ -1,16 +1,16 @@
-Error ----------------------------------------------------------------------------------------- cross_module/app.js:3:24
+Error ------------------------------------------------------------------------------------------ cross_module/app.js:4:9
 
-Cannot call `fn` with function bound to `arg` because number [1] is incompatible with string [2] in property `a` of the
-first parameter. [incompatible-call]
+Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
+property `a`. [incompatible-call]
 
-   cross_module/app.js:3:24
-   3| const app = fn((o: {a: number, b: number}) => {});
-                             ^^^^^^ [1]
-
-References:
    cross_module/app.js:4:9
    4| app({a: 'foo', b: 2});
-              ^^^^^ [2]
+              ^^^^^ [1]
+
+References:
+   cross_module/app.js:3:24
+   3| const app = fn((o: {a: number, b: number}) => {});
+                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ cross_module/use.js:3:9

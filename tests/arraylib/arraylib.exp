@@ -149,8 +149,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:66:57
 
-Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because number [1] is incompatible with string [2] in array
-element. [incompatible-type]
+Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-call]
 
    array_lib.js:66:57
    66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
@@ -164,8 +163,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:66:60
 
-Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because number [1] is incompatible with string [2] in array
-element. [incompatible-type]
+Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-call]
 
    array_lib.js:66:60
    66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);

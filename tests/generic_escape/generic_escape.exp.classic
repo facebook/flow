@@ -1,0 +1,814 @@
+Error ----------------------------------------------------------------------------------------------------- alias.js:9:2
+
+Cannot cast function to `Tr` because function type [1] contains type variable `Return` [2] which cannot escape from the
+scope in which it was defined [3] (try adding a type annotation to `f` [4]) in the first parameter. [escaped-generic]
+
+   alias.js:9:2
+        v-----
+    9| (f => {
+   10|   return aw(f());
+   11| }: Tr);
+       ^
+
+References:
+   alias.js:5:20
+    5| type Tr = <Return>(() => Pr<Return>) => Return;
+                          ^^^^^^^^^^^^^^^^ [1]
+   alias.js:5:29
+    5| type Tr = <Return>(() => Pr<Return>) => Return;
+                                   ^^^^^^ [2]
+   alias.js:5:12
+    5| type Tr = <Return>(() => Pr<Return>) => Return;
+                  ^^^^^^ [3]
+   alias.js:9:2
+    9| (f => {
+        ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- class.js:9:9
+
+Cannot assign `this.s` to `x` because `X` [1] is incompatible with number [2]. All writes to `x` must be compatible with
+the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired. [incompatible-type]
+
+   class.js:9:9
+   9|     x = this.s;
+              ^^^^^^
+
+References:
+   class.js:6:6
+   6|   s: X;
+           ^ [1]
+   class.js:3:9
+   3| var x = 42;
+              ^^ [2]
+   class.js:3:5
+   3| var x = 42;
+          ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:10:9
+
+Cannot assign `this.s` to `y` because `X` [1] is incompatible with number [2]. [incompatible-type]
+
+   class.js:10:9
+   10|     y = this.s;
+               ^^^^^^
+
+References:
+   class.js:6:6
+    6|   s: X;
+            ^ [1]
+   class.js:8:12
+    8|     var y: number = 42;
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:20:11
+
+Cannot assign `this.s` to `y` because `X` [1] is incompatible with number [2]. All writes to `y` must be compatible with
+the type of its initializer [3]. Add an annotation to `y` [3] if a different type is desired. [incompatible-type]
+
+   class.js:20:11
+   20|       y = this.s;
+                 ^^^^^^
+
+References:
+   class.js:17:6
+   17|   s: X;
+            ^ [1]
+   class.js:14:9
+   14| var y = 22;
+               ^^ [2]
+   class.js:14:5
+   14| var y = 22;
+           ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:22:14
+
+Cannot assign `y` to `this.s` because number [1] is incompatible with `X` [2]. [incompatible-type]
+
+   class.js:22:14
+   22|     this.s = y;
+                    ^
+
+References:
+   class.js:14:9
+   14| var y = 22;
+               ^^ [1]
+   class.js:17:6
+   17|   s: X;
+            ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:39:11
+
+Cannot assign `z` to `a` because `Z` [1] is incompatible with number [2]. All writes to `a` must be compatible with the
+type of its initializer [3]. Add an annotation to `a` [3] if a different type is desired. [incompatible-type]
+
+   class.js:39:11
+   39|       a = z;
+                 ^
+
+References:
+   class.js:37:22
+   37|     function h<Z>(z: Z) {
+                            ^ [1]
+   class.js:35:13
+   35|     var a = 42;
+                   ^^ [2]
+   class.js:35:9
+   35|     var a = 42;
+               ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:43:11
+
+Cannot assign `w` to `a` because `W` [1] is incompatible with number [2]. All writes to `a` must be compatible with the
+type of its initializer [3]. Add an annotation to `a` [3] if a different type is desired. [incompatible-type]
+
+   class.js:43:11
+   43|       a = w;
+                 ^
+
+References:
+   class.js:41:12
+   41|     <W>(w: W) => {
+                  ^ [1]
+   class.js:35:13
+   35|     var a = 42;
+                   ^^ [2]
+   class.js:35:9
+   35|     var a = 42;
+               ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:45:9
+
+Cannot assign `this.s` to `z` because `Y` [1] is incompatible with number [2]. All writes to `z` must be compatible with
+the type of its initializer [3]. Add an annotation to `z` [3] if a different type is desired. [incompatible-type]
+
+   class.js:45:9
+   45|     z = this.s;
+               ^^^^^^
+
+References:
+   class.js:30:11
+   30|   f<Y>(y: Y, x: X) {
+                 ^ [1]
+   class.js:26:9
+   26| var z = 42;
+               ^^ [2]
+   class.js:26:5
+   26| var z = 42;
+           ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:45:9
+
+Cannot assign `this.s` to `z` because `X` [1] is incompatible with number [2]. All writes to `z` must be compatible with
+the type of its initializer [3]. Add an annotation to `z` [3] if a different type is desired. [incompatible-type]
+
+   class.js:45:9
+   45|     z = this.s;
+               ^^^^^^
+
+References:
+   class.js:30:17
+   30|   f<Y>(y: Y, x: X) {
+                       ^ [1]
+   class.js:26:9
+   26| var z = 42;
+               ^^ [2]
+   class.js:26:5
+   26| var z = 42;
+           ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:73:18
+
+class `D` [1] contains `this` [2] which cannot escape from its class [2] (try adding a type annotation to
+`globalCtor` [3]). [escaped-generic]
+
+   class.js:73:18
+   73|     globalCtor = this.constructor;
+                        ^^^^ [1]
+
+References:
+   class.js:71:7
+   71| class D {
+             ^ [2]
+   class.js:69:5
+   69| let globalCtor;
+           ^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ func.js:6:7
+
+Cannot assign `a` to `x` because `X` [1] is incompatible with number [2]. All writes to `x` must be compatible with the
+type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired. [incompatible-type]
+
+   func.js:6:7
+   6|   x = a; // error, X ~> escape
+            ^
+
+References:
+   func.js:5:19
+   5| function f1<X>(a: X): X {
+                        ^ [1]
+   func.js:3:9
+   3| var x = 42;
+              ^^ [2]
+   func.js:3:5
+   3| var x = 42;
+          ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- func.js:13:12
+
+Cannot return `ng(...)` because mixed [1] is incompatible with `T` [2]. [incompatible-return]
+
+   func.js:13:12
+   13|     return ng(value); // no escape errors
+                  ^^^^^^^^^
+
+References:
+   func.js:10:36
+   10| declare function ng(value: mixed): mixed;
+                                          ^^^^^ [1]
+   func.js:12:42
+   12|   static stableCopy<T: mixed>(value: T): T {
+                                                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- func.js:25:20
+
+Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
+
+   25| function o<X>(x: X) {
+                          
+
+
+Error ----------------------------------------------------------------------------------------------------- func.js:34:9
+
+Cannot assign function to `a` because function [1] is incompatible with number [2]. All writes to `a` must be compatible
+with the type of its initializer [3]. Add an annotation to `a` [3] if a different type is desired. [incompatible-type]
+
+   func.js:34:9
+   34|     a = (x: X) => x;
+               ^^^^^^^^^^^ [1]
+
+References:
+   func.js:30:9
+   30| var a = 42;
+               ^^ [2]
+   func.js:30:5
+   30| var a = 42;
+           ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- func.js:46:13
+
+Cannot assign `a` to `xa[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `xa` [3]). [escaped-generic]
+
+   func.js:46:13
+   46|     xa[0] = a;
+                   ^
+
+References:
+   func.js:44:19
+   44| function fa<T>(a: T, b: boolean): T {
+                         ^ [1]
+   func.js:44:13
+   44| function fa<T>(a: T, b: boolean): T {
+                   ^ [2]
+   func.js:43:5
+   43| var xa = [];
+           ^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:9:9
+
+Cannot assign `id(...)` to `x` because `T` [1] is incompatible with number [2]. All writes to `x` must be compatible
+with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired. [incompatible-type]
+
+   import.js:9:9
+   9|     x = id(t);
+              ^^^^^
+
+References:
+   import.js:7:18
+   7| function f<T>(t: T, escape: boolean): T | number {
+                       ^ [1]
+   import.js:5:9
+   5| var x = 42;
+              ^^ [2]
+   import.js:5:5
+   5| var x = 42;
+          ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:10:9
+
+Cannot assign `id<...>(...)` to `x` because `T` [1] is incompatible with number [2]. All writes to `x` must be
+compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired.
+[incompatible-type]
+
+   import.js:10:9
+   10|     x = id<T>(t);
+               ^^^^^^^^
+
+References:
+   import.js:10:12
+   10|     x = id<T>(t);
+                  ^ [1]
+   import.js:5:9
+    5| var x = 42;
+               ^^ [2]
+   import.js:5:5
+    5| var x = 42;
+           ^ [3]
+
+
+Error -------------------------------------------------------------------------------------- invalid_declarations.js:1:5
+
+Variable `esc1` [1] should be annotated, because it is only initialized in a generic context [2] [invalid-declaration]
+
+   invalid_declarations.js:1:5
+   1| let esc1; // error
+          ^^^^ [1]
+
+References:
+   invalid_declarations.js:3:3
+   3|   esc1 = 1;
+        ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- invalid_declarations.js:7:5
+
+Variable `esc2` [1] should be annotated, because it is only initialized in a generic context [2], [3]
+[invalid-declaration]
+
+   invalid_declarations.js:7:5
+    7| let esc2; // error
+           ^^^^ [1]
+
+References:
+   invalid_declarations.js:9:3
+    9|   esc2 = 1;
+         ^^^^ [2]
+   invalid_declarations.js:12:3
+   12|   esc2 = 2;
+         ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------- invalid_declarations.js:16:5
+
+Variable `esc3` [1] should be annotated, because it is only ever assigned to by `null` and in generic context [2]
+[invalid-declaration]
+
+   invalid_declarations.js:16:5
+   16| let esc3 = null; // error
+           ^^^^ [1]
+
+References:
+   invalid_declarations.js:18:3
+   18|   esc3 = 1;
+         ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ invalid_declarations.js:18:10
+
+Cannot assign `1` to `esc3` because number [1] is incompatible with null [2]. All writes to `esc3` must be compatible
+with the type of its initializer [3]. Add an annotation to `esc3` [3] if a different type is desired.
+[incompatible-type]
+
+   invalid_declarations.js:18:10
+   18|   esc3 = 1;
+                ^ [1]
+
+References:
+   invalid_declarations.js:16:12
+   16| let esc3 = null; // error
+                  ^^^^ [2]
+   invalid_declarations.js:16:5
+   16| let esc3 = null; // error
+           ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------- invalid_declarations.js:22:5
+
+Variable `esc4` [1] should be annotated, because it is only ever assigned to by `null` and in generic context [2], [3]
+[invalid-declaration]
+
+   invalid_declarations.js:22:5
+   22| let esc4 = null; // error
+           ^^^^ [1]
+
+References:
+   invalid_declarations.js:24:3
+   24|   esc4 = 1;
+         ^^^^ [2]
+   invalid_declarations.js:27:3
+   27|   esc4 = 2;
+         ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ invalid_declarations.js:24:10
+
+Cannot assign `1` to `esc4` because number [1] is incompatible with null [2]. All writes to `esc4` must be compatible
+with the type of its initializer [3]. Add an annotation to `esc4` [3] if a different type is desired.
+[incompatible-type]
+
+   invalid_declarations.js:24:10
+   24|   esc4 = 1;
+                ^ [1]
+
+References:
+   invalid_declarations.js:22:12
+   22| let esc4 = null; // error
+                  ^^^^ [2]
+   invalid_declarations.js:22:5
+   22| let esc4 = null; // error
+           ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ invalid_declarations.js:27:10
+
+Cannot assign `2` to `esc4` because number [1] is incompatible with null [2]. All writes to `esc4` must be compatible
+with the type of its initializer [3]. Add an annotation to `esc4` [3] if a different type is desired.
+[incompatible-type]
+
+   invalid_declarations.js:27:10
+   27|   esc4 = 2;
+                ^ [1]
+
+References:
+   invalid_declarations.js:22:12
+   22| let esc4 = null; // error
+                  ^^^^ [2]
+   invalid_declarations.js:22:5
+   22| let esc4 = null; // error
+           ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:7:12
+
+Cannot assign `x` to `e[n]` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `e` [3]). [escaped-generic]
+
+   misc.js:7:12
+   7|     e[n] = x;
+                 ^
+
+References:
+   misc.js:5:19
+   5| function f1<X>(x: X, escape: boolean, n: number): X | number {
+                        ^ [1]
+   misc.js:5:13
+   5| function f1<X>(x: X, escape: boolean, n: number): X | number {
+                  ^ [2]
+   misc.js:3:5
+   3| var e = new Array(10);
+          ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:15:7
+
+Cannot reassign class binding `e` [1]. [cannot-reassign]
+
+   misc.js:15:7
+   15|       e = x;
+             ^
+
+References:
+   misc.js:12:15
+   12| var c = class e {
+                     ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:17:12
+
+Cannot return `e` because: [incompatible-return]
+ - Either class `e` [1] is incompatible with `X` [2].
+ - Or `e` [1] is incompatible with `this` [3].
+
+   misc.js:17:12
+   17|     return e;
+                  ^
+
+References:
+   misc.js:12:15
+   12| var c = class e {
+                     ^ [1]
+   misc.js:13:32
+   13|   f<X>(x: X, escape: boolean): X | Class<this> {
+                                      ^ [2]
+   misc.js:13:42
+   13|   f<X>(x: X, escape: boolean): X | Class<this> {
+                                                ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:25:11
+
+Cannot assign `x` to `a.x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a` [3]). [escaped-generic]
+
+   misc.js:25:11
+   25|     a.x = x;
+                 ^
+
+References:
+   misc.js:23:19
+   23| function f2<X>(x: X, escape: boolean): X | number {
+                         ^ [1]
+   misc.js:23:13
+   23| function f2<X>(x: X, escape: boolean): X | number {
+                   ^ [2]
+   misc.js:21:5
+   21| var a = Object.create(null, {x: {value: 42}});
+           ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:34:13
+
+Cannot assign `x` to `a2[n]` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `a2` [3]). [escaped-generic]
+
+   misc.js:34:13
+   34|     a2[n] = x;
+                   ^
+
+References:
+   misc.js:32:19
+   32| function f3<X>(x: X, escape: boolean, n: number): X | string {
+                         ^ [1]
+   misc.js:32:13
+   32| function f3<X>(x: X, escape: boolean, n: number): X | string {
+                   ^ [2]
+   misc.js:30:5
+   30| var a2 = Object.keys({x: 42});
+           ^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:42:7
+
+Cannot reassign function binding `g` [1]. [cannot-reassign]
+
+   misc.js:42:7
+   42|       g = x;
+             ^
+
+References:
+   misc.js:40:12
+   40|   function g<X>(x: X): X | ((boolean, number) => void) {
+                  ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:44:12
+
+Cannot return `g` because undefined [1] is incompatible with boolean [2] in the first parameter. [incompatible-return]
+
+   misc.js:44:12
+   44|     return g;
+                  ^
+
+References:
+   misc.js:40:50
+   40|   function g<X>(x: X): X | ((boolean, number) => void) {
+                                                        ^^^^ [1]
+   misc.js:40:30
+   40|   function g<X>(x: X): X | ((boolean, number) => void) {
+                                    ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:53:5
+
+Cannot reassign class binding `C` [1]. [cannot-reassign]
+
+   misc.js:53:5
+   53|     C = x;
+           ^
+
+References:
+   misc.js:49:7
+   49| class C {}
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:61:7
+
+Cannot reassign class binding `D` [1]. [cannot-reassign]
+
+   misc.js:61:7
+   61|       D = x;
+             ^
+
+References:
+   misc.js:58:7
+   58| class D {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:63:12
+
+Cannot return `D` because class `D` [1] is incompatible with `X` [2]. [incompatible-return]
+
+   misc.js:63:12
+   63|     return D;
+                  ^
+
+References:
+   misc.js:58:7
+   58| class D {
+             ^ [1]
+   misc.js:59:32
+   59|   f<X>(x: X, escape: boolean): X {
+                                      ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:69:9
+
+Cannot assign `x` to `u` because `X` [1] is incompatible with number [2]. All writes to `u` must be compatible with the
+type of its initializer [3]. Add an annotation to `u` [3] if a different type is desired. [incompatible-type]
+
+   misc.js:69:9
+   69|     u = x;
+               ^
+
+References:
+   misc.js:67:17
+   67| var u = (<X>(x: X, escape: boolean): X => {
+                       ^ [1]
+   misc.js:72:4
+   72| })(42, true);
+          ^^ [2]
+   misc.js:67:5
+   67| var u = (<X>(x: X, escape: boolean): X => {
+           ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:71:10
+
+Cannot return `u` because number [1] is incompatible with `X` [2]. [incompatible-return]
+
+   misc.js:71:10
+   71|   return u;
+                ^
+
+References:
+   misc.js:72:4
+   72| })(42, true);
+          ^^ [1]
+   misc.js:67:38
+   67| var u = (<X>(x: X, escape: boolean): X => {
+                                            ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:76:10
+
+Cannot assign `y` to `x0` because `X` [1] is incompatible with variable `x0` of unknown type [2]. All writes to `x0`
+must be compatible with the type of its initializer [2]. Add an annotation to `x0` [2] if a different type is desired.
+[incompatible-type]
+
+   misc.js:76:10
+   76|     x0 = y;
+                ^
+
+References:
+   misc.js:75:20
+   75|   function f<X>(y: X) {
+                          ^ [1]
+   misc.js:74:10
+   74| for (var x0 of []) {
+                ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:82:10
+
+Cannot assign `y` to `x1` because `X` [1] is incompatible with variable `x1` of unknown type [2]. All writes to `x1`
+must be compatible with the type of its initializer [2]. Add an annotation to `x1` [2] if a different type is desired.
+[incompatible-type]
+
+   misc.js:82:10
+   82|     x1 = y;
+                ^
+
+References:
+   misc.js:81:20
+   81|   function f<X>(y: X) {
+                          ^ [1]
+   misc.js:80:11
+   80| for (var [x1] of []) {
+                 ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:88:10
+
+Cannot assign `y` to `x2` because `X` [1] is incompatible with variable `x2` of unknown type [2]. All writes to `x2`
+must be compatible with the type of its initializer [2]. Add an annotation to `x2` [2] if a different type is desired.
+[incompatible-type]
+
+   misc.js:88:10
+   88|     x2 = y;
+                ^
+
+References:
+   misc.js:87:20
+   87|   function f<X>(y: X) {
+                          ^ [1]
+   misc.js:86:14
+   86| for (var [...x2] of []) {
+                    ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- misc.js:94:10
+
+Cannot assign `y` to `x3` because `X` [1] is incompatible with variable `x3` of unknown type [2]. All writes to `x3`
+must be compatible with the type of its initializer [2]. Add an annotation to `x3` [2] if a different type is desired.
+[incompatible-type]
+
+   misc.js:94:10
+   94|     x3 = y;
+                ^
+
+References:
+   misc.js:93:20
+   93|   function f<X>(y: X) {
+                          ^ [1]
+   misc.js:92:14
+   92| for (var {...x3} of []) {
+                    ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- misc.js:121:11
+
+Cannot assign `x` to `aaa` because object type [1] is incompatible with number [2]. All writes to `aaa` must be
+compatible with the type of its initializer [3]. Add an annotation to `aaa` [3] if a different type is desired.
+[incompatible-type]
+
+   misc.js:121:11
+   121|     aaa = x;
+                  ^
+
+References:
+   misc.js:120:30
+   120| function foo<T: {}>(x: $Diff<T, {}>) {
+                                     ^ [1]
+   misc.js:119:11
+   119| var aaa = 1;
+                  ^ [2]
+   misc.js:119:5
+   119| var aaa = 1;
+            ^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- misc.js:126:11
+
+Cannot assign `t` to `x4[0]` because type variable `T` [1] cannot escape from the scope in which it was defined [2] (try
+adding a type annotation to `x4` [3]). [escaped-generic]
+
+   misc.js:126:11
+   126|   x4[0] = t;
+                  ^
+
+References:
+   misc.js:125:18
+   125| function f<T>(t: T) {
+                         ^ [1]
+   misc.js:125:12
+   125| function f<T>(t: T) {
+                   ^ [2]
+   misc.js:124:5
+   124| var x4 = [];
+            ^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- pred.js:5:30
+
+Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
+
+   5| function f4<X>(x: X): %checks {
+                                   
+
+
+Error --------------------------------------------------------------------------------------------------- spreads.js:3:5
+
+Variable `esc` [1] should be annotated, because it is only initialized in a generic context [2] [invalid-declaration]
+
+   spreads.js:3:5
+   3| var esc; // error
+          ^^^ [1]
+
+References:
+   spreads.js:5:3
+   5|   esc = {...x, ...y};
+        ^^^ [2]
+
+
+
+Found 44 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -1,0 +1,270 @@
+Error ----------------------------------------------------------------------------------------------------- arrow.js:2:4
+
+Cannot cast `this` to number because global object [1] is incompatible with number [2]. [incompatible-cast]
+
+   arrow.js:2:4
+   2|   (this: number); // ERROR
+         ^^^^ [1]
+
+References:
+   arrow.js:2:10
+   2|   (this: number); // ERROR
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- arrow.js:7:2
+
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   arrow.js:7:2
+   7| (f.a: empty); // ERROR
+       ^^^
+
+References:
+   arrow.js:4:7
+   4| f.a = 1;
+            ^ [1]
+   arrow.js:7:7
+   7| (f.a: empty); // ERROR
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- arrow.js:27:7
+
+Cannot call `d` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
+
+   arrow.js:27:7
+   27|     d(n, s); // ERROR
+             ^
+
+References:
+   arrow.js:25:32
+   25|   const f = (s: string) => (n: number) => {
+                                      ^^^^^^ [1]
+   arrow.js:24:26
+   24|   const d = debounce((s: string, n: number): void => {});
+                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- arrow.js:27:10
+
+Cannot call `d` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
+
+   arrow.js:27:10
+   27|     d(n, s); // ERROR
+                ^
+
+References:
+   arrow.js:25:17
+   25|   const f = (s: string) => (n: number) => {
+                       ^^^^^^ [1]
+   arrow.js:24:37
+   24|   const d = debounce((s: string, n: number): void => {});
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- arrow.js:35:9
+
+Cannot assign `1` to `f.a` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   arrow.js:35:9
+   35|   f.a = 1; // ERROR
+               ^ [1]
+
+References:
+   arrow.js:33:28
+   33|   const f: {(): number, a: string} = () => 1;
+                                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- arrow.js:36:5
+
+Cannot get `f.xxx` because property `xxx` is missing in object type [1]. [prop-missing]
+
+   arrow.js:36:5
+   36|   f.xxx; // ERROR
+           ^^^
+
+References:
+   arrow.js:33:12
+   33|   const f: {(): number, a: string} = () => 1;
+                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- function_declaration.js:11:2
+
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_declaration.js:11:2
+   11| (f.a: empty); // ERROR
+        ^^^
+
+References:
+   function_declaration.js:5:7
+    5| f.a = 1;
+             ^ [1]
+   function_declaration.js:11:7
+   11| (f.a: empty); // ERROR
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- function_declaration.js:12:2
+
+Cannot cast `f.b()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_declaration.js:12:2
+   12| (f.b(): empty); // ERROR
+        ^^^^^
+
+References:
+   function_declaration.js:6:13
+    6| f.b = () => 1;
+                   ^ [1]
+   function_declaration.js:12:9
+   12| (f.b(): empty); // ERROR
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- function_declaration.js:22:7
+
+Cannot assign `1` to `f.c` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   function_declaration.js:22:7
+   22| f.c = 1; // ERROR
+             ^ [1]
+
+References:
+   function_declaration.js:20:7
+   20| f.c = ""; // OK
+             ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- function_declaration.js:29:5
+
+Cannot assign `1` to `f.xxx` because property `xxx` is missing in function [1]. [prop-missing]
+
+   function_declaration.js:29:5
+   29|   f.xxx = 1; // ERROR
+           ^^^
+
+References:
+   function_declaration.js:1:1
+    1| function f(this: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- function_expression.js:7:2
+
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   function_expression.js:7:2
+   7| (f.a: empty); // ERROR
+       ^^^
+
+References:
+   function_expression.js:4:7
+   4| f.a = 1;
+            ^ [1]
+   function_expression.js:7:7
+   7| (f.a: empty); // ERROR
+            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- function_expression.js:28:9
+
+Cannot call `d` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
+
+   function_expression.js:28:9
+   28|       d(n, s); // ERROR
+               ^
+
+References:
+   function_expression.js:26:25
+   26|     return function (n: number) {
+                               ^^^^^^ [1]
+   function_expression.js:24:26
+   24|   const d = debounce((s: string, n: number): void => {});
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- function_expression.js:28:12
+
+Cannot call `d` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
+
+   function_expression.js:28:12
+   28|       d(n, s); // ERROR
+                  ^
+
+References:
+   function_expression.js:25:26
+   25|   const f = function (s: string) {
+                                ^^^^^^ [1]
+   function_expression.js:24:37
+   24|   const d = debounce((s: string, n: number): void => {});
+                                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- function_expression.js:34:9
+
+Cannot call `d` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
+
+   function_expression.js:34:9
+   34|       d(n, s); // ERROR
+               ^
+
+References:
+   function_expression.js:32:26
+   32|     return function m(n: number) {
+                                ^^^^^^ [1]
+   function_expression.js:24:26
+   24|   const d = debounce((s: string, n: number): void => {});
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- function_expression.js:34:12
+
+Cannot call `d` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
+
+   function_expression.js:34:12
+   34|       d(n, s); // ERROR
+                  ^
+
+References:
+   function_expression.js:31:27
+   31|   const g = function n(s: string) {
+                                 ^^^^^^ [1]
+   function_expression.js:24:37
+   24|   const d = debounce((s: string, n: number): void => {});
+                                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- function_expression.js:43:9
+
+Cannot assign `1` to `f.a` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   function_expression.js:43:9
+   43|   f.a = 1; // ERROR
+               ^ [1]
+
+References:
+   function_expression.js:41:28
+   41|   const f: {(): number, a: string} = function () { return 1};
+                                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- function_expression.js:44:5
+
+Cannot get `f.xxx` because property `xxx` is missing in object type [1]. [prop-missing]
+
+   function_expression.js:44:5
+   44|   f.xxx; // ERROR
+           ^^^
+
+References:
+   function_expression.js:41:12
+   41|   const f: {(): number, a: string} = function () { return 1};
+                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 17 errors

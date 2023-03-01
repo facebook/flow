@@ -833,23 +833,6 @@ References:
                           ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:664:19
-
-Cannot use operator `+=` with operands number [1] and undefined [2] [unsafe-addition]
-
-   test.js:664:19
-   664|     this.f = x => this.p += x;
-                          ^^^^^^^^^^^
-
-References:
-   test.js:661:6
-   661|   p: number;
-             ^^^^^^ [1]
-   test.js:665:12
-   665|     this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
-                   ^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:665:5
 
 It is unsafe to call a property function in the constructor before all class properties are definitely initialized.
@@ -1074,4 +1057,4 @@ It is unsafe to read from a class property before it is definitely initialized. 
 
 
 
-Found 118 errors
+Found 117 errors

@@ -49,9 +49,9 @@ saved_state=0
 verbose=0
 quiet=0
 relative="."
-lti=0
+classic=0
 check_only=0
-export saved_state filter check_only lti
+export saved_state filter check_only classic
 while getopts "b:d:f:clqxnrst:vh?" opt; do
   case "$opt" in
   b)
@@ -67,7 +67,7 @@ while getopts "b:d:f:clqxnrst:vh?" opt; do
     check_only=1
     ;;
   n)
-    lti=1
+    classic=1
     ;;
   l)
     list_tests=1
@@ -173,8 +173,8 @@ print_failure() {
     fi
     # Default expected file extension is .exp
     ext=".exp"
-    if [[ "$lti" -eq 1 ]] && [ -f "${dir}${name}${ext}.lti" ]; then
-      ext="${ext}.lti"
+    if [[ "$classic" -eq 1 ]] && [ -f "${dir}${name}${ext}.classic" ]; then
+      ext="${ext}.classic"
     fi
 
     if [[ "$record" -eq 1 ]]; then

@@ -61,40 +61,39 @@ References:
                               ^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------- iterator_result.js:23:18
+Error ----------------------------------------------------------------------------------------- iterator_result.js:23:31
 
-Cannot return object literal because boolean [1] is incompatible with boolean literal `false` [2] in property `done`.
+Cannot return object literal because string [1] is incompatible with undefined [2] in property `value`.
 [incompatible-return]
 
-   iterator_result.js:23:18
-     23|         return { done, value: "still going..." }; // Error string ~> void
-                          ^^^^
+   iterator_result.js:23:31
+   23|         return { done, value: "still going..." }; // Error string ~> void
+                                     ^^^^^^^^^^^^^^^^ [1]
 
 References:
-   iterator_result.js:17:41
-     17| function makeIterator2(coin_flip: () => boolean ): Iterator<string> {
-                                                 ^^^^^^^ [1]
-   <BUILTINS>/core.js:1671:11
-   1671|     done: false,
-                   ^^^^^ [2]
+   iterator_result.js:20:36
+   20|     next(): IteratorResult<string, void> {
+                                          ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- iterator_result.js:25:18
+Error ----------------------------------------------------------------------------------------- iterator_result.js:25:16
 
-Cannot return object literal because boolean [1] is incompatible with boolean literal `true` [2] in property `done`.
-[incompatible-return]
+Cannot return object literal because property `value` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
 
-   iterator_result.js:25:18
+   iterator_result.js:25:16
      25|         return { done }; // Error void ~> string, LTI: prop-missing of value
-                          ^^^^
+                        ^^^^^^^^ [1]
 
 References:
-   iterator_result.js:17:41
-     17| function makeIterator2(coin_flip: () => boolean ): Iterator<string> {
-                                                 ^^^^^^^ [1]
-   <BUILTINS>/core.js:1666:11
-   1666|     done: true,
-                   ^^^^ [2]
+   <BUILTINS>/core.js:1670:5
+             v
+   1670|   | {
+   1671|     done: false,
+   1672|     +value: Yield,
+   1673|     ...
+   1674| };
+         ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:14:10

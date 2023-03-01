@@ -572,8 +572,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- call_error_generic2.js:4:8
 
-Cannot call `bar1` with `fragmentRef` bound to `key` because property `$data` is missing in object type [1] but exists
-in object type [2]. [prop-missing]
+Cannot call `bar1` because property `$data` is missing in object type [1] but exists in object type [2] in type argument
+`TKey`. [prop-missing]
 
    call_error_generic2.js:4:8
    4|   bar1(fragmentRef);
@@ -734,7 +734,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:38:55
 
-Cannot call `string_rest_t` because rest array [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `string_rest_t` because rest array [1] is incompatible with string [2] in type argument `T`.
+[incompatible-call]
 
    rest.js:38:55
    38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
@@ -751,7 +752,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:39:54
 
-Cannot call `empty_rest_t2` because rest array [1] is incompatible with empty [2]. [incompatible-call]
+Cannot call `empty_rest_t2` because rest array [1] is incompatible with empty [2] in type argument `T`.
+[incompatible-call]
 
    rest.js:39:54
    39| function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
@@ -811,10 +813,16 @@ References:
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rest_type.js:15:5
+Error ------------------------------------------------------------------------------------------------ rest_type.js:15:3
 
-Cannot call `f` with `123` bound to `x` because number [1] is not an array. [not-an-array]
+Cannot call `f` because number [1] is not an array. [not-an-array]
 
+   rest_type.js:15:3
+   15|   f(123); // Error - number ~> array - luckily this errors
+         ^
+
+References:
+   rest_type.js:15:5
    15|   f(123); // Error - number ~> array - luckily this errors
            ^^^ [1]
 

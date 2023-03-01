@@ -2400,7 +2400,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements2.js:9:4
 
-Cannot cast `t` to union type because `T` [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `t` to union type because object type [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:9:4
    9|   (t: (null | void)); // no
@@ -2448,7 +2448,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:13:4
 
-Cannot cast `t` to union type because `T` [1] is incompatible with literal union [2]. [incompatible-cast]
+Cannot cast `t` to union type because object type [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:13:4
    13|   (t: (null | void)); // no
@@ -3694,25 +3694,8 @@ References:
                               ^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:6:25
 
-read-only array type [1] is incompatible with undefined [2]. [incompatible-type]
-
-   typeof.js:6:25
-   6|   type T = $ElementType<typeof y, 0>; // error: undefined does not have properties
-                              ^^^^^^^^
-
-References:
-   typeof.js:4:21
-   4|   const x: {a?: {b: $ReadOnlyArray<{c: number}>}} = {};
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:4:17
-   4|   const x: {a?: {b: $ReadOnlyArray<{c: number}>}} = {};
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 233 errors
+Found 232 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -29,21 +29,22 @@ References:
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:14:2
+Error ---------------------------------------------------------------------------------------------------- test.js:10:11
 
-Cannot cast `a` to object type because string [1] is incompatible with number [2] in property `x`. [incompatible-cast]
+Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2]. Either add explicit
+type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   test.js:14:2
-   14| (a: {x: number}); // Not ok, number incompatible with string, OK in LTI since targ pinned to any
-        ^
+   test.js:10:11
+   10| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
+                 ^^^^^^^^^^^^^^^
 
 References:
-   test.js:12:12
-   12| var b: {x: string} = a; // Concretize to string.
-                  ^^^^^^ [1]
-   test.js:14:9
-   14| (a: {x: number}); // Not ok, number incompatible with string, OK in LTI since targ pinned to any
-               ^^^^^^ [2]
+   test.js:7:34
+    7| declare function unimplementable<T>(): {x: T};
+                                        ^ [1]
+   test.js:10:11
+   10| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
+                 ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:2
@@ -63,6 +64,42 @@ References:
            ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:22:6
+
+Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2]. Either add explicit
+type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   test.js:22:6
+   22|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
+            ^^^^^^^^^^^^^^^
+
+References:
+   test.js:7:34
+    7| declare function unimplementable<T>(): {x: T};
+                                        ^ [1]
+   test.js:22:6
+   22|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
+            ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:6
+
+Cannot call `readOnly` because `T` [1] is underconstrained by call of `readOnly` [2]. Either add explicit type arguments
+or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   test.js:23:6
+   23|   y: readOnly<_>(), // Error in LTI
+            ^^^^^^^^
+
+References:
+   test.js:19:27
+   19| declare function readOnly<T>(): {+x :T};
+                                 ^ [1]
+   test.js:23:6
+   23|   y: readOnly<_>(), // Error in LTI
+            ^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------- under_constrained_speculation.js:1:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -77,5 +114,42 @@ References:
           ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:15:1
 
-Found 5 errors
+Cannot call `C` because undefined [1] is incompatible with array type [2]. [incompatible-call]
+
+   under_constrained_speculation.js:15:1
+   15| C(undefined); // error branches are under-constrained for the first overload,
+       ^
+
+References:
+   under_constrained_speculation.js:15:3
+   15| C(undefined); // error branches are under-constrained for the first overload,
+         ^^^^^^^^^ [1]
+   under_constrained_speculation.js:6:23
+    6|   static <K, V>(iter: Array<[K, V]>): C<K, V>;
+                             ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:20:1
+
+Cannot call `foo` because undefined [1] is incompatible with array type [2]. [incompatible-call]
+
+   under_constrained_speculation.js:20:1
+   20| foo(undefined); // error branches are under-constrained for the first overload,
+       ^^^
+
+References:
+   under_constrained_speculation.js:20:5
+   20| foo(undefined); // error branches are under-constrained for the first overload,
+           ^^^^^^^^^ [1]
+   under_constrained_speculation.js:10:34
+   10| declare function foo<K, V>(iter: Array<[K, V]>): C<K, V>;
+                                        ^^^^^^^^^^^^^ [2]
+
+
+
+Found 9 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

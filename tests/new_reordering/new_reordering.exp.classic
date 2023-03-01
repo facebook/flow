@@ -1,0 +1,452 @@
+Typechecking for cycles...
+Error -------------------------------------------------------------------------------------------------------- a.js:14:1
+
+Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
+this definition [2] [recursive-definition]
+
+   a.js:14:1
+   14| function f_na() {
+       ^^^^^^^^^^^^^^^
+
+References:
+   a.js:18:10
+   18|   return f_na();
+                ^^^^ [1]
+   a.js:14:16
+   14| function f_na() {
+                       [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:22:7
+
+Cannot assign `null` to `x` because null [1] is incompatible with possibly uninitialized variable [2]. All writes to `x`
+must be compatible with the type of its initial assignment [3]. Add an annotation to `x` [2] if a different type is
+desired. [incompatible-type]
+
+   a.js:22:7
+   22|   x = null;
+             ^^^^ [1]
+
+References:
+   a.js:25:5
+   25| var x;
+           ^ [2]
+   a.js:27:1
+   27| x = x;
+       ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:27:1
+
+Cannot compute a type for `x` because its definition includes references to itself [1]. Please add an annotation to this
+definition [2] [recursive-definition]
+
+   a.js:27:1
+   27| x = x;
+       ^
+
+References:
+   a.js:27:5
+   27| x = x;
+           ^ [1]
+   a.js:25:5
+   25| var x;
+           ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:29:1
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - function [1] depends on other definition [2]
+ - function [3] depends on other definition [4]
+Please add type annotations to these definitions [5] [6] [definition-cycle]
+
+   a.js:29:1
+   29| function odd(x: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   a.js:33:10
+   33|   return even(x - 1)
+                ^^^^ [2]
+   a.js:36:1
+   36| function even(x: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   a.js:40:10
+   40|   return odd(x - 1)
+                ^^^ [4]
+   a.js:29:24
+   29| function odd(x: number) {
+                               [5]
+   a.js:36:25
+   36| function even(x: number) {
+                                [6]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:47:18
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   47| function missing(x): number {
+                        ^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:71:7
+
+Cannot compute a type for `math2` because its definition includes references to itself [1],  [2]. Please add an
+annotation to these definitions [3] [4] [5] [recursive-definition]
+
+   a.js:71:7
+   71| const math2 = {
+             ^^^^^
+
+References:
+   a.js:87:12
+   87|     return math2.odd(x - 1)
+                  ^^^^^ [1]
+   a.js:81:12
+   81|     return math2.even(x - 1)
+                  ^^^^^ [2]
+   a.js:75:20
+   75|     meth(x: number) { return true }
+                           [3]
+   a.js:77:17
+   77|   odd(x: number) {
+                        [4]
+   a.js:83:20
+   83|   even: (x: number) => {
+                           [5]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:91:7
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `odd_obj` [1] depends on other definition [2]
+ - `even_obj` [3] depends on other definition [4]
+Please add type annotations to these definitions [5] [6] [7] [definition-cycle]
+
+   a.js:91:7
+    91| const odd_obj = {
+              ^^^^^^^ [1]
+
+References:
+   a.js:97:12
+    97|     return even_obj.even(x - 1)
+                   ^^^^^^^^ [2]
+   a.js:101:7
+   101| const even_obj = {
+              ^^^^^^^^ [3]
+   a.js:106:12
+   106|     return odd_obj.odd(x - 1)
+                   ^^^^^^^ [4]
+   a.js:92:14
+    92|   unrelated() { return 42 },
+                      [5]
+   a.js:93:17
+    93|   odd(x: number) {
+                         [6]
+   a.js:102:22
+   102|     even: (x: number) => {
+                              [7]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:110:7
+
+Cannot compute a type for `recursiveArrow` because its definition includes references to itself [1]. Please add an
+annotation to this definition [2] [recursive-definition]
+
+   a.js:110:7
+   110| const recursiveArrow = () => true ? 1 : recursiveArrow();
+              ^^^^^^^^^^^^^^
+
+References:
+   a.js:110:41
+   110| const recursiveArrow = () => true ? 1 : recursiveArrow();
+                                                ^^^^^^^^^^^^^^ [1]
+   a.js:110:26
+   110| const recursiveArrow = () => true ? 1 : recursiveArrow();
+                                  [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ a.js:146:25
+
+Cannot return `Utils.foo` because array literal [1] is incompatible with empty [2]. [incompatible-return]
+
+   a.js:146:25
+   146|     h(): empty { return Utils.foo } //err
+                                ^^^^^^^^^
+
+References:
+   a.js:143:10
+   143|     foo: [{x: function(): number { return 42 }}, 42],
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   a.js:146:10
+   146|     h(): empty { return Utils.foo } //err
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:153:9
+
+Cannot compute a type for `Utils` because its definition includes references to itself [1]. Please add an annotation to
+these definitions [2] [3] [recursive-definition]
+
+   a.js:153:9
+   153|   const Utils = {
+                ^^^^^
+
+References:
+   a.js:155:18
+   155|     f() { return Utils.foo }
+                         ^^^^^ [1]
+   a.js:154:25
+   154|     foo: [{x: function() { return 42 }}, 42],
+                                 [2]
+   a.js:155:8
+   155|     f() { return Utils.foo }
+                [3]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:160:9
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `m` [1] depends on other definition [2], [3], [4], [5]
+ - `x` [5] depends on other definition [4]
+ - `H` [6] depends on other definition [7]
+ - `x` [2] depends on other definition [3]
+Please add type annotations to these definitions [8] [5] [definition-cycle]
+
+   a.js:160:9
+   160|   const m = {
+                ^ [1]
+
+References:
+   a.js:161:7
+   161|     f(x: H) {
+              ^ [2]
+   a.js:161:10
+   161|     f(x: H) {
+                 ^ [3]
+   a.js:162:14
+   162|       return x(x => 42)
+                     ^ [4]
+   a.js:162:16
+   162|       return x(x => 42)
+                       ^ [5]
+   a.js:168:8
+   168|   type H = { (number => number): void, m: typeof m, s: S }
+               ^ [6]
+   a.js:168:50
+   168|   type H = { (number => number): void, m: typeof m, s: S }
+                                                         ^ [7]
+   a.js:161:12
+   161|     f(x: H) {
+                    [8]
+
+
+
+Found 11 errors
+Annotating cycles...
+>>> a.js (#changes: 16)
+//@flow
+
+
+class TimeOfDay {
+  a(other: TimeOfDay): boolean {
+    return true
+  }
+}
+
+function f(): number {
+  return f();
+}
+
+function f_na(): number {
+  if (true) {
+    return 42;
+  }
+  return f_na();
+}
+
+function havoc_x() {
+  x = null;
+}
+
+var x: void;
+havoc_x();
+x = x;
+
+function odd(x: number): boolean {
+  if (x === 0) {
+    return false;
+  }
+  return even(x - 1)
+}
+
+function even(x: number): boolean {
+  if (x === 0) {
+    return true;
+  }
+  return odd(x - 1)
+}
+
+function is_zero(x: number): boolean %checks {
+  return x === 0 || is_zero(x);
+}
+
+function missing(x): number {
+  return missing(x);
+}
+
+const math1 = {
+  foo: "Hello",
+  subobj: {
+    foo: is_zero,
+    meth(x: number): boolean { return true }
+  },
+  odd(x: number): boolean {
+    if (x === 0) {
+      return false;
+    }
+    return math1.even(x - 1)
+  },
+  even: (x: number): boolean => {
+    if (x === 0) {
+      return true;
+    }
+    return math1.odd(x - 1)
+  }
+}
+
+const math2 = {
+  foo: "Hello",
+  subobj: {
+    foo: math1,
+    meth(x: number): boolean { return true }
+  },
+  odd(x: number): boolean {
+    if (x === 0) {
+      return false;
+    }
+    return math2.even(x - 1)
+  },
+  even: (x: number): boolean => {
+    if (x === 0) {
+      return true;
+    }
+    return math2.odd(x - 1)
+  }
+}
+
+const odd_obj = {
+  unrelated(): number { return 42 },
+  odd(x: number): boolean {
+    if (x === 0) {
+      return false;
+    }
+    return even_obj.even(x - 1)
+  }
+}
+
+const even_obj = {
+    even: (x: number): boolean => {
+    if (x === 0) {
+      return true;
+    }
+    return odd_obj.odd(x - 1)
+  }
+}
+
+const recursiveArrow = (): number => true ? 1 : recursiveArrow();
+
+const moremath1 = {
+  ...math1,
+  sqrt(x: number): number {
+    return moremath1.odd(x) ? 1 : 0;
+  }
+}
+
+const moremath2 = {
+  ...math2,
+  sqrt(x: number): number {
+    return moremath2.odd(x) ? 1 : 0;
+  }
+}
+
+export const foo = (): number => foo();
+
+{
+  declare function g(any): any;
+  declare function f(): any;
+  g(function () { return f() })
+}
+
+import * as React from 'react';
+{
+  declare function F(any): any;
+  declare function f(): any;
+  <F attr={function () { return f() }} />
+}
+
+{
+  const Utils = {
+    foo: [{x: function(): number { return 42 }}, 42],
+    f(): Array<number | { x: () => number }> { return Utils.foo }, //ok
+    g(): [{ x: () => number }, number] { return Utils.foo }, //ok
+    h(): empty { return Utils.foo } //err
+  };
+
+  (Utils.foo: Array<number | { x:() => number }>);
+}
+
+{
+  const Utils = {
+    foo: [{x: function(): number { return 42 }}, 42],
+    f(): Array<number | {| x: () => number |}> { return Utils.foo }
+  };
+}
+
+{
+  const m = {
+    f(x: H): void {
+      return x(x => 42)
+    }
+  }
+
+  type S = H; // not included in error message
+
+  type H = { (number => number): void, m: typeof m, s: S }
+}
+
+{
+  function F(): number { return F.B() }
+  F.A = (): number => 42;
+  F.B = (): number => F.A();
+}
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:             14
+  Total size of annotations:               20
+  Number of cycles:                        15
+  Number of annotations skipped:            0
+  Number of unannotatable cycles:           0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       1
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

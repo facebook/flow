@@ -186,21 +186,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- union.js:17:13
 
-Cannot use `x` [1] as a computed property. Computed properties may only be primitive literal values, but this one may be
-either string literal `foo` [2] or string literal `bar` [3]. Can you add a literal type annotation to `x` [1]? See
-https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+Cannot use `x` [1] as a computed property. Computed properties may only be primitive literal values, but `x` [1] is a
+union. Can you add a literal type annotation to `x` [1]? See https://flow.org/en/docs/types/literals/ for more
+information on literal types. [invalid-computed-prop]
 
-   union.js:17:13
    17| const b = {[x]: 3} // Error, x has multiple lower bounds
                    ^ [1]
-
-References:
-   union.js:10:7
-   10|   x = 'foo';
-             ^^^^^ [2]
-   union.js:12:7
-   12|   x = 'bar';
-             ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:20:13

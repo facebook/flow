@@ -1,0 +1,269 @@
+Error -------------------------------------------------------------------------------------------------- Profile.js:23:6
+
+Cannot cast `this.props.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   Profile.js:23:6
+   23|     (this.props.foo: empty); // Error: number ~> empty
+            ^^^^^^^^^^^^^^
+
+References:
+   Profile.js:18:8
+   18|   foo: number,
+              ^^^^^^ [1]
+   Profile.js:23:22
+   23|     (this.props.foo: empty); // Error: number ~> empty
+                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- Profile.js:24:6
+
+Cannot cast `this.props.user.id` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   Profile.js:24:6
+   24|     (this.props.user.id: empty); // Error: string ~> empty
+            ^^^^^^^^^^^^^^^^^^
+
+References:
+   Profile.graphql.js:15:10
+   15|     +id: string,
+                ^^^^^^ [1]
+   Profile.js:24:26
+   24|     (this.props.user.id: empty); // Error: string ~> empty
+                                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- Profile.js:25:6
+
+Cannot cast `this.props.user.name` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   Profile.js:25:6
+   25|     (this.props.user.name: empty); // Error: string ~> empty
+            ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   Profile.graphql.js:16:12
+   16|     +name: string,
+                  ^^^^^^ [1]
+   Profile.js:25:28
+   25|     (this.props.user.name: empty); // Error: string ~> empty
+                                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- Profile.js:26:6
+
+Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   Profile.js:26:6
+   26|     (this.props.user.pic.id: empty); // Error: string ~> empty
+            ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   Profile.graphql.js:18:12
+   18|       +id: string,
+                  ^^^^^^ [1]
+   Profile.js:26:30
+   26|     (this.props.user.pic.id: empty); // Error: string ~> empty
+                                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Profile.js:27:24
+
+Cannot create `ProfilePic` element because object literal [1] is incompatible with `ProfilePic_imageRef` [2] in property
+`image`. [incompatible-type]
+
+   Profile.js:27:24
+   27|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   ProfilePic.graphql.js:11:3
+   11|   ProfilePic_imageRef,
+         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- ProfilePic.js:17:6
+
+Cannot cast `this.props.image.url` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   ProfilePic.js:17:6
+   17|     (this.props.image.url: empty); // Error: string ~> empty
+            ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   ProfilePic.graphql.js:14:11
+   14|     +url: string,
+                 ^^^^^^ [1]
+   ProfilePic.js:17:28
+   17|     (this.props.image.url: empty); // Error: string ~> empty
+                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:15:2
+
+Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   main.js:15:2
+   15| <Profile user={userRef} />; // Error: Missing foo
+        ^^^^^^^
+
+References:
+   main.js:15:1
+   15| <Profile user={userRef} />; // Error: Missing foo
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   Profile.js:40:3
+   40|   $ObjMap<Props, GetPropFragmentRef>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:16:2
+
+Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   main.js:16:2
+   16| <Profile foo={42} />; // Error: Missing user
+        ^^^^^^^
+
+References:
+   main.js:16:1
+   16| <Profile foo={42} />; // Error: Missing user
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+   Profile.js:40:3
+   40|   $ObjMap<Props, GetPropFragmentRef>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:17:29
+
+Cannot create `Profile` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   main.js:17:29
+   17| <Profile user={userRef} foo="bar" />; // Error: string ~> number
+                                   ^^^^^ [1]
+
+References:
+   Profile.js:18:8
+   18|   foo: number,
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:18:2
+
+Cannot create `Profile` element because property `foo` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   main.js:18:2
+   18| <Profile />; // Error: Missing user and foo
+        ^^^^^^^
+
+References:
+   main.js:18:1
+   18| <Profile />; // Error: Missing user and foo
+       ^^^^^^^^^^^ [1]
+   Profile.js:40:3
+   40|   $ObjMap<Props, GetPropFragmentRef>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:18:2
+
+Cannot create `Profile` element because property `user` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   main.js:18:2
+   18| <Profile />; // Error: Missing user and foo
+        ^^^^^^^
+
+References:
+   main.js:18:1
+   18| <Profile />; // Error: Missing user and foo
+       ^^^^^^^^^^^ [1]
+   Profile.js:40:3
+   40|   $ObjMap<Props, GetPropFragmentRef>,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:19:16
+
+Cannot create `Profile` element because object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
+[incompatible-type]
+
+   main.js:19:16
+   19| <Profile user={user} foo={42} />; // Error: You must pass in a ref
+                      ^^^^
+
+References:
+   main.js:11:19
+   11| declare var user: Profile_user;
+                         ^^^^^^^^^^^^ [1]
+   Profile.graphql.js:12:3
+   12|   Profile_userRef,
+         ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:20:16
+
+Cannot create `Profile` element because object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
+[incompatible-type]
+
+   main.js:20:16
+   20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
+                      ^^^^
+
+References:
+   main.js:11:19
+   11| declare var user: Profile_user;
+                         ^^^^^^^^^^^^ [1]
+   Profile.graphql.js:12:3
+   12|   Profile_userRef,
+         ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:20:26
+
+Cannot create `Profile` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   main.js:20:26
+   20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
+                                ^^^^^ [1]
+
+References:
+   Profile.js:18:8
+   18|   foo: number,
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:21:23
+
+Cannot create `Profile` element because mixed [1] is incompatible with `Profile_userRef` [2] in property `user`.
+[incompatible-type]
+
+   main.js:21:23
+   21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+                             ^^^^^ [1]
+
+References:
+   Profile.graphql.js:12:3
+   12|   Profile_userRef,
+         ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:21:43
+
+Cannot create `Profile` element because mixed [1] is incompatible with number [2] in property `foo`. [incompatible-type]
+
+   main.js:21:43
+   21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+                                                 ^^^^^ [1]
+
+References:
+   Profile.js:18:8
+   18|   foo: number,
+              ^^^^^^ [2]
+
+
+
+Found 16 errors

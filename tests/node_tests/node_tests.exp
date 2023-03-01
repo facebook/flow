@@ -1944,64 +1944,70 @@ References:
                                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- process/nextTick.js:14:3
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:13:3
 
-Cannot call `process.nextTick` because number [1] is incompatible with string [2] in the first argument.
-[incompatible-call]
+Cannot call `process.nextTick` with function bound to `cb` because number [1] is incompatible with string [2] in the
+first argument. [incompatible-call]
 
+   process/nextTick.js:13:3
+   13|   (a: string, b: number, c: boolean) => {},
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    process/nextTick.js:14:3
    14|   0, // Error: number ~> string
          ^ [1]
-
-References:
    process/nextTick.js:13:7
    13|   (a: string, b: number, c: boolean) => {},
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- process/nextTick.js:16:3
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:13:3
 
-Cannot call `process.nextTick` because null [1] is incompatible with boolean [2] in the third argument.
-[incompatible-call]
+Cannot call `process.nextTick` with function bound to `cb` because null [1] is incompatible with boolean [2] in the
+third argument. [incompatible-call]
 
+   process/nextTick.js:13:3
+   13|   (a: string, b: number, c: boolean) => {},
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    process/nextTick.js:16:3
    16|   null // Error: null ~> boolean
          ^^^^ [1]
-
-References:
    process/nextTick.js:13:29
    13|   (a: string, b: number, c: boolean) => {},
                                    ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- process/nextTick.js:22:3
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:20:3
 
-Cannot call `process.nextTick` because string [1] is incompatible with number [2] in the second argument.
-[incompatible-call]
+Cannot call `process.nextTick` with function bound to `cb` because string [1] is incompatible with number [2] in the
+second argument. [incompatible-call]
 
+   process/nextTick.js:20:3
+   20|   (a: string, b: number, c: boolean) => {},
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    process/nextTick.js:22:3
    22|   'y', // Error: string ~> number
          ^^^ [1]
-
-References:
    process/nextTick.js:20:18
    20|   (a: string, b: number, c: boolean) => {},
                         ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- process/nextTick.js:26:9
+Error ----------------------------------------------------------------------------------------- process/nextTick.js:27:3
 
-Cannot call `process.nextTick` because function [1] requires another argument from function type [2].
-[incompatible-call]
+Cannot call `process.nextTick` with function bound to `cb` because function [1] requires another argument from function
+type [2]. [incompatible-call]
 
-   process/nextTick.js:26:9
-     26| process.nextTick(
-                 ^^^^^^^^
-
-References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    <BUILTINS>/node.js:3171:21
    3171|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
