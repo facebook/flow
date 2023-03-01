@@ -4,7 +4,7 @@ function foo(b: boolean) {
         var y:string = x; // Error
         x = false; // Constrain writes error
     }
-    var z:string = x; // Error
+    var z:string = x; // Error: number ~> string
 }
 
 function bar(b: boolean) {
@@ -30,7 +30,7 @@ function qux() {
         // include the number 42 written downstream;
         // so if we did y:string, we would get at least a spurious error
         // (among other reasonable errors caused by values written upstream)
-        var y:number = x;  // Error
+        var y:number = x; // No error. x is never widened because x is initialized at declaration site.
         x = 42;
     }
     var z:string = x;  // Error
@@ -42,7 +42,7 @@ function corge(b: boolean) {
          x = false) {
         var y:string = x;  // Error
     }
-    var z:string = x; // Error
+    var z:string = x; // Error: null ~> string
 }
 
 function waldo() {

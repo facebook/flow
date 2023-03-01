@@ -1537,9 +1537,7 @@ try {
           Global invariant
         };
         (5, 2) to (5, 3) => {
-          (1, 4) to (1, 5): (`x`),
-          (3, 24) to (3, 25): (`x`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "nested_logical_throw_and" =
@@ -1664,8 +1662,7 @@ x;|};
     [%expect {|
       [
         (5, 0) to (5, 1) => {
-          (1, 4) to (1, 5): (`x`),
-          (3, 2) to (3, 3): (`x`)
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "if_no_else_statement_with_assignment_simple_with_annotation" =
@@ -1937,13 +1934,10 @@ x;|};
           {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)}
         };
         (9, 0) to (9, 1) => {
-          (2, 4) to (2, 5): (`y`),
-          {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (2, 4) to (2, 5): (`y`)}
+          (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
-          (1, 4) to (1, 5): (`x`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "while_with_runtime_writes" =
@@ -1978,7 +1972,7 @@ x;|};
           (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`),(5, 4) to (5, 5): (`x`)}
+          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "while_with_var_write" =
@@ -2042,9 +2036,7 @@ x;|};
           {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)}
         };
         (9, 0) to (9, 1) => {
-          (2, 4) to (2, 5): (`y`),
-          {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (2, 4) to (2, 5): (`y`)}
+          (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
           {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
@@ -2074,7 +2066,7 @@ x;|};
           {refinement = Not (3); writes = {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}}
         };
         (8, 0) to (8, 1) => {
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`),{refinement = 3; writes = (1, 4) to (1, 5): (`x`)},{refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)}}
+          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "do_while" =
@@ -2160,14 +2152,13 @@ x;|};
           (2, 4) to (2, 5): (`y`)
         };
         (8, 9) to (8, 10) => {
-          (1, 4) to (1, 5): (`x`),
-          (5, 4) to (5, 5): (`x`)
+          (1, 4) to (1, 5): (`x`)
         };
         (9, 0) to (9, 1) => {
           (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`),(5, 4) to (5, 5): (`x`)}
+          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "do_while_continue" =
@@ -2320,13 +2311,10 @@ x;|};
           {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)}
         };
         (9, 0) to (9, 1) => {
-          (2, 4) to (2, 5): (`y`),
-          {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (2, 4) to (2, 5): (`y`)}
+          (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
-          (1, 4) to (1, 5): (`x`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "for_no_init_no_update_with_runtime_writes" =
@@ -2361,7 +2349,7 @@ x;|};
           (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`),(5, 4) to (5, 5): (`x`)}
+          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
 
 let%expect_test "for_no_init_no_update_continue" =
@@ -2411,9 +2399,7 @@ x;|};
           {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)}
         };
         (9, 0) to (9, 1) => {
-          (2, 4) to (2, 5): (`y`),
-          {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (2, 4) to (2, 5): (`y`)}
+          (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
           {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
@@ -2443,9 +2429,7 @@ x;|};
           {refinement = Not (3); writes = {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}}
         };
         (8, 0) to (8, 1) => {
-          (1, 4) to (1, 5): (`x`),
-          {refinement = 3; writes = {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}},
-          {refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)}
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "for_shadow" =
@@ -2524,9 +2508,7 @@ y;|};
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)}
         };
         (8, 0) to (8, 1) => {
-          (1, 4) to (1, 5): (`y`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`y`)}
+          (1, 4) to (1, 5): (`y`)
         }] |}]
 
 let%expect_test "for_with_runtime_writes" =
@@ -2604,9 +2586,7 @@ y;|};
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)}
         };
         (8, 0) to (8, 1) => {
-          (1, 4) to (1, 5): (`y`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`y`)}
+          (1, 4) to (1, 5): (`y`)
         }] |}]
 
 let%expect_test "no_havoc_before_write_seen" =
@@ -2846,9 +2826,7 @@ y;|};
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)}
         };
         (8, 0) to (8, 1) => {
-          (1, 4) to (1, 5): (`y`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`y`)}
+          (1, 4) to (1, 5): (`y`)
         }] |}]
 
 let%expect_test "for_in_with_runtime_writes" =
@@ -2880,8 +2858,7 @@ x;|};
           (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
-          (1, 4) to (1, 5): (`x`),
-          (5, 4) to (5, 5): (`x`)
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "for_in_continue" =
@@ -2920,9 +2897,7 @@ y;|};
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)}
         };
         (8, 0) to (8, 1) => {
-          (1, 4) to (1, 5): (`y`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`y`)}
+          (1, 4) to (1, 5): (`y`)
         }] |}]
 
 let%expect_test "for_in_reassign_right" =
@@ -2937,8 +2912,7 @@ stuff;|};
           (1, 4) to (1, 9): (`stuff`)
         };
         (5, 0) to (5, 5) => {
-          (1, 4) to (1, 9): (`stuff`),
-          (3, 2) to (3, 7): (`stuff`)
+          (1, 4) to (1, 9): (`stuff`)
         }] |}]
 
 let%expect_test "for_of" =
@@ -3057,9 +3031,7 @@ y;|};
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)}
         };
         (8, 0) to (8, 1) => {
-          (1, 4) to (1, 5): (`y`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`y`)}
+          (1, 4) to (1, 5): (`y`)
         }] |}]
 
 let%expect_test "for_of_with_runtime_writes" =
@@ -3091,8 +3063,7 @@ x;|};
           (2, 4) to (2, 5): (`y`)
         };
         (10, 0) to (10, 1) => {
-          (1, 4) to (1, 5): (`x`),
-          (5, 4) to (5, 5): (`x`)
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "for_of_continue" =
@@ -3131,9 +3102,7 @@ y;|};
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)}
         };
         (8, 0) to (8, 1) => {
-          (1, 4) to (1, 5): (`y`),
-          {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)},
-          {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`y`)}
+          (1, 4) to (1, 5): (`y`)
         }] |}]
 
 let%expect_test "for_of_reassign_right" =
@@ -3148,8 +3117,7 @@ stuff;|};
           (1, 4) to (1, 9): (`stuff`)
         };
         (5, 0) to (5, 5) => {
-          (1, 4) to (1, 9): (`stuff`),
-          (3, 2) to (3, 7): (`stuff`)
+          (1, 4) to (1, 9): (`stuff`)
         }] |}]
 
 let%expect_test "invariant" =
@@ -3254,8 +3222,7 @@ try {
           Global invariant
         };
         (8, 2) to (8, 3) => {
-          (1, 4) to (1, 5): (`x`),
-          (5, 21) to (5, 22): (`x`)
+          (1, 4) to (1, 5): (`x`)
         }] |}]
 
 let%expect_test "switch_empty" =
@@ -4149,8 +4116,7 @@ x.foo; // No refinement
           (3, 4) to (3, 5): (`x`)
         };
         (8, 0) to (8, 1) => {
-          (3, 4) to (3, 5): (`x`),
-          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+          (3, 4) to (3, 5): (`x`)
         }] |}]
 
 let%expect_test "heap_refinement_while_loop_subject_changed" =
@@ -4175,8 +4141,7 @@ x.foo; // No heap refinement here
           {refinement = 3; writes = projection at (3, 7) to (3, 12)}
         };
         (8, 0) to (8, 1) => {
-          (2, 4) to (2, 5): (`x`),
-          (5, 2) to (5, 3): (`x`)
+          (2, 4) to (2, 5): (`x`)
         }] |}]
 
 let%expect_test "heap_refinement_while_loop_projection_changed" =
@@ -4211,8 +4176,7 @@ x.foo;
           {refinement = 4; writes = {refinement = 3; writes = projection at (4, 7) to (4, 12)}}
         };
         (9, 0) to (9, 1) => {
-          (3, 4) to (3, 5): (`x`),
-          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+          (3, 4) to (3, 5): (`x`)
         }] |}]
 
 let%expect_test "heap_refinement_while_loop_negated" =
@@ -4276,7 +4240,7 @@ x.foo;
           {refinement = 4; writes = {refinement = 3; writes = projection at (3, 7) to (3, 12)}}
         };
         (9, 0) to (9, 1) => {
-          {refinement = Not (SentinelR foo); writes = (2, 4) to (2, 5): (`x`),{refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
+          {refinement = Not (SentinelR foo); writes = (2, 4) to (2, 5): (`x`)}
         };
         (9, 0) to (9, 5) => {
           {refinement = Not (3); writes = projection at (3, 7) to (3, 12),{refinement = 4; writes = projection at (3, 7) to (3, 12)}}

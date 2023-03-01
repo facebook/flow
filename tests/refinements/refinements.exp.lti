@@ -4101,7 +4101,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `x` to `z` because null [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:7:20
-   7|     var z:string = x; // Error
+   7|     var z:string = x; // Error: number ~> string
                          ^
 
 References:
@@ -4109,24 +4109,7 @@ References:
    2|     var x = b? 0 : null;
                          ^^^^ [1]
    refinements.js:7:11
-   7|     var z:string = x; // Error
-                ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- refinements.js:7:20
-
-Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
-
-   refinements.js:7:20
-   7|     var z:string = x; // Error
-                         ^
-
-References:
-   refinements.js:5:13
-   5|         x = false; // Constrain writes error
-                  ^^^^^ [1]
-   refinements.js:7:11
-   7|     var z:string = x; // Error
+   7|     var z:string = x; // Error: number ~> string
                 ^^^^^^ [2]
 
 
@@ -4235,40 +4218,6 @@ References:
                ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:33:24
-
-Cannot assign `x` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   refinements.js:33:24
-   33|         var y:number = x;  // Error
-                              ^
-
-References:
-   refinements.js:24:13
-   24|         x = "hello"; // Constrain writes error
-                   ^^^^^^^ [1]
-   refinements.js:33:15
-   33|         var y:number = x;  // Error
-                     ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- refinements.js:33:24
-
-Cannot assign `x` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   refinements.js:33:24
-   33|         var y:number = x;  // Error
-                              ^
-
-References:
-   refinements.js:27:13
-   27|         x = "hello"; // Constrain writes error
-                   ^^^^^^^ [1]
-   refinements.js:33:15
-   33|         var y:number = x;  // Error
-                     ^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------- refinements.js:36:20
 
 Cannot assign `x` to `z` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -4326,7 +4275,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `x` to `z` because null [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:45:20
-   45|     var z:string = x; // Error
+   45|     var z:string = x; // Error: null ~> string
                           ^
 
 References:
@@ -4334,24 +4283,7 @@ References:
    40|     for (var x = b? 0 : null;
                                ^^^^ [1]
    refinements.js:45:11
-   45|     var z:string = x; // Error
-                 ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- refinements.js:45:20
-
-Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
-
-   refinements.js:45:20
-   45|     var z:string = x; // Error
-                          ^
-
-References:
-   refinements.js:42:14
-   42|          x = false) {
-                    ^^^^^ [1]
-   refinements.js:45:11
-   45|     var z:string = x; // Error
+   45|     var z:string = x; // Error: null ~> string
                  ^^^^^^ [2]
 
 
@@ -6295,7 +6227,7 @@ References:
 
 
 
-Found 417 errors
+Found 413 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
