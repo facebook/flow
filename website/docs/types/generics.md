@@ -18,7 +18,7 @@ function identity(value) {
 We would have a lot of trouble trying to write specific types for this function
 since it could be anything.
 
-```js
+```js flow-check
 function identity(value: string): string {
   return value;
 }
@@ -27,7 +27,7 @@ function identity(value: string): string {
 Instead we can create a generic (or polymorphic type) in our function and use
 it in place of other types.
 
-```js
+```js flow-check
 function identity<T>(value: T): T {
   return value;
 }
@@ -39,28 +39,6 @@ and interfaces.
 > **Warning:** Flow does not infer generic types. If you want something to have a
 generic type, **annotate it**. Otherwise, Flow may infer a type that is less
 polymorphic than you expect.
-
-In the following example, we forget to properly annotate `identity` with a generic type, so we run into trouble when we try to assign it to `func`. On the other hand, `genericIdentity` is properly typed, and we are able to use it as expected.
-
-```js flow-check
-// @flow
-
-type IdentityWrapper = {
-  func<T>(T): T
-}
-
-function identity(value) {
-  return value;
-}
-
-function genericIdentity<T>(value: T): T {
-  return value;
-}
-
-// $ExpectError
-const bad: IdentityWrapper = { func: identity }; // Error!
-const good: IdentityWrapper = { func: genericIdentity }; // Works!
-```
 
 ### Syntax of generics {#toc-syntax-of-generics}
 
@@ -74,13 +52,13 @@ the function parameter list.
 You can use generics in the same places you'd add any other type in a function
 (parameter or return types).
 
-```js
+```js flow-check
 function method<T>(param: T): T {
-  // ...
+  return param;
 }
 
-function<T>(param: T): T {
-  // ...
+const f = function<T>(param: T): T {
+  return param;
 }
 ```
 
@@ -98,7 +76,7 @@ type (parameter or return types).
 
 Which then gets used as its own type.
 
-```js
+```js flow-check
 function method(func: <T>(param: T) => T) {
   // ...
 }
@@ -155,7 +133,6 @@ interface Item<T> {
 You can give callable entities type arguments for their generics directly in the call:
 
 ```js flow-check
-//@flow
 function doSomething<T>(param: T): T {
   // ...
   return param;
@@ -166,7 +143,6 @@ doSomething<number>(3);
 
 You can also give generic classes type arguments directly in the `new` expression:
 ```js flow-check
-//@flow
 class GenericClass<T> {}
 const c = new GenericClass<number>();
 ```
@@ -174,9 +150,8 @@ const c = new GenericClass<number>();
 If you only want to specify some of the type arguments, you can use `_` to let flow infer a type for you:
 
 ```js flow-check
-//@flow
-class GenericClass<T, U, V>{}
-const c = new GenericClass<_, number, _>()
+class GenericClass<T, U=string, V=number>{}
+const c = new GenericClass<boolean, _, string>();
 ```
 
 > **Warning:** For performance purposes, we always recommend you annotate with
@@ -215,16 +190,12 @@ When using a generic type for a value, Flow will track the value and make sure
 that you aren't replacing it with something else.
 
 ```js flow-check
-// @flow
 function identity<T>(value: T): T {
-  // $ExpectError
   return "foo"; // Error!
 }
 
 function identity<T>(value: T): T {
-  // $ExpectError
   value = "foo"; // Error!
-  // $ExpectError
   return value;  // Error!
 }
 ```
@@ -233,15 +204,13 @@ Flow tracks the specific type of the value you pass through a generic, letting
 you use it later.
 
 ```js flow-check
-// @flow
 function identity<T>(value: T): T {
   return value;
 }
 
 let one: 1 = identity(1);
 let two: 2 = identity(2);
-// $ExpectError
-let three: 3 = identity(42);
+let three: 3 = identity(42); // Error
 ```
 
 ### Adding types to generics {#toc-adding-types-to-generics}
@@ -250,9 +219,7 @@ Similar to  `mixed`, generics have an "unknown" type. You're not allowed to use
 a generic as if it were a specific type.
 
 ```js flow-check
-// @flow
 function logFoo<T>(obj: T): T {
-  // $ExpectError
   console.log(obj.foo); // Error!
   return obj;
 }
@@ -262,7 +229,6 @@ You could refine the type, but the generic will still allow any type to be
 passed in.
 
 ```js flow-check
-// @flow
 function logFoo<T>(obj: T): T {
   if (obj && obj.foo) {
     console.log(obj.foo); // Works.
@@ -278,14 +244,12 @@ Instead, you could add a type to your generic like you would with a function
 parameter.
 
 ```js flow-check
-// @flow
 function logFoo<T: { foo: string }>(obj: T): T {
   console.log(obj.foo); // Works!
   return obj;
 }
 
 logFoo({ foo: 'foo', bar: 'bar' });  // Works!
-// $ExpectError
 logFoo({ bar: 'bar' }); // Error!
 ```
 
@@ -293,7 +257,6 @@ This way you can keep the behavior of generics while only allowing certain
 types to be used.
 
 ```js flow-check
-// @flow
 function identity<T: number>(value: T): T {
   return value;
 }
@@ -307,7 +270,6 @@ let three: "three" = identity("three");
 ### Generic types act as bounds {#toc-generic-types-act-as-bounds}
 
 ```js flow-check
-// @flow
 function identity<T>(val: T): T {
   return val;
 }
@@ -321,7 +283,6 @@ original type. So that when you pass a specific type into a less specific one
 Flow "forgets" it was once something more specific.
 
 ```js flow-check
-// @flow
 function identity(val: string): string {
   return val;
 }
@@ -335,7 +296,6 @@ Generics allow you to hold onto the more specific type while adding a
 constraint. In this way types on generics act as "bounds".
 
 ```js flow-check
-// @flow
 function identity<T: string>(val: T): T {
   return val;
 }
@@ -348,10 +308,8 @@ Note that when you have a value with a bound generic type, you can't use it as
 if it were a more specific type.
 
 ```js flow-check
-// @flow
 function identity<T: string>(val: T): T {
   let str: string = val; // Works!
-  // $ExpectError
   let bar: 'bar'  = val; // Error!
   return val;
 }
@@ -387,7 +345,6 @@ parameterized generics.
 ***Classes***
 
 ```js flow-check
-// @flow
 class Item<T> {
   prop: T;
   constructor(param: T) {
@@ -396,27 +353,23 @@ class Item<T> {
 }
 
 let item1: Item<number> = new Item(42); // Works!
-// $ExpectError
 let item2: Item = new Item(42); // Error!
 ```
 
 ***Type Aliases***
 
 ```js flow-check
-// @flow
 type Item<T> = {
   prop: T,
 };
 
 let item1: Item<number> = { prop: 42 }; // Works!
-// $ExpectError
 let item2: Item = { prop: 42 }; // Error!
 ```
 
 ***Interfaces***
 
 ```js flow-check
-// @flow
 interface HasProp<T> {
   prop: T,
 }
@@ -426,7 +379,6 @@ class Item {
 }
 
 (Item.prototype: HasProp<string>); // Works!
-// $ExpectError
 (Item.prototype: HasProp); // Error!
 ```
 
@@ -435,7 +387,7 @@ class Item {
 You can also provide defaults for parameterized generics just like parameters
 of a function.
 
-```js
+```js flow-check
 type Item<T: number = 1> = {
   prop: T,
 };
@@ -460,7 +412,6 @@ use your generics, giving Flow the power to do more precise type checking.
 For example, you may want this relationship to hold:
 
 ```js flow-check
-//@flow
 type GenericBox<+T> = T;
 
 var x: GenericBox<number> = 3;
@@ -470,7 +421,6 @@ var x: GenericBox<number> = 3;
 The example above could not be accomplished without the `+` variance sigil:
 
 ```js flow-check
-//@flow
 type GenericBoxError<T> = T;
 
 var x: GenericBoxError<number> = 3;
@@ -483,6 +433,5 @@ that variance sigil. For example, you cannot declare a generic type parameter
 to behave covariantly and use it in a contravariant position:
 
 ```js flow-check
-//@flow
 type NotActuallyCovariant<+T> = (T) => void;
 ```
