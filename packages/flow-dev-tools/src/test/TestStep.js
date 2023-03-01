@@ -328,7 +328,12 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     string,
     number,
     maxDist?: number,
-  ) => TestStepSecondStage = (name, substring, expectedCount, maxDist = 0) => {
+  ) => TestStepSecondStage = (
+    name,
+    substring,
+    expectedCount,
+    maxDist: number = 0,
+  ) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
       const actualInvocations = env.getMockInvocationsSinceStartOfStep()[name];

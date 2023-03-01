@@ -147,7 +147,7 @@ function withTimeout<A, B>(
   onTimeout: () => B,
 ): Promise<A | B> {
   let timer;
-  const timeout = new Promise(resolve => {
+  const timeout = new Promise<B>(resolve => {
     timer = setTimeout(() => resolve(onTimeout()), timeout_ms);
   });
   return Promise.race([timeout, promise]).finally(

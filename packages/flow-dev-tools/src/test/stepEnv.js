@@ -43,51 +43,51 @@ function newEnv(oldErrors: FlowResult): {
   envWrite: StepEnvWriteable,
   envRead: StepEnvReadable,
 } {
-  let stdout = [];
-  let stderr = [];
-  let exitCodes = [];
+  let stdout: Array<string> = [];
+  let stderr: Array<string> = [];
+  let exitCodes: Array<number> = [];
   let newErrors = oldErrors;
   let serverRunning = 'stopped';
   let lspRunning = 'stopped';
   let shouldRunFlow = false;
-  let lspMessagesSinceStartOfStep = [];
+  let lspMessagesSinceStartOfStep: Array<LSPMessage> = [];
   let lspStderrSinceStartOfStep = '';
   let mockInvocationsSinceStartOfStep = {};
 
   const envWrite: StepEnvWriteable = {
-    reportStdout(output) {
+    reportStdout(output: string) {
       stdout.push(output);
     },
 
-    reportStderr(output) {
+    reportStderr(output: string) {
       stderr.push(output);
     },
 
-    reportExitCode(code) {
+    reportExitCode(code: number) {
       exitCodes.push(code);
     },
 
-    setLSPMessagesSinceStartOfStep(messages) {
+    setLSPMessagesSinceStartOfStep(messages: Array<LSPMessage>) {
       lspMessagesSinceStartOfStep = messages;
     },
 
-    setLSPStderrSinceStartOfStep(stderr) {
+    setLSPStderrSinceStartOfStep(stderr: string) {
       lspStderrSinceStartOfStep = stderr;
     },
 
-    setMockInvocationsSinceStartOfStep(invocations) {
+    setMockInvocationsSinceStartOfStep(invocations: AllInvocations) {
       mockInvocationsSinceStartOfStep = invocations;
     },
 
-    setNewErrors(errors) {
+    setNewErrors(errors: FlowResult) {
       newErrors = errors;
     },
 
-    setServerRunning(running) {
+    setServerRunning(running: 'stopped' | 'running') {
       serverRunning = running;
     },
 
-    setLSPRunning(running) {
+    setLSPRunning(running: 'stopped' | 'running') {
       lspRunning = running;
     },
 

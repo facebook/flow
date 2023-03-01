@@ -67,7 +67,7 @@ async function runner(args: Args): Promise<void> {
 }
 
 async function addComments(args: Args, errors: Array<FlowError>) {
-  const seen = new Set();
+  const seen = new Set<string>();
   let filenameToLineToLocsMap: Map<
     string,
     Map<number, Suppression>,
@@ -81,7 +81,7 @@ async function addComments(args: Args, errors: Array<FlowError>) {
       const source = loc.source;
       const lineToLocsMap = filenameToLineToLocsMap.get(source) || new Map();
       const isError = error.kind !== 'lint';
-      let lints = new Set();
+      let lints = new Set<string>();
       if (error.kind === 'lint') {
         // \u0060 is `. using the escape to avoid a syntax highlighting bug in vscode-language-babel
         const match = /\(\u0060([^\u0060]+)\u0060\)$/.exec(

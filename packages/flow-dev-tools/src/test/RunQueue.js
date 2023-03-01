@@ -155,7 +155,7 @@ class RunQueue {
                 stepNum + 1,
                 testResult.stepResults.length,
               );
-              const messages = [];
+              const messages: Array<string> = [];
               for (const assertionResult of result.assertionResults) {
                 if (assertionResult.type === 'fail') {
                   messages.push(...assertionResult.messages);

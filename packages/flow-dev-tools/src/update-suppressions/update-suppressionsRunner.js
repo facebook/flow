@@ -49,7 +49,7 @@ function locKey(loc: FlowLoc): LocKey {
 
 async function getFiles(args: Args): Promise<Map<string, Set<RootName>>> {
   const {bin, roots, rootNames, flowconfigName} = args;
-  const rootsByFile = new Map();
+  const rootsByFile = new Map<string, Set<RootName>>();
   for (let i = 0; i < roots.length; i++) {
     const root = roots[i];
     const rootName = rootNames[i];

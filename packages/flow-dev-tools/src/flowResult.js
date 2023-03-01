@@ -211,7 +211,7 @@ function getOpReason(op: ?FlowMessage): Array<FlowMessage> {
 
 function getExtraMessages(extra: ?FlowExtra): Array<FlowMessage> {
   if (extra) {
-    const messages = extra.reduce((acc, current) => {
+    const messages = extra.reduce((acc: Array<FlowMessage>, current) => {
       const childrenMessages =
         current.children == null ? [] : getExtraMessages(current.children);
       const messages = acc.concat(current.message, childrenMessages);

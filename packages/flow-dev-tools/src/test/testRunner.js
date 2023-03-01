@@ -41,9 +41,9 @@ function startWatchAndRun(suites: Set<string>, args: Args) {
   const sane = require('sane');
 
   let running = false;
-  let queuedSet = new Set();
-  let changedThings = new Set();
-  let queuedMessages = [];
+  let queuedSet = new Set<string>();
+  let changedThings = new Set<string>();
+  let queuedMessages: Array<string> = [];
 
   process.stderr.write(format('Watching %d suites\n', suites.size));
 
@@ -206,7 +206,7 @@ function startWatchAndRun(suites: Set<string>, args: Args) {
     watcher.on('delete', callback);
   };
 
-  shortcuts.set('q', ['quit', async () => process.exit(0)]);
+  shortcuts.set('q', ['quit', async () => (process.exit(0): mixed)]);
   shortcuts.set('a', [
     'run all the tests',
     async () => {

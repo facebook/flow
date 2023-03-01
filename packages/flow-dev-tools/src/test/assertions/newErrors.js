@@ -12,7 +12,11 @@ const {difference, prettyPrint} = require('../../flowResult');
 
 const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
-import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertion,
+  Suggestion,
+} from './assertionTypes';
 
 function newErrors(
   expected: string,
@@ -22,7 +26,7 @@ function newErrors(
     const diff = difference(env.getNewErrors(), env.getOldErrors());
     const actual = prettyPrint(diff);
 
-    let suggestion = {method: 'noNewErrors', args: []};
+    let suggestion: Suggestion = {method: 'noNewErrors', args: []};
     if (!diff.passed) {
       suggestion = {
         method: 'newErrors',

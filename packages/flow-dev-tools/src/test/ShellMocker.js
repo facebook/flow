@@ -98,10 +98,10 @@ class ShellMocker {
    */
   async wait(name: string, timeout: number): Promise<boolean> {
     let watcher;
-    const waitPromise = new Promise(resolve => {
+    const waitPromise = new Promise<boolean>(resolve => {
       watcher = watch(this.outFile(name), null, resolve.bind(null, true));
     });
-    const timeoutPromise = new Promise(resolve =>
+    const timeoutPromise = new Promise<?boolean>(resolve =>
       setTimeout(resolve, timeout),
     ).then(() => {
       watcher.close();

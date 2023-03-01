@@ -22,7 +22,7 @@ async function finder(cwd: string): Promise<Map<string, string>> {
   const root = join('.', relative(cwd, join(__dirname, '..')));
   const commands = await glob(format('%s/**/*Command.js', root), {cwd});
 
-  const commandMap = new Map();
+  const commandMap = new Map<string, string>();
   for (const command of commands) {
     const match = basename(command).match(/^(.*)Command.js$/);
     if (match != null) {

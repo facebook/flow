@@ -33,7 +33,7 @@ async function findTestSuites(): Promise<Array<string>> {
 async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<string>> {
   let suites = null;
   if (suitesOrig != null) {
-    suites = new Set();
+    suites = new Set<string>();
     for (let suite of suitesOrig) {
       suite = normalize(suite.trim());
       suites.add(suite);
@@ -43,7 +43,7 @@ async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<string>> {
   const testsDir = getTestsDir();
   const testSuites = await findTestSuites();
 
-  const result = new Set();
+  const result = new Set<string>();
 
   process.stderr.write(format('Found %d suites\n', testSuites.length));
   for (const suiteFile of testSuites) {

@@ -97,7 +97,7 @@ async function getUnusedSuppressionErrors(
 
 function collateLocs(errors: Array<FlowError>): Map<string, Array<FlowLoc>> {
   const errorsByFile = collateErrors(errors);
-  const locsByFile = new Map();
+  const locsByFile = new Map<string, Array<FlowLoc>>();
   for (const [file, errors] of errorsByFile) {
     locsByFile.set(
       file,
@@ -133,7 +133,7 @@ function filterErrors(errors: Array<FlowError>): Array<FlowError> {
 function collateErrors(
   errors: Array<FlowError>,
 ): Map<string, Array<FlowError>> {
-  const errorsByFile = new Map();
+  const errorsByFile = new Map<string, Array<FlowError>>();
   for (const error of errors) {
     const message = error.message[0];
     const loc = message.loc;

@@ -21,7 +21,7 @@ async function runner(args: Args): Promise<void> {
   );
 
   var error_summary: {[string]: number} = {};
-  var files = new Set();
+  var files = new Set<string>();
   flow_result.errors.forEach(error =>
     error.message.forEach(err => {
       let messageFilter =
