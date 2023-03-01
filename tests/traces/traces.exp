@@ -64,8 +64,6 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ StrT [string]
  14: f2(function(x) { return x * x });
-                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from [not shown])
- 14: f2(function(x) { return x * x });
                              ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
 
 
@@ -181,23 +179,17 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ StrT [string]
  14: f2(function(x) { return x * x });
-                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
- 14: f2(function(x) { return x * x });
-                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from path 2)
 * path 2:
- 13: function f2(xlam: (s:string) => number) { g2(xlam) }
-                          ^^^^^^ StrT [string]
  14: f2(function(x) { return x * x });
-                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
+                                 ^ OpenT [`x`]
  14: f2(function(x) { return x * x });
-                 ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
-                                 ^ ~> ReposLowerT [`x`]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from path 3)
 * path 3:
  14: f2(function(x) { return x * x });
-        ^^^^^^^^^^^ FunT [function]
- 13: function f2(xlam: (s:string) => number) { g2(xlam) }
-                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from [not shown])
+                             ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
 
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37
@@ -327,33 +319,22 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ StrT [string]
  14: f2(function(x) { return x * x });
-                                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 2)
- 14: f2(function(x) { return x * x });
-                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from [not shown])
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from path 2)
 * path 2:
- 13: function f2(xlam: (s:string) => number) { g2(xlam) }
-                          ^^^^^^ StrT [string]
  14: f2(function(x) { return x * x });
-                 ^ ~> UseT(FunParam, OpenT) [`x`] (from path 3)
+                                 ^ OpenT [`x`]
  14: f2(function(x) { return x * x });
-                 ^ OpenT [`x`]
- 14: f2(function(x) { return x * x });
-                                 ^ ~> ReposLowerT [`x`]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from path 3)
 * path 3:
  14: f2(function(x) { return x * x });
-        ^^^^^^^^^^^ FunT [function]
- 13: function f2(xlam: (s:string) => number) { g2(xlam) }
-                       ^^^^^^^^^^^^^^^^^^^^ ~> UseT(FunParam, FunT) [function type] (from path 4)
+                             ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`] (from path 4)
 * path 4:
  14: f2(function(x) { return x * x });
-     ^^ FunT [function]
+                             ^ OpenT [`x`]
  14: f2(function(x) { return x * x });
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> CallT [call of `f2`] (from path 5)
-* path 5:
- 14: f2(function(x) { return x * x });
-     ^^ OpenT [`f2`]
- 14: f2(function(x) { return x * x });
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> CallT [call of `f2`]
+                             ^^^^^ ~> ArithT [`x` arithmetic operation `x`]
 
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:19:37

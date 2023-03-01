@@ -16,15 +16,15 @@ with file batch coverage
 
 Coverage results from 1 file(s):
 
-no-config/d2.js: 100.00% (9 of 9 expressions)
+no-config/d2.js: 66.67% (6 of 9 expressions)
 
 -----------------------------------
 Aggregate coverage statistics
 -----------------------------------
 Files                : 1
 Expressions          :
-  Covered            : 9
+  Covered            : 6
   Total              : 9
-  Covered Percentage : 100.00%
+  Covered Percentage : 66.67%
 
 with bad root directory, and file batch coverage
