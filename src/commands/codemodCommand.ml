@@ -276,7 +276,7 @@ module Annotate_lti_command = struct
 
       let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
 
-      let check_options o = o
+      let check_options o = { o with Options.opt_inference_mode = Options.ConstrainWrites }
 
       let include_dependents_in_prepass = false
 
@@ -479,7 +479,7 @@ module Annotate_empty_array_command = struct
 
       let mod_prepass_options o = { o with Options.opt_inference_mode = Options.LTI }
 
-      let check_options o = o
+      let check_options o = { o with Options.opt_inference_mode = Options.ConstrainWrites }
 
       let include_dependents_in_prepass = false
 
@@ -647,7 +647,12 @@ module Annotate_react_hooks_command = struct
 
       let reporter = string_reporter (module Acc)
 
-      let check_options o = { o with Options.opt_save_implicit_instantiation_results = true }
+      let check_options o =
+        {
+          o with
+          Options.opt_save_implicit_instantiation_results = true;
+          opt_inference_mode = Options.ConstrainWrites;
+        }
 
       let visit =
         let mapper =
@@ -742,6 +747,7 @@ module Annotate_implicit_instantiation = struct
         {
           o with
           Options.opt_run_post_inference_implicit_instantiation = true;
+          opt_inference_mode = Options.ConstrainWrites;
           opt_enable_post_inference_targ_widened_check = include_widened;
           opt_save_implicit_instantiation_results = true;
         }
@@ -779,6 +785,7 @@ module Annotate_implicit_instantiation = struct
         {
           o with
           Options.opt_run_post_inference_implicit_instantiation = true;
+          opt_inference_mode = Options.ConstrainWrites;
           opt_enable_post_inference_targ_widened_check = include_widened;
           opt_save_implicit_instantiation_results = true;
         }
