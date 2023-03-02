@@ -3,6 +3,8 @@ title: Utility Types
 slug: /types/utilities
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Flow provides a set of utility types to operate on other types, and can be useful for different scenarios.
 
 ## `$Keys<T>` {#toc-keys}
@@ -647,30 +649,48 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 ```
 
-## `$Partial<T>` {#toc-partial}
-This utility converts all of an object or interface's named fields to be optional, while maintaining all the object's other properties (e.g. exactness). Use this utility instead of `$Shape`.
+## `Partial<T>` {#toc-partial}
+Note: Up until Flow version 0.201, this utility type was named `$Partial`.
+
+This utility converts all of an object or interface's named fields to be optional,
+while maintaining all the object's other properties (e.g. exactness, variance).
+Use this utility instead of `$Shape`.
 
 ```js flow-check
 type Person = {
-  age: number,
   name: string,
+  age: number,
 };
-type PersonDetails = $Partial<Person>;
+type PartialPerson = Partial<Person>;
+// Above equivalent to `{name?: string, age?: number}`
 
-const person1: Person = {age: 28};  // Error: missing `name`
-const person2: Person = {name: 'a'};  // Error: missing `age`
+const a: PartialPerson = {}; // OK
+const b: PartialPerson = {name: 'George'}; // OK
+const c: PartialPerson = {name: 'George', age: 123}; // OK
 
-const personDetails1: PersonDetails = {age: 28};  // OK
-const personDetails2: PersonDetails = {name: 'a'};  // OK
-const personDetails3: PersonDetails = {age: 28, name: 'a'};  // OK
-const personDetails4: PersonDetails = {age: 'a'};  // Error: string is incompatible with number
+(c: Person); // ERROR: `PersonDetails` is not a `Person` (unlike with `$Shape`)
+```
 
-(personDetails1: Person); // Error: `PersonDetails` is not a `Person` (unlike with `$Shape`)
+## `Required<T>` <SinceVersion version="0.121" /> {#toc-required}
+
+The `Required` utility type is the opposite of [`Partial`](#toc-partial):
+it converts all of an object or interface’s optional fields to be required. For example:
+
+```js flow-check
+type PartialPerson = {
+  name?: string,
+  age?: number,
+};
+type Person = Required<PartialPerson>;
+// Above equivalent to `{name: string, age: number}`
+
+const a: Person = {name: 'George', age: 123}; // OK
+const b: Person = {age: 123}; // ERROR: missing `name` property
 ```
 
 ## `$Shape<T>` {#toc-shape}
 
-> NOTE: This utility is unsafe - please use [`$Partial`](#toc-partial) documented above to make all of an object's fields optional.
+NOTE: **Deprecated!** This utility is unsafe - please use [`Partial`](#toc-partial) documented above to make all of an object's fields optional.
 
 A variable of type `$Shape<T>`, where `T` is some object type, can be assigned objects `o`
 that contain a subset of the properties included in `T`. For each property `p: S` of `T`,
@@ -678,30 +698,40 @@ the type of a potential binding of `p` in `o` must be compatible with `S`.
 
 For example
 ```js flow-check
-// @flow
 type Person = {
   age: number,
   name: string,
 }
 type PersonDetails = $Shape<Person>;
 
-const person1: Person = {age: 28};  // Error: missing `name`
-const person2: Person = {name: 'a'};  // Error: missing `age`
+const person1: Person = {age: 28};  // ERROR: missing `name`
+const person2: Person = {name: 'a'};  // ERROR: missing `age`
 const person3: PersonDetails = {age: 28};  // OK
 const person4: PersonDetails = {name: 'a'};  // OK
 const person5: PersonDetails = {age: 28, name: 'a'};  // OK
-const person6: PersonDetails = {age: '28'};  // Error: string is incompatible with number
+const person6: PersonDetails = {age: '28'};  // ERROR: string is incompatible with number
 ```
 
-> Note: `$Shape<T>` is **not** equivalent to `T` with all its fields marked as optional.
-> In particular, Flow unsoundly allows `$Shape<T>` to be used as a `T` in several
-> contexts. For example in
-```
+NOTE: `$Shape<T>` is **not** equivalent to `T` with all its fields marked as optional.
+In particular, Flow unsoundly allows `$Shape<T>` to be used as a `T` in several
+contexts. For example in
+
+```js
 const personShape: PersonDetails = {age: 28};
 (personShape: Person);
 ```
-Flow will unsoundly allow this last cast to succeed. If this behavior is not wanted,
-then this utility type should be avoided - use [`$Partial`](#toc-partial) instead.
+Flow will unsoundly allow this last cast to succeed.
+
+It is also not equivalent to itself in some contexts:
+
+```js flow-check
+function f<T>(input: $Shape<T>): $Shape<T> {
+  return input; // ERROR: `T` is incompatible with `$Shape` of `T`
+}
+```
+
+This utility type is deprecated and will be deleted in the future -
+use [`Partial`](#toc-partial) instead.
 
 ## `$Exports<T>` {#toc-exports}
 
