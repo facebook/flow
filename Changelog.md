@@ -1,3 +1,50 @@
+### 0.201.0
+
+Local Type Inference:
+* Local Type Inference is a rewrite of Flow’s type inference algorithm. This change makes Flow’s inference behavior more reliable and predictable. It replaces a global inference scheme that Flow has relied on since its inception and that has often been the culprit of confusing action-at-a-distance behavior, in exchange for modestly increased type annotations.
+  It is now enabled by default! See [this blog post](https://medium.com/flow-type/local-type-inference-for-flow-aaa65d071347) for more details on the new system and steps to upgrade your project.
+
+Likely to cause new Flow errors:
+* When a variable is initialized at declaration, subsequent assignment in a conditional branch will no longer cause later reads to get a union type. This is already the case if the variable is annotated. As a result of this change, you might get new type errors. [Example](https://flow.org/try/#0DYUwLgBAJghmMQLwQEQEYUG4BQBLAZhABRgBOAriAJTRwLJo6zyYQD0bEADqSAG64A9uQDOwAJ4RckAO65gwCAAsYfEBDDiu6gHbkAtgCMQpCAB8IIsrh0BzADQQdgmVNnzFKtRq3qrpG1tsIA)
+* When a variable is uninitialized or initialized to `null`, we use all the assignments to the variables as its initial type. We now no longer consider assignments from a child generic function. As a result, you might get new `invalid-declaration` errors. [Example](https://flow.org/try/#0DYUwLgBAHg3BD08IDsQHcIEtkDcCGwmAJgLREgDGweATnmJgPbIQg02M0BQXAZgK7IKDZhF4AeACoA+ABQBPAFwRJASggBvLhGgQAvBHkwuAXx6hIALy5A)
+* Fix object value rest. It will now error if attempting to read a write-only or setter-only property (it reads while copying the properties). Additionally, the resulting rest object will no longer preserve read-only variance (as it is a copy).
+* The type utility `$Partial` will now preserve the variance of the input object type's properties. For example, if the the input was a read-only object, now that output will also be a read-only object (with optional properties).
+* `string` and `symbol` are no longer subtypes of an interface
+* Error on `with` statements in non-strict mode. It was already a syntax error in strict mode.
+
+New Features:
+* A native Apple Silicon precompiled binary is now available via the GitHub Releases page. It is not yet available via flow-bin. Internally, we see about 2X faster performance than using Rosetta, and 4X faster performance than on actual Intel Macs.
+* Add local variable renaming capabilities to the LSP
+* Add "Find All References" functionality to the LSP for showing local references
+* JSDoc autocomplete will automatically trigger after typing `/**`
+* Add option for automatically closing JSX tags in the IDE
+* Hovering in the IDE now shows both the unevaluated and evaluated type of the target expression.
+* Add `use_mixed_in_catch_variables` config option that makes `catch` variables default to `mixed` instead of `any`
+* Rename `$Partial` utility type to `Partial`. `$Partial` will continue working as an alias for at least one more version - use that period of time to codemod it to `Partial`.
+* Add the `Required` utility type. It does the opposite of `Partial`: it makes optional properties required in object types.
+* Improve error when attempting to call `Object.values` on a Flow Enum, to point the user to using `.members()`
+* Improve error when using `number` and `boolean` primitives as a subtype of an interface
+* Improve error on tuple arity mismatch
+
+Notable bug fixes:
+* Fix a bug preventing annotation hints from being used in tagged template expressions. This fix may get rid of some `underconstrained-implicit-instantiation` errors that were otherwise impossible to fix.
+* Fix error when autocompleting the method stub for a function type without parameter names
+* Document highlight in the IDE now correctly highlights destructured object keys
+* Autocomplete can suggest literals when the target type is `$Keys`
+
+[`flow-upgrade`](https://www.npmjs.com/package/flow-upgrade):
+* Add codemod to convert usage of the `$Shape` utility type to `Partial`. It is possible that this will create type errors that you will have to resolve.
+* Add codemod to rename `$Partial` to `Partial`
+
+Misc:
+* Remove `unused-promise-in-async-scope` and `unused-promise-in-sync-scope`. They can be enabled with `unused-promise`.
+* Remove `--evaluate-type-destructors` flag from `type-at-pos` command
+* Add `flow save-state --scm` flag to ease creation of SCM-aware saved states
+
+Parser:
+* Fix missing decorators on class fields
+* Make `infer` a reserved word in types
+
 ### 0.200.1
 
 Notable bug fixes:
