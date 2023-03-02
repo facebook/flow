@@ -7,6 +7,7 @@
   flow_exit_status
   flow_logging_utils
   flow_parser_utils
+  flow_parser_utils_output
   flow_server_env
   flow_server_find_refs
   flow_server_rechecker
