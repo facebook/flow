@@ -6,7 +6,7 @@ foo();
 
 function qux(x: number = "hello", ...y: [string, mixed]):string { foo(x); return y[0]; } // error: string ~> number
 
-qux(0,0); // Error, number ~> string
+qux(0,0,0); // Error, number ~> string
 qux(0,...[42, ""]); // Error, number ~> string
 qux(0,...["",42]); // No error
 

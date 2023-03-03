@@ -1429,21 +1429,6 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:13:8
 
-Cannot create `Tuple` element because JSX text [1] is incompatible with boolean [2] in index 0 of property `children`.
-[incompatible-type]
-
-   tuple.js:13:8
-   13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-              ^^ [1]
-
-References:
-   tuple.js:6:39
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                             ^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- tuple.js:13:8
-
 Cannot create `Tuple` element because children array [1] has 4 elements but tuple type [2] has 3 elements in property
 `children`. [invalid-tuple-arity]
 
@@ -1455,36 +1440,6 @@ References:
    tuple.js:6:38
     6|   extends React.Component<{children: [boolean, string, number]}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- tuple.js:13:11
-
-Cannot create `Tuple` element because boolean [1] is incompatible with string [2] in index 1 of property `children`.
-[incompatible-type]
-
-   tuple.js:13:11
-   13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                 ^^^^ [1]
-
-References:
-   tuple.js:6:48
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                      ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- tuple.js:13:16
-
-Cannot create `Tuple` element because JSX text [1] is incompatible with number [2] in index 2 of property `children`.
-[incompatible-type]
-
-   tuple.js:13:16
-   13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                      ^^^ [1]
-
-References:
-   tuple.js:6:56
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:14:8
@@ -1515,36 +1470,6 @@ References:
    tuple.js:6:38
     6|   extends React.Component<{children: [boolean, string, number]}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- tuple.js:16:9
-
-Cannot create `Tuple` element because array literal [1] is incompatible with boolean [2] in index 0 of property
-`children`. [incompatible-type]
-
-   tuple.js:16:9
-   16| <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-               ^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   tuple.js:6:39
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                             ^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- tuple.js:16:28
-
-Cannot create `Tuple` element because array literal [1] is incompatible with string [2] in index 1 of property
-`children`. [incompatible-type]
-
-   tuple.js:16:28
-   16| <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-                                  ^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   tuple.js:6:48
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                      ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:18:9
@@ -1750,7 +1675,7 @@ References:
 
 
 
-Found 107 errors
+Found 102 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

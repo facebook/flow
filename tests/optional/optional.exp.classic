@@ -217,29 +217,12 @@ References:
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- optional.js:9:1
-
-Cannot call `qux` because rest array [1] has 1 element but tuple type [2] has 2 elements. [invalid-tuple-arity]
-
-   optional.js:9:1
-   9| qux(0,0); // Error, number ~> string
-      ^^^
-
-References:
-   optional.js:9:1
-   9| qux(0,0); // Error, number ~> string
-      ^^^^^^^^ [1]
-   optional.js:7:41
-   7| function qux(x: number = "hello", ...y: [string, mixed]):string { foo(x); return y[0]; } // error: string ~> number
-                                              ^^^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- optional.js:9:7
 
 Cannot call `qux` because number [1] is incompatible with string [2] in index 0. [incompatible-call]
 
    optional.js:9:7
-   9| qux(0,0); // Error, number ~> string
+   9| qux(0,0,0); // Error, number ~> string
             ^ [1]
 
 References:
@@ -340,4 +323,4 @@ References:
 
 
 
-Found 23 errors
+Found 22 errors
