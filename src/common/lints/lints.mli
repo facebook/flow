@@ -25,9 +25,7 @@ type property_assignment_kind =
   | ThisBeforeEverythingInitialized
   | PropertyFunctionCallBeforeEverythingInitialized
 
-type deprecated_type_kind =
-  | DeprecatedBool
-  | DeprecatedStar
+type deprecated_type_kind = DeprecatedBool
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind
