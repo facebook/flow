@@ -16,7 +16,6 @@ If you're familiar with those utility types already, here is a quick conversion 
 
 Access an object type's property:
 ```js flow-check
-// @flow
 type Cat = {
   name: string,
   age: number,
@@ -34,7 +33,6 @@ const catAge: Age = 6; // OK - `Age` is an alias for `number`
 
 Access an array type's element, by getting the type at the array's indices (which are `number`s):
 ```js flow-check
-// @flow
 type CatNames = Array<string>;
 
 type CatName = CatNames[number]; // type CatName = string
@@ -43,7 +41,6 @@ const myCatsName: CatName = 'whiskers'; // OK - `CatName` is an alias for `strin
 
 Access a tuple type's elements:
 ```js flow-check
-// @flow
 type Pair = [string, number];
 
 const name: Pair[0] = 'whiskers'; // OK - `Pair[0]` is an alias for `string`
@@ -53,7 +50,6 @@ const wrong: Pair[2] = true; // Error - `Pair` only has two elements
 
 The index can be a union, including the result of calling [`$Keys<...>`](../utilities/#toc-keys):
 ```js flow-check
-// @flow
 type Cat = {
   name: string,
   age: number,
@@ -65,7 +61,6 @@ type Values = Cat[$Keys<Cat>]; // type Values = string | number | boolean
 
 The index can also be a generic:
 ```js flow-check
-// @flow
 function getProp<O: {+[string]: mixed}, K: $Keys<O>>(o: O, k: K): O[K] {
   return o[k];
 }
@@ -77,7 +72,6 @@ getProp({a: 42}, 'b'); // Error - `b` does not exist in object type
 
 You can nest these accesses:
 ```js flow-check
-// @flow
 type Cat = {
   name: string,
   age: number,
@@ -114,7 +108,6 @@ If you have a long chain of nested optional accesses, you can wrap the entire th
 Example:
 
 ```js flow-check
-// @flow
 type TasksContent = ?{
   tasks?: Array<{
     items?: {

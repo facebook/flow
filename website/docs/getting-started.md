@@ -13,10 +13,11 @@ _types_ allow you to tell Flow how you want your code to work, and Flow will
 make sure it does work that way.
 
 ```js flow-check
-// @flow
 function square(n: number): number {
   return n * n;
 }
 
 square("2"); // Error!
 ```
+
+First step: [install Flow](../install).
