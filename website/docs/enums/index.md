@@ -82,12 +82,18 @@ Cast an enum type to its representation type (must be done explicitly):
 (status: string)
 ```
 Checks of enums in `switch` statements are exhaustive - we ensure you check all members:
-```js
-// ERROR: Incomplete exhaustive check: the member `Off` of enum `Status`
-// has not been considered in check of `status`.
+```js flow-check
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+const status: Status = Status.Active;
+
+// ERROR: Incomplete exhaustive check
 switch (status) {
-  case Status.Active: ...; break;
-  case Status.Paused: ...; break;
+  case Status.Active:  break;
+  case Status.Paused: break;
   // We forgot to add `case: Status.Off:` here, resulting in error above.
   // Using `default:` would also work to check all remaining members.
 }

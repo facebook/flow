@@ -122,7 +122,9 @@ enum Status {
   Off = 3,
 }
 ```
-Optionally, you can use an `of` clause:
+Optionally, you can use an `of` clause.
+This does not affect the type-checking behavior of a valid Flow Enum,
+it just ensures that all enum members are `number`s as the definition site.
 
 ```js flow-check
 enum Status of number {
@@ -151,7 +153,9 @@ enum Status {
   Off = false,
 }
 ```
-Optionally, you can use an `of` clause:
+Optionally, you can use an `of` clause.
+This does not affect the type-checking behavior of a valid Flow Enum,
+it just ensures that all enum members are `boolean`s as the definition site.
 
 ```js flow-check
 enum Status of boolean {
@@ -185,6 +189,13 @@ enum Status {
   Paused,
   Off,
   ...
+}
+const status: Status = Status.Active;
+
+switch (status) {
+  case Status.Active: break;
+  case Status.Paused: break;
+  case Status.Off: break;
 }
 ```
 

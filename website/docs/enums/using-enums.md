@@ -24,7 +24,12 @@ const status = Status.Active;
 ```
 You can’t use computed access:
 
-```js
+```js flow-check
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
 const x = "Active";
 Status[x]; // Error: computed access on enums is not allowed
 ```
@@ -44,16 +49,20 @@ const status: Status = calculateStatus();
 Enums do not implicitly coerce to their representation type or vice-versa.
 If you want to convert from the enum type to the representation type, you can use an explicit cast `(x: string)`:
 
-```js
-const s: string = Status.Active; // Error: 'Status' is not compatible with 'string'
+```js flow-check
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
 
+const s: string = Status.Active; // Error: 'Status' is not compatible with 'string'
 const statusString: string = (Status.Active: string);
 ```
 
 To convert from a nullable enum type to nullable string, you can do:
 ```js
 const maybeStatus: ?Status = ....;
-
 const maybeStatusString: ?string = maybeStatus && (maybeStatus: string);
 ```
 
@@ -143,7 +152,14 @@ The enum is not enumerable or iterable itself (e.g. a for-in/for-of loop over th
 
 You can convert the iterable into an `Array` using: `Array.from(Status.members())`.
 You can make use of [`Array.from`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from)'s second argument to map over the values at
-the same time you construct the array: e.g. `const buttonArray = Array.from(Status.members(), status => getButtonForStatus(status));`.
+the same time you construct the array: e.g. 
+
+```js
+const buttonArray = Array.from(
+  Status.members(),
+  status => getButtonForStatus(status),
+);
+```
 
 #### .getName {#toc-getname}
 Type: `getName(value: TEnum): string`
@@ -205,7 +221,14 @@ switch (status) {
 ```
 
 You must match against all of the members of the enum (or supply a `default` case):
-```js
+```js flow-check
+enum Status {
+  Active = 1,
+  Paused = 2,
+  Off = 3,
+}
+const status: Status = Status.Active;
+
 // Error: you haven't checked 'Status.Off' in the switch
 switch (status) {
   case Status.Active:
@@ -216,7 +239,14 @@ switch (status) {
 ```
 
 You can’t repeat cases (as this would be dead code!):
-```js
+```js flow-check
+enum Status {
+  Active = 1,
+  Paused = 2,
+  Off = 3,
+}
+const status: Status = Status.Active;
+
 switch (status) {
   case Status.Active:
     break;
@@ -230,7 +260,14 @@ switch (status) {
 ```
 
 A `default` case is redundant if you’ve already matched all cases:
-```js
+```js flow-check
+enum Status {
+  Active = 1,
+  Paused = 2,
+  Off = 3,
+}
+const status: Status = Status.Active;
+
 switch (status) {
   case Status.Active:
     break;
@@ -328,7 +365,14 @@ switch (status) {
 
 You can use the `require-explicit-enum-switch-cases` [Flow Lint](../../linting/flowlint-comments/) to require that all known members are explicitly listed as cases. For example:
 
-```js
+```js flow-check
+enum Status {
+  Active = 1,
+  Paused = 2,
+  Off = 3,
+}
+const status: Status = Status.Active;
+
 // flowlint-next-line require-explicit-enum-switch-cases:error
 switch (status) {
   case Status.Active:
@@ -338,13 +382,6 @@ switch (status) {
   default:
     break;
 }
-```
-
-Will trigger an error (without the lint there would be no error):
-```js
-Incomplete exhaustive check: the member `Off` of enum `Status` has not been
-considered in check of `status`. The default case does not check for the missing
-members as the `require-explicit-enum-switch-cases` lint has been enabled.
 ```
 
 You can fix if by doing:
