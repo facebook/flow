@@ -1177,6 +1177,9 @@ module rec TypeTerm : sig
     | TupleAT of {
         elem_t: t;
         elements: tuple_element list;
+        (* Arity represents the range of valid arities, considering optional elements.
+           It ranges from the number of required elements, to the total number of elements. *)
+        arity: int * int;
       }
     (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
      * elemt is a supertype of every element type *)

@@ -214,10 +214,10 @@ let rec merge_type cx =
         bogus_trust (),
         ArrT (ArrayAT (merge_type cx (t1, t2), tuple_types))
       )
-  | ( DefT (_, _, ArrT (TupleAT { elem_t = t1; elements = ts1 })),
-      DefT (_, _, ArrT (TupleAT { elem_t = t2; elements = ts2 }))
+  | ( DefT (_, _, ArrT (TupleAT { elem_t = t1; elements = ts1; arity = arity1 })),
+      DefT (_, _, ArrT (TupleAT { elem_t = t2; elements = ts2; arity = arity2 }))
     )
-    when List.length ts1 = List.length ts2
+    when arity1 = arity2
          && List.for_all2
               (fun (TupleElement { polarity = p1; _ }) (TupleElement { polarity = p2; _ }) ->
                 Polarity.equal (p1, p2))
@@ -245,6 +245,7 @@ let rec merge_type cx =
                      TupleElement { name; t; polarity })
                    ts1
                    ts2;
+               arity = arity1;
              }
           )
       )

@@ -110,6 +110,7 @@ type 'a tuple_element =
       name: string option;
       t: 'a;
       polarity: Polarity.t;
+      optional: bool;
     }
 [@@deriving iter, map, show { with_path = false }]
 
@@ -414,6 +415,7 @@ type ('loc, 'a) annot =
   | Tuple of {
       loc: 'loc;
       elems_rev: 'a tuple_element tailrec_list;
+      arity: int * int;
     }
   | Array of 'loc * 'a
   | ReadOnlyArray of 'loc * 'a

@@ -3200,11 +3200,14 @@ let%expect_test "tuple_annot" =
               elems_rev =
               [TupleElement {name = None;
                  t = (Annot (Number [1:25-31]));
-                 polarity = Polarity.Neutral};
+                 polarity = Polarity.Neutral;
+                 optional = false};
                 TupleElement {name = None;
                   t = (Annot (String [1:17-23]));
-                  polarity = Polarity.Neutral}
-                ]})}
+                  polarity = Polarity.Neutral;
+                  optional = false}
+                ];
+              arity = (2, 2)})}
   |}]
 
 let%expect_test "tuple_annot_labeled" =
@@ -3225,11 +3228,14 @@ let%expect_test "tuple_annot_labeled" =
               elems_rev =
               [TupleElement {name = (Some "bar");
                  t = (Annot (Number [1:35-41]));
-                 polarity = Polarity.Neutral};
+                 polarity = Polarity.Neutral;
+                 optional = false};
                 TupleElement {name = (Some "foo");
                   t = (Annot (String [1:22-28]));
-                  polarity = Polarity.Neutral}
-                ]})}
+                  polarity = Polarity.Neutral;
+                  optional = false}
+                ];
+              arity = (2, 2)})}
   |}]
 
 let%expect_test "tuple_annot_variance" =
@@ -3250,11 +3256,14 @@ let%expect_test "tuple_annot_variance" =
               elems_rev =
               [TupleElement {name = (Some "bar");
                  t = (Annot (Number [1:37-43]));
-                 polarity = Polarity.Negative};
+                 polarity = Polarity.Negative;
+                 optional = false};
                 TupleElement {name = (Some "foo");
                   t = (Annot (String [1:23-29]));
-                  polarity = Polarity.Positive}
-                ]})}
+                  polarity = Polarity.Positive;
+                  optional = false}
+                ];
+              arity = (2, 2)})}
   |}]
 
 let%expect_test "cycle" =
@@ -5466,3 +5475,44 @@ let%expect_test "fun_shadow_declare_fun" =
              return = (Annot (String [2:31-37]));
              predicate = None})
            ]} |}]
+
+let%expect_test "optional_tuple_elements" =
+  print_sig {|
+    export type T = [a: number, b?: string];
+  |};
+  [%expect{|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info = CJSModuleInfo {type_export_keys = [|"T"|]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         name = "T"; tparams = Mono;
+         body =
+         (Annot
+            Tuple {loc = [1:16-39];
+              elems_rev =
+              [TupleElement {name = (Some "b");
+                 t = (Annot (String [1:32-38]));
+                 polarity = Polarity.Neutral;
+                 optional = true};
+                TupleElement {name = (Some "a");
+                  t = (Annot (Number [1:20-26]));
+                  polarity = Polarity.Neutral;
+                  optional = false}
+                ];
+              arity = (1, 2)})}
+  |}]
+
+let%expect_test "optional_tuple_elements_invalid" =
+  print_sig {|
+    export type T = [a?: number, b: string];
+  |};
+  [%expect{|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info = CJSModuleInfo {type_export_keys = [|"T"|]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [1:16-39]))}
+  |}]

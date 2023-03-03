@@ -714,21 +714,6 @@ let reason_of_propref = function
   | Named (r, _) -> r
   | Computed t -> reason_of_t t
 
-and tuple_length reason trust ts =
-  let r =
-    let desc = RTupleLength (List.length ts) in
-    replace_desc_reason desc reason
-  in
-  let t =
-    let n = List.length ts in
-    let float = Base.Float.of_int n in
-    let string = Base.Int.to_string n in
-    SingletonNumT (float, string)
-  in
-  DefT (r, trust, t)
-
-and tuple_ts_of_elements elements = Base.List.map ~f:(fun (TupleElement { t; _ }) -> t) elements
-
 let optional ?annot_loc ?(use_desc = false) t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in
   let reason =
@@ -938,3 +923,22 @@ let all_explicit_targs = function
         | (ExplicitArg _, Some acc) -> Some (targ :: acc)
         | _ -> None
     )
+
+let tuple_length reason trust (num_req, num_total) =
+  let t_of_n n =
+    let r =
+      let desc = RTupleLength n in
+      replace_desc_reason desc reason
+    in
+    let t =
+      let float = Base.Float.of_int n in
+      let string = Base.Int.to_string n in
+      SingletonNumT (float, string)
+    in
+    DefT (r, trust, t)
+  in
+  Base.List.range num_req ~stop:`inclusive num_total
+  |> Base.List.map ~f:t_of_n
+  |> union_of_ts reason
+
+let tuple_ts_of_elements elements = Base.List.map ~f:(fun (TupleElement { t; _ }) -> t) elements

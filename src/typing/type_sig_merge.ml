@@ -494,7 +494,7 @@ and merge_annot tps file = function
     (* NB: tail-recursive map in case of very large types *)
     let ts = Base.List.map ~f:(merge tps file) ts in
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
-  | Tuple { loc; elems_rev } ->
+  | Tuple { loc; elems_rev; arity } ->
     let reason = Reason.(mk_annot_reason RTupleType loc) in
     let elem_reason = Reason.(mk_annot_reason RTupleElement loc) in
     (* NB: tail-recursive map in case of very large types *)
@@ -502,8 +502,14 @@ and merge_annot tps file = function
       Base.List.fold
         elems_rev
         ~init:([], [])
-        ~f:(fun (els, ts) (TupleElement { name; t; polarity }) ->
+        ~f:(fun (els, ts) (TupleElement { name; t; polarity; optional }) ->
           let t = merge tps file t in
+          let t =
+            if optional then
+              TypeUtil.optional t
+            else
+              t
+          in
           let el = Type.TupleElement { name; t; polarity } in
           (el :: els, t :: ts)
       )
@@ -516,7 +522,7 @@ and merge_annot tps file = function
         let rep = Type.UnionRep.make t0 t1 ts in
         Type.UnionT (elem_reason, rep)
     in
-    Type.(DefT (reason, trust, ArrT (TupleAT { elem_t; elements })))
+    Type.(DefT (reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
     let t = merge tps file t in

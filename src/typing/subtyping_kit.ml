@@ -1582,8 +1582,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let ts2 = Base.Option.value ~default:[] ts2 in
       array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
-    | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1 })),
-        DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2 }))
+    | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1 })),
+        DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2 }))
       ) ->
       let fresh =
         match desc_of_reason r1 with
@@ -1593,39 +1593,52 @@ module Make (Flow : INPUT) : OUTPUT = struct
           true
         | _ -> false
       in
-      let l1 = List.length elements1 in
-      let l2 = List.length elements2 in
-      if l1 <> l2 then
-        add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), l1, l2, use_op))
+      let (num_req1, num_total1) = arity1 in
+      let (num_req2, num_total2) = arity2 in
+      (* Arity range LHS is within arity range RHS *)
+      let arities_are_valid = num_req1 >= num_req2 && num_total1 <= num_total2 in
+      if not arities_are_valid then
+        add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), arity1, arity2, use_op))
       else
         let n = ref 0 in
+        let tuple_element_compat t1 t2 p1 p2 =
+          if not (fresh || Polarity.compat (p1, p2)) then
+            add_output
+              cx
+              ~trace
+              (Error_message.ETupleElementPolarityMismatch
+                 {
+                   index = !n;
+                   reason_lower = r1;
+                   polarity_lower = p1;
+                   reason_upper = r2;
+                   polarity_upper = p2;
+                   use_op;
+                 }
+              );
+          let use_op =
+            Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
+          in
+          match p2 with
+          | Polarity.Positive -> rec_flow_t cx trace ~use_op (t1, t2)
+          | Polarity.Negative -> rec_flow_t cx trace ~use_op (t2, t1)
+          | Polarity.Neutral -> flow_to_mutable_child cx trace use_op fresh t1 t2
+        in
         iter2opt
           (fun t1 t2 ->
             match (t1, t2) with
             | ( Some (TupleElement { t = t1; polarity = p1; name = _ }),
                 Some (TupleElement { t = t2; polarity = p2; name = _ })
               ) ->
-              if not (fresh || Polarity.compat (p1, p2)) then
-                add_output
-                  cx
-                  ~trace
-                  (Error_message.ETupleElementPolarityMismatch
-                     {
-                       index = !n;
-                       reason_lower = r1;
-                       polarity_lower = p1;
-                       reason_upper = r2;
-                       polarity_upper = p2;
-                       use_op;
-                     }
-                  );
-              let use_op =
-                Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
+              tuple_element_compat t1 t2 p1 p2;
+              n := !n + 1
+            | (None, Some (TupleElement { t = t2; polarity = p2; name = _ })) ->
+              let p1 = Polarity.Neutral in
+              let t1 =
+                VoidT.make (replace_desc_new_reason (RTupleOutOfBoundsAccess !n) r1)
+                |> with_trust bogus_trust
               in
-              (match p2 with
-              | Polarity.Positive -> rec_flow_t cx trace ~use_op (t1, t2)
-              | Polarity.Negative -> rec_flow_t cx trace ~use_op (t2, t1)
-              | Polarity.Neutral -> flow_to_mutable_child cx trace use_op fresh t1 t2);
+              tuple_element_compat t1 t2 p1 p2;
               n := !n + 1
             | _ -> ())
           (elements1, elements2)
@@ -1634,6 +1647,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       match ts1 with
       | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
       | Some ts1 ->
+        let len = Base.List.length ts1 in
         rec_flow_t
           cx
           trace
@@ -1650,6 +1664,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                            ~f:(fun t ->
                              TupleElement { name = None; polarity = Polarity.Neutral; t })
                            ts1;
+                       arity = (len, len);
                      }
                   )
               ),

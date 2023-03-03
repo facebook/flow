@@ -143,6 +143,7 @@ type error_code =
   | TSSyntax
   | ThisInExportedFunction
   | ToplevelLibraryImport
+  | TupleRequiredAfterOptional
   | TypeAsValue
   | UnclearAddition
   | UnclearType
@@ -331,6 +332,7 @@ let string_of_code : error_code -> string = function
   | TSSyntax -> "ts-syntax"
   | ThisInExportedFunction -> "this-in-exported-function"
   | ToplevelLibraryImport -> "toplevel-library-import"
+  | TupleRequiredAfterOptional -> "tuple-required-after-optional"
   | TypeAsValue -> "type-as-value"
   | UnclearAddition -> "unclear-addition"
   | UnclearType -> "unclear-type"

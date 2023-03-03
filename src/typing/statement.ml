@@ -6039,6 +6039,7 @@ module Make
                        TupleElement
                          { name = Some "value"; t = values_t; polarity = Polarity.Neutral };
                      ];
+                   arity = (2, 2);
                  }
               )
           )

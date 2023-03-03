@@ -137,7 +137,7 @@ and 'loc t' =
       is_this: bool;
     }
   | ETupleArityMismatch of
-      ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
+      ('loc virtual_reason * 'loc virtual_reason) * (int * int) * (int * int) * 'loc virtual_use_op
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | ETupleOutOfBounds of {
       use_op: 'loc virtual_use_op;
@@ -175,6 +175,7 @@ and 'loc t' =
       polarity_upper: Polarity.t;
       use_op: 'loc Type.virtual_use_op;
     }
+  | ETupleRequiredAfterOptional of 'loc virtual_reason
   | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
@@ -824,6 +825,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         polarity_upper;
         use_op = map_use_op use_op;
       }
+  | ETupleRequiredAfterOptional reason -> ETupleRequiredAfterOptional (map_reason reason)
   | EROArrayWrite ((r1, r2), op) -> EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
     EUnionSpeculationFailed
@@ -1447,7 +1449,8 @@ let util_use_op_of_msg nope util = function
   | EBigIntNumCoerce _
   | EInvalidCatchParameterAnnotation _
   | ETSSyntax _
-  | EInvalidBinaryArith _ ->
+  | EInvalidBinaryArith _
+  | ETupleRequiredAfterOptional _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1514,7 +1517,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidDeclaration { declaration = reason; _ }
   | EBigIntRShift3 reason
   | EBigIntNumCoerce reason
-  | EInvalidBinaryArith { reason_out = reason; _ } ->
+  | EInvalidBinaryArith { reason_out = reason; _ }
+  | ETupleRequiredAfterOptional reason ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -2323,13 +2327,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text ") instead.";
           ];
       }
-  | ETupleArityMismatch (reasons, l1, l2, use_op) ->
+  | ETupleArityMismatch (reasons, arity1, arity2, use_op) ->
     let (lower, upper) = reasons in
-    let str_of_arity n =
-      if n = 1 then
-        spf "%d element" n
+    let str_of_arity (num_req, num_total) =
+      if num_req = num_total then
+        if num_total = 1 then
+          spf "%d element" num_total
+        else
+          spf "%d elements" num_total
       else
-        spf "%d elements" n
+        spf "%d-%d elements" num_req num_total
     in
     UseOp
       {
@@ -2338,14 +2345,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           [
             ref lower;
             text " has ";
-            text (str_of_arity l1);
+            text (str_of_arity arity1);
             text " but ";
             ref upper;
             text " has ";
-            text (str_of_arity l2);
+            text (str_of_arity arity2);
           ];
         use_op;
       }
+  | ETupleRequiredAfterOptional reason ->
+    let features =
+      [
+        text "Invalid ";
+        ref reason;
+        text ", cannot have required tuple members after an optional one.";
+      ]
+    in
+    Normal { features }
   | ENonLitArrayToTuple (reasons, use_op) ->
     let (lower, upper) = reasons in
     UseOp
@@ -4858,6 +4874,7 @@ let error_code_of_message err : error_code option =
   | ETrustedAnnot _ -> Some InvalidTrustedTypeArg
   | ETrustIncompatibleWithUseOp _ -> Some Error_codes.IncompatibleTrust
   | ETupleArityMismatch _ -> Some InvalidTupleArity
+  | ETupleRequiredAfterOptional _ -> Some TupleRequiredAfterOptional
   | ETupleElementNotReadable _ -> Some CannotRead
   | ETupleElementNotWritable _ -> Some CannotWrite
   | ETupleElementPolarityMismatch _ -> Some IncompatibleVariance

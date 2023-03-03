@@ -1122,10 +1122,10 @@ module rec ConsGen : S = struct
     | (DefT (reason, _, ArrT (ArrayAT (t, _))), (Annot_GetPropT _ | Annot_LookupT _)) ->
       let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [t] in
       elab_t cx arr op
-    | ( DefT (reason, trust, ArrT (TupleAT { elements; _ })),
+    | ( DefT (reason, trust, ArrT (TupleAT { arity; _ })),
         Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "length"))
       ) ->
-      GetPropTKit.on_array_length cx dummy_trace reason trust elements reason_op
+      GetPropTKit.on_array_length cx dummy_trace reason trust arity reason_op
     | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
         (Annot_GetPropT _ | Annot_LookupT _)
       ) ->

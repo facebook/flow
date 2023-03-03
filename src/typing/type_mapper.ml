@@ -653,7 +653,7 @@ class virtual ['a] t =
           t
         else
           ArrayAT (t'', tlistopt')
-      | TupleAT { elem_t; elements } ->
+      | TupleAT { elem_t; elements; arity } ->
         let elem_t' = self#type_ cx map_cx elem_t in
         let elements' =
           ListUtils.ident_map
@@ -668,7 +668,7 @@ class virtual ['a] t =
         if elem_t' == elem_t && elements' == elements then
           t
         else
-          TupleAT { elem_t = elem_t'; elements = elements' }
+          TupleAT { elem_t = elem_t'; elements = elements'; arity }
       | ROArrayAT t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

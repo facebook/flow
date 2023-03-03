@@ -329,40 +329,65 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         (Error_message.ETSSyntax { kind = Error_message.TSReadonlyType arg_kind; loc });
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), ReadOnly (Tast_utils.error_mapper#readonly_type ro))
-    | (loc, Tuple { Tuple.elements; comments }) ->
-      let (ts_rev, els_rev, els_ast_rev) =
-        Base.List.fold elements ~init:([], [], []) ~f:(fun (ts, els, els_ast) element ->
-            let (t, el, el_ast) = convert_tuple_element cx tparams_map element in
-            (t :: ts, el :: els, el_ast :: els_ast)
+    | (loc, Tuple { Tuple.elements; comments }) as t_ast ->
+      let reason = mk_annot_reason RTupleType loc in
+      let (ts_rev, els_rev, els_ast_rev, num_req, num_opt, req_after_opt) =
+        Base.List.fold
+          elements
+          ~init:([], [], [], 0, 0, None)
+          ~f:(fun (ts, els, els_ast, num_req, num_opt, req_after_opt) element ->
+            let (t, el, el_ast, optional) = convert_tuple_element cx tparams_map element in
+            let (num_req, num_opt, req_after_opt) =
+              if optional then
+                (num_req, num_opt + 1, req_after_opt)
+              else
+                ( num_req + 1,
+                  num_opt,
+                  if num_opt > 0 && Option.is_none req_after_opt then
+                    let (loc, _) = element in
+                    Some (mk_annot_reason RTupleElement loc)
+                  else
+                    req_after_opt
+                )
+            in
+            (t :: ts, el :: els, el_ast :: els_ast, num_req, num_opt, req_after_opt)
         )
       in
-      let (ts, els, els_ast) = (List.rev ts_rev, List.rev els_rev, List.rev els_ast_rev) in
-      let reason = mk_annot_reason RTupleType loc in
-      let element_reason = mk_annot_reason RTupleElement loc in
-      let elem_t =
-        match ts with
-        | [] -> EmptyT.why element_reason |> with_trust bogus_trust
-        | [t] -> t
-        | t0 :: t1 :: ts ->
-          (* If a tuple should be viewed as an array, what would the element type of
-             the array be?
+      (match req_after_opt with
+      | Some reason -> error_type cx loc (Error_message.ETupleRequiredAfterOptional reason) t_ast
+      | None ->
+        let (ts, els, els_ast) = (List.rev ts_rev, List.rev els_rev, List.rev els_ast_rev) in
+        let element_reason = mk_annot_reason RTupleElement loc in
+        let elem_t =
+          match ts with
+          | [] -> EmptyT.why element_reason |> with_trust bogus_trust
+          | [t] -> t
+          | t0 :: t1 :: ts ->
+            (* If a tuple should be viewed as an array, what would the element type of
+               the array be?
 
-             Using a union here seems appealing but is wrong: setting elements
-             through arbitrary indices at the union type would be unsound, since it
-             might violate the projected types of the tuple at their corresponding
-             positions. This also shows why `mixed` doesn't work, either.
+               Using a union here seems appealing but is wrong: setting elements
+               through arbitrary indices at the union type would be unsound, since it
+               might violate the projected types of the tuple at their corresponding
+               positions. This also shows why `mixed` doesn't work, either.
 
-             On the other hand, using the empty type would prevent writes, but admit
-             unsound reads.
+               On the other hand, using the empty type would prevent writes, but admit
+               unsound reads.
 
-             The correct solution is to safely case a tuple type to a covariant
-             array interface whose element type would be a union.
-          *)
-          UnionT (element_reason, UnionRep.make t0 t1 ts)
-      in
-      ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT { elem_t; elements = els }))),
-        Tuple { Tuple.elements = els_ast; comments }
-      )
+               The correct solution is to safely case a tuple type to a covariant
+               array interface whose element type would be a union.
+            *)
+            UnionT (element_reason, UnionRep.make t0 t1 ts)
+        in
+        ( ( loc,
+            DefT
+              ( reason,
+                infer_trust cx,
+                ArrT (TupleAT { elem_t; elements = els; arity = (num_req, num_req + num_opt) })
+              )
+          ),
+          Tuple { Tuple.elements = els_ast; comments }
+        ))
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
       let (((_, elemt), _) as t_ast) = convert cx tparams_map t in
@@ -1839,15 +1864,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | Ast.Type.Tuple.UnlabeledElement annot ->
       let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
       let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
-      (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast)
+      let optional = false in
+      (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast, optional)
     | Ast.Type.Tuple.LabeledElement
         { Ast.Type.Tuple.LabeledElement.name; annot; variance; optional } ->
       let (((_, annot_t), _) as annot_ast) = convert cx tparams_map annot in
       let t =
-        if optional then (
-          Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, TupleOptionalElement));
-          AnyT.at (AnyError None) loc
-        ) else
+        if optional then
+          TypeUtil.optional annot_t
+        else
           annot_t
       in
       let (name_loc, ({ Ast.Identifier.name = str_name; _ } as name_ast)) = name in
@@ -1858,14 +1883,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             { Ast.Type.Tuple.LabeledElement.name = id_name; annot = annot_ast; variance; optional }
         )
       in
-      (t, TupleElement { name = Some str_name; t; polarity = polarity cx variance }, element_ast)
+      ( t,
+        TupleElement { name = Some str_name; t; polarity = polarity cx variance },
+        element_ast,
+        optional
+      )
     | Ast.Type.Tuple.SpreadElement spread_el ->
       Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, TupleSpreadElement));
       let t = AnyT.at (AnyError None) loc in
       let element_ast =
         (loc, Ast.Type.Tuple.SpreadElement (Tast_utils.error_mapper#tuple_spread_element spread_el))
       in
-      (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast)
+      let optional = false in
+      (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast, optional)
 
   and mk_func_sig =
     let open Ast.Type.Function in

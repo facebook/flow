@@ -1768,11 +1768,11 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | InternalModuleName _ ->
       error_invalid_access ~suggestion:None
 
-  let on_array_length cx trace reason trust ts reason_op =
+  let on_array_length cx trace reason trust arity reason_op =
     (* Use definition as the reason for the length, as this is
      * the actual location where the length is in fact set. *)
     let loc = Reason.aloc_of_reason reason_op in
-    let t = tuple_length reason trust ts in
+    let t = tuple_length reason trust arity in
     F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
 
   let get_obj_prop cx trace o propref reason_op =
@@ -1867,7 +1867,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
     | ArrayAT (value, ts) ->
       let ts = Base.Option.map ~f:(Base.List.map ~f:(fun t -> (t, Polarity.Neutral, None))) ts in
       (value, ts, false, false)
-    | TupleAT { elem_t; elements } ->
+    | TupleAT { elem_t; elements; arity = _ } ->
       let ts =
         Base.List.map ~f:(fun (TupleElement { t; polarity; name }) -> (t, polarity, name)) elements
       in
@@ -1918,7 +1918,9 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                          index = index_string;
                        }
                     );
-                  (true, AnyT.error (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason)))
+                  ( true,
+                    AnyT.error (mk_reason (RTupleOutOfBoundsAccess index) (aloc_of_reason reason))
+                  )
                 ) else
                   (true, value)
             end

@@ -476,7 +476,8 @@ struct
           | [t] -> t
           | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
         in
-        TupleAT { elem_t; elements = Base.List.rev tuple_elements_rev }
+        let len = Base.List.length tuple_ts in
+        TupleAT { elem_t; elements = Base.List.rev tuple_elements_rev; arity = (len, len) }
       | Some (_, _, rest_param_t) ->
         let rest_elem_t =
           Tvar.mk_no_wrap_where cx reason (fun tout ->

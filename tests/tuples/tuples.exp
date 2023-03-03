@@ -310,21 +310,301 @@ Cannot cast array literal to tuple type because empty array literal [1] has 0 el
 elements. [invalid-tuple-arity]
 
    optional.js:4:2
-   4| ([]: [?number, string]); // error, since second element is not marked optional
+   4| ([]: [?number, string]); // error, since second element is not marked maybe
        ^^ [1]
 
 References:
    optional.js:4:6
-   4| ([]: [?number, string]); // error, since second element is not marked optional
+   4| ([]: [?number, string]); // error, since second element is not marked maybe
            ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:6:24
+Error ------------------------------------------------------------------------------------------------- optional.js:14:4
 
-Optional tuple elements are not supported. [unsupported-syntax]
+Cannot cast `single` to `WithOpt` because undefined (out of bounds tuple access at index 1) [1] is incompatible with
+string [2] in index 1. [incompatible-cast]
 
-   6| type A = [foo: number, bar?: number]; // ERROR: syntax not supported
-                             ^^^^^^^^^^^^
+   optional.js:14:4
+   14|   (single: WithOpt); // ERROR
+          ^^^^^^ [1]
+
+References:
+   optional.js:9:32
+    9| type WithOpt = [a: number, b?: string];
+                                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:21:4
+
+Cannot cast `withOpt` to `Single` because `WithOpt` [1] has 1-2 elements but `Single` [2] has 1 element.
+[invalid-tuple-arity]
+
+   optional.js:21:4
+   21|   (withOpt: Single); // ERROR
+          ^^^^^^^
+
+References:
+   optional.js:20:26
+   20|   declare const withOpt: WithOpt;
+                                ^^^^^^^ [1]
+   optional.js:21:13
+   21|   (withOpt: Single); // ERROR
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:25:4
+
+Cannot cast `withOpt.length` to number literal `2` because length `1` (number) of tuple [1] is incompatible with number
+literal `2` [2]. [incompatible-cast]
+
+   optional.js:25:4
+   25|   (withOpt.length: 2); // ERROR
+          ^^^^^^^^^^^^^^
+
+References:
+   optional.js:20:26
+   20|   declare const withOpt: WithOpt;
+                                ^^^^^^^ [1]
+   optional.js:25:20
+   25|   (withOpt.length: 2); // ERROR
+                          ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:30:4
+
+Cannot cast `withReadOnlyOpt` to `Single` because `WithReadOnlyOpt` [1] has 1-2 elements but `Single` [2] has 1 element.
+[invalid-tuple-arity]
+
+   optional.js:30:4
+   30|   (withReadOnlyOpt: Single); // ERROR
+          ^^^^^^^^^^^^^^^
+
+References:
+   optional.js:29:34
+   29|   declare const withReadOnlyOpt: WithReadOnlyOpt;
+                                        ^^^^^^^^^^^^^^^ [1]
+   optional.js:30:21
+   30|   (withReadOnlyOpt: Single); // ERROR
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:31:4
+
+Cannot cast `withReadOnlyOpt` to `WithOpt` because tuple element at index `1` is read-only in `WithReadOnlyOpt` [1] but
+writable in `WithOpt` [2]. [incompatible-variance]
+
+   optional.js:31:4
+   31|   (withReadOnlyOpt: WithOpt); // ERROR
+          ^^^^^^^^^^^^^^^
+
+References:
+   optional.js:29:34
+   29|   declare const withReadOnlyOpt: WithReadOnlyOpt;
+                                        ^^^^^^^^^^^^^^^ [1]
+   optional.js:31:21
+   31|   (withReadOnlyOpt: WithOpt); // ERROR
+                           ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:36:4
+
+Cannot cast `withWriteOnlyOpt` to tuple type because tuple type [1] has 1-2 elements but tuple type [2] has 1 element.
+[invalid-tuple-arity]
+
+   optional.js:36:4
+   36|   (withWriteOnlyOpt: [a: number]); // ERROR
+          ^^^^^^^^^^^^^^^^
+
+References:
+   optional.js:35:35
+   35|   declare const withWriteOnlyOpt: [a: number, -b?: string | boolean];
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:36:22
+   36|   (withWriteOnlyOpt: [a: number]); // ERROR
+                            ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:37:4
+
+Cannot cast `withWriteOnlyOpt` to tuple type because tuple element at index `1` is write-only in tuple type [1] but
+readable in tuple type [2]. [incompatible-variance]
+
+   optional.js:37:4
+   37|   (withWriteOnlyOpt: [a: number, b?: string | boolean]); // ERROR
+          ^^^^^^^^^^^^^^^^
+
+References:
+   optional.js:35:35
+   35|   declare const withWriteOnlyOpt: [a: number, -b?: string | boolean];
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:37:22
+   37|   (withWriteOnlyOpt: [a: number, b?: string | boolean]); // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:42:2
+
+Cannot cast array literal to `Single` because array literal [1] has 2 elements but `Single` [2] has 1 element.
+[invalid-tuple-arity]
+
+   optional.js:42:2
+   42| ([1, undefined]: Single); // ERROR
+        ^^^^^^^^^^^^^^ [1]
+
+References:
+   optional.js:42:18
+   42| ([1, undefined]: Single); // ERROR
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:47:6
+
+Cannot cast array literal to `WithOpt` because boolean [1] is incompatible with string [2] in index 1.
+[incompatible-cast]
+
+   optional.js:47:6
+   47| ([1, true]: WithOpt); // ERROR
+            ^^^^ [1]
+
+References:
+   optional.js:9:32
+    9| type WithOpt = [a: number, b?: string];
+                                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:52:6
+
+Cannot cast array literal to `WithReadOnlyOpt` because boolean [1] is incompatible with string [2] in index 1.
+[incompatible-cast]
+
+   optional.js:52:6
+   52| ([1, true]: WithReadOnlyOpt); // ERROR
+            ^^^^ [1]
+
+References:
+   optional.js:10:41
+   10| type WithReadOnlyOpt = [a: number, +b?: string];
+                                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ optional.js:54:51
+
+Invalid tuple element [1], cannot have required tuple members after an optional one. [tuple-required-after-optional]
+
+   54| type InvalidReqAfterOpt = [a: number, b?: string, c: string]; // ERROR
+                                                         ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ optional.js:59:59
+
+Invalid tuple element [1], cannot have required tuple members after an optional one. [tuple-required-after-optional]
+
+   59| type InvalidReqAfterOptMultiple = [a: number, b?: string, c: string, d: boolean]; // ERROR (on first one)
+                                                                 ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:66:6
+
+Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   optional.js:66:6
+   66|     (x: empty); // ERROR
+            ^
+
+References:
+   optional.js:63:20
+   63|   declare const x: [number] | [a: boolean, b?: string];
+                          ^^^^^^^^ [1]
+   optional.js:66:9
+   66|     (x: empty); // ERROR
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:66:6
+
+Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   optional.js:66:6
+   66|     (x: empty); // ERROR
+            ^
+
+References:
+   optional.js:63:31
+   63|   declare const x: [number] | [a: boolean, b?: string];
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:66:9
+   66|     (x: empty); // ERROR
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:70:6
+
+Cannot cast `x` to tuple type because tuple type [1] has 1-2 elements but tuple type [2] has 1 element.
+[invalid-tuple-arity]
+
+   optional.js:70:6
+   70|     (x: [number]); // ERROR
+            ^
+
+References:
+   optional.js:63:31
+   63|   declare const x: [number] | [a: boolean, b?: string];
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:70:9
+   70|     (x: [number]); // ERROR
+               ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:78:6
+
+Cannot cast `x` to tuple type because tuple type [1] has 2-3 elements but tuple type [2] has 1 element.
+[invalid-tuple-arity]
+
+   optional.js:78:6
+   78|     (x: [number]); // ERROR
+            ^
+
+References:
+   optional.js:74:31
+   74|   declare const x: [number] | [a: boolean, b: string, c?: string];
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:78:9
+   78|     (x: [number]); // ERROR
+               ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:81:6
+
+Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   optional.js:81:6
+   81|     (x: empty); // ERROR
+            ^
+
+References:
+   optional.js:74:20
+   74|   declare const x: [number] | [a: boolean, b: string, c?: string];
+                          ^^^^^^^^ [1]
+   optional.js:81:9
+   81|     (x: empty); // ERROR
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:81:6
+
+Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   optional.js:81:6
+   81|     (x: empty); // ERROR
+            ^
+
+References:
+   optional.js:74:31
+   74|   declare const x: [number] | [a: boolean, b: string, c?: string];
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:81:9
+   81|     (x: empty); // ERROR
+               ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:16:76
@@ -1074,4 +1354,4 @@ References:
 
 
 
-Found 71 errors
+Found 88 errors

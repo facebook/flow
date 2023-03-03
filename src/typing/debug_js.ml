@@ -1333,13 +1333,16 @@ let dump_error_message =
       spf "EComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | ENonStrictEqualityComparison (reason1, reason2) ->
       spf "ENonStrictEqualityComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-    | ETupleArityMismatch ((reason1, reason2), arity1, arity2, use_op) ->
+    | ETupleArityMismatch
+        ((reason1, reason2), (num_req1, num_total1), (num_req2, num_total2), use_op) ->
       spf
-        "ETupleArityMismatch (%s, %s, %d, %d, %s)"
+        "ETupleArityMismatch (%s, %s, %d-%d, %d-%d, %s)"
         (dump_reason cx reason1)
         (dump_reason cx reason2)
-        arity1
-        arity2
+        num_req1
+        num_total1
+        num_req2
+        num_total2
         (string_of_use_op use_op)
     | ENonLitArrayToTuple ((reason1, reason2), use_op) ->
       spf
@@ -1347,6 +1350,8 @@ let dump_error_message =
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         (string_of_use_op use_op)
+    | ETupleRequiredAfterOptional reason ->
+      spf "ETupleRequiredAfterOptional (%s)" (dump_reason cx reason)
     | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
       spf
         "ETupleOutOfBounds { use_op = %s; reason = %s; reason_op = %s; length = %d; index = %s }"

@@ -55,10 +55,6 @@ val quick_subtype : bool -> Type.t -> Type.t -> bool
 
 val reason_of_propref : Type.propref -> reason
 
-val tuple_length : reason -> Trust.trust_rep -> Type.tuple_element list -> Type.t
-
-val tuple_ts_of_elements : Type.tuple_element list -> Type.t list
-
 val optional : ?annot_loc:ALoc.t -> ?use_desc:bool -> Type.t -> Type.t
 
 val maybe : Type.t -> Type.t
@@ -106,3 +102,7 @@ val annotated_or_inferred_of_option : default:Type.t -> Type.t option -> Type.an
 val subtype_this_of_function : Type.funtype -> Type.t
 
 val all_explicit_targs : Type.targ Base.List.t option -> Type.targ list option
+
+val tuple_length : reason -> Trust.trust_rep -> int * int -> Type.t
+
+val tuple_ts_of_elements : Type.tuple_element list -> Type.t list

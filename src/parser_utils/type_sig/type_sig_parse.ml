@@ -1251,28 +1251,56 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       let (_, result) = optional_indexed_access opts scope tbls xs (loc, ia) in
       result
     | T.Tuple { T.Tuple.elements; _ } ->
-      let elems_rev =
-        List.rev_map
-          (function
-            | (_, T.Tuple.UnlabeledElement t) ->
-              TupleElement
-                { name = None; t = annot opts scope tbls xs t; polarity = Polarity.Neutral }
-            | ( _,
-                T.Tuple.LabeledElement
-                  { T.Tuple.LabeledElement.annot = t; name; variance; optional = _ }
-              ) ->
-              TupleElement
-                {
-                  name = Some (id_name name);
-                  t = annot opts scope tbls xs t;
-                  polarity = polarity variance;
-                }
-            | (loc, T.Tuple.SpreadElement _) ->
-              let loc = push_loc tbls loc in
-              TupleElement { name = None; t = Annot (Any loc); polarity = Polarity.Neutral })
+      let (arity, req_after_opt, elems_rev) =
+        List.fold_left
+          (fun ((num_req, num_total), req_after_opt, elems) elem ->
+            let elem =
+              match elem with
+              | (_, T.Tuple.UnlabeledElement t) ->
+                TupleElement
+                  {
+                    name = None;
+                    t = annot opts scope tbls xs t;
+                    polarity = Polarity.Neutral;
+                    optional = false;
+                  }
+              | ( _,
+                  T.Tuple.LabeledElement
+                    { T.Tuple.LabeledElement.annot = t; name; variance; optional }
+                ) ->
+                TupleElement
+                  {
+                    name = Some (id_name name);
+                    t = annot opts scope tbls xs t;
+                    polarity = polarity variance;
+                    optional;
+                  }
+              | (loc, T.Tuple.SpreadElement _) ->
+                let loc = push_loc tbls loc in
+                TupleElement
+                  {
+                    name = None;
+                    t = Annot (Any loc);
+                    polarity = Polarity.Neutral;
+                    optional = false;
+                  }
+            in
+            let (TupleElement { optional; _ }) = elem in
+            let (num_req, req_after_opt) =
+              if optional then
+                (num_req, req_after_opt)
+              else
+                let has_opt = num_total > num_req in
+                (num_req + 1, has_opt)
+            in
+            ((num_req, num_total + 1), req_after_opt, elem :: elems))
+          ((0, 0), false, [])
           elements
       in
-      Annot (Tuple { loc; elems_rev })
+      if req_after_opt then
+        Annot (Any loc)
+      else
+        Annot (Tuple { loc; elems_rev; arity })
     | T.Union { T.Union.types = (t0, t1, ts); _ } ->
       let t0 = annot opts scope tbls xs t0 in
       let t1 = annot opts scope tbls xs t1 in

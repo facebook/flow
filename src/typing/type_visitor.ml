@@ -313,7 +313,7 @@ class ['a] t =
         let acc = self#type_ cx P.Neutral acc t in
         let acc = self#list (self#type_ cx P.Neutral) acc ts in
         acc
-      | TupleAT { elem_t; elements } ->
+      | TupleAT { elem_t; elements; arity = _ } ->
         let acc = self#type_ cx P.Neutral acc elem_t in
         let acc =
           self#list

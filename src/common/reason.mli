@@ -51,7 +51,7 @@ type 'loc virtual_reason_desc =
   | RTupleType
   | RTupleElement
   | RTupleLength of int
-  | RTupleOutOfBoundsAccess
+  | RTupleOutOfBoundsAccess of int
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody

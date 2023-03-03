@@ -4228,8 +4228,13 @@ struct
             | ROArrayAT _ ->
               arrtype
             | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Base.List.drop ts i))
-            | TupleAT { elem_t; elements } ->
-              TupleAT { elem_t; elements = Base.List.drop elements i }
+            | TupleAT { elem_t; elements; arity = (num_req, num_total) } ->
+              TupleAT
+                {
+                  elem_t;
+                  elements = Base.List.drop elements i;
+                  arity = (max (num_req - i) 0, max (num_total - i) 0);
+                }
           in
           let a = DefT (reason, trust, ArrT arrtype) in
           rec_flow_t cx trace ~use_op:unknown_use (a, tout)
@@ -4263,7 +4268,7 @@ struct
           let arrtype =
             match arrtype with
             | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Base.Option.map ~f:(Base.List.map ~f) ts)
-            | TupleAT { elem_t; elements } ->
+            | TupleAT { elem_t; elements; arity } ->
               TupleAT
                 {
                   elem_t = f elem_t;
@@ -4272,6 +4277,7 @@ struct
                       ~f:(fun (TupleElement { name; t; polarity }) ->
                         TupleElement { name; t = f t; polarity })
                       elements;
+                  arity;
                 }
             | ROArrayAT elemt -> ROArrayAT (f elemt)
           in
@@ -5388,10 +5394,10 @@ struct
         (*************************)
         (* Tuple "length" access *)
         (*************************)
-        | ( DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements })),
+        | ( DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements = _; arity })),
             GetPropT (_, _, _, Named (_, OrdinaryName "length"), tout)
           ) ->
-          GetPropTKit.on_array_length cx trace reason trust elements (reason_of_use_t u) tout
+          GetPropTKit.on_array_length cx trace reason trust arity (reason_of_use_t u) tout
         | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
@@ -5890,7 +5896,7 @@ struct
     let only_any _ = any in
     match t with
     | DefT (r, trust, ArrT (ArrayAT _)) -> DefT (r, trust, ArrT (ArrayAT (any, None)))
-    | DefT (r, trust, ArrT (TupleAT { elements; _ })) ->
+    | DefT (r, trust, ArrT (TupleAT { elements; arity; _ })) ->
       DefT
         ( r,
           trust,
@@ -5903,6 +5909,7 @@ struct
                      ~f:(fun (TupleElement { name; t; polarity }) ->
                        TupleElement { name; t = only_any t; polarity })
                      elements;
+                 arity;
                }
             )
         )
@@ -7834,13 +7841,14 @@ struct
           (* TODO: add test for sentinel test on implements *)
           flow_sentinel sense own_props obj s
         (* tuple.length ===/!== literal value *)
-        | DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements })) when key = "length" ->
+        | DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements = _; arity }))
+          when key = "length" ->
           let test =
             let desc = RMatchingProp (key, desc_of_sentinel s) in
             let r = replace_desc_reason desc (fst result) in
             SentinelPropTestT (r, orig_obj, key, sense, s, result)
           in
-          rec_flow cx trace (tuple_length reason trust elements, test)
+          rec_flow cx trace (tuple_length reason trust arity, test)
         | IntersectionT (_, rep) ->
           (* For an intersection of object types, try the test for each object
              type in turn, while recording the original intersection so that we
@@ -8386,13 +8394,16 @@ struct
           let ts1 = Base.Option.value ~default:[] ts1 in
           let ts2 = Base.Option.value ~default:[] ts2 in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
-        | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1 })),
-            DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2 }))
+        | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1 })),
+            DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2 }))
           ) ->
-          let l1 = List.length elements1 in
-          let l2 = List.length elements2 in
-          if l1 <> l2 then
-            add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), l1, l2, use_op));
+          let (num_req1, num_total1) = arity1 in
+          let (num_req2, num_total2) = arity2 in
+          if num_req1 <> num_req2 || num_total1 <> num_total2 then
+            add_output
+              cx
+              ~trace
+              (Error_message.ETupleArityMismatch ((r1, r2), arity1, arity2, use_op));
           let n = ref 0 in
           iter2opt
             (fun t1 t2 ->
@@ -9015,6 +9026,7 @@ struct
             | (_, `Array) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
             | (_, `Literal) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, tuple_types)))
             | (Some tuple_types, `Tuple) ->
+              let len = Base.List.length tuple_types in
               DefT
                 ( reason_op,
                   bogus_trust (),
@@ -9027,6 +9039,7 @@ struct
                              ~f:(fun t ->
                                TupleElement { name = None; t; polarity = Polarity.Neutral })
                              tuple_types;
+                         arity = (len, len);
                        }
                     )
                 )
