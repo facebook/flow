@@ -31,7 +31,12 @@ Or as constructed wrapper objects.
 new Boolean(false);
 new String("world");
 new Number(42);
-new BigInt(3n);
+```
+
+BigInts and Symbols are created with calls to `BigInt` and `Symbol`, respectively.
+```js flow-check
+BigInt(3n);
+Symbol("hello");
 ```
 
 Types for literal values are lowercase.
