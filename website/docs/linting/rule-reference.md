@@ -14,15 +14,22 @@ semantics than would be expected.
 Like [`implicit-inexact-object`](#toc-implicit-inexact-object), except triggers even when the `exact_by_default` option is set to `true`.
 
 ### `deprecated-type` {#toc-deprecated-type}
-Triggers when you use the `*` (existential) type, as this type is unsafe and usually just equivalent to `any`.
-The effect of `*` can generally be achieved by simply not providing a type annotation.
+Triggered on the `bool` type, which is just an alias for `boolean`. Just use `boolean` instead.
+
+```js flow-check
+// flowlint deprecated-type:error
+
+type A = Array<bool>; // Error
+```
 
 ### `implicit-inexact-object` {#toc-implicit-inexact-object}
 Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
 
-This lint setting is ignored when `exact_by_default` is set to `true`.
+This lint setting is ignored when [`exact_by_default`](../../config/options/#toc-exact-by-default-boolean) is set to `true`.
 
 ```js flow-check
+// flowlint implicit-inexact-object:error
+
 type A = {x: number}; // Error
 type B = {x: number, ...} // Ok
 type C = {| x: number |} // Ok
@@ -36,6 +43,8 @@ Triggers when you do an existence check on a value that can be either null/undef
 
 For example:
 ```js flow-check
+// flowlint sketchy-null:error
+
 const x: ?number = 5;
 if (x) {} // sketchy because x could be either null or 0.
 
@@ -73,11 +82,11 @@ doesn't report a warning.
 
 Suppressing one type of sketchy null check only suppresses that type, so, for example
 ```js flow-check
-// flowlint sketchy-null:warn, sketchy-null-bool:off
+// flowlint sketchy-null:error, sketchy-null-bool:off
 const x: ?(number | bool) = 0;
 if (x) {}
 ```
-would still have a sketchy-null-number warning on line 3.
+would still have a `sketchy-null-number` error on line 3.
 
 ### `sketchy-number` {#toc-sketchy-number}
 Triggers when a `number` is used in a manner which may lead to unexpected results if the value is falsy.
@@ -105,30 +114,49 @@ If `count` is, say, `5`, then this displays "[5 comments]". However, if `count` 
 ```
 
 ### `unclear-type` {#toc-unclear-type}
-Triggers when you use `any`, `Object`, or `Function` as type annotations. These
+Triggers when you use `any`, `Object`, `Function`, or `*` as type annotations. These
 types are unsafe.
+
+```js flow-check
+// flowlint unclear-type:error
+
+declare const a: any; // Error
+declare const b: *; // Error
+declare const c: Object; // Error
+declare const d: Function; // Error
+```
 
 ### `unnecessary-invariant` {#toc-unnecessary-invariant}
 Triggers when you use `invariant` to check a condition which we know must be truthy based on the available type information. This is quite conservative: for example, if all we know about the condition is that it is a `boolean`, then the lint will not fire even if the condition must be `true` at runtime.
 
 Note that this lint does not trigger when we know a condition is always `false`. It is a common idiom to use `invariant()` or `invariant(false, ...)` to throw in code that should be unreachable.
 
+```js flow-check
+// flowlint unnecessary-invariant:error
+declare function invariant(boolean): void;
+
+declare const x: Array<string>; // Array is truthy
+invariant(x);
+```
+
 ### `unnecessary-optional-chain` {#toc-unnecessary-optional-chain}
 
 Triggers when you use `?.` where it isn't needed. This comes in two main flavors. The first is when the left-hand-side cannot be nullish:
 
 ```js flow-check
+// flowlint unnecessary-optional-chain:error
 type Foo = {
   bar: number
 }
 
 declare var foo: Foo;
-foo?.bar; // Lint: unnecessary-optional-chain
+foo?.bar; // Error
 ```
 
 The second is when the left-hand-side could be nullish, but the short-circuiting behavior of `?.` is sufficient to handle it anyway:
 
 ```js flow-check
+// flowlint unnecessary-optional-chain:error
 type Foo = {
   bar: {
     baz: number
@@ -136,7 +164,7 @@ type Foo = {
 }
 
 declare var foo: ?Foo;
-foo?.bar?.baz; // Lint: unnecessary-optional-chain
+foo?.bar?.baz; // Error
 ```
 
 In the second example, the first use of `?.` is valid, since `foo` is potentially nullish, but the second use of `?.` is unnecessary. The left-hand-side of the second `?.` (`foo?.bar`) can only be nullish as a result of `foo` being nullish, and when `foo` is nullish, short-circuiting lets us avoid the second `?.` altogether!
@@ -154,9 +182,11 @@ effects and are unsafe.
 For example:
 
 ```js flow-check
+// flowlint unsafe-getters-setters:error
+let a = 1;
 const o = {
-  get a() { return 4; }, // Error: unsafe-getters-setters
-  set b(x: number) { o.c = x; }, // Error: unsafe-getters-setters
+  get a() { return a; }, // Error: unsafe-getters-setters
+  set b(x: number) { a = x; }, // Error: unsafe-getters-setters
   c: 10,
 };
 ```
@@ -171,12 +201,14 @@ untyped file results in an `any` alias, which is typically not the intended beha
 Enabling this lint brings extra attention to this case and can help improve Flow
 coverage of typed files by limiting the spread of implicit `any` types.
 
-### `unused-promise-in-async-scope` {#toc-unused-promise-in-async-scope}
-Triggers when a `Promise` is unused in an async scope (i.e., it is not `await`ed, stored in a variable, passed to a function, etc.). This can be dangerous, because errors are potentially unhandled, and the code may not execute in the desired order.
+### `unused-promise` {#toc-unused-promise}
+Triggers when a `Promise` is unused (i.e., it is not `await`ed, stored in a variable, passed to a function, etc.).
+This can be dangerous, because errors are potentially unhandled, and the code may not execute in the desired order.
 
 For example:
 
 ```js flow-check
+// flowlint unused-promise:error
 declare function foo(): Promise<void>;
 
 async function bar() {

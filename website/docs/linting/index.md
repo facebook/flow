@@ -35,15 +35,11 @@ settings apply to a region of a file, or a single line, or part of a line. For
 more details see [Flowlint Comments](./flowlint-comments).
 
 **Example:**
-```js
- /* flowlint
-  *   sketchy-null:error,
-  *   untyped-type-import:error
-  */
+```js flow-check
+// flowlint sketchy-null:error
 const x: ?number = 0;
 
 if (x) {} // Error
-import type {Foo} from './untyped.js'; // Error
 
 // flowlint-next-line sketchy-null:off
 if (x) {} // No Error
@@ -53,8 +49,6 @@ if (x) {} /* flowlint-line sketchy-null:off */ // No Error
 // flowlint sketchy-null:off
 if (x) {} // No Error
 if (x) {} // No Error
-import type {Bar} from './untyped.js'; // Error; unlike a $FlowFixMe, a flowlint comment only suppresses one particular type of error.
-// flowlint sketchy-null:error
 ```
 
 ### Lint Settings Precedence {#toc-lint-settings-precedence}
