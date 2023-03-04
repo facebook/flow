@@ -263,17 +263,15 @@ let resolve_hint cx loc hint =
         Context.reset_errors cx Flow_error.ErrorSet.empty;
         let result =
           lazy
-            (let (_, (props, _, unresolved_params, _)) =
-               Context.run_in_synthesis_mode cx (fun () ->
-                   Statement.jsx_mk_props
-                     cx
-                     reason
-                     ~check_expression:synthesize_expression_for_instantiation
-                     ~collapse_children:synthesize_jsx_children_for_instantiation
-                     name
-                     props
-                     children
-               )
+            (let (props, _, unresolved_params, _) =
+               Statement.jsx_mk_props
+                 cx
+                 reason
+                 ~check_expression:synthesize_expression_for_instantiation
+                 ~collapse_children:synthesize_jsx_children_for_instantiation
+                 name
+                 props
+                 children
              in
              let children =
                Base.List.map
