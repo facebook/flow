@@ -26,3 +26,9 @@ import { type wut5 } from 'wutland';
 import { type wut6 as wutLocal } from 'wutland';
 (wut: wut5);
 (wut: wutLocal);
+
+// Exports
+const localVar = 1;
+const aliasedVar = 1;
+export {localVar}
+export {aliasedVar as newAlias}

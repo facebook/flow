@@ -45,6 +45,23 @@ class rename_mapper ~(targets : FindRefsTypes.ref_kind Loc_collections.LocMap.t)
         else
           specifier
 
+    method! export_named_declaration_specifier specifier =
+      let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+      let (specifier_loc, { local = (loc, local_id); exported }) = specifier in
+      match exported with
+      | Some _ -> super#export_named_declaration_specifier specifier
+      | None ->
+        if LocMap.mem loc targets then
+          let export_specifier =
+            {
+              local = Ast_builder.Identifiers.identifier new_name;
+              exported = Some (Loc.none, local_id);
+            }
+          in
+          (specifier_loc, export_specifier)
+        else
+          specifier
+
     method! pattern_object_property ?kind prop =
       let open Ast.Pattern.Object.Property in
       match prop with
