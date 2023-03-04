@@ -50,6 +50,7 @@ can be overridden with command line flags.
 * [`suppress_type`](#toc-suppress-type-string)
 * [`temp_dir`](#toc-temp-dir-string)
 * [`traces`](#toc-traces-integer)
+* [`use_mixed_in_catch_variables`](#toc-use-mixed-in-catch-variables)
 
 The following options are deprecated and have been removed in the latest version of Flow:
 * [`strip_root`](#toc-strip-root-boolean)
@@ -427,6 +428,18 @@ The default value is `/tmp/flow`.
 Enables traces on all error output (showing additional details about the flow
 of types through the system), to the depth specified. This can be very
 expensive, so is disabled by default.
+
+#### `use_mixed_in_catch_variables` _`(boolean)`_ <SinceVersion version="0.201" /> {#toc-use-mixed-in-catch-variables}
+
+Changes the default type of `catch` variables from [`any`](../any) to [`mixed`](../mixed). E.g.
+
+```js flow-check
+try {
+} catch (e) {
+}
+```
+
+in the above example, if the option is `true`, `catch` will be typed as `mixed` as it lacks an explicit type annotation.
 
 #### `strip_root` _`(boolean)`_ <UntilVersion version="0.48" /> {#toc-strip-root-boolean}
 

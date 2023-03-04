@@ -3,6 +3,8 @@ title: Variable Types
 slug: /types/variables
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 When you are declaring a new variable, you may optionally declare its type.
 
 JavaScript has three ways of declaring local variables:
@@ -119,3 +121,26 @@ let isString: string = foo; // Error!
 ```
 
 As Flow gets smarter and smarter, there should be fewer instances of these scenarios.
+
+## Catch variables <SinceVersion version="0.197" />
+If a `catch` variable does not have an annotation, its default type is [`any`](../any).
+
+You can optionally annotate it with exactly [`mixed`](../mixed) or `any`. E.g.
+
+```js flow-check
+try {
+} catch (e: mixed) {
+  if (e instanceof TypeError) {
+    (e: TypeError); // OK
+  } else if (e instanceof Error) {
+    (e: Error); // OK
+  } else {
+    throw e;
+  }
+}
+```
+
+By using `mixed`, you can improve your safety and Flow [coverage](../../cli/coverage/),
+at the trade-off of increased runtime checks.
+
+You can change the default type of `catch` variables when there is no annotation by setting the [`use_mixed_in_catch_variables`](../../config/options/#toc-use-mixed-in-catch-variables) option to true.
