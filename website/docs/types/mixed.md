@@ -1,7 +1,11 @@
 ---
-title: Mixed Types
+title: Mixed
 slug: /types/mixed
 ---
+
+`mixed` is the supertype of all types. All values are `mixed`.
+However, this means that very few operations are permitted on it, without refining to some more specific type.
+That's because the valid operations on `mixed` must be valid for all types.
 
 In general, programs have several different categories of types:
 
@@ -77,14 +81,13 @@ the actual type is or you'll end up with an error.
 
 ```js flow-check
 function stringify(value: mixed) {
-  // $ExpectError
   return "" + value; // Error!
 }
 
 stringify("foo");
 ```
 
-Instead you must ensure the value is a certain type by refining it.
+Instead you must ensure the value is a certain type by [refining](../../lang/refinements/) it.
 
 ```js flow-check
 function stringify(value: mixed) {
@@ -104,3 +107,8 @@ only be a `string` inside of the `if` statement. This is known as a
 
 ## Versus `any`
 `mixed` is safe while [`any`](../any) is not. While both accept all values, but `any` also unsafely allows all operations.
+
+## Versus `empty`
+`mixed` is the opposite of [`empty`](../empty):
+- Everything is a `mixed`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
+- Nothing is `empty`, but any operation is permitted on it. It is the subtype of all types.

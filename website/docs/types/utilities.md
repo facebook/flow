@@ -671,7 +671,7 @@ const c: PartialPerson = {name: 'George', age: 123}; // OK
 (c: Person); // ERROR: `PersonDetails` is not a `Person` (unlike with `$Shape`)
 ```
 
-## `Required<T>` <SinceVersion version="0.121" /> {#toc-required}
+## `Required<T>` <SinceVersion version="0.201" /> {#toc-required}
 
 The `Required` utility type is the opposite of [`Partial`](#toc-partial):
 it converts all of an object or interface’s optional fields to be required. For example:
