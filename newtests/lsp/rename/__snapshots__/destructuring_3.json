@@ -7,14 +7,14 @@
           "range": {
             "start": {
               "line": 14,
-              "character": 6
+              "character": 4
             },
             "end": {
               "line": 14,
-              "character": 7
+              "character": 12
             }
           },
-          "newText": "x: NEW_NAME"
+          "newText": "{x: NEW_NAME, y}"
         },
         {
           "range": {

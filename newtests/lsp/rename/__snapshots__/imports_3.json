@@ -6,15 +6,15 @@
         {
           "range": {
             "start": {
-              "line": 21,
-              "character": 9
+              "line": 20,
+              "character": 0
             },
             "end": {
               "line": 21,
-              "character": 13
+              "character": 31
             }
           },
-          "newText": "wut3 as NEW_NAME"
+          "newText": "// Imports\nimport { wut3 as NEW_NAME } from \"wutland\";"
         },
         {
           "range": {
