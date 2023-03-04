@@ -207,7 +207,10 @@ type t = {
   trust_constructor: unit -> Trust.trust_rep;
   hint_map_arglist_cache: (ALoc.t * Type.call_arg) list ALocMap.t ref;
   hint_map_jsx_cache:
-    (Reason.t * string * ALoc.t list * ALoc.t, Type.t * (Type.t list * Type.t option)) Hashtbl.t;
+    ( Reason.t * string * ALoc.t list * ALoc.t,
+      Type.t Lazy.t * (Type.t list * Type.t option) Lazy.t
+    )
+    Hashtbl.t;
   mutable hint_eval_cache: Type.t option IMap.t;
   mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;

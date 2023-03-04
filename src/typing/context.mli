@@ -538,7 +538,11 @@ val hint_eval_cache_find_opt : t -> int -> Type.t option option
 val hint_map_arglist_cache : t -> (ALoc.t * Type.call_arg) list ALocMap.t ref
 
 val hint_map_jsx_cache :
-  t -> (Reason.t * string * ALoc.t list * ALoc.t, Type.t * (Type.t list * Type.t option)) Hashtbl.t
+  t ->
+  ( Reason.t * string * ALoc.t list * ALoc.t,
+    Type.t Lazy.t * (Type.t list * Type.t option) Lazy.t
+  )
+  Hashtbl.t
 
 val constraint_cache : t -> Type.FlowSet.t ref
 

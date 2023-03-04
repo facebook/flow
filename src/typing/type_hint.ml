@@ -322,9 +322,9 @@ and instantiate_component cx component instantiation_hint =
         reason
         false
         ~component
-        ~config
+        ~config:(Lazy.force config)
         ~targs:None
-        children
+        (Lazy.force children)
     in
     let subst_map =
       Context.run_in_implicit_instantiation_mode cx (fun () ->

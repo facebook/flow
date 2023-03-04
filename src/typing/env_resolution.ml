@@ -261,27 +261,34 @@ let resolve_hint cx loc hint =
       | None ->
         let original_errors = Context.errors cx in
         Context.reset_errors cx Flow_error.ErrorSet.empty;
-        let (_, (props, _, unresolved_params, _)) =
-          Context.run_in_synthesis_mode cx (fun () ->
-              Statement.jsx_mk_props
-                cx
-                reason
-                ~check_expression:synthesize_expression_for_instantiation
-                ~collapse_children:synthesize_jsx_children_for_instantiation
-                name
-                props
-                children
-          )
+        let result =
+          lazy
+            (let (_, (props, _, unresolved_params, _)) =
+               Context.run_in_synthesis_mode cx (fun () ->
+                   Statement.jsx_mk_props
+                     cx
+                     reason
+                     ~check_expression:synthesize_expression_for_instantiation
+                     ~collapse_children:synthesize_jsx_children_for_instantiation
+                     name
+                     props
+                     children
+               )
+             in
+             let children =
+               Base.List.map
+                 ~f:(function
+                   | Type.UnresolvedArg (a, _) -> a
+                   | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
+                 unresolved_params
+             in
+             (props, (children, None))
+            )
         in
+        let props = Lazy.map fst result in
+        let children = Lazy.map snd result in
         Context.reset_errors cx original_errors;
-        let children =
-          Base.List.map
-            ~f:(function
-              | Type.UnresolvedArg (a, _) -> a
-              | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
-            unresolved_params
-        in
-        let result = (props, (children, None)) in
+        let result = (props, children) in
         Hashtbl.add cache key result;
         result
     in
