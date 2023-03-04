@@ -4,31 +4,54 @@ slug: /react/refs
 ---
 
 React allows you to grab the instance of an element or component with [`ref`
-functions][]. To use a ref function add a [maybe instance type][] to your class
-and assign your instance to that property in your ref function.
+functions][].
+
+##  Refs in Functional Components {#toc-refs-in-functional-components}
+
+Inside a functional component, refs are accessed with the
+`useRef` hook.
 
 [`ref` functions]: https://facebook.github.io/react/docs/refs-and-the-dom.html
-[maybe instance type]: ../../types/maybe/
+
+```js flow-check
+import * as React from 'react';
+
+function MyComponent() {
+  const buttonRef = React.useRef<null | HTMLButtonElement>(null);
+  (buttonRef: {current: null | HTMLButtonElement}); // useRef wraps the ref value in an object
+  return <button ref={buttonRef}>Toggle</button>;
+}
+```
+
+Note that `useRef` wraps the ref value in an object with a `current` property. This must be
+reflected in the type of anything accepting the ref value.
+
+##  Refs in Class Components {#toc-refs-in-class-components}
+
+Refs in class components are similar to function components. To create one, add a
+property to your class and assign the result of `React.createRef` to it.
 
 ```js flow-check
 import * as React from 'react';
 
 class MyComponent extends React.Component<{}> {
-  // The `?` here is important because you may not always have the instance.
-  button: ?HTMLButtonElement;
+  // The `null` here is important because you may not always have the instance.
+  buttonRef: {current: null | HTMLButtonElement};
+
+  constructor() {
+    super();
+    this.buttonRef = React.createRef<HTMLButtonElement>();
+  }
 
   render(): React.Node {
-    return <button ref={button => (this.button = button)}>Toggle</button>;
+    return <button ref={this.buttonRef}>Toggle</button>;
   }
 }
 ```
 
-The `?` in `?HTMLButtonElement` is important. In the example above
-the first argument to `ref` will be `HTMLButtonElement | null` as React will
-[call your `ref` callback with null][] when the component unmounts. Also, the
-`button` property on `MyComponent` will not be set until React has finished
-rendering. Until then your `button` ref will be undefined. Protect yourself
-against these cases and use a `?` (like in `?HTMLButtonElement`) to protect
-yourself from bugs.
+One notable difference between `useRef` and `createRef` is that `createRef` does not accept
+a default value. It will initialize the ref with the value `null`. This is because
+DOM elements will not exist until the first render of `MyComponent` and so a `null` value
+must be used.
 
-[call your `ref` callback with null]: https://facebook.github.io/react/docs/refs-and-the-dom.html#adding-a-ref-to-a-dom-element
+Again, note that the ref value is wrapped in an object with a `current` property.
