@@ -8,11 +8,6 @@
 module Ast = Flow_ast
 module LocMap = Loc_collections.LocMap
 
-type shorthandKind =
-  | Obj
-  | Import
-  | Export
-
 let get_rename_order name new_name ref_kind =
   match ref_kind with
   | FindRefsTypes.PropertyDefinition

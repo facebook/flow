@@ -5,14 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type shorthandKind =
-  | Obj
-  | Import
-  | Export
-
 (**
-Given a list of property locations, creates a map from each of those locations to the property kind.
-If the property is not a shorthand or named import, then the property will not be added to the map
+Renames the target refs with the `new_name`
 *)
 val rename :
   targets:FindRefsTypes.ref_kind Loc_collections.LocMap.t ->
