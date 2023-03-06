@@ -2879,7 +2879,10 @@ module AConstraint = struct
     | Annot_ImportTypeT of Reason.reason * string
     | Annot_ImportTypeofT of Reason.reason * string
     | Annot_ImportDefaultT of Reason.t * TypeTerm.import_kind * (string * string) * bool
-    | Annot_CJSRequireT of Reason.t * bool
+    | Annot_CJSRequireT of {
+        reason: Reason.t;
+        is_strict: bool;
+      }
     (* Exports *)
     | Annot_CJSExtractNamedExportsT of Reason.t * (Reason.t * TypeTerm.exporttypes * bool)
     | Annot_ExportNamedT of
@@ -3013,7 +3016,7 @@ module AConstraint = struct
     | Annot_SpecializeT (_, r, _, _)
     | Annot_ThisSpecializeT (r, _)
     | Annot_UseT_TypeT r
-    | Annot_CJSRequireT (r, _)
+    | Annot_CJSRequireT { reason = r; _ }
     | Annot_ImportTypeT (r, _)
     | Annot_ImportTypeofT (r, _)
     | Annot_ImportNamedT (r, _, _, _, _)

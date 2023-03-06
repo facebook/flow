@@ -639,7 +639,7 @@ module rec ConsGen : S = struct
     (******************)
     (* Module imports *)
     (******************)
-    | (ModuleT m, Annot_CJSRequireT (reason, is_strict)) ->
+    | (ModuleT m, Annot_CJSRequireT { reason; is_strict }) ->
       CJSRequireTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
     | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
       ImportModuleNsTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
@@ -651,7 +651,8 @@ module rec ConsGen : S = struct
         dummy_trace
         (reason, import_kind, export_name, module_name, is_strict)
         m
-    | (AnyT (lreason, src), (Annot_CJSRequireT (reason, _) | Annot_ImportModuleNsT (reason, _))) ->
+    | (AnyT (lreason, src), (Annot_CJSRequireT { reason; _ } | Annot_ImportModuleNsT (reason, _)))
+      ->
       Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
       AnyT.why src reason
     | (AnyT (lreason, src), Annot_ImportDefaultT (reason, import_kind, _, _)) ->
@@ -1235,7 +1236,7 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  and cjs_require cx t reason is_strict = elab_t cx t (Annot_CJSRequireT (reason, is_strict))
+  and cjs_require cx t reason is_strict = elab_t cx t (Annot_CJSRequireT { reason; is_strict })
 
   and export_named cx reason kind named t = elab_t cx t (Annot_ExportNamedT (reason, named, kind))
 
