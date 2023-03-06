@@ -480,6 +480,16 @@ module Statements = struct
 
   let named_import_specifier ?kind ?local remote = { ImportDeclaration.kind; local; remote }
 
+  let named_import_declaration ?loc ?comments import_kind source specifiers =
+    let default = None in
+    import_declaration
+      ?loc
+      ?comments
+      import_kind
+      source
+      default
+      (Some (ImportDeclaration.ImportNamedSpecifiers specifiers))
+
   let if_ ?(loc = Loc.none) ?comments test consequent alternate =
     (loc, If { If.test; consequent; alternate; comments })
 
