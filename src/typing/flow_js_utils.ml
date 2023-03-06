@@ -1242,7 +1242,8 @@ end
 
 module CJSRequireT_kit (F : Import_export_helper_sig) = struct
   (* require('SomeModule') *)
-  let on_ModuleT cx trace (reason, is_strict) (module_reason, exports, imported_is_strict) =
+  let on_ModuleT
+      cx trace (reason, is_strict, legacy_interop) (module_reason, exports, imported_is_strict) =
     check_nonstrict_import cx trace is_strict imported_is_strict reason;
     let cjs_exports =
       match exports.cjs_export with
@@ -1251,6 +1252,11 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
            we create below for non-CommonJS exports *)
         F.reposition ~trace cx (aloc_of_reason reason) t
       | None ->
+        (* Use default export if option is enabled and module is not lib *)
+        let automatic_require_default =
+          (legacy_interop || Context.automatic_require_default cx)
+          && not (is_lib_reason_def module_reason)
+        in
         let exports_tmap = Context.find_exports cx exports.exports_tmap in
         (* Convert ES module's named exports to an object *)
         let mk_exports_object () =
@@ -1260,8 +1266,7 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
           in
           Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
         in
-        (* Use default export if option is enabled and module is not lib *)
-        if Context.automatic_require_default cx && not (is_lib_reason_def module_reason) then
+        if automatic_require_default then
           match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
           | Some (_, default_t) -> default_t
           | _ -> mk_exports_object ()

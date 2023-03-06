@@ -19,6 +19,7 @@ let run ctxt expected name content =
       parse_use_strict = true;
       parse_prevent_munge = false;
       parse_module_ref_prefix = None;
+      parse_module_ref_prefix_LEGACY_INTEROP = None;
       parse_facebook_fbt = None;
       (* following options unused in classic mode *)
       parse_suppress_types = SSet.empty;

@@ -31,6 +31,7 @@ type options = {
   max_literal_len: int;
   exact_by_default: bool;
   module_ref_prefix: string option;
+  module_ref_prefix_LEGACY_INTEROP: string option;
   enable_enums: bool;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
@@ -77,6 +78,7 @@ type 'loc parsed =
   | ModuleRef of {
       loc: 'loc loc_node;
       mref: module_ref_node;
+      legacy_interop: bool;
     }
 
 and 'loc tyname =
@@ -2334,11 +2336,15 @@ let setter_def opts scope tbls xs id_loc f =
   | _ -> failwith "unexpected setter"
 
 let string_literal opts tbls loc s =
-  match opts.module_ref_prefix with
-  | Some prefix when String.starts_with ~prefix s ->
+  match (opts.module_ref_prefix, opts.module_ref_prefix_LEGACY_INTEROP) with
+  | (Some prefix, _) when String.starts_with ~prefix s ->
     let name = String_utils.lstrip s prefix in
     let mref = push_module_ref tbls name in
-    ModuleRef { loc; mref }
+    ModuleRef { loc; mref; legacy_interop = false }
+  | (_, Some prefix) when String.starts_with ~prefix s ->
+    let name = String_utils.lstrip s prefix in
+    let mref = push_module_ref tbls name in
+    ModuleRef { loc; mref; legacy_interop = true }
   | _ ->
     if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
       Value (StringLit (loc, s))

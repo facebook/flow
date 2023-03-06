@@ -57,6 +57,7 @@ let sig_opts =
     max_literal_len = 100;
     exact_by_default = true;
     module_ref_prefix = None;
+    module_ref_prefix_LEGACY_INTEROP = None;
     enable_enums = true;
     enable_relay_integration = false;
     relay_integration_module_prefix = None;

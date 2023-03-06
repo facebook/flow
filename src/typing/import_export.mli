@@ -7,7 +7,7 @@
 
 val mk_module_t : Context.t -> Reason.t -> ALoc.t -> Type.t
 
-val require : Context.t -> ALoc.t * string -> ALoc.t -> Type.t
+val require : Context.t -> ALoc.t * string -> ALoc.t -> legacy_interop:bool -> Type.t
 
 val import : Context.t -> ALoc.t * string -> Type.tvar
 

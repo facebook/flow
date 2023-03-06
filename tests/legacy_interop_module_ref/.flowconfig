@@ -1,0 +1,7 @@
+[options]
+all=true
+exact_by_default=true
+
+module.system=haste
+module.system.haste.module_ref_prefix=a#
+module.system.haste.module_ref_prefix_LEGACY_INTEROP=b#

@@ -46,7 +46,7 @@ let rec mark_parsed = function
     mark_op op
   | P.Require { loc; mref }
   | P.ImportDynamic { loc; mref }
-  | P.ModuleRef { loc; mref } ->
+  | P.ModuleRef { loc; mref; legacy_interop = _ } ->
     mark_loc loc;
     mark_mref mref
 

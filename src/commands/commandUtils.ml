@@ -1399,6 +1399,8 @@ let make_options
       || FlowConfig.include_warnings flowconfig;
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
+    opt_haste_module_ref_prefix_LEGACY_INTEROP =
+      FlowConfig.haste_module_ref_prefix_LEGACY_INTEROP flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
     opt_haste_paths_excludes =
       Base.List.map

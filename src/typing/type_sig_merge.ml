@@ -199,10 +199,10 @@ let add_name_field reason =
   in
   SMap.update "name" f
 
-let require file loc index =
+let require file loc index ~legacy_interop =
   let (mref, mk_module_t) = Module_refs.get file.dependencies index in
   let reason = Reason.(mk_reason (RCommonJSExports mref) loc) in
-  ConsGen.cjs_require file.cx (mk_module_t loc) reason false
+  ConsGen.cjs_require file.cx (mk_module_t loc) reason false legacy_interop
 
 let import file reason id_loc index kind ~remote ~local =
   let (mref, mk_module_t) = Module_refs.get file.dependencies index in
@@ -450,15 +450,15 @@ let rec merge tps file = function
     let t = merge tps file t in
     let op = merge_op tps file op in
     eval file loc t op
-  | Pack.Require { loc; index } -> require file loc index
+  | Pack.Require { loc; index } -> require file loc index ~legacy_interop:false
   | Pack.ImportDynamic { loc; index } ->
     let (mref, _) = Module_refs.get file.dependencies index in
     let ns_reason = Reason.(mk_reason (RModule (OrdinaryName mref)) loc) in
     let ns_t = import_ns file ns_reason loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
     Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "Promise") [ns_t]
-  | Pack.ModuleRef { loc; index } ->
-    let t = require file loc index in
+  | Pack.ModuleRef { loc; index; legacy_interop } ->
+    let t = require file loc index ~legacy_interop in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
     Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "$Flow$ModuleRef") [t]
 
@@ -708,7 +708,7 @@ and merge_annot tps file = function
     let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
     let m_name = Reason.internal_module_name ref in
     let module_t = Flow_js_utils.lookup_builtin_strict file.cx m_name reason in
-    ConsGen.cjs_require file.cx module_t reason false
+    ConsGen.cjs_require file.cx module_t reason false false
   | Call { loc; fn; args } ->
     let reason = Reason.(mk_reason RFunctionCallType loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in

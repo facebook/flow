@@ -239,7 +239,8 @@ and mod_reason_of_use_t f = function
     CallT { use_op; reason = f reason; call_action; return_hint }
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
   | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
-  | CJSRequireT { reason; t_out; is_strict } -> CJSRequireT { reason = f reason; t_out; is_strict }
+  | CJSRequireT { reason; t_out; is_strict; legacy_interop } ->
+    CJSRequireT { reason = f reason; t_out; is_strict; legacy_interop }
   | ComparatorT ({ reason; _ } as x) -> ComparatorT { x with reason = f reason }
   | ConstructorT { use_op; reason; targs; args; tout; return_hint } ->
     ConstructorT { use_op; reason = f reason; targs; args; tout; return_hint }

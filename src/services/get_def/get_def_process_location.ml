@@ -44,6 +44,7 @@ let annot_of_jsx_name =
 class ['M, 'T] searcher
   ~(is_legit_require : 'T -> bool)
   ~(module_ref_prefix : string option)
+  ~(module_ref_prefix_LEGACY_INTEROP : string option)
   ~(covers_target : 'M -> bool)
   ~(loc_of_annot : 'T -> 'M) =
   let annot_covers_target annot = covers_target (loc_of_annot annot) in
@@ -254,7 +255,7 @@ class ['M, 'T] searcher
       super#t_pattern_identifier ?kind (annot, name)
 
     method! expression (annot, expr) =
-      match (expr, module_ref_prefix) with
+      match (expr, module_ref_prefix, module_ref_prefix_LEGACY_INTEROP) with
       | ( Flow_ast.Expression.(
             Call
               {
@@ -274,12 +275,18 @@ class ['M, 'T] searcher
                   );
                 _;
               }),
+          _,
           _
         )
         when annot_covers_target annot && is_legit_require source_annot ->
         let source_loc = loc_of_annot source_annot in
         this#request (Get_def_request.Require (source_loc, module_name))
-      | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, Some prefix)
+      | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, Some prefix, _)
+        when annot_covers_target annot && Base.String.is_prefix str ~prefix ->
+        let loc = loc_of_annot annot in
+        let mref = Base.String.chop_prefix_exn str ~prefix in
+        this#request (Get_def_request.Require (loc, mref))
+      | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, _, Some prefix)
         when annot_covers_target annot && Base.String.is_prefix str ~prefix ->
         let loc = loc_of_annot annot in
         let mref = Base.String.chop_prefix_exn str ~prefix in
@@ -303,18 +310,45 @@ class ['M, 'T] searcher
       super#object_property prop
   end
 
-let process_location ~loc_of_annot ~ast ~is_legit_require ~module_ref_prefix ~covers_target =
-  let searcher = new searcher ~loc_of_annot ~is_legit_require ~module_ref_prefix ~covers_target in
+let process_location
+    ~loc_of_annot
+    ~ast
+    ~is_legit_require
+    ~module_ref_prefix
+    ~module_ref_prefix_LEGACY_INTEROP
+    ~covers_target =
+  let searcher =
+    new searcher
+      ~loc_of_annot
+      ~is_legit_require
+      ~module_ref_prefix
+      ~module_ref_prefix_LEGACY_INTEROP
+      ~covers_target
+  in
   (try ignore (searcher#program ast) with
   | Found -> ());
   searcher#found_loc
 
-let process_location_in_ast ~ast ~is_legit_require ~module_ref_prefix loc =
+let process_location_in_ast
+    ~ast ~is_legit_require ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP loc =
   let loc_of_annot loc = loc in
   let covers_target test_loc = Reason.in_range loc test_loc in
-  process_location ~loc_of_annot ~is_legit_require ~ast ~module_ref_prefix ~covers_target
+  process_location
+    ~loc_of_annot
+    ~is_legit_require
+    ~ast
+    ~module_ref_prefix
+    ~module_ref_prefix_LEGACY_INTEROP
+    ~covers_target
 
-let process_location_in_typed_ast ~typed_ast ~is_legit_require ~module_ref_prefix loc =
+let process_location_in_typed_ast
+    ~typed_ast ~is_legit_require ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP loc =
   let loc_of_annot (loc, _) = loc in
   let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
-  process_location ~loc_of_annot ~is_legit_require ~ast:typed_ast ~module_ref_prefix ~covers_target
+  process_location
+    ~loc_of_annot
+    ~is_legit_require
+    ~ast:typed_ast
+    ~module_ref_prefix
+    ~module_ref_prefix_LEGACY_INTEROP
+    ~covers_target

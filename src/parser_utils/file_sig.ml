@@ -23,6 +23,7 @@ struct
 
   and options = {
     module_ref_prefix: string option;
+    module_ref_prefix_LEGACY_INTEROP: string option;
     enable_enums: bool;
     enable_relay_integration: bool;
     relay_integration_module_prefix: string option;
@@ -87,6 +88,7 @@ struct
   let default_opts =
     {
       module_ref_prefix = None;
+      module_ref_prefix_LEGACY_INTEROP = None;
       enable_relay_integration = false;
       enable_enums = false;
       relay_integration_module_prefix = None;
@@ -745,10 +747,10 @@ struct
 
       method private handle_literal loc lit =
         let open Ast.Literal in
-        match opts.module_ref_prefix with
-        | Some prefix -> begin
-          match lit with
-          | String s when String.starts_with ~prefix s ->
+        match lit with
+        | String s ->
+          (match (opts.module_ref_prefix, opts.module_ref_prefix_LEGACY_INTEROP) with
+          | (Some prefix, _) when String.starts_with ~prefix s ->
             this#add_require
               (Require
                  {
@@ -757,9 +759,17 @@ struct
                    bindings = None;
                  }
               )
-          | _ -> ()
-        end
-        | None -> ()
+          | (_, Some prefix) when String.starts_with ~prefix s ->
+            this#add_require
+              (Require
+                 {
+                   source = (loc, String_utils.lstrip s prefix);
+                   require_loc = loc;
+                   bindings = None;
+                 }
+              )
+          | _ -> ())
+        | _ -> ()
 
       method! declare_module loc (m : (L.t, L.t) Ast.Statement.DeclareModule.t) =
         let name =

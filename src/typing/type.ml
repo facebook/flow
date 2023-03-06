@@ -690,6 +690,7 @@ module rec TypeTerm : sig
         reason: reason;
         t_out: t;
         is_strict: bool;
+        legacy_interop: bool;
       }
     | ImportModuleNsT of {
         reason: reason;
@@ -2882,6 +2883,7 @@ module AConstraint = struct
     | Annot_CJSRequireT of {
         reason: Reason.t;
         is_strict: bool;
+        legacy_interop: bool;
       }
     (* Exports *)
     | Annot_CJSExtractNamedExportsT of Reason.t * (Reason.t * TypeTerm.exporttypes * bool)

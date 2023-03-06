@@ -189,6 +189,7 @@ let sig_options
     ?(max_literal_len = 100)
     ?(exact_by_default = false)
     ?module_ref_prefix
+    ?module_ref_prefix_LEGACY_INTEROP
     ?(enable_enums = true)
     ?(enable_relay_integration = false)
     ?relay_integration_module_prefix
@@ -202,6 +203,7 @@ let sig_options
     max_literal_len;
     exact_by_default;
     module_ref_prefix;
+    module_ref_prefix_LEGACY_INTEROP;
     enable_enums;
     enable_relay_integration;
     relay_integration_module_prefix;
@@ -219,6 +221,7 @@ let print_sig
     ?exact_by_default
     ?max_literal_len
     ?module_ref_prefix
+    ?module_ref_prefix_LEGACY_INTEROP
     ?enable_enums
     ?enable_relay_integration
     ?relay_integration_module_prefix
@@ -233,6 +236,7 @@ let print_sig
       ?exact_by_default
       ?max_literal_len
       ?module_ref_prefix
+      ?module_ref_prefix_LEGACY_INTEROP
       ?enable_enums
       ?enable_relay_integration
       ?relay_integration_module_prefix
@@ -4669,7 +4673,8 @@ let%expect_test "module_ref_prefix" =
     module.exports = "m#foo";
   |};
   [%expect {|
-    CJSModule {type_exports = [||]; exports = (Some ModuleRef {loc = [1:17-24]; index = 0});
+    CJSModule {type_exports = [||];
+      exports = (Some ModuleRef {loc = [1:17-24]; index = 0; legacy_interop = false});
       info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
 
     Module refs:

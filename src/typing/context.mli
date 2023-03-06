@@ -66,6 +66,7 @@ type metadata = {
   facebook_fbt: string option;
   facebook_module_interop: bool;
   haste_module_ref_prefix: string option;
+  haste_module_ref_prefix_LEGACY_INTEROP: string option;
   ignore_non_literal_requires: bool;
   array_literal_providers: bool;
   array_literal_providers_includes: string list;
@@ -239,6 +240,8 @@ val facebook_fbt : t -> string option
 val facebook_module_interop : t -> bool
 
 val haste_module_ref_prefix : t -> string option
+
+val haste_module_ref_prefix_LEGACY_INTEROP : t -> string option
 
 val should_ignore_non_literal_requires : t -> bool
 

@@ -2748,7 +2748,7 @@ module Make
       let module_prefix = Context.relay_integration_module_prefix cx in
       let t =
         match Graphql.extract_module_name ~module_prefix quasi with
-        | Ok module_name -> Import_export.require cx (loc, module_name) loc
+        | Ok module_name -> Import_export.require cx (loc, module_name) loc ~legacy_interop:false
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
           let reason = mk_reason (RCustom "graphql tag") loc in
@@ -3107,7 +3107,7 @@ module Make
                 }
               )
             ) ->
-            ( Import_export.require cx (source_loc, module_name) loc,
+            ( Import_export.require cx (source_loc, module_name) loc ~legacy_interop:false,
               (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments })
             )
           | ( None,
@@ -3139,7 +3139,7 @@ module Make
                 }
               )
             ) ->
-            ( Import_export.require cx (source_loc, module_name) loc,
+            ( Import_export.require cx (source_loc, module_name) loc ~legacy_interop:false,
               (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments })
             )
           | (Some _, arguments) ->
@@ -4403,10 +4403,19 @@ module Make
       let open Ast.Literal in
       match lit.Ast.Literal.value with
       | String s -> begin
-        match Context.haste_module_ref_prefix cx with
-        | Some prefix when String.starts_with ~prefix s ->
+        let haste_module_ref_prefix = Context.haste_module_ref_prefix cx in
+        let haste_module_ref_prefix_LEGACY_INTEROP =
+          Context.haste_module_ref_prefix_LEGACY_INTEROP cx
+        in
+        match (haste_module_ref_prefix, haste_module_ref_prefix_LEGACY_INTEROP) with
+        | (Some prefix, _) when String.starts_with ~prefix s ->
           let m = String_utils.lstrip s prefix in
-          let t = Import_export.require cx (loc, m) loc in
+          let t = Import_export.require cx (loc, m) loc ~legacy_interop:false in
+          let reason = mk_reason (RCustom "module reference") loc in
+          Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [t]
+        | (_, Some prefix) when String.starts_with ~prefix s ->
+          let m = String_utils.lstrip s prefix in
+          let t = Import_export.require cx (loc, m) loc ~legacy_interop:true in
           let reason = mk_reason (RCustom "module reference") loc in
           Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [t]
         | _ ->

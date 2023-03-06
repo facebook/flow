@@ -86,6 +86,7 @@ type parse_options = {
   parse_use_strict: bool;
   parse_prevent_munge: bool;
   parse_module_ref_prefix: string option;
+  parse_module_ref_prefix_LEGACY_INTEROP: string option;
   parse_facebook_fbt: string option;
   parse_suppress_types: SSet.t;
   parse_max_literal_len: int;
@@ -149,6 +150,7 @@ let do_parse ~parse_options ~info content file =
     parse_use_strict = use_strict;
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
+    parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
     parse_facebook_fbt = facebook_fbt;
     parse_suppress_types = suppress_types;
     parse_max_literal_len = max_literal_len;
@@ -201,6 +203,7 @@ let do_parse ~parse_options ~info content file =
         let file_sig_opts =
           {
             File_sig.With_Loc.module_ref_prefix;
+            module_ref_prefix_LEGACY_INTEROP;
             enable_enums;
             enable_relay_integration;
             relay_integration_module_prefix;
@@ -223,6 +226,7 @@ let do_parse ~parse_options ~info content file =
               max_literal_len;
               exact_by_default;
               module_ref_prefix;
+              module_ref_prefix_LEGACY_INTEROP;
               enable_enums;
               enable_relay_integration;
               relay_integration_module_prefix;
@@ -588,6 +592,7 @@ let make_parse_options_internal ?(types_mode = TypesAllowed) ?use_strict ~docblo
     | None -> Options.modules_are_use_strict options
   in
   let module_ref_prefix = Options.haste_module_ref_prefix options in
+  let module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options in
   let facebook_fbt = Options.facebook_fbt options in
   let prevent_munge =
     let default = not (Options.should_munge_underscores options) in
@@ -600,6 +605,7 @@ let make_parse_options_internal ?(types_mode = TypesAllowed) ?use_strict ~docblo
     parse_use_strict = use_strict;
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
+    parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
     parse_facebook_fbt = facebook_fbt;
     parse_suppress_types = Options.suppress_types options;
     parse_max_literal_len = Options.max_literal_length options;

@@ -132,6 +132,7 @@ type 'loc packed =
   | ModuleRef of {
       loc: 'loc;
       index: Module_refs.index;
+      legacy_interop: bool;
     }
 
 and 'loc packed_value = ('loc, 'loc packed) value
@@ -258,10 +259,10 @@ let rec pack_parsed cx = function
     let loc = pack_loc loc in
     let index = Module_refs.index_exn mref in
     ImportDynamic { loc; index }
-  | P.ModuleRef { loc; mref } ->
+  | P.ModuleRef { loc; mref; legacy_interop } ->
     let loc = pack_loc loc in
     let index = Module_refs.index_exn mref in
-    ModuleRef { loc; index }
+    ModuleRef { loc; index; legacy_interop }
 
 and pack_tyapp cx loc name targs =
   let loc = pack_loc loc in

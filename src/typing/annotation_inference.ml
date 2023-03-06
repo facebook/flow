@@ -98,7 +98,7 @@ module type S = sig
 
   val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
 
-  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> Type.t
+  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
 
   val export_named :
     Context.t ->
@@ -639,8 +639,8 @@ module rec ConsGen : S = struct
     (******************)
     (* Module imports *)
     (******************)
-    | (ModuleT m, Annot_CJSRequireT { reason; is_strict }) ->
-      CJSRequireTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
+    | (ModuleT m, Annot_CJSRequireT { reason; is_strict; legacy_interop }) ->
+      CJSRequireTKit.on_ModuleT cx dummy_trace (reason, is_strict, legacy_interop) m
     | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
       ImportModuleNsTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
     | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
@@ -1236,7 +1236,8 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  and cjs_require cx t reason is_strict = elab_t cx t (Annot_CJSRequireT { reason; is_strict })
+  and cjs_require cx t reason is_strict legacy_interop =
+    elab_t cx t (Annot_CJSRequireT { reason; is_strict; legacy_interop })
 
   and export_named cx reason kind named t = elab_t cx t (Annot_ExportNamedT (reason, named, kind))
 

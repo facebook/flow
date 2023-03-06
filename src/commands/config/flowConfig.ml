@@ -80,6 +80,7 @@ module Opts = struct
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
     generate_tests: bool;
     haste_module_ref_prefix: string option;
+    haste_module_ref_prefix_LEGACY_INTEROP: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
@@ -206,6 +207,7 @@ module Opts = struct
       gc_worker_window_size = None;
       generate_tests = false;
       haste_module_ref_prefix = None;
+      haste_module_ref_prefix_LEGACY_INTEROP = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"];
@@ -504,6 +506,9 @@ module Opts = struct
 
   let haste_module_ref_prefix_parser =
     string (fun opts v -> Ok { opts with haste_module_ref_prefix = Some v })
+
+  let haste_module_ref_prefix_LEGACY_INTEROP_parser =
+    string (fun opts v -> Ok { opts with haste_module_ref_prefix_LEGACY_INTEROP = Some v })
 
   let haste_use_name_reducers_parser =
     boolean
@@ -821,6 +826,9 @@ module Opts = struct
       ("module.missing_module_generators", missing_module_generators_parser);
       ("module.system", module_system_parser);
       ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
+      ( "module.system.haste.module_ref_prefix_LEGACY_INTEROP",
+        haste_module_ref_prefix_LEGACY_INTEROP_parser
+      );
       ("module.system.haste.name_reducers", haste_name_reducers_parser);
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
@@ -1481,6 +1489,8 @@ let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
 let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
+
+let haste_module_ref_prefix_LEGACY_INTEROP c = c.options.Opts.haste_module_ref_prefix_LEGACY_INTEROP
 
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
 

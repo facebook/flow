@@ -36,6 +36,7 @@ let metadata =
     facebook_fbt = None;
     facebook_module_interop = false;
     haste_module_ref_prefix = None;
+    haste_module_ref_prefix_LEGACY_INTEROP = None;
     ignore_non_literal_requires = false;
     max_literal_length = 100;
     max_trace_depth = 0;

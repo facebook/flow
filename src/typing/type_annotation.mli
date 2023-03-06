@@ -12,7 +12,7 @@ module type C = sig
 
   val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
-  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> Type.t
+  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
 
   val get_prop :
     Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t

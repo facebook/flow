@@ -863,8 +863,8 @@ struct
         (******************)
         (* Module imports *)
         (******************)
-        | (ModuleT m, CJSRequireT { reason; t_out; is_strict }) ->
-          CJSRequireTKit.on_ModuleT cx trace (reason, is_strict) m t_out
+        | (ModuleT m, CJSRequireT { reason; t_out; is_strict; legacy_interop }) ->
+          CJSRequireTKit.on_ModuleT cx trace (reason, is_strict, legacy_interop) m t_out
         | (ModuleT m, ImportModuleNsT { reason; t; is_strict; allow_untyped = _ }) ->
           ImportModuleNsTKit.on_ModuleT cx trace (reason, is_strict) m t
         | (ModuleT m, ImportDefaultT (reason, import_kind, local, t, is_strict)) ->

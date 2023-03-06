@@ -21,7 +21,7 @@ module type C = sig
 
   val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
-  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> Type.t
+  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
 
   val get_prop :
     Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
@@ -50,9 +50,9 @@ module FlowJS : C = struct
   let mixin cx reason i =
     Tvar.mk_where cx reason (fun tout -> Flow.flow cx (i, Type.MixinT (reason, tout)))
 
-  let cjs_require cx remote_module_t reason is_strict =
+  let cjs_require cx remote_module_t reason is_strict legacy_interop =
     Tvar.mk_where cx reason (fun t_out ->
-        Flow.flow cx (remote_module_t, CJSRequireT { reason; t_out; is_strict })
+        Flow.flow cx (remote_module_t, CJSRequireT { reason; t_out; is_strict; legacy_interop })
     )
 
   let obj_test_proto cx reason t =
@@ -796,7 +796,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 let remote_module_t = ConsGen.get_builtin cx (internal_module_name value) reason in
                 let str_t = mk_singleton_string cx str_loc value in
                 reconstruct_ast
-                  (ConsGen.cjs_require cx remote_module_t reason (Context.is_strict cx))
+                  (ConsGen.cjs_require cx remote_module_t reason (Context.is_strict cx) false)
                   (Some
                      ( targs_loc,
                        {

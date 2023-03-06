@@ -70,6 +70,7 @@ type parse_options = {
   parse_use_strict: bool;
   parse_prevent_munge: bool;
   parse_module_ref_prefix: string option;
+  parse_module_ref_prefix_LEGACY_INTEROP: string option;
   parse_facebook_fbt: string option;
   parse_suppress_types: SSet.t;
   parse_max_literal_len: int;
