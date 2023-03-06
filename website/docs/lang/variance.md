@@ -3,8 +3,8 @@ title: Type Variance
 slug: /lang/variance
 ---
 
-Variance is a topic that comes up fairly often in type systems and can be a bit
-confusing the first time you hear it. Let's walk through each form of variance.
+Variance is a topic that comes up fairly often in type systems. It is used to determine
+how type parameters behave with respect to subtyping.
 
 First we'll setup a couple of classes that extend one another.
 
@@ -14,162 +14,131 @@ class City extends Noun {}
 class SanFrancisco extends City {}
 ```
 
-We'll use these classes to write a method that has each kind of variance.
+We saw in the section on [generic types](../../types/generics/#toc-variance-sigils)
+that it is possible to
+use variance sigils to describe when a type parameter is used in an output position,
+when it is used in an input position, and when it is used in either one.
 
-> **Note:** The `*variantOf` types below are not a part of Flow, they are being
-> used to explain variance.
-
----
-
-## Invariance {#toc-invariance}
-
-```js
-function method(value: InvariantOf<City>) {...}
-
-method(new Noun());         // error...
-method(new City());         // okay
-method(new SanFrancisco()); // error...
-```
-
-- Invariance _does not_ accept **supertypes**.
-- Invariance _does not_ accept **subtypes**.
+Here we'll dive deeper into each one of these cases.
 
 ## Covariance {#toc-covariance}
 
+Consider for example the type
 ```js
-function method(value: CovariantOf<City>) {...}
+type CovariantOf<X> = {
+  +prop: X;
+  getter(): X;
+}
+```
+Here, `X` appears strictly in *output* positions: it is used to read out information
+from objects `o` of type `CovariantOf<X>`, either through property accesses `o.prop`,
+or through calls to `o.getter()`.
 
-method(new Noun());         // error...
-method(new City());         // okay
-method(new SanFrancisco()); // okay
+Notably, there is no way to input data through the reference to the object `o`,
+given that `prop` is a readonly property.
+
+When these conditions hold, we can use the sigil `+` to annotate `X` in the definition
+of `CovariantOf`:
+```js
+type CovariantOf<+X> = {
+  +prop: X;
+  getter(): X;
+}
 ```
 
-- Covariance _does not_ accept **supertypes**.
-- Covariance _does_ accept **subtypes**.
+These conditions have important implications on the way that we can treat an object
+of type `CovariantOf<T>` with respect to subtyping. As a reminder, subtyping rules
+help us answer the question: "given some context that expects values of type
+`T`, is it safe to pass in values of type `S`?" If this is the case, then `S` is a
+subtype of `T`.
+
+Using our `CovariantOf` definition, and given that `City` is a subtype of `Noun`, it is
+also the case that `CovariantOf<City>` is a subtype of `CovariantOf<Noun>`. Indeed
+* it is safe to *read* a property `prop` of type `City` when a property
+of type `Noun` is expected, and
+* it is safe to *return* values of type `City` when calling `getter()`, when
+values of type `Noun` are expected.
+
+Combining these two, it will always be safe to use `CovariantOf<City>` whenever a
+`CovariantOf<Noun>` is expected.
+
+A commonly used example where covariance is used is [`$ReadOnlyArray<T>`](../../types/arrays/#toc-readonlyarray).
+Just like with the `prop` property, one cannot use a `$ReadOnlyArray` reference to write data
+to an array. This allows more flexible subtyping rules: Flow only needs to prove that
+`S` is a subtype of `T` to determine that `$ReadOnlyArray<S>` is also a subtype
+of `$ReadOnlyArray<T>`.
+
+
+## Invariance {#toc-invariance}
+
+Let's see what happens if we try to relax the restrictions on the use of `X` and make,
+for example, `prop` be a read-write property. We arrive at the type definition
+```js
+type NonCovariantOf<X> = {
+  prop: X;
+  getter(): X;
+};
+```
+Let's also declare a variable `nonCovariantCity` of type `NonCovariantOf<City>`
+```js
+declare var nonCovariantCity: NonCovariantOf<City>;
+```
+Now, it is not safe to consider `nonCovariantCity` as an object of type `NonCovariantOf<Noun>`.
+Were we allowed to do this, we could have the following declaration:
+```js
+const nonCovariantNoun: NonCovariantOf<Noun> = nonCovariantCity;
+```
+This type permits the following assignment:
+```js
+nonCovariantNoun.prop = new Noun;
+```
+which would invalidate the original type for `nonCovariantCity` as it would now be storing
+a `Noun` in its `prop` field.
+
+
+What distinguishes `NonCovariantOf` from the `CovariantOf` definition is that type parameter `X` is used both
+in input and output positions, as it is being used to both read and write to
+property `prop`. Such a type parameter is called *invariant* and is the default case
+of variance, thus requiring no prepending sigil:
+```js
+type InvariantOf<X> = {
+  prop: X;
+  getter(): X;
+  setter(X): void;
+};
+```
+Assuming a variable
+```js
+declare var invariantCity: InvariantOf<City>;
+```
+it is *not* safe to use `invariantCity` in a context where:
+- an `InvariantOf<Noun>` is needed, because we should not be able to write a `Noun` to property
+`prop`.
+- an `InvariantOf<SanFrancisco>` is needed, because reading `prop` could return a `City` which
+may not be `SanFrancisco`.
+
+In orther words, `InvariantOf<City>` is neither a subtype of `InvariantOf<Noun>` nor
+a subtype of `InvariantOf<SanFrancisco>`.
+
 
 ## Contravariance {#toc-contravariance}
 
-```js
-function method(value: ContravariantOf<City>) {...}
-
-method(new Noun());         // okay
-method(new City());         // okay
-method(new SanFrancisco()); // error...
-```
-
-- Contravariance _does_ accept **supertypes**.
-- Contravariance _does not_ accept **subtypes**.
-
-## Bivariance {#toc-bivariance}
+When a type parameter is only used in *input* positions, we say that it is used in
+a *contravariant* way. This means that it only apears in positions through which
+we write data to the structure. We use the sigil `-` to describe this kind of type
+parameters:
 
 ```js
-function method(value: BivariantOf<City>) {...}
-method(new Noun());         // okay
-method(new City());         // okay
-method(new SanFrancisco()); // okay
+type ContravariantOf<-X> = {
+  -prop: X;
+  setter(X): void;
+};
 ```
+Common contravariant positions are write-only properties and "setter" functions.
 
-- Bivariance _does_ accept **supertypes**.
-- Bivariance _does_ accept **subtypes**.
-
----
-
-As a result of having weak dynamic typing, JavaScript doesn't have any of
-these, you can use any type at any time.
-
-## Variance in Classes {#toc-variance-in-classes}
-
-To get a sense of when and why the different kinds of variance matters, let's
-talk about methods of subclasses and how they get type checked.
-
-We'll quickly set up our `BaseClass` which will define just one method that
-accepts an input value with the type `City` and a returned output also with
-the type `City`.
-
-```js
-class BaseClass {
-  method(value: City): City { ... }
-}
-```
-
-Now, let's walk through different definitions of `method()` in a couple
-different _subclasses_.
-
----
-
-### Equally specific inputs and outputs — Good {#toc-equally-specific-inputs-and-outputs-good}
-
-To start, we can define a SubClass that extends our BaseClass. Here you can see
-that the value and the return type are both City just like in BaseClass:
-
-```js
-class SubClass extends BaseClass {
-  method(value: City): City { ... }
-}
-```
-
-This is okay because if something else in your program is using `SubClass` as
-if it were a `BaseClass`, it would still be using a `City` and wouldn't cause
-any issues.
-
-### More specific outputs — Good {#toc-more-specific-outputs-good}
-
-Next, we'll have a different `SubClass` that returns a more specific type:
-
-```js
-class SubClass extends BaseClass {
-  method(value: City): SanFrancisco { ... }
-}
-```
-
-This is also okay because if something is using `SubClass` as if it were a
-`BaseClass` they would still have access to the same interface as before
-because `SanFrancisco` is just a `City` with a little more information.
-
-### Less specific outputs — Bad {#toc-less-specific-outputs-bad}
-
-Next, we'll have a different `SubClass` that returns a less specific type:
-
-```js
-class SubClass extends BaseClass {
-  method(value: City): Noun { ... } // ERROR!!
-}
-```
-
-In Flow this will cause an error because if you are expecting to get a return
-value of a `City`, you may be using something that doesn't exist on `Noun`,
-which could easily cause an error at runtime.
-
-### Less specific inputs — Good {#toc-less-specific-inputs-good}
-
-Next, we'll have another SubClass that accepts a value of a less specific type.
-
-```js
-class SubClass extends BaseClass {
-  method(value: Noun): City { ... }
-}
-```
-
-This is perfectly fine because if we pass in a more specific type we'll still
-have all the information we need to be compatible with `Noun`.
-
-### More specific inputs — Bad {#toc-more-specific-inputs-bad}
-
-Finally, we'll have yet another `SubClass` that accepts a value of a more
-specific type.
-
-```js
-class SubClass extends BaseClass {
-  method(value: SanFrancisco): City { ... } // ERROR!!
-}
-```
-
-This is an error in Flow because if you are expecting a `SanFrancisco` and you
-get a `City` you could be using something that only exists on `SanFrancisco`
-which would cause an error at runtime.
-
----
-
-All of this is why Flow has contravariant inputs (accepts less specific types
-to be passed in), and covariant outputs (allows more specific types to be
-returned).
+An object of type `ContravariantOf<City>` can be used whenever an object of type
+`ContravariantOf<SanFrancisco>` is expected, but not when a `ContravariantOf<Noun>` is.
+In other words, `ContravariantOf<City>` is a subtype of `ContravariantOf<SanFrancisco>`, but not
+`ContravariantOf<Noun>`.
+This is because it is fine to write `SanFrancisco` into a property that can have any `City` written
+to, but it is not safe to write just any `Noun`.
