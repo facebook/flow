@@ -19,29 +19,69 @@ static and runtime checks.
 
 [`babel-plugin-react-flow-props-to-prop-types`]: https://github.com/thejameskyle/babel-plugin-react-flow-props-to-prop-types
 
-## Class Components {#toc-class-components}
+## Functional Components {#toc-functional-components}
 
-Before we show how to type a React class component with Flow, let us first show
-how you would write a React class component *without* Flow but with React's prop
-types. You would extend `React.Component` and add a static `propTypes` property.
+Adding Flow types to a functional component is the same as [adding types to a
+standard function]. Just create an object type for the props and Flow will
+ensure that the props passed to the component match up with what is expected.
 
-```js
-import React from 'react';
-import PropTypes from 'prop-types';
+[adding types to a standard function]: ../../types/functions/
 
-class MyComponent extends React.Component {
-  static propTypes = {
-    foo: PropTypes.number.isRequired,
-    bar: PropTypes.string,
-  };
+```js flow-check
+import * as React from 'react';
 
-  render() {
-    return <div>{this.props.bar}</div>;
-  }
+type Props = {
+  foo: number,
+  bar?: string,
+};
+
+function MyComponent(props: Props) {
+  props.doesNotExist; // Error! You did not define a `doesNotExist` prop.
+
+  return <div>{props.bar}</div>;
 }
+
+<MyComponent foo={42} />
 ```
 
-Now, let's Flowify the component we just wrote:
+> **Note:** We import `React` as a namespace here with
+> `import * as React from 'react'` instead of as a default with
+> `import React from 'react'`. When importing React as an ES module you may use
+> either style, but importing as a namespace gives you access to React's
+> [utility types](../types).
+
+
+### Adding Default Props to Functional Components {#toc-adding-default-props-to-functional-components}
+
+A nice pattern to add default props to functional components is to use
+[destructuring with default values][]. By destructuring the props in the
+function parameter, you can assign a value to any props that are not passed
+to the component (or passed with the value `undefined`).
+
+[destructuring with default values]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#default_value
+
+```js flow-check
+import * as React from 'react';
+
+type Props = {
+  foo?: number, // foo is optional to pass in.
+  bar: string, // bar is required.
+};
+
+function MyComponent({foo = 42, bar}: Props) {
+  // Flow knows that foo is not null or undefined
+  const baz = foo + 1;
+}
+
+// And we don't need to include foo.
+<MyComponent bar={"abc"} />;
+```
+
+## Class Components {#toc-class-components}
+
+To Flowify a class component, the type of the props can be passed as the first
+argument to the `React.Component` type. This will have the same effect as adding types
+to the `props` parameter of a function component.
 
 ```js flow-check
 import * as React from 'react';
@@ -62,25 +102,11 @@ class MyComponent extends React.Component<Props> {
 <MyComponent foo={42} />;
 ```
 
-We removed our dependency on `prop-types` and added a Flow object type named
-`Props` with the same shape as the prop types but using Flow's static type
-syntax. Then we passed our new `Props` type into `React.Component` as a type
-argument.
-
-Now if you try to use `<MyComponent>` with a string for `foo` instead of a
-number you will get an error.
-
 Now wherever we use `this.props` in our React component Flow will treat it as
 the `Props` type we defined.
 
 > **Note:** If you don't need to use the `Props` type again you could also
 > define it inline: `extends React.Component<{ foo: number, bar?: string }>`.
-
-> **Note:** We import `React` as a namespace here with
-> `import * as React from 'react'` instead of as a default with
-> `import React from 'react'`. When importing React as an ES module you may use
-> either style, but importing as a namespace gives you access to React's
-> [utility types](../types).
 
 `React.Component<Props, State>` is a [generic type][] that takes two type
 arguments. Props and state. The second type argument, `State`, is optional. By
@@ -91,7 +117,7 @@ default it is undefined so you can see in the example above we did not include
 
 ### Adding State {#toc-adding-state}
 
-To add a type for state to your React class component then create a new object
+To add a type for state to your React class component: create a new object
 type, in the example below we name it `State`, and pass it as the second type
 argument to `React.Component`.
 
@@ -133,11 +159,11 @@ you could also pass a partial state object to `setState()`.
 > **Note:** If you don't need to use the `State` type again you could also
 > define it inline: `extends React.Component<{}, { count: number }>`.
 
-### Using Default Props {#toc-using-default-props}
+### Using Default Props for Class Components {#toc-using-default-props-for-class-components}
 
 React supports the notion of `defaultProps` which you can think of as default
-function arguments. When you create an element and you did not include a prop
-with a default then React will substitute that prop with its corresponding
+function arguments. When you create an element and do not include a prop
+which has a default then React will substitute that prop with its corresponding
 value from `defaultProps`. Flow supports this notion as well. To type default
 props add a `static defaultProps` property to your class.
 
@@ -159,11 +185,11 @@ class MyComponent extends React.Component<Props> {
 <MyComponent bar={"abc"} />
 ```
 
-Flow will infer the type of your default props from `static defaultProps` so you
-don't have to add any type annotations to use default props.
-
 > **Note:** You don't need to make `foo` nullable in your `Props` type. Flow
 > will make sure that `foo` is optional if you have a default prop for `foo`.
+
+Flow will infer the type of your default props from `static defaultProps` so you
+don't have to add any type annotations to use default props.
 
 If you would like to add a type annotation to `defaultProps` you can define the
 type as
@@ -181,50 +207,10 @@ type Props = {
 ```
 This way you avoid duplicating the properties that happen to have a default value.
 
-## Stateless Functional Components {#toc-stateless-functional-components}
-
-In addition to classes, React also supports stateless functional components.
-You type these components like you would type a function:
-
-```js flow-check
-import * as React from 'react';
-
-type Props = {
-  foo: number,
-  bar?: string,
-};
-
-function MyComponent(props: Props) {
-  props.doesNotExist; // Error! You did not define a `doesNotExist` prop.
-
-  return <div>{props.bar}</div>;
-}
-
-<MyComponent foo={42} />
-```
-
-### Using Default Props for Functional Components {#toc-using-default-props-for-functional-components}
-
-React also supports default props on stateless functional components. Similarly
-to class components, default props for stateless functional components will
-work without any extra type annotations.
-
-```js flow-check
-import * as React from 'react';
-
-type Props = {
-  foo: number, // foo is required.
-};
-
-function MyComponent(props: Props) {}
-
-MyComponent.defaultProps = {
-  foo: 42, // ...but we have a default prop for foo.
-};
-
-// So we don't need to include foo.
-<MyComponent />;
-```
-
-> **Note:** You don't need to make `foo` nullable in your `Props` type. Flow
-> will make sure that `foo` is optional if you have a default prop for `foo`.
+> **Note:** You can also apply this format of default props to functional components
+> by adding a `defaultProps` property to a the component function. However, it is generally
+> simpler to use the destructuring pattern described above.
+> ```js flow-check
+> function MyComponent(props: {foo: number}) {}
+> MyComponent.defaultProps = {foo: 42};
+> ```
