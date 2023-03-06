@@ -545,8 +545,112 @@ module.exports = (suite(({addFile, flowCmd}) => [
          {
            "result": [
              {
+               "name": "async",
+               "type": ""
+             },
+             {
+               "name": "await",
+               "type": ""
+             },
+             {
+               "name": "break",
+               "type": ""
+             },
+             {
+               "name": "case",
+               "type": ""
+             },
+             {
+               "name": "catch",
+               "type": ""
+             },
+             {
+               "name": "class",
+               "type": ""
+             },
+             {
+               "name": "const",
+               "type": ""
+             },
+             {
+               "name": "continue",
+               "type": ""
+             },
+             {
+               "name": "debugger",
+               "type": ""
+             },
+             {
+               "name": "declare",
+               "type": ""
+             },
+             {
+               "name": "default",
+               "type": ""
+             },
+             {
+               "name": "delete",
+               "type": ""
+             },
+             {
+               "name": "do",
+               "type": ""
+             },
+             {
+               "name": "else",
+               "type": ""
+             },
+             {
+               "name": "enum",
+               "type": ""
+             },
+             {
+               "name": "export",
+               "type": ""
+             },
+             {
+               "name": "extends",
+               "type": ""
+             },
+             {
+               "name": "finally",
+               "type": ""
+             },
+             {
+               "name": "for",
+               "type": ""
+             },
+             {
+               "name": "function",
+               "type": ""
+             },
+             {
                "name": "idx",
                "type": "<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?IdxResult"
+             },
+             {
+               "name": "if",
+               "type": ""
+             },
+             {
+               "name": "implements",
+               "type": ""
+             },
+             {
+               "name": "import",
+               "type": ""
+             },
+             {
+               "name": "interface",
+               "type": ""
+             },
+             {
+               "name": "let",
+               "type": ""
+             },
+             {
+               "name": "new",
+               "type": ""
              },
              {
                "name": "objectAssign",
@@ -555,6 +659,58 @@ module.exports = (suite(({addFile, flowCmd}) => [
              {
                "name": "objectGetPrototypeOf",
                "type": "(o: any) => any"
+             },
+             {
+               "name": "opaque",
+               "type": ""
+             },
+             {
+               "name": "return",
+               "type": ""
+             },
+             {
+               "name": "static",
+               "type": ""
+             },
+             {
+               "name": "switch",
+               "type": ""
+             },
+             {
+               "name": "throw",
+               "type": ""
+             },
+             {
+               "name": "try",
+               "type": ""
+             },
+             {
+               "name": "type",
+               "type": ""
+             },
+             {
+               "name": "typeof",
+               "type": ""
+             },
+             {
+               "name": "var",
+               "type": ""
+             },
+             {
+               "name": "void",
+               "type": ""
+             },
+             {
+               "name": "void",
+               "type": ""
+             },
+             {
+               "name": "while",
+               "type": ""
+             },
+             {
+               "name": "yield",
+               "type": ""
              }
            ]
          }
@@ -617,8 +773,164 @@ module.exports = (suite(({addFile, flowCmd}) => [
         {
           "result": [
             {
+              "name": "async",
+              "type": ""
+            },
+            {
+              "name": "await",
+              "type": ""
+            },
+            {
+              "name": "break",
+              "type": ""
+            },
+            {
+              "name": "case",
+              "type": ""
+            },
+            {
+              "name": "catch",
+              "type": ""
+            },
+            {
+              "name": "class",
+              "type": ""
+            },
+            {
+              "name": "const",
+              "type": ""
+            },
+            {
+              "name": "continue",
+              "type": ""
+            },
+            {
+              "name": "debugger",
+              "type": ""
+            },
+            {
+              "name": "declare",
+              "type": ""
+            },
+            {
+              "name": "default",
+              "type": ""
+            },
+            {
+              "name": "delete",
+              "type": ""
+            },
+            {
+              "name": "do",
+              "type": ""
+            },
+            {
+              "name": "else",
+              "type": ""
+            },
+            {
+              "name": "enum",
+              "type": ""
+            },
+            {
+              "name": "export",
+              "type": ""
+            },
+            {
+              "name": "extends",
+              "type": ""
+            },
+            {
+              "name": "finally",
+              "type": ""
+            },
+            {
+              "name": "for",
+              "type": ""
+            },
+            {
+              "name": "function",
+              "type": ""
+            },
+            {
+              "name": "if",
+              "type": ""
+            },
+            {
+              "name": "implements",
+              "type": ""
+            },
+            {
+              "name": "import",
+              "type": ""
+            },
+            {
+              "name": "interface",
+              "type": ""
+            },
+            {
+              "name": "let",
+              "type": ""
+            },
+            {
+              "name": "new",
+              "type": ""
+            },
+            {
               "name": "obj",
               "type": "{|num: number, str: string|}"
+            },
+            {
+              "name": "opaque",
+              "type": ""
+            },
+            {
+              "name": "return",
+              "type": ""
+            },
+            {
+              "name": "static",
+              "type": ""
+            },
+            {
+              "name": "switch",
+              "type": ""
+            },
+            {
+              "name": "throw",
+              "type": ""
+            },
+            {
+              "name": "try",
+              "type": ""
+            },
+            {
+              "name": "type",
+              "type": ""
+            },
+            {
+              "name": "typeof",
+              "type": ""
+            },
+            {
+              "name": "var",
+              "type": ""
+            },
+            {
+              "name": "void",
+              "type": ""
+            },
+            {
+              "name": "void",
+              "type": ""
+            },
+            {
+              "name": "while",
+              "type": ""
+            },
+            {
+              "name": "yield",
+              "type": ""
             }
           ]
         }

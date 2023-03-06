@@ -33,10 +33,112 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
+                  label: 'function',
+                  kind: 14,
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 8,
+                      },
+                    },
+                    newText: 'function',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        token: 'fAUTO332',
+                        index: 0,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'function',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'finally',
+                  kind: 14,
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 8,
+                      },
+                    },
+                    newText: 'finally',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        token: 'fAUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'finally',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'for',
+                  kind: 14,
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 8,
+                      },
+                    },
+                    newText: 'for',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        token: 'fAUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'for',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'far',
                   kind: 6,
                   detail: '(global)',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -59,7 +161,7 @@ module.exports = (suite(
                       'global',
                       {
                         token: 'fAUTO332',
-                        index: 0,
+                        index: 3,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'far',
@@ -71,7 +173,7 @@ module.exports = (suite(
                   label: 'foo',
                   kind: 6,
                   detail: 'Import default from ./foo',
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -109,7 +211,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 1,
+                        index: 4,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'foo',
@@ -121,7 +223,7 @@ module.exports = (suite(
                   label: 'foo',
                   kind: 6,
                   detail: 'Import from LibA',
-                  sortText: '00000000000000000002',
+                  sortText: '00000000000000000005',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -159,7 +261,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 2,
+                        index: 5,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'foo',
@@ -171,7 +273,7 @@ module.exports = (suite(
                   label: 'foo',
                   kind: 6,
                   detail: 'Import * from ./foo',
-                  sortText: '00000000000000000003',
+                  sortText: '00000000000000000006',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -209,7 +311,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 3,
+                        index: 6,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'foo',
@@ -221,7 +323,7 @@ module.exports = (suite(
                   label: 'foobar',
                   kind: 6,
                   detail: 'Import default from ./foobar',
-                  sortText: '00000000000000000004',
+                  sortText: '00000000000000000007',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -259,7 +361,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 4,
+                        index: 7,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'foobar',
@@ -271,7 +373,7 @@ module.exports = (suite(
                   label: 'Foo',
                   kind: 6,
                   detail: 'Import from ./foo',
-                  sortText: '00000000000000000005',
+                  sortText: '00000000000000000008',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -309,7 +411,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 5,
+                        index: 8,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'Foo',
@@ -321,7 +423,7 @@ module.exports = (suite(
                   label: 'Function',
                   kind: 6,
                   detail: '(global)',
-                  sortText: '00000000000000000006',
+                  sortText: '00000000000000000009',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -344,7 +446,7 @@ module.exports = (suite(
                       'global',
                       {
                         token: 'fAUTO332',
-                        index: 6,
+                        index: 9,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'Function',
@@ -356,7 +458,7 @@ module.exports = (suite(
                   label: 'barFoo',
                   kind: 6,
                   detail: 'Import from ./bar',
-                  sortText: '00000000000000000007',
+                  sortText: '00000000000000000010',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -394,7 +496,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 7,
+                        index: 10,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'barFoo',
@@ -430,10 +532,112 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
+                  label: 'function',
+                  kind: 14,
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 8,
+                      },
+                    },
+                    newText: 'function',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        token: 'fAUTO332',
+                        index: 0,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'function',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'finally',
+                  kind: 14,
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 8,
+                      },
+                    },
+                    newText: 'finally',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        token: 'fAUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'finally',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'for',
+                  kind: 14,
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 8,
+                      },
+                    },
+                    newText: 'for',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        token: 'fAUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'for',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'foo',
                   kind: 6,
                   detail: 'Import default from ./foo',
-                  sortText: '00000000000000000000',
+                  sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -471,7 +675,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 0,
+                        index: 3,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'foo',
@@ -480,60 +684,10 @@ module.exports = (suite(
                   },
                 },
                 {
-                  label: 'Foo',
-                  kind: 6,
-                  detail: 'Import from ./foo',
-                  sortText: '00000000000000000001',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 2,
-                        character: 1,
-                      },
-                    },
-                    newText: 'Foo',
-                  },
-                  additionalTextEdits: [
-                    {
-                      range: {
-                        start: {
-                          line: 2,
-                          character: 0,
-                        },
-                        end: {
-                          line: 2,
-                          character: 0,
-                        },
-                      },
-                      newText: 'import { Foo } from "./foo";\n\n',
-                    },
-                  ],
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'autoimport',
-                      {
-                        token: 'fAUTO332',
-                        index: 1,
-                        session_requests: 1,
-                        typed_length: 1,
-                        completion: 'Foo',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'far',
                   kind: 6,
                   detail: '(global)',
-                  sortText: '00000000000000000002',
+                  sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -556,7 +710,7 @@ module.exports = (suite(
                       'global',
                       {
                         token: 'fAUTO332',
-                        index: 2,
+                        index: 4,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'far',
@@ -568,7 +722,7 @@ module.exports = (suite(
                   label: 'foo',
                   kind: 6,
                   detail: 'Import from LibA',
-                  sortText: '00000000000000000003',
+                  sortText: '00000000000000000005',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -606,7 +760,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 3,
+                        index: 5,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'foo',
@@ -618,7 +772,7 @@ module.exports = (suite(
                   label: 'foo',
                   kind: 6,
                   detail: 'Import * from ./foo',
-                  sortText: '00000000000000000004',
+                  sortText: '00000000000000000006',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -656,7 +810,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 4,
+                        index: 6,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'foo',
@@ -668,7 +822,7 @@ module.exports = (suite(
                   label: 'foobar',
                   kind: 6,
                   detail: 'Import default from ./foobar',
-                  sortText: '00000000000000000005',
+                  sortText: '00000000000000000007',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -706,7 +860,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 5,
+                        index: 7,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'foobar',
@@ -715,10 +869,60 @@ module.exports = (suite(
                   },
                 },
                 {
+                  label: 'Foo',
+                  kind: 6,
+                  detail: 'Import from ./foo',
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 1,
+                      },
+                    },
+                    newText: 'Foo',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import { Foo } from "./foo";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'fAUTO332',
+                        index: 8,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'Foo',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'Function',
                   kind: 6,
                   detail: '(global)',
-                  sortText: '00000000000000000006',
+                  sortText: '00000000000000000009',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -741,7 +945,7 @@ module.exports = (suite(
                       'global',
                       {
                         token: 'fAUTO332',
-                        index: 6,
+                        index: 9,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'Function',
@@ -753,7 +957,7 @@ module.exports = (suite(
                   label: 'barFoo',
                   kind: 6,
                   detail: 'Import from ./bar',
-                  sortText: '00000000000000000007',
+                  sortText: '00000000000000000010',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -791,7 +995,7 @@ module.exports = (suite(
                       'autoimport',
                       {
                         token: 'fAUTO332',
-                        index: 7,
+                        index: 10,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'barFoo',

@@ -15,8 +15,11 @@ class virtual ['L] mapper =
 
     method virtual loc_annot_contains_target : 'L -> bool
 
-    method! program ((l, _) as x) =
-      if this#loc_annot_contains_target l then
+    method! program ((l, { Flow_ast.Program.all_comments; _ }) as x) =
+      if
+        this#loc_annot_contains_target l
+        || Base.List.exists all_comments ~f:(fun (loc, _) -> this#loc_annot_contains_target loc)
+      then
         super#program x
       else
         x
