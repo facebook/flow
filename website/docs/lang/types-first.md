@@ -1,40 +1,45 @@
 ---
-title: Types-First
+title: File Signatures (Types-First)
 slug: /lang/types-first
 ---
 
 Flow checks codebases by processing each file separately in dependency
-order. After a file has been checked, a signature is extracted and stored in
-main memory, to be used for files that depend on it. Currently, the default mode
-(we'll also refer to it as *classic* mode) builds these signatures by using the
-types inferred for the file's exports. In the new *types-first* architecture,
-Flow relies on annotations available at the boundaries of files to build these
-signatures.
+order. For every file containing important typing information for the checking
+process, a signature needs to be extracted and stored in
+main memory, to be used for files that depend on it. Flow relies on annotations
+available at the boundaries of files to build these signatures. We call this
+requirement of Flow's architecture *Types-First*.
 
-The benefit of this new architecture is dual:
+The benefit of this architecture is dual:
 
 1. It dramatically improves *performance*, in particular when it comes to
 rechecks. Suppose we want Flow to check a file `foo.js`, for which it hasn't
-checked its dependencies yet. Classic mode would need to check all
-dependencies and generate signatures from them first, before it could check
-`foo.js`. In types-first, Flow extracts the dependency signatures just by
+checked its dependencies yet. Flow extracts the dependency signatures just by
 looking at the annotations around the exports. This process is mostly
-syntactic, and therefore much faster than full type inference.
+syntactic, and therefore much faster than full type inference that legacy versions
+of Flow (prior to v0.125) used to perform in order to generate signatures.
 
 2. It improves error *reliability*. Inferred types often become complicated, and may
 lead to errors being reported in downstream files, far away from their actual source.
 Type annotations at file boundaries of files can help localize such errors, and
 address them in the file that introduced them.
 
-The caveat of this new version is that it requires exported parts of the code to be
+The trade-off for this performance benefit is that exported parts of the code need to be
 annotated with types, or to be expressions whose type can be trivially inferred
 (for example numbers and strings).
 
+More information on the Types-First architecture can be found in [this post](https://medium.com/flow-type/types-first-a-scalable-new-architecture-for-flow-3d8c7ba1d4eb).
+
 ## How to upgrade your codebase to Types-First {#toc-how-to-upgrade-your-codebase-to-types-first}
+
+> Note: Types-first has been the default mode since v0.134 and the only available
+mode since v0.143. No `.flowconfig` options are necessary to enable it since then.
+In case you're upgrading your codebase from a much earlier version here are some
+useful tools.
 
 ### Upgrade Flow version {#toc-upgrade-flow-version}
 
-Types-first mode is officially released with version 0.125, but has been available in
+Types-first mode was officially released with version 0.125, but has been available in
 *experimental* status as of version 0.102. If you are currently on an older
 Flow version, you’d have to first upgrade Flow. Using the latest Flow version
 is the best way to benefit from the performance benefits outlined above.
