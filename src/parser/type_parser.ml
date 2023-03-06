@@ -237,10 +237,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | _ -> postfix env
 
   and postfix env =
+    let start_loc = Peek.loc env in
     let t = primary env in
-    postfix_with env t
+    postfix_with env ~start_loc t
 
-  and postfix_with ?(in_optional_indexed_access = false) env t =
+  and postfix_with ?(in_optional_indexed_access = false) env ~start_loc t =
     if Peek.is_line_terminator env then
       t
     else
@@ -249,26 +250,36 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Eat.token env;
         if Peek.token env <> T_LBRACKET then error env Parse_error.InvalidOptionalIndexedAccess;
         Expect.token env T_LBRACKET;
-        postfix_brackets ~in_optional_indexed_access:true ~optional_indexed_access:true env t
+        postfix_brackets
+          ~in_optional_indexed_access:true
+          ~optional_indexed_access:true
+          env
+          start_loc
+          t
       | T_LBRACKET ->
         Eat.token env;
-        postfix_brackets ~in_optional_indexed_access ~optional_indexed_access:false env t
+        postfix_brackets ~in_optional_indexed_access ~optional_indexed_access:false env start_loc t
       | T_PERIOD ->
         (match Peek.ith_token ~i:1 env with
         | T_LBRACKET ->
           error env (Parse_error.InvalidIndexedAccess { has_bracket = true });
           Expect.token env T_PERIOD;
           Expect.token env T_LBRACKET;
-          postfix_brackets ~in_optional_indexed_access ~optional_indexed_access:false env t
+          postfix_brackets
+            ~in_optional_indexed_access
+            ~optional_indexed_access:false
+            env
+            start_loc
+            t
         | _ ->
           error env (Parse_error.InvalidIndexedAccess { has_bracket = false });
           t)
       | _ -> t
 
-  and postfix_brackets ~in_optional_indexed_access ~optional_indexed_access env t =
+  and postfix_brackets ~in_optional_indexed_access ~optional_indexed_access env start_loc t =
     let t =
       with_loc
-        ~start_loc:(fst t)
+        ~start_loc
         (fun env ->
           (* Legacy Array syntax `Foo[]` *)
           if (not optional_indexed_access) && Eat.maybe env T_RBRACKET then
@@ -293,7 +304,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               Type.IndexedAccess indexed_access)
         env
     in
-    postfix_with env ~in_optional_indexed_access t
+    postfix_with env ~in_optional_indexed_access ~start_loc t
 
   and typeof_expr env = raw_typeof_expr_with_identifier env (Parse.identifier env)
 
@@ -772,14 +783,15 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_COLON ->
       ParamList (function_param_list_without_parens env [])
     | _ ->
+      let start_loc = Peek.loc env in
       let id = type_identifier env in
       Type
         (generic_type_with_identifier env id
-        |> postfix_with env
+        |> postfix_with env ~start_loc
         |> anon_function_without_parens_with env
         |> intersection_with env
         |> union_with env
-        |> conditional_with env ~start_loc:(fst id)
+        |> conditional_with env ~start_loc
         )
 
   and function_or_group env =

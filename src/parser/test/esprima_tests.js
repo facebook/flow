@@ -1227,69 +1227,6 @@ module.exports = {
       'class Foo extends class Bar implements Bat {} {}',
       'class Foo extends class Bar implements Bat {} implements Man {}',
     ],
-    'Array Types': [
-      'var x: number[];',
-      'var x: ?number[];',
-      {
-        content: 'var x: (?number)[];',
-        explanation: 'Flow does not count parens in its locs',
-        expected_differences: {
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.loc.start.column': {
-            type: 'Wrong number',
-            expected: 7,
-            actual: 8,
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.range.0': {
-            type: 'Wrong number',
-            expected: 7,
-            actual: 8,
-          }
-        }
-      },
-      'var x: () => number[];',
-      {
-        content: 'var x: (() => number)[];',
-        explanation: 'Flow does not count parens in its locs',
-        expected_differences: {
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.loc.start.column': {
-            type: 'Wrong number',
-            expected: 7,
-            actual: 8,
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.range.0': {
-            type: 'Wrong number',
-            expected: 7,
-            actual: 8,
-          }
-        }
-      },
-      {
-        content: 'var x: typeof A[];',
-        explanation: "Esprima-fb sees typeof arguments as arbitrary types",
-        expected_differences: {
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.type': {
-            type: 'Wrong string',
-            expected: 'GenericTypeAnnotation',
-            actual: 'Identifier',
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.id': {
-            type: 'Missing property'
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.typeParameters': {
-            type: 'Missing property'
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.name': {
-            type: 'Unexpected property'
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.typeAnnotation': {
-            type: 'Unexpected property'
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.optional': {
-            type: 'Unexpected property'
-          },
-        },
-      },
-    ],
     'Export': {
       'options': { sourceType: "module" },
       'tests': [

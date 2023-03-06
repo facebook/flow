@@ -178,8 +178,8 @@
       "typeParameters":null,
       "right":{
         "type":"IndexedAccessType",
-        "loc":{"source":null,"start":{"line":7,"column":10},"end":{"line":7,"column":28}},
-        "range":[97,115],
+        "loc":{"source":null,"start":{"line":7,"column":9},"end":{"line":7,"column":28}},
+        "range":[96,115],
         "objectType":{
           "type":"IndexedAccessType",
           "loc":{"source":null,"start":{"line":7,"column":10},"end":{"line":7,"column":20}},
