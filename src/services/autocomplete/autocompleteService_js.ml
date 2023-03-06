@@ -2012,64 +2012,50 @@ let autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc =
     )
     |> filter_by_token_and_sort token
 
-let autocomplete_jsdoc ~cx ~edit_locs ~token ~typed_ast ~file_sig ~ac_loc =
-  let open Base.Result in
-  let open Base.Result.Let_syntax in
+let autocomplete_jsdoc ~edit_locs ~token ~ast ~ac_loc =
   let (before, _after) = Autocomplete_sigil.remove token in
   if before <> "*" then
-    return []
+    []
   else
-    let%bind target = of_option ~error:[] (Find_doc_target.find typed_ast ac_loc) in
-    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
-    let%bind target_ty =
-      Ty_normalizer.from_type ~options:ty_normalizer_options ~genv target
-      |> map_error ~f:(fun err -> [Ty_normalizer.error_to_string err])
-    in
-    match target_ty with
-    | Ty.Type target_ty ->
-      let%bind stub = of_option ~error:[] (Jsdoc_stub.stub_for_ty target_ty) in
-      let name = "/** */" in
-      let insert_text = Jsdoc_stub.string_of_stub stub in
-      let edit_locs = (snd edit_locs, snd edit_locs) in
-      return
-        ([
-           {
-             ServerProt.Response.Completion.kind = Some Lsp.Completion.Text;
-             name;
-             labelDetail = None;
-             description = None;
-             itemDetail = Some "JSDoc Comment";
-             text_edit = Some (text_edit ~insert_text name edit_locs);
-             additional_text_edits = [];
-             sort_text = sort_text_of_rank 0;
-             preselect = false;
-             documentation = None;
-             tags = None;
-             log_info = "jsdoc";
-             insert_text_format = Lsp.Completion.SnippetFormat;
-           };
-         ]
-        |> filter_by_token_and_sort token
-        )
-    | _ -> return []
+    ast
+    |> Insert_jsdoc.insert_stub_in_comment (ALoc.to_loc_exn ac_loc)
+    |> Base.Option.value_map ~default:[] ~f:(fun (_, stub) ->
+           let name = "/** */" in
+           let edit_locs = (snd edit_locs, snd edit_locs) in
+           let insert_text = Printf.sprintf "/*%s */" stub in
+           [
+             {
+               ServerProt.Response.Completion.kind = Some Lsp.Completion.Text;
+               name;
+               labelDetail = None;
+               description = None;
+               itemDetail = Some "JSDoc Comment";
+               text_edit = Some (text_edit ~insert_text name edit_locs);
+               additional_text_edits = [];
+               sort_text = sort_text_of_rank 0;
+               preselect = false;
+               documentation = None;
+               tags = None;
+               log_info = "jsdoc";
+               insert_text_format = Lsp.Completion.SnippetFormat;
+             };
+           ]
+       )
+    |> filter_by_token_and_sort token
 
 let autocomplete_comment
-    ~reader ~cx ~edit_locs ~trigger_character ~ac_loc ~token ~typed_ast ~file_sig ~text ~word_loc =
-  let (items, errors_to_log) =
+    ~reader ~cx ~edit_locs ~trigger_character ~ac_loc ~token ~ast ~text ~word_loc =
+  let items =
     match trigger_character with
     | Some "*"
     | None ->
       let items_fixme = autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc in
-      let (items_jsdoc, errors_jsdoc) =
-        match autocomplete_jsdoc ~cx ~edit_locs ~token ~typed_ast ~file_sig ~ac_loc with
-        | Ok items -> (items, [])
-        | Error errs -> ([], errs)
-      in
-      (items_fixme @ items_jsdoc, errors_jsdoc)
-    | _ -> ([], [])
+      let items_jsdoc = autocomplete_jsdoc ~edit_locs ~token ~ast ~ac_loc in
+      items_fixme @ items_jsdoc
+    | _ -> []
   in
   AcResult
-    { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
+    { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log = [] }
 
 (** Used for logging to classify the kind of completion request *)
 let string_of_autocomplete_type ac_type =
@@ -2138,8 +2124,7 @@ let autocomplete_get_results
           ~trigger_character
           ~ac_loc
           ~token
-          ~typed_ast
-          ~file_sig
+          ~ast
           ~text
           ~word_loc
       | Ac_jsx_text -> AcEmpty "JSXText"

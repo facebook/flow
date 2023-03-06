@@ -7,6 +7,6 @@
 
 type t
 
-val stub_for_ty : Ty.t -> t option
+val stub_for_function : ('M, 'T) Flow_ast.Function.t -> t
 
 val string_of_stub : t -> string
