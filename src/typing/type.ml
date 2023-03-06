@@ -686,7 +686,11 @@ module rec TypeTerm : sig
      * local metadata? Because when checking cycles, during the merge we use the context of the
      * "leader" module, and thus the is_strict flag in the context won't be accurate.
      *)
-    | CJSRequireT of reason * t * bool (* is_strict *)
+    | CJSRequireT of {
+        reason: reason;
+        t_out: t;
+        is_strict: bool;
+      }
     | ImportModuleNsT of {
         reason: reason;
         t: t;

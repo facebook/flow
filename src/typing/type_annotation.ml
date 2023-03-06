@@ -51,8 +51,8 @@ module FlowJS : C = struct
     Tvar.mk_where cx reason (fun tout -> Flow.flow cx (i, Type.MixinT (reason, tout)))
 
   let cjs_require cx remote_module_t reason is_strict =
-    Tvar.mk_where cx reason (fun tout ->
-        Flow.flow cx (remote_module_t, CJSRequireT (reason, tout, is_strict))
+    Tvar.mk_where cx reason (fun t_out ->
+        Flow.flow cx (remote_module_t, CJSRequireT { reason; t_out; is_strict })
     )
 
   let obj_test_proto cx reason t =
