@@ -138,28 +138,16 @@ let checked_find_loc_env_write cx kind loc =
     let env = Context.environment cx in
     t_option_value_exn cx loc (Loc_env.find_write env kind loc)
   in
-  match
-    (enforced_env_read_error_opt cx kind loc, Context.typing_mode cx <> Context.CheckingMode)
-  with
-  | (Some _, true) -> Context.mk_placeholder cx (mk_reason (RCustom "Out of order read") loc)
-  | (Some error, false) ->
-    Flow_js_utils.add_output cx error;
-    get_t ()
-  | (None, _) -> get_t ()
+  enforced_env_read_error_opt cx kind loc |> Base.Option.iter ~f:(Flow_js_utils.add_output cx);
+  get_t ()
 
 let checked_find_loc_env_write_opt cx kind loc =
   let get_t () =
     let env = Context.environment cx in
     Loc_env.find_write env kind loc
   in
-  match
-    (enforced_env_read_error_opt cx kind loc, Context.typing_mode cx <> Context.CheckingMode)
-  with
-  | (Some _, true) -> Some (Context.mk_placeholder cx (mk_reason (RCustom "Out of order read") loc))
-  | (Some error, false) ->
-    Flow_js_utils.add_output cx error;
-    get_t ()
-  | (None, _) -> get_t ()
+  enforced_env_read_error_opt cx kind loc |> Base.Option.iter ~f:(Flow_js_utils.add_output cx);
+  get_t ()
 
 let find_var_opt { Env_api.env_values; _ } loc =
   match ALocMap.find_opt loc env_values with
