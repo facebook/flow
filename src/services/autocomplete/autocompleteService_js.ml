@@ -2018,7 +2018,7 @@ let autocomplete_jsdoc ~edit_locs ~token ~ast ~ac_loc =
     []
   else
     ast
-    |> Insert_jsdoc.insert_stub_in_comment (ALoc.to_loc_exn ac_loc)
+    |> Insert_jsdoc.insert_stub_in_comment ~use_snippets:true (ALoc.to_loc_exn ac_loc)
     |> Base.Option.value_map ~default:[] ~f:(fun (_, stub) ->
            let name = "/** */" in
            let edit_locs = (snd edit_locs, snd edit_locs) in

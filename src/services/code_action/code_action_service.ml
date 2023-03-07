@@ -133,6 +133,31 @@ let refactor_extract_code_actions
   else
     []
 
+let insert_jsdoc_code_actions ~options ~ast uri loc =
+  match Insert_jsdoc.insert_stub_for_target ~use_snippets:false loc ast with
+  | Some (ast', _) ->
+    ast'
+    |> Flow_ast_differ.program Flow_ast_differ.Standard ast
+    |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    |> Base.List.map ~f:(fun edit ->
+           (* This hack is needed because the differ doesn't differentiate between
+              [comment; \n; node] and [comment; node] *)
+           Lsp.TextEdit.{ edit with newText = edit.newText ^ "\n" }
+       )
+    |> fun edits ->
+    let open Lsp in
+    [
+      CodeAction.Action
+        {
+          CodeAction.title = "Add JSDoc documentation";
+          kind = CodeActionKind.refactor;
+          diagnostics = [];
+          action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+        };
+    ]
+  | _ -> []
+
 let main_of_package ~reader package_dir =
   let file_key = File_key.JsonFile (package_dir ^ "/package.json") in
   match Parsing_heaps.Reader.get_package_info ~reader file_key with
@@ -874,6 +899,7 @@ let code_actions_at_loc
         ~diagnostics
         uri
         loc
+    @ insert_jsdoc_code_actions ~options ~ast uri loc
   in
   let error_fixes =
     code_actions_of_errors

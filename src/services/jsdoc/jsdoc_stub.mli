@@ -9,4 +9,4 @@ type t
 
 val stub_for_function : ('M, 'T) Flow_ast.Function.t -> t
 
-val string_of_stub : t -> string
+val string_of_stub : ?use_snippets:bool -> t -> string

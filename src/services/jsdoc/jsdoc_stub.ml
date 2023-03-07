@@ -46,10 +46,18 @@ let stub_for_function
   in
   { description = "$0"; params }
 
-let string_of_stub { description; params } =
+let string_of_stub ?(use_snippets = true) { description; params } =
   let params =
     params
-    |> Base.List.mapi ~f:(fun i (name, _) -> Printf.sprintf "\n * @param %s $%d" name (i + 1))
+    |> Base.List.mapi ~f:(fun i (name, _) ->
+           let desc =
+             if use_snippets then
+               Printf.sprintf "$%d" (i + 1)
+             else
+               ""
+           in
+           Printf.sprintf "\n * @param %s %s" name desc
+       )
     |> Base.String.concat
   in
   Printf.sprintf "*\n * %s%s\n" description params

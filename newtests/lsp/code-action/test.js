@@ -3237,5 +3237,171 @@ module.exports = (suite(
           ],
         )
     ]),
+    test('provide codeAction for inserting jsdocs', [
+      addFile('insert-jsdoc.js.ignored', 'insert-jsdoc.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 10,
+          },
+          end: {
+            line: 3,
+            character: 10,
+          },
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+          [
+            {
+              "method": "textDocument/codeAction",
+              "result": [
+                {
+                  "title": "Add JSDoc documentation",
+                  "kind": "refactor",
+                  "diagnostics": [],
+                  "edit": {
+                    "changes": {
+                      "<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js": [
+                        {
+                          "range": {
+                            "start": {
+                              "line": 3,
+                              "character": 0
+                            },
+                            "end": {
+                              "line": 3,
+                              "character": 0
+                            }
+                          },
+                          "newText": "/**\n * $0\n * @param x \n * @param y \n */\n"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            "textDocument/publishDiagnostics"
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js',
+          },
+          range: {
+            start: {
+              line: 8,
+              character: 18,
+            },
+            end: {
+              line: 8,
+              character: 18,
+            },
+          },
+          context: {
+            only: ['refactor'],
+            diagnostics: [],
+          },
+        }).verifyAllLSPMessagesInStep(
+            [
+              {
+                "method": "textDocument/codeAction",
+                "result": [
+                  {
+                    "title": "Add JSDoc documentation",
+                    "kind": "refactor",
+                    "diagnostics": [],
+                    "edit": {
+                      "changes": {
+                        "<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js": [
+                          {
+                            "range": {
+                              "start": {
+                                "line": 8,
+                                "character": 0
+                              },
+                              "end": {
+                                "line": 8,
+                                "character": 0
+                              }
+                            },
+                            "newText": "/**\n * $0\n * @param x \n * @param y \n */\n"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "textDocument/publishDiagnostics"
+            ],
+          ),
+          lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+            textDocument: {
+              uri: '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js',
+            },
+            range: {
+              start: {
+                line: 11,
+                character: 18,
+              },
+              end: {
+                line: 11,
+                character: 18,
+              },
+            },
+            context: {
+              only: ['refactor'],
+              diagnostics: [],
+            },
+          }).verifyAllLSPMessagesInStep(
+              [
+                {
+                  "method": "textDocument/codeAction",
+                  "result": [
+                    {
+                      "title": "Add JSDoc documentation",
+                      "kind": "refactor",
+                      "diagnostics": [],
+                      "edit": {
+                        "changes": {
+                          "<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js": [
+                            {
+                              "range": {
+                                "start": {
+                                  "line": 11,
+                                  "character": 0
+                                },
+                                "end": {
+                                  "line": 11,
+                                  "character": 0
+                                }
+                              },
+                              "newText": "/**\n * $0\n */\n"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              [
+                "textDocument/publishDiagnostics"
+              ],
+            )
+    ])
   ],
 ): Suite);
