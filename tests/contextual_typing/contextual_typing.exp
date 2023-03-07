@@ -686,6 +686,71 @@ An annotation on destructuring is required because Flow cannot infer its type fr
                                     ^^^
 
 
+Error -------------------------------------------------------------------------------------------- param_default.js:2:20
+
+Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   param_default.js:2:20
+   2| context = (a) => {(a: number)}; // error: number | void ~> number
+                         ^
+
+References:
+   param_default.js:1:27
+   1| declare var context: (a?: number) => void;
+                                ^^^^^^ [1]
+   param_default.js:2:23
+   2| context = (a) => {(a: number)}; // error: number | void ~> number
+                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- param_default.js:3:21
+
+Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   param_default.js:3:21
+   3| context = (a?) => {(a: number)}; // error: number | void ~> number
+                          ^
+
+References:
+   param_default.js:1:27
+   1| declare var context: (a?: number) => void;
+                                ^^^^^^ [1]
+   param_default.js:3:24
+   3| context = (a?) => {(a: number)}; // error: number | void ~> number
+                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- param_default.js:3:21
+
+Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   param_default.js:3:21
+   3| context = (a?) => {(a: number)}; // error: number | void ~> number
+                          ^
+
+References:
+   param_default.js:3:12
+   3| context = (a?) => {(a: number)}; // error: number | void ~> number
+                 ^^ [1]
+   param_default.js:3:24
+   3| context = (a?) => {(a: number)}; // error: number | void ~> number
+                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- param_default.js:8:16
+
+Cannot assign `undefined` to `a` because undefined [1] is incompatible with number [2]. [incompatible-type]
+
+   param_default.js:8:16
+   8| context = (a = undefined) => {(a: number)}; // error: void ~> number
+                     ^^^^^^^^^ [1]
+
+References:
+   param_default.js:1:27
+   1| declare var context: (a?: number) => void;
+                                ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------- poly_class_static_sanity_test.js:13:25
 
 Cannot resolve name `unbound_type`. [cannot-resolve-name]
@@ -1045,4 +1110,4 @@ References:
 
 
 
-Found 76 errors
+Found 80 errors

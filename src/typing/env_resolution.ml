@@ -682,7 +682,16 @@ let resolve_binding_partial cx reason loc b =
       if contextual_typing_enabled then (
         let (has_hint, lazy_hint) = lazily_resolve_hints cx loc hints in
         match lazy_hint reason with
-        | HintAvailable (t, _) -> TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
+        | HintAvailable (t, _) ->
+          let t =
+            if Option.is_some default_expression then
+              Tvar.mk_no_wrap_where cx reason (fun tout ->
+                  Flow_js.flow cx (t, FilterMaybeT (unknown_use, OpenT tout))
+              )
+            else
+              t
+          in
+          TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
         | NoHint
         | DecompositionError
         | EncounteredPlaceholder ->
