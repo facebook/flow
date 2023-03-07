@@ -66,7 +66,7 @@ class resolver ~no_lowers =
         in
         Base.Option.value_map t ~default:seen ~f:(fun t ->
             let new_root =
-              if Context.in_synthesis_mode cx then
+              if Context.typing_mode cx <> Context.CheckingMode then
                 C.Root { root with C.constraints = C.Resolved (unknown_use, t) }
               else
                 C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) }

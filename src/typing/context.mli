@@ -102,6 +102,11 @@ type phase =
 
 val string_of_phase : phase -> string
 
+type typing_mode =
+  | CheckingMode
+  | SynthesisMode
+  | HintEvaluationMode
+
 type voidable_check = {
   public_property_map: Type.Properties.id;
   private_property_map: Type.Properties.id;
@@ -289,7 +294,7 @@ val implicit_instantiation_ty_results : t -> (Ty.t option * Subst_name.t) list A
 
 val environment : t -> Loc_env.t
 
-val in_synthesis_mode : t -> bool
+val typing_mode : t -> typing_mode
 
 val node_cache : t -> Node_cache.t
 
@@ -422,7 +427,9 @@ val set_environment : t -> Loc_env.t -> unit
 
 val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
 
-val run_in_synthesis_mode : ?reset_placeholders:bool -> t -> (unit -> 'a) -> bool * 'a
+val run_in_synthesis_mode : t -> (unit -> 'a) -> bool * 'a
+
+val run_in_hint_eval_mode : t -> (unit -> 'a) -> bool * 'a
 
 val clear_master_shared : t -> master_context -> unit
 

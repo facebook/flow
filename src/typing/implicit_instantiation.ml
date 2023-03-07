@@ -1065,7 +1065,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
     match tparam.default with
     | Some inferred -> { tparam; inferred = mod_inferred_default inferred }
     | None ->
-      if Context.in_synthesis_mode cx then
+      if Context.typing_mode cx <> Context.CheckingMode then
         { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
       else (
         Flow_js_utils.add_output
@@ -1082,7 +1082,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
       )
 
   let on_upper_non_t cx ~use_op _u tparam ~tparam_binder_reason ~instantiation_reason =
-    if Context.in_synthesis_mode cx then
+    if Context.typing_mode cx <> Context.CheckingMode then
       { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
     else (
       Flow_js_utils.add_output

@@ -27,12 +27,10 @@ let mk_tparams_map cx tparams_map =
 
 let try_cache : 'l. check:(unit -> 'l) -> cache:('l -> unit) -> Context.t -> 'l =
  fun ~check ~cache cx ->
-  if Context.in_synthesis_mode cx then begin
+  if Context.typing_mode cx <> Context.CheckingMode then begin
     let original_errors = Context.errors cx in
     Context.reset_errors cx Flow_error.ErrorSet.empty;
-    let (produced_placeholders, e) =
-      Context.run_in_synthesis_mode ~reset_placeholders:false cx check
-    in
+    let (produced_placeholders, e) = Context.run_in_synthesis_mode cx check in
     let can_cache =
       (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
          we can cache the result *)

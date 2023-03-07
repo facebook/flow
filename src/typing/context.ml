@@ -197,6 +197,11 @@ let string_of_phase = function
   | Merging -> "Merging"
   | PostInference -> "PostInference"
 
+type typing_mode =
+  | CheckingMode
+  | SynthesisMode
+  | HintEvaluationMode
+
 type t = {
   ccx: component_t;
   file: File_key.t;
@@ -215,7 +220,7 @@ type t = {
   mutable hint_eval_cache: Type.t option IMap.t;
   mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;
-  mutable in_synthesis_mode: bool;
+  mutable typing_mode: typing_mode;
   node_cache: Node_cache.t;
 }
 
@@ -396,7 +401,7 @@ let make ccx metadata file aloc_table phase =
     hint_eval_cache = IMap.empty;
     declare_module_ref = None;
     environment = Loc_env.empty Name_def.Global;
-    in_synthesis_mode = false;
+    typing_mode = CheckingMode;
     node_cache = Node_cache.mk_empty ();
   }
 
@@ -636,7 +641,7 @@ let implicit_instantiation_ty_results cx = cx.ccx.implicit_instantiation_ty_resu
 
 let environment cx = cx.environment
 
-let in_synthesis_mode cx = cx.in_synthesis_mode
+let typing_mode cx = cx.typing_mode
 
 let any_propagation cx = cx.metadata.any_propagation
 
@@ -901,24 +906,24 @@ let run_and_rolled_back_cache cx f =
   let cache_snapshot = take_cache_snapshot cx in
   Exception.protect ~f ~finally:(fun () -> restore_cache_snapshot cx cache_snapshot)
 
-let run_in_synthesis_mode ?(reset_placeholders = true) cx f =
-  let old_synthesis_mode = cx.in_synthesis_mode in
+let run_in_typing_mode cx ~typing_mode ~reset_placeholders f =
+  let old_typing_mode = cx.typing_mode in
   let old_produced_placeholders = cx.ccx.produced_placeholders in
   (* Synthesis mode is either already starting with an empty speculation state, because we are about
    * to start synthesizing expressions, or we are in type hint eval.
-   *  We need to run type hint eval in an empty speculation state, since the hint eval is an
-   *  independent unit of type evaluation that's separate from an ongoing speculation. *)
+   * We need to run type hint eval in an empty speculation state, since the hint eval is an
+   * independent unit of type evaluation that's separate from an ongoing speculation. *)
   let saved_speculation_state = !(cx.ccx.speculation_state) in
   cx.ccx.speculation_state := [];
   cx.ccx.produced_placeholders <- false;
-  cx.in_synthesis_mode <- true;
+  cx.typing_mode <- typing_mode;
   let cache_snapshot = take_cache_snapshot cx in
   let produced_placeholders = ref false in
   let result =
     Exception.protect ~f ~finally:(fun () ->
         restore_cache_snapshot cx cache_snapshot;
         cx.ccx.speculation_state := saved_speculation_state;
-        cx.in_synthesis_mode <- old_synthesis_mode;
+        cx.typing_mode <- old_typing_mode;
         produced_placeholders := cx.ccx.produced_placeholders;
         cx.ccx.produced_placeholders <-
           ( if reset_placeholders then
@@ -929,6 +934,11 @@ let run_in_synthesis_mode ?(reset_placeholders = true) cx f =
     )
   in
   (!produced_placeholders, result)
+
+let run_in_synthesis_mode = run_in_typing_mode ~typing_mode:SynthesisMode ~reset_placeholders:false
+
+let run_in_hint_eval_mode =
+  run_in_typing_mode ~typing_mode:HintEvaluationMode ~reset_placeholders:true
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global

@@ -651,7 +651,7 @@ and evaluate_hint_ops cx reason t kind ops =
   (* We evaluate the decompositions in synthesis mode, but fully resolve the final result in
      checking mode, so that any unresolved tvars in the midddle won't fail the evaluation, but
      unsolved tvars in the final result will fail the evaluation. *)
-  match Context.run_in_synthesis_mode cx (fun () -> loop t ops) with
+  match Context.run_in_hint_eval_mode cx (fun () -> loop t ops) with
   | (_, None) -> DecompositionError
   | (_, Some t) -> fully_resolve_final_result cx t kind
 

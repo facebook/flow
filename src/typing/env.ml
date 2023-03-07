@@ -37,14 +37,14 @@ let get_class_entries cx =
     class_stack
 
 let has_hint cx loc =
-  if Context.in_synthesis_mode cx then
+  if Context.typing_mode cx <> Context.CheckingMode then
     false
   else
     let { Loc_env.hint_map; _ } = Context.environment cx in
     ALocMap.find_opt loc hint_map |> Base.Option.value_map ~f:fst ~default:false
 
 let get_hint cx loc =
-  if Context.in_synthesis_mode cx then
+  if Context.typing_mode cx <> Context.CheckingMode then
     Type.hint_unavailable
   else
     let { Loc_env.hint_map; _ } = Context.environment cx in
@@ -138,7 +138,9 @@ let checked_find_loc_env_write cx kind loc =
     let env = Context.environment cx in
     t_option_value_exn cx loc (Loc_env.find_write env kind loc)
   in
-  match (enforced_env_read_error_opt cx kind loc, Context.in_synthesis_mode cx) with
+  match
+    (enforced_env_read_error_opt cx kind loc, Context.typing_mode cx <> Context.CheckingMode)
+  with
   | (Some _, true) -> Context.mk_placeholder cx (mk_reason (RCustom "Out of order read") loc)
   | (Some error, false) ->
     Flow_js_utils.add_output cx error;
@@ -150,7 +152,9 @@ let checked_find_loc_env_write_opt cx kind loc =
     let env = Context.environment cx in
     Loc_env.find_write env kind loc
   in
-  match (enforced_env_read_error_opt cx kind loc, Context.in_synthesis_mode cx) with
+  match
+    (enforced_env_read_error_opt cx kind loc, Context.typing_mode cx <> Context.CheckingMode)
+  with
   | (Some _, true) -> Some (Context.mk_placeholder cx (mk_reason (RCustom "Out of order read") loc))
   | (Some error, false) ->
     Flow_js_utils.add_output cx error;
@@ -438,7 +442,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
     let t =
       match val_id with
       | Some id ->
-        if Context.in_synthesis_mode cx then
+        if Context.typing_mode cx <> Context.CheckingMode then
           Lazy.force t
         else
           let for_value =
@@ -759,7 +763,7 @@ let bind_function_param cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionParamLoc loc
 
 let bind_function_this cx t loc =
-  if not (Context.in_synthesis_mode cx) then
+  if Context.typing_mode cx = Context.CheckingMode then
     unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionThisLoc loc
 
 let bind_class_instance_this cx t loc =

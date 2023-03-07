@@ -2351,7 +2351,7 @@ module Make
         node
       | None ->
         let res = expression_ ~cond cx loc e in
-        if Context.lti cx && not (Context.in_synthesis_mode cx) then begin
+        if Context.lti cx && not (Context.typing_mode cx <> Context.CheckingMode) then begin
           let cache = Context.constraint_cache cx in
           cache := FlowSet.empty;
           Node_cache.set_expression node_cache res
@@ -2428,7 +2428,7 @@ module Make
       ((loc, t), Object { Object.properties; comments })
     | Array { Array.elements; comments } ->
       (match elements with
-      | [] when Context.in_synthesis_mode cx ->
+      | [] when Context.typing_mode cx <> Context.CheckingMode ->
         let reason = mk_reason REmptyArrayLit loc in
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elemt = Context.mk_placeholder cx element_reason in
@@ -6371,7 +6371,7 @@ module Make
                   reason
                   function_
               in
-              if not (Context.in_synthesis_mode cx) then
+              if Context.typing_mode cx = Context.CheckingMode then
                 Node_cache.set_function_sig cache sig_loc sig_data;
               let t =
                 Statement.Func_stmt_sig.functiontype cx ~arrow function_loc_opt this_t func_sig
@@ -7006,7 +7006,7 @@ module Make
       | (false, _, _, _) -> Utils_js.assert_false "(async || generator) && pred"
     in
     let mk_param_annot cx tparams_map reason = function
-      | Ast.Type.Missing loc when Context.in_synthesis_mode cx ->
+      | Ast.Type.Missing loc when Context.typing_mode cx <> Context.CheckingMode ->
         let t = Context.mk_placeholder cx reason in
         (t, Ast.Type.Missing (loc, t))
       | Ast.Type.Missing loc ->
@@ -7361,7 +7361,7 @@ module Make
       | None -> dummy_this (aloc_of_reason reason)
     in
     let fun_type = Func_stmt_sig.functiontype cx ~arrow fun_loc default_this func_sig in
-    if Context.in_synthesis_mode cx then
+    if Context.typing_mode cx <> Context.CheckingMode then
       let { Ast.Function.params; body; _ } = func in
       let mapper = Typed_ast_utils.placeholder_mapper cx in
       let params_ast = mapper#function_params params in

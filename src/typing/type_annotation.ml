@@ -1972,7 +1972,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   and mk_type_annotation cx tparams_map reason = function
     | T.Missing loc ->
       let t =
-        if Context.in_synthesis_mode cx then
+        if Context.typing_mode cx <> Context.CheckingMode then
           Context.mk_placeholder cx reason
         else
           Tvar.mk cx reason
