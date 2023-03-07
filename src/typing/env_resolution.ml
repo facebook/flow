@@ -25,10 +25,8 @@ let mk_tparams_map cx tparams_map =
     tparams_map
     Subst_name.Map.empty
 
-let try_cache :
-      'l. check:(unit -> 'l) -> cache:('l -> unit) -> extract:('l -> Type.t) -> Context.t -> Type.t
-    =
- fun ~check ~cache ~extract cx ->
+let try_cache : 'l. check:(unit -> 'l) -> cache:('l -> unit) -> Context.t -> 'l =
+ fun ~check ~cache cx ->
   if Context.in_synthesis_mode cx then begin
     let original_errors = Context.errors cx in
     Context.reset_errors cx Flow_error.ErrorSet.empty;
@@ -40,21 +38,23 @@ let try_cache :
          we can cache the result *)
       (not produced_placeholders) && Flow_error.ErrorSet.is_empty (Context.errors cx)
     in
-    Context.reset_errors cx (Flow_error.ErrorSet.union original_errors (Context.errors cx));
+    Context.reset_errors cx original_errors;
     if can_cache then cache e;
-    extract e
+    e
   end else
     let e = check () in
     cache e;
-    extract e
+    e
 
 let expression cx ?cond exp =
   let cache = Context.node_cache cx in
-  try_cache
-    cx
-    ~check:(fun () -> Statement.expression ?cond cx exp)
-    ~cache:(Node_cache.set_expression cache)
-    ~extract:(fun ((_, t), _) -> t)
+  let ((_, t), _) =
+    try_cache
+      cx
+      ~check:(fun () -> Statement.expression ?cond cx exp)
+      ~cache:(Node_cache.set_expression cache)
+  in
+  t
 
 let resolve_annotation cx tparams_map anno =
   let cache = Context.node_cache cx in
@@ -112,34 +112,15 @@ let mk_selector_reason_has_default cx loc = function
   | Name_def.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
 
 let synthesize_expression_for_instantiation cx e =
-  let original_errors = Context.errors cx in
-  Context.reset_errors cx Flow_error.ErrorSet.empty;
-  let (produced_placeholders, e) =
-    Context.run_in_synthesis_mode cx (fun () -> Statement.expression cx e)
-  in
-  let can_cache =
-    (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
-       we can cache the result *)
-    (not produced_placeholders) && Flow_error.ErrorSet.is_empty (Context.errors cx)
-  in
-  Context.reset_errors cx original_errors;
-  if can_cache then Node_cache.set_expression (Context.node_cache cx) e;
-  e
+  let cache = Context.node_cache cx in
+  try_cache cx ~check:(fun () -> Statement.expression cx e) ~cache:(Node_cache.set_expression cache)
 
 let synthesize_jsx_children_for_instantiation cx children =
-  let original_errors = Context.errors cx in
-  Context.reset_errors cx Flow_error.ErrorSet.empty;
-  let (produced_placeholders, result) =
-    Context.run_in_synthesis_mode cx (fun () -> Statement.collapse_children cx children)
-  in
-  let can_cache =
-    (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
-       we can cache the result *)
-    (not produced_placeholders) && Flow_error.ErrorSet.is_empty (Context.errors cx)
-  in
-  Context.reset_errors cx original_errors;
-  if can_cache then Node_cache.set_jsx_children (Context.node_cache cx) result;
-  result
+  let cache = Context.node_cache cx in
+  try_cache
+    cx
+    ~check:(fun () -> Statement.collapse_children cx children)
+    ~cache:(Node_cache.set_jsx_children cache)
 
 let synth_arg_list cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ }) =
   Base.List.map
