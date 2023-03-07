@@ -954,10 +954,6 @@ language/block-scope/syntax/redeclaration/var-redeclaration-attempt-after-let.js
   Missing parse error
 language/block-scope/syntax/redeclaration/var-redeclaration-attempt-after-let.js (default)
   Missing parse error
-language/expressions/arrow-function/params-duplicate.js (default)
-  Missing parse error
-language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates.js (default)
-  Missing parse error
 language/expressions/assignmenttargettype/direct-arrowfunction-1.js (strict mode)
   Missing parse error
 language/expressions/assignmenttargettype/direct-arrowfunction-1.js (default)
@@ -969,8 +965,6 @@ language/expressions/assignmenttargettype/direct-asyncarrowfunction-1.js (defaul
 language/expressions/assignmenttargettype/parenthesized-primaryexpression-objectliteral.js (strict mode)
   Missing parse error
 language/expressions/assignmenttargettype/parenthesized-primaryexpression-objectliteral.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-duplicate-parameters.js (default)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (strict mode)
   Missing parse error
@@ -3674,8 +3668,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84694 (97.88%)
-Failed:  1835 (2.12%)
+Passed:  84697 (97.88%)
+Failed:  1832 (2.12%)
 Errored: 2 (0.00%)
 
 Features:

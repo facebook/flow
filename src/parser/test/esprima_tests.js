@@ -187,18 +187,6 @@ module.exports = {
             }
           },
         },
-        // I don't see why this should be an error. 14.2.9
-        {
-          content: '(a, a) => 42',
-          explanation: "Esprima counts parens in its loc, Flow doesn't",
-          expected_differences: {
-            'root.errors': {
-              type: 'Flow found no error',
-              expected: 'Line 1: Strict mode function may not have duplicate parameter names',
-              actual: undefined
-            },
-          }
-        },
         '([...a]) => 42',
         '({...a}) => 42',
     ],

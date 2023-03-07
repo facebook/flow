@@ -1631,6 +1631,7 @@ module Expression
       Parse_error.(
         function
         (* Don't rollback on these errors. *)
+        | StrictParamDupe
         | StrictParamName
         | StrictReservedWord
         | ParameterAfterRestParameter
@@ -1710,6 +1711,10 @@ module Expression
               )
             else
               let params = Declaration.function_params ~await ~yield env in
+
+              (* https://tc39.es/ecma262/#prod-ArrowFormalParameters *)
+              Declaration.check_unique_formal_parameters env params;
+
               (* There's an ambiguity if you use a function type as the return
                * type for an arrow function. So we disallow anonymous function
                * types in arrow function return types unless the function type is

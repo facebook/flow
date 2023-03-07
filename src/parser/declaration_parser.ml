@@ -29,6 +29,8 @@ module type DECLARATION = sig
     simple_params:bool ->
     (Loc.t, Loc.t) Function.body * bool
 
+  val check_unique_formal_parameters : env -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
+
   val strict_post_check :
     env ->
     contains_use_strict:bool ->
@@ -77,15 +79,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     and object_property check_env =
       let open Pattern.Object in
       function
-      | Property (_, property) ->
-        Property.(
-          let check_env =
-            match property.key with
-            | Identifier id -> identifier_no_dupe_check check_env id
-            | _ -> check_env
-          in
-          pattern check_env property.pattern
-        )
+      | Property (_, { Property.pattern = patt; key = _; shorthand = _; default = _ }) ->
+        pattern check_env patt
       | RestElement (_, { Pattern.RestElement.argument; comments = _ }) ->
         pattern check_env argument
     and _array check_env arr = List.fold_left array_element check_env arr.Pattern.Array.elements
@@ -108,10 +103,24 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     in
     pattern
 
+  (** Errors if there are any duplicate formal parameters
+
+      https://tc39.es/ecma262/#sec-parameter-lists-static-semantics-early-errors *)
+  let check_unique_formal_parameters env params =
+    let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
+    let acc =
+      List.fold_left
+        (fun acc (_, { Function.Param.argument; default = _ }) -> check_param acc argument)
+        (env, SSet.empty)
+        params
+    in
+    match rest with
+    | Some (_, { Function.RestParam.argument; comments = _ }) -> ignore (check_param acc argument)
+    | None -> ()
+
   let strict_post_check env ~contains_use_strict id params =
     let strict_mode = Parser_env.in_strict_mode env in
     let simple = is_simple_parameter_list params in
-    let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
     (* If we were already in strict mode and therefore already threw strict
        errors, we want to do these checks outside of strict mode. If we
        were in non-strict mode but the function contains "use strict", then
@@ -128,15 +137,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         if is_restricted name then strict_error_at env (loc, Parse_error.StrictFunctionName);
         if is_strict_reserved name then strict_error_at env (loc, Parse_error.StrictReservedWord)
       | None -> ());
-      let acc =
-        List.fold_left
-          (fun acc (_, { Function.Param.argument; default = _ }) -> check_param acc argument)
-          (env, SSet.empty)
-          params
-      in
-      match rest with
-      | Some (_, { Function.RestParam.argument; comments = _ }) -> ignore (check_param acc argument)
-      | None -> ()
+      check_unique_formal_parameters env params
     )
 
   let function_params =
