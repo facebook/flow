@@ -684,7 +684,7 @@ let resolve_binding_partial cx reason loc b =
           let t =
             if Option.is_some default_expression then
               Tvar.mk_no_wrap_where cx reason (fun tout ->
-                  Flow_js.flow cx (t, FilterMaybeT (unknown_use, OpenT tout))
+                  Flow_js.flow cx (t, PredicateT (NotP VoidP, tout))
               )
             else
               t
