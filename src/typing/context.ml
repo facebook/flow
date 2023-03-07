@@ -111,7 +111,7 @@ type component_t = {
   mutable type_graph: Graph_explorer.graph;
   (* map of speculation ids to sets of unresolved tvars *)
   mutable all_unresolved: ISet.t IMap.t;
-  mutable produced_placeholders: bool;
+  mutable synthesis_produced_placeholders: bool;
   mutable errors: Flow_error.ErrorSet.t;
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
@@ -348,7 +348,7 @@ let make_ccx master_cx =
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
     all_unresolved = IMap.empty;
-    produced_placeholders = false;
+    synthesis_produced_placeholders = false;
     matching_props = [];
     literal_subtypes = [];
     constrained_writes = [];
@@ -719,7 +719,7 @@ let add_trust_var cx id bounds =
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
 let mk_placeholder cx reason =
-  cx.ccx.produced_placeholders <- true;
+  if cx.typing_mode = SynthesisMode then cx.ccx.synthesis_produced_placeholders <- true;
   Type.AnyT.placeholder reason
 
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
@@ -906,39 +906,36 @@ let run_and_rolled_back_cache cx f =
   let cache_snapshot = take_cache_snapshot cx in
   Exception.protect ~f ~finally:(fun () -> restore_cache_snapshot cx cache_snapshot)
 
-let run_in_typing_mode cx ~typing_mode ~reset_placeholders f =
+let run_in_synthesis_mode cx f =
   let old_typing_mode = cx.typing_mode in
-  let old_produced_placeholders = cx.ccx.produced_placeholders in
-  (* Synthesis mode is either already starting with an empty speculation state, because we are about
-   * to start synthesizing expressions, or we are in type hint eval.
-   * We need to run type hint eval in an empty speculation state, since the hint eval is an
-   * independent unit of type evaluation that's separate from an ongoing speculation. *)
-  let saved_speculation_state = !(cx.ccx.speculation_state) in
-  cx.ccx.speculation_state := [];
-  cx.ccx.produced_placeholders <- false;
-  cx.typing_mode <- typing_mode;
+  let old_produced_placeholders = cx.ccx.synthesis_produced_placeholders in
+  cx.ccx.synthesis_produced_placeholders <- false;
+  cx.typing_mode <- SynthesisMode;
   let cache_snapshot = take_cache_snapshot cx in
   let produced_placeholders = ref false in
   let result =
     Exception.protect ~f ~finally:(fun () ->
         restore_cache_snapshot cx cache_snapshot;
-        cx.ccx.speculation_state := saved_speculation_state;
         cx.typing_mode <- old_typing_mode;
-        produced_placeholders := cx.ccx.produced_placeholders;
-        cx.ccx.produced_placeholders <-
-          ( if reset_placeholders then
-            old_produced_placeholders
-          else
-            old_produced_placeholders || cx.ccx.produced_placeholders
-          )
+        produced_placeholders := cx.ccx.synthesis_produced_placeholders;
+        cx.ccx.synthesis_produced_placeholders <- old_produced_placeholders
     )
   in
   (!produced_placeholders, result)
 
-let run_in_synthesis_mode = run_in_typing_mode ~typing_mode:SynthesisMode ~reset_placeholders:false
-
-let run_in_hint_eval_mode =
-  run_in_typing_mode ~typing_mode:HintEvaluationMode ~reset_placeholders:true
+let run_in_hint_eval_mode cx f =
+  let old_typing_mode = cx.typing_mode in
+  (* We need to run type hint eval in an empty speculation state, since the hint eval is an
+   * independent unit of type evaluation that's separate from an ongoing speculation. *)
+  let saved_speculation_state = !(cx.ccx.speculation_state) in
+  cx.ccx.speculation_state := [];
+  cx.typing_mode <- HintEvaluationMode;
+  let cache_snapshot = take_cache_snapshot cx in
+  Exception.protect ~f ~finally:(fun () ->
+      restore_cache_snapshot cx cache_snapshot;
+      cx.ccx.speculation_state := saved_speculation_state;
+      cx.typing_mode <- old_typing_mode
+  )
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global

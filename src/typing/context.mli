@@ -429,7 +429,7 @@ val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
 
 val run_in_synthesis_mode : t -> (unit -> 'a) -> bool * 'a
 
-val run_in_hint_eval_mode : t -> (unit -> 'a) -> bool * 'a
+val run_in_hint_eval_mode : t -> (unit -> 'a) -> 'a
 
 val clear_master_shared : t -> master_context -> unit
 
