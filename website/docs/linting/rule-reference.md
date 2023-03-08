@@ -202,8 +202,14 @@ Enabling this lint brings extra attention to this case and can help improve Flow
 coverage of typed files by limiting the spread of implicit `any` types.
 
 ### `unused-promise` {#toc-unused-promise}
-Triggers when a `Promise` is unused (i.e., it is not `await`ed, stored in a variable, passed to a function, etc.).
-This can be dangerous, because errors are potentially unhandled, and the code may not execute in the desired order.
+Triggers when a `Promise` is unused. This can be dangerous, because errors are potentially unhandled, and the code may not execute in the desired order.
+
+A promise can be "used" by...
+* `await`ing it
+* Calling `.then` with a rejection handler (i.e., with two arguments)
+* Calling `.catch`
+* Calling `.finally`
+* Storing it in a variable, passing it to a function, etc.
 
 For example:
 
@@ -212,8 +218,16 @@ For example:
 declare function foo(): Promise<void>;
 
 async function bar() {
-  foo(); // we forgot to await!
+  await foo(); // ok
+  foo(); // error, we forgot to await!
+}
+
+function baz() {
+  foo().catch(handleError); // ok
+  foo(); // error
 }
 ```
 
 You can explicitly ignore the promise with the `void` operator (e.g., `void foo();`).
+
+Note: As of v0.201.0, this rule subsumed the `unused-promise-in-async-scope` and `unused-promise-in-sync-scope` rules.
