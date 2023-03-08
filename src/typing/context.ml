@@ -937,34 +937,6 @@ let run_in_hint_eval_mode cx f =
       cx.typing_mode <- old_typing_mode
   )
 
-(* Given a sig context, it makes sense to clear the parts that are shared with
-   the master sig context. Why? The master sig context, which contains global
-   declarations, is an implicit dependency for every file, and so will be
-   "merged in" anyway, thus making those shared parts redundant to carry around
-   in other sig contexts. This saves a lot of shared memory as well as
-   deserialization time. *)
-let clear_master_shared cx master_cx =
-  let { master_sig_cx = master_cx; _ } = master_cx in
-  let module PMap = Type.Properties.Map in
-  let module EMap = Type.Exports.Map in
-  let sig_cx = cx.ccx.sig_cx in
-  cx.ccx.sig_cx <-
-    {
-      graph = IMap.filter (fun id _ -> not (IMap.mem id master_cx.graph)) sig_cx.graph;
-      trust_graph =
-        IMap.filter (fun id _ -> not (IMap.mem id master_cx.trust_graph)) sig_cx.trust_graph;
-      property_maps =
-        PMap.filter (fun id _ -> not (PMap.mem id master_cx.property_maps)) sig_cx.property_maps;
-      call_props =
-        IMap.filter (fun id _ -> not (IMap.mem id master_cx.call_props)) sig_cx.call_props;
-      evaluated =
-        Type.Eval.Map.filter
-          (fun id _ -> not (Type.Eval.Map.mem id master_cx.evaluated))
-          sig_cx.evaluated;
-      export_maps =
-        EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) sig_cx.export_maps;
-    }
-
 let test_prop_hit cx id =
   cx.ccx.test_prop_hits_and_misses <- IMap.add id Hit cx.ccx.test_prop_hits_and_misses
 

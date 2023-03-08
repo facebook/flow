@@ -431,8 +431,6 @@ val run_in_synthesis_mode : t -> (unit -> 'a) -> bool * 'a
 
 val run_in_hint_eval_mode : t -> (unit -> 'a) -> 'a
 
-val clear_master_shared : t -> master_context -> unit
-
 val add_global_value_cache_entry :
   t -> Reason.name -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result -> unit
 
