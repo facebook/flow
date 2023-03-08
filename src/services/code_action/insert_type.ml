@@ -226,15 +226,7 @@ let path_of_loc ?(error = Error "no path for location") (loc : Loc.t) : (string,
 class mapper ~strict ~synth_type target =
   let target_is_point = Utils.is_point target in
   object (this)
-    inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
-
-    method private target_contains loc = Loc.contains target loc
-
-    method private target_contained_by loc = Loc.contains loc target
-
-    method private is_target loc = Loc.equal target loc
-
-    method loc_annot_contains_target = this#target_contained_by
+    inherit Autofix_mapper.mapper target as super
 
     method private synth_type_annotation_hint loc = Flow_ast.Type.Available (synth_type loc)
 

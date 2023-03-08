@@ -752,9 +752,7 @@ module Identifier_finder = struct
 
   class mapper target =
     object (this)
-      inherit [Loc.t] Flow_ast_contains_mapper.mapper
-
-      method loc_annot_contains_target loc = Loc.contains loc target
+      inherit Autofix_mapper.mapper target
 
       method! identifier id =
         let (loc, _) = id in

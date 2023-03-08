@@ -10,15 +10,7 @@
 
 class mapper target =
   object (this)
-    inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
-
-    method private target_contains loc = Loc.contains target loc
-
-    method private target_contained_by loc = Loc.contains loc target
-
-    method private is_target loc = Loc.equal target loc
-
-    method loc_annot_contains_target = this#target_contained_by
+    inherit Autofix_mapper.mapper target as super
 
     method! type_ t =
       let open Flow_ast.Type in
