@@ -197,7 +197,6 @@ let post_check ~visit ~iteration ~reader ~options ~metadata file = function
   | (Ok None | Error _) as result -> result
   | Ok (Some ((cx, type_sig, file_sig, typed_ast), _)) ->
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
     let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
     let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
     let ccx =
@@ -207,7 +206,6 @@ let post_check ~visit ~iteration ~reader ~options ~metadata file = function
         file_sig;
         metadata;
         options;
-        master_cx;
         cx;
         typed_ast;
         docblock;

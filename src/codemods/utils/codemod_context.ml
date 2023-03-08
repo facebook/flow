@@ -12,7 +12,6 @@ module Typed = struct
     file_sig: File_sig.With_ALoc.t;
     metadata: Context.metadata;
     options: Options.t;
-    master_cx: Context.master_context;
     cx: Context.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     docblock: Docblock.t;
