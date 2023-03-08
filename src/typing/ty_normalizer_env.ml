@@ -110,7 +110,7 @@ type genv = {
   file_sig: File_sig.t;
 }
 
-let mk_genv ~full_cx ~file ~typed_ast ~file_sig = { file; cx = full_cx; typed_ast; file_sig }
+let mk_genv ~cx ~file ~typed_ast ~file_sig = { file; cx; typed_ast; file_sig }
 
 module SymbolSet = Flow_set.Make (struct
   type t = Ty_symbol.symbol

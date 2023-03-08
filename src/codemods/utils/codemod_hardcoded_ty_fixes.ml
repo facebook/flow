@@ -275,7 +275,7 @@ module Make (Extra : BASE_STATS) = struct
       ~generalize_maybe
       ~generalize_react_mixed_element
       acc =
-    let { Codemod_context.Typed.full_cx = cx; file_sig; typed_ast; _ } = cctx in
+    let { Codemod_context.Typed.cx; file_sig; typed_ast; _ } = cctx in
     object (this)
       inherit Insert_type_utils.patch_up_react_mapper ~imports_react () as super
 

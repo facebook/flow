@@ -423,7 +423,7 @@ let mk_check_file options ~reader () =
         SMap.fold f require_loc_map []
       in
       let (cx, typed_ast) = check_file file requires ast comments file_sig docblock aloc_table in
-      let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
+      let coverage = Coverage.file_coverage ~cx typed_ast in
       let errors = Context.errors cx in
       let errors =
         tolerable_errors

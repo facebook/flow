@@ -303,7 +303,7 @@ let infer_type filename content line col : Loc.t * (string, string) result =
     let open Query_types in
     let result =
       type_at_pos_type
-        ~full_cx:cx
+        ~cx
         ~file
         ~file_sig
         ~omit_targ_defaults:false

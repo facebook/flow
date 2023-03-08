@@ -23,7 +23,7 @@ let assert_refactored
   let actual =
     Refactor_extract.provide_available_refactors
       ~ast
-      ~full_cx:cx
+      ~cx
       ~file:dummy_filename
       ~file_sig:(file_sig_of_ast ast)
       ~typed_ast

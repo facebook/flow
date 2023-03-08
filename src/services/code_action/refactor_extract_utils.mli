@@ -167,7 +167,7 @@ module TypeSynthesizer : sig
   type synthesizer_context
 
   val create_synthesizer_context :
-    full_cx:Context.t ->
+    cx:Context.t ->
     file:File_key.t ->
     file_sig:File_sig.With_ALoc.t ->
     typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->

@@ -52,7 +52,7 @@ val error_to_string : errors -> string
 
 val synth_type :
   ?size_limit:int ->
-  full_cx:Context.t ->
+  cx:Context.t ->
   file_sig:File_sig.With_ALoc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
@@ -73,7 +73,7 @@ val add_imports :
   (Loc.t, Loc.t) Flow_ast.Statement.t list
 
 val insert_type :
-  full_cx:Context.t ->
+  cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
@@ -85,7 +85,7 @@ val insert_type :
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
 
 val insert_type_t :
-  full_cx:Context.t ->
+  cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->

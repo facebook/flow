@@ -13,7 +13,7 @@ type refactor = {
 
 val provide_available_refactors :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
-  full_cx:Context.t ->
+  cx:Context.t ->
   file:File_key.t ->
   file_sig:File_sig.With_ALoc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->

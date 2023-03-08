@@ -434,7 +434,7 @@ let covered_types ~should_check ~check_trust cx tast =
   coverage_fold_tast ~f:step ~init:[] tast |> List.sort (fun (a, _) (b, _) -> Loc.compare a b)
 
 let file_coverage :
-    full_cx:Context.t ->
+    cx:Context.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
     Coverage_response.file_coverage =
   let coverage_computer = new visitor in
@@ -446,6 +446,6 @@ let file_coverage :
     | Tainted -> { acc with tainted = acc.tainted + 1 }
     | Empty -> { acc with empty = acc.empty + 1 }
   in
-  fun ~full_cx ->
-    let step = step full_cx in
+  fun ~cx ->
+    let step = step cx in
     coverage_fold_tast ~f:step ~init:initial_coverage

@@ -208,7 +208,7 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
     let ty =
       Ty_normalizer.from_scheme
         ~options:ty_normalizer_options
-        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+        ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig)
         scheme
     in
     let jsdoc =

@@ -52,25 +52,25 @@ let autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri new_as
   ]
 
 let autofix_exports_code_actions
-    ~options ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
+    ~options ~cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
   let open Autofix_exports in
   let fixable_locs = set_of_fixable_signature_verification_locations tolerable_errors in
   if LocSet.mem loc fixable_locs then
-    fix_signature_verification_error_at_loc ~full_cx ~file_sig ~typed_ast ast loc
+    fix_signature_verification_error_at_loc ~cx ~file_sig ~typed_ast ast loc
     |> autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri
   else
     []
 
 let autofix_missing_local_annot_code_actions
-    ~options ~full_cx ~ast ~file_sig ~tolerable_errors:_ ~typed_ast ~diagnostics uri loc =
+    ~options ~cx ~ast ~file_sig ~tolerable_errors:_ ~typed_ast ~diagnostics uri loc =
   let open Autofix_missing_local_annots in
-  let fixable_locs = map_of_fixable_missing_local_params full_cx in
+  let fixable_locs = map_of_fixable_missing_local_params cx in
   let entry =
     Base.List.find ~f:(fun (err_loc, _) -> Loc.contains err_loc loc) (LocMap.elements fixable_locs)
   in
   match entry with
   | Some (_, type_t) ->
-    fix_missing_param_annot_at_loc ~cx:full_cx ~file_sig ~typed_ast ast loc type_t
+    fix_missing_param_annot_at_loc ~cx ~file_sig ~typed_ast ast loc type_t
     |> autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri
   | None -> []
 
@@ -78,7 +78,7 @@ let refactor_extract_code_actions
     ~options
     ~support_experimental_snippet_text_edit
     ~ast
-    ~full_cx
+    ~cx
     ~file_sig
     ~typed_ast
     ~reader
@@ -122,7 +122,7 @@ let refactor_extract_code_actions
         in
         Refactor_extract.provide_available_refactors
           ~ast
-          ~full_cx
+          ~cx
           ~file
           ~file_sig:(File_sig.abstractify_locs file_sig)
           ~typed_ast
@@ -869,7 +869,7 @@ let code_actions_at_loc
   let experimental_code_actions =
     autofix_exports_code_actions
       ~options
-      ~full_cx:cx
+      ~cx
       ~ast
       ~file_sig
       ~tolerable_errors
@@ -882,7 +882,7 @@ let code_actions_at_loc
         ~support_experimental_snippet_text_edit:
           (Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
         ~ast
-        ~full_cx:cx
+        ~cx
         ~file_sig
         ~typed_ast
         ~reader
@@ -891,7 +891,7 @@ let code_actions_at_loc
         loc
     @ autofix_missing_local_annot_code_actions
         ~options
-        ~full_cx:cx
+        ~cx
         ~ast
         ~file_sig
         ~tolerable_errors
@@ -1033,11 +1033,11 @@ let autofix_exports ~options ~profiling ~file_key ~file_content =
   match file_artifacts with
   | Ok
       ( Parse_artifacts { ast; file_sig; tolerable_errors; _ },
-        Typecheck_artifacts { cx = full_cx; typed_ast; obj_to_obj_map = _ }
+        Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }
       ) ->
     let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
     let (new_ast, it_errs) =
-      fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
+      fix_signature_verification_errors ~file_key ~cx ~file_sig ~typed_ast ast sv_errors
     in
     let opts = layout_options options in
     Ok (Insert_type.mk_patch ~opts ast new_ast file_content, it_errs)
@@ -1057,9 +1057,9 @@ let autofix_missing_local_annot ~options ~profiling ~file_key ~file_content =
   match file_artifacts with
   | Ok
       ( Parse_artifacts { ast; file_sig; _ },
-        Typecheck_artifacts { cx = full_cx; typed_ast; obj_to_obj_map = _ }
+        Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }
       ) ->
-    let new_ast = fix_all_missing_param_annot_errors_in_file ~cx:full_cx ~file_sig ~typed_ast ast in
+    let new_ast = fix_all_missing_param_annot_errors_in_file ~cx ~file_sig ~typed_ast ast in
     let opts = layout_options options in
     Ok (Insert_type.mk_patch ~opts ast new_ast file_content)
   | Error _ -> Error "Failed to type-check file"
@@ -1090,12 +1090,12 @@ let insert_type
   match file_artifacts with
   | Ok
       ( Parse_artifacts { ast; file_sig; _ },
-        Typecheck_artifacts { cx = full_cx; typed_ast; obj_to_obj_map = _ }
+        Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }
       ) ->
     (try
        let new_ast =
          Insert_type.insert_type
-           ~full_cx
+           ~cx
            ~file_sig
            ~typed_ast
            ~omit_targ_defaults

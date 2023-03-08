@@ -30,9 +30,9 @@ let mapper
   let ty_normalizer_options = Ty_normalizer_env.default_options in
   let typed_ast = Codemod_context.Typed.typed_ast cctx in
   let file_sig = Codemod_context.Typed.file_sig cctx in
-  let full_cx = Codemod_context.Typed.context cctx in
+  let cx = Codemod_context.Typed.context cctx in
   let file = Codemod_context.Typed.file cctx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
   let implicit_instantiation_results =
     ALocFuzzyMap.fold
       (fun aloc result acc ->

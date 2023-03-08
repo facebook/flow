@@ -357,9 +357,9 @@ let type_lookup_at_location cx typed_ast loc =
   | Some p -> p
   | None -> raise @@ unexpected @@ UnknownTypeAtPoint loc
 
-let normalize ~full_cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme =
+let normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme =
   Query_types.(
-    match insert_type_normalize ~full_cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme with
+    match insert_type_normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme with
     | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalizeNoMatch
     | FailureUnparseable (loc, _, msg) -> raise @@ expected @@ FailedToNormalize (loc, msg)
     | Success (_, ty) -> ty
@@ -367,7 +367,7 @@ let normalize ~full_cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme =
 
 let synth_type
     ?(size_limit = 30)
-    ~full_cx
+    ~cx
     ~file_sig
     ~typed_ast
     ~omit_targ_defaults
@@ -375,7 +375,7 @@ let synth_type
     ~remote_converter
     type_loc
     type_scheme =
-  let exact_by_default = Context.exact_by_default full_cx in
+  let exact_by_default = Context.exact_by_default cx in
   let imports_react = ImportsHelper.imports_react file_sig in
   let process ty =
     let () =
@@ -390,7 +390,7 @@ let synth_type
     remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty type_loc
   in
   let ty =
-    match normalize ~full_cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc type_scheme with
+    match normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc type_scheme with
     | Ty.Type ty -> process ty
     | Ty.Decl (Ty.ClassDecl (name, _)) ->
       let ty = Ty.TypeOf (Ty.TSymbol name) in
@@ -470,7 +470,7 @@ let add_imports remote_converter stmts =
   add_statement_after_directive_and_type_imports stmts new_imports
 
 let insert_type_scheme
-    ~full_cx
+    ~cx
     ~file_sig
     ~typed_ast
     ~omit_targ_defaults
@@ -495,7 +495,7 @@ let insert_type_scheme
   in
   let synth_type location =
     synth_type
-      ~full_cx
+      ~cx
       ~file_sig
       ~typed_ast
       ~omit_targ_defaults
@@ -510,7 +510,7 @@ let insert_type_scheme
   (loc, { ast' with Flow_ast.Program.statements })
 
 let insert_type
-    ~full_cx
+    ~cx
     ~file_sig
     ~typed_ast
     ~omit_targ_defaults
@@ -520,7 +520,7 @@ let insert_type
     ast
     target =
   insert_type_scheme
-    ~full_cx
+    ~cx
     ~file_sig
     ~typed_ast
     ~omit_targ_defaults
@@ -529,11 +529,11 @@ let insert_type
     ?remote_converter
     ast
     target
-    (fun location -> type_lookup_at_location full_cx typed_ast location
+    (fun location -> type_lookup_at_location cx typed_ast location
   )
 
 let insert_type_t
-    ~full_cx
+    ~cx
     ~file_sig
     ~typed_ast
     ~omit_targ_defaults
@@ -544,11 +544,11 @@ let insert_type_t
     target
     type_t =
   let loc_to_scheme location =
-    let scheme = type_lookup_at_location full_cx typed_ast location in
+    let scheme = type_lookup_at_location cx typed_ast location in
     { scheme with Type.TypeScheme.type_ = type_t }
   in
   insert_type_scheme
-    ~full_cx
+    ~cx
     ~file_sig
     ~typed_ast
     ~omit_targ_defaults

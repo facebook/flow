@@ -12,8 +12,8 @@ module Typed = struct
     file_sig: File_sig.With_ALoc.t;
     metadata: Context.metadata;
     options: Options.t;
-    full_cx: Context.t;
     master_cx: Context.master_context;
+    cx: Context.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     docblock: Docblock.t;
     iteration: int;
@@ -27,12 +27,12 @@ module Typed = struct
   let file ccx = ccx.file
 
   let ty_at_loc norm_opts ccx loc =
-    let { full_cx; file; file_sig; typed_ast; _ } = ccx in
+    let { cx; file; file_sig; typed_ast; _ } = ccx in
     let aloc = ALoc.of_loc loc in
-    match Typed_ast_utils.find_exact_match_annotation full_cx typed_ast aloc with
+    match Typed_ast_utils.find_exact_match_annotation cx typed_ast aloc with
     | None -> Error MissingTypeAnnotation
     | Some scheme ->
-      let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
+      let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
       (match Ty_normalizer.from_scheme ~options:norm_opts ~genv scheme with
       | Ok ty -> Ok ty
       | Error e -> Error (NormalizationError e))
@@ -41,7 +41,7 @@ module Typed = struct
 
   let metadata ccx = ccx.metadata
 
-  let context ccx = ccx.full_cx
+  let context ccx = ccx.cx
 
   let typed_ast ccx = ccx.typed_ast
 

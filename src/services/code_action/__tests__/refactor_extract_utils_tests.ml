@@ -1037,7 +1037,7 @@ let type_synthesizer_tests =
     let file_sig = file_sig_of_ast ast in
     let locs = LocSet.of_list locs in
     TypeSynthesizer.create_synthesizer_context
-      ~full_cx:cx
+      ~cx
       ~file:dummy_filename
       ~file_sig
       ~typed_ast

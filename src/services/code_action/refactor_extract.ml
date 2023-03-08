@@ -459,7 +459,7 @@ let available_refactors_for_statements
     extract_to_method_refactors @ extract_to_functions_refactors
 
 let extract_from_statements_refactors
-    ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~create_unique_name extracted_statements =
+    ~ast ~cx ~file ~file_sig ~typed_ast ~reader ~create_unique_name extracted_statements =
   let { InformationCollectors.has_unwrapped_control_flow; async_function; has_this_super } =
     InformationCollectors.collect_statements_information extracted_statements
   in
@@ -479,7 +479,7 @@ let extract_from_statements_refactors
         | Some loc -> Loc.btwn insert_new_function_call_loc loc
       in
       let (_ssa_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
-        Ssa_builder.program_with_scope ~enable_enums:(Context.enable_enums full_cx) ast
+        Ssa_builder.program_with_scope ~enable_enums:(Context.enable_enums cx) ast
       in
       let {
         VariableAnalysis.defs_with_scopes_of_local_uses;
@@ -510,7 +510,7 @@ let extract_from_statements_refactors
             @ escaping_definitions.VariableAnalysis.escaping_variables
             )
         in
-        TypeSynthesizer.create_synthesizer_context ~full_cx ~file ~file_sig ~typed_ast ~reader ~locs
+        TypeSynthesizer.create_synthesizer_context ~cx ~file ~file_sig ~typed_ast ~reader ~locs
       in
       available_refactors_for_statements
         ~scope_info
@@ -603,7 +603,7 @@ let create_extract_to_constant_refactor
 
 let extract_from_expression_refactors
     ~ast
-    ~full_cx
+    ~cx
     ~typed_ast
     ~reader
     ~create_unique_name
@@ -613,7 +613,7 @@ let extract_from_expression_refactors
   in
   let extracted_expression_loc = fst expression in
   let (_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
-    Ssa_builder.program_with_scope ~enable_enums:(Context.enable_enums full_cx) ast
+    Ssa_builder.program_with_scope ~enable_enums:(Context.enable_enums cx) ast
   in
   let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =
     VariableAnalysis.collect_relevant_defs_with_scope
@@ -671,7 +671,7 @@ let extract_from_expression_refactors
 
 let extract_to_type_alias_refactors
     ~ast
-    ~full_cx
+    ~cx
     ~file
     ~file_sig
     ~typed_ast
@@ -694,7 +694,7 @@ let extract_to_type_alias_refactors
     let%bind (type_params_to_add, type_param_synthesizer) =
       let type_synthesizer_context =
         TypeSynthesizer.create_synthesizer_context
-          ~full_cx
+          ~cx
           ~file
           ~file_sig
           ~typed_ast
@@ -758,7 +758,7 @@ let extract_to_type_alias_refactors
 
 let provide_available_refactors
     ~ast
-    ~full_cx
+    ~cx
     ~file
     ~file_sig
     ~typed_ast
@@ -776,7 +776,7 @@ let provide_available_refactors
       ~f:
         (extract_from_statements_refactors
            ~ast
-           ~full_cx
+           ~cx
            ~file
            ~file_sig
            ~typed_ast
@@ -788,7 +788,7 @@ let provide_available_refactors
   let extract_from_expression_refactors =
     Base.Option.value_map
       ~default:[]
-      ~f:(extract_from_expression_refactors ~ast ~full_cx ~typed_ast ~reader ~create_unique_name)
+      ~f:(extract_from_expression_refactors ~ast ~cx ~typed_ast ~reader ~create_unique_name)
       extracted_expression
   in
   let extract_to_type_alias_refactors =
@@ -797,7 +797,7 @@ let provide_available_refactors
       ~f:
         (extract_to_type_alias_refactors
            ~ast
-           ~full_cx
+           ~cx
            ~file
            ~file_sig
            ~typed_ast

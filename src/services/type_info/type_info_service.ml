@@ -27,7 +27,7 @@ let type_at_pos
       let file = Context.file cx in
       let result =
         type_at_pos_type
-          ~full_cx:cx
+          ~cx
           ~file
           ~file_sig:(File_sig.abstractify_locs file_sig)
           ~omit_targ_defaults

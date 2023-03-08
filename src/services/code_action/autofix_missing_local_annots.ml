@@ -37,7 +37,7 @@ let map_of_fixable_missing_local_params cx =
 let fix_missing_param_annot_at_loc ?remote_converter ~cx ~file_sig ~typed_ast =
   let open Insert_type in
   insert_type_t
-    ~full_cx:cx
+    ~cx
     ~file_sig
     ~typed_ast
     ?remote_converter
@@ -50,7 +50,7 @@ let fix_all_missing_param_annot_errors_in_file ?remote_converter ~cx ~file_sig ~
   let fixable_locs = map_of_fixable_missing_local_params cx in
   let fix_one_loc =
     insert_type_t
-      ~full_cx:cx
+      ~cx
       ~file_sig
       ~typed_ast
       ?remote_converter

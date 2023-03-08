@@ -848,7 +848,7 @@ end
 
 module TypeSynthesizer = struct
   type synthesizer_context = {
-    full_cx: Context.t;
+    cx: Context.t;
     file: File_key.t;
     file_sig: File_sig.With_ALoc.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
@@ -920,11 +920,11 @@ module TypeSynthesizer = struct
     |> fst
     |> List.rev
 
-  let create_synthesizer_context ~full_cx ~file ~file_sig ~typed_ast ~reader ~locs =
+  let create_synthesizer_context ~cx ~file ~file_sig ~typed_ast ~reader ~locs =
     let collector = new type_collector reader locs in
     ignore (collector#program typed_ast);
     let type_at_loc_map = collector#collected_types in
-    { full_cx; file; file_sig; typed_ast; type_at_loc_map }
+    { cx; file; file_sig; typed_ast; type_at_loc_map }
 
   type type_synthesizer_with_import_adder = {
     type_param_synthesizer:
@@ -937,8 +937,7 @@ module TypeSynthesizer = struct
     added_imports: unit -> (string * Autofix_imports.bindings) list;
   }
 
-  let create_type_synthesizer_with_import_adder
-      { full_cx; file; file_sig; typed_ast; type_at_loc_map } =
+  let create_type_synthesizer_with_import_adder { cx; file; file_sig; typed_ast; type_at_loc_map } =
     let remote_converter =
       new Insert_type_imports.ImportsHelper.remote_converter
         ~iteration:0
@@ -949,7 +948,7 @@ module TypeSynthesizer = struct
       try
         Ok
           (Insert_type.synth_type
-             ~full_cx
+             ~cx
              ~file_sig
              ~typed_ast
              ~omit_targ_defaults:false
@@ -989,7 +988,7 @@ module TypeSynthesizer = struct
       | None -> return None
       | Some ({ Type.TypeScheme.tparams_rev; type_ } as type_scheme) ->
         let%map (_, ast_type) = synth_type loc type_scheme in
-        Some (keep_used_tparam_rev ~cx:full_cx ~tparams_rev ~type_, ast_type)
+        Some (keep_used_tparam_rev ~cx ~tparams_rev ~type_, ast_type)
     in
     {
       type_param_synthesizer;

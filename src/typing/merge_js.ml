@@ -410,7 +410,7 @@ let check_implicit_instantiations cx typed_ast file_sig =
   let () =
     let file = Context.file cx in
     let ty_normalizer_options = Ty_normalizer_env.default_codemod_options in
-    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~file_sig ~typed_ast in
+    let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
     let implicit_instantiation_ty_results =
       Loc_collections.ALocFuzzyMap.mapi
         (fun loc result ->

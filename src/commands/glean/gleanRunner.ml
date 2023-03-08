@@ -190,14 +190,14 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_modules ~file_s
     [])
   |> Base.List.map ~f:(TypeImportDeclaration.to_json ~root ~write_root)
 
-let type_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast =
+let type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast =
   let results = ref [] in
   let add_reference ((aloc, t), Flow_ast.Identifier.{ name; _ }) =
     let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
     let rec def_loc_of_t t =
       let def_loc = t |> TypeUtil.def_loc_of_t |> Parsing_heaps.Reader.loc_of_aloc ~reader in
       if Loc.contains def_loc loc then
-        match Flow_js_utils.possible_types_of_type full_cx t with
+        match Flow_js_utils.possible_types_of_type cx t with
         | [t'] -> def_loc_of_t t'
         | _ -> None
       else
@@ -222,13 +222,11 @@ let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t option =
       ~f:(fun { def_loc; _ } -> def_loc
     )
 
-let member_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast ~file_sig =
+let member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig =
   let results = ref [] in
   let add_member ~type_ ~aloc ~name ~tparams_rev =
     let scheme = TypeScheme.{ tparams_rev; type_ } in
-    Base.Option.iter
-      (extract_member_def ~cx:full_cx ~typed_ast ~file_sig scheme name)
-      ~f:(fun def_aloc ->
+    Base.Option.iter (extract_member_def ~cx ~typed_ast ~file_sig scheme name) ~f:(fun def_aloc ->
         let memberDeclaration =
           let loc = Parsing_heaps.Reader.loc_of_aloc ~reader def_aloc in
           MemberDeclaration.{ name; loc }
@@ -589,8 +587,7 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
       super#enum_declaration enum
   end
 
-let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~reader ~typed_ast ~ast
-    =
+let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader ~typed_ast ~ast =
   let infos = ref [] in
   let add_info kind ~tparams_rev name loc type_ =
     let scheme = TypeScheme.{ tparams_rev; type_ } in
@@ -610,9 +607,9 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~re
        #program
        typed_ast
     );
-  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~typed_ast ~file_sig in
   let options = Ty_normalizer_env.default_options in
-  let exact_by_default = Context.exact_by_default full_cx in
+  let exact_by_default = Context.exact_by_default cx in
   let documentations = Find_documentation.def_loc_to_comment_loc_map ast in
   Base.List.fold
     (Ty_normalizer.from_schemes ~options ~genv !infos)
@@ -714,9 +711,7 @@ let make ~output_dir ~write_root =
       { report; combine; empty }
 
     let visit ~options ast ctx =
-      let Codemod_context.Typed.{ typed_ast; full_cx; file; file_sig; docblock; type_sig; _ } =
-        ctx
-      in
+      let Codemod_context.Typed.{ typed_ast; cx; file; file_sig; docblock; type_sig; _ } = ctx in
       let root = Options.root options in
       let reader = State_reader.create () in
       let resolved_modules =
@@ -731,16 +726,7 @@ let make ~output_dir ~write_root =
         Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast
       in
       let (declaration_info, member_declaration_info, type_declaration_info) =
-        declaration_infos
-          ~scope_info
-          ~root
-          ~write_root
-          ~file
-          ~file_sig
-          ~full_cx
-          ~reader
-          ~typed_ast
-          ~ast
+        declaration_infos ~scope_info ~root ~write_root ~file ~file_sig ~cx ~reader ~typed_ast ~ast
       in
       let type_import_declaration =
         type_import_declarations ~root ~write_root ~reader ~resolved_modules ~file_sig
@@ -766,10 +752,10 @@ let make ~output_dir ~write_root =
         import_declarations ~root ~write_root ~reader ~resolved_modules ~file_sig
       in
       let member_declaration_reference =
-        member_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast ~file_sig
+        member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig
       in
       let type_declaration_reference =
-        type_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast
+        type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast
       in
       let file_of_string_module =
         file_of_string_modules ~root ~write_root ~options ~docblock ~file

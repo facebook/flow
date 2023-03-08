@@ -283,7 +283,7 @@ let ty_normalizer_options =
   }
 
 let extract ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme =
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let in_idx_ref = ref false in
   let idx_hook () = in_idx_ref := true in
   match

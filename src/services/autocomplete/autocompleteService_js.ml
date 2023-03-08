@@ -781,7 +781,7 @@ let autocomplete_id
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
   let prefer_single_quotes = Options.format_single_quotes options in
   let results =
@@ -1179,7 +1179,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
   |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
   |> Ty_normalizer.from_types
        ~options:ty_normalizer_options
-       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+       ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
 let autocomplete_unqualified_type
     ~env
@@ -1230,7 +1230,7 @@ let autocomplete_unqualified_type
              (items_rev, error_to_log :: errors_to_log))
          (items_rev, [])
   in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let value_identifiers =
     local_value_identifiers
       ~options
@@ -1726,7 +1726,7 @@ let autocomplete_module_exports
   let module_ty_res =
     Ty_normalizer.from_scheme
       ~options:ty_normalizer_options
-      ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
+      ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig)
       scheme
   in
   let documentation_and_tags_of_module_member =
@@ -2180,9 +2180,7 @@ let autocomplete_get_results
           obj_type
           ~tparams_rev
       | Ac_literal { lit_type } ->
-        let genv =
-          Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig
-        in
+        let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
         let upper_bound = upper_bound_t_of_t ~cx lit_type in
         let prefer_single_quotes = Options.format_single_quotes options in
         let items =

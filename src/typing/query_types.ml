@@ -23,12 +23,12 @@ let result_of_normalizer_error loc scheme err =
   FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)
 
 let type_at_pos_type
-    ~full_cx ~file ~file_sig ~omit_targ_defaults ~verbose_normalizer ~max_depth ~typed_ast loc :
+    ~cx ~file ~file_sig ~omit_targ_defaults ~verbose_normalizer ~max_depth ~typed_ast loc :
     Ty.type_at_pos_result result =
-  match find_type_at_pos_annotation full_cx typed_ast loc with
+  match find_type_at_pos_annotation cx typed_ast loc with
   | None -> FailureNoMatch
   | Some (loc, scheme) ->
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
+    let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
     let from_scheme evaluate_type_destructors =
       Ty_normalizer.from_scheme
         ~options:
@@ -51,11 +51,11 @@ let type_at_pos_type
       (* We need to roll back caches and errors, because server state persists
          through IDE requests. If evaluation results in new errors, future
          requests at the same location should also result in "new" errors. *)
-      Context.run_and_rolled_back_cache full_cx (fun () ->
-          let errors = Context.errors full_cx in
+      Context.run_and_rolled_back_cache cx (fun () ->
+          let errors = Context.errors cx in
           let evaluated = from_scheme Ty_normalizer_env.EvaluateAll in
-          let errors' = Context.errors full_cx in
-          Context.reset_errors full_cx errors;
+          let errors' = Context.errors cx in
+          Context.reset_errors cx errors;
           if Flow_error.ErrorSet.equal errors errors' then
             Some evaluated
           else
@@ -75,7 +75,7 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
     { Ty_normalizer_env.default_options with Ty_normalizer_env.evaluate_type_destructors }
   in
   let file = Context.file cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~typed_ast ~file_sig in
   let result =
     Ty_normalizer.from_schemes ~options ~genv (Typed_ast_utils.typed_ast_to_list typed_ast)
   in
@@ -86,7 +86,7 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   Base.List.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
 
 let insert_type_normalize
-    ~full_cx ?(file = Context.file full_cx) ~file_sig ~omit_targ_defaults ~typed_ast loc scheme :
+    ~cx ?(file = Context.file cx) ~file_sig ~omit_targ_defaults ~typed_ast loc scheme :
     Ty.elt result =
   let options =
     {
@@ -108,7 +108,7 @@ let insert_type_normalize
       max_depth = None;
     }
   in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~typed_ast in
+  let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
   match Ty_normalizer.from_scheme ~options ~genv scheme with
   | Ok elt -> Success (loc, elt)
   | Error err -> result_of_normalizer_error loc scheme err
