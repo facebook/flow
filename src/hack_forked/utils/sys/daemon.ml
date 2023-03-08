@@ -180,55 +180,6 @@ let setup_channels channel_mode =
   Unix.set_close_on_exec parent_out;
   ((parent_in, child_out), (child_in, parent_out))
 
-let descr_as_channels (descr_in, descr_out) =
-  let ic = Timeout.in_channel_of_descr descr_in in
-  let oc = Unix.out_channel_of_descr descr_out in
-  (ic, oc)
-
-(* This only works on Unix, and should be avoided as far as possible. Use
- * Daemon.spawn instead. *)
-let fork
-    ?(channel_mode = `pipe)
-    (type param)
-    (log_stdout, log_stderr)
-    (f : param -> ('a, 'b) channel_pair -> unit)
-    (param : param) : ('b, 'a) handle =
-  let ((parent_in, child_out), (child_in, parent_out)) = setup_channels channel_mode in
-  (* Since don't use exec, we can actually set CLOEXEC before the fork. *)
-  Unix.set_close_on_exec child_in;
-  Unix.set_close_on_exec child_out;
-  let (parent_in, child_out) = descr_as_channels (parent_in, child_out) in
-  let (child_in, parent_out) = descr_as_channels (child_in, parent_out) in
-  match Fork.fork () with
-  | -1 -> failwith "Go get yourself a real computer"
-  | 0 ->
-    (* child *)
-    (try
-       ignore (Unix.setsid ());
-       Timeout.close_in parent_in;
-       close_out parent_out;
-       Sys_utils.with_umask 0o111 (fun () ->
-           let fd = null_fd () in
-           Unix.dup2 fd Unix.stdin;
-           Unix.close fd
-       );
-       Unix.dup2 log_stdout Unix.stdout;
-       Unix.dup2 log_stderr Unix.stderr;
-       if log_stdout <> Unix.stdout then Unix.close log_stdout;
-       if log_stderr <> Unix.stderr && log_stderr <> log_stdout then Unix.close log_stderr;
-       f param (child_in, child_out);
-       exit 0
-     with
-    | e ->
-      let e = Exception.wrap e in
-      prerr_endline (Exception.to_string e);
-      exit 1)
-  | pid ->
-    (* parent *)
-    Timeout.close_in child_in;
-    close_out child_out;
-    { channels = (parent_in, parent_out); pid }
-
 let spawn
     (type param input output)
     ?(channel_mode = `pipe)

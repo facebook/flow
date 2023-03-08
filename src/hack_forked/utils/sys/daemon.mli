@@ -78,15 +78,6 @@ val fd_of_path : string -> Unix.file_descr
 
 val null_fd : unit -> Unix.file_descr
 
-(* Fork and run a function that communicates via the typed channels *)
-val fork :
-  ?channel_mode:[ `pipe | `socket ] ->
-  (* Where the daemon's output should go *)
-  Unix.file_descr * Unix.file_descr ->
-  ('param -> ('input, 'output) channel_pair -> unit) ->
-  'param ->
-  ('output, 'input) handle
-
 (* Spawn a new instance of the current process, and execute the
    alternate entry point. *)
 val spawn :
