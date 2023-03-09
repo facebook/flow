@@ -58,7 +58,7 @@ let resolve_annotation cx tparams_map anno =
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
-  Node_cache.set_annotation cache anno;
+  if Context.typing_mode cx = Context.CheckingMode then Node_cache.set_annotation cache anno;
   t
 
 let rec synthesizable_expression cx ?cond exp =
