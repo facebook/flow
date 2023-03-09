@@ -1283,21 +1283,6 @@ let process_rollouts config sections =
   let%bind config = parse_rollouts config !rollout_section_lines in
   filter_sections_by_rollout sections config
 
-let validate_config config sections =
-  let options = config.options in
-  let err_line_num =
-    match List.find_opt (fun ((_, name), _) -> name = "options") sections with
-    | None -> 0
-    | Some ((line_num, _), _) -> line_num
-  in
-  if Base.Option.is_none options.Opts.exact_by_default then
-    let msg =
-      "Must set option `exact_by_default`. Add either `exact_by_default=true` or `exact_by_default=false` to your `[options]` section. Previously the absence of the option was equivalent to `exact_by_default=false`."
-    in
-    Error (err_line_num, msg)
-  else
-    Ok config
-
 let parse config lines =
   let%bind sections = group_into_sections lines in
   let%bind (config, sections) = process_rollouts config sections in
@@ -1307,7 +1292,6 @@ let parse config lines =
         Ok (config, Base.List.rev_append warnings warn_acc)
     )
   in
-  let%bind config = validate_config config sections in
   Ok (config, Base.List.rev warn_acc)
 
 let is_meaningful_line =
@@ -1355,11 +1339,7 @@ let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
   let options_lines = Base.List.map ~f:(fun s -> (1, s)) options in
   let lib_lines = Base.List.map ~f:(fun s -> (1, s)) libs in
   let lint_lines = Base.List.map ~f:(fun s -> (1, s)) lints in
-  (* We require `exact_by_default` to be set. *)
-  let default_config =
-    { empty_config with options = Opts.{ default_options with exact_by_default = Some false } }
-  in
-  Ok (default_config, [])
+  Ok (empty_config, [])
   >>= parse_ignores ignores_lines
   >>= parse_untyped untyped_lines
   >>= parse_declarations declarations_lines
