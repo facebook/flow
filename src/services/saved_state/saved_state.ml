@@ -65,13 +65,19 @@ type saved_state_data = {
   dependency_graph: saved_state_dependency_graph;
 }
 
-let modulename_map_fn ~f = function
-  | Modulename.Filename fn -> Modulename.Filename (f fn)
-  | Modulename.String _ as module_name -> module_name
+let modulename_map_fn ~on_file ?on_string = function
+  | Modulename.Filename fn -> Modulename.Filename (on_file fn)
+  | Modulename.String str as module_name ->
+    (match on_string with
+    | None -> module_name
+    | Some f -> Modulename.String (f str))
 
-let resolved_module_map_fn ~f = function
-  | Ok mname -> Ok (modulename_map_fn ~f mname)
-  | Error _ as err -> err
+let resolved_module_map_fn ~on_file ?on_string = function
+  | Ok mname -> Ok (modulename_map_fn ~on_file ?on_string mname)
+  | Error mapped_name as err ->
+    (match (mapped_name, on_string) with
+    | (Some name, Some f) -> Error (Some (f name))
+    | _ -> err)
 
 let update_dependency_graph_filenames f graph =
   let update_set set = FilenameSet.map f set in
@@ -141,40 +147,34 @@ module Save : sig
     profiling:Profiling_js.running ->
     unit Lwt.t
 end = struct
-  module FileNormalizer : sig
-    type t
+  type t = {
+    root: string;
+    intern_tbl: (string, string) Hashtbl.t;
+  }
 
-    val make : root:string -> t
+  let make ~root = { root; intern_tbl = Hashtbl.create (1 lsl 20) }
 
-    val normalize_path : t -> string -> string
+  let intern t x =
+    match Hashtbl.find_opt t.intern_tbl x with
+    | Some interned -> interned
+    | None ->
+      Hashtbl.add t.intern_tbl x x;
+      x
 
-    val normalize_file_key : t -> File_key.t -> File_key.t
-  end = struct
-    type t = {
-      root: string;
-      file_key_cache: (File_key.t, File_key.t) Hashtbl.t;
-    }
+  (* We could also add a cache for this call, to improve sharing of the underlying strings
+   * between file keys and the places that deal with raw paths. Unfortunately, an April 2020 test
+   * of the saved state size of Facebook's largest JS codebase showed that while adding this
+   * cache decreased the pre-compression size, it actually increased the post-compression size.
+   * *)
+  let normalize_path t path = intern t (Files.relative_path t.root path)
 
-    let make ~root = { root; file_key_cache = Hashtbl.create 16 }
+  let normalize_file_key t file_key = File_key.map (normalize_path t) file_key
 
-    (* We could also add a cache for this call, to improve sharing of the underlying strings
-     * between file keys and the places that deal with raw paths. Unfortunately, an April 2020 test
-     * of the saved state size of Facebook's largest JS codebase showed that while adding this
-     * cache decreased the pre-compression size, it actually increased the post-compression size.
-     * *)
-    let normalize_path { root; _ } path = Files.relative_path root path
-
-    let normalize_file_key ({ file_key_cache; _ } as normalizer) file_key =
-      with_cache file_key_cache file_key (File_key.map (normalize_path normalizer))
-  end
-
-  let normalize_dependency_graph ~normalizer =
-    update_dependency_graph_filenames (FileNormalizer.normalize_file_key normalizer)
+  let normalize_dependency_graph t = update_dependency_graph_filenames (normalize_file_key t)
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
-  let normalize_error ~normalizer =
-    Flow_error.map_loc_of_error
-      (ALoc.update_source (Base.Option.map ~f:(FileNormalizer.normalize_file_key normalizer)))
+  let normalize_error t =
+    Flow_error.map_loc_of_error (ALoc.update_source (Base.Option.map ~f:(normalize_file_key t)))
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
@@ -192,26 +192,57 @@ end = struct
     in
     loop 0 saved_state_version_length
 
-  let normalize_resolved_requires ~normalizer resolved_modules phantom_dependencies =
-    let f = FileNormalizer.normalize_file_key normalizer in
-    let resolved_modules = Array.map (resolved_module_map_fn ~f) resolved_modules in
-    let phantom_dependencies = Array.map (modulename_map_fn ~f) phantom_dependencies in
+  let normalize_resolved_requires t resolved_modules phantom_dependencies =
+    let on_file = normalize_file_key t in
+    let on_string = intern t in
+    let resolved_modules =
+      Array.map (resolved_module_map_fn ~on_file ~on_string) resolved_modules
+    in
+    let phantom_dependencies =
+      Array.map (modulename_map_fn ~on_file ~on_string) phantom_dependencies
+    in
     (resolved_modules, phantom_dependencies)
 
-  let normalize_file_data
-      ~normalizer
-      { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest } =
-    let (resolved_modules, phantom_dependencies) =
-      normalize_resolved_requires ~normalizer resolved_modules phantom_dependencies
+  let rec normalize_exports t =
+    let open Exports in
+    let f = function
+      | Default -> Default
+      | Named str -> Named (intern t str)
+      | NamedType str -> NamedType (intern t str)
+      | Module (str, exports) -> Module (intern t str, normalize_exports t exports)
     in
+    (fun exports -> Base.List.map ~f exports)
+
+  let normalize_imports t imports =
+    let open Imports in
+    let f { export; source; kind } =
+      let export = intern t export in
+      let source =
+        match source with
+        | Unresolved_source str -> Unresolved_source (intern t str)
+        | Global -> Global
+      in
+      { export; source; kind }
+    in
+    Base.List.map ~f imports
+
+  let normalize_file_data
+      t { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest } =
+    let requires = Array.map (intern t) requires in
+    let (resolved_modules, phantom_dependencies) =
+      normalize_resolved_requires t resolved_modules phantom_dependencies
+    in
+    let exports = normalize_exports t exports in
+    let imports = normalize_imports t imports in
     { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest }
 
-  let normalize_parsed_data ~normalizer { module_name; normalized_file_data } =
-    let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
+  let normalize_parsed_data t { module_name; normalized_file_data } =
+    let module_name = Option.map (intern t) module_name in
+    let normalized_file_data = normalize_file_data t normalized_file_data in
     { module_name; normalized_file_data }
 
   (* Collect all the data for a single parsed file *)
-  let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
+  let collect_normalized_data_for_parsed_file t ~reader fn parsed_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
     let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
     let imports = Parsing_heaps.read_imports parse in
@@ -240,34 +271,37 @@ end = struct
           };
       }
     in
-    let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
-    let relative_file_data = normalize_parsed_data ~normalizer file_data in
+    let relative_fn = normalize_file_key t fn in
+    let relative_file_data = normalize_parsed_data t file_data in
     (relative_fn, relative_file_data) :: parsed_heaps
 
-  let collect_normalized_data_for_package_json_file ~normalizer ~reader fn package_heaps =
+  let collect_normalized_data_for_package_json_file t ~reader fn package_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
     let parse = Parsing_heaps.Reader.get_package_parse_unsafe ~reader fn addr in
+    let package_module_name =
+      Parsing_heaps.Reader.get_haste_name ~reader addr |> Option.map (intern t)
+    in
     let relative_file_data =
       {
-        package_module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
+        package_module_name;
         package_hash = Parsing_heaps.read_file_hash parse;
         package_info = Parsing_heaps.read_package_info parse;
       }
     in
-    let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
+    let relative_fn = normalize_file_key t fn in
     (relative_fn, relative_file_data) :: package_heaps
 
   (* Collect all the data for a single unparsed file *)
-  let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
+  let collect_normalized_data_for_unparsed_file t ~reader fn unparsed_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
     let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader fn addr in
-    let relative_file_data =
-      {
-        unparsed_module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
-        unparsed_hash = Parsing_heaps.read_file_hash parse;
-      }
+    let unparsed_module_name =
+      Parsing_heaps.Reader.get_haste_name ~reader addr |> Option.map (intern t)
     in
-    let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
+    let relative_file_data =
+      { unparsed_module_name; unparsed_hash = Parsing_heaps.read_file_hash parse }
+    in
+    let relative_fn = normalize_file_key t fn in
     (relative_fn, relative_file_data) :: unparsed_heaps
 
   (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
@@ -277,20 +311,18 @@ end = struct
     let is_in_flowlib = Files.is_in_flowlib file_options in
     (fun f -> not (is_in_flowlib f))
 
-  let normalize_error_set ~normalizer = Flow_error.ErrorSet.map (normalize_error ~normalizer)
+  let normalize_error_set t = Flow_error.ErrorSet.map (normalize_error t)
 
   (* Collect all the data for all the files *)
   let collect_data ~genv ~env ~profiling =
     let options = genv.ServerEnv.options in
     let reader = State_reader.create () in
-    let normalizer =
-      let root = Options.root options |> Path.to_string in
-      FileNormalizer.make ~root
-    in
+    let root = Options.root options |> Path.to_string in
+    let t = make ~root in
     let parsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectParsed" ~f:(fun () ->
           FilenameSet.fold
-            (collect_normalized_data_for_parsed_file ~normalizer ~reader)
+            (collect_normalized_data_for_parsed_file t ~reader)
             env.ServerEnv.files
             []
       )
@@ -298,7 +330,7 @@ end = struct
     let unparsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectUnparsed" ~f:(fun () ->
           FilenameSet.fold
-            (collect_normalized_data_for_unparsed_file ~normalizer ~reader)
+            (collect_normalized_data_for_unparsed_file t ~reader)
             env.ServerEnv.unparsed
             []
       )
@@ -306,7 +338,7 @@ end = struct
     let package_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectPackageJson" ~f:(fun () ->
           FilenameSet.fold
-            (collect_normalized_data_for_package_json_file ~normalizer ~reader)
+            (collect_normalized_data_for_package_json_file t ~reader)
             env.ServerEnv.package_json_files
             []
       )
@@ -314,20 +346,20 @@ end = struct
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
       |> List.filter (is_not_in_flowlib ~options)
-      |> Base.List.map ~f:(FileNormalizer.normalize_path normalizer)
+      |> Base.List.map ~f:(normalize_path t)
     in
     let local_errors =
       FilenameMap.fold
         (fun fn error_set acc ->
-          let normalized_fn = FileNormalizer.normalize_file_key normalizer fn in
-          let normalized_error_set = normalize_error_set ~normalizer error_set in
+          let normalized_fn = normalize_file_key t fn in
+          let normalized_error_set = normalize_error_set t error_set in
           FilenameMap.add normalized_fn normalized_error_set acc)
         env.ServerEnv.errors.ServerEnv.local_errors
         FilenameMap.empty
     in
     let node_modules_containers =
       SMap.fold
-        (fun key value acc -> SMap.add (FileNormalizer.normalize_path normalizer key) value acc)
+        (fun key value acc -> SMap.add (normalize_path t key) value acc)
         !Files.node_modules_containers
         SMap.empty
     in
@@ -351,7 +383,7 @@ end = struct
           impl_map
       in
 
-      normalize_dependency_graph ~normalizer dependency_graph
+      normalize_dependency_graph t dependency_graph
     in
     let flowconfig_hash =
       FlowConfig.get_hash
@@ -527,10 +559,14 @@ end = struct
 
   let denormalize_resolved_requires ~root resolved_modules phantom_dependencies =
     let resolved_modules =
-      Array.map (resolved_module_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
+      Array.map
+        (resolved_module_map_fn ~on_file:(denormalize_file_key_nocache ~root))
+        resolved_modules
     in
     let phantom_dependencies =
-      Array.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) phantom_dependencies
+      Array.map
+        (modulename_map_fn ~on_file:(denormalize_file_key_nocache ~root))
+        phantom_dependencies
     in
     (* Sort after denormalizing because the denormalized file keys could be in a
      * different sort order, specifically for paths outside of the root, i.e.,
