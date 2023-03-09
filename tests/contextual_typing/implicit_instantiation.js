@@ -185,3 +185,8 @@ function test17() {
   declare function magic<T>(): T;
   const _: interface {[key: string]: any} = { foo: magic() }; // ok
 }
+
+function test18() {
+  declare function foo({||}): void;
+  foo({bar: new Set([''])}); // error: there should be only one prop-missing error
+}

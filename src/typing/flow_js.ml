@@ -5307,7 +5307,8 @@ struct
                   )
                 | _ -> None
               in
-              Context.test_prop_miss cx id (name_of_propref propref) reasons use_op suggestion
+              if Context.typing_mode cx <> Context.HintEvaluationMode then
+                Context.test_prop_miss cx id (name_of_propref propref) reasons use_op suggestion
           );
 
           begin

@@ -499,6 +499,21 @@ References:
           ------------^ [1]
 
 
+Error ---------------------------------------------------------------------------------- implicit_instantiation.js:191:7
+
+Cannot call `foo` with object literal bound to the first parameter because property `bar` is missing in object type [1]
+but exists in object literal [2]. [prop-missing]
+
+   implicit_instantiation.js:191:7
+   191|   foo({bar: new Set([''])}); // error: there should be only one prop-missing error
+              ^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   implicit_instantiation.js:190:24
+   190|   declare function foo({||}): void;
+                               ^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- intersections.js:7:24
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -1118,4 +1133,4 @@ References:
 
 
 
-Found 81 errors
+Found 82 errors
