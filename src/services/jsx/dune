@@ -1,4 +1,4 @@
 (library
- (name flow_service_auto_close_jsx)
+ (name flow_service_jsx)
  (wrapped false)
  (libraries flow_typing))

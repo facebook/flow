@@ -12,10 +12,10 @@
   flow_server_find_refs
   flow_server_rechecker
   flow_service_autocomplete
-  flow_service_auto_close_jsx
   flow_service_inference
   flow_service_inference_module
   flow_service_jsdoc
+  flow_service_jsx
   flow_service_saved_state_fetcher
   flow_service_type_info
   flow_typing
