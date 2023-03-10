@@ -45,3 +45,6 @@ declare var i2: FType;
 
 const j = E.cast('A') ?? E.A;
 //    ^
+
+const k = true ? E : 1;
+//    ^

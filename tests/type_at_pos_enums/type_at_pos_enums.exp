@@ -88,3 +88,8 @@ Flags:
 E
 test.js:46:7,46:7
 
+test.js:49:7
+Flags:
+typeof E | number
+test.js:49:7,49:7
+

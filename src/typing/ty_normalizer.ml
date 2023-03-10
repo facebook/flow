@@ -819,10 +819,12 @@ end = struct
         else
           return Ty.(TypeOf FunProtoCall)
       | NullProtoT _ -> return Ty.Null
-      | DefT (_, _, EnumObjectT _) -> terr ~kind:(UnexpectedTypeCtor "EnumObjectT") None
+      | DefT (reason, _, EnumObjectT _) ->
+        let%map symbol = Reason_utils.local_type_alias_symbol env reason in
+        Ty.TypeOf (Ty.TSymbol symbol)
       | DefT (reason, _, EnumT _) ->
-        let%bind symbol = Reason_utils.local_type_alias_symbol env reason in
-        return (Ty.Generic (symbol, Ty.EnumKind, None))
+        let%map symbol = Reason_utils.local_type_alias_symbol env reason in
+        Ty.Generic (symbol, Ty.EnumKind, None)
       | DefT (_, _, CharSetT s) -> return (Ty.CharSet (String_utils.CharSet.to_string s))
       (* Top-level only *)
       | DefT (_, _, TypeT _)
