@@ -1427,6 +1427,16 @@ class ['loc] mapper =
           comments = comments';
         }
 
+    method infer_type (t : ('loc, 'loc) Ast.Type.Infer.t) =
+      let open Ast.Type.Infer in
+      let { tparam; comments } = t in
+      let tparam' = this#type_param tparam in
+      let comments' = this#syntax_opt comments in
+      if tparam == tparam' && comments == comments' then
+        t
+      else
+        { tparam = tparam'; comments = comments' }
+
     method typeof_type (t : ('loc, 'loc) Ast.Type.Typeof.t) =
       let open Ast.Type.Typeof in
       let { argument; comments } = t in
@@ -1581,6 +1591,7 @@ class ['loc] mapper =
       | (loc, Nullable t') -> id this#nullable_type t' t (fun t' -> (loc, Nullable t'))
       | (loc, Array t') -> id this#array_type t' t (fun t' -> (loc, Array t'))
       | (loc, Conditional t') -> id this#conditional_type t' t (fun t' -> (loc, Conditional t'))
+      | (loc, Infer t') -> id this#infer_type t' t (fun t' -> (loc, Infer t'))
       | (loc, Typeof t') -> id this#typeof_type t' t (fun t' -> (loc, Typeof t'))
       | (loc, Keyof t') -> id this#keyof_type t' t (fun t' -> (loc, Keyof t'))
       | (loc, ReadOnly t') -> id this#readonly_type t' t (fun t' -> (loc, ReadOnly t'))

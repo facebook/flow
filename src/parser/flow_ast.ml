@@ -156,6 +156,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Infer : sig
+    type ('M, 'T) t = {
+      tparam: ('M, 'T) Type.TypeParam.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Function : sig
     module Param : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -479,6 +487,7 @@ and Type : sig
     | Interface of ('M, 'T) Interface.t
     | Array of ('M, 'T) Array.t
     | Conditional of ('M, 'T) Conditional.t
+    | Infer of ('M, 'T) Infer.t
     | Generic of ('M, 'T) Generic.t
     | IndexedAccess of ('M, 'T) IndexedAccess.t
     | OptionalIndexedAccess of ('M, 'T) OptionalIndexedAccess.t

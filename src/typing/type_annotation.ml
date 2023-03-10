@@ -407,6 +407,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         )
       else
         error_type cx loc Error_message.(EUnsupportedSyntax (loc, ConditionalType)) t_ast
+    | (loc, Infer { Infer.tparam; comments }) as t_ast ->
+      if Context.conditional_type cx then
+        let tparam = Tast_utils.error_mapper#type_param tparam in
+        let t = AnyT.annot (mk_reason (RCustom "experimental infer type") loc) in
+        ((loc, t), Infer { Infer.tparam; comments })
+      else
+        error_type cx loc Error_message.(EUnsupportedSyntax (loc, ConditionalType)) t_ast
     | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
       let t =
         if Type_inference_hooks_js.dispatch_literal_hook cx loc then

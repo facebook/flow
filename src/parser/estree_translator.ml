@@ -1431,6 +1431,7 @@ with type t = Impl.t = struct
         | Interface i -> interface_type (loc, i)
         | Array t -> array_type loc t
         | Conditional t -> conditional_type loc t
+        | Infer t -> infer_type loc t
         | Generic g -> generic_type (loc, g)
         | IndexedAccess ia -> indexed_access (loc, ia)
         | OptionalIndexedAccess ia -> optional_indexed_access (loc, ia)
@@ -1657,6 +1658,8 @@ with type t = Impl.t = struct
           ("trueType", _type true_type);
           ("falseType", _type false_type);
         ]
+    and infer_type loc { Type.Infer.tparam; comments } =
+      node ?comments "InferType" loc [("typeParameter", type_param tparam)]
     and generic_type_qualified_identifier (loc, { Type.Generic.Identifier.id; qualification }) =
       let qualification =
         match qualification with

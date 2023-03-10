@@ -1609,6 +1609,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Array { t with Array.comments = merge_comments comments }
       | Conditional ({ Conditional.comments; _ } as t) ->
         Conditional { t with Conditional.comments = merge_comments comments }
+      | Infer ({ Infer.comments; _ } as t) ->
+        Infer { t with Infer.comments = merge_comments comments }
       | Generic ({ Generic.comments; _ } as t) ->
         Generic { t with Generic.comments = merge_comments comments }
       | IndexedAccess ({ IndexedAccess.comments; _ } as t) ->

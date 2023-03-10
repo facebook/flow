@@ -105,6 +105,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method conditional_type : ('M, 'T) Ast.Type.Conditional.t -> ('N, 'U) Ast.Type.Conditional.t
 
+    method infer_type : ('M, 'T) Ast.Type.Infer.t -> ('N, 'U) Ast.Type.Infer.t
+
     method continue : 'M Ast.Statement.Continue.t -> 'N Ast.Statement.Continue.t
 
     method debugger : 'M Ast.Statement.Debugger.t -> 'N Ast.Statement.Debugger.t
