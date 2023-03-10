@@ -169,8 +169,6 @@ module type READER = sig
 
   val read_dependency : dependency -> Modulename.t
 
-  val get_master_cx : unit -> Context.master_context
-
   val get_provider : dependency -> provider option
 
   val get_file_key : provider -> File_key.t
@@ -199,8 +197,6 @@ let mk_heap_reader reader =
     type dependency = Parsing_heaps.dependency_addr
 
     let read_dependency = Parsing_heaps.read_dependency
-
-    let get_master_cx () = Context_heaps.Reader_dispatcher.find_master ~reader
 
     let get_provider m =
       match Parsing_heaps.Reader_dispatcher.get_provider ~reader m with
@@ -248,15 +244,14 @@ let mk_heap_reader reader =
  * function which can be called repeatedly. The returned function closes over an
  * environment which defines caches that can be re-used when checking multiple
  * files. *)
-let mk_check_file (type a) (module Reader : READER with type dependency = a) ~options ~cache () :
+let mk_check_file
+    (type a) (module Reader : READER with type dependency = a) ~options ~master_cx ~cache () :
     a check_file =
   let open Type_sig_collections in
   let module ConsGen = Annotation_inference.ConsGen in
   let module Merge = Type_sig_merge in
   let module Pack = Type_sig_pack in
   let module Bin = Type_sig_bin in
-  let master_cx = Reader.get_master_cx () in
-
   let base_metadata = Context.metadata_of_options options in
 
   (* Create a type representing the exports of a dependency. For checked

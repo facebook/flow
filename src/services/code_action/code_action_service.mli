@@ -62,6 +62,7 @@ val autofix_imports :
 
 val autofix_exports :
   options:Options.t ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   file_key:File_key.t ->
   file_content:string ->
@@ -69,6 +70,7 @@ val autofix_exports :
 
 val autofix_missing_local_annot :
   options:Options.t ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   file_key:File_key.t ->
   file_content:string ->

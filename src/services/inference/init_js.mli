@@ -11,6 +11,7 @@ type init_result = {
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   suppressions: Error_suppressions.t;
   exports: Exports.t;
+  master_cx: Context.master_context;
 }
 
 (* called to initialize library code on initial full pass.

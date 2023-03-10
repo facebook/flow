@@ -594,13 +594,13 @@ end = struct
         in
         let job =
           if Options.distributed options then
-            let master_cx =
-              Context_heaps.Reader_dispatcher.find_master
-                ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-            in
+            let master_cx = Context_heaps.find_master () in
             Remote_execution.distributed_check_job options master_cx
           else
-            let mk_check () = Merge_service.mk_check options ~reader () in
+            let mk_check () =
+              let master_cx = Context_heaps.find_master () in
+              Merge_service.mk_check options ~master_cx ~reader ()
+            in
             mk_job ~mk_check ~options ()
         in
         let%lwt ret = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
@@ -672,6 +672,7 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
             warnings = lib_warnings;
             suppressions = lib_suppressions;
             exports;
+            master_cx;
           } =
         Init_js.init ~options ~reader ordered_libs
       in
@@ -680,7 +681,8 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
           FilenameMap.union lib_errors local_errors,
           FilenameMap.union lib_warnings warnings,
           Error_suppressions.update_suppressions lib_suppressions suppressions,
-          exports
+          exports,
+          master_cx
         )
   )
 
@@ -1806,7 +1808,8 @@ let mk_env
     ~ordered_libs
     ~libs
     ~errors
-    ~exports =
+    ~exports
+    ~master_cx =
   {
     ServerEnv.files;
     unparsed;
@@ -1820,6 +1823,7 @@ let mk_env
     collated_errors = ref None;
     connections;
     exports;
+    master_cx;
   }
 
 (** Verify that the hash in shared memory matches what's on disk.
@@ -2074,7 +2078,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
    *)
   let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
   let libs = SSet.of_list ordered_libs in
-  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
+  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
     let warnings = FilenameMap.empty in
     init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
@@ -2122,6 +2126,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       ~errors
       ~exports
       ~connections
+      ~master_cx
   in
   Lwt.return (env, libs_ok)
 
@@ -2233,7 +2238,7 @@ let init_from_scratch ~profiling ~workers options =
   let local_errors = merge_error_maps package_errors local_errors in
 
   Hh_logger.info "Loading libraries";
-  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports) =
+  let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
     init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
   in
@@ -2275,6 +2280,7 @@ let init_from_scratch ~profiling ~workers options =
       ~errors
       ~exports
       ~connections:Persistent_connection.empty
+      ~master_cx
   in
   Lwt.return (env, libs_ok)
 

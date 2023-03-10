@@ -217,7 +217,8 @@ let post_check ~visit ~iteration ~reader ~options ~metadata file = function
     Ok (Some ((), result))
 
 let mk_check ~visit ~iteration ~reader ~options ~metadata () =
-  let check = Merge_service.mk_check options ~reader () in
+  let master_cx = Context_heaps.find_master () in
+  let check = Merge_service.mk_check options ~reader ~master_cx () in
   (fun file -> check file |> post_check ~visit ~iteration ~reader ~options ~metadata file)
 
 let mk_next ~options ~workers roots =
@@ -333,7 +334,8 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
   let pre_check_job ~reader ~options acc roots =
     let state = C.prepass_init () in
     let options = C.mod_prepass_options options in
-    let check = Merge_service.mk_check options ~reader () in
+    let master_cx = Context_heaps.find_master () in
+    let check = Merge_service.mk_check options ~reader ~master_cx () in
     List.fold_left
       (fun acc file ->
         match check file with

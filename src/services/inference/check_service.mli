@@ -28,8 +28,6 @@ module type READER = sig
 
   val read_dependency : dependency -> Modulename.t
 
-  val get_master_cx : unit -> Context.master_context
-
   val get_provider : dependency -> provider option
 
   val get_file_key : provider -> File_key.t
@@ -53,6 +51,7 @@ val mk_heap_reader :
 val mk_check_file :
   (module READER with type dependency = 'a) ->
   options:Options.t ->
+  master_cx:Context.master_context ->
   cache:Check_cache.t ->
   unit ->
   'a check_file

@@ -25,14 +25,15 @@ type 'a workload = profiling:Profiling_js.running -> env:ServerEnv.env -> 'a Lwt
 (* Returns the result of calling `type_parse_artifacts`, along with a bool option indicating
  * whether the cache was hit -- None if no cache was available, Some true if it was hit, and Some
  * false if it was missed. *)
-let type_parse_artifacts_with_cache ~options ~profiling ~type_parse_artifacts_cache file artifacts =
+let type_parse_artifacts_with_cache
+    ~options ~profiling ~type_parse_artifacts_cache master_cx file artifacts =
   match type_parse_artifacts_cache with
   | None ->
-    let result = Type_contents.type_parse_artifacts ~options ~profiling file artifacts in
+    let result = Type_contents.type_parse_artifacts ~options ~profiling master_cx file artifacts in
     (result, None)
   | Some cache ->
     let lazy_result =
-      lazy (Type_contents.type_parse_artifacts ~options ~profiling file artifacts)
+      lazy (Type_contents.type_parse_artifacts ~options ~profiling master_cx file artifacts)
     in
     let (result, did_hit) = FilenameCache.with_cache_sync file lazy_result cache in
     (result, Some did_hit)
@@ -278,7 +279,7 @@ let autocomplete
     Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
     let file_artifacts_result =
       let parse_result = Type_contents.parse_contents ~options ~profiling contents filename in
-      Type_contents.type_parse_artifacts ~options ~profiling filename parse_result
+      Type_contents.type_parse_artifacts ~options ~profiling env.master_cx filename parse_result
     in
     Autocomplete_js.autocomplete_unset_hooks ();
     let initial_json_props =
@@ -393,7 +394,12 @@ let check_file ~options ~env ~profiling ~force file_input =
       if not (Flow_error.ErrorSet.is_empty parse_errs) then
         Error parse_errs
       else
-        Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
+        Type_contents.type_parse_artifacts
+          ~options
+          ~profiling
+          env.master_cx
+          file_key
+          intermediate_result
     in
     let (errors, warnings) =
       Type_contents.printable_errors_of_file_artifacts_result ~options ~env file_key result
@@ -479,6 +485,7 @@ let infer_type
         ~options
         ~profiling
         ~type_parse_artifacts_cache
+        env.master_cx
         file_key
         parse_result
     in
@@ -553,15 +560,15 @@ let insert_type
     ~location_is_strict
     ~ambiguity_strategy
 
-let autofix_exports ~options ~profiling ~input =
+let autofix_exports ~options ~env ~profiling ~input =
   let file_key = file_key_of_file_input ~options input in
   File_input.content_of_file_input input >>= fun file_content ->
-  Code_action_service.autofix_exports ~options ~profiling ~file_key ~file_content
+  Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
 
-let autofix_missing_local_annot ~options ~profiling ~input =
+let autofix_missing_local_annot ~options ~env ~profiling ~input =
   let file_key = file_key_of_file_input ~options input in
   File_input.content_of_file_input input >>= fun file_content ->
-  Code_action_service.autofix_missing_local_annot ~options ~profiling ~file_key ~file_content
+  Code_action_service.autofix_missing_local_annot ~options ~env ~profiling ~file_key ~file_content
 
 let collect_rage ~profiling ~options ~reader ~env ~files =
   let items = [] in
@@ -642,20 +649,20 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
   in
   items
 
-let dump_types ~options ~profiling ~evaluate_type_destructors file_input =
+let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
   let open Base.Result in
   let file_key = file_key_of_file_input ~options file_input in
   File_input.content_of_file_input file_input >>= fun content ->
   let file_artifacts_result =
     let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
-    Type_contents.type_parse_artifacts ~options ~profiling file_key parse_result
+    Type_contents.type_parse_artifacts ~options ~profiling env.master_cx file_key parse_result
   in
   match file_artifacts_result with
   | Error _parse_errors -> Error "Couldn't parse file in parse_contents"
   | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
     Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast)
 
-let coverage ~options ~profiling ~type_parse_artifacts_cache ~force ~trust file_key content =
+let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file_key content =
   if Options.trust_mode options = Options.NoTrust && trust then
     ( Error
         "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command.",
@@ -668,6 +675,7 @@ let coverage ~options ~profiling ~type_parse_artifacts_cache ~force ~trust file_
         ~options
         ~profiling
         ~type_parse_artifacts_cache
+        env.master_cx
         file_key
         parse_result
     in
@@ -801,6 +809,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
           ~options
           ~profiling
           ~type_parse_artifacts_cache
+          env.master_cx
           file_key
           parse_result
       with
@@ -941,12 +950,12 @@ let handle_autocomplete
   in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
-let handle_autofix_exports ~options ~input ~profiling ~env:_ =
-  let result = try_with (fun () -> autofix_exports ~options ~profiling ~input) in
+let handle_autofix_exports ~options ~input ~profiling ~env =
+  let result = try_with (fun () -> autofix_exports ~options ~env ~profiling ~input) in
   Lwt.return (ServerProt.Response.AUTOFIX_EXPORTS result, None)
 
-let handle_autofix_missing_local_annot ~options ~input ~profiling ~env:_ =
-  let result = try_with (fun () -> autofix_missing_local_annot ~options ~profiling ~input) in
+let handle_autofix_missing_local_annot ~options ~input ~profiling ~env =
+  let result = try_with (fun () -> autofix_missing_local_annot ~options ~env ~profiling ~input) in
   Lwt.return (ServerProt.Response.AUTOFIX_MISSING_LOCAL_ANNOT result, None)
 
 let handle_check_file ~options ~force ~input ~profiling ~env =
@@ -963,6 +972,7 @@ let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
         | Ok (file_key, file_contents) ->
           coverage
             ~options
+            ~env
             ~profiling
             ~type_parse_artifacts_cache:None
             ~force
@@ -981,9 +991,9 @@ let handle_cycle ~fn ~types_only ~profiling:_ ~env =
   let response = get_cycle ~env fn types_only in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
-let handle_dump_types ~options ~input ~evaluate_type_destructors ~profiling ~env:_ =
+let handle_dump_types ~options ~input ~evaluate_type_destructors ~profiling ~env =
   let response =
-    try_with (fun () -> dump_types ~options ~profiling ~evaluate_type_destructors input)
+    try_with (fun () -> dump_types ~options ~env ~profiling ~evaluate_type_destructors input)
   in
   Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
 
@@ -1131,6 +1141,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
           ~options
           ~profiling
           ~type_parse_artifacts_cache
+          env.master_cx
           file_key
           parse_result
       in
@@ -1191,6 +1202,7 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
         ~options
         ~profiling
         ~type_parse_artifacts_cache
+        env.master_cx
         file_key
         parse_result
     in
@@ -1929,7 +1941,7 @@ let handle_persistent_autocomplete_lsp
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
 
 let handle_persistent_signaturehelp_lsp
-    ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env:_ =
+    ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let file_input =
     match file_input with
     | Some file_input -> file_input
@@ -1966,6 +1978,7 @@ let handle_persistent_signaturehelp_lsp
         ~options
         ~profiling
         ~type_parse_artifacts_cache
+        env.master_cx
         path
         parse_result
     in
@@ -2031,6 +2044,7 @@ let find_local_references ~reader ~options ~client ~profiling ~env pos :
         ~options
         ~profiling
         ~type_parse_artifacts_cache
+        env.master_cx
         file_key
         parse_result
     in
@@ -2214,6 +2228,7 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       in
       coverage
         ~options
+        ~env
         ~profiling
         ~type_parse_artifacts_cache
         ~force
@@ -2486,6 +2501,7 @@ let handle_live_errors_request =
                       ~options
                       ~profiling
                       ~type_parse_artifacts_cache
+                      env.master_cx
                       file_key
                       intermediate_result
                 in

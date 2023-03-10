@@ -50,6 +50,7 @@ val check_contents_cache : Check_cache.t
 val check_contents_context :
   reader:State_reader.t ->
   Options.t ->
+  Context.master_context ->
   File_key.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Docblock.t ->
@@ -80,6 +81,7 @@ val merge :
 val mk_check :
   Options.t ->
   reader:Parsing_heaps.Mutator_reader.reader ->
+  master_cx:Context.master_context ->
   unit ->
   File_key.t ->
   check_result option unit_result

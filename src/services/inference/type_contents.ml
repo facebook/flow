@@ -230,10 +230,10 @@ let ensure_checked_dependencies ~options ~reader file file_sig =
     raise Lwt.Canceled
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~profiling ~reader filename info ast file_sig =
+let merge_contents ~options ~profiling ~reader master_cx filename info ast file_sig =
   with_timer ~options "MergeContents" profiling (fun () ->
       let () = ensure_checked_dependencies ~options ~reader filename file_sig in
-      Merge_service.check_contents_context ~reader options filename ast info file_sig
+      Merge_service.check_contents_context ~reader options master_cx filename ast info file_sig
   )
 
 (* If the given type refers to an object literal, return the location of the object literal.
@@ -267,14 +267,14 @@ let set_obj_to_obj_hook ~reader () =
   Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook;
   obj_to_obj_map
 
-let type_parse_artifacts ~options ~profiling filename intermediate_result =
+let type_parse_artifacts ~options ~profiling master_cx filename intermediate_result =
   match intermediate_result with
   | (Some (Parse_artifacts { docblock; ast; file_sig; _ } as parse_artifacts), _errs) ->
     (* We assume that callers have already inspected the parse errors, so we discard them here. *)
     let reader = State_reader.create () in
     let obj_to_obj_map_ref = set_obj_to_obj_hook ~reader () in
     let (cx, typed_ast) =
-      merge_contents ~options ~profiling ~reader filename docblock ast file_sig
+      merge_contents ~options ~profiling ~reader master_cx filename docblock ast file_sig
     in
     Type_inference_hooks_js.reset_hooks ();
     Ok (parse_artifacts, Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = !obj_to_obj_map_ref })

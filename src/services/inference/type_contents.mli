@@ -20,6 +20,7 @@ val ensure_checked_dependencies :
 val type_parse_artifacts :
   options:Options.t ->
   profiling:Profiling_js.running ->
+  Context.master_context ->
   (* fake file-/module name *)
   File_key.t ->
   Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t ->

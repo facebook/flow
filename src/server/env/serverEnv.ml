@@ -57,4 +57,5 @@ type env = {
   collated_errors: collated_errors option ref;
   connections: Persistent_connection.t;
   exports: Export_search.t;
+  master_cx: Context.master_context;
 }

@@ -383,7 +383,7 @@ let merge_component ~mutator ~options ~reader component =
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Some (suppressions, duration))
 
-let mk_check_file options ~reader () =
+let mk_check_file options ~reader ~master_cx () =
   let get_ast_unsafe file parse =
     let ast = Parsing_heaps.read_ast_unsafe file parse in
     let (_, { Flow_ast.Program.all_comments; _ }) = ast in
@@ -398,7 +398,7 @@ let mk_check_file options ~reader () =
   let check_file =
     let reader = Check_service.mk_heap_reader (Abstract_state_reader.Mutator_state_reader reader) in
     let cache = Check_cache.create ~capacity:10000000 in
-    Check_service.mk_check_file reader ~options ~cache ()
+    Check_service.mk_check_file reader ~options ~master_cx ~cache ()
   in
   fun file ->
     let start_time = Unix.gettimeofday () in
@@ -464,7 +464,7 @@ let check_contents_cache = Check_cache.create ~capacity:10000
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let check_contents_context ~reader options file ast docblock file_sig =
+let check_contents_context ~reader options master_cx file ast docblock file_sig =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let file_sig = File_sig.abstractify_locs file_sig in
@@ -502,7 +502,7 @@ let check_contents_context ~reader options file ast docblock file_sig =
   in
   let check_file =
     let reader = Check_service.mk_heap_reader reader in
-    Check_service.mk_check_file reader ~options ~cache:check_contents_cache ()
+    Check_service.mk_check_file reader ~options ~master_cx ~cache:check_contents_cache ()
   in
   check_file file required ast comments file_sig docblock aloc_table
 
@@ -566,11 +566,11 @@ let merge_runner
 
 let merge = merge_runner ~job:merge_component
 
-let mk_check options ~reader () =
+let mk_check options ~reader ~master_cx () =
   let check_timeout = Options.merge_timeout options in
   (* TODO: add new option *)
   let interval = Base.Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
-  let check_file = mk_check_file options ~reader () in
+  let check_file = mk_check_file options ~master_cx ~reader () in
   fun file ->
     let file_str = File_key.to_string file in
     try

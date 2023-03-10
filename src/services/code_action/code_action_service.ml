@@ -1019,7 +1019,7 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
   in
   edits
 
-let autofix_exports ~options ~profiling ~file_key ~file_content =
+let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
   let file_artifacts =
     let ((_, parse_errs) as intermediate_result) =
@@ -1028,7 +1028,12 @@ let autofix_exports ~options ~profiling ~file_key ~file_content =
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Error parse_errs
     else
-      Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
+      Type_contents.type_parse_artifacts
+        ~options
+        ~profiling
+        env.ServerEnv.master_cx
+        file_key
+        intermediate_result
   in
   match file_artifacts with
   | Ok
@@ -1043,7 +1048,7 @@ let autofix_exports ~options ~profiling ~file_key ~file_content =
     Ok (Insert_type.mk_patch ~opts ast new_ast file_content, it_errs)
   | Error _ -> Error "Failed to type-check file"
 
-let autofix_missing_local_annot ~options ~profiling ~file_key ~file_content =
+let autofix_missing_local_annot ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_missing_local_annots in
   let file_artifacts =
     let ((_, parse_errs) as intermediate_result) =
@@ -1052,7 +1057,12 @@ let autofix_missing_local_annot ~options ~profiling ~file_key ~file_content =
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Error parse_errs
     else
-      Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
+      Type_contents.type_parse_artifacts
+        ~options
+        ~profiling
+        env.ServerEnv.master_cx
+        file_key
+        intermediate_result
   in
   match file_artifacts with
   | Ok
@@ -1085,7 +1095,12 @@ let insert_type
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Error parse_errs
     else
-      Type_contents.type_parse_artifacts ~options ~profiling file_key intermediate_result
+      Type_contents.type_parse_artifacts
+        ~options
+        ~profiling
+        env.ServerEnv.master_cx
+        file_key
+        intermediate_result
   in
   match file_artifacts with
   | Ok

@@ -167,6 +167,7 @@ type init_result = {
   warnings: ErrorSet.t FilenameMap.t;
   suppressions: Error_suppressions.t;
   exports: Exports.t;
+  master_cx: Context.master_context;
 }
 
 let error_set_to_filemap err_set =
@@ -215,11 +216,11 @@ let init ~options ~reader lib_files =
   in
 
   (* store master signature context to heap *)
-  Context_heaps.Init_master_context_mutator.add_master ~audit:Expensive.ok master_cx;
+  Context_heaps.add_master master_cx;
 
   let errors = ErrorSet.union parse_and_sig_errors errors in
   let (errors, warnings, suppressions) =
     (error_set_to_filemap errors, error_set_to_filemap warnings, suppressions)
   in
 
-  Lwt.return { ok; errors; warnings; suppressions; exports }
+  Lwt.return { ok; errors; warnings; suppressions; exports; master_cx }
