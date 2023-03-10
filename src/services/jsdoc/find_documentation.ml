@@ -317,3 +317,8 @@ let def_loc_to_comment_loc_map ast =
   let searcher = new documentation_searcher add_to_map in
   ignore (searcher#program ast);
   !map_ref
+
+let module_doc_loc (_, Flow_ast.Program.{ comments; _ }) : Loc.t option =
+  match comments with
+  | Some Flow_ast.Syntax.{ leading = (comment_loc, _) :: _; _ } -> Some comment_loc
+  | _ -> None

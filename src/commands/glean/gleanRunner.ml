@@ -587,6 +587,12 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
       super#enum_declaration enum
   end
 
+let module_documentations ~root ~write_root ~ast ~file : Hh_json.json list =
+  match (Module.of_file_key ~root ~write_root file, Find_documentation.module_doc_loc ast) with
+  | (Module.File file, Some documentation) ->
+    [ModuleDoc.{ documentation; file } |> ModuleDoc.to_json ~root ~write_root]
+  | _ -> []
+
 let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader ~typed_ast ~ast =
   let infos = ref [] in
   let add_info kind ~tparams_rev name loc type_ =
@@ -725,6 +731,7 @@ let make ~output_dir ~write_root =
       let scope_info =
         Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast
       in
+      let module_documentation = module_documentations ~root ~write_root ~ast ~file in
       let (declaration_info, member_declaration_info, type_declaration_info) =
         declaration_infos ~scope_info ~root ~write_root ~file ~file_sig ~cx ~reader ~typed_ast ~ast
       in
@@ -801,6 +808,8 @@ let make ~output_dir ~write_root =
       output_facts (flow_pred "SourceOfTypeExport") source_of_type_export;
       output_string out_channel ",";
       output_facts (flow_pred "FileOfStringModule") file_of_string_module;
+      output_string out_channel ",";
+      output_facts (flow_pred "ModuleDoc") module_documentation;
       output_string out_channel ",";
       output_facts "src.FileLines.1" file_lines;
       close_out out_channel;

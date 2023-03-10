@@ -227,6 +227,21 @@ module MemberDeclarationInfo = struct
          )
 end
 
+module ModuleDoc = struct
+  type t = {
+    documentation: Documentation.t;
+    file: Src.File.t;
+  }
+
+  let to_json ~root ~write_root { documentation; file } =
+    key
+    @@ JSON_Object
+         [
+           ("file", Src.File.to_json file);
+           ("documentation", Documentation.to_json ~root ~write_root documentation);
+         ]
+end
+
 module Export = struct
   type t =
     | CommonJS
