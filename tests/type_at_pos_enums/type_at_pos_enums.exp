@@ -83,3 +83,8 @@ Flags:
 type FType = F
 test.js:43:17,43:21
 
+test.js:46:7
+Flags:
+E
+test.js:46:7,46:7
+

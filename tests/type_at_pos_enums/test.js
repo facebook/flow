@@ -42,3 +42,6 @@ declare var i: FType;
 //          ^
 declare var i2: FType;
 //              ^
+
+const j = E.cast('A') ?? E.A;
+//    ^

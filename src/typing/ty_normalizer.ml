@@ -510,37 +510,47 @@ end = struct
 
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
-      match desc_of_reason ~unwrap:false reason with
-      | REnum name -> return (symbol_from_reason env reason (Reason.OrdinaryName name))
-      | RTypeAlias (name, Some loc, _) -> return (symbol_from_loc env loc (Reason.OrdinaryName name))
-      | RType name -> return (symbol_from_reason env reason name)
-      | desc ->
-        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
-        let msg = "could not extract local type alias name from reason: " ^ desc in
-        terr ~kind:BadTypeAlias ~msg None
+      let rec loop = function
+        | REnum name -> return (symbol_from_reason env reason (Reason.OrdinaryName name))
+        | RTypeAlias (name, Some loc, _) ->
+          return (symbol_from_loc env loc (Reason.OrdinaryName name))
+        | RType name -> return (symbol_from_reason env reason name)
+        | RUnionBranching (desc, _) -> loop desc
+        | desc ->
+          let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+          let msg = "could not extract local type alias name from reason: " ^ desc in
+          terr ~kind:BadTypeAlias ~msg None
+      in
+      loop (desc_of_reason ~unwrap:false reason)
 
     let imported_type_alias_symbol env reason =
-      match desc_of_reason ~unwrap:false reason with
-      | RNamedImportedType (_, name)
-      | RDefaultImportedType (name, _)
-      | RImportStarType name
-      | RImportStarTypeOf name
-      | RImportStar name ->
-        return (symbol_from_reason env reason (Reason.OrdinaryName name))
-      | RType name -> return (symbol_from_reason env reason name)
-      | desc ->
-        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
-        let msg = "could not extract imported type alias name from reason: " ^ desc in
-        terr ~kind:BadTypeAlias ~msg None
+      let rec loop = function
+        | RNamedImportedType (_, name)
+        | RDefaultImportedType (name, _)
+        | RImportStarType name
+        | RImportStarTypeOf name
+        | RImportStar name ->
+          return (symbol_from_reason env reason (Reason.OrdinaryName name))
+        | RType name -> return (symbol_from_reason env reason name)
+        | RUnionBranching (desc, _) -> loop desc
+        | desc ->
+          let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+          let msg = "could not extract imported type alias name from reason: " ^ desc in
+          terr ~kind:BadTypeAlias ~msg None
+      in
+      loop (desc_of_reason ~unwrap:false reason)
 
     let opaque_type_alias_symbol env reason =
-      match desc_of_reason ~unwrap:false reason with
-      | ROpaqueType name -> return (symbol_from_reason env reason (Reason.OrdinaryName name))
-      | RType name -> return (symbol_from_reason env reason name)
-      | desc ->
-        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
-        let msg = "could not extract opaque name from reason: " ^ desc in
-        terr ~kind:BadTypeAlias ~msg None
+      let rec loop = function
+        | ROpaqueType name -> return (symbol_from_reason env reason (Reason.OrdinaryName name))
+        | RType name -> return (symbol_from_reason env reason name)
+        | RUnionBranching (desc, _) -> loop desc
+        | desc ->
+          let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+          let msg = "could not extract opaque name from reason: " ^ desc in
+          terr ~kind:BadTypeAlias ~msg None
+      in
+      loop (desc_of_reason ~unwrap:false reason)
 
     let instance_symbol env reason =
       match desc_of_reason reason with
