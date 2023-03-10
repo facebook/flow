@@ -6,7 +6,7 @@
  *)
 
 module TestHeap =
-  SharedMem.NoCache
+  SharedMem.SerializedHeap
     (StringKey)
     (struct
       type t = string

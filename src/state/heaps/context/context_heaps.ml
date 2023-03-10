@@ -18,7 +18,7 @@ module Unit_key = struct
 end
 
 module MasterContextHeap =
-  SharedMem.NoCache
+  SharedMem.SerializedHeap
     (Unit_key)
     (struct
       type t = Context.master_context

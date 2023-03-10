@@ -14,7 +14,7 @@ type patch = (int * int * string) list
 type key = File_key.t
 
 module DiffPatchHeap =
-  SharedMem.NoCache
+  SharedMem.SerializedHeap
     (File_key)
     (struct
       type t = patch

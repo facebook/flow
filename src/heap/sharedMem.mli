@@ -76,7 +76,7 @@ module type AddrValue = sig
   type t
 end
 
-module type NoCache = sig
+module type Heap = sig
   type key
 
   type value
@@ -119,15 +119,12 @@ end
 module LocalCache (Config : CacheConfig) :
   LocalCache with type key = Config.key and type value = Config.value
 
-module NoCache (Key : Key) (Value : Value) :
-  NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
+module SerializedHeap (Key : Key) (Value : Value) :
+  Heap with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
-module NoCacheAddr (Key : Key) (Value : AddrValue) : sig
+module AddrHeap (Key : Key) (Value : AddrValue) : sig
   include
-    NoCache
-      with type key = Key.t
-       and type value = Value.t addr
-       and module KeySet = Flow_set.Make(Key)
+    Heap with type key = Key.t and type value = Value.t addr and module KeySet = Flow_set.Make(Key)
 
   val add : Key.t -> Value.t addr -> Value.t addr
 end

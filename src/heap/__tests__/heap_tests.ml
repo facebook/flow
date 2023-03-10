@@ -13,42 +13,42 @@ open NewAPI
 open Prepare_syntax
 
 module H1 =
-  NoCacheAddr
+  AddrHeap
     (StringKey)
     (struct
       type t = [ `string ]
     end)
 
 module H2 =
-  NoCacheAddr
+  AddrHeap
     (StringKey)
     (struct
       type t = [ `string ] tbl
     end)
 
 module H3 =
-  NoCacheAddr
+  AddrHeap
     (StringKey)
     (struct
       type t = [ `string ] tbl tbl
     end)
 
 module Ent =
-  NoCacheAddr
+  AddrHeap
     (StringKey)
     (struct
       type t = [ `string ] entity
     end)
 
 module Files =
-  NoCacheAddr
+  AddrHeap
     (StringKey)
     (struct
       type t = [ `file ]
     end)
 
 module HasteModules =
-  NoCacheAddr
+  AddrHeap
     (StringKey)
     (struct
       type t = [ `haste_module ]

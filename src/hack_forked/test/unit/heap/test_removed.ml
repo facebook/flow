@@ -13,17 +13,17 @@ module IntVal = struct
   let description = "IntVal"
 end
 
-let test_add_remove
-    (module IntHeap : SharedMem.NoCache with type key = string and type value = int) () =
+let test_add_remove (module IntHeap : SharedMem.Heap with type key = string and type value = int) ()
+    =
   IntHeap.add "a" 4;
   assert (IntHeap.mem "a");
   IntHeap.remove_batch (IntHeap.KeySet.singleton "a");
   assert (not (IntHeap.mem "a"))
 
-module TestNoCache = SharedMem.NoCache (StringKey) (IntVal)
+module TestHeap = SharedMem.SerializedHeap (StringKey) (IntVal)
 
 let tests () =
-  let list = [("test_add_remove", test_add_remove (module TestNoCache))] in
+  let list = [("test_add_remove", test_add_remove (module TestHeap))] in
   let setup_test (name, test) =
     ( name,
       fun () ->

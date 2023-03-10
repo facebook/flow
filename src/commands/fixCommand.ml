@@ -14,7 +14,7 @@ type transformable_error = Loc.t Error_message.t'
 (* Codemod-specific shared mem heap *)
 (* stores a mapping from a file to all the errors that have transformations in that file *)
 module TransformableErrorsHeap =
-  SharedMem.NoCache
+  SharedMem.SerializedHeap
     (File_key)
     (struct
       type t = transformable_error list

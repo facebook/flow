@@ -212,7 +212,7 @@ module Annotate_lti_command = struct
     }
 
   module LtiPerFileMissingLocalAnnotErrorsHeap =
-    SharedMem.NoCache
+    SharedMem.SerializedHeap
       (File_key)
       (struct
         type t = Loc.t list
@@ -377,7 +377,7 @@ end
 
 module Annotate_empty_array_command = struct
   module LtiPerFileEmptyArrayErrorsHeap =
-    SharedMem.NoCache
+    SharedMem.SerializedHeap
       (File_key)
       (struct
         type t = Flow_error.ErrorSet.t
@@ -716,7 +716,7 @@ module Annotate_implicit_instantiation = struct
     }
 
   module LtiPerFileUnderconstrainedImplicitInstantiationErrorsHeap =
-    SharedMem.NoCache
+    SharedMem.SerializedHeap
       (File_key)
       (struct
         type t = Flow_error.ErrorSet.t

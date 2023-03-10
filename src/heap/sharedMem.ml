@@ -373,7 +373,7 @@ end
 (* The signatures of what we are actually going to expose to the user *)
 (*****************************************************************************)
 
-module type NoCache = sig
+module type Heap = sig
   type key
 
   type value
@@ -409,8 +409,8 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCache (Key : Key) (Value : Value) :
-  NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key) =
+module SerializedHeap (Key : Key) (Value : Value) :
+  Heap with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key) =
 struct
   module Tbl = HashtblSegment (Key)
   module KeySet = Flow_set.Make (Key)
@@ -476,7 +476,7 @@ struct
   let remove_batch keys = KeySet.iter remove keys
 end
 
-module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
+module AddrHeap (Key : Key) (Value : AddrValue) = struct
   module Tbl = HashtblSegment (Key)
   module KeySet = Flow_set.Make (Key)
 

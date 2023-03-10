@@ -10,14 +10,14 @@ module Heap = SharedMem.NewAPI
 module MSet = Modulename.Set
 
 module FileHeap =
-  SharedMem.NoCacheAddr
+  SharedMem.AddrHeap
     (File_key)
     (struct
       type t = [ `file ]
     end)
 
 module HasteModuleHeap =
-  SharedMem.NoCacheAddr
+  SharedMem.AddrHeap
     (StringKey)
     (struct
       type t = [ `haste_module ]
