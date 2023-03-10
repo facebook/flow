@@ -28,7 +28,28 @@ module.exports = (suite(
           {
             method: 'textDocument/linkedEditingRange',
             result: {
-              ranges: [],
+              ranges: [
+                {
+                  start: {
+                    line: 5,
+                    character: 3,
+                  },
+                  end: {
+                    line: 5,
+                    character: 6,
+                  },
+                },
+                {
+                  start: {
+                    line: 7,
+                    character: 4,
+                  },
+                  end: {
+                    line: 7,
+                    character: 7,
+                  },
+                },
+              ],
             },
           },
         ],
@@ -50,7 +71,28 @@ module.exports = (suite(
           {
             method: 'textDocument/linkedEditingRange',
             result: {
-              ranges: [],
+              ranges: [
+                {
+                  start: {
+                    line: 5,
+                    character: 3,
+                  },
+                  end: {
+                    line: 5,
+                    character: 6,
+                  },
+                },
+                {
+                  start: {
+                    line: 7,
+                    character: 4,
+                  },
+                  end: {
+                    line: 7,
+                    character: 7,
+                  },
+                },
+              ],
             },
           },
         ],
@@ -72,7 +114,28 @@ module.exports = (suite(
           {
             method: 'textDocument/linkedEditingRange',
             result: {
-              ranges: [],
+              ranges: [
+                {
+                  start: {
+                    line: 11,
+                    character: 3,
+                  },
+                  end: {
+                    line: 11,
+                    character: 6,
+                  },
+                },
+                {
+                  start: {
+                    line: 15,
+                    character: 4,
+                  },
+                  end: {
+                    line: 15,
+                    character: 7,
+                  },
+                },
+              ],
             },
           },
         ],
@@ -94,7 +157,28 @@ module.exports = (suite(
           {
             method: 'textDocument/linkedEditingRange',
             result: {
-              ranges: [],
+              ranges: [
+                {
+                  start: {
+                    line: 12,
+                    character: 5,
+                  },
+                  end: {
+                    line: 12,
+                    character: 8,
+                  },
+                },
+                {
+                  start: {
+                    line: 14,
+                    character: 6,
+                  },
+                  end: {
+                    line: 14,
+                    character: 9,
+                  },
+                },
+              ],
             },
           },
         ],
@@ -116,7 +200,28 @@ module.exports = (suite(
           {
             method: 'textDocument/linkedEditingRange',
             result: {
-              ranges: [],
+              ranges: [
+                {
+                  start: {
+                    line: 19,
+                    character: 3,
+                  },
+                  end: {
+                    line: 19,
+                    character: 3,
+                  },
+                },
+                {
+                  start: {
+                    line: 21,
+                    character: 4,
+                  },
+                  end: {
+                    line: 21,
+                    character: 4,
+                  },
+                },
+              ],
             },
           },
         ],
@@ -138,7 +243,28 @@ module.exports = (suite(
           {
             method: 'textDocument/linkedEditingRange',
             result: {
-              ranges: [],
+              ranges: [
+                {
+                  start: {
+                    line: 19,
+                    character: 3,
+                  },
+                  end: {
+                    line: 19,
+                    character: 3,
+                  },
+                },
+                {
+                  start: {
+                    line: 21,
+                    character: 4,
+                  },
+                  end: {
+                    line: 21,
+                    character: 4,
+                  },
+                },
+              ],
             },
           },
         ],
@@ -159,9 +285,7 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            result: {
-              ranges: [],
-            },
+            result: null,
           },
         ],
         [
@@ -181,9 +305,7 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            result: {
-              ranges: [],
-            },
+            result: null,
           },
         ],
         [
