@@ -1178,6 +1178,20 @@ function foo(arr: $ReadOnlyArray<Object>) {
     (4, 49) to (4, 51) =>
     illegal scc: ((illegal self-cycle ((2, 9) to (2, 12))); ((3, 19) to (3, 22)); ((4, 16) to (4, 47)); ((4, 17) to (4, 20)); ((4, 22) to (4, 26)); ((4, 42) to (4, 46))) |}]
 
+let%expect_test "obj cycle" =
+  print_order_test {|
+const RecursiveObj = {
+  nonSynthesizableProp: 1 == 1,
+
+  f(): void {
+    RecursiveObj.f(true ? 1 : []);
+  },
+};
+  |};
+  [%expect {|
+  illegal scc: ((illegal self-cycle ((2, 6) to (2, 18))); ((6, 19) to (6, 32)))
+     |}]
+
 let%expect_test "react_fwd" =
   print_order_test {|
 import * as React from 'react';

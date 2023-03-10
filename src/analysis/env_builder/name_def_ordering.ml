@@ -842,16 +842,8 @@ struct
           EnvMap.empty
       in
       let depends_of_hinted_expression ~for_expression_writes hints expr state =
-        let open Ast.Expression in
         let state = depends_of_expression ~for_expression_writes expr state in
-        match expr with
-        | ( _,
-            ( Array { Array.elements = []; _ }
-            | Call _ | New _
-            | Object { Object.properties = []; _ } )
-          ) ->
-          depends_of_hints state hints
-        | _ -> state
+        depends_of_hints state hints
       in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
