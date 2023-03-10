@@ -355,13 +355,7 @@ end
 (* All the caches are functors returning a module of the following signature *)
 (*****************************************************************************)
 
-module type DebugCacheType = sig
-  val get_size : unit -> int
-end
-
 module type CacheType = sig
-  include DebugCacheType
-
   type key
 
   type value
@@ -398,10 +392,6 @@ module type NoCache = sig
 end
 
 module type LocalCache = sig
-  module DebugL1 : DebugCacheType
-
-  module DebugL2 : DebugCacheType
-
   type key
 
   type value
@@ -529,8 +519,6 @@ module FreqCache (Config : CacheConfig) :
 
   let size = ref 0
 
-  let get_size () = !size
-
   let clear () =
     Hashtbl.clear cache;
     size := 0
@@ -607,8 +595,6 @@ module OrderedCache (Config : CacheConfig) :
 
   let size = ref 0
 
-  let get_size () = !size
-
   let clear () =
     Hashtbl.clear cache;
     size := 0;
@@ -654,10 +640,6 @@ module LocalCache (Config : CacheConfig) = struct
 
   (* Frequent values cache *)
   module L2 = FreqCache (Config)
-
-  (* These are exposed only for tests *)
-  module DebugL1 = L1
-  module DebugL2 = L2
 
   let add x y =
     L1.add x y;

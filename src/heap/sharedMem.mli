@@ -94,18 +94,10 @@ module type NoCache = sig
   val mem : key -> bool
 end
 
-module type DebugCacheType = sig
-  val get_size : unit -> int
-end
-
 module type LocalCache = sig
   type key
 
   type value
-
-  module DebugL1 : DebugCacheType
-
-  module DebugL2 : DebugCacheType
 
   val add : key -> value -> unit
 
