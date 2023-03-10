@@ -27,9 +27,8 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            error: {
-              message: 'Unhandled method textDocument/linkedEditingRange',
-              code: -32601,
+            result: {
+              ranges: [],
             },
           },
         ],
@@ -50,9 +49,8 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            error: {
-              message: 'Unhandled method textDocument/linkedEditingRange',
-              code: -32601,
+            result: {
+              ranges: [],
             },
           },
         ],
@@ -73,9 +71,8 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            error: {
-              message: 'Unhandled method textDocument/linkedEditingRange',
-              code: -32601,
+            result: {
+              ranges: [],
             },
           },
         ],
@@ -96,9 +93,8 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            error: {
-              message: 'Unhandled method textDocument/linkedEditingRange',
-              code: -32601,
+            result: {
+              ranges: [],
             },
           },
         ],
@@ -119,9 +115,8 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            error: {
-              message: 'Unhandled method textDocument/linkedEditingRange',
-              code: -32601,
+            result: {
+              ranges: [],
             },
           },
         ],
@@ -142,9 +137,8 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            error: {
-              message: 'Unhandled method textDocument/linkedEditingRange',
-              code: -32601,
+            result: {
+              ranges: [],
             },
           },
         ],
@@ -165,9 +159,8 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            error: {
-              message: 'Unhandled method textDocument/linkedEditingRange',
-              code: -32601,
+            result: {
+              ranges: [],
             },
           },
         ],
@@ -188,9 +181,8 @@ module.exports = (suite(
         [
           {
             method: 'textDocument/linkedEditingRange',
-            error: {
-              message: 'Unhandled method textDocument/linkedEditingRange',
-              code: -32601,
+            result: {
+              ranges: [],
             },
           },
         ],

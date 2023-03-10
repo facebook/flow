@@ -69,6 +69,8 @@ type t = {
   of_initialize_params: t -> Initialize.params -> Initialize.params;
   of_initialize_result: t -> Initialize.result -> Initialize.result;
   of_insert_replace_edit: t -> InsertReplaceEdit.t -> InsertReplaceEdit.t;
+  of_linked_editing_range_params: t -> LinkedEditingRange.params -> LinkedEditingRange.params;
+  of_linked_editing_range_result: t -> LinkedEditingRange.result -> LinkedEditingRange.result;
   of_log_message_params: t -> LogMessage.params -> LogMessage.params;
   of_lsp_message: t -> lsp_message -> lsp_message;
   of_lsp_notification: t -> lsp_notification -> lsp_notification;
@@ -401,6 +403,16 @@ let default_mapper =
         let insert = mapper.of_range mapper insert in
         let replace = mapper.of_range mapper replace in
         { InsertReplaceEdit.newText; insert; replace });
+    of_linked_editing_range_params =
+      (fun mapper params -> mapper.of_text_document_position_params mapper params);
+    of_linked_editing_range_result =
+      (fun mapper result ->
+        Base.Option.map result ~f:(fun { LinkedEditingRange.ranges; wordPattern } ->
+            {
+              LinkedEditingRange.ranges = Base.List.map ranges ~f:(mapper.of_range mapper);
+              wordPattern;
+            }
+        ));
     of_log_message_params =
       (fun _mapper { LogMessage.type_; message } -> { LogMessage.type_; message });
     of_lsp_message =
@@ -496,6 +508,8 @@ let default_mapper =
           ApplyWorkspaceEditResult (mapper.of_apply_workspace_edit_result mapper result)
         | AutoCloseJsxResult result ->
           AutoCloseJsxResult (mapper.of_auto_close_jsx_result mapper result)
+        | LinkedEditingRangeResult result ->
+          LinkedEditingRangeResult (mapper.of_linked_editing_range_result mapper result)
         | ErrorResult (err, str) -> ErrorResult (err, str));
     of_lsp_request =
       (fun mapper request ->
@@ -551,6 +565,8 @@ let default_mapper =
           ApplyWorkspaceEditRequest (mapper.of_apply_workspace_edit_params mapper params)
         | AutoCloseJsxRequest params ->
           AutoCloseJsxRequest (mapper.of_auto_close_jsx_params mapper params)
+        | LinkedEditingRangeRequest params ->
+          LinkedEditingRangeRequest (mapper.of_linked_editing_range_params mapper params)
         | UnknownRequest (req, json) -> UnknownRequest (req, json));
     of_location =
       (fun mapper { Location.uri; range } ->

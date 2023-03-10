@@ -317,6 +317,10 @@ module PublishDiagnosticsClientCapabilities : sig
   and tagSupport = { valueSet: DiagnosticTag.t list }
 end
 
+module LinkedEditingRangeClientCapabilities : sig
+  type t = { dynamicRegistration: bool }
+end
+
 module CompletionOptions : sig
   type completionItem = {
     labelDetailsSupport: bool;
@@ -406,6 +410,7 @@ module Initialize : sig
     signatureHelp: SignatureHelpClientCapabilities.t;
     selectionRange: SelectionRangeClientCapabilities.t;
     publishDiagnostics: PublishDiagnosticsClientCapabilities.t;
+    linkedEditingRange: LinkedEditingRangeClientCapabilities.t;
   }
 
   and windowClientCapabilities = { status: bool }
@@ -444,6 +449,7 @@ module Initialize : sig
     server_experimental: experimentalServerCapabilities;
     typeCoverageProvider: bool;
     rageProvider: bool;
+    linkedEditingRangeProvider: bool;
   }
 
   and serverInfo = {
@@ -1097,6 +1103,17 @@ module AutoCloseJsx : sig
   and result = string option
 end
 
+module LinkedEditingRange : sig
+  type params = TextDocumentPositionParams.t
+
+  and result = linkedEditingRanges option
+
+  and linkedEditingRanges = {
+    ranges: range list;
+    wordPattern: string option;
+  }
+end
+
 type lsp_request =
   | InitializeRequest of Initialize.params
   | RegisterCapabilityRequest of RegisterCapability.params
@@ -1127,6 +1144,7 @@ type lsp_request =
   | ExecuteCommandRequest of ExecuteCommand.params
   | ApplyWorkspaceEditRequest of ApplyWorkspaceEdit.params
   | AutoCloseJsxRequest of AutoCloseJsx.params
+  | LinkedEditingRangeRequest of LinkedEditingRange.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -1160,6 +1178,7 @@ type lsp_result =
   | ApplyWorkspaceEditResult of ApplyWorkspaceEdit.result
   | RegisterCapabilityResult
   | AutoCloseJsxResult of AutoCloseJsx.result
+  | LinkedEditingRangeResult of LinkedEditingRange.result
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 

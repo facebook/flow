@@ -440,6 +440,10 @@ module PublishDiagnosticsClientCapabilities = struct
   and tagSupport = { valueSet: DiagnosticTag.t list }
 end
 
+module LinkedEditingRangeClientCapabilities = struct
+  type t = { dynamicRegistration: bool }
+end
+
 module CompletionOptions = struct
   type completionItem = {
     labelDetailsSupport: bool;
@@ -536,6 +540,7 @@ module Initialize = struct
     signatureHelp: SignatureHelpClientCapabilities.t;
     selectionRange: SelectionRangeClientCapabilities.t;
     publishDiagnostics: PublishDiagnosticsClientCapabilities.t;
+    linkedEditingRange: LinkedEditingRangeClientCapabilities.t;
   }
 
   and windowClientCapabilities = {
@@ -582,6 +587,7 @@ module Initialize = struct
     server_experimental: experimentalServerCapabilities;
     typeCoverageProvider: bool;  (** nuclide-specific *)
     rageProvider: bool;  (** nuclide-specific *)
+    linkedEditingRangeProvider: bool;
   }
 
   and serverInfo = {
@@ -1328,6 +1334,18 @@ module AutoCloseJsx = struct
   and result = string option
 end
 
+(** LinkedEditingRange request, method="textDocument/linkedEditingRange" *)
+module LinkedEditingRange = struct
+  type params = TextDocumentPositionParams.t
+
+  and result = linkedEditingRanges option
+
+  and linkedEditingRanges = {
+    ranges: range list;
+    wordPattern: string option;
+  }
+end
+
 (**
  * Here are gathered-up ADTs for all the messages we handle
  *)
@@ -1362,6 +1380,7 @@ type lsp_request =
   | ExecuteCommandRequest of ExecuteCommand.params
   | ApplyWorkspaceEditRequest of ApplyWorkspaceEdit.params
   | AutoCloseJsxRequest of AutoCloseJsx.params
+  | LinkedEditingRangeRequest of LinkedEditingRange.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -1395,6 +1414,7 @@ type lsp_result =
   | ApplyWorkspaceEditResult of ApplyWorkspaceEdit.result
   | RegisterCapabilityResult
   | AutoCloseJsxResult of AutoCloseJsx.result
+  | LinkedEditingRangeResult of LinkedEditingRange.result
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 

@@ -916,6 +916,11 @@ let auto_close_jsx ~options ~env ~profiling ~params ~client =
         (Ok edit, None)
     end
 
+let linked_editing_range ~options ~env ~profiling ~params ~client =
+  let _ = (options, env, profiling, params, client) in
+  let result = Some { LinkedEditingRange.ranges = []; wordPattern = None } in
+  (Ok result, None)
+
 let handle_autocomplete
     ~trigger_character
     ~reader
@@ -2388,6 +2393,17 @@ let handle_persistent_auto_close_jsx ~options ~id ~params ~metadata ~client ~pro
     Lwt.return
       (LspProt.LspFromServer (Some (ResponseMessage (id, AutoCloseJsxResult text_opt))), metadata)
 
+let handle_persistent_linked_editing_range ~options ~id ~params ~metadata ~client ~profiling ~env =
+  let (result, extra_data) = linked_editing_range ~options ~env ~profiling ~params ~client in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
+  | Ok result ->
+    Lwt.return
+      ( LspProt.LspFromServer (Some (ResponseMessage (id, LinkedEditingRangeResult result))),
+        metadata
+      )
+
 let handle_persistent_malformed_command ~id ~metadata ~client:_ ~profiling:_ =
   mk_lsp_error_response ~id:(Some id) ~reason:"Malformed command" metadata
 
@@ -2776,6 +2792,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_auto_close_jsx ~options ~id ~params ~metadata)
+  | LspToServer (RequestMessage (id, LinkedEditingRangeRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_linked_editing_range ~options ~id ~params ~metadata)
   | LspToServer (ResponseMessage (id, result)) ->
     Handle_persistent_immediately (handle_result_from_client ~id ~result ~metadata)
   | LspToServer unhandled ->

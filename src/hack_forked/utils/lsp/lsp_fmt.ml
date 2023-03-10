@@ -1130,6 +1130,23 @@ let print_documentOnTypeFormatting (r : DocumentOnTypeFormatting.result) : json 
   JSON_Array (Base.List.map r ~f:TextEditFmt.to_json)
 
 (************************************************************************)
+(* textDocument/linkedEditingRange request                              *)
+(************************************************************************)
+
+let parse_linkedEditingRange (params : json option) : LinkedEditingRange.params =
+  parse_textDocumentPositionParams params
+
+let print_linkedEditingRange (r : LinkedEditingRange.result) : json =
+  match r with
+  | None -> JSON_Null
+  | Some r ->
+    Jprint.object_opt
+      [
+        ("ranges", Some (JSON_Array (Base.List.map r.LinkedEditingRange.ranges ~f:print_range)));
+        ("wordPattern", Base.Option.map r.LinkedEditingRange.wordPattern ~f:(fun s -> JSON_String s));
+      ]
+
+(************************************************************************)
 (* initialize request                                                   *)
 (************************************************************************)
 
@@ -1268,6 +1285,12 @@ module PublishDiagnosticsClientCapabilitiesFmt = struct
     }
 end
 
+module LinkedEditingRangeClientCapabilitiesFmt = struct
+  open LinkedEditingRangeClientCapabilities
+
+  let of_json json = { dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:false }
+end
+
 module CompletionOptionsFmt = struct
   open CompletionOptions
 
@@ -1338,6 +1361,8 @@ let parse_initialize (params : json option) : Initialize.params =
           Jget.obj_opt json "signatureHelp" |> SignatureHelpClientCapabilitiesFmt.of_json;
         publishDiagnostics =
           Jget.obj_opt json "publishDiagnostics" |> PublishDiagnosticsClientCapabilitiesFmt.of_json;
+        linkedEditingRange =
+          Jget.obj_opt json "linkedEditingRange" |> LinkedEditingRangeClientCapabilitiesFmt.of_json;
       }
     and parse_window json = { status = Jget.obj_opt json "status" |> Base.Option.is_some }
     and parse_telemetry json =
@@ -1469,6 +1494,7 @@ let print_initialize ~key (r : Initialize.result) : json =
               ("implementationProvider", Some (JSON_Bool cap.implementationProvider));
               ("typeCoverageProvider", Some (JSON_Bool cap.typeCoverageProvider));
               ("rageProvider", Some (JSON_Bool cap.rageProvider));
+              ("linkedEditingRangeProvider", Some (JSON_Bool cap.linkedEditingRangeProvider));
               ("experimental", experimental);
             ]
         );
@@ -1549,6 +1575,12 @@ module AutoCloseJsxFmt = struct
   let params_of_json = parse_textDocumentPositionParams
 
   let json_of_result = Base.Option.value_map ~default:JSON_Null ~f:(fun text -> JSON_String text)
+end
+
+module LinkedEditingRangeFmt = struct
+  let params_of_json = parse_linkedEditingRange
+
+  let json_of_result = print_linkedEditingRange
 end
 
 (************************************************************************)
@@ -1635,6 +1667,7 @@ let request_name_to_string (request : lsp_request) : string =
   | ExecuteCommandRequest _ -> "workspace/executeCommand"
   | ApplyWorkspaceEditRequest _ -> "workspace/applyEdit"
   | AutoCloseJsxRequest _ -> "flow/autoCloseJsx"
+  | LinkedEditingRangeRequest _ -> "textDocument/linkedEditingRange"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result : lsp_result) : string =
@@ -1669,6 +1702,7 @@ let result_name_to_string (result : lsp_result) : string =
   | ApplyWorkspaceEditResult _ -> "workspace/applyEdit"
   | RegisterCapabilityResult -> "client/registerCapability"
   | AutoCloseJsxResult _ -> "flow/autoCloseJsx"
+  | LinkedEditingRangeResult _ -> "textDocument/linkedEditingRange"
   | ErrorResult (e, _stack) -> "ERROR/" ^ e.Error.message
 
 let notification_name_to_string (notification : lsp_notification) : string =
@@ -1736,6 +1770,8 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "workspace/executeCommand" -> ExecuteCommandRequest (ExecuteCommandFmt.params_of_json params)
   | "workspace/configuration" -> ConfigurationRequest (ConfigurationFmt.params_of_json params)
   | "flow/autoCloseJsx" -> AutoCloseJsxRequest (AutoCloseJsxFmt.params_of_json params)
+  | "textDocument/linkedEditingRange" ->
+    LinkedEditingRangeRequest (LinkedEditingRangeFmt.params_of_json params)
   | "completionItem/resolve"
   | "window/showMessageRequest" (* server -> client, we should never receive this *)
   | "window/showStatus" (* server -> client, we should never receive this *)
@@ -1799,6 +1835,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | DocumentCodeLensRequest _
   | ExecuteCommandRequest _
   | AutoCloseJsxRequest _
+  | LinkedEditingRangeRequest _
   | UnknownRequest _ ->
     raise
       (Error.LspException
@@ -1865,6 +1902,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | DocumentCodeLensRequest _
     | ExecuteCommandRequest _
     | AutoCloseJsxRequest _
+    | LinkedEditingRangeRequest _
     | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
@@ -1906,6 +1944,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | SelectionRangeResult r -> SelectionRangeFmt.json_of_result r
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
     | AutoCloseJsxResult r -> AutoCloseJsxFmt.json_of_result r
+    | LinkedEditingRangeResult r -> LinkedEditingRangeFmt.json_of_result r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _

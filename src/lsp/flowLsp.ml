@@ -824,6 +824,7 @@ let do_initialize params : Initialize.result =
         selectionRangeProvider = true;
         typeCoverageProvider = true;
         rageProvider = true;
+        linkedEditingRangeProvider = true;
         server_experimental =
           { server_snippetTextEdit; strictCompletionOrder = true; autoCloseJsx = true };
       };
