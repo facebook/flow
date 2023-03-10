@@ -94,31 +94,6 @@ module type Heap = sig
   val mem : key -> bool
 end
 
-module type LocalCache = sig
-  type key
-
-  type value
-
-  val add : key -> value -> unit
-
-  val get : key -> value option
-
-  val remove : key -> unit
-
-  val clear : unit -> unit
-end
-
-module type CacheConfig = sig
-  type key
-
-  type value
-
-  val capacity : int
-end
-
-module LocalCache (Config : CacheConfig) :
-  LocalCache with type key = Config.key and type value = Config.value
-
 module SerializedHeap (Key : Key) (Value : Value) :
   Heap with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 

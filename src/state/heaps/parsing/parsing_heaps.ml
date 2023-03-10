@@ -1076,7 +1076,7 @@ module Reader_cache : sig
 
   val clear : unit -> unit
 end = struct
-  module ASTCache = SharedMem.LocalCache (struct
+  module ASTCache = LocalCache.Make (struct
     type key = File_key.t
 
     type value = (Loc.t, Loc.t) Flow_ast.Program.t
@@ -1084,7 +1084,7 @@ end = struct
     let capacity = 1000
   end)
 
-  module ALocTableCache = SharedMem.LocalCache (struct
+  module ALocTableCache = LocalCache.Make (struct
     type key = File_key.t
 
     type value = ALoc.table
@@ -1118,7 +1118,7 @@ module Mutator_cache : sig
 
   val clear : unit -> unit
 end = struct
-  module ALocTableCache = SharedMem.LocalCache (struct
+  module ALocTableCache = LocalCache.Make (struct
     type key = File_key.t
 
     type value = ALoc.table

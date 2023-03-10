@@ -43,7 +43,7 @@
 (library
  (name heap_shared_mem)
  (wrapped false)
- (modules prefix sharedMem)
+ (modules prefix sharedMem localCache)
  (preprocess
   (pps ppx_deriving.std visitors.ppx))
  (libraries
