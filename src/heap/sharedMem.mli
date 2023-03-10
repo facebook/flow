@@ -8,7 +8,6 @@
 type config = {
   heap_size: int;
   hash_table_pow: int;
-  log_level: int;
 }
 
 type handle = Unix.file_descr
@@ -103,8 +102,6 @@ module AddrHeap (Key : Key) (Value : AddrValue) : sig
 
   val add : Key.t -> Value.t addr -> Value.t addr
 end
-
-val debug_value_size : Obj.t -> int
 
 module NewAPI : sig
   (* This module provides a type-safe and bounds-checked interface to shared

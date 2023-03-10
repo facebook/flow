@@ -123,7 +123,6 @@ module Opts = struct
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_hash_table_pow: int;
     shm_heap_size: int;
-    shm_log_level: int;
     strict_es6_import_export: bool;
     strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
@@ -251,7 +250,6 @@ module Opts = struct
       saved_state_fetcher = Options.Dummy_fetcher;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
-      shm_log_level = 0;
       strict_es6_import_export = false;
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
@@ -854,7 +852,6 @@ module Opts = struct
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = Some v }));
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
-      ("sharedmemory.log_level", uint (fun opts shm_log_level -> Ok { opts with shm_log_level }));
       ("suppress_type", suppress_types_parser);
       ("traces", uint (fun opts v -> Ok { opts with traces = v }));
       ("trust_mode", trust_mode_parser);
@@ -1562,8 +1559,6 @@ let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 
 let shm_heap_size c = c.options.Opts.shm_heap_size
-
-let shm_log_level c = c.options.Opts.shm_log_level
 
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 

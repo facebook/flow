@@ -1489,7 +1489,6 @@ CAMLprim value hh_ml_alloc(value wsize) {
 /*****************************************************************************/
 CAMLprim value hh_store_ocaml(value v, value tag_val) {
   CAMLparam1(v);
-  CAMLlocal1(result);
   check_should_exit();
 
   char *serialized, *compressed;
@@ -1573,12 +1572,7 @@ CAMLprim value hh_store_ocaml(value v, value tag_val) {
   free(serialized);
   free(compressed);
 
-  result = caml_alloc_tuple(3);
-  Store_field(result, 0, Val_long(Addr_of_ptr(entry)));
-  Store_field(result, 1, Val_long(compressed_size));
-  Store_field(result, 2, Val_long(serialized_size));
-
-  CAMLreturn(result);
+  CAMLreturn(Val_long(Addr_of_ptr(entry)));
 }
 
 // The final byte of a compressed heap entry contains an offset, which we can
@@ -1745,16 +1739,6 @@ CAMLprim value hh_get(value key) {
   find_slot(key, &elt);
 
   CAMLreturn(Val_long(elt.hash == 0 ? NULL_ADDR : elt.addr));
-}
-
-/*****************************************************************************/
-/* Returns the size of the value at the given address. */
-/*****************************************************************************/
-CAMLprim value hh_get_size(value addr_val) {
-  CAMLparam1(addr_val);
-  heap_entry_t* entry = Entry_of_addr(Long_val(addr_val));
-  size_t compressed_bsize = entry_compressed_bsize(entry);
-  CAMLreturn(Val_long(compressed_bsize));
 }
 
 /*****************************************************************************/

@@ -245,7 +245,7 @@ let tests () =
     ( name,
       fun () ->
         let num_workers = 0 in
-        let config = { SharedMem.heap_size = 1024; hash_table_pow; log_level = 0 } in
+        let config = { SharedMem.heap_size = 1024; hash_table_pow } in
         match SharedMem.init ~num_workers config with
         | Ok handle ->
           ignore (handle : SharedMem.handle);

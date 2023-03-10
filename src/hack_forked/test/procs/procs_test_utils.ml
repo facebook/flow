@@ -25,7 +25,7 @@ let try_finalize f x finally y =
 let make_workers n =
   let default_sharedmem_config =
     let gig = 1024 * 1024 * 1024 in
-    { SharedMem.heap_size = 20 * gig; hash_table_pow = 18; log_level = 0 }
+    { SharedMem.heap_size = 20 * gig; hash_table_pow = 18 }
   in
   let heap_handle =
     match SharedMem.init ~num_workers:n default_sharedmem_config with

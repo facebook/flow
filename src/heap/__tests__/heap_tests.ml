@@ -630,7 +630,7 @@ let () =
   Daemon.check_entry_point ();
 
   let num_workers = 4 in
-  let config = { heap_size = 10 * 1024 * 1024; hash_table_pow = 20; log_level = 0 } in
+  let config = { heap_size = 10 * 1024 * 1024; hash_table_pow = 20 } in
   let heap_handle = Result.get_ok (init ~num_workers config) in
   let workers =
     MultiWorkerLwt.make

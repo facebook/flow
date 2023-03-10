@@ -234,11 +234,7 @@ let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
       raise SharedMem.Out_of_shared_memory
   in
   let genv = ServerEnvBuild.make_genv ~options ~init_id handle in
-  let program_init profiling =
-    let%lwt ret = init ~profiling ?focus_targets genv in
-    if shared_mem_config.SharedMem.log_level > 0 then Measure.print_stats ();
-    Lwt.return ret
-  in
+  let program_init profiling = init ~profiling ?focus_targets genv in
   (genv, program_init)
 
 let run ~monitor_channels ~init_id ~shared_mem_config options =

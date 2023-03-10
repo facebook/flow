@@ -10,7 +10,6 @@
 type config = {
   heap_size: int;
   hash_table_pow: int;
-  log_level: int;
 }
 
 type handle = Unix.file_descr
@@ -187,13 +186,6 @@ external sweep_slice : int -> int = "hh_sweep_slice"
 external hh_compact : unit -> unit = "hh_compact"
 
 (*****************************************************************************)
-(* The logging level for shared memory statistics *)
-(* 0 = nothing *)
-(* 1 = log totals, averages, min, max bytes marshalled and unmarshalled *)
-(*****************************************************************************)
-external hh_log_level : unit -> int = "hh_log_level"
-
-(*****************************************************************************)
 (* The total number of slots in our hashtable *)
 (*****************************************************************************)
 external hash_stats : unit -> table_stats = "hh_hash_stats"
@@ -288,13 +280,6 @@ let compact () =
   finish_cycle ();
   compact_helper ()
 
-(* Compute size of values in the garbage-collected heap *)
-let value_size r =
-  let w = Obj.reachable_words r in
-  w * (Sys.word_size / 8)
-
-let debug_value_size = value_size
-
 module type Key = sig
   type t
 
@@ -387,57 +372,25 @@ struct
 
   type value = Value.t
 
-  (* Returns address into the heap, alloc size, and orig size *)
-  external hh_store : Value.t -> int -> _ addr * int * int = "hh_store_ocaml"
+  (** Returns address into the heap *)
+  external hh_store : Value.t -> int -> _ addr = "hh_store_ocaml"
 
   external hh_deserialize : _ addr -> Value.t = "hh_deserialize"
-
-  external hh_get_size : _ addr -> int = "hh_get_size"
 
   let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x (tag_val Serialized_tag))
 
   let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
 
-  let log_serialize compressed original =
-    let compressed = float compressed in
-    let original = float original in
-    let saved = original -. compressed in
-    let ratio = compressed /. original in
-    Measure.sample (Value.description ^ " (bytes serialized into shared heap)") compressed;
-    Measure.sample "ALL bytes serialized into shared heap" compressed;
-    Measure.sample (Value.description ^ " (bytes saved in shared heap due to compression)") saved;
-    Measure.sample "ALL bytes saved in shared heap due to compression" saved;
-    Measure.sample (Value.description ^ " (shared heap compression ratio)") ratio;
-    Measure.sample "ALL bytes shared heap compression ratio" ratio
-
-  let log_deserialize l r =
-    let sharedheap = float l in
-    Measure.sample (Value.description ^ " (bytes deserialized from shared heap)") sharedheap;
-    Measure.sample "ALL bytes deserialized from shared heap" sharedheap;
-
-    if hh_log_level () > 1 then (
-      (* value_size is a bit expensive to call this often, so only run with log levels >= 2 *)
-      let localheap = float (value_size r) in
-      Measure.sample (Value.description ^ " (bytes allocated for deserialized value)") localheap;
-      Measure.sample "ALL bytes allocated for deserialized value" localheap
-    )
-
   let add key value =
-    let (addr, compressed_size, original_size) = hh_store value in
-    ignore (Tbl.add key addr);
-    if hh_log_level () > 0 && compressed_size > 0 then log_serialize compressed_size original_size
+    let addr = hh_store value in
+    ignore (Tbl.add key addr)
 
   let mem = Tbl.mem
-
-  let deserialize addr =
-    let value = hh_deserialize addr in
-    if hh_log_level () > 0 then log_deserialize (hh_get_size addr) (Obj.repr value);
-    value
 
   let get key =
     match Tbl.get key with
     | None -> None
-    | Some addr -> Some (deserialize addr)
+    | Some addr -> Some (hh_deserialize addr)
 
   let remove = Tbl.remove
 

@@ -262,11 +262,10 @@ let verbose_focus_flag prev =
 type shared_mem_params = {
   shm_heap_size: int option;
   shm_hash_table_pow: int option;
-  shm_log_level: int option;
 }
 
-let collect_shm_flags main shm_heap_size shm_hash_table_pow shm_log_level =
-  main { shm_heap_size; shm_hash_table_pow; shm_log_level }
+let collect_shm_flags main shm_heap_size shm_hash_table_pow =
+  main { shm_heap_size; shm_hash_table_pow }
 
 let shm_flags prev =
   CommandSpec.ArgSpec.(
@@ -283,10 +282,6 @@ let shm_flags prev =
          int
          ~doc:
            "The exponent for the size of the shared memory hash table. The default is 19, implying a size of 2^19 bytes"
-    |> flag
-         "--sharedmemory-log-level"
-         int
-         ~doc:"The logging level for shared memory statistics. 0=none, 1=some"
   )
 
 let shm_config shm_flags flowconfig =
@@ -298,10 +293,7 @@ let shm_config shm_flags flowconfig =
       shm_flags.shm_hash_table_pow
       ~default:(FlowConfig.shm_hash_table_pow flowconfig)
   in
-  let log_level =
-    Base.Option.value shm_flags.shm_log_level ~default:(FlowConfig.shm_log_level flowconfig)
-  in
-  { SharedMem.heap_size; hash_table_pow; log_level }
+  { SharedMem.heap_size; hash_table_pow }
 
 let from_flag =
   let collector main from =
@@ -1513,7 +1505,6 @@ let make_env flowconfig flowconfig_name connect_flags root =
     autostop = connect_flags.autostop;
     tmp_dir;
     shm_hash_table_pow = connect_flags.shm_flags.shm_hash_table_pow;
-    shm_log_level = connect_flags.shm_flags.shm_log_level;
     ignore_version = connect_flags.ignore_version;
     emoji = Base.Option.value (FlowConfig.emoji flowconfig) ~default:false;
     quiet = connect_flags.quiet;
