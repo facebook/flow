@@ -415,16 +415,6 @@ module type LocalCache = sig
   val clear : unit -> unit
 end
 
-module type WithCache = sig
-  include NoCache
-
-  val write_around : key -> value -> unit
-
-  val get_no_cache : key -> value option
-
-  module DebugCache : LocalCache with type key = key and type value = value
-end
-
 (*****************************************************************************)
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
@@ -654,14 +644,6 @@ module OrderedCache (Config : CacheConfig) :
     | Not_found -> ()
 end
 
-(*****************************************************************************)
-(* Every time we create a new cache, a function that knows how to clear the
- * cache is registered in the "invalidate_callback_list" global.
- *)
-(*****************************************************************************)
-
-let invalidate_callback_list = ref []
-
 module LocalCache (Config : CacheConfig) = struct
   type key = Config.key
 
@@ -708,90 +690,6 @@ end
  * much time. The caches keep a deserialized version of the types.
  *)
 (*****************************************************************************)
-module WithCache (Key : Key) (Value : Value) :
-  WithCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key) =
-struct
-  module Direct = NoCache (Key) (Value)
-
-  type key = Direct.key
-
-  type value = Direct.value
-
-  module KeySet = Direct.KeySet
-
-  module Cache = LocalCache (struct
-    type nonrec key = key
-
-    type nonrec value = value
-
-    let capacity = 1000
-  end)
-
-  (* This is exposed for tests *)
-  module DebugCache = Cache
-
-  let add x y =
-    Direct.add x y;
-    Cache.add x y
-
-  let get_no_cache = Direct.get
-
-  let write_around x y =
-    (* Note that we do not need to do any cache invalidation here because
-     * Direct.add is a no-op if the key already exists. *)
-    Direct.add x y
-
-  let log_hit_rate ~hit =
-    Measure.sample
-      (Value.description ^ " (cache hit rate)")
-      ( if hit then
-        1.
-      else
-        0.
-      );
-    Measure.sample
-      "(ALL cache hit rate)"
-      ( if hit then
-        1.
-      else
-        0.
-      )
-
-  let get x =
-    match Cache.get x with
-    | None ->
-      let result =
-        match Direct.get x with
-        | None -> None
-        | Some v as result ->
-          Cache.add x v;
-          result
-      in
-      if hh_log_level () > 0 then log_hit_rate ~hit:false;
-      result
-    | Some _ as result ->
-      if hh_log_level () > 0 then log_hit_rate ~hit:true;
-      result
-
-  let mem x =
-    match get x with
-    | None -> false
-    | Some _ -> true
-
-  let remove x =
-    Direct.remove x;
-    Cache.remove x
-
-  let remove_batch xs = KeySet.iter remove xs
-
-  let () =
-    invalidate_callback_list :=
-      begin
-        (fun () -> Cache.clear ())
-      end
-      :: !invalidate_callback_list
-end
-
 module NewAPI = struct
   type chunk = {
     heap: buf;

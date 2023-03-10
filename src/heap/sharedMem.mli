@@ -124,21 +124,8 @@ module type CacheConfig = sig
   val capacity : int
 end
 
-module type WithCache = sig
-  include NoCache
-
-  val write_around : key -> value -> unit
-
-  val get_no_cache : key -> value option
-
-  module DebugCache : LocalCache with type key = key and type value = value
-end
-
 module LocalCache (Config : CacheConfig) :
   LocalCache with type key = Config.key and type value = Config.value
-
-module WithCache (Key : Key) (Value : Value) :
-  WithCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
 module NoCache (Key : Key) (Value : Value) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
