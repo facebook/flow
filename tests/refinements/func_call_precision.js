@@ -5,4 +5,4 @@ function foo() {
 function bar() { }
 x = 1;
 bar();
-(x: number); // error in constrain_writes mode
+(x: number); // error
