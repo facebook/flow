@@ -8,4 +8,3 @@
 all=true
 exact_by_default=false
 include_warnings=true
-inference_mode=constrain_writes
