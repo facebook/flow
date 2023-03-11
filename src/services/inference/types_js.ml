@@ -2336,11 +2336,13 @@ let load_saved_state ~profiling ~workers options =
        Lwt.return_some (saved_state, updates)
      with
     | Saved_state.Invalid_saved_state invalid_reason ->
+      let trace = Saved_state.backtrace_of_invalid_reason invalid_reason in
       let invalid_reason = Saved_state.invalid_reason_to_string invalid_reason in
       FlowEventLogger.load_saved_state_error
         ~saved_state_filename:(Path.to_string saved_state_filename)
         ~changed_files_count
-        ~invalid_reason;
+        ~invalid_reason
+        ~trace;
       let msg = spf "Failed to load saved state: %s" invalid_reason in
       exit_if_no_fallback ~msg options;
       Lwt.return_none)

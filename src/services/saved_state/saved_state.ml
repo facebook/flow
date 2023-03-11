@@ -445,21 +445,36 @@ end
 
 type invalid_reason =
   | Bad_header
-  | Build_mismatch
+  | Build_mismatch of {
+      expected: string;
+      actual: string;
+    }
   | Changed_files
-  | Failed_to_marshal
-  | Failed_to_decompress
+  | Failed_to_marshal of Exception.t
+  | Failed_to_decompress of Exception.t
   | File_does_not_exist
   | Flowconfig_mismatch
 
 let invalid_reason_to_string = function
   | Bad_header -> "Invalid saved state header"
-  | Build_mismatch -> "Build ID of saved state does not match this binary"
+  | Build_mismatch _ -> "Build ID of saved state does not match this binary"
   | Changed_files -> "A file change invalidated the saved state"
-  | Failed_to_marshal -> "Failed to unmarshal data from saved state"
-  | Failed_to_decompress -> "Failed to decompress saved state data"
+  | Failed_to_marshal _ -> "Failed to unmarshal data from saved state"
+  | Failed_to_decompress _ -> "Failed to decompress saved state data"
   | File_does_not_exist -> "Saved state file does not exist"
   | Flowconfig_mismatch -> ".flowconfig has changed since saved state was generated"
+
+let backtrace_of_invalid_reason = function
+  | Failed_to_decompress exn
+  | Failed_to_marshal exn ->
+    Some (Exception.to_string exn)
+  | Build_mismatch { expected; actual } ->
+    Some (Printf.sprintf "Expected %S, got %s" expected actual)
+  | Bad_header
+  | Changed_files
+  | File_does_not_exist
+  | Flowconfig_mismatch ->
+    None
 
 exception Invalid_saved_state of invalid_reason
 
@@ -532,14 +547,14 @@ end = struct
       else
         Lwt.return (Bytes.to_string buf)
     in
-    let assert_version result =
-      let flow_build_id = saved_state_version () in
-      if result <> flow_build_id then (
+    let assert_version actual =
+      let expected = saved_state_version () in
+      if actual <> expected then (
         Hh_logger.error
           "Saved-state file failed version check. Expected version %S but got %S"
-          flow_build_id
-          result;
-        raise (Invalid_saved_state Build_mismatch)
+          expected
+          actual;
+        raise (Invalid_saved_state (Build_mismatch { expected; actual }))
       ) else
         ()
     in
@@ -706,7 +721,7 @@ end = struct
           | exn ->
             let exn = Exception.wrap exn in
             Hh_logger.error ~exn "Failed to parse saved state data";
-            raise (Invalid_saved_state Failed_to_marshal)
+            raise (Invalid_saved_state (Failed_to_marshal exn))
       )
     in
     let%lwt () = Lwt_unix.close fd in
@@ -718,7 +733,7 @@ end = struct
           | exn ->
             let exn = Exception.wrap exn in
             Hh_logger.error ~exn "Failed to decompress saved state";
-            raise (Invalid_saved_state Failed_to_decompress)
+            raise (Invalid_saved_state (Failed_to_decompress exn))
       )
     in
     Hh_logger.info "Denormalizing saved-state data";

@@ -49,14 +49,19 @@ type saved_state_data = {
 
 type invalid_reason =
   | Bad_header
-  | Build_mismatch
+  | Build_mismatch of {
+      expected: string;
+      actual: string;
+    }
   | Changed_files
-  | Failed_to_marshal
-  | Failed_to_decompress
+  | Failed_to_marshal of Exception.t
+  | Failed_to_decompress of Exception.t
   | File_does_not_exist
   | Flowconfig_mismatch
 
 val invalid_reason_to_string : invalid_reason -> string
+
+val backtrace_of_invalid_reason : invalid_reason -> string option
 
 exception Invalid_saved_state of invalid_reason
 
