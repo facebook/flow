@@ -382,12 +382,10 @@ let synth_type
     remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty type_loc
   in
   let ty =
-    match normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc type_scheme with
-    | Ty.Type ty -> process ty
-    | Ty.Decl (Ty.ClassDecl (name, _)) ->
-      let ty = Ty.TypeOf (Ty.TSymbol name) in
-      process ty
-    | _ ->
+    let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc type_scheme in
+    match Ty_utils.typify_elt elt with
+    | Some ty -> process ty
+    | None ->
       let err = FailedToNormalize (type_loc, "Non-type") in
       raise (expected err)
   in

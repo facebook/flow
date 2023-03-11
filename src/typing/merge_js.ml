@@ -423,9 +423,8 @@ let check_implicit_instantiations cx typed_ast file_sig =
             (fun (t, name) ->
               let scheme = { Type.TypeScheme.type_ = t; tparams_rev } in
               ( (match Ty_normalizer.from_scheme ~options:ty_normalizer_options ~genv scheme with
-                | Ok (Ty.Type ty) -> Some ty
-                | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ty.TypeOf (Ty.TSymbol s))
-                | _ -> None),
+                | Ok elt -> Ty_utils.typify_elt elt
+                | Error _ -> None),
                 name
               ))
             result)

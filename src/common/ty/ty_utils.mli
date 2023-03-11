@@ -5,9 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* Returns the number of nodes in a type. Will return None if the number of nodes
- * exceeds the max parameter.
- *)
+(** Returns the number of nodes in a type. Will return None if the number of nodes
+    exceeds the max parameter. *)
 val size_of_type : ?max:int -> Ty.t -> int option
 
 val simplify_type : merge_kinds:bool -> ?sort:bool -> Ty.t -> Ty.t
@@ -17,3 +16,9 @@ val simplify_elt : merge_kinds:bool -> ?sort:bool -> Ty.elt -> Ty.elt
 val symbols_of_type : Ty.t -> Ty_symbol.symbol list
 
 val elt_equal : Ty.elt -> Ty.elt -> bool
+
+(** Utility useful for codemods/type insertion. When the element we infered is a
+    declaration we can't directly print/insert in code. This utility helps convert
+    it to an equivalent type. For example it will convert `class C` to `typeof C`,
+    `enum E` to `typeof E`. *)
+val typify_elt : Ty.elt -> Ty.t option

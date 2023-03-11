@@ -41,9 +41,8 @@ let mapper
           List.map
             (fun (t, _) ->
               match Ty_normalizer.from_type ~options:ty_normalizer_options ~genv t with
-              | Ok (Ty.Type ty) -> Some (Ok ty)
-              | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Some (Ok (Ty.TypeOf (Ty.TSymbol s)))
-              | _ -> None)
+              | Ok elt -> Ty_utils.typify_elt elt
+              | Error _ -> None)
             result
         in
         LMap.add loc call_args acc)
@@ -65,16 +64,16 @@ let mapper
   in
 
   (* Filter out undesirable types from unions. *)
-  let filter_ty_result ty_result =
-    match ty_result with
-    | Ok (Ty.Union _ as ty) ->
+  let filter_ty ty =
+    match ty with
+    | Ty.Union _ ->
       let members = Ty.bk_union ty |> Nel.to_list in
       let filtered = Base.List.filter ~f:(fun ty -> not @@ ignore_type ty) members in
       (match filtered with
-      | [] -> Ok (Ty.Bot Ty.EmptyType)
-      | [x] -> Ok x
-      | x0 :: x1 :: xs -> Ok (Ty.Union (false, x0, x1, xs)))
-    | _ -> ty_result
+      | [] -> Ty.Bot Ty.EmptyType
+      | [x] -> x
+      | x0 :: x1 :: xs -> Ty.Union (false, x0, x1, xs))
+    | _ -> ty
   in
 
   object (this)
@@ -201,7 +200,7 @@ let mapper
         let ty_result =
           Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size val_loc
         in
-        let ty_result = filter_ty_result ty_result in
+        let ty_result = Base.Result.map ~f:filter_ty ty_result in
         (match ty_result with
         (* Don't insert just `void`or just `null` (but these are OK in a union). *)
         | Ok (Ty.Null | Ty.Void) -> super#variable_declarator ~kind decl
@@ -417,18 +416,18 @@ let mapper
             )
         ) ->
         (match LMap.find_opt call_loc implicit_instantiation_results with
-        | Some [targ_ty] ->
-          (match targ_ty with
-          | None -> super#variable_declarator ~kind decl
-          | Some ty ->
-            (match filter_ty_result ty with
-            (* Don't insert just `void`or just `null` (but these are OK in a union). *)
-            | Ok (Ty.Null | Ty.Void) -> super#variable_declarator ~kind decl
-            | Ok t when ignore_type t -> super#variable_declarator ~kind decl
-            | ty ->
-              (match
-                 this#get_annot loc (ty >>= this#fix_and_validate loc) (Ast.Type.Missing loc)
-               with
+        | Some [None] -> super#variable_declarator ~kind decl
+        | Some [Some ty] ->
+          (match filter_ty ty with
+          (* Don't insert just `void`or just `null` (but these are OK in a union). *)
+          | Ty.Null
+          | Ty.Void ->
+            super#variable_declarator ~kind decl
+          | t ->
+            if ignore_type t then
+              super#variable_declarator ~kind decl
+            else (
+              match this#get_annot loc (this#fix_and_validate loc ty) (Ast.Type.Missing loc) with
               | Ast.Type.Missing _ -> super#variable_declarator ~kind decl
               | Ast.Type.Available (_, t) ->
                 let targs =
@@ -446,7 +445,8 @@ let mapper
                     (* Add the explicit type argument to `useRef`. *)
                     init = Some (call_loc, Call { Call.callee; targs; arguments; comments });
                   }
-                ))))
+                )
+            ))
         | _ -> super#variable_declarator ~kind decl)
       | _ -> super#variable_declarator ~kind decl
 

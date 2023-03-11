@@ -119,9 +119,9 @@ let get_ty cctx ~preserve_literals loc =
     Ty_normalizer_env.{ default_codemod_options with preserve_inferred_literal_types = lits }
   in
   match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
-  | Ok (Ty.Type ty) -> Ok ty
-  | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Ok (Ty.TypeOf (Ty.TSymbol s))
-  | Ok _ -> Error [Error.Missing_annotation_or_normalizer_error]
+  | Ok elt ->
+    Ty_utils.typify_elt elt
+    |> Base.Result.of_option ~error:[Error.Missing_annotation_or_normalizer_error]
   | Error _ -> Error [Error.Missing_annotation_or_normalizer_error]
 
 let get_validated_ty cctx ~preserve_literals ~max_type_size loc =

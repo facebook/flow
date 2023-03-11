@@ -134,6 +134,6 @@ Warnings:
   Skipping arrow function:                  0
   Large type added:                         0
   Location unhandled:                       0
-  Empty NoUpper:                            0
+  Empty NoUpper:                            1
   Empty SomeKnownUpper:                     0
 
