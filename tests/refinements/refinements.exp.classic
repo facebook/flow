@@ -680,7 +680,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
 
    func_call_precision.js:8:2
-   8| (x: number); // error in constrain_writes mode
+   8| (x: number); // error
        ^
 
 References:
@@ -688,7 +688,7 @@ References:
    1| let x = null;
               ^^^^ [1]
    func_call_precision.js:8:5
-   8| (x: number); // error in constrain_writes mode
+   8| (x: number); // error
           ^^^^^^ [2]
 
 
