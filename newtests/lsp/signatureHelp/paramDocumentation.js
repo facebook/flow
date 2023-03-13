@@ -8,6 +8,6 @@
  * @param [baz.y=0] - the third summand
  * @unrecognized this tag is unrecognized
  */
-function foo(bar, baz) {}
+function foo(bar: string, baz: number) {}
 
 foo(

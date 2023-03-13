@@ -194,21 +194,21 @@ module.exports = (suite(
           JSON.stringify({
             signatures: [
               {
-                label: '(bar: void, baz: void): void',
+                label: '(bar: string, baz: number): void',
                 documentation: {
                   kind: 'markdown',
                   value: 'foo\n\n**@unrecognized** this tag is unrecognized',
                 },
                 parameters: [
                   {
-                    label: 'bar: void',
+                    label: 'bar: string',
                     documentation: {
                       kind: 'markdown',
                       value: 'bar - the first summand',
                     },
                   },
                   {
-                    label: 'baz: void',
+                    label: 'baz: number',
                     documentation: {
                       kind: 'markdown',
                       value:
