@@ -191,7 +191,7 @@ Error --------------------------------------------------------------------------
 
 The following definitions recursively depend on each other, and Flow cannot compute their types:
  - `m` [1] depends on other definition [2], [3], [4], [5], [6]
- - function [6] depends on other definition [5]
+ - function [6] depends on other definition [4], [5]
  - `x` [5] depends on other definition [4]
  - `H` [7] depends on other definition [8]
  - `x` [2] depends on other definition [3]
