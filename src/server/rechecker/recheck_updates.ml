@@ -44,11 +44,7 @@ let get_updated_flowconfig config_path =
   match config with
   | Ok (config, _warnings) -> Ok (config, hash)
   | Error _ ->
-    Error
-      {
-        msg = spf "%s changed in an incompatible way. Exiting." config_path;
-        exit_status = Exit.Flowconfig_changed;
-      }
+    Error { msg = "Config changed in an incompatible way"; exit_status = Exit.Flowconfig_changed }
 
 let assert_compatible_flowconfig_version =
   let not_satisfied version_constraint =
@@ -84,11 +80,7 @@ let assert_compatible_flowconfig_change ~options config_path =
   else
     let () = Hh_logger.error "Flowconfig hash changed from %S to %S" old_hash new_hash in
     let%bind () = assert_compatible_flowconfig_version new_config in
-    Error
-      {
-        msg = spf "%s changed in an incompatible way. Exiting." config_path;
-        exit_status = Exit.Flowconfig_changed;
-      }
+    Error { msg = "Config changed in an incompatible way"; exit_status = Exit.Flowconfig_changed }
 
 (** Checks whether [updates] includes the flowconfig, and if so whether the change can
     be handled incrementally (returns [Ok ()]) or we need to restart (returns [Error]) *)
@@ -122,7 +114,7 @@ let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompati
     in
     Error
       {
-        msg = spf "%s\nPackages changed in an incompatible way. Exiting." messages;
+        msg = spf "%s\nPackages changed in an incompatible way" messages;
         exit_status = Exit.Server_out_of_date;
       }
   else
@@ -150,7 +142,7 @@ let check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible updates =
     in
     Error
       {
-        msg = spf "%s\nLib files changed in an incompatible way. Exiting" messages;
+        msg = spf "%s\nLib files changed in an incompatible way" messages;
         exit_status = Exit.Server_out_of_date;
       }
   else
