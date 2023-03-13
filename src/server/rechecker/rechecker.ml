@@ -84,11 +84,8 @@ let process_updates ~skip_incompatible ~options env updates =
   match
     Recheck_updates.process_updates ~skip_incompatible ~options ~libs:env.ServerEnv.libs updates
   with
-  | Base.Result.Ok updates -> updates
-  | Base.Result.Error { Recheck_updates.msg; exit_status } ->
-    Hh_logger.fatal "Status: Error";
-    Hh_logger.fatal "%s" msg;
-    Exit.exit ~msg exit_status
+  | Ok updates -> updates
+  | Error { Recheck_updates.msg; exit_status } -> Exit.exit ~msg exit_status
 
 (** Notify clients that a recheck is starting. This is used to know that
     error updates are incremental. [send_end_recheck] must be called when
