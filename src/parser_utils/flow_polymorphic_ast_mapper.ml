@@ -1098,6 +1098,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         comments = comments';
       }
 
+    method infer_type (t : ('M, 'T) Ast.Type.Infer.t) : ('N, 'U) Ast.Type.Infer.t =
+      let open Ast.Type.Infer in
+      let { tparam; comments } = t in
+      let tparam' = this#type_param tparam in
+      let comments' = Option.map ~f:this#syntax comments in
+      { tparam = tparam'; comments = comments' }
+
     method union_type (t : ('M, 'T) Ast.Type.Union.t) : ('N, 'U) Ast.Type.Union.t =
       let open Ast.Type.Union in
       let { types = (t0, t1, ts); comments } = t in
@@ -1163,6 +1170,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Nullable t' -> Nullable (this#nullable_type t')
         | Array t' -> Array (this#array_type t')
         | Conditional t' -> Conditional (this#conditional_type t')
+        | Infer t' -> Infer (this#infer_type t')
         | Typeof t' -> Typeof (this#typeof_type t')
         | Keyof t' -> Keyof (this#keyof_type t')
         | ReadOnly t' -> ReadOnly (this#readonly_type t')

@@ -3885,6 +3885,9 @@ and type_conditional
            );
        ]
 
+and type_infer ~opts loc { Ast.Type.Infer.tparam; comments } =
+  layout_node_with_comments_opt loc comments (fuse [Atom "infer"; space; type_param ~opts tparam])
+
 and type_union ~opts loc { Ast.Type.Union.types = (t0, t1, ts); comments } =
   layout_node_with_comments_opt
     loc
@@ -3937,6 +3940,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Interface i -> type_interface ~opts loc i
       | T.Array t -> type_array ~opts loc t
       | T.Conditional t -> type_conditional ~opts loc t
+      | T.Infer t -> type_infer ~opts loc t
       | T.Generic generic -> type_generic ~opts loc generic
       | T.IndexedAccess indexed_access -> type_indexed_access ~opts loc indexed_access
       | T.OptionalIndexedAccess { T.OptionalIndexedAccess.indexed_access; optional } ->
