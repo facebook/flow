@@ -110,7 +110,7 @@ module.exports = (suite(
                           start: {line: 1, character: 22},
                           end: {line: 1, character: 22},
                         },
-                        newText: ': empty',
+                        newText: ': any',
                       },
                     ],
                   },
@@ -167,7 +167,7 @@ module.exports = (suite(
                           },
                         },
                         newText:
-                          ': { a: number, b: (a: empty, b: string) => number, ... }',
+                          ': { a: number, b: (a: any, b: string) => number, ... }',
                       },
                     ],
                   },
