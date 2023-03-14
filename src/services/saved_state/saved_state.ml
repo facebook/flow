@@ -739,14 +739,7 @@ let restore_dependency_info (files, file_impls, file_sigs) =
      * different sort order, specifically for paths outside of the root, i.e.,
      * paths starting with `../` *)
     Array.sort File_key.compare dep_files;
-    let i = ref 0 in
-    let len = Array.length dep_files in
-    let f () =
-      let x = dep_files.(!i) in
-      incr i;
-      x
-    in
-    FilenameSet.of_increasing_iterator_unchecked f len
+    FilenameSet.of_sorted_array_unchecked dep_files
   in
   let files =
     Array.mapi
@@ -760,11 +753,4 @@ let restore_dependency_info (files, file_impls, file_sigs) =
    * different sort order, specifically for paths outside of the root, i.e.,
    * paths starting with `../` *)
   Array.sort (fun (a, _) (b, _) -> File_key.compare a b) files;
-  let i = ref 0 in
-  let len = Array.length files in
-  let f () =
-    let x = files.(!i) in
-    incr i;
-    x
-  in
-  FilenameMap.of_increasing_iterator_unchecked f len |> Dependency_info.of_map
+  FilenameMap.of_sorted_array_unchecked files |> Dependency_info.of_map

@@ -99,6 +99,8 @@ module type S = sig
 
   val of_increasing_iterator_unchecked : (unit -> elt) -> int -> t
 
+  val of_sorted_array_unchecked : elt array -> t
+
   val find_first_opt : (elt -> bool) -> t -> elt option
 end
 
@@ -202,6 +204,16 @@ let rec of_increasing_iterator_unchecked f = function
     let v = f () in
     let r = of_increasing_iterator_unchecked f lenr in
     Node { l; v; r; h = height l + 1 }
+
+let of_sorted_array_unchecked xs =
+  let len = Array.length xs in
+  let i = ref 0 in
+  let f () =
+    let x = xs.(!i) in
+    incr i;
+    x
+  in
+  of_increasing_iterator_unchecked f len
 
 (* Same as create, but performs one step of rebalancing if necessary.
    Assumes l and r balanced and | height l - height r | <= 3.
@@ -820,6 +832,8 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
     Format.fprintf fmt "@,}@]"
 
   let of_increasing_iterator_unchecked = of_increasing_iterator_unchecked
+
+  let of_sorted_array_unchecked = of_sorted_array_unchecked
 
   let rec find_first_opt_aux v0 f = function
     | Empty -> Some v0

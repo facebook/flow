@@ -88,6 +88,16 @@ let rec of_increasing_iterator_unchecked f = function
     let r = of_increasing_iterator_unchecked f lenr in
     Node { l; v; d; r; h = height l + 1 }
 
+let of_sorted_array_unchecked xs =
+  let len = Array.length xs in
+  let i = ref 0 in
+  let f () =
+    let x = xs.(!i) in
+    incr i;
+    x
+  in
+  of_increasing_iterator_unchecked f len
+
 (* The result can not be leaf *)
 let node l x d r =
   let hl = height l in
@@ -453,6 +463,8 @@ module type S = sig
   val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
 
   val of_increasing_iterator_unchecked : (unit -> key * 'a) -> int -> 'a t
+
+  val of_sorted_array_unchecked : (key * 'a) array -> 'a t
 end
 
 module Make (Ord : OrderedType) : S with type key = Ord.t = struct
@@ -840,6 +852,8 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
   let ordered_keys = keys
 
   let of_increasing_iterator_unchecked = of_increasing_iterator_unchecked
+
+  let of_sorted_array_unchecked = of_sorted_array_unchecked
 
   let ident_map_key ?combine f map =
     let (map_, changed) =
