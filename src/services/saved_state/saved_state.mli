@@ -33,8 +33,7 @@ type package_file_data = {
   package_info: (Package_json.t, unit) result;
 }
 
-type saved_state_dependency_graph =
-  (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+type saved_state_dependency_graph
 
 type saved_state_data = {
   flowconfig_hash: Xx.hash;
@@ -79,3 +78,5 @@ val load :
   (Profiling_js.finished * saved_state_data) Lwt.t
 
 val denormalize_file_data : root:string -> normalized_file_data -> denormalized_file_data
+
+val restore_dependency_info : saved_state_dependency_graph -> Dependency_info.t

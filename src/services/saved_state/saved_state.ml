@@ -38,8 +38,7 @@ type package_file_data = {
   package_info: (Package_json.t, unit) result;
 }
 
-type saved_state_dependency_graph =
-  (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+type saved_state_dependency_graph = File_key.t array * int array array * int array array
 
 (* This is the complete saved state data representation *)
 type saved_state_data = {
@@ -78,29 +77,6 @@ let resolved_module_map_fn ~on_file ?on_string = function
     (match (mapped_name, on_string) with
     | (Some name, Some f) -> Error (Some (f name))
     | _ -> err)
-
-let update_dependency_graph_filenames f graph =
-  let update_set set = FilenameSet.map f set in
-  let update_map update_value map =
-    FilenameMap.fold
-      (fun key value new_map ->
-        let key = f key in
-        let value = update_value value in
-        FilenameMap.update
-          key
-          (function
-            | None -> Some value
-            | Some _ -> invalid_arg "Duplicate keys created by mapper function")
-          new_map)
-      map
-      FilenameMap.empty
-  in
-  let update_value (sig_deps, impl_deps) =
-    let sig_deps = update_set sig_deps in
-    let impl_deps = update_set impl_deps in
-    (sig_deps, impl_deps)
-  in
-  update_map update_value graph
 
 (* It's simplest if the build ID is always the same length. Let's use 16, since that happens to
  * be the size of the build ID hash. *)
@@ -169,8 +145,6 @@ end = struct
   let normalize_path t path = intern t (Files.relative_path t.root path)
 
   let normalize_file_key t file_key = File_key.map (normalize_path t) file_key
-
-  let normalize_dependency_graph t = update_dependency_graph_filenames (normalize_file_key t)
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
   let normalize_error t =
@@ -368,22 +342,21 @@ end = struct
       let impl_map =
         dependency_info |> Dependency_info.implementation_dependency_graph |> FilenameGraph.to_map
       in
-      let dependency_graph =
-        let sig_map =
-          dependency_info |> Dependency_info.sig_dependency_graph |> FilenameGraph.to_map
-        in
-        (* The maps should have the same entries. Enforce this by asserting that they have the
-         * same size, and then by using `FilenameMap.find` below to ensure that each `impl_map`
-         * entry has a corresponding `sig_map` entry. *)
-        assert (FilenameMap.cardinal sig_map = FilenameMap.cardinal impl_map);
-        FilenameMap.mapi
-          (fun file impl_deps ->
-            let sig_deps = FilenameMap.find file sig_map in
-            (sig_deps, impl_deps))
-          impl_map
+      let sig_map =
+        dependency_info |> Dependency_info.sig_dependency_graph |> FilenameGraph.to_map
       in
-
-      normalize_dependency_graph t dependency_graph
+      let files = Array.of_list (FilenameMap.keys impl_map) in
+      let file_offset file_key =
+        Base.Array.binary_search files ~compare:File_key.compare `First_equal_to file_key
+        |> Option.get
+      in
+      let file_offsets (_, file_set) =
+        FilenameSet.elements file_set |> Base.Array.of_list_map ~f:file_offset
+      in
+      let file_impls = FilenameMap.bindings impl_map |> Base.Array.of_list_map ~f:file_offsets in
+      let file_sigs = FilenameMap.bindings sig_map |> Base.Array.of_list_map ~f:file_offsets in
+      let files = Array.map (normalize_file_key t) files in
+      (files, file_impls, file_sigs)
     in
     let flowconfig_hash =
       FlowConfig.get_hash
@@ -522,8 +495,9 @@ end = struct
 
   let denormalize_file_key_nocache ~root fn = File_key.map (Files.absolute_path root) fn
 
-  let denormalize_dependency_graph ~denormalizer =
-    update_dependency_graph_filenames (FileDenormalizer.denormalize_file_key denormalizer)
+  let denormalize_dependency_graph ~denormalizer (files, impls, sigs) =
+    let files = Array.map (FileDenormalizer.denormalize_file_key denormalizer) files in
+    (files, impls, sigs)
 
   let denormalize_error ~denormalizer =
     Flow_error.map_loc_of_error
@@ -757,3 +731,40 @@ let load ~workers ~saved_state_filename ~options =
   )
 
 let denormalize_file_data = Load.denormalize_file_data
+
+let restore_dependency_info (files, file_impls, file_sigs) =
+  let dep_set_of_offsets dep_offsets =
+    let dep_files = Array.map (fun i -> files.(i)) dep_offsets in
+    (* Sort after denormalizing because the denormalized file keys could be in a
+     * different sort order, specifically for paths outside of the root, i.e.,
+     * paths starting with `../` *)
+    Array.sort File_key.compare dep_files;
+    let i = ref 0 in
+    let len = Array.length dep_files in
+    let f () =
+      let x = dep_files.(!i) in
+      incr i;
+      x
+    in
+    FilenameSet.of_increasing_iterator_unchecked f len
+  in
+  let files =
+    Array.mapi
+      (fun i file ->
+        let impl_deps = dep_set_of_offsets file_impls.(i) in
+        let sig_deps = dep_set_of_offsets file_sigs.(i) in
+        (file, (sig_deps, impl_deps)))
+      files
+  in
+  (* Sort after denormalizing because the denormalized file keys could be in a
+   * different sort order, specifically for paths outside of the root, i.e.,
+   * paths starting with `../` *)
+  Array.sort (fun (a, _) (b, _) -> File_key.compare a b) files;
+  let i = ref 0 in
+  let len = Array.length files in
+  let f () =
+    let x = files.(!i) in
+    incr i;
+    x
+  in
+  FilenameMap.of_increasing_iterator_unchecked f len |> Dependency_info.of_map

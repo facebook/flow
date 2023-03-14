@@ -2097,7 +2097,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
 
   let%lwt dependency_info =
     with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
-        Lwt.return (Dependency_info.of_map dependency_graph)
+        Lwt.return (Saved_state.restore_dependency_info dependency_graph)
     )
   in
 
