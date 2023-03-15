@@ -68,11 +68,23 @@ Removes annotations nested inside of destructuring (e.g. `const [o: number] = fo
 
 Run with `yarn run flow-codemod removeAnnotationsInDestructuring`.
 
-Part of upgrade to 0.176
+Part of the upgrade to 0.176
 
 ### Remove duplicate class properties
 Removes useless duplicate class properties and fixes bad constructor binding in those classes.
 
 Run with `yarn run flow-codemod removeDuplicateClassProperties`.
 
-Part of upgrade to 0.170
+Part of the upgrade to 0.170
+
+### Rename `$Partial` to `Partial`
+Renames usages of the `$Partial` utility type to its new name, [`Partial`](https://flow.org/en/docs/types/utilities/#toc-partial).
+
+Run with `yarn run flow-codemod renamePartial`.
+
+Part of the upgrade to 0.201
+
+### Convert `$Shape` to `Partial`
+Converts usages of the deprecated and unsafe `$Shape` utility type to its replacement, [`Partial`](https://flow.org/en/docs/types/utilities/#toc-partial).
+
+Run with `yarn run flow-codemod convertShapeToPartial`.
