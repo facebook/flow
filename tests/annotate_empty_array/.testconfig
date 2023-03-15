@@ -1,1 +1,0 @@
-cmd: codemod annotate-empty-array --strip-root --quiet --generalize-maybe --generalize-react-mixed-element ./
