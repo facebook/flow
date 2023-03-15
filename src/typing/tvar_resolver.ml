@@ -11,6 +11,8 @@ open Utils_js
 
 exception EncounteredPlaceholderType
 
+exception EncounteredUnresolvedTvar
+
 let has_placeholders =
   let visitor =
     object (this)
@@ -39,6 +41,28 @@ let has_placeholders =
     match visitor#type_ cx Polarity.Positive ISet.empty t with
     | exception EncounteredPlaceholderType -> true
     | _ -> false
+
+let has_unresolved_tvars_visitor =
+  object (this)
+    inherit [ISet.t] Type_visitor.t
+
+    method! tvar cx pole seen _r id =
+      let module C = Type.Constraint in
+      let (root_id, root) = Context.find_root cx id in
+      if ISet.mem root_id seen then
+        seen
+      else
+        let seen = ISet.add root_id seen in
+        match root.C.constraints with
+        | C.FullyResolved _ -> seen
+        | C.Resolved (_, t) -> this#type_ cx pole seen t
+        | C.Unresolved _ -> raise EncounteredUnresolvedTvar
+  end
+
+let has_unresolved_tvars cx t =
+  match has_unresolved_tvars_visitor#type_ cx Polarity.Positive ISet.empty t with
+  | exception EncounteredUnresolvedTvar -> true
+  | _ -> false
 
 let default_no_lowers r =
   let desc =

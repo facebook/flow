@@ -1229,26 +1229,61 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   let run
       cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
     if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
-    let is_utility_type_call =
-      match check.Check.operation with
-      | (_, _, Check.Call { call_kind = MapTypeKind | CallTypeKind; _ }) -> true
-      | (_, _, Check.Call _)
-      | (_, _, Check.Constructor _)
-      | (_, _, Check.Jsx _) ->
-        false
-    in
     if Context.lti cx then
-      if Context.in_implicit_instantiation cx && is_utility_type_call then
-        run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
-      else
-        let (allow_underconstrained, return_hint) =
-          match lazy_hint reason_op with
-          | HintAvailable (t, kind) -> (true, Some (t, kind))
-          | DecompositionError -> (true, None)
-          | NoHint
-          | EncounteredPlaceholder ->
-            (false, None)
-        in
+      let (check, in_nested_instantiation) =
+        match check.Check.operation with
+        | ( use_op,
+            reason,
+            Check.Call
+              {
+                call_this_t;
+                call_targs;
+                call_args_tlist;
+                call_tout;
+                call_strict_arity;
+                call_speculation_hint_state;
+                call_kind = (MapTypeKind | CallTypeKind) as call_kind;
+              }
+          )
+          when Context.in_implicit_instantiation cx ->
+          (* We ensure that the nested instantiated to have a fully resolved view of the input.
+           * As a starting point, we just replace any types that contain unresolved tvars with
+           * placeholders. Soundness is guaranteed by the post instantiation check.
+           * In the future, we can optimize this by doing more careful book-keeping in one pass. *)
+          let ensure_resolved t =
+            if Tvar_resolver.has_unresolved_tvars cx t then
+              Context.mk_placeholder cx (TypeUtil.reason_of_t t)
+            else
+              t
+          in
+          let fun_type =
+            {
+              call_this_t = ensure_resolved call_this_t;
+              call_args_tlist =
+                ListUtils.ident_map
+                  (function
+                    | Arg t -> Arg (ensure_resolved t)
+                    | SpreadArg t -> SpreadArg (ensure_resolved t))
+                  call_args_tlist;
+              call_targs;
+              call_tout;
+              call_strict_arity;
+              call_speculation_hint_state;
+              call_kind;
+            }
+          in
+          ({ check with Check.operation = (use_op, reason, Check.Call fun_type) }, true)
+        | _ -> (check, false)
+      in
+      let (allow_underconstrained, return_hint) =
+        match lazy_hint reason_op with
+        | HintAvailable (t, kind) -> (true, Some (t, kind))
+        | DecompositionError -> (true, None)
+        | NoHint
+        | EncounteredPlaceholder ->
+          (false, None)
+      in
+      let f () =
         Context.run_in_implicit_instantiation_mode cx (fun () ->
             run_pierce
               cx
@@ -1261,6 +1296,11 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               ~reason_op
               ~reason_tapp
         )
+      in
+      if in_nested_instantiation then
+        Context.run_in_synthesis_mode cx f |> snd
+      else
+        f ()
     else
       run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
 end
