@@ -53,9 +53,9 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:53:37
-   53|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:53:49
+   53|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
                      ^^^^^^^^^^^^^^ [3]
@@ -96,8 +96,8 @@ References:
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:53:19
-   53|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
-                         ^^^^^^^^^^^^^^ [3]
+   53|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
@@ -370,9 +370,9 @@ References:
    state6.js:28:12
    28|       bar: '42',
                   ^^^^ [1]
-   state6.js:5:33
-    5| type State = {foo: number, bar: number};
-                                       ^^^^^^ [2]
+   state6.js:5:34
+    5| type State = {|foo: number, bar: number|};
+                                        ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:31:29
@@ -423,16 +423,17 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:3
 
-Cannot cast function to `State` because function [1] is incompatible with `$Shape` of `State` [2]. [incompatible-shape]
+Cannot cast function to partial `State` because inexact function [1] is incompatible with exact `State` [2].
+[incompatible-exact]
 
    state6.js:45:3
-   45| ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
+   45| ((() => {}): Partial<State>); // Error: Functions are not a valid object shape.
          ^^^^^^^^ [1]
 
 References:
-   state6.js:45:21
-   45| ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.
-                           ^^^^^ [2]
+   state6.js:45:22
+   45| ((() => {}): Partial<State>); // Error: Functions are not a valid object shape.
+                            ^^^^^ [2]
 
 
 
