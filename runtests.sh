@@ -49,10 +49,9 @@ saved_state=0
 verbose=0
 quiet=0
 relative="."
-classic=0
 check_only=0
-export saved_state filter check_only classic
-while getopts "b:d:f:clqxnrst:vh?" opt; do
+export saved_state filter check_only
+while getopts "b:d:f:clqxrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -65,9 +64,6 @@ while getopts "b:d:f:clqxnrst:vh?" opt; do
     ;;
   c)
     check_only=1
-    ;;
-  n)
-    classic=1
     ;;
   l)
     list_tests=1
@@ -173,9 +169,6 @@ print_failure() {
     fi
     # Default expected file extension is .exp
     ext=".exp"
-    if [[ "$classic" -eq 1 ]] && [ -f "${dir}${name}${ext}.classic" ]; then
-      ext="${ext}.classic"
-    fi
 
     if [[ "$record" -eq 1 ]]; then
       # Copy .out to .exp, replacing the current version, if present, with
