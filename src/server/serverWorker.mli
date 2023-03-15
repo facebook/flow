@@ -6,4 +6,9 @@
  *)
 
 val make :
-  n:int -> gc_control:Gc.control -> init_id:string -> SharedMem.handle -> MultiWorkerLwt.worker list
+  n:int ->
+  channel_mode:[ `pipe | `socket ] ->
+  gc_control:Gc.control ->
+  init_id:string ->
+  SharedMem.handle ->
+  MultiWorkerLwt.worker list

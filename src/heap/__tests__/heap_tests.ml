@@ -634,6 +634,7 @@ let () =
   let heap_handle = Result.get_ok (init ~num_workers config) in
   let workers =
     MultiWorkerLwt.make
+      ~channel_mode:`pipe
       ~call_wrapper:None
       ~saved_state:()
       ~entry

@@ -49,6 +49,7 @@ module Opts = struct
     autoimports_ranked_by_usage: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
+    channel_mode: [ `pipe | `socket ] option;
     conditional_type: bool option;
     cycle_errors: bool;
     cycle_errors_includes: string list;
@@ -175,6 +176,7 @@ module Opts = struct
       autoimports_ranked_by_usage = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
+      channel_mode = None;
       conditional_type = None;
       cycle_errors = false;
       cycle_errors_includes = [];
@@ -383,6 +385,15 @@ module Opts = struct
 
   let max_rss_bytes_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v })
+
+  let channel_mode_parser ~cond =
+    enum
+      [("pipe", `pipe); ("socket", `socket)]
+      (fun opts v ->
+        if cond () then
+          Ok { opts with channel_mode = Some v }
+        else
+          Ok opts)
 
   let file_ext_parser =
     string
@@ -793,6 +804,8 @@ module Opts = struct
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
+      ("experimental.channel_mode", channel_mode_parser ~cond:(Fun.const true));
+      ("experimental.channel_mode.windows", channel_mode_parser ~cond:(Fun.const Sys.win32));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
@@ -1406,6 +1419,8 @@ let autoimports_ranked_by_usage c = c.options.Opts.autoimports_ranked_by_usage
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
+
+let channel_mode c = c.options.Opts.channel_mode
 
 let conditional_type c = c.options.Opts.conditional_type
 

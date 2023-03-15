@@ -1355,6 +1355,7 @@ let make_options
       Base.List.map
         ~f:(fun s -> Files.expand_project_root_token ~root s)
         (FlowConfig.array_literal_providers_includes flowconfig);
+    opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
     opt_conditional_type = Base.Option.value (FlowConfig.conditional_type flowconfig) ~default:false;
     opt_cycle_errors = FlowConfig.cycle_errors flowconfig;
     opt_cycle_errors_includes =

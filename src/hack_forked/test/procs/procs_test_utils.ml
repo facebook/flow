@@ -35,6 +35,7 @@ let make_workers n =
   let gc_control = Caml.Gc.get () in
   let workers =
     MultiWorkerLwt.make
+      ~channel_mode:`pipe
       ~call_wrapper:None
       ~saved_state:()
       ~entry

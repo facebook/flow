@@ -76,6 +76,8 @@ val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option
 
+val channel_mode : config -> [ `pipe | `socket ] option
+
 val conditional_type : config -> bool option
 
 val cycle_errors : config -> bool
