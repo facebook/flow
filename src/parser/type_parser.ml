@@ -106,6 +106,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and conditional env =
     let start_loc = Peek.loc env in
+    let env = Parser_env.with_no_conditional_type false env in
     let check_type = union env in
     conditional_with env ~start_loc check_type
 
@@ -116,7 +117,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         ~start_loc
         (fun env ->
           Expect.token env T_EXTENDS;
-          let extends_type = union env in
+          let extends_type = union (Parser_env.with_no_conditional_type true env) in
           Expect.token_opt env T_PLING;
           let true_type = _type env in
           Expect.token_opt env T_COLON;
@@ -459,6 +460,40 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
         env
+    | T_INFER ->
+      with_loc
+        (fun env ->
+          let leading = Peek.comments env in
+          Eat.token env;
+          let trailing = Eat.trailing_comments env in
+          let tparam =
+            with_loc
+              (fun env ->
+                let name = type_identifier env in
+                let bound =
+                  Try.or_else
+                    env
+                    ~fallback:(Type.Missing (Peek.loc env))
+                    (fun env ->
+                      if not @@ Eat.maybe env T_EXTENDS then raise Try.Rollback;
+                      let bound = union env in
+                      if Parser_env.no_conditional_type env || Peek.token env <> T_PLING then
+                        Type.Available (fst bound, bound)
+                      else
+                        raise Try.Rollback)
+                in
+                {
+                  Type.TypeParam.name;
+                  bound;
+                  bound_kind = Type.TypeParam.Extends;
+                  variance = None;
+                  default = None;
+                })
+              env
+          in
+          Type.Infer
+            { Type.Infer.tparam; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+        env
     | T_ERROR "`" ->
       error env Parse_error.TSTemplateLiteralType;
       (loc, Type.Any None)
@@ -791,7 +826,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         |> anon_function_without_parens_with env
         |> intersection_with env
         |> union_with env
-        |> conditional_with env ~start_loc
+        |> conditional_with (Parser_env.with_no_conditional_type false env) ~start_loc
         )
 
   and function_or_group env =

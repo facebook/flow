@@ -154,6 +154,7 @@ type env = {
   no_call: bool;
   no_let: bool;
   no_anon_function_type: bool;
+  no_conditional_type: bool;
   no_new: bool;
   allow_yield: bool;
   allow_await: bool;
@@ -209,6 +210,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     no_call = false;
     no_let = false;
     no_anon_function_type = false;
+    no_conditional_type = false;
     no_new = false;
     allow_yield = false;
     allow_await = false;
@@ -263,6 +265,8 @@ let no_call env = env.no_call
 let no_let env = env.no_let
 
 let no_anon_function_type env = env.no_anon_function_type
+
+let no_conditional_type env = env.no_conditional_type
 
 let no_new env = env.no_new
 
@@ -401,6 +405,12 @@ let with_no_anon_function_type no_anon_function_type env =
     env
   else
     { env with no_anon_function_type }
+
+let with_no_conditional_type no_conditional_type env =
+  if no_conditional_type = env.no_conditional_type then
+    env
+  else
+    { env with no_conditional_type }
 
 let with_no_new no_new env =
   if no_new = env.no_new then

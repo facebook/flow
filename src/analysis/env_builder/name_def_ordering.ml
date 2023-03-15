@@ -1071,7 +1071,8 @@ struct
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | TypeAlias (_, alias) -> depends_of_alias alias
       | OpaqueType (_, alias) -> depends_of_opaque alias
-      | TypeParam (tparams_map, tparam) -> depends_of_tparam tparams_map tparam
+      | TypeParam { tparams_map; from_infer_type = _; tparam } ->
+        depends_of_tparam tparams_map tparam
       | Interface (_, inter) -> depends_of_interface inter
       | GeneratorNext (Some { return_annot; tparams_map; _ }) ->
         depends_of_annotation tparams_map return_annot EnvMap.empty

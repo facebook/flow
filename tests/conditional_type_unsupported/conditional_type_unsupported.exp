@@ -2,9 +2,17 @@ Error --------------------------------------------------------------------------
 
 Conditional types are not yet supported. [unsupported-syntax]
 
-   1| type BasicConditionalType = 1 extends number ? string : number; // error: unsupported
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   1| type BasicConditionalType = 1 extends infer T ? string : number; // error: unsupported
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:1:45
+
+Internal error: expected env entry for write location(1, 44) to (1, 45)
+
+   1| type BasicConditionalType = 1 extends infer T ? string : number; // error: unsupported
+                                                  ^
 
 
 
-Found 1 error
+Found 2 errors

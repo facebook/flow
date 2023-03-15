@@ -1,1 +1,10 @@
-Found 0 errors
+Error ---------------------------------------------------------------------------------------------------- basic.js:1:45
+
+Internal error: expected env entry for write location(1, 44) to (1, 45)
+
+   1| type BasicConditionalType = 1 extends infer T ? string : number;  // evals to string
+                                                  ^
+
+
+
+Found 1 error

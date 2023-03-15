@@ -28,6 +28,11 @@ function custom_ast_types(fork) {
     .field('trueType', def('FlowType'))
     .field('falseType', def('FlowType'));
 
+  def('InferType')
+    .bases('FlowType')
+    .build('typeParameter')
+    .field('typeParameter', def('TypeParameter'));
+
   def('ObjectTypeIndexer').field('id', or(def('Identifier'), null));
 
   def('TupleTypeLabeledElement')

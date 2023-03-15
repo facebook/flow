@@ -1,2 +1,2 @@
-type BasicConditionalType = 1 extends number ? string : number; // error: unsupported
+type BasicConditionalType = 1 extends infer T ? string : number; // error: unsupported
 const num: BasicConditionalType = "";
