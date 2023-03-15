@@ -372,28 +372,6 @@ let rec dump_t_ (depth, tvars) cx t =
       p
         ~extra:(spf "%s on upper, (%s, %s)" (string_of_destructor s) (string_of_reason r) (tvar x))
         t
-    | OpenPredT { base_t = arg; m_pos = p_pos; m_neg = p_neg; reason = _ } ->
-      p
-        t
-        ~extra:
-          (spf
-             "%s, {%s}, {%s}"
-             (kid arg)
-             (String.concat
-                "; "
-                (Base.List.map
-                   ~f:(fun (k, p) -> spf "%s: %s" (Key.string_of_key k) (string_of_predicate p))
-                   (Key_map.elements p_pos)
-                )
-             )
-             (String.concat
-                "; "
-                (Base.List.map
-                   ~f:(fun (k, p) -> spf "%s: %s" (Key.string_of_key k) (string_of_predicate p))
-                   (Key_map.elements p_neg)
-                )
-             )
-          )
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =
@@ -747,7 +725,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | CallT { use_op; reason = _; call_action = ConcretizeCallee _; return_hint = _ } ->
       p ~extra:(spf "%s ConcretizeCallee" (string_of_use_op use_op)) t
     | CallLatentPredT _ -> p t
-    | CallOpenPredT _ -> p t
     | ChoiceKitUseT (_, TryFlow (_, spec)) -> p ~extra:(try_flow spec) t
     | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
     | CJSExtractNamedExportsT _ -> p t
@@ -884,13 +861,6 @@ and dump_use_t_ (depth, tvars) cx t =
         ~reason:false
         ~extra:(spf "%s, %b, %s, %s" (kid l) sense (string_of_sentinel sentinel) (tout result))
         t
-    | SubstOnPredT (_, _, subst, arg) ->
-      let subst =
-        SMap.bindings subst
-        |> List.map (fun (k, v) -> spf "%s -> %s" k (Key.string_of_key v))
-        |> String.concat ", "
-      in
-      p t ~extra:(spf "[subst: {%s}] %s" subst (kid arg))
     | SuperT _ -> p t
     | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | SetElemT (_, _, ix, _, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t

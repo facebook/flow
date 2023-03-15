@@ -182,11 +182,7 @@ let rec default_resolve_touts ~flow cx loc u =
     resolve voided_out;
     default_resolve_touts ~flow cx loc t_out
   | InvariantT _ -> ()
-  | CallLatentPredT (_, _, _, _, tvar)
-  | CallOpenPredT (_, _, _, _, tvar) ->
-    resolve_tvar tvar
-  | SubstOnPredT (_, _, _, OpenPredT { base_t; _ }) -> resolve base_t
-  | SubstOnPredT (_, _, _, t) -> resolve t
+  | CallLatentPredT (_, _, _, _, tvar) -> resolve_tvar tvar
   | RefineT (_, _, tvar) -> resolve_tvar tvar
   | ResolveSpreadT (_, _, { rrt_resolve_to; _ }) -> resolve_spread_resolve rrt_resolve_to
   | CondT (_, _, _, t) -> resolve t

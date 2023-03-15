@@ -772,7 +772,6 @@ end = struct
         return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
       | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
       | FunProtoT _ -> return Ty.(TypeOf FunProto)
-      | OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ } -> type__ ~env t
       | FunProtoApplyT _ ->
         if Env.expand_internal_types env then
           (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)

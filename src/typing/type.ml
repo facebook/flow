@@ -176,19 +176,6 @@ module rec TypeTerm : sig
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind (* Predicate types **)
-    (* `OpenPredT (reason, base_t, m_pos, m_neg)` wraps around a base type
-       `base_t` and encodes additional information that hold in conditional
-       contexts (in the form of logical predicates). This information is split
-       into positive and negative versions in `m_pos` and `m_neg`. The
-       predicates here are "open" in the sense that they contain free variable
-       instances, which are the keys to the two maps.
-    *)
-    | OpenPredT of {
-        reason: reason;
-        base_t: t;
-        m_pos: predicate Key_map.t;
-        m_neg: predicate Key_map.t;
-      }
     | AnyT of reason * any_source
 
   and def_t =
@@ -758,58 +745,6 @@ module rec TypeTerm : sig
      * The boolean part is the sense of the conditional check.
      *)
     | CallLatentPredT of reason * sense * index * t * tvar
-    (*
-     * CallOpenPredT is fired subsequently, after processing the flow
-     * described above. This flow is necessary since the return type of the
-     * predicate function (which determines the predicate it expresses)
-     * might not be readily available. So, a flow to CallOpenPredT awaits
-     * for the return_t of the function in question to be concretized,
-     * while still holding the unrefined and refined versions of the variable
-     * under refinement. In addition, since the structure (and hence the
-     * function paramenters) of the function are now known (from the above
-     * flow) we only keep the relevant key, which corresponds to the refining
-     * parameter.
-     *)
-    | CallOpenPredT of reason * sense * Key.t * t * tvar
-    (*
-     * Even for the limited use of function predicates that is currently
-     * allowed, we still have to build machinery to handle subtyping for
-     * predicated function types.
-     *
-     * Let the following be the general form of function subtyping:
-     *
-     *   (xs:Ts): R / P(xs) <: (xs': Ts'): R' / P'(xs')
-     *   \________________/    \______________________/
-     *           T                        T'
-     *
-     * where `P(xs)` and `P'(xs')` are the open predicates established by
-     * the functions in each side of the subtyping constraint. These
-     * predicates are "open", in the sense that they have free occurrences of
-     * each function's formal parameters (xs and xs', respectively).
-     *
-     * The constraint T <: T', causes the following (expected) sub-constraints:
-     *
-     *  - Ts' <: Ts
-     *  - R <: R'
-     *
-     * and (additionally) to account for the predicates expressed by the two
-     * functions a logical implication constraint:
-     *
-     *   P(xs) => [xs/xs'] P'(xs')
-     *
-     * Note in the above, that to be able to compare them, we need to first
-     * substitute occurrence of xs' in P' for xs, which is denoted with
-     * [xs/xs'].
-     *
-     * Valid flows to `SubstOnPredT (_, theta, t)` are from `OpenPredT`. This
-     * is treated as an intermediate flow that adjusts the predicates of the
-     * OpenPredT by applying a substitution `theta` to the predicates therein.
-     *
-     * NOTE: this substitution is not used at the moment since we don't yet
-     * support subtyping of predicated functions, but the scaffolding might be
-     * useful later on.
-     *)
-    | SubstOnPredT of use_op * reason * substitution * t
     (*
      * `RefineT (reason, pred, tvar)` is an instruction to refine an incoming
      * flow using the predicate `pred`. The result will be stored in `tvar`,
@@ -3647,7 +3582,6 @@ let string_of_ctor = function
   | ObjProtoT _ -> "ObjProtoT"
   | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
-  | OpenPredT _ -> "OpenPredT"
   | ShapeT _ -> "ShapeT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
@@ -3743,7 +3677,6 @@ let string_of_use_ctor = function
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
   | CallLatentPredT _ -> "CallLatentPredT"
-  | CallOpenPredT _ -> "CallOpenPredT"
   | CallT _ -> "CallT"
   | ChoiceKitUseT (_, tool) ->
     spf
@@ -3841,7 +3774,6 @@ let string_of_use_ctor = function
   | SpecializeT _ -> "SpecializeT"
   | StrictEqT _ -> "StrictEqT"
   | ObjKitT _ -> "ObjKitT"
-  | SubstOnPredT _ -> "SubstOnPredT"
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"
   | ThisSpecializeT _ -> "ThisSpecializeT"

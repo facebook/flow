@@ -35,7 +35,6 @@ let rec reason_of_t = function
   | ObjProtoT reason -> reason
   | MatchingPropT (reason, _, _) -> reason
   | OpaqueT (reason, _) -> reason
-  | OpenPredT { reason; m_pos = _; m_neg = _; base_t = _ } -> reason
   | ShapeT (reason, _) -> reason
   | ThisClassT (reason, _, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
@@ -66,7 +65,6 @@ and reason_of_use_t = function
   | BindT (_, reason, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
-  | CallOpenPredT (reason, _, _, _, _) -> reason
   | CallT { reason; _ } -> reason
   | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
@@ -137,7 +135,6 @@ and reason_of_use_t = function
   | SpecializeT (_, _, reason, _, _, _) -> reason
   | StrictEqT { reason; _ } -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
-  | SubstOnPredT (_, reason, _, _) -> reason
   | SuperT (_, reason, _) -> reason
   | TestPropT (_, reason, _, _, _) -> reason
   | ThisSpecializeT (reason, _, _) -> reason
@@ -205,8 +202,6 @@ let rec mod_reason_of_t f = function
   | ObjProtoT reason -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
-  | OpenPredT { reason; base_t; m_pos; m_neg } ->
-    OpenPredT { reason = f reason; base_t; m_pos; m_neg }
   | ShapeT (reason, t) -> ShapeT (f reason, t)
   | ThisClassT (reason, t, is_this, this_name) -> ThisClassT (f reason, t, is_this, this_name)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
@@ -234,7 +229,6 @@ and mod_reason_of_use_t f = function
   | BindT (use_op, reason, ft) -> BindT (use_op, f reason, ft)
   | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
-  | CallOpenPredT (reason, sense, key, l, t) -> CallOpenPredT (f reason, sense, key, l, t)
   | CallT { use_op; reason; call_action; return_hint } ->
     CallT { use_op; reason = f reason; call_action; return_hint }
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
@@ -330,7 +324,6 @@ and mod_reason_of_use_t f = function
     StrictEqT { reason = f reason; cond_context; flip; arg }
   | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
     ObjKitT (use_op, f reason, resolve_tool, tool, tout)
-  | SubstOnPredT (use_op, reason, subst, t) -> SubstOnPredT (use_op, f reason, subst, t)
   | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
   | TestPropT (op, reason, id, n, t) -> TestPropT (op, f reason, id, n, t)
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
@@ -485,8 +478,6 @@ let rec util_use_op_of_use_t :
   | OptionalChainT _
   | InvariantT _
   | CallLatentPredT (_, _, _, _, _)
-  | CallOpenPredT (_, _, _, _, _)
-  | SubstOnPredT (_, _, _, _)
   | RefineT (_, _, _)
   | CondT (_, _, _, _)
   | ReactPropsToOut _

@@ -119,7 +119,6 @@ let detect_sketchy_null_checks cx master_cx =
             | EvalT _
             | ThisClassT _
             | TypeDestructorTriggerT _
-            | OpenPredT _
             | DefT
                 ( _,
                   _,

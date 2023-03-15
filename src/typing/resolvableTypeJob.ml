@@ -224,8 +224,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | FunProtoT _
   | NullProtoT _
   | ObjProtoT _
-  | CustomFunT (_, _)
-  | OpenPredT _ ->
+  | CustomFunT (_, _) ->
     acc
 
 and collect_of_destructor ?log_unresolved cx acc = function

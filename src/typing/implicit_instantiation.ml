@@ -238,7 +238,6 @@ struct
     | ConstructorT _
     | ToStringT _
     | CallLatentPredT _
-    | CallOpenPredT _
     | MapTypeT _
     (* Get/set-prop related upper bounds are ignored because there is not enough info to reverse. *)
     | SetPropT _
@@ -310,7 +309,6 @@ struct
     | InvariantT _
     | PredicateT _
     | GuardT _
-    | SubstOnPredT _
     | RefineT _
     | CondT _
     | SentinelPropTestT _

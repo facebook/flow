@@ -769,23 +769,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (KeysT (reason1, o1), _) ->
       (* flow all keys of o1 to u *)
       rec_flow cx trace (o1, GetKeysT (reason1, UseT (use_op, u)))
-    (* Identical predicates are okay, just do the base type check. *)
-    | ( OpenPredT { base_t = t1; m_pos = p_pos_1; m_neg = _; reason = lreason },
-        OpenPredT { base_t = t2; m_pos = p_pos_2; m_neg = _; reason = ureason }
-      ) ->
-      if TypeUtil.pred_map_implies p_pos_1 p_pos_2 then
-        rec_flow_t ~use_op cx trace (t1, t2)
-      else
-        let error =
-          Error_message.EIncompatibleWithUseOp
-            { reason_lower = lreason; reason_upper = ureason; use_op }
-        in
-        add_output cx ~trace error
     (*********************************************)
     (* Using predicate functions as regular ones *)
     (*********************************************)
-    | (OpenPredT { base_t = l; m_pos = _; m_neg = _; reason = _ }, _) ->
-      rec_flow_t cx trace ~use_op (l, u)
     | (UnionT (reason, rep), _) when UnionRep.members rep |> List.exists is_union_resolvable ->
       iter_resolve_union ~f:rec_flow cx trace reason rep (UseT (use_op, u))
     (* cases where there is no loss of precision *)

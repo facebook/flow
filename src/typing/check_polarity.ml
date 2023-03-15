@@ -34,9 +34,6 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     (* No need to walk into tvars, since we're looking for GenericT types, which
      * will certainly never appear in the bounds of a tvar. *)
     | OpenT _ -> ()
-    (* This type can appear in an annotation due to the $Pred type constructor,
-     * but it won't contain a GenericT. *)
-    | OpenPredT _ -> ()
     (* The annot will resolve to some type, but it doesn't matter because that
      * type will certainly not contain a GenericT. *)
     | AnnotT _ -> ()
