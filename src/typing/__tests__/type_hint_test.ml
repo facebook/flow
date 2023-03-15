@@ -265,7 +265,7 @@ let fun_t ~params ~return_t =
             params;
             rest_param = None;
             return_t;
-            is_predicate = false;
+            predicate = None;
             def_reason = dummy_reason;
           }
         )

@@ -113,6 +113,37 @@ Invalid body for predicate function. Expected a simple return statement as body.
        ^
 
 
+Error -------------------------------------------------------------------------------------------------- sanity.js:21:12
+
+Cannot return `z` because string [1] is incompatible with number [2]. [incompatible-return]
+
+   sanity.js:21:12
+   21|     return z;
+                  ^
+
+References:
+   sanity.js:19:17
+   19| function bak(z: string | number): number {
+                       ^^^^^^ [1]
+   sanity.js:19:35
+   19| function bak(z: string | number): number {
+                                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- sanity.js:23:14
+
+Cannot get `z.length` because property `length` is missing in `Number` [1]. [prop-missing]
+
+   sanity.js:23:14
+   23|     return z.length;
+                    ^^^^^^
+
+References:
+   sanity.js:19:26
+   19| function bak(z: string | number): number {
+                                ^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- wf-eval.js:3:42
 
 The return type of a predicate function cannot contain a generic type. The function predicate will be ignored here.
@@ -159,4 +190,4 @@ The return type of a predicate function cannot contain a generic type. The funct
 
 
 
-Found 13 errors
+Found 15 errors

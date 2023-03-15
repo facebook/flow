@@ -83,7 +83,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
       | _ -> ())
 
-  let flow_predicate_func =
+  let func_predicate_compat =
     let rec subst_map (n, map) = function
       | ((Some k, _) :: ps1, (Some v, _) :: ps2) ->
         let map' =
@@ -104,8 +104,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | (_, (None, _) :: _) ->
         Error `NoParamNames
     in
-    fun cx trace use_op (lreason, ft1) (ureason, ft2) ->
-      match subst_map (0, SMap.empty) (ft1.params, ft2.params) with
+    fun cx trace use_op (lreason, params1, pred1) (ureason, params2, pred2) ->
+      match subst_map (0, SMap.empty) (params1, params2) with
       | Error (`ArityMismatch (n1, n2)) ->
         let mod_reason n =
           replace_desc_reason (RCustom (spf "predicate function with %d arguments" n))
@@ -121,21 +121,25 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let error = Error_message.(EInternal (aloc_of_reason ureason, PredFunWithoutParamNames)) in
         add_output cx ~trace error
       | Ok map ->
-        let reason =
-          update_desc_new_reason
-            (fun desc -> RCustom (spf "predicate of %s" (string_of_desc desc)))
-            (reason_of_t ft2.return_t)
-        in
-        (* We need to treat the return type of the predicated function as an
-           annotation, to ensure that the LHS return type is checked against it,
-           if ft2.return_t happens to be an OpenT. *)
-        let out =
-          if SMap.is_empty map then
-            UseT (use_op, annot false ft2.return_t)
-          else
-            SubstOnPredT (use_op, reason, map, annot false ft2.return_t)
-        in
-        rec_flow cx trace (ft1.return_t, out)
+        let (lreason, pmap1, _nmap1) = pred1 in
+        let (ureason, pmap2, nmap2) = pred2 in
+        if SMap.is_empty map then (
+          if not (TypeUtil.pred_map_implies pmap1 pmap2) then
+            add_output
+              cx
+              ~trace
+              (Error_message.EIncompatibleWithUseOp
+                 { reason_lower = lreason; reason_upper = ureason; use_op }
+              )
+        ) else if Key_map.(is_empty pmap2 && is_empty nmap2) then
+          ()
+        else
+          add_output
+            cx
+            ~trace
+            (Error_message.EIncompatibleWithUseOp
+               { reason_lower = lreason; reason_upper = ureason; use_op }
+            )
 
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let {
@@ -1307,32 +1311,28 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       multiflow_subtype cx trace ~use_op ureason args ft1;
 
-      (* Well-formedness adjustment: If this is predicate function subtyping,
-         make sure to apply a latent substitution on the right-hand use to
-         bridge the mismatch of the parameter naming. Otherwise, proceed with
-         the subtyping of the return types normally. In general it should
-         hold as an invariant that OpenPredTs (where free variables appear)
-         should not flow to other OpenPredTs without wrapping the latter in
-         SubstOnPredT.
-      *)
-      if ft2.is_predicate then
-        if not ft1.is_predicate then
+      (* Return type subtyping *)
+      let ret_use_op =
+        Frame
+          (FunReturn { lower = reason_of_t ft1.return_t; upper = reason_of_t ft2.return_t }, use_op)
+      in
+      rec_flow cx trace (ft1.return_t, UseT (ret_use_op, ft2.return_t));
+
+      begin
+        match (ft1.predicate, ft2.predicate) with
+        | (None, Some _) ->
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
           add_output
             cx
             ~trace
             (Error_message.EFunPredCustom ((lreason, ureason), "Function is incompatible with"))
-        else
-          flow_predicate_func cx trace use_op (lreason, ft1) (ureason, ft2)
-      else
-        let use_op =
-          Frame
-            ( FunReturn { lower = reason_of_t ft1.return_t; upper = reason_of_t ft2.return_t },
-              use_op
-            )
-        in
-        rec_flow cx trace (ft1.return_t, UseT (use_op, ft2.return_t))
+        | (Some p1, Some p2) ->
+          func_predicate_compat cx trace use_op (lreason, ft1.params, p1) (ureason, ft2.params, p2)
+        | (Some _, None)
+        | (None, None) ->
+          ()
+      end
     | (DefT (reason, _, StrT (Literal (_, name))), DefT (reason_op, _, CharSetT chars)) ->
       let str = display_string_of_name name in
       let module CharSet = String_utils.CharSet in

@@ -362,8 +362,7 @@ class virtual ['a] t =
     method fun_type
         cx
         map_cx
-        ({ this_t = (this, subtyping); params; rest_param; return_t; is_predicate; def_reason } as t)
-        =
+        ({ this_t = (this, subtyping); params; rest_param; return_t; predicate; def_reason } as t) =
       let this' = self#type_ cx map_cx this in
       let params' =
         ListUtils.ident_map
@@ -385,6 +384,7 @@ class virtual ['a] t =
           else
             Some (name, loc, t')
       in
+      let predicate' = OptionUtils.ident_map (self#func_predicate cx map_cx) predicate in
       let return_t' = self#type_ cx map_cx return_t in
       if this' == this && return_t' == return_t && params' == params && rest_param' == rest_param
       then
@@ -394,7 +394,8 @@ class virtual ['a] t =
         let return_t = return_t' in
         let params = params' in
         let rest_param = rest_param' in
-        { this_t; params; rest_param; return_t; is_predicate; def_reason }
+        let predicate = predicate' in
+        { this_t; params; rest_param; return_t; predicate; def_reason }
 
     method inst_type cx map_cx i =
       let {
@@ -582,6 +583,15 @@ class virtual ['a] t =
       | DebugThrow
       | DebugSleep ->
         kind
+
+    method private func_predicate cx map_cx predicate =
+      let (reason, pmap, nmap) = predicate in
+      let pmap' = Key_map.ident_map (self#predicate cx map_cx) pmap in
+      let nmap' = Key_map.ident_map (self#predicate cx map_cx) nmap in
+      if pmap == pmap' && nmap == nmap' then
+        predicate
+      else
+        (reason, pmap', nmap')
 
     method virtual exports : Context.t -> 'a -> Type.Exports.id -> Type.Exports.id
 

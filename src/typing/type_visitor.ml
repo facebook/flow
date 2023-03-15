@@ -279,13 +279,17 @@ class ['a] t =
       self#opt (self#type_ cx pole) acc default
 
     method fun_type cx pole acc ft =
-      let { this_t = (this_t, _); params; rest_param; return_t; is_predicate = _; def_reason = _ } =
-        ft
-      in
+      let { this_t = (this_t, _); params; rest_param; return_t; predicate; def_reason = _ } = ft in
       let acc = self#type_ cx pole acc this_t in
       let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
       let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
       let acc = self#type_ cx pole acc return_t in
+      let acc = self#opt (self#fun_predicate cx) acc predicate in
+      acc
+
+    method private fun_predicate cx acc (_, pmap, nmap) =
+      let acc = Key_map.fold (fun _ p acc -> self#predicate cx acc p) pmap acc in
+      let acc = Key_map.fold (fun _ p acc -> self#predicate cx acc p) nmap acc in
       acc
 
     method private obj_flags cx pole acc flags =

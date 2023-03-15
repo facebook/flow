@@ -281,14 +281,8 @@ let lazily_resolve_hints cx loc hints =
   (has_hint, lazy_hint)
 
 let resolve_annotated_function
-    cx
-    synthesizable
-    ~bind_this
-    ~statics
-    reason
-    tparams_map
-    function_loc
-    ({ Ast.Function.body; params; sig_loc; return; _ } as function_) =
+    cx synthesizable ~bind_this ~statics reason tparams_map function_loc function_ =
+  let { Ast.Function.body; params; sig_loc; return; _ } = function_ in
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this =
@@ -298,7 +292,7 @@ let resolve_annotated_function
     else
       Type.implicit_mixed_this reason
   in
-  let ((({ Statement.Func_stmt_sig.Types.return_t; _ } as func_sig), _) as sig_data) =
+  let ((func_sig, _) as sig_data) =
     Statement.mk_func_sig
       cx
       ~required_this_param_type:(Base.Option.some_if bind_this default_this)
@@ -312,18 +306,13 @@ let resolve_annotated_function
   begin
     match (synthesizable, Context.current_phase cx) with
     | (_, Context.InitLib) -> ()
-    | (FunctionPredicateSynthesizable (pred_loc, pred_expr), _) ->
+    | (FunctionPredicateSynthesizable (_, pred_expr), _) ->
+      let { Statement.Func_stmt_sig.Types.return_t; _ } = func_sig in
       let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
-      let reason = mk_reason (RCustom "return") pred_loc in
       let (return_annot, _) = Anno.mk_type_annotation cx tparams_map reason return in
       let return_annot = TypeUtil.type_t_of_annotated_or_inferred return_annot in
-      let (p_map, n_map) = Env.predicate_refinement_maps cx pred_loc in
-      let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
-      let pred_t =
-        OpenPredT { reason = pred_reason; base_t = return_annot; m_pos = p_map; m_neg = n_map }
-      in
       let use_op = Op (FunReturnStatement { value = mk_expression_reason pred_expr }) in
-      Flow_js.flow cx (pred_t, UseT (use_op, return_t))
+      Flow_js.flow cx (return_annot, UseT (use_op, return_t))
     | _ -> ()
   end;
   Node_cache.set_function_sig cache sig_loc sig_data;
@@ -527,7 +516,7 @@ let resolve_binding_partial cx reason loc b =
       else
         Type.implicit_mixed_this reason_fun
     in
-    let ((({ Statement.Func_stmt_sig.Types.return_t; _ } as func_sig), _) as sig_data) =
+    let ((func_sig, _) as sig_data) =
       Statement.mk_func_sig
         cx
         ~required_this_param_type:(Base.Option.some_if (not arrow) default_this)
@@ -541,18 +530,13 @@ let resolve_binding_partial cx reason loc b =
     begin
       match (synthesizable_from_annotation, Context.current_phase cx) with
       | (_, Context.InitLib) -> ()
-      | (FunctionPredicateSynthesizable (pred_loc, pred_expr), _) ->
+      | (FunctionPredicateSynthesizable (_, pred_expr), _) ->
+        let { Statement.Func_stmt_sig.Types.return_t; _ } = func_sig in
         let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
-        let reason = mk_reason (RCustom "return") pred_loc in
         let (return_annot, _) = Anno.mk_type_annotation cx tparams_map reason return in
         let return_annot = TypeUtil.type_t_of_annotated_or_inferred return_annot in
-        let (p_map, n_map) = Env.predicate_refinement_maps cx pred_loc in
-        let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
-        let pred_t =
-          OpenPredT { reason = pred_reason; base_t = return_annot; m_pos = p_map; m_neg = n_map }
-        in
         let use_op = Op (FunReturnStatement { value = mk_expression_reason pred_expr }) in
-        Flow_js.flow cx (pred_t, UseT (use_op, return_t))
+        Flow_js.flow cx (return_annot, UseT (use_op, return_t))
       | _ -> ()
     end;
     Node_cache.set_function_sig cache sig_loc sig_data;

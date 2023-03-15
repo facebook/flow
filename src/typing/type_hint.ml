@@ -347,7 +347,7 @@ and type_of_hint_decomposition cx op reason t =
               params;
               rest_param;
               return_t;
-              is_predicate = false;
+              predicate = None;
               def_reason = reason;
             }
           )
@@ -375,14 +375,14 @@ and type_of_hint_decomposition cx op reason t =
       | DefT
           ( reason,
             trust,
-            FunT (static, { this_t; params; rest_param; return_t = _; is_predicate; def_reason })
+            FunT (static, { this_t; params; rest_param; return_t = _; predicate; def_reason })
           ) ->
         DefT
           ( reason,
             trust,
             FunT
               ( static,
-                { this_t; params; rest_param; return_t = instance_type; is_predicate; def_reason }
+                { this_t; params; rest_param; return_t = instance_type; predicate; def_reason }
               )
           )
       | t -> get_t cx t

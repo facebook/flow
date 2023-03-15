@@ -218,12 +218,8 @@ struct
       statics = None;
     }
 
-  let functiontype
-      cx
-      ~arrow
-      func_loc
-      this_default
-      ({ T.reason; kind; tparams; fparams; return_t; statics; _ } as x) =
+  let functiontype cx ~arrow func_loc this_default x =
+    let { T.reason; kind; tparams; fparams; return_t; statics; _ } = x in
     let make_trust = Context.trust_constructor cx in
     let this_type = F.this fparams |> Base.Option.value ~default:this_default in
     let funtype =
@@ -238,7 +234,13 @@ struct
                  && (not @@ F.all_params_annotated x.T.fparams) ->
             Context.mk_placeholder cx (TypeUtil.reason_of_t t)
           | _ -> TypeUtil.type_t_of_annotated_or_inferred return_t);
-        is_predicate = kind = Predicate;
+        predicate =
+          (match kind with
+          | Predicate return_loc ->
+            let (pmap, nmap) = Env.predicate_refinement_maps cx return_loc in
+            let reason = mk_reason (RPredicateOf (RCustom "return")) return_loc in
+            Some (reason, pmap, nmap)
+          | _ -> None);
         def_reason = reason;
       }
     in
@@ -309,7 +311,7 @@ struct
         | Ordinary
         | FieldInit _ ->
           Name_def.Ordinary
-        | Predicate -> Name_def.Predicate
+        | Predicate _ -> Name_def.Predicate
         | Async -> Name_def.Async
         | Generator _ -> Name_def.Generator
         | AsyncGenerator _ -> Name_def.AsyncGenerator
@@ -415,21 +417,6 @@ struct
           | _ -> failwith "expected return body")
         )
     in
-    (* NOTE: Predicate functions can currently only be of the form:
-       function f(...) { return <exp>; }
-    *)
-    Ast.Statement.(
-      match kind with
-      | Predicate -> begin
-        match statements with
-        | [(_, Return { Return.argument = Some _; comments = _; return_out = _ })] -> ()
-        | _ ->
-          let loc = aloc_of_reason reason in
-          Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, PredicateInvalidBody))
-      end
-      | _ -> ()
-    );
-
     let (has_return_annot, return_t) =
       match (return_t, kind) with
       | (Inferred t, _) -> (false, t)
@@ -505,7 +492,7 @@ struct
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)
-          | Predicate ->
+          | Predicate _ ->
             let loc = aloc_of_reason reason in
             Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, PredicateVoidReturn));
             let t = VoidT.at loc |> with_trust bogus_trust in

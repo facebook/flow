@@ -1169,15 +1169,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 let key_strs = Base.List.init n ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i)) in
                 let emp = Key_map.empty in
                 let tins = Base.List.init n ~f:(fun _ -> Unsoundness.at FunctionPrototype loc) in
-                let tout =
-                  OpenPredT
-                    {
-                      reason = out_reason;
-                      base_t = MixedT.at loc |> with_trust bogus_trust;
-                      m_pos = emp;
-                      m_neg = emp;
-                    }
-                in
+                let tout = MixedT.at loc |> with_trust bogus_trust in
                 reconstruct_ast
                   (DefT
                      ( fun_reason,
@@ -1191,7 +1183,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                              ~rest_param:None
                              ~def_reason:fun_reason
                              ~params_names:key_strs
-                             ~is_predicate:true
+                             ~predicate:(out_reason, emp, emp)
                          )
                      )
                   )
@@ -1314,7 +1306,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   params = List.rev rev_params;
                   rest_param;
                   return_t;
-                  is_predicate = false;
+                  predicate = None;
                   def_reason = reason;
                 }
               )

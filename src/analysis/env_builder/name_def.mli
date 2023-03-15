@@ -7,6 +7,11 @@
 
 include module type of Name_def_types
 
+val predicate_synthesizable :
+  (ALoc.t, ALoc.t) Ast.Type.Predicate.t option ->
+  (ALoc.t, ALoc.t) Ast.Function.body ->
+  function_synth_kind
+
 val predicate_function_invalid_param_reasons :
   ('a, 'a) Flow_ast.Function.Params.t -> 'a Reason.virtual_reason list
 

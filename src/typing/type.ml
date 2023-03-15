@@ -1096,7 +1096,7 @@ module rec TypeTerm : sig
     params: fun_param list;
     rest_param: fun_rest_param option;
     return_t: t;
-    is_predicate: bool;
+    predicate: (reason * predicate Key_map.t * predicate Key_map.t) option;
     def_reason: Reason.t;
   }
 
@@ -3967,14 +3967,7 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    this_t
-    ?(subtyping = This_Function)
-    tins
-    ~rest_param
-    ~def_reason
-    ?params_names
-    ?(is_predicate = false)
-    tout =
+    this_t ?(subtyping = This_Function) tins ~rest_param ~def_reason ?params_names ?predicate tout =
   {
     this_t = (this_t, subtyping);
     params =
@@ -3983,7 +3976,7 @@ let mk_methodtype
       | Some xs -> List.map2 (fun x t -> (x, t)) xs tins);
     rest_param;
     return_t = tout;
-    is_predicate;
+    predicate;
     def_reason;
   }
 

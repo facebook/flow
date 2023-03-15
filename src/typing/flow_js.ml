@@ -2296,31 +2296,15 @@ struct
         (* Call to predicated (latent) functions *)
 
         (* Calls to functions appearing in predicate refinement contexts dispatch
-           to this case. Here, the return type of the function holds the predicate
+           to this case. Here, the callee function type holds the predicate
            that will refine the incoming `unrefined_t` and flow a filtered
            (refined) version of this type into `fresh_t`.
-
-           What is important to note here is that `return_t` has no access to the
-           function's parameter names. It will simply be an `OpenPredT` containing
-           mappings from symbols (Key.t) that are (hopefully) the function's
-           parameters to predicates. In other words, it is an "open" predicate over
-           (free) variables, which *should* be the function's parameters.
-
-           The `CallLatentPredT` use contains the index of the argument under
-           refinement. By combining this information with the names of the
-           parameters, we can arrive to the actual name (Key.t) of the parameter
-           that gets refined, which can be used as a key into the `OpenPredT` that
-           is expected to eventually flow to `return_t`.  Effectively, we are
-           substituting the actual parameter to the refining call (here in the form
-           of the index of the argument to the call) to the formal parameter of the
-           function, and this information is stored in `CallOpenPredT` of the
-           produced flow.
 
            Problematic cases (e.g. when the refining index is out of bounds w.r.t.
            `params`) raise errors, but also propagate the unrefined types (as if the
            refinement never took place).
         *)
-        | ( DefT (lreason, _, FunT (_, { params; return_t; is_predicate = true; _ })),
+        | ( DefT (lreason, _, FunT (_, { params; predicate = Some (_, pmap, nmap); _ })),
             CallLatentPredT (reason, sense, index, unrefined_t, fresh_t)
           ) ->
           (* TODO: for the moment we only support simple keys (empty projection)
@@ -2351,16 +2335,28 @@ struct
               in
               Error ("This is incompatible with", (r1, r2))
           in
-          (match name_or_err with
-          | Ok (Some name) ->
-            let key = (OrdinaryName name, []) in
-            rec_flow cx trace (return_t, CallOpenPredT (reason, sense, key, unrefined_t, fresh_t))
-          | Ok None ->
-            let loc = aloc_of_reason lreason in
-            add_output cx ~trace Error_message.(EInternal (loc, PredFunWithoutParamNames))
-          | Error (msg, reasons) ->
-            add_output cx ~trace (Error_message.EFunPredCustom (reasons, msg));
-            rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t))
+          begin
+            match name_or_err with
+            | Ok (Some name) ->
+              let key = (OrdinaryName name, []) in
+              let preds =
+                if sense then
+                  pmap
+                else
+                  nmap
+              in
+              begin
+                match Key_map.find_opt key preds with
+                | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
+                | None -> rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+              end
+            | Ok None ->
+              let loc = aloc_of_reason lreason in
+              add_output cx ~trace Error_message.(EInternal (loc, PredFunWithoutParamNames))
+            | Error (msg, reasons) ->
+              add_output cx ~trace (Error_message.EFunPredCustom (reasons, msg));
+              rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+          end
         (* Fall through all the remaining cases *)
         | (_, CallLatentPredT (_, _, _, unrefined_t, fresh_t)) ->
           rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
@@ -2853,15 +2849,14 @@ struct
             trace
             (l, React_kit.component_class cx r ~get_builtin_typeapp props)
         (* Functions with rest params or that are predicates cannot be React components *)
-        | ( DefT (reason, _, FunT (_, { params; rest_param = None; is_predicate = false; _ })),
+        | ( DefT (reason, _, FunT (_, { params; rest_param = None; predicate = None; _ })),
             ReactPropsToOut (_, props)
           ) ->
           (* Contravariance *)
           Base.List.hd params
           |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx reason)
           |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, props)
-        | ( DefT
-              (reason, _, FunT (_, { params; return_t; rest_param = None; is_predicate = false; _ })),
+        | ( DefT (reason, _, FunT (_, { params; return_t; rest_param = None; predicate = None; _ })),
             ReactInToProps (reason_op, props)
           ) ->
           (* Contravariance *)
@@ -2881,7 +2876,7 @@ struct
             (ReactInToProps (_, props) | ReactPropsToOut (_, props))
           ) -> begin
           match Context.find_call cx id with
-          | ( DefT (_, _, FunT (_, { rest_param = None; is_predicate = false; _ }))
+          | ( DefT (_, _, FunT (_, { rest_param = None; predicate = None; _ }))
             | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
             (* Keep the object's reason for better error reporting *)
             rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
@@ -5931,7 +5926,7 @@ struct
 
   and any_prop_to_function
       use_op
-      { this_t = (this, _); params; rest_param; return_t; is_predicate = _; def_reason = _ }
+      { this_t = (this, _); params; rest_param; return_t; predicate = _; def_reason = _ }
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;

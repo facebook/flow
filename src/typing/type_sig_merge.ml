@@ -879,9 +879,7 @@ and merge_annot tps file = function
     let key_strs = Base.List.init n ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i)) in
     let emp = Key_map.empty in
     let tins = Base.List.init n ~f:(fun _ -> Unsoundness.at FunctionPrototype loc) in
-    let tout =
-      OpenPredT { reason = out_reason; base_t = MixedT.at loc trust; m_pos = emp; m_neg = emp }
-    in
+    let tout = MixedT.at loc trust in
     let statics = dummy_static static_reason in
     let functiontype =
       mk_functiontype
@@ -891,7 +889,7 @@ and merge_annot tps file = function
         ~rest_param:None
         ~def_reason:fun_reason
         ~params_names:key_strs
-        ~is_predicate:true
+        ~predicate:(out_reason, emp, emp)
     in
     DefT (fun_reason, trust, FunT (statics, functiontype))
   | Refine { loc; base; fn_pred; index } ->
@@ -1420,7 +1418,7 @@ and merge_fun_statics tps file reason statics =
     ~props
     ?call:None
 
-and merge_predicate tps file base_t loc p =
+and merge_predicate tps file (loc, p) =
   let singleton key pos =
     let key = (Reason.OrdinaryName key, []) in
     (Key_map.singleton key pos, Key_map.singleton key (Type.NotP pos))
@@ -1500,7 +1498,7 @@ and merge_predicate tps file base_t loc p =
     | None -> (Key_map.empty, Key_map.empty)
     | Some p -> pred p
   in
-  Type.OpenPredT { reason; base_t; m_pos; m_neg }
+  (reason, m_pos, m_neg)
 
 and merge_fun
     ?(is_method = false)
@@ -1535,12 +1533,8 @@ and merge_fun
           Type.bound_function_dummy_this (Reason.aloc_of_reason reason)
       | Some t -> merge tps file t
     in
-    let return = merge tps file return in
-    let return =
-      match predicate with
-      | None -> return
-      | Some (loc, p) -> merge_predicate tps file return loc p
-    in
+    let return_t = merge tps file return in
+    let predicate = Base.Option.map predicate ~f:(merge_predicate tps file) in
     let this_status =
       if is_method then
         Type.This_Method { unbound = false }
@@ -1552,8 +1546,8 @@ and merge_fun
         this_t = (this_t, this_status);
         params;
         rest_param;
-        return_t = return;
-        is_predicate = predicate <> None;
+        return_t;
+        predicate;
         def_reason = reason;
       }
     in

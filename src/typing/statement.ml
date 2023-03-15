@@ -738,19 +738,12 @@ module Make
       | Some abnormal -> Abnormal.throw_stmt_control_flow_exception ast abnormal)
     (*******************************************************)
     | (loc, Return { Return.argument; comments; return_out }) ->
-      let reason = mk_reason (RCustom "return") loc in
       let (t, argument_ast) =
         match argument with
         | None -> (VoidT.at loc |> with_trust literal_trust, None)
         | Some expr ->
-          if Env.in_predicate_scope cx then
-            let (((_, t), _) as ast) = condition ~cond:OtherTest cx expr in
-            let (p_map, n_map) = Env.predicate_refinement_maps cx loc in
-            let pred_reason = update_desc_reason (fun desc -> RPredicateOf desc) reason in
-            (OpenPredT { reason = pred_reason; base_t = t; m_pos = p_map; m_neg = n_map }, Some ast)
-          else
-            let (((_, t), _) as ast) = expression cx expr in
-            (t, Some ast)
+          let (((_, t), _) as ast) = expression cx expr in
+          (t, Some ast)
       in
       Abnormal.throw_stmt_control_flow_exception
         (loc, Return { Return.argument = argument_ast; comments; return_out = (return_out, t) })
@@ -6968,20 +6961,32 @@ module Make
         )
 
   and mk_func_sig =
-    let predicate_function_kind cx loc params =
+    let predicate_function_kind cx predicate body loc params =
       let invalid_param_reasons = Name_def.predicate_function_invalid_param_reasons params in
       Base.List.iter invalid_param_reasons ~f:(fun reason ->
           Flow_js.add_output
             cx
             Error_message.(EUnsupportedSyntax (loc, PredicateInvalidParameter reason))
       );
+      let pred_synth = Name_def.predicate_synthesizable predicate body in
+      if pred_synth = Name_def.FunctionSynthesizable then begin
+        let body_loc =
+          match body with
+          | Ast.Function.BodyExpression (loc, _) -> loc
+          | Ast.Function.BodyBlock (loc, _) -> loc
+        in
+        Flow_js.add_output cx Error_message.(EUnsupportedSyntax (body_loc, PredicateInvalidBody))
+      end;
       if Base.List.is_empty invalid_param_reasons then
-        Func_class_sig_types.Func.Predicate
+        match pred_synth with
+        | Name_def.FunctionPredicateSynthesizable (ret_loc, _) -> Func.Predicate ret_loc
+        | Name_def.FunctionSynthesizable
+        | Name_def.MissingReturn _ ->
+          Func.Ordinary
       else
-        Func_class_sig_types.Func.Ordinary
+        Func.Ordinary
     in
-    let function_kind cx ~constructor ~async ~generator ~predicate ~params ~ret_loc =
-      let open Ast.Type.Predicate in
+    let function_kind cx ~body ~constructor ~async ~generator ~predicate ~params ~ret_loc =
       let open Func_class_sig_types.Func in
       match (constructor, async, generator, predicate) with
       | (true, false, false, None) -> Ctor
@@ -6997,12 +7002,7 @@ module Make
       | (false, true, false, None) -> Async
       | (false, false, true, None) -> Generator { return_loc = ret_loc }
       | (false, false, false, None) -> Ordinary
-      | ( false,
-          false,
-          false,
-          Some (loc, { kind = Ast.Type.Predicate.Inferred | Declared _; comments = _ })
-        ) ->
-        predicate_function_kind cx loc params
+      | (false, false, false, Some (loc, _)) -> predicate_function_kind cx predicate body loc params
       | (false, _, _, _) -> Utils_js.assert_false "(async || generator) && pred"
     in
     let mk_param_annot cx tparams_map reason = function
@@ -7177,7 +7177,9 @@ module Make
           | Ast.Type.Missing loc ->
             loc
         in
-        let kind = function_kind cx ~constructor ~async ~generator ~predicate ~params ~ret_loc in
+        let kind =
+          function_kind cx ~body ~constructor ~async ~generator ~predicate ~params ~ret_loc
+        in
         let (tparams, tparams_map, tparams_ast) =
           Anno.mk_type_param_declarations cx ~tparams_map tparams
         in
@@ -7223,47 +7225,14 @@ module Make
         in
         let (return_annotated_or_inferred, predicate) =
           let open Ast.Type.Predicate in
-          match predicate with
-          | Some ((_, { kind = Ast.Type.Predicate.Inferred; comments = _ }) as pred)
-            when kind = Func_class_sig_types.Func.Predicate ->
-            (* Predicate Functions
-             *
-             * function f(x: S): [T] %checks { return e; }
-             *
-             * The return type we assign to this function will be used for refining the
-             * input x. The type annotation T may not have this ability (if it's an
-             * annotation). Instead we introduce a fresh type T'. T' will receive lower
-             * bounds from the return expression e, but is also checked against the
-             * return type (annotation) T:
-             *
-             *   OpenPred(typeof e, preds) ~> T'
-             *   T' ~> T
-             *
-             * The function signature will be
-             *
-             *  (x: S) => T' (%checks)
-             *)
+          match (predicate, kind) with
+          | (Some ((_, { kind = Ast.Type.Predicate.Inferred; _ }) as pred), Func.Predicate _) ->
             let bounds =
               free_bound_ts cx (type_t_of_annotated_or_inferred return_annotated_or_inferred)
             in
             if Loc_collections.ALocSet.is_empty bounds then
-              let return_annotated_or_inferred' =
-                map_annotated_or_inferred
-                  (fun return_t -> Tvar.mk_where cx reason (fun t -> Flow.flow_t cx (t, return_t)))
-                  return_annotated_or_inferred
-              in
-              (return_annotated_or_inferred', Some pred)
+              (return_annotated_or_inferred, Some pred)
             else
-              (* If T is a polymorphic type P<X>, this approach can lead to some
-               * complications. The 2nd constraint from above would become
-               *
-               *   T' ~> P<X>
-               *
-               * which was previously ill-formed since it was outside a check_with_generics
-               * call (led to Not_expect_bounds exception). We disallow this case
-               * and instead propagate the original return type T; with the removal of
-               * check_with_generics this may no longer be necessary.
-               *)
               let () =
                 Loc_collections.ALocSet.iter
                   (fun loc ->
@@ -7273,7 +7242,7 @@ module Make
                   bounds
               in
               (return_annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
-          | Some ((loc, { kind = Declared _; comments = _ }) as pred) ->
+          | (Some ((loc, { kind = Declared _; comments = _ }) as pred), _) ->
             let (annotated_or_inferred, _) =
               Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
             in
