@@ -29,6 +29,7 @@ val next2 :
 
 (* Creates a pool of workers. *)
 val make :
+  channel_mode:[ `pipe | `socket ] ->
   call_wrapper:
     (* See docs in WorkerController.worker for call_wrapper. *)
     WorkerController.call_wrapper option ->

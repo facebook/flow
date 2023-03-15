@@ -192,7 +192,7 @@ let make_one ?call_wrapper controller_fd spawn id =
 
 (* Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
-let make ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
+let make ~channel_mode ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   let setup_controller_fd () =
     if use_prespawned then
       let (parent_fd, child_fd) = Unix.pipe () in
@@ -215,7 +215,12 @@ let make ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
     Base.Option.iter child_fd ~f:Unix.clear_close_on_exec;
     let state = (saved_state, gc_control, heap_handle, worker_id) in
     let handle =
-      Daemon.spawn ~name (Daemon.null_fd (), Unix.stdout, Unix.stderr) entry (state, child_fd)
+      Daemon.spawn
+        ~channel_mode
+        ~name
+        (Daemon.null_fd (), Unix.stdout, Unix.stderr)
+        entry
+        (state, child_fd)
     in
     Unix.set_close_on_exec heap_handle;
 
