@@ -66,8 +66,6 @@ let in_class_scope cx loc f =
 
 let is_var_kind cx k = (Context.environment cx).Loc_env.scope_kind = k
 
-let in_predicate_scope cx = is_var_kind cx Name_def.Predicate
-
 let in_async_scope cx = is_var_kind cx Name_def.Async || is_var_kind cx Name_def.AsyncGenerator
 
 let var_scope_kind cx = (Context.environment cx).Loc_env.scope_kind

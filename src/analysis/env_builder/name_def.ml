@@ -579,23 +579,18 @@ let def_of_function ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~ar
       statics;
     }
 
-let func_scope_kind ?key { Ast.Function.async; generator; predicate; params; _ } =
-  match (async, generator, predicate, key) with
+let func_scope_kind ?key { Ast.Function.async; generator; _ } =
+  match (async, generator, key) with
   | ( false,
       false,
-      None,
       Some
         (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name = "constructor"; _ }))
     ) ->
     Ctor
-  | (true, true, None, _) -> AsyncGenerator
-  | (true, false, None, _) -> Async
-  | (false, true, None, _) -> Generator
-  | (false, false, Some _, _)
-    when Base.List.is_empty (predicate_function_invalid_param_reasons params) ->
-    Predicate
-  | (false, false, None, _) -> Ordinary
-  | _ -> (* Invalid, default to ordinary and hopefully error elsewhere *) Ordinary
+  | (true, true, _) -> AsyncGenerator
+  | (true, false, _) -> Async
+  | (false, true, _) -> Generator
+  | (false, false, _) -> Ordinary
 
 (* Existing own properties on `Function` as defined in `lib/core.js`. We don't
    want to shadow these when creating function statics. *)

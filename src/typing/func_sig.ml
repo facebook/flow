@@ -309,9 +309,9 @@ struct
       let var_scope_kind =
         match kind with
         | Ordinary
-        | FieldInit _ ->
+        | FieldInit _
+        | Predicate _ ->
           Name_def.Ordinary
-        | Predicate _ -> Name_def.Predicate
         | Async -> Name_def.Async
         | Generator _ -> Name_def.Generator
         | AsyncGenerator _ -> Name_def.AsyncGenerator

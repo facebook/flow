@@ -51,8 +51,6 @@ val var_scope_kind : Context.t -> Name_def.scope_kind
 
 val in_async_scope : Context.t -> bool
 
-val in_predicate_scope : Context.t -> bool
-
 (** Set the current scope kind and return the previous scope kind. *)
 val set_scope_kind : Context.t -> Name_def.scope_kind -> Name_def.scope_kind
 

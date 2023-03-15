@@ -21,7 +21,6 @@ type scope_kind =
   | AsyncGenerator (* async generator function *)
   | Module (* module scope *)
   | Global (* global scope *)
-  | Predicate (* predicate function *)
   | Ctor
 (* constructor function *)
 
