@@ -213,7 +213,11 @@ type def =
   | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
-  | TypeParam of tparams_map * (ALoc.t, ALoc.t) Ast.Type.TypeParam.t
+  | TypeParam of {
+      tparams_map: tparams_map;
+      from_infer_type: bool;
+      tparam: (ALoc.t, ALoc.t) Ast.Type.TypeParam.t;
+    }
   | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t
   | Enum of ALoc.t * ALoc.t Ast.Statement.EnumDeclaration.body
   | Import of {
@@ -331,7 +335,7 @@ module Print = struct
       spf "alias %s" (ALoc.debug_to_string loc)
     | OpaqueType (_, { Ast.Statement.OpaqueType.id = (loc, _); _ }) ->
       spf "opaque %s" (ALoc.debug_to_string loc)
-    | TypeParam (_, (loc, _)) -> spf "tparam %s" (ALoc.debug_to_string loc)
+    | TypeParam { tparam = (loc, _); _ } -> spf "tparam %s" (ALoc.debug_to_string loc)
     | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
     | Interface _ -> "interface"
     | DeclaredModule _ -> "module"

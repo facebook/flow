@@ -2068,7 +2068,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
       )
 
-  and mk_type_param cx tparams_map (loc, type_param) =
+  and mk_type_param cx tparams_map ~from_infer_type (loc, type_param) =
     let node_cache = Context.node_cache cx in
     match Node_cache.get_tparam node_cache loc with
     | Some x -> x
@@ -2085,7 +2085,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
       let polarity = polarity cx variance in
       (match bound_kind with
-      | Ast.Type.TypeParam.Extends ->
+      | Ast.Type.TypeParam.Extends when not from_infer_type ->
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.TSTypeParamExtends; loc });
@@ -2102,7 +2102,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         in
         let ast = Tast_utils.error_mapper#type_param (loc, type_param) in
         (ast, tparam, t)
-      | Ast.Type.TypeParam.Colon ->
+      | _ ->
         let (bound, bound_ast) =
           match bound with
           | Ast.Type.Missing loc ->
@@ -2151,7 +2151,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   and mk_type_param_declarations cx ?(tparams_map = Subst_name.Map.empty) tparams =
     let add_type_param (tparams, tparams_map, bounds_map, rev_asts) (loc, type_param) =
       let (ast, ({ name; bound; _ } as tparam), t) =
-        mk_type_param cx tparams_map (loc, type_param)
+        mk_type_param cx tparams_map ~from_infer_type:false (loc, type_param)
       in
 
       let tparams = tparam :: tparams in

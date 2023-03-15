@@ -1117,7 +1117,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Interface (loc, inter) -> resolve_interface cx loc inter
     | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
     | Enum (enum_loc, enum) -> resolve_enum cx id_loc def_reason enum_loc enum
-    | TypeParam (_, _) -> resolve_type_param cx id_loc
+    | TypeParam _ -> resolve_type_param cx id_loc
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     | DeclaredModule (loc, module_) -> resolve_declare_module cx loc module_
     | NonBindingParam -> (AnyT.at (Unsound NonBindingParameter) id_loc, unknown_use)
@@ -1212,9 +1212,11 @@ let init_type_param =
     let (def, _, _, reason) = EnvMap.find_ordinary def_loc graph in
     let tparam_entry =
       match def with
-      | TypeParam (tparams_locs, tparam) ->
+      | TypeParam { tparams_map = tparams_locs; from_infer_type; tparam } ->
         let tparams_map = mk_tparams_map cx graph tparams_locs in
-        let ((_, ({ name; _ } as tparam), t) as info) = Anno.mk_type_param cx tparams_map tparam in
+        let ((_, ({ name; _ } as tparam), t) as info) =
+          Anno.mk_type_param cx tparams_map ~from_infer_type tparam
+        in
         let cache = Context.node_cache cx in
         Node_cache.set_tparam cache info;
         (name, tparam, t)
@@ -1269,15 +1271,17 @@ let resolve_component_type_params cx graph component =
   let resolve_illegal loc def =
     match def with
     | ( TypeParam
-          ( _,
-            ( _,
-              {
-                Ast.Type.TypeParam.name =
-                  (name_loc, { Ast.Identifier.name = str_name; comments = _ });
-                _;
-              }
-            )
-          ),
+          {
+            tparam =
+              ( _,
+                {
+                  Ast.Type.TypeParam.name =
+                    (name_loc, { Ast.Identifier.name = str_name; comments = _ });
+                  _;
+                }
+              );
+            _;
+          },
         _,
         _,
         _

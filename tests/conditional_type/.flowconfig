@@ -2,3 +2,4 @@
 all=true
 exact_by_default=false
 experimental.conditional_type=true
+inference_mode=lti
