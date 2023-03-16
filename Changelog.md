@@ -1,3 +1,29 @@
+### 0.202.0
+
+Likely to cause new Flow errors:
+* Don't error for tuple element type incompatibility if we have already errored for invalid tuple arity.
+* Fix a bug that causes certain errors in annotations to be hidden. As a result, more legitimate errors might appear. Example [here](https://flow.org/try#0BTCUC4AIBUAkEkDKB9RsDyBVAMgEWQKIBKR6RkAvAHyQB2ApgO6SL0AuwA2gLqigBQQA).
+
+New Features:
+* Add support for optional tuple elements, e.g. `['s']` and `['s', 1]` are both valid values for `[foo: string, bar?: number]`.
+* Add autocomplete for keywords to the LSP.
+* Add a code action that inserts jsdoc on a function.
+* `exact_by_default=true` is now the default value if the option is omitted from the `.flowconfig`. Read this [blog post](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69) for more details.
+
+Notable bug fixes:
+* Fix LSP rename command to consider aliased named exports.
+* If a contextually typed parameter has a default, we will filter out `null` and `void` from the inferred type of the parameter. This removes spurious errors like [this](https://flow.org/try/#0MYewdgzgLgBAZiEAuGAKAhisBXAtgIwFMAnAGhnwH4s8jiBKGAXgD4YcCTm11z9uAjAAYhjVjACy6KAAsAdLgCWYDH3oBuGAHotMAArFCAN0UhsEADYBPPjEUQ7YOCUMATGFBAVC7WlwA+MEYgiq7kYCAA7nZQAOQOHHRAA).
+* Some spurious `prop-missing` errors might be removed. Example [here](https://flow.org/try#0CYUwxgNghgTiAEAzArgOzAFwJYHtVJxwAoBvAHzIF8BKALngDcctgBuAKEUNICNZ7UIAO7wAyiAxEA2gHIZAXWo1W8APSr4GABYg48AM5acyCMHg8EeCAE94eBAAcYOBwFoAtln36sqAObwus4wQA)
+* Remove some spurious internal errors of Flow. Example [here](https://flow.org/try#0MYewdgzgLgBASgU2AVwE4QJYDcEHkBGAVjALwwDeMA9FTGCDALYioIwZhQKpgCGANjG6oWEAFAw64AMoBPTgAsEmAF698-BAAURABwBcMAIykyRgDRiJMAGYAKAJSGsIDABMK1yYhTpseIgA6eyhUZDYAfmMYQwBtAF0HAG5rAF9LVKSgA)
+
+Misc:
+* Add option for `module.system.haste.module_ref_prefix_LEGACY_INTEROP` in the config to allow migration from the `automatic_require_default` flag and to ES module syntax.
+
+Parser:
+* Include InterpreterDirective in the AST.
+* Fix loc/range of postfix arrays that start with a parenthesis, like `(A | B)[]`.
+* Fix missing error when arrow functions have duplicate params.
+
 ### 0.201.0
 
 Local Type Inference:
