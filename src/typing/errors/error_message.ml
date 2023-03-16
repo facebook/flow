@@ -593,6 +593,7 @@ and 'loc unsupported_syntax =
   | DestructuringObjectPropertyLiteralNonString
   | DestructuringExpressionPattern
   | JSXTypeArgs
+  | MappedType
   | PredicateDeclarationForImplementation
   | PredicateDeclarationWithoutExpression
   | PredicateDeclarationAnonymousParameters
@@ -701,13 +702,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | ObjectPropertyGetSet | ObjectPropertyComputedGetSet | InvariantSpreadArgument
       | ClassPropertyLiteral | ClassPropertyComputed | RequireDynamicArgument
       | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
-      | DestructuringExpressionPattern | JSXTypeArgs | PredicateDeclarationForImplementation
-      | PredicateDeclarationWithoutExpression | PredicateDeclarationAnonymousParameters
-      | PredicateInvalidBody | PredicateFunctionAbstractReturnType | PredicateVoidReturn
-      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
-      | SpreadArgument | ImportDynamicArgument | IllegalName | TupleOptionalElement
-      | TupleSpreadElement | UnsupportedInternalSlot _ | AnnotationInsideDestructuring
-      | WithStatement ) as u ->
+      | DestructuringExpressionPattern | JSXTypeArgs | MappedType
+      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
+      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
+      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
+      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
+      | ImportDynamicArgument | IllegalName | TupleOptionalElement | TupleSpreadElement
+      | UnsupportedInternalSlot _ | AnnotationInsideDestructuring | WithStatement ) as u ->
       u
   in
   function
@@ -2654,6 +2655,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Unsupported non-string literal object property in destructuring."]
       | DestructuringExpressionPattern -> [text "Unsupported expression pattern in destructuring."]
       | JSXTypeArgs -> [text "Flow doesn't support JSX type arguments."]
+      | MappedType -> [text "Mapped Types are not yet supported."]
       | PredicateDeclarationForImplementation ->
         [text "Cannot declare predicate when a function body is present."]
       | PredicateDeclarationWithoutExpression ->
