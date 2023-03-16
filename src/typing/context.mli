@@ -53,14 +53,10 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   conditional_type: bool;
-  cycle_errors: bool;
-  cycle_errors_includes: string list;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
   enforce_strict_call_arity: bool;
-  inference_mode: Options.inference_mode;
-  inference_mode_lti_includes: string list;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -68,8 +64,6 @@ type metadata = {
   haste_module_ref_prefix: string option;
   haste_module_ref_prefix_LEGACY_INTEROP: string option;
   ignore_non_literal_requires: bool;
-  array_literal_providers: bool;
-  array_literal_providers_includes: string list;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -81,11 +75,6 @@ type metadata = {
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
   root: Path.t;
-  run_post_inference_implicit_instantiation: bool;
-  enable_post_inference_targ_widened_check: bool;
-  (* save_implicit_instantiation_results is used for the implicit instantiation
-   * annotation codemod *)
-  save_implicit_instantiation_results: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;

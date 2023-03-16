@@ -80,10 +80,6 @@ val channel_mode : config -> [ `pipe | `socket ] option
 
 val conditional_type : config -> bool option
 
-val cycle_errors : config -> bool
-
-val cycle_errors_includes : config -> string list
-
 val direct_dependent_files_fix : config -> bool option
 
 val emoji : config -> bool option
@@ -93,10 +89,6 @@ val enable_const_params : config -> bool option
 val enforce_strict_call_arity : config -> bool
 
 val enums : config -> bool
-
-val inference_mode : config -> Options.inference_mode
-
-val inference_mode_lti_includes : config -> string list
 
 val estimate_recheck_time : config -> bool option
 
@@ -187,10 +179,6 @@ val modules_are_use_strict : config -> bool
 
 val munge_underscores : config -> bool
 
-val array_literal_providers : config -> bool
-
-val array_literal_providers_includes : config -> string list
-
 val no_flowlib : config -> bool
 
 val node_main_fields : config -> string list
@@ -218,8 +206,6 @@ val relay_integration_module_prefix_includes : config -> string list
 val required_version : config -> string option
 
 val root_name : config -> string option
-
-val run_post_inference_implicit_instantiation : config -> bool
 
 val saved_state_allow_reinit : config -> bool option
 

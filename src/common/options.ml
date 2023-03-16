@@ -30,10 +30,6 @@ type trust_mode =
   | CheckTrust
   | SilentTrust
 
-type inference_mode =
-  | ConstrainWrites
-  | LTI
-
 type react_runtime =
   | ReactRuntimeAutomatic
   | ReactRuntimeClassic
@@ -69,8 +65,6 @@ type t = {
   opt_babel_loose_array_spread: bool;
   opt_channel_mode: [ `pipe | `socket ];
   opt_conditional_type: bool;
-  opt_cycle_errors: bool;
-  opt_cycle_errors_includes: string list;
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
@@ -78,8 +72,6 @@ type t = {
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_strict_call_arity: bool;
   opt_enums: bool;
-  opt_inference_mode: inference_mode;
-  opt_inference_mode_lti_includes: string list;
   opt_estimate_recheck_time: bool;
   opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
@@ -115,8 +107,6 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_array_literal_providers: bool;
-  opt_array_literal_providers_includes: string list;
   opt_node_main_fields: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
@@ -130,9 +120,6 @@ type t = {
   opt_relay_integration_module_prefix_includes: Str.regexp list;
   opt_root: Path.t;
   opt_root_name: string option;
-  opt_run_post_inference_implicit_instantiation: bool;
-  opt_enable_post_inference_targ_widened_check: bool;
-  opt_save_implicit_instantiation_results: bool;
   opt_saved_state_allow_reinit: bool;
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
@@ -171,10 +158,6 @@ let channel_mode opts = opts.opt_channel_mode
 
 let conditional_type opts = opts.opt_conditional_type
 
-let cycle_errors opts = opts.opt_cycle_errors
-
-let cycle_errors_includes opts = opts.opt_cycle_errors_includes
-
 let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 
 let enable_const_params opts = opts.opt_enable_const_params
@@ -186,10 +169,6 @@ let enabled_rollouts opts = opts.opt_enabled_rollouts
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 
 let enums opts = opts.opt_enums
-
-let inference_mode opts = opts.opt_inference_mode
-
-let inference_mode_lti_includes opts = opts.opt_inference_mode_lti_includes
 
 let estimate_recheck_time opts = opts.opt_estimate_recheck_time
 
@@ -263,10 +242,6 @@ let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
-let array_literal_providers opts = opts.opt_array_literal_providers
-
-let array_literal_providers_includes opts = opts.opt_array_literal_providers_includes
-
 let node_main_fields opts = opts.opt_node_main_fields
 
 let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
@@ -289,14 +264,6 @@ let relay_integration_module_prefix_includes opts =
 let root opts = opts.opt_root
 
 let root_name opts = opts.opt_root_name
-
-let run_post_inference_implicit_instantiation opts =
-  opts.opt_run_post_inference_implicit_instantiation
-
-let enable_post_inference_targ_widened_check opts =
-  opts.opt_enable_post_inference_targ_widened_check
-
-let save_implicit_instantiation_results opts = opts.opt_save_implicit_instantiation_results
 
 let saved_state_allow_reinit opts = opts.opt_saved_state_allow_reinit
 

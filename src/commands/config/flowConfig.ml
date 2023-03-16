@@ -51,15 +51,11 @@ module Opts = struct
     babel_loose_array_spread: bool option;
     channel_mode: [ `pipe | `socket ] option;
     conditional_type: bool option;
-    cycle_errors: bool;
-    cycle_errors_includes: string list;
     direct_dependent_files_fix: bool option;
     emoji: bool option;
     enable_const_params: bool option;
     enforce_strict_call_arity: bool;
     enums: bool;
-    inference_mode: Options.inference_mode;
-    inference_mode_lti_includes: string list;
     estimate_recheck_time: bool option;
     exact_by_default: bool option;
     facebook_fbs: string option;
@@ -109,8 +105,6 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
-    array_literal_providers: bool;
-    array_literal_providers_includes: string list;
     react_runtime: Options.react_runtime;
     react_server_component_exts: SSet.t;
     recursion_limit: int;
@@ -119,7 +113,6 @@ module Opts = struct
     relay_integration_module_prefix: string option;
     relay_integration_module_prefix_includes: string list;
     root_name: string option;
-    run_post_inference_implicit_instantiation: bool;
     saved_state_allow_reinit: bool option;
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_hash_table_pow: int;
@@ -178,15 +171,11 @@ module Opts = struct
       babel_loose_array_spread = None;
       channel_mode = None;
       conditional_type = None;
-      cycle_errors = false;
-      cycle_errors_includes = [];
       direct_dependent_files_fix = None;
       emoji = None;
       enable_const_params = None;
       enforce_strict_call_arity = true;
       enums = false;
-      inference_mode = Options.LTI;
-      inference_mode_lti_includes = [];
       estimate_recheck_time = None;
       exact_by_default = None;
       facebook_fbs = None;
@@ -237,8 +226,6 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
-      array_literal_providers = false;
-      array_literal_providers_includes = [];
       react_runtime = Options.ReactRuntimeClassic;
       react_server_component_exts;
       recursion_limit = 10000;
@@ -247,7 +234,6 @@ module Opts = struct
       relay_integration_module_prefix = None;
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
       root_name = None;
-      run_post_inference_implicit_instantiation = false;
       saved_state_allow_reinit = None;
       saved_state_fetcher = Options.Dummy_fetcher;
       shm_hash_table_pow = 19;
@@ -468,9 +454,6 @@ module Opts = struct
       ~init:(fun opts -> { opts with haste_paths_includes = [] })
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
-
-  let post_inference_implicit_instantiation_parser =
-    boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
 
   let abstract_locations_parser =
     boolean (fun opts v -> Ok { opts with abstract_locations = Some v })
@@ -722,42 +705,6 @@ module Opts = struct
   let use_mixed_in_catch_variables_parser =
     boolean (fun opts v -> Ok { opts with use_mixed_in_catch_variables = Some v })
 
-  let cycle_errors_includes_parser =
-    string
-      ~init:(fun opts -> { opts with cycle_errors_includes = [] })
-      ~multiple:true
-      (fun opts v -> Ok { opts with cycle_errors_includes = v :: opts.cycle_errors_includes })
-
-  let inference_mode_parser =
-    string (fun opts s ->
-        match s with
-        | "constrain_writes" -> Ok { opts with inference_mode = Options.ConstrainWrites }
-        | "lti" -> Ok { opts with inference_mode = Options.LTI }
-        | "experimental.lti" -> Ok { opts with inference_mode = Options.LTI }
-        | inference_mode -> Error (spf "\"%s\" is not a valid inference_mode option" inference_mode)
-    )
-
-  let inference_mode_lti_includes_parser =
-    string
-      ~init:(fun opts -> { opts with inference_mode_lti_includes = [] })
-      ~multiple:true
-      (fun opts v ->
-        Ok { opts with inference_mode_lti_includes = v :: opts.inference_mode_lti_includes })
-
-  let experimental_empty_array_literals_parser =
-    boolean (fun opts v -> Ok { opts with array_literal_providers = v })
-
-  let experimental_empty_array_literals_includes_parser =
-    string
-      ~init:(fun opts -> { opts with array_literal_providers_includes = [] })
-      ~multiple:true
-      (fun opts v ->
-        Ok
-          {
-            opts with
-            array_literal_providers_includes = v :: opts.array_literal_providers_includes;
-          })
-
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->
         Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }
@@ -785,22 +732,10 @@ module Opts = struct
       ( "experimental.conditional_type",
         boolean (fun opts v -> Ok { opts with conditional_type = Some v })
       );
-      ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
-      ("experimental.cycle_errors.includes", cycle_errors_includes_parser);
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
-      ("inference_mode", inference_mode_parser);
-      ("inference_mode.lti.includes", inference_mode_lti_includes_parser);
-      ("inference_mode.experimental.lti.includes", inference_mode_lti_includes_parser);
-      ("experimental.array_literal_providers", experimental_empty_array_literals_parser);
-      ( "experimental.array_literal_providers.includes",
-        experimental_empty_array_literals_includes_parser
-      );
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
-      ( "experimental.run_post_inference_implicit_instantiation",
-        post_inference_implicit_instantiation_parser
-      );
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
@@ -1424,10 +1359,6 @@ let channel_mode c = c.options.Opts.channel_mode
 
 let conditional_type c = c.options.Opts.conditional_type
 
-let cycle_errors c = c.options.Opts.cycle_errors
-
-let cycle_errors_includes c = c.options.Opts.cycle_errors_includes
-
 let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 
 let emoji c = c.options.Opts.emoji
@@ -1437,10 +1368,6 @@ let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enums c = c.options.Opts.enums
-
-let inference_mode c = c.options.Opts.inference_mode
-
-let inference_mode_lti_includes c = c.options.Opts.inference_mode_lti_includes
 
 let estimate_recheck_time c = c.options.Opts.estimate_recheck_time
 
@@ -1531,10 +1458,6 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 
 let munge_underscores c = c.options.Opts.munge_underscores
 
-let array_literal_providers c = c.options.Opts.array_literal_providers
-
-let array_literal_providers_includes c = c.options.Opts.array_literal_providers_includes
-
 let no_flowlib c = c.options.Opts.no_flowlib
 
 let node_main_fields c = c.options.Opts.node_main_fields
@@ -1563,9 +1486,6 @@ let relay_integration_module_prefix_includes c =
 let required_version c = c.version
 
 let root_name c = c.options.Opts.root_name
-
-let run_post_inference_implicit_instantiation c =
-  c.options.Opts.run_post_inference_implicit_instantiation
 
 let saved_state_allow_reinit c = c.options.Opts.saved_state_allow_reinit
 

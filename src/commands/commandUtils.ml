@@ -838,8 +838,6 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    inference_mode: Options.inference_mode option;
-    run_post_inference_implicit_instantiation: bool option;
     abstract_locations: bool option;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -910,8 +908,6 @@ let options_flags =
       abstract_locations
       include_suppressions
       trust_mode
-      inference_mode
-      run_post_inference_implicit_instantiation
       estimate_recheck_time
       distributed =
     (match merge_timeout with
@@ -925,8 +921,6 @@ let options_flags =
         profile;
         all;
         wait_for_recheck;
-        inference_mode;
-        run_post_inference_implicit_instantiation;
         traces;
         no_flowlib;
         munge_underscore_members;
@@ -1004,11 +998,6 @@ let options_flags =
               )
            )
            ~doc:""
-      |> flag
-           "--inference-mode"
-           (optional (enum [("constrain_writes", Options.ConstrainWrites); ("lti", Options.LTI)]))
-           ~doc:""
-      |> flag "--experimental.run-post-inference-implicit-instantiation" (optional bool) ~doc:""
       (* restarting to save time is a hack and should be removed. this should
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
@@ -1350,32 +1339,10 @@ let make_options
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
-    opt_array_literal_providers = FlowConfig.array_literal_providers flowconfig;
-    opt_array_literal_providers_includes =
-      Base.List.map
-        ~f:(fun s -> Files.expand_project_root_token ~root s)
-        (FlowConfig.array_literal_providers_includes flowconfig);
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
     opt_conditional_type = Base.Option.value (FlowConfig.conditional_type flowconfig) ~default:false;
-    opt_cycle_errors = FlowConfig.cycle_errors flowconfig;
-    opt_cycle_errors_includes =
-      Base.List.map
-        ~f:(fun s -> Files.expand_project_root_token ~root s)
-        (FlowConfig.cycle_errors_includes flowconfig);
-    opt_run_post_inference_implicit_instantiation =
-      Base.Option.value
-        options_flags.run_post_inference_implicit_instantiation
-        ~default:(FlowConfig.run_post_inference_implicit_instantiation flowconfig);
-    opt_enable_post_inference_targ_widened_check = false;
-    opt_save_implicit_instantiation_results = false;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
-    opt_inference_mode =
-      Base.Option.value options_flags.inference_mode ~default:(FlowConfig.inference_mode flowconfig);
-    opt_inference_mode_lti_includes =
-      Base.List.map
-        ~f:(fun s -> Files.expand_project_root_token ~root s)
-        (FlowConfig.inference_mode_lti_includes flowconfig);
     opt_estimate_recheck_time =
       Base.Option.first_some
         options_flags.estimate_recheck_time

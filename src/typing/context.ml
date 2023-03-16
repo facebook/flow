@@ -33,14 +33,10 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   conditional_type: bool;
-  cycle_errors: bool;
-  cycle_errors_includes: string list;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
   enforce_strict_call_arity: bool;
-  inference_mode: Options.inference_mode;
-  inference_mode_lti_includes: string list;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -48,8 +44,6 @@ type metadata = {
   haste_module_ref_prefix: string option;
   haste_module_ref_prefix_LEGACY_INTEROP: string option;
   ignore_non_literal_requires: bool;
-  array_literal_providers: bool;
-  array_literal_providers_includes: string list;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -61,11 +55,6 @@ type metadata = {
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
   root: Path.t;
-  run_post_inference_implicit_instantiation: bool;
-  enable_post_inference_targ_widened_check: bool;
-  (* save_implicit_instantiation_results is used for the implicit instantiation
-   * annotation codemod *)
-  save_implicit_instantiation_results: bool;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -239,14 +228,10 @@ let metadata_of_options options =
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     conditional_type = Options.conditional_type options;
-    cycle_errors = Options.cycle_errors options;
-    cycle_errors_includes = Options.cycle_errors_includes options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-    inference_mode = Options.inference_mode options;
-    inference_mode_lti_includes = Options.inference_mode_lti_includes options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
@@ -258,8 +243,6 @@ let metadata_of_options options =
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
-    array_literal_providers = Options.array_literal_providers options;
-    array_literal_providers_includes = Options.array_literal_providers_includes options;
     react_runtime = Options.react_runtime options;
     react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
@@ -268,11 +251,6 @@ let metadata_of_options options =
     relay_integration_module_prefix_includes =
       Options.relay_integration_module_prefix_includes options;
     root = Options.root options;
-    run_post_inference_implicit_instantiation =
-      Options.run_post_inference_implicit_instantiation options;
-    enable_post_inference_targ_widened_check =
-      Options.enable_post_inference_targ_widened_check options;
-    save_implicit_instantiation_results = Options.save_implicit_instantiation_results options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
@@ -317,12 +295,6 @@ let docblock_overrides docblock_info metadata =
   let metadata =
     if Docblock.preventMunge docblock_info then
       { metadata with munge_underscores = false }
-    else
-      metadata
-  in
-  let metadata =
-    if Docblock.lti docblock_info then
-      { metadata with inference_mode = Options.LTI }
     else
       metadata
   in
@@ -464,16 +436,7 @@ let relay_integration_module_prefix cx =
     (file cx)
     cx.metadata.relay_integration_module_prefix
 
-let in_dirlist cx dirs =
-  match dirs with
-  | [] -> false
-  | _ :: _ ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
-
-let lti cx =
-  cx.metadata.inference_mode = Options.LTI || in_dirlist cx cx.metadata.inference_mode_lti_includes
+let lti _ = true
 
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
@@ -489,14 +452,11 @@ let exact_by_default cx = cx.metadata.exact_by_default
 
 let conditional_type cx = cx.metadata.conditional_type
 
-let cycle_errors cx =
-  cx.metadata.cycle_errors || lti cx || in_dirlist cx cx.metadata.cycle_errors_includes
+let cycle_errors = lti
 
-let run_post_inference_implicit_instantiation cx =
-  cx.metadata.run_post_inference_implicit_instantiation && not (lti cx)
+let run_post_inference_implicit_instantiation _ = false
 
-let enable_post_inference_targ_widened_check cx =
-  cx.metadata.enable_post_inference_targ_widened_check
+let enable_post_inference_targ_widened_check _ = false
 
 let aloc_tables cx = cx.ccx.aloc_tables
 
@@ -620,10 +580,7 @@ let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
 
-let array_literal_providers cx =
-  cx.metadata.array_literal_providers
-  || lti cx
-  || in_dirlist cx cx.metadata.array_literal_providers_includes
+let array_literal_providers = lti
 
 let jsx cx = cx.metadata.jsx
 
@@ -751,16 +708,8 @@ let add_implicit_instantiation_result cx loc result =
 let add_implicit_instantiation_check cx check =
   cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
 
-let add_possibly_speculating_implicit_instantiation_result cx loc result =
-  let speculation_state = cx.ccx.speculation_state in
-  match !speculation_state with
-  | [] when cx.metadata.save_implicit_instantiation_results ->
-    add_implicit_instantiation_result cx loc result
-  | Speculation_state.{ case; _ } :: _ when cx.metadata.save_implicit_instantiation_results ->
-    case.Speculation_state.implicit_instantiation_results <-
-      ALocFuzzyMap.add loc result case.Speculation_state.implicit_instantiation_results
-  | _ -> ()
-(*TODO: Speculative implicit instantiations *)
+let add_possibly_speculating_implicit_instantiation_result _cx _loc _result = ()
+(*TODO: remove *)
 
 let add_possibly_speculating_implicit_instantiation_check cx check =
   let open Speculation_state in
@@ -771,32 +720,13 @@ let add_possibly_speculating_implicit_instantiation_check cx check =
     case.implicit_instantiation_post_inference_checks <-
       check :: case.implicit_instantiation_post_inference_checks
 
-let add_implicit_instantiation_call cx lhs poly_t use_op reason funcalltype =
-  if cx.metadata.run_post_inference_implicit_instantiation then
-    let check = Implicit_instantiation_check.of_call lhs poly_t use_op reason funcalltype in
-    add_possibly_speculating_implicit_instantiation_check cx check
+let add_implicit_instantiation_call _cx _lhs _poly_t _use_op _reason _funcalltype = ()
 
-let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op targs args =
-  if cx.metadata.run_post_inference_implicit_instantiation then
-    let check = Implicit_instantiation_check.of_ctor lhs poly_t use_op reason_op targs args in
-    add_possibly_speculating_implicit_instantiation_check cx check
+let add_implicit_instantiation_ctor _cx _lhs _poly_t _use_op _reason_op _targs _args = ()
 
 let add_implicit_instantiation_jsx
-    cx lhs poly_t use_op reason_op clone ~component ~config ~targs children =
-  if cx.metadata.run_post_inference_implicit_instantiation then
-    let check =
-      Implicit_instantiation_check.of_jsx
-        lhs
-        poly_t
-        use_op
-        reason_op
-        clone
-        ~component
-        ~config
-        ~targs
-        children
-    in
-    add_possibly_speculating_implicit_instantiation_check cx check
+    _cx _lhs _poly_t _use_op _reason_op _clone ~component:_ ~config:_ ~targs:_ _children =
+  ()
 
 let add_missing_local_annot_lower_bound cx loc t =
   let missing_local_annot_lower_bounds = cx.ccx.missing_local_annot_lower_bounds in
