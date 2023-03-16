@@ -50,6 +50,12 @@ executors:
     environment:
       <<: *opam_env
     working_directory: ~/flow
+  mac-arm64:
+    macos:
+      xcode: "14.2.0"
+    environment:
+      <<: *opam_env
+    working_directory: ~/flow
   curl:
     docker:
       - image: appropriate/curl:latest
@@ -305,7 +311,7 @@ jobs:
           destination: libflowparser-osx.zip
 
   build_macos_arm64:
-    executor: mac
+    executor: mac-arm64
     resource_class: macos.m1.large.gen1
     steps:
       - attach_workspace:
