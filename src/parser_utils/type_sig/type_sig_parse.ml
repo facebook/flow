@@ -1524,7 +1524,10 @@ and object_type =
           | O.SpreadProperty (_, p) -> spread opts scope tbls xs acc p
           | O.Indexer (_, p) -> dict opts scope tbls xs acc p
           | O.CallProperty (_, p) -> call opts scope tbls xs acc p
-          | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p)
+          | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
+          | O.MappedType _ ->
+            (* TODO(jmbrown): Mapped types in type signatures *)
+            acc)
         Acc.empty
         properties
     in
@@ -1620,7 +1623,10 @@ and interface_props =
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
         | O.SpreadProperty _ -> acc
-        (* no spread in interface *))
+        (* no spread in interface *)
+        | O.MappedType _ ->
+          (* TODO(jmbrown): Mapped types in type signatures *)
+          acc)
       acc
       properties
 
@@ -1703,7 +1709,10 @@ and declare_class_props =
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
         | O.SpreadProperty _ -> acc
-        (* no spread in interface / declare class *))
+        (* no spread in interface / declare class *)
+        | O.MappedType _ ->
+          (* no mapped types in interface / declared class *)
+          acc)
       acc
       properties
 

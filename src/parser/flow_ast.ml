@@ -302,6 +302,27 @@ and Type : sig
       and ('M, 'T) t = 'M * ('M, 'T) t' [@@deriving show]
     end
 
+    module MappedType : sig
+      (* PlusOptional = +?, MinusOptional = -?, Optional = ?, NoOptionalFlag = blank *)
+      type optional_flag =
+        | PlusOptional
+        | MinusOptional
+        | Optional
+        | NoOptionalFlag
+      [@@deriving show]
+
+      type ('M, 'T) t' = {
+        key_tparam: ('M, 'T) Type.TypeParam.t;
+        prop_type: ('M, 'T) Type.t;
+        source_type: ('M, 'T) Type.t;
+        variance: 'M Variance.t option;
+        optional: optional_flag;
+        comments: ('M, unit) Syntax.t option;
+      }
+
+      and ('M, 'T) t = 'M * ('M, 'T) t' [@@deriving show]
+    end
+
     module CallProperty : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
@@ -347,6 +368,7 @@ and Type : sig
       | Indexer of ('M, 'T) Indexer.t
       | CallProperty of ('M, 'T) CallProperty.t
       | InternalSlot of ('M, 'T) InternalSlot.t
+      | MappedType of ('M, 'T) MappedType.t
     [@@deriving show]
   end
 

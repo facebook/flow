@@ -1774,6 +1774,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           ( Acc.add_spread t acc,
             SpreadProperty (loc, { SpreadProperty.argument = argument_ast; comments })
           )
+        | MappedType _ as prop -> (acc, Tast_utils.error_mapper#object_type_property prop)
       )
     in
     fun cx tparams_map loc ~exact properties ->
@@ -2213,6 +2214,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               ( add_indexer ~static polarity ~key:k ~value:v x,
                 Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
               )
+            | MappedType _ as prop ->
+              (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
             | Property
                 ( loc,
                   ( { Property.key; value; static; proto; optional; _method; variance; comments = _ }

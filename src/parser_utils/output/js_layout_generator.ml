@@ -3607,6 +3607,37 @@ and type_object_property ~opts =
             type_ ~opts value;
           ]
       )
+  | MappedType
+      ( loc,
+        { MappedType.key_tparam; prop_type; source_type; variance = variance_; optional; comments }
+      ) ->
+    let optional_token =
+      MappedType.(
+        match optional with
+        | PlusOptional -> Atom "+?"
+        | MinusOptional -> Atom "-?"
+        | Optional -> Atom "?"
+        | NoOptionalFlag -> Empty
+      )
+    in
+    source_location_with_comments
+      ?comments
+      ( loc,
+        fuse
+          [
+            option variance variance_;
+            Atom "[";
+            identifier (snd key_tparam).Ast.Type.TypeParam.name;
+            space;
+            Atom "in";
+            space;
+            type_ ~opts source_type;
+            Atom "]";
+            optional_token;
+            Atom ":";
+            type_ ~opts prop_type;
+          ]
+      )
   | CallProperty (loc, { CallProperty.value = (call_loc, func); static; comments }) ->
     source_location_with_comments
       ?comments
@@ -3663,7 +3694,8 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
     | SpreadProperty (loc, _)
     | Indexer (loc, _)
     | CallProperty (loc, _)
-    | InternalSlot (loc, _) ->
+    | InternalSlot (loc, _)
+    | MappedType (loc, _) ->
       loc
   in
   let num_props = List.length properties in

@@ -1538,7 +1538,10 @@ with type t = Impl.t = struct
                 (props, ixs, call :: calls, slots)
               | InternalSlot s ->
                 let slot = object_type_internal_slot s in
-                (props, ixs, calls, slot :: slots))
+                (props, ixs, calls, slot :: slots)
+              | MappedType m ->
+                let mapped_type = object_type_mapped_type m in
+                (mapped_type :: props, ixs, calls, slots))
             ([], [], [], [])
             properties
         in
@@ -1622,6 +1625,37 @@ with type t = Impl.t = struct
         "ObjectTypeCallProperty"
         loc
         [("value", function_type value); ("static", bool static)]
+    and object_type_mapped_type
+        ( mt_loc,
+          {
+            Type.Object.MappedType.key_tparam;
+            prop_type;
+            source_type;
+            variance = variance_;
+            comments;
+            optional;
+          }
+        ) =
+      let optional_flag flag =
+        Type.Object.MappedType.(
+          match flag with
+          | PlusOptional -> string "PlusOptional"
+          | MinusOptional -> string "MinusOptional"
+          | Optional -> string "Optional"
+          | NoOptionalFlag -> null
+        )
+      in
+      node
+        ?comments
+        "ObjectTypeMappedTypeProperty"
+        mt_loc
+        [
+          ("keyTparam", type_param key_tparam);
+          ("propType", _type prop_type);
+          ("sourceType", _type source_type);
+          ("variance", option variance variance_);
+          ("optional", optional_flag optional);
+        ]
     and object_type_internal_slot
         (loc, { Type.Object.InternalSlot.id; optional; static; _method; value; comments }) =
       node
