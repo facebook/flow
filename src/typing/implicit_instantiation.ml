@@ -1167,140 +1167,76 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     let targs_map = Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check in
     instantiate_poly_with_subst_map cx ?cache trace t targs_map ~use_op ~reason_op ~reason_tapp
 
-  let run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp =
-    let {
-      Implicit_instantiation_check.poly_t = (_, xs, _) as poly_t;
-      operation = (_, _, operation);
-      _;
-    } =
-      check
-    in
-    let (t, all_ts_rev) =
-      match operation with
-      | Implicit_instantiation_check.Call { Type.call_targs = Some targs; _ }
-      | Implicit_instantiation_check.Constructor (Some targs, _)
-      | Implicit_instantiation_check.Jsx { targs = Some targs; _ } ->
-        let (_, ts_rev) =
-          Nel.fold_left
-            (fun (targs, ts) typeparam ->
-              match targs with
-              | [] -> ([], ts)
-              | ExplicitArg t :: targs -> (targs, t :: ts)
-              | ImplicitArg (r, id) :: targs ->
-                (* `_` can introduce non-termination, just like omitting type arguments
-                 * can. In order to protect against that non-termination we use cache_instantiate.
-                 * Instead of letting instantiate_poly do that for us on every type argument, we
-                 * do it ourselves here so that explicit type arguments do not have their reasons
-                 * needlessly changed. Note that the ImplicitTypeParam reason that cache instatiations
-                 * introduce can also change the use_op in a flow. In the NumT ~> StrT case,
-                 * this can make meaningful differences in type checking behavior. Ensuring that
-                 * the use_op/reason change happens _only_ on actually implicitly instantiated
-                 * type variables helps preserve the correct type checking behavior. *)
-                let reason = mk_reason RImplicitInstantiation (aloc_of_reason r) in
-                let t =
-                  Instantiation_utils.ImplicitTypeArgument.mk_targ cx typeparam reason reason_tapp
-                in
-                let t_ =
-                  cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t
-                in
-                Flow.flow cx (t_, UseT (use_op, OpenT (r, id)));
-                (targs, t_ :: ts))
-            (targs, [])
-            xs
-        in
-        FlowJs.instantiate_poly_with_targs
-          cx
-          trace
-          ~use_op
-          ~reason_op
-          ~reason_tapp
-          ?cache:None
-          poly_t
-          (List.rev ts_rev)
-      | _ -> FlowJs.instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache poly_t
-    in
-    let ts_with_names = List.rev all_ts_rev in
-    Context.add_possibly_speculating_implicit_instantiation_result
-      cx
-      (Reason.aloc_of_reason reason_op)
-      ts_with_names;
-    t
-
-  let run
-      cx check ~return_hint:(has_context, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
-    if not has_context then Context.add_possibly_speculating_implicit_instantiation_check cx check;
-    if Context.lti cx then
-      let (check, in_nested_instantiation) =
-        match check.Check.operation with
-        | ( use_op,
-            reason,
-            Check.Call
-              {
-                call_this_t;
-                call_targs;
-                call_args_tlist;
-                call_tout;
-                call_strict_arity;
-                call_speculation_hint_state;
-                call_kind = (MapTypeKind | CallTypeKind) as call_kind;
-              }
-          )
-          when Context.in_implicit_instantiation cx ->
-          (* We ensure that the nested instantiated to have a fully resolved view of the input.
-           * As a starting point, we just replace any types that contain unresolved tvars with
-           * placeholders. Soundness is guaranteed by the post instantiation check.
-           * In the future, we can optimize this by doing more careful book-keeping in one pass. *)
-          let ensure_resolved t =
-            if Tvar_resolver.has_unresolved_tvars cx t then
-              Context.mk_placeholder cx (TypeUtil.reason_of_t t)
-            else
-              t
-          in
-          let fun_type =
+  let run cx check ~return_hint:(_, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
+    let (check, in_nested_instantiation) =
+      match check.Check.operation with
+      | ( use_op,
+          reason,
+          Check.Call
             {
-              call_this_t = ensure_resolved call_this_t;
-              call_args_tlist =
-                ListUtils.ident_map
-                  (function
-                    | Arg t -> Arg (ensure_resolved t)
-                    | SpreadArg t -> SpreadArg (ensure_resolved t))
-                  call_args_tlist;
+              call_this_t;
               call_targs;
+              call_args_tlist;
               call_tout;
               call_strict_arity;
               call_speculation_hint_state;
-              call_kind;
+              call_kind = (MapTypeKind | CallTypeKind) as call_kind;
             }
-          in
-          ({ check with Check.operation = (use_op, reason, Check.Call fun_type) }, true)
-        | _ -> (check, false)
-      in
-      let (allow_underconstrained, return_hint) =
-        match lazy_hint reason_op with
-        | HintAvailable (t, kind) -> (true, Some (t, kind))
-        | DecompositionError -> (true, None)
-        | NoHint
-        | EncounteredPlaceholder ->
-          (false, None)
-      in
-      let f () =
-        Context.run_in_implicit_instantiation_mode cx (fun () ->
-            run_pierce
-              cx
-              ~allow_underconstrained
-              ~return_hint
-              check
-              ?cache
-              trace
-              ~use_op
-              ~reason_op
-              ~reason_tapp
         )
-      in
-      if in_nested_instantiation then
-        Context.run_in_synthesis_mode cx f |> snd
-      else
-        f ()
+        when Context.in_implicit_instantiation cx ->
+        (* We ensure that the nested instantiated to have a fully resolved view of the input.
+         * As a starting point, we just replace any types that contain unresolved tvars with
+         * placeholders. Soundness is guaranteed by the post instantiation check.
+         * In the future, we can optimize this by doing more careful book-keeping in one pass. *)
+        let ensure_resolved t =
+          if Tvar_resolver.has_unresolved_tvars cx t then
+            Context.mk_placeholder cx (TypeUtil.reason_of_t t)
+          else
+            t
+        in
+        let fun_type =
+          {
+            call_this_t = ensure_resolved call_this_t;
+            call_args_tlist =
+              ListUtils.ident_map
+                (function
+                  | Arg t -> Arg (ensure_resolved t)
+                  | SpreadArg t -> SpreadArg (ensure_resolved t))
+                call_args_tlist;
+            call_targs;
+            call_tout;
+            call_strict_arity;
+            call_speculation_hint_state;
+            call_kind;
+          }
+        in
+        ({ check with Check.operation = (use_op, reason, Check.Call fun_type) }, true)
+      | _ -> (check, false)
+    in
+    let (allow_underconstrained, return_hint) =
+      match lazy_hint reason_op with
+      | HintAvailable (t, kind) -> (true, Some (t, kind))
+      | DecompositionError -> (true, None)
+      | NoHint
+      | EncounteredPlaceholder ->
+        (false, None)
+    in
+    let f () =
+      Context.run_in_implicit_instantiation_mode cx (fun () ->
+          run_pierce
+            cx
+            ~allow_underconstrained
+            ~return_hint
+            check
+            ?cache
+            trace
+            ~use_op
+            ~reason_op
+            ~reason_tapp
+      )
+    in
+    if in_nested_instantiation then
+      Context.run_in_synthesis_mode cx f |> snd
     else
-      run_instantiate_poly cx check ?cache trace ~use_op ~reason_op ~reason_tapp
+      f ()
 end

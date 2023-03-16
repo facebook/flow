@@ -108,7 +108,7 @@ let t_option_value_exn cx loc t =
 (************************)
 
 let enforced_env_read_error_opt cx kind loc =
-  if Context.lti cx && Context.current_phase cx <> Context.InitLib then
+  if Context.current_phase cx <> Context.InitLib then
     let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
     match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
     | Some Env_api.NonAssigningWrite -> None
@@ -742,9 +742,6 @@ let set_module_exports cx t =
     env.Loc_env.declare_module_exports_write_loc
     ~f:(unify_write_entry cx ~use_op:unknown_use t Env_api.DeclareModuleExportsLoc)
 
-let bind cx t ~kind loc =
-  if not (Context.lti cx) then unify_write_entry cx ~use_op:Type.unknown_use t kind loc
-
 let bind_function_param cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionParamLoc loc
 
@@ -764,12 +761,7 @@ let bind_class_instance_super cx t loc =
 let bind_class_static_super cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassStaticSuperLoc loc
 
-let bind_fun cx _name t loc = bind cx t ~kind:Env_api.OrdinaryNameLoc loc
-
 let bind_this_tparam t loc = this_type_params := ALocMap.add loc t !this_type_params
-
-let bind_class_self_type cx class_loc class_t_internal =
-  bind cx class_t_internal ~kind:Env_api.ClassSelfLoc class_loc
 
 let init_var cx ~use_op t loc = init_entry cx ~use_op t loc
 

@@ -7,7 +7,6 @@
 
 open Name_def
 open Type
-open Hint
 open Reason
 open Loc_collections
 open Utils_js
@@ -209,69 +208,66 @@ let resolve_hint cx loc hint =
         ~frozen:false
         ~default_proto:(ObjProtoT reason)
   in
-  if Context.lti cx then
-    let map_base_hint = resolve_hint_node in
-    let map_targs = Statement.convert_call_targs_opt' cx in
-    let map_arg_list arg_list =
-      let cache_ref = Context.hint_map_arglist_cache cx in
-      let (l, _) = arg_list in
-      match ALocMap.find_opt l !cache_ref with
-      | Some result -> result
-      | None ->
-        let result = synth_arg_list cx arg_list in
-        cache_ref := ALocMap.add l result !cache_ref;
-        result
+  let map_base_hint = resolve_hint_node in
+  let map_targs = Statement.convert_call_targs_opt' cx in
+  let map_arg_list arg_list =
+    let cache_ref = Context.hint_map_arglist_cache cx in
+    let (l, _) = arg_list in
+    match ALocMap.find_opt l !cache_ref with
+    | Some result -> result
+    | None ->
+      let result = synth_arg_list cx arg_list in
+      cache_ref := ALocMap.add l result !cache_ref;
+      result
+  in
+  let map_jsx reason name props children =
+    let cache = Context.hint_map_jsx_cache cx in
+    let key =
+      ( reason,
+        name,
+        Base.List.map props ~f:(function
+            | Ast.JSX.Opening.Attribute (l, _)
+            | Ast.JSX.Opening.SpreadAttribute (l, _)
+            -> l
+            ),
+        fst children
+      )
     in
-    let map_jsx reason name props children =
-      let cache = Context.hint_map_jsx_cache cx in
-      let key =
-        ( reason,
-          name,
-          Base.List.map props ~f:(function
-              | Ast.JSX.Opening.Attribute (l, _)
-              | Ast.JSX.Opening.SpreadAttribute (l, _)
-              -> l
-              ),
-          fst children
-        )
+    match Hashtbl.find_opt cache key with
+    | Some result -> result
+    | None ->
+      let original_errors = Context.errors cx in
+      Context.reset_errors cx Flow_error.ErrorSet.empty;
+      let result =
+        lazy
+          (let (props, _, unresolved_params, _) =
+             Statement.jsx_mk_props
+               cx
+               reason
+               ~check_expression:synthesize_expression_for_instantiation
+               ~collapse_children:synthesize_jsx_children_for_instantiation
+               name
+               props
+               children
+           in
+           let children =
+             Base.List.map
+               ~f:(function
+                 | Type.UnresolvedArg (a, _) -> a
+                 | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
+               unresolved_params
+           in
+           (props, (children, None))
+          )
       in
-      match Hashtbl.find_opt cache key with
-      | Some result -> result
-      | None ->
-        let original_errors = Context.errors cx in
-        Context.reset_errors cx Flow_error.ErrorSet.empty;
-        let result =
-          lazy
-            (let (props, _, unresolved_params, _) =
-               Statement.jsx_mk_props
-                 cx
-                 reason
-                 ~check_expression:synthesize_expression_for_instantiation
-                 ~collapse_children:synthesize_jsx_children_for_instantiation
-                 name
-                 props
-                 children
-             in
-             let children =
-               Base.List.map
-                 ~f:(function
-                   | Type.UnresolvedArg (a, _) -> a
-                   | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
-                 unresolved_params
-             in
-             (props, (children, None))
-            )
-        in
-        let props = Lazy.map fst result in
-        let children = Lazy.map snd result in
-        Context.reset_errors cx original_errors;
-        let result = (props, children) in
-        Hashtbl.add cache key result;
-        result
-    in
-    Hint.map hint ~map_base_hint ~map_targs ~map_arg_list ~map_jsx
-  else
-    Hint_Placeholder
+      let props = Lazy.map fst result in
+      let children = Lazy.map snd result in
+      Context.reset_errors cx original_errors;
+      let result = (props, children) in
+      Hashtbl.add cache key result;
+      result
+  in
+  Hint.map hint ~map_base_hint ~map_targs ~map_arg_list ~map_jsx
 
 let resolve_hints cx loc = Base.List.map ~f:(resolve_hint cx loc)
 
@@ -601,7 +597,7 @@ let resolve_binding_partial cx reason loc b =
     let env = Context.environment cx in
     let (elem_t, elems, reason) =
       let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-      if Context.array_literal_providers cx && ALocSet.cardinal array_providers > 0 then (
+      if ALocSet.cardinal array_providers > 0 then (
         let ts =
           ALocSet.elements array_providers
           |> Base.List.map ~f:(fun loc ->
@@ -640,13 +636,8 @@ let resolve_binding_partial cx reason loc b =
         (elem_t, None, reason)
       ) else
         let elemt = Tvar.mk cx element_reason in
-        if Context.array_literal_providers cx then begin
-          Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-          if Context.lti cx then
-            Flow_js.flow_t
-              cx
-              (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
-        end;
+        Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
+        Flow_js.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt);
         (elemt, Some [], replace_desc_reason REmptyArrayLit reason)
     in
     let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
@@ -659,33 +650,29 @@ let resolve_binding_partial cx reason loc b =
     (t, use_op)
   | Root (Contextual { reason; hints; optional; default_expression }) ->
     let param_loc = Reason.poly_loc_of_reason reason in
-    let contextual_typing_enabled = Context.lti cx in
     let t =
-      if contextual_typing_enabled then (
-        let (has_hint, lazy_hint) = lazily_resolve_hints cx loc hints in
-        match lazy_hint reason with
-        | HintAvailable (t, _) ->
-          let t =
-            if Option.is_some default_expression then
-              Tvar.mk_no_wrap_where cx reason (fun tout ->
-                  Flow_js.flow cx (t, PredicateT (NotP VoidP, tout))
-              )
-            else
-              t
-          in
-          TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
-        | NoHint
-        | DecompositionError
-        | EncounteredPlaceholder ->
-          if has_hint then
-            Flow_js.add_output
-              cx
-              (Error_message.EMissingLocalAnnotation
-                 { reason; hint_available = true; from_generic_function = false }
-              );
-          AnyT.error reason
-      ) else
-        Tvar.mk cx reason
+      let (has_hint, lazy_hint) = lazily_resolve_hints cx loc hints in
+      match lazy_hint reason with
+      | HintAvailable (t, _) ->
+        let t =
+          if Option.is_some default_expression then
+            Tvar.mk_no_wrap_where cx reason (fun tout ->
+                Flow_js.flow cx (t, PredicateT (NotP VoidP, tout))
+            )
+          else
+            t
+        in
+        TypeUtil.mod_reason_of_t (Base.Fn.const reason) t
+      | NoHint
+      | DecompositionError
+      | EncounteredPlaceholder ->
+        if has_hint then
+          Flow_js.add_output
+            cx
+            (Error_message.EMissingLocalAnnotation
+               { reason; hint_available = true; from_generic_function = false }
+            );
+        AnyT.error reason
     in
     let () =
       match hints with
@@ -1105,8 +1092,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     | DeclaredModule (loc, module_) -> resolve_declare_module cx loc module_
     | NonBindingParam -> (AnyT.at (Unsound NonBindingParameter) id_loc, unknown_use)
-    | MissingThisAnnot when Context.lti cx -> (AnyT.at (AnyError None) id_loc, unknown_use)
-    | MissingThisAnnot -> (Tvar.mk cx def_reason, unknown_use)
+    | MissingThisAnnot -> (AnyT.at (AnyError None) id_loc, unknown_use)
   in
   let update_reason =
     match def with
@@ -1312,12 +1298,11 @@ let resolve_component_type_params cx graph component =
     | _ -> ()
   in
   let resolve_element = function
-    | Illegal { payload = key; _ } when Context.lti cx ->
+    | Illegal { payload = key; _ } ->
       let (_kind, loc) = key in
       resolve_illegal loc (EnvMap.find key graph)
     | Name_def_ordering.Normal key
-    | Resolvable key
-    | Illegal { payload = key; _ } ->
+    | Resolvable key ->
       (match EnvMap.find key graph with
       | (TypeParam _, _, _, _)
       | (Class _, _, _, _) ->
@@ -1326,7 +1311,7 @@ let resolve_component_type_params cx graph component =
       | _ -> ())
   in
   match component with
-  | IllegalSCC elts when Context.lti cx ->
+  | IllegalSCC elts ->
     Nel.iter
       (fun ( {
                payload =
@@ -1338,14 +1323,10 @@ let resolve_component_type_params cx graph component =
       elts
   | Singleton elt -> resolve_element elt
   | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
-  | IllegalSCC elts -> Nel.iter (fun ({ payload = elt; _ }, _) -> resolve_element elt) elts
 
 let resolve_component cx graph component =
   let open Name_def_ordering in
-  if Context.lti cx then begin
-    let cache = Context.constraint_cache cx in
-    cache := FlowSet.empty
-  end;
+  Context.constraint_cache cx := FlowSet.empty;
   let resolve_illegal entries =
     EnvSet.iter
       (fun (kind, loc) ->
@@ -1359,10 +1340,9 @@ let resolve_component cx graph component =
       entries
   in
   let resolve_element = function
-    | Illegal { payload; _ } when Context.lti cx -> resolve_illegal (entries_of_def graph payload)
+    | Illegal { payload; _ } -> resolve_illegal (entries_of_def graph payload)
     | Name_def_ordering.Normal (kind, loc)
-    | Resolvable (kind, loc)
-    | Illegal { payload = (kind, loc); _ } ->
+    | Resolvable (kind, loc) ->
       Abnormal.try_with_abnormal_exn
         ~f:(fun () -> resolve cx (kind, loc) (EnvMap.find (kind, loc) graph))
           (* When there is an unhandled exception, it means that the initialization of the env slot
@@ -1374,23 +1354,19 @@ let resolve_component cx graph component =
     cx
     (lazy [Utils_js.spf "Resolving component %s" (string_of_component graph component)]);
   let entries_for_resolution =
-    if Context.lti cx then begin
-      let entries = entries_of_component graph component in
-      let ({ Loc_env.readable; _ } as env) = Context.environment cx in
-      Context.set_environment
-        cx
-        { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries };
-      entries
-    end else
-      EnvSet.empty
+    let entries = entries_of_component graph component in
+    let ({ Loc_env.readable; _ } as env) = Context.environment cx in
+    Context.set_environment
+      cx
+      { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries };
+    entries
   in
   resolve_component_type_params cx graph component;
   let () =
     match component with
-    | IllegalSCC _ when Context.lti cx -> resolve_illegal entries_for_resolution
+    | IllegalSCC _ -> resolve_illegal entries_for_resolution
     | Singleton elt -> resolve_element elt
     | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
-    | IllegalSCC elts -> Nel.iter (fun ({ payload; _ }, _) -> resolve_element payload) elts
   in
   let env = Context.environment cx in
   EnvSet.iter

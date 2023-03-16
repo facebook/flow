@@ -4067,23 +4067,21 @@ module Make
         expr
 
       method! call_arguments arg_list =
-        ( if Context.lti cx then
-          let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = arg_list in
-          Base.List.iter arguments ~f:(fun arg ->
-              let ((loc, _) as expr) =
-                match arg with
-                | Ast.Expression.Expression expr -> expr
-                | Ast.Expression.Spread (_, spread) -> spread.Ast.Expression.SpreadElement.argument
+        let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = arg_list in
+        Base.List.iter arguments ~f:(fun arg ->
+            let ((loc, _) as expr) =
+              match arg with
+              | Ast.Expression.Expression expr -> expr
+              | Ast.Expression.Spread (_, spread) -> spread.Ast.Expression.SpreadElement.argument
+            in
+            if not @@ Provider_api.is_array_provider provider_info loc then
+              let write_entries =
+                EnvMap.add
+                  (Env_api.ExpressionLoc, loc)
+                  (Env_api.AssigningWrite (Reason.mk_expression_reason expr))
+                  env_state.write_entries
               in
-              if not @@ Provider_api.is_array_provider provider_info loc then
-                let write_entries =
-                  EnvMap.add
-                    (Env_api.ExpressionLoc, loc)
-                    (Env_api.AssigningWrite (Reason.mk_expression_reason expr))
-                    env_state.write_entries
-                in
-                env_state <- { env_state with write_entries }
-          )
+              env_state <- { env_state with write_entries }
         );
         super#call_arguments arg_list
 

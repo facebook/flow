@@ -122,11 +122,8 @@ module Make
           let get_autocomplete_t () =
             Tvar.mk_where cx reason (fun tvar -> Flow_js.flow_t cx (obj_t, tvar))
           in
-          if Context.lti cx then
-            let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
-            lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:get_autocomplete_t
-          else
-            get_autocomplete_t ()
+          let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
+          lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:get_autocomplete_t
         else
           obj_t
       | os ->
@@ -192,7 +189,7 @@ module Make
         let use_op = Op (ObjectSpread { op = reason }) in
         let l = Flow.widen_obj_type cx ~use_op reason t in
         Flow.flow cx (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
-        if Context.lti cx && obj_key_autocomplete acc then
+        if obj_key_autocomplete acc then
           let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
           lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> tout)
         else
@@ -2305,28 +2302,24 @@ module Make
     let (has_hint, lazy_hint) = Env.get_hint cx loc in
     let elemt = Tvar.mk cx element_reason in
     (* empty array, analogous to object with implicit properties *)
-    ( if Context.array_literal_providers cx then
-      if not has_hint then begin
-        if Context.lti cx then
-          Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
-      end else if not (Context.lti cx) then
-        ()
-      else
-        match lazy_hint element_reason with
-        | HintAvailable (hint, _) -> Flow.flow_t cx (hint, elemt)
-        | DecompositionError ->
-          (* A hint is available, but cannot be used to provide a type for this
-           * array element. In this case, the element type of the array is likely
-           * useless (does not escape the annotation), so we can use `empty` as
-           * its type. *)
-          Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
-        | NoHint
-        | EncounteredPlaceholder ->
-          (* If there is no hint then raise an error. The EncounteredPlaceholder case
-           * corresponds to code like `const set = new Set([]);`. This case will
-           * raise a [missing-empty-array-annot] error on `[]`. *)
-          Flow.add_output cx (Error_message.EEmptyArrayNoProvider { loc });
-          if Context.lti cx then Flow.flow_t cx (AnyT.at Untyped loc, elemt)
+    ( if not has_hint then
+      Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
+    else
+      match lazy_hint element_reason with
+      | HintAvailable (hint, _) -> Flow.flow_t cx (hint, elemt)
+      | DecompositionError ->
+        (* A hint is available, but cannot be used to provide a type for this
+         * array element. In this case, the element type of the array is likely
+         * useless (does not escape the annotation), so we can use `empty` as
+         * its type. *)
+        Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
+      | NoHint
+      | EncounteredPlaceholder ->
+        (* If there is no hint then raise an error. The EncounteredPlaceholder case
+         * corresponds to code like `const set = new Set([]);`. This case will
+         * raise a [missing-empty-array-annot] error on `[]`. *)
+        Flow.add_output cx (Error_message.EEmptyArrayNoProvider { loc });
+        Flow.flow_t cx (AnyT.at Untyped loc, elemt)
     );
     (reason, elemt)
 
@@ -2344,7 +2337,7 @@ module Make
         node
       | None ->
         let res = expression_ ~cond cx loc e in
-        if Context.lti cx && not (Context.typing_mode cx <> Context.CheckingMode) then begin
+        if not (Context.typing_mode cx <> Context.CheckingMode) then begin
           let cache = Context.constraint_cache cx in
           cache := FlowSet.empty;
           Node_cache.set_expression node_cache res
@@ -2711,10 +2704,8 @@ module Make
       let (t, func) =
         match id with
         | None -> mk_function_expression cx reason ~needs_this_param:true ~general:tvar loc func
-        | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+        | Some _ ->
           let prev_scope_kind = Env.set_scope_kind cx Name_def.Ordinary in
-          let name = OrdinaryName name in
-          Env.bind_fun cx name tvar name_loc;
           let (t, func) =
             mk_function_expression cx reason ~needs_this_param:true ~general:tvar loc func
           in
@@ -4375,15 +4366,14 @@ module Make
         let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
         Tvar.mk_where cx reason (Flow.unify cx t)
     in
-    match (Context.lti cx, Type_inference_hooks_js.dispatch_id_hook cx name loc) with
-    | (true, true) ->
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let (_, lazy_hint) = Env.get_hint cx loc in
       lazy_hint reason
       |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
              EmptyT.at loc |> with_trust bogus_trust
          )
-    | (false, true) -> Tvar.mk cx reason
-    | (_, false) -> get_checking_mode_type ()
+    else
+      get_checking_mode_type ()
 
   and identifier cx { Ast.Identifier.name; comments = _ } loc =
     let t = identifier_ cx name loc in
@@ -4430,15 +4420,14 @@ module Make
         DefT (mk_annot_reason RBigInt loc, make_trust (), BigIntT (Literal (None, (n, lit.raw))))
       | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
     in
-    match (Context.lti cx, Type_inference_hooks_js.dispatch_literal_hook cx loc) with
-    | (true, true) ->
+    if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Env.get_hint cx loc in
       lazy_hint (mk_reason (RCustom "literal") loc)
       |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
              EmptyT.at loc |> with_trust bogus_trust
          )
-    | (false, true) -> Tvar.mk cx (mk_reason (RCustom "literal") loc)
-    | (_, false) -> get_checking_mode_type ()
+    else
+      get_checking_mode_type ()
 
   (* traverse a unary expression, return result type *)
   and unary cx ~cond loc =
@@ -6380,8 +6369,7 @@ module Make
                      from_generic_function = false;
                    }
                 );
-              if Context.lti cx then
-                Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
+              Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
             | _ -> ()
           end;
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
@@ -6401,8 +6389,7 @@ module Make
           (Error_message.EMissingLocalAnnotation
              { reason; hint_available = false; from_generic_function = false }
           );
-        if Context.lti cx then
-          Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
+        Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
       | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
@@ -6938,7 +6925,6 @@ module Make
         Env.bind_class_instance_super cx super class_loc;
         Env.bind_class_static_super cx static_super class_loc;
         let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
-        Env.bind_class_self_type cx class_loc class_t_internal;
         ( class_t,
           class_t_internal,
           class_sig,
@@ -7086,8 +7072,7 @@ module Make
           (Error_message.EMissingLocalAnnotation
              { reason; hint_available = false; from_generic_function = false }
           );
-        if Context.lti cx then
-          Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
+        Flow_js.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
       | _ -> ()
     in
     let mk_params cx tparams_map params =
@@ -7217,8 +7202,7 @@ module Make
                 (Error_message.EMissingLocalAnnotation
                    { reason; hint_available = false; from_generic_function }
                 );
-              if Context.lti cx then
-                Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
+              Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
             | _ -> ()
           end;
           return

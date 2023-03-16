@@ -149,14 +149,6 @@ type component_t = {
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
-  mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
-  mutable implicit_instantiation_results: (Type.t * Subst_name.t) list ALocFuzzyMap.t;
-  (* This are only used for the implicit instantiation codemod. Right before we run the post-
-   * inference pass to get the error locations we change the implicit_instantiation_results map
-   * into tys and set this field. We do this in order to avoid accidentally resolving types in the
-   * results via the tvar resolver. We really want to get these types fully free from any pollution
-   * that might happen during the post-pass. *)
-  mutable implicit_instantiation_ty_results: (Ty.t option * Subst_name.t) list ALocFuzzyMap.t;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
   mutable global_value_cache:
     (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result NameUtils.Map.t;
@@ -334,9 +326,6 @@ let make_ccx master_cx =
     exists_checks = ALocMap.empty;
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
-    implicit_instantiation_checks = [];
-    implicit_instantiation_results = ALocFuzzyMap.empty;
-    implicit_instantiation_ty_results = ALocFuzzyMap.empty;
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -436,8 +425,6 @@ let relay_integration_module_prefix cx =
     (file cx)
     cx.metadata.relay_integration_module_prefix
 
-let lti _ = true
-
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
 let errors cx = cx.ccx.errors
@@ -451,12 +438,6 @@ let goals cx = cx.ccx.goal_map
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let conditional_type cx = cx.metadata.conditional_type
-
-let cycle_errors = lti
-
-let run_post_inference_implicit_instantiation _ = false
-
-let enable_post_inference_targ_widened_check _ = false
 
 let aloc_tables cx = cx.ccx.aloc_tables
 
@@ -485,12 +466,6 @@ let graph cx = cx.ccx.sig_cx.graph
 let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
 
 let in_implicit_instantiation cx = cx.ccx.in_implicit_instantiation
-
-let in_lti_implicit_instantiation cx =
-  match (cx.phase, lti cx) with
-  | (_, true) -> in_implicit_instantiation cx
-  | (PostInference, _) -> in_implicit_instantiation cx
-  | _ -> false
 
 let is_checked cx = cx.metadata.checked
 
@@ -580,8 +555,6 @@ let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
 
-let array_literal_providers = lti
-
 let jsx cx = cx.metadata.jsx
 
 let exists_checks cx = cx.ccx.exists_checks
@@ -589,12 +562,6 @@ let exists_checks cx = cx.ccx.exists_checks
 let exists_excuses cx = cx.ccx.exists_excuses
 
 let voidable_checks cx = cx.ccx.voidable_checks
-
-let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
-
-let implicit_instantiation_results cx = cx.ccx.implicit_instantiation_results
-
-let implicit_instantiation_ty_results cx = cx.ccx.implicit_instantiation_ty_results
 
 let environment cx = cx.environment
 
@@ -696,37 +663,6 @@ let add_env_cache_entry cx ~for_value id t =
 
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
-
-let set_implicit_instantiation_ty_results cx results =
-  cx.ccx.implicit_instantiation_ty_results <- results
-
-let add_implicit_instantiation_result cx loc result =
-  if cx.phase <> PostInference then
-    cx.ccx.implicit_instantiation_results <-
-      ALocFuzzyMap.add loc result cx.ccx.implicit_instantiation_results
-
-let add_implicit_instantiation_check cx check =
-  cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
-
-let add_possibly_speculating_implicit_instantiation_result _cx _loc _result = ()
-(*TODO: remove *)
-
-let add_possibly_speculating_implicit_instantiation_check cx check =
-  let open Speculation_state in
-  let speculation_state = cx.ccx.speculation_state in
-  match !speculation_state with
-  | [] -> add_implicit_instantiation_check cx check
-  | { case; _ } :: _ ->
-    case.implicit_instantiation_post_inference_checks <-
-      check :: case.implicit_instantiation_post_inference_checks
-
-let add_implicit_instantiation_call _cx _lhs _poly_t _use_op _reason _funcalltype = ()
-
-let add_implicit_instantiation_ctor _cx _lhs _poly_t _use_op _reason_op _targs _args = ()
-
-let add_implicit_instantiation_jsx
-    _cx _lhs _poly_t _use_op _reason_op _clone ~component:_ ~config:_ ~targs:_ _children =
-  ()
 
 let add_missing_local_annot_lower_bound cx loc t =
   let missing_local_annot_lower_bounds = cx.ccx.missing_local_annot_lower_bounds in

@@ -5,49 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
-
-module PierceImplicitInstantiation : Implicit_instantiation.S with type output = Type.t =
-  Implicit_instantiation.Make
-    (struct
-      type output = Type.t
-
-      let on_pinned_tparam _ _ inferred = inferred
-
-      let on_constant_tparam_missing_bounds _ tparam =
-        match tparam.Type.default with
-        | None -> tparam.Type.bound
-        | Some t -> t
-
-      let on_missing_bounds cx ~use_op tparam ~tparam_binder_reason ~instantiation_reason =
-        if tparam.Type.default = None then
-          Flow_js.add_output
-            cx
-            (Error_message.EImplicitInstantiationUnderconstrainedError
-               {
-                 bound = Subst_name.string_of_subst_name tparam.Type.name;
-                 reason_call = instantiation_reason;
-                 reason_tparam = tparam_binder_reason;
-                 use_op;
-               }
-            );
-        Type.AnyT.error tparam_binder_reason
-
-      let on_upper_non_t cx ~use_op _u tparam ~tparam_binder_reason ~instantiation_reason =
-        Flow_js_utils.add_output
-          cx
-          (Error_message.EImplicitInstantiationUnderconstrainedError
-             {
-               bound = Subst_name.string_of_subst_name tparam.Type.name;
-               reason_call = instantiation_reason;
-               reason_tparam = tparam_binder_reason;
-               use_op;
-             }
-          );
-        Type.AnyT.error tparam_binder_reason
-    end)
-    (Flow_js.FlowJs)
-
 let create_cx_with_context_optimizer init_cx master_cx ~reducer ~f =
   let file = Context.file init_cx in
   let metadata = Context.metadata init_cx in
@@ -371,137 +328,6 @@ class resolver_visitor =
         Context.make_call_prop cx t'
   end
 
-(* It's unfortunate that this function and prepare_implicit_instantiation_checks are here,
- * but ocamlbuild erroneously detects a cycle when using the context optimizer in
- * implicit_instantiation.ml. dune does not detect that cycle, and neither does buck.
- *)
-let reduce_implicit_instantiation_check cx check =
-  let open Implicit_instantiation_check in
-  let no_lowers r = Type.(AnyT.make Untyped r) in
-  let { lhs; poly_t = (loc, tparams, t); operation = (use_op, reason_op, op) } = check in
-  (* The tvars get resolved either way.
-     Erroring on unresolved tvars is undesirable for the post-inference pass *)
-  let lhs' = Tvar_resolver.resolved_t ~no_lowers cx lhs in
-  let tparams' = Nel.ident_map (Tvar_resolver.resolved_typeparam ~no_lowers cx) tparams in
-  let t' = Tvar_resolver.resolved_t ~no_lowers cx t in
-  let op' =
-    match op with
-    | Call calltype -> Call (Tvar_resolver.resolved_fun_call_type ~no_lowers cx calltype)
-    | Constructor (targs, args) ->
-      let targs = Tvar_resolver.resolved_type_args ~no_lowers cx targs in
-      let args = ListUtils.ident_map (Tvar_resolver.resolved_call_arg ~no_lowers cx) args in
-      Constructor (targs, args)
-    | Jsx { clone; component; config; targs; children = (children, children_spread) } ->
-      let reduce_t = Tvar_resolver.resolved_t ~no_lowers cx in
-      let children = (ListUtils.ident_map reduce_t children, Option.map reduce_t children_spread) in
-      let targs = Tvar_resolver.resolved_type_args ~no_lowers cx targs in
-      Jsx { clone; component = reduce_t component; config = reduce_t config; targs; children }
-  in
-  { lhs = lhs'; poly_t = (loc, tparams', t'); operation = (use_op, reason_op, op') }
-
-let prepare_implicit_instantiation_checks ~cx implicit_instantiation_checks =
-  let implicit_instantiation_checks =
-    Base.List.map ~f:(reduce_implicit_instantiation_check cx) implicit_instantiation_checks
-  in
-  implicit_instantiation_checks
-
-let check_implicit_instantiations cx typed_ast file_sig =
-  let () =
-    let file = Context.file cx in
-    let ty_normalizer_options = Ty_normalizer_env.default_codemod_options in
-    let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
-    let implicit_instantiation_ty_results =
-      Loc_collections.ALocFuzzyMap.mapi
-        (fun loc result ->
-          let tparams_rev =
-            Base.Option.value
-              ~default:[]
-              (Typed_ast_utils.find_tparams_rev_at_location typed_ast loc)
-          in
-          List.map
-            (fun (t, name) ->
-              let scheme = { Type.TypeScheme.type_ = t; tparams_rev } in
-              ( (match Ty_normalizer.from_scheme ~options:ty_normalizer_options ~genv scheme with
-                | Ok elt -> Ty_utils.typify_elt elt
-                | Error _ -> None),
-                name
-              ))
-            result)
-        (Context.implicit_instantiation_results cx)
-    in
-    Context.set_implicit_instantiation_ty_results cx implicit_instantiation_ty_results
-  in
-  Context.run_in_post_inference_mode cx (fun () ->
-      if Context.run_post_inference_implicit_instantiation cx then (
-        let implicit_instantiation_checks = Context.implicit_instantiation_checks cx in
-        let implicit_instantiation_checks =
-          prepare_implicit_instantiation_checks ~cx implicit_instantiation_checks
-        in
-        let saved_errors = Context.errors cx in
-        Context.reset_errors cx Flow_error.ErrorSet.empty;
-        let run_enable_post_inference_targ_widened_check cx check output_map =
-          let {
-            Implicit_instantiation_check.poly_t = (_, tparams, _);
-            operation = (_, reason_op, _);
-            _;
-          } =
-            check
-          in
-          let pierce_solution =
-            tparams
-            |> Nel.to_list
-            |> Base.List.map ~f:(fun tparam -> Subst_name.Map.find_opt tparam.Type.name output_map)
-            |> Base.Option.all
-          in
-          let inferred_solution =
-            Context.implicit_instantiation_results cx
-            |> ALocFuzzyMap.find_opt (Reason.aloc_of_reason reason_op)
-          in
-          match Base.Option.both inferred_solution pierce_solution with
-          | Some (inferred_solution, pierce_solution)
-            when List.length inferred_solution = List.length pierce_solution ->
-            Base.List.iter2_exn inferred_solution pierce_solution ~f:(fun (t1, name) t2 ->
-                let errors_before = Context.errors cx in
-                Tvar_resolver.resolve cx t1;
-                Tvar_resolver.resolve cx t2;
-                Flow_js.unify cx t1 t2;
-                if Context.errors cx != errors_before then
-                  Flow_js_utils.add_output
-                    cx
-                    Error_message.(
-                      EImplicitInstantiationWidenedError
-                        { reason_call = reason_op; bound = Subst_name.string_of_subst_name name }
-                    )
-            )
-          | Some _ -> ()
-          | None -> ()
-        in
-        Context.run_in_implicit_instantiation_mode cx (fun () ->
-            PierceImplicitInstantiation.fold
-              ~implicit_instantiation_cx:cx
-              ~cx
-              ~init:()
-              ~f:(fun cx _ check output_map ->
-                if Context.enable_post_inference_targ_widened_check cx then
-                  run_enable_post_inference_targ_widened_check cx check output_map)
-              ~post:(fun ~cx ~implicit_instantiation_cx:_ ->
-                let new_errors = Context.errors cx in
-                Context.reset_errors cx saved_errors;
-                Flow_error.ErrorSet.iter
-                  (fun error ->
-                    Error_message.(
-                      match Flow_error.msg_of_error error with
-                      | EImplicitInstantiationUnderconstrainedError _
-                      | EImplicitInstantiationWidenedError _ ->
-                        Context.add_error cx error
-                      | _ -> ()
-                    ))
-                  new_errors)
-              implicit_instantiation_checks
-        )
-      )
-  )
-
 let detect_matching_props_violations init_cx master_cx =
   let open Type in
   let peek =
@@ -621,7 +447,7 @@ let detect_literal_subtypes =
         Flow_js.flow cx (l, UseT (Op (Internal Refinement), u_def)))
       checks
 
-let check_constrained_writes init_cx master_cx =
+let check_constrained_writes init_cx =
   let prepare_checks ~resolve_t checks =
     Base.List.map
       ~f:(fun (t, use_op, u_def) ->
@@ -665,39 +491,8 @@ let check_constrained_writes init_cx master_cx =
 
   let checks = Context.constrained_writes init_cx in
   if not @@ Base.List.is_empty checks then (
-    let (cx, checks) =
-      if Context.lti init_cx then
-        (init_cx, prepare_checks ~resolve_t:(fun t -> t) checks)
-      else
-        let reducer =
-          let mk_reason =
-            let open Reason in
-            let open Utils_js in
-            update_desc_reason (function
-                | RIdentifier (OrdinaryName name) ->
-                  RCustom (spf "variable `%s` of unknown type" name)
-                | RParameter (Some name)
-                | RRestParameter (Some name) ->
-                  RUnknownParameter name
-                | RTypeParam (name, _, _) ->
-                  RCustom
-                    (spf
-                       "unknown implicit instantiation of `%s`"
-                       (Subst_name.string_of_subst_name name)
-                    )
-                | desc -> desc
-                )
-          in
-          new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
-              Type.EmptyT.make (mk_reason r) (Type.bogus_trust ())
-          )
-        in
-        create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
-            prepare_checks ~resolve_t:(reducer#type_ init_cx Polarity.Neutral) checks
-        )
-    in
+    let (cx, checks) = (init_cx, prepare_checks ~resolve_t:(fun t -> t) checks) in
     Base.List.iter ~f:(Flow_js.flow cx) checks;
-
     let new_errors = Context.errors cx in
     Flow_error.ErrorSet.iter (Context.add_error init_cx) new_errors
   )
@@ -719,12 +514,11 @@ let get_lint_severities metadata strict_mode lint_severities =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx master_cx ast tast metadata file_sig =
+let post_merge_checks cx master_cx ast tast metadata =
   let results = [(cx, ast, tast)] in
-  check_constrained_writes cx master_cx;
+  check_constrained_writes cx;
   detect_sketchy_null_checks cx master_cx;
   detect_non_voidable_properties cx;
-  check_implicit_instantiations cx tast file_sig;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;

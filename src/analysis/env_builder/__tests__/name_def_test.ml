@@ -26,8 +26,6 @@ module Context = struct
 
   let react_runtime _cx = !react_runtime
 
-  let lti _cx = true
-
   let enable_const_params _cx = false
 
   let add_literal_subtypes _ _ = ()

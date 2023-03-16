@@ -47,36 +47,6 @@ module FlowConstraint = struct
       found
 end
 
-(* Cache that limits instantiation of polymorphic definitions. Intuitively,
-   for each operation on a polymorphic definition, we remember the type
-   arguments we use to specialize the type parameters. An operation is
-   identified by its reason, and possibly the reasons of its arguments. We
-   don't use the entire operation for caching since it may contain the very
-   type variables we are trying to limit the creation of with the cache (e.g.,
-   those representing the result): the cache would be useless if we considered
-   those type variables as part of the identity of the operation. *)
-module PolyInstantiation = struct
-  let find cx reason_tapp typeparam op_reason =
-    if Context.lti cx then
-      ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp
-    else
-      let cache = Context.instantiation_cache cx in
-      match
-        Reason.ImplicitInstantiationReasonMap.find_opt
-          (reason_tapp, typeparam.reason, op_reason)
-          !cache
-      with
-      | Some t -> t
-      | None ->
-        let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
-        cache :=
-          Reason.ImplicitInstantiationReasonMap.add
-            (reason_tapp, typeparam.reason, op_reason)
-            t
-            !cache;
-        t
-end
-
 module Eval = struct
   let id cx t defer_use =
     let (eval_id_cache, id_cache) = Context.eval_id_cache cx in

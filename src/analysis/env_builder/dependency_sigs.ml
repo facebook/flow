@@ -18,8 +18,6 @@ module type C = sig
 
   val enable_const_params : t -> bool
 
-  val lti : t -> bool
-
   val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
 
   val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit

@@ -829,12 +829,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
    * since before beginning speculation we replaced each use_op with
    * an UnknownUse. *)
   and fire_actions cx trace spec case speculation_id =
-    List.iter
-      (fun check -> Context.add_implicit_instantiation_check cx check)
-      case.Speculation_state.implicit_instantiation_post_inference_checks;
-    ALocFuzzyMap.iter
-      (fun loc targs -> Context.add_implicit_instantiation_result cx loc targs)
-      case.Speculation_state.implicit_instantiation_results;
     log_synthesis_result cx trace case speculation_id;
 
     case.Speculation_state.actions

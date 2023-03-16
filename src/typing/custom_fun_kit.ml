@@ -109,12 +109,9 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       let tvar = (reason_op, Tvar.mk_no_wrap cx reason_op) in
       run_compose cx trace ~use_op reason_op reverse args spread_arg tin tvar;
       let tin =
-        if Context.lti cx then (
-          let tin' = (reason_op, Tvar.mk_no_wrap cx reason_op) in
-          unify cx (OpenT tin') (PinTypes.pin_type cx ~use_op:unknown_use reason_op (OpenT tin));
-          tin'
-        ) else
-          tin
+        let tin' = (reason_op, Tvar.mk_no_wrap cx reason_op) in
+        unify cx (OpenT tin') (PinTypes.pin_type cx ~use_op:unknown_use reason_op (OpenT tin));
+        tin'
       in
       let funt =
         FunT

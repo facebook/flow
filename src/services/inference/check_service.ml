@@ -477,5 +477,5 @@ let mk_check_file
     Type_inference_js.add_require_tvars cx file_sig;
     List.iter (connect_require cx) requires;
     let typed_ast = Type_inference_js.infer_ast cx file_key comments ast ~lint_severities in
-    Merge_js.post_merge_checks cx master_cx ast typed_ast metadata file_sig;
+    Merge_js.post_merge_checks cx master_cx ast typed_ast metadata;
     (cx, typed_ast)

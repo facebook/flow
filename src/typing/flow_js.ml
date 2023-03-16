@@ -230,12 +230,12 @@ struct
     let cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t =
       match cache with
       | None -> t
-      | Some rs ->
+      | Some _ ->
         (match desc_of_reason reason_tapp with
         (* This reason description cannot be trusted for caching purposes. *)
         | RTypeAppImplicit _ -> t
         | _ ->
-          let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
+          let t_ = ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp in
           FlowJs.rec_unify cx trace ~use_op ~unify_any:true t t_;
           t_)
 
@@ -5924,7 +5924,7 @@ struct
      * we do it only in implicit instantiation to ensure that we do not get
      * spurious underconstrained errors when objects contain type arguments
      * that get any as a lower bound *)
-    if Context.in_lti_implicit_instantiation cx then
+    if Context.in_implicit_instantiation cx then
       reachable_targs
       |> List.iter (fun (t, p) ->
              match p with
@@ -5979,7 +5979,7 @@ struct
         has_unknown_react_mixins = _;
         inst_kind;
       } =
-    if Context.in_lti_implicit_instantiation cx then (
+    if Context.in_implicit_instantiation cx then (
       any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow type_args;
       match inst_kind with
       | InterfaceKind { inline = true } ->

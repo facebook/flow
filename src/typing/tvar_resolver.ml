@@ -127,12 +127,9 @@ class resolver ~no_lowers =
   end
 
 let run_conditionally cx f =
-  match (Context.lti cx, Context.current_phase cx) with
-  | (_, Context.InitLib) -> ()
-  | (true, _)
-  | (_, Context.PostInference) ->
-    ignore @@ f ()
-  | _ -> ()
+  match Context.current_phase cx with
+  | Context.InitLib -> ()
+  | _ -> ignore @@ f ()
 
 let resolve ?(no_lowers = default_no_lowers) cx t =
   run_conditionally cx (fun () ->

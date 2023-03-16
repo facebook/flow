@@ -147,8 +147,6 @@ val enable_relay_integration : t -> bool
 
 val relay_integration_module_prefix : t -> string option
 
-val lti : t -> bool
-
 val enforce_strict_call_arity : t -> bool
 
 val errors : t -> Flow_error.ErrorSet.t
@@ -161,15 +159,7 @@ val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
 
-val array_literal_providers : t -> bool
-
 val conditional_type : t -> bool
-
-val cycle_errors : t -> bool
-
-val run_post_inference_implicit_instantiation : t -> bool
-
-val enable_post_inference_targ_widened_check : t -> bool
 
 val file : t -> File_key.t
 
@@ -192,8 +182,6 @@ val graph : t -> Type.Constraint.node IMap.t
 val trust_graph : t -> Trust_constraint.node IMap.t
 
 val in_implicit_instantiation : t -> bool
-
-val in_lti_implicit_instantiation : t -> bool
 
 val is_checked : t -> bool
 
@@ -275,12 +263,6 @@ val exists_excuses : t -> ExistsCheck.t ALocMap.t
 
 val voidable_checks : t -> voidable_check list
 
-val implicit_instantiation_checks : t -> Implicit_instantiation_check.t list
-
-val implicit_instantiation_results : t -> (Type.t * Subst_name.t) list ALocFuzzyMap.t
-
-val implicit_instantiation_ty_results : t -> (Ty.t option * Subst_name.t) list ALocFuzzyMap.t
-
 val environment : t -> Loc_env.t
 
 val typing_mode : t -> typing_mode
@@ -338,51 +320,6 @@ val add_constrained_write : t -> Type.t * Type.use_op * Type.t -> unit
 val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
-
-val add_implicit_instantiation_result : t -> ALoc.t -> (Type.t * Subst_name.t) list -> unit
-
-val add_possibly_speculating_implicit_instantiation_result :
-  t -> ALoc.t -> (Type.t * Subst_name.t) list -> unit
-
-val add_implicit_instantiation_check : t -> Implicit_instantiation_check.t -> unit
-
-val add_possibly_speculating_implicit_instantiation_check :
-  t -> Implicit_instantiation_check.t -> unit
-
-val add_implicit_instantiation_call :
-  t ->
-  Type.t ->
-  Implicit_instantiation_check.poly_t ->
-  Type.use_op ->
-  Reason.t ->
-  Type.funcalltype ->
-  unit
-
-val add_implicit_instantiation_ctor :
-  t ->
-  Type.t ->
-  Implicit_instantiation_check.poly_t ->
-  Type.use_op ->
-  Reason.t ->
-  Type.targ list option ->
-  Type.call_arg list ->
-  unit
-
-val add_implicit_instantiation_jsx :
-  t ->
-  Type.t ->
-  Implicit_instantiation_check.poly_t ->
-  Type.use_op ->
-  Reason.t ->
-  bool ->
-  component:Type.t ->
-  config:Type.t ->
-  targs:Type.targ list option ->
-  Type.t list * Type.t option ->
-  unit
-
-val set_implicit_instantiation_ty_results :
-  t -> (Ty.t option * Subst_name.t) list ALocFuzzyMap.t -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 
