@@ -1,0 +1,77 @@
+
+=== Codemod annotate-exports ===
+
+>>> ./file.js
+// @flow
+
+import type { Bar } from "./export.graphql";import type {Foo as LocalFoo} from './export.graphql';
+import {foo, bar} from './export.graphql';
+
+/* TODO should annotate x with `LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]` or equivalent type.
+ * Currently the annotated type is missing the `?`. This seems to be a problem with the
+ * inferred/normalized type -- not the graphql transform. */
+export const x: $NonMaybeType<LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]> = foo()?.f?.g?.h?.[0]?.i;
+
+/* should annotate x with `$IMPORTED_TYPE$_Bar["f"]["g"]["h"][0]["i"]` */
+export const y: Bar["f"]["g"]["h"][0]["i"] = bar().f.g.h[0].i;
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              2
+  Total size of annotations:                2
+  Number of sig. ver. errors:               2
+  Number of annotations required:           2
+  Number of annotations skipped:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
+
+=== Autofix exports ===
+
+>>> ./file.js
+// @flow
+
+import type {Foo as LocalFoo} from './export.graphql';
+import {foo, bar} from './export.graphql';
+
+/* TODO should annotate x with `LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]` or equivalent type.
+ * Currently the annotated type is missing the `?`. This seems to be a problem with the
+ * inferred/normalized type -- not the graphql transform. */
+export const x: { ... } = foo()?.f?.g?.h?.[0]?.i;
+
+/* should annotate x with `$IMPORTED_TYPE$_Bar["f"]["g"]["h"][0]["i"]` */
+export const y: { ... } = bar().f.g.h[0].i;
+
+
+=== Diff between codemod-ed & autofix-ed ===
+>>> ./file.js
+3c3
+< import type { Bar } from "./export.graphql";import type {Foo as LocalFoo} from './export.graphql';
+---
+> import type {Foo as LocalFoo} from './export.graphql';
+9c9
+< export const x: $NonMaybeType<LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]> = foo()?.f?.g?.h?.[0]?.i;
+---
+> export const x: { ... } = foo()?.f?.g?.h?.[0]?.i;
+12c12
+< export const y: Bar["f"]["g"]["h"][0]["i"] = bar().f.g.h[0].i;
+---
+> export const y: { ... } = bar().f.g.h[0].i;
+
