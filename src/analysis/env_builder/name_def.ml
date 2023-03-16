@@ -1275,6 +1275,9 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
     method! function_type loc ft =
       this#in_new_tparams_env ~keep:true (fun () -> super#function_type loc ft)
 
+    method! object_mapped_type_property mt =
+      this#in_new_tparams_env ~keep:true (fun () -> super#object_mapped_type_property mt)
+
     method! function_ _ expr =
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () -> this#visit_function ~scope_kind ~func_hints:[] expr);
