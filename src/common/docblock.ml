@@ -28,18 +28,10 @@ type t = {
   providesModule: string option;
   jsx: jsx_pragma option;
   jsxRuntime: jsx_runtime_pragma option;
-  lti: bool;
 }
 
 let default_info =
-  {
-    flow = None;
-    preventMunge = false;
-    providesModule = None;
-    jsx = None;
-    jsxRuntime = None;
-    lti = false;
-  }
+  { flow = None; preventMunge = false; providesModule = None; jsx = None; jsxRuntime = None }
 
 (* accessors *)
 let flow info = info.flow
@@ -51,8 +43,6 @@ let providesModule info = info.providesModule
 let jsx info = info.jsx
 
 let jsx_runtime info = info.jsxRuntime
-
-let lti info = info.lti
 
 let is_strict info =
   match info.flow with

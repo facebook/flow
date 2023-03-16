@@ -87,9 +87,6 @@ let extract_docblock =
       | (_, "@preventMunge") :: xs ->
         (* dupes are ok since they can only be truthy *)
         parse_attributes (errors, { info with preventMunge = true }) xs
-      | (_, lti_pragma) :: xs when lti_pragma = "@lti_@" ^ "nocommit" ->
-        (* dupes are ok since they can only be truthy *)
-        parse_attributes (errors, { info with lti = true }) xs
       | [(jsx_loc, "@jsx")] -> ((jsx_loc, InvalidJSXAttribute None) :: errors, info)
       | (jsx_loc, "@jsx") :: (expr_loc, expr) :: xs ->
         let acc =
