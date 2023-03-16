@@ -227,5 +227,23 @@ References:
                     [9]
 
 
+Error ------------------------------------------------------------------------------------------------------- a.js:178:7
 
-Found 10 errors
+Cannot compute a type for `x` because its definition includes references to itself [1]. Please add an annotation to this
+definition [2] [recursive-definition]
+
+   a.js:178:7
+   178|   let x = function() {
+              ^
+
+References:
+   a.js:179:12
+   179|     return x;
+                   ^ [1]
+   a.js:178:21
+   178|   let x = function() {
+                             [2]
+
+
+
+Found 11 errors

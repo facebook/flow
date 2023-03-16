@@ -1,6 +1,0 @@
-[options]
-all=true
-exact_by_default=false
-inference_mode=constrain_writes
-experimental.array_literal_providers.includes=<PROJECT_ROOT>/include.js
-no_flowlib=false

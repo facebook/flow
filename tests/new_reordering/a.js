@@ -173,3 +173,9 @@ import * as React from 'react';
   F.A = (): number => 42;
   F.B = (): number => F.A();
 }
+
+{
+  let x = function() {
+    return x;
+  }
+}

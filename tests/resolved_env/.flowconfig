@@ -1,6 +1,5 @@
 [options]
 all=true
 exact_by_default=false
-experimental.cycle_errors=true
 enums=true
 no_flowlib=false

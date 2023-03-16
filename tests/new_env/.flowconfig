@@ -1,5 +1,4 @@
 [options]
 all=true
 exact_by_default=false
-experimental.array_literal_providers=true
 no_flowlib=false

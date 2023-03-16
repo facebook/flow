@@ -1,5 +1,0 @@
-[options]
-all=true
-exact_by_default=false
-inference_mode=constrain_writes
-experimental.cycle_errors.includes=<PROJECT_ROOT>/include.js
