@@ -30,6 +30,7 @@ type trigger =
   | SignatureHelp of Lsp.lsp_id
   | TypeCoverage of Lsp.lsp_id
   | ExecuteCommand of Lsp.lsp_id
+  | WillRenameFiles of Lsp.lsp_id
   | AutoCloseJsx of Lsp.lsp_id
   | LinkedEditingRange of Lsp.lsp_id
   | UnknownTrigger

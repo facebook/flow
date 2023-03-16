@@ -34,6 +34,7 @@ type trigger =
   | SignatureHelp of Lsp.lsp_id
   | TypeCoverage of Lsp.lsp_id
   | ExecuteCommand of Lsp.lsp_id
+  | WillRenameFiles of Lsp.lsp_id
   | AutoCloseJsx of Lsp.lsp_id
   | LinkedEditingRange of Lsp.lsp_id
   | UnknownTrigger
@@ -102,6 +103,7 @@ let string_of_trigger = function
   | SignatureHelp _ -> "SignatureHelp"
   | TypeCoverage _ -> "TypeCoverage"
   | ExecuteCommand _ -> "ExecuteCommand"
+  | WillRenameFiles _ -> "willRenameFiles"
   | AutoCloseJsx _ -> "AutoCloseJsx"
   | LinkedEditingRange _ -> "LinkedEditingRange"
   | UnknownTrigger -> "UnknownTrigger"
@@ -121,6 +123,7 @@ let lsp_id_of_trigger = function
   | TypeCoverage lsp_id
   | ExecuteCommand lsp_id
   | AutoCloseJsx lsp_id
+  | WillRenameFiles lsp_id
   | LinkedEditingRange lsp_id ->
     Some lsp_id
   | DidChange
@@ -178,6 +181,7 @@ let source_of_trigger = function
   | TypeCoverage _
   | ExecuteCommand _
   | AutoCloseJsx _
+  | WillRenameFiles _
   | LinkedEditingRange _ ->
     Client
   | PushedErrorsEndOfRecheck
@@ -338,6 +342,7 @@ let trigger_of_lsp_msg =
   | RequestMessage (lsp_id, SelectionRangeRequest _) -> Some (SelectionRange lsp_id)
   | RequestMessage (lsp_id, SignatureHelpRequest _) -> Some (SignatureHelp lsp_id)
   | RequestMessage (lsp_id, ExecuteCommandRequest _) -> Some (ExecuteCommand lsp_id)
+  | RequestMessage (lsp_id, WillRenameFilesRequest _) -> Some (WillRenameFiles lsp_id)
   | RequestMessage (lsp_id, AutoCloseJsxRequest _) -> Some (AutoCloseJsx lsp_id)
   | RequestMessage (lsp_id, LinkedEditingRangeRequest _) -> Some (LinkedEditingRange lsp_id)
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
@@ -392,6 +397,7 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, ErrorResult _)
   | ResponseMessage (_, CodeActionResult _)
   | ResponseMessage (_, AutoCloseJsxResult _)
+  | ResponseMessage (_, WillRenameFilesResult _)
   | ResponseMessage (_, LinkedEditingRangeResult _) ->
     None
   (* Only a few notifications can trigger an interaction *)

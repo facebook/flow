@@ -1396,6 +1396,52 @@ module TextDocumentSyncOptionsFmt = struct
       ]
 end
 
+module FileOperationOptionsFmt = struct
+  open FileOperationOptions
+
+  let json_of_file_operation_server_filter_capabilities filter =
+    Jprint.object_opt
+      [
+        ( "pattern",
+          Some
+            (JSON_Object
+               [
+                 ("glob", JSON_String filter.pattern.glob);
+                 ( "matches",
+                   JSON_String
+                     (match filter.pattern.matches with
+                     | FileOperationOptions.File -> "file"
+                     | FileOperationOptions.Folder -> "folder")
+                 );
+                 ( "options",
+                   JSON_Object [("ignoreCase", JSON_Bool filter.pattern.options.ignoreCase)]
+                 );
+               ]
+            )
+        );
+        ("scheme", Base.Option.map ~f:(fun s -> JSON_String s) filter.scheme);
+      ]
+
+  let to_json { willRename } =
+    Jprint.object_opt
+      [
+        ( "willRename",
+          Base.Option.map
+            ~f:(fun prop ->
+              JSON_Object
+                [
+                  ( "filters",
+                    JSON_Array
+                      FileOperationOptions.(
+                        List.map json_of_file_operation_server_filter_capabilities prop.filters
+                      )
+                  );
+                ])
+            willRename
+        );
+      ]
+end
+
 let print_initialize ~key (r : Initialize.result) : json =
   Initialize.(
     let cap = r.server_capabilities in
@@ -1495,6 +1541,16 @@ let print_initialize ~key (r : Initialize.result) : json =
               ("typeCoverageProvider", Some (JSON_Bool cap.typeCoverageProvider));
               ("rageProvider", Some (JSON_Bool cap.rageProvider));
               ("linkedEditingRangeProvider", Some (JSON_Bool cap.linkedEditingRangeProvider));
+              ( "workspace",
+                Some
+                  (JSON_Object
+                     [
+                       ( "fileOperations",
+                         FileOperationOptionsFmt.to_json cap.server_workspace.fileOperations
+                       );
+                     ]
+                  )
+              );
               ("experimental", experimental);
             ]
         );
@@ -1540,6 +1596,22 @@ module DidChangeWatchedFilesFmt = struct
             )
         );
       ]
+end
+
+(** workspace/willRenameFiles Request *)
+module WillRenameFilesFmt = struct
+  open WillRenameFiles
+
+  let parse_file_rename json =
+    {
+      oldUri = Jget.string_exn json "oldUri" |> DocumentUri.of_string;
+      newUri = Jget.string_exn json "newUri" |> DocumentUri.of_string;
+    }
+
+  let params_of_json (params : json option) : params =
+    { files = Jget.array_exn params "files" |> List.map parse_file_rename }
+
+  let json_of_result : result -> json = print_workspaceEdit
 end
 
 (** capabilities *)
@@ -1668,6 +1740,7 @@ let request_name_to_string (request : lsp_request) : string =
   | ApplyWorkspaceEditRequest _ -> "workspace/applyEdit"
   | AutoCloseJsxRequest _ -> "flow/autoCloseJsx"
   | LinkedEditingRangeRequest _ -> "textDocument/linkedEditingRange"
+  | WillRenameFilesRequest _ -> "workspace/willRenameFiles"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result : lsp_result) : string =
@@ -1699,6 +1772,7 @@ let result_name_to_string (result : lsp_result) : string =
   | RenameResult _ -> "textDocument/rename"
   | DocumentCodeLensResult _ -> "textDocument/codeLens"
   | ExecuteCommandResult _ -> "workspace/executeCommand"
+  | WillRenameFilesResult _ -> "workspace/willRenameFiles"
   | ApplyWorkspaceEditResult _ -> "workspace/applyEdit"
   | RegisterCapabilityResult -> "client/registerCapability"
   | AutoCloseJsxResult _ -> "flow/autoCloseJsx"
@@ -1769,6 +1843,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "telemetry/rage" -> RageRequest
   | "workspace/executeCommand" -> ExecuteCommandRequest (ExecuteCommandFmt.params_of_json params)
   | "workspace/configuration" -> ConfigurationRequest (ConfigurationFmt.params_of_json params)
+  | "workspace/willRenameFiles" -> WillRenameFilesRequest (WillRenameFilesFmt.params_of_json params)
   | "flow/autoCloseJsx" -> AutoCloseJsxRequest (AutoCloseJsxFmt.params_of_json params)
   | "textDocument/linkedEditingRange" ->
     LinkedEditingRangeRequest (LinkedEditingRangeFmt.params_of_json params)
@@ -1832,6 +1907,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | DocumentOnTypeFormattingRequest _
   | RageRequest
   | RenameRequest _
+  | WillRenameFilesRequest _
   | DocumentCodeLensRequest _
   | ExecuteCommandRequest _
   | AutoCloseJsxRequest _
@@ -1899,6 +1975,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | DocumentOnTypeFormattingRequest _
     | RageRequest
     | RenameRequest _
+    | WillRenameFilesRequest _
     | DocumentCodeLensRequest _
     | ExecuteCommandRequest _
     | AutoCloseJsxRequest _
@@ -1943,6 +2020,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | ApplyWorkspaceEditResult r -> ApplyWorkspaceEditFmt.json_of_result r
     | SelectionRangeResult r -> SelectionRangeFmt.json_of_result r
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
+    | WillRenameFilesResult r -> WillRenameFilesFmt.json_of_result r
     | AutoCloseJsxResult r -> AutoCloseJsxFmt.json_of_result r
     | LinkedEditingRangeResult r -> LinkedEditingRangeFmt.json_of_result r
     | ShowMessageRequestResult _

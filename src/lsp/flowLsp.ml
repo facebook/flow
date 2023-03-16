@@ -825,6 +825,7 @@ let do_initialize params : Initialize.result =
         typeCoverageProvider = true;
         rageProvider = true;
         linkedEditingRangeProvider = true;
+        server_workspace = { fileOperations = FileOperationOptions.{ willRename = None } };
         server_experimental =
           { server_snippetTextEdit; strictCompletionOrder = true; autoCloseJsx = true };
       };

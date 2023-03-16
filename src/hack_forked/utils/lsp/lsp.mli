@@ -358,6 +358,29 @@ module TextDocumentSyncOptions : sig
   and saveOptions = { includeText: bool }
 end
 
+module FileOperationOptions : sig
+  type fileOperationsServerCapabilities = { willRename: fileOperationRegistrationOptions option }
+
+  and fileOperationRegistrationOptions = { filters: fileOperationFilter list }
+
+  and fileOperationFilter = {
+    pattern: fileOperationPattern;
+    scheme: string option;
+  }
+
+  and fileOperationPattern = {
+    glob: string;
+    matches: fileOperationPatternKind;
+    options: fileOperationPatternOptions;
+  }
+
+  and fileOperationPatternKind =
+    | File
+    | Folder
+
+  and fileOperationPatternOptions = { ignoreCase: bool }
+end
+
 module Initialize : sig
   type params = {
     processId: int option;
@@ -425,6 +448,10 @@ module Initialize : sig
     autoCloseJsx: bool;
   }
 
+  and workspaceServerCapabilities = {
+    fileOperations: FileOperationOptions.fileOperationsServerCapabilities;
+  }
+
   and server_capabilities = {
     textDocumentSync: TextDocumentSyncOptions.t;
     hoverProvider: bool;
@@ -450,6 +477,7 @@ module Initialize : sig
     typeCoverageProvider: bool;
     rageProvider: bool;
     linkedEditingRangeProvider: bool;
+    server_workspace: workspaceServerCapabilities;
   }
 
   and serverInfo = {
@@ -1057,6 +1085,17 @@ module ToggleTypeCoverage : sig
   and toggleTypeCoverageParams = { toggle: bool }
 end
 
+module WillRenameFiles : sig
+  type fileRename = {
+    oldUri: DocumentUri.t;
+    newUri: DocumentUri.t;
+  }
+
+  and params = { files: fileRename list }
+
+  and result = WorkspaceEdit.t
+end
+
 module Error : sig
   type code =
     | ParseError [@value -32700]
@@ -1143,6 +1182,7 @@ type lsp_request =
   | DocumentCodeLensRequest of DocumentCodeLens.params
   | ExecuteCommandRequest of ExecuteCommand.params
   | ApplyWorkspaceEditRequest of ApplyWorkspaceEdit.params
+  | WillRenameFilesRequest of WillRenameFiles.params
   | AutoCloseJsxRequest of AutoCloseJsx.params
   | LinkedEditingRangeRequest of LinkedEditingRange.params
   | UnknownRequest of string * Hh_json.json option
@@ -1176,6 +1216,7 @@ type lsp_result =
   | DocumentCodeLensResult of DocumentCodeLens.result
   | ExecuteCommandResult of ExecuteCommand.result
   | ApplyWorkspaceEditResult of ApplyWorkspaceEdit.result
+  | WillRenameFilesResult of WillRenameFiles.result
   | RegisterCapabilityResult
   | AutoCloseJsxResult of AutoCloseJsx.result
   | LinkedEditingRangeResult of LinkedEditingRange.result

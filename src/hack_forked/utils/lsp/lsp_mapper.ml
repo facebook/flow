@@ -109,6 +109,8 @@ type t = {
   of_type_definition_result: t -> TypeDefinition.result -> TypeDefinition.result;
   of_versioned_text_document_identifier:
     t -> VersionedTextDocumentIdentifier.t -> VersionedTextDocumentIdentifier.t;
+  of_will_rename_files_params: t -> WillRenameFiles.params -> WillRenameFiles.params;
+  of_will_rename_files_result: t -> WillRenameFiles.result -> WillRenameFiles.result;
   of_workspace_edit: t -> WorkspaceEdit.t -> WorkspaceEdit.t;
   of_workspace_symbol_params: t -> WorkspaceSymbol.params -> WorkspaceSymbol.params;
   of_workspace_symbol_result: t -> WorkspaceSymbol.result -> WorkspaceSymbol.result;
@@ -506,6 +508,8 @@ let default_mapper =
           ExecuteCommandResult (mapper.of_execute_command_result mapper result)
         | ApplyWorkspaceEditResult result ->
           ApplyWorkspaceEditResult (mapper.of_apply_workspace_edit_result mapper result)
+        | WillRenameFilesResult result ->
+          WillRenameFilesResult (mapper.of_will_rename_files_result mapper result)
         | AutoCloseJsxResult result ->
           AutoCloseJsxResult (mapper.of_auto_close_jsx_result mapper result)
         | LinkedEditingRangeResult result ->
@@ -563,6 +567,8 @@ let default_mapper =
           ExecuteCommandRequest (mapper.of_execute_command_params mapper params)
         | ApplyWorkspaceEditRequest params ->
           ApplyWorkspaceEditRequest (mapper.of_apply_workspace_edit_params mapper params)
+        | WillRenameFilesRequest params ->
+          WillRenameFilesRequest (mapper.of_will_rename_files_params mapper params)
         | AutoCloseJsxRequest params ->
           AutoCloseJsxRequest (mapper.of_auto_close_jsx_params mapper params)
         | LinkedEditingRangeRequest params ->
@@ -666,6 +672,20 @@ let default_mapper =
       (fun mapper { VersionedTextDocumentIdentifier.uri; version } ->
         let uri = mapper.of_document_uri mapper uri in
         { VersionedTextDocumentIdentifier.uri; version });
+    of_will_rename_files_params =
+      (fun mapper { WillRenameFiles.files } ->
+        let open WillRenameFiles in
+        let files =
+          Base.List.map
+            ~f:(fun { oldUri; newUri } ->
+              {
+                oldUri = mapper.of_document_uri mapper oldUri;
+                newUri = mapper.of_document_uri mapper newUri;
+              })
+            files
+        in
+        { files });
+    of_will_rename_files_result = (fun mapper result -> mapper.of_workspace_edit mapper result);
     of_workspace_edit =
       (fun mapper { WorkspaceEdit.changes } ->
         let changes =
