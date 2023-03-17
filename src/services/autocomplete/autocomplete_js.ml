@@ -425,7 +425,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         this#find loc raw (Ac_literal { lit_type })
       | _ -> super#object_key key
 
-    method! enum_identifier ((loc, Flow_ast.Identifier.{ name; _ }) as ident) =
+    method! enum_member_identifier ((loc, Flow_ast.Identifier.{ name; _ }) as ident) =
       if this#covers_target loc then
         this#find loc name Ac_enum
       else
