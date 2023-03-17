@@ -338,8 +338,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let key' = this#class_property_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
-      let variance' = Option.map ~f:this#variance variance in
       let decorators' = List.map ~f:this#class_decorator decorators in
+      let variance' = this#variance_opt variance in
       let comments' = this#syntax_opt comments in
       {
         key = key';
@@ -367,8 +367,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
-      let variance' = Option.map ~f:this#variance variance in
       let decorators' = List.map ~f:this#class_decorator decorators in
+      let variance' = this#variance_opt variance in
       let comments' = this#syntax_opt comments in
       {
         key = key';
@@ -886,7 +886,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { key; value; optional; static; proto; _method; variance; comments }) = opt in
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
-      let variance' = Option.map ~f:this#variance variance in
+      let variance' = this#variance_opt variance in
       let comments' = this#syntax_opt comments in
       ( this#on_loc_annot annot,
         {
@@ -908,7 +908,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let id' = Option.map ~f:this#identifier id_ in
       let key' = this#type_ key in
       let value' = this#type_ value in
-      let variance' = Option.map ~f:this#variance variance in
+      let variance' = this#variance_opt variance in
       let comments' = this#syntax_opt comments in
       ( this#on_loc_annot annot,
         { id = id'; key = key'; value = value'; static; variance = variance'; comments = comments' }
@@ -1054,7 +1054,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { name; bound; bound_kind; variance; default }) = tparam in
       let name' = this#type_param_identifier name in
       let bound' = this#type_annotation_hint bound in
-      let variance' = Option.map ~f:this#variance variance in
+      let variance' = this#variance_opt variance in
       let default' = Option.map ~f:this#type_ default in
       ( this#on_loc_annot annot,
         { name = name'; bound = bound'; bound_kind; variance = variance'; default = default' }
@@ -1158,7 +1158,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { annot = t_annot; name; variance; optional } = t in
       let t_annot' = this#type_ t_annot in
       let name' = this#t_identifier name in
-      let variance' = Option.map ~f:this#variance variance in
+      let variance' = this#variance_opt variance in
       { annot = t_annot'; name = name'; variance = variance'; optional }
 
     method tuple_spread_element (t : ('M, 'T) Ast.Type.Tuple.SpreadElement.t)
@@ -2198,6 +2198,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#on_loc_annot annot in
       let comments' = this#syntax_opt comments in
       (annot', { kind; comments = comments' })
+
+    method variance_opt (opt : 'M Ast.Variance.t option) : 'N Ast.Variance.t option =
+      Option.map ~f:this#variance opt
 
     method while_ (stuff : ('M, 'T) Ast.Statement.While.t) : ('N, 'U) Ast.Statement.While.t =
       let open Ast.Statement.While in

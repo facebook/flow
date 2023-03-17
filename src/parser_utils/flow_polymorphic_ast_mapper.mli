@@ -710,6 +710,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method variance : 'M Ast.Variance.t -> 'N Ast.Variance.t
 
+    method variance_opt : 'M Ast.Variance.t option -> 'N Ast.Variance.t option
+
     method while_ : ('M, 'T) Ast.Statement.While.t -> ('N, 'U) Ast.Statement.While.t
 
     method with_ : ('M, 'T) Ast.Statement.With.t -> ('N, 'U) Ast.Statement.With.t
