@@ -1008,10 +1008,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Generic.Identifier in
       match git with
       | Unqualified i -> Unqualified (this#t_identifier i)
-      | Qualified (annot, { qualification; id = id_ }) ->
-        let qualification' = this#generic_identifier_type qualification in
-        let id' = this#t_identifier id_ in
-        Qualified (this#on_loc_annot annot, { qualification = qualification'; id = id' })
+      | Qualified qual -> Qualified (this#generic_qualified_identifier_type qual)
+
+    method generic_qualified_identifier_type (qual : ('M, 'T) Ast.Type.Generic.Identifier.qualified)
+        : ('N, 'U) Ast.Type.Generic.Identifier.qualified =
+      let open Ast.Type.Generic.Identifier in
+      let (annot, { qualification; id = id_ }) = qual in
+      let qualification' = this#generic_identifier_type qualification in
+      let id' = this#t_identifier id_ in
+      (this#on_loc_annot annot, { qualification = qualification'; id = id' })
 
     method type_args (targs : ('M, 'T) Ast.Type.TypeArgs.t) : ('N, 'U) Ast.Type.TypeArgs.t =
       let open Ast.Type.TypeArgs in
