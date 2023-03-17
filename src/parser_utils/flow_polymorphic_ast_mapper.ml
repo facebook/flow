@@ -554,21 +554,24 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.EnumDeclaration.t =
       let open Ast.Statement.EnumDeclaration in
       let { id; body; comments } = enum in
-      let body' =
-        match body with
-        | (annot, BooleanBody boolean_body) ->
-          (this#on_loc_annot annot, BooleanBody (this#enum_boolean_body boolean_body))
-        | (annot, NumberBody number_body) ->
-          (this#on_loc_annot annot, NumberBody (this#enum_number_body number_body))
-        | (annot, StringBody string_body) ->
-          (this#on_loc_annot annot, StringBody (this#enum_string_body string_body))
-        | (annot, SymbolBody symbol_body) ->
-          (this#on_loc_annot annot, SymbolBody (this#enum_symbol_body symbol_body))
-        | (annot, BigIntBody bigint_body) ->
-          (this#on_loc_annot annot, BigIntBody (this#enum_bigint_body bigint_body))
-      in
+      let body' = this#enum_body body in
       let comments' = this#syntax_opt comments in
       { id = this#t_identifier id; body = body'; comments = comments' }
+
+    method enum_body (body : 'M Ast.Statement.EnumDeclaration.body)
+        : 'N Ast.Statement.EnumDeclaration.body =
+      let open Ast.Statement.EnumDeclaration in
+      match body with
+      | (annot, BooleanBody boolean_body) ->
+        (this#on_loc_annot annot, BooleanBody (this#enum_boolean_body boolean_body))
+      | (annot, NumberBody number_body) ->
+        (this#on_loc_annot annot, NumberBody (this#enum_number_body number_body))
+      | (annot, StringBody string_body) ->
+        (this#on_loc_annot annot, StringBody (this#enum_string_body string_body))
+      | (annot, SymbolBody symbol_body) ->
+        (this#on_loc_annot annot, SymbolBody (this#enum_symbol_body symbol_body))
+      | (annot, BigIntBody bigint_body) ->
+        (this#on_loc_annot annot, BigIntBody (this#enum_bigint_body bigint_body))
 
     method enum_boolean_body (body : 'M Ast.Statement.EnumDeclaration.BooleanBody.t)
         : 'N Ast.Statement.EnumDeclaration.BooleanBody.t =

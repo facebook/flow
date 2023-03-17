@@ -164,6 +164,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method enum_declaration :
       ('M, 'T) Ast.Statement.EnumDeclaration.t -> ('N, 'U) Ast.Statement.EnumDeclaration.t
 
+    method enum_body :
+      'M Ast.Statement.EnumDeclaration.body -> 'N Ast.Statement.EnumDeclaration.body
+
     method enum_boolean_body :
       'M Ast.Statement.EnumDeclaration.BooleanBody.t ->
       'N Ast.Statement.EnumDeclaration.BooleanBody.t
