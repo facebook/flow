@@ -186,6 +186,87 @@ let get_t = get_t ~depth:3
 
 let rec instantiate_callee cx fn instantiation_hint =
   let { Hint.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
+  let rec handle_poly = function
+    | ExactT (_, DefT (_, _, ObjT { call_t = Some id; _ }))
+    | DefT (_, _, ObjT { call_t = Some id; _ })
+    | DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })) ->
+      handle_poly (Context.find_call cx id)
+    | DefT (reason, _, ClassT instance) ->
+      let statics = (reason, Tvar.mk_no_wrap cx reason) in
+      Flow_js.flow cx (instance, GetStaticsT statics);
+      handle_poly (get_t cx (OpenT statics))
+    | DefT
+        ( _,
+          _,
+          PolyT { tparams_loc = _; tparams; t_out = ThisClassT (r, i, this, this_name); id = _ }
+        ) ->
+      let subst_map =
+        tparams
+        |> Nel.map (fun tparam -> (tparam.name, tparam.bound))
+        |> Nel.to_list
+        |> Subst_name.Map.of_list
+      in
+      let t =
+        Flow_js.FlowJs.fix_this_class
+          cx
+          Trace.dummy_trace
+          r
+          (r, Flow_js.subst cx subst_map i, this, this_name)
+      in
+      handle_poly (get_t cx t)
+    | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) as t ->
+      let call_targs = Lazy.force targs in
+      (match TypeUtil.all_explicit_targ_ts call_targs with
+      | Some targ_ts -> synthesis_instantiate_callee cx reason tparams t_out targ_ts
+      | None ->
+        let call_args_tlist =
+          let checked_t t loc =
+            let reason = mk_reason (TypeUtil.reason_of_t t |> Reason.desc_of_reason) loc in
+            Env.find_write cx Env_api.ExpressionLoc reason
+          in
+          let rec loop i = function
+            | [] -> []
+            | (_loc, t) :: rest when i >= arg_index -> t :: loop (i + 1) rest
+            | (loc, t) :: rest ->
+              let t' =
+                match t with
+                | Arg t -> Arg (checked_t t loc)
+                | SpreadArg t -> SpreadArg (checked_t t loc)
+              in
+              t' :: loop (i + 1) rest
+          in
+          loop 0 (Lazy.force arg_list)
+        in
+        let return_hint =
+          match evaluate_hints cx reason (Lazy.force return_hints) with
+          | HintAvailable (t, k) -> Some (t, k)
+          | _ -> None
+        in
+        let check =
+          Implicit_instantiation_check.of_call
+            t
+            (tparams_loc, tparams, t_out)
+            unknown_use
+            reason
+            {
+              call_this_t = Unsoundness.unresolved_any reason;
+              call_targs;
+              call_args_tlist;
+              call_tout = (reason, Tvar.mk_no_wrap cx reason);
+              call_strict_arity = true;
+              call_speculation_hint_state = None;
+              call_kind = RegularCallKind;
+            }
+        in
+        let subst_map =
+          Context.run_in_implicit_instantiation_mode cx (fun () ->
+              ImplicitInstantiation.solve_targs cx ~use_op:unknown_use ?return_hint check
+              |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
+          )
+        in
+        Flow_js.subst cx subst_map t_out)
+    | t -> t
+  in
   let resolve_overload_and_targs fn =
     let t =
       match fn with
@@ -196,99 +277,6 @@ let rec instantiate_callee cx fn instantiation_hint =
           (r, rep)
           (Lazy.force targs)
           (Lazy.force arg_list |> Base.List.map ~f:snd)
-      | t -> t
-    in
-    let rec handle_poly = function
-      | ExactT (_, DefT (_, _, ObjT { call_t = Some id; _ })) ->
-        handle_poly (Context.find_call cx id)
-      | DefT (_, _, ObjT { call_t = Some id; _ }) -> handle_poly (Context.find_call cx id)
-      | DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })) ->
-        handle_poly (Context.find_call cx id)
-      | DefT (reason, _, ClassT instance) ->
-        let statics = (reason, Tvar.mk_no_wrap cx reason) in
-        Flow_js.flow cx (instance, GetStaticsT statics);
-        handle_poly (get_t cx (OpenT statics))
-      | DefT
-          ( _,
-            _,
-            PolyT { tparams_loc = _; tparams; t_out = ThisClassT (r, i, this, this_name); id = _ }
-          ) ->
-        let subst_map =
-          tparams
-          |> Nel.map (fun tparam -> (tparam.name, tparam.bound))
-          |> Nel.to_list
-          |> Subst_name.Map.of_list
-        in
-        let t =
-          Flow_js.FlowJs.fix_this_class
-            cx
-            Trace.dummy_trace
-            r
-            (r, Flow_js.subst cx subst_map i, this, this_name)
-        in
-        handle_poly (get_t cx t)
-      | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
-        let call_targs = Lazy.force targs in
-        (match call_targs with
-        | Some targs
-          when Base.List.for_all targs ~f:(function
-                   | ExplicitArg _ -> true
-                   | ImplicitArg _ -> false
-                   ) ->
-          let targ_ts =
-            Base.List.map targs ~f:(function
-                | ExplicitArg t -> t
-                | ImplicitArg _ -> failwith "Should be filtered out by when above"
-                )
-          in
-          synthesis_instantiate_callee cx reason tparams t_out targ_ts
-        | _ ->
-          let call_args_tlist =
-            let checked_t t loc =
-              let reason = mk_reason (TypeUtil.reason_of_t t |> Reason.desc_of_reason) loc in
-              Env.find_write cx Env_api.ExpressionLoc reason
-            in
-            let rec loop i = function
-              | [] -> []
-              | (_loc, t) :: rest when i >= arg_index -> t :: loop (i + 1) rest
-              | (loc, t) :: rest ->
-                let t' =
-                  match t with
-                  | Arg t -> Arg (checked_t t loc)
-                  | SpreadArg t -> SpreadArg (checked_t t loc)
-                in
-                t' :: loop (i + 1) rest
-            in
-            loop 0 (Lazy.force arg_list)
-          in
-          let return_hint =
-            match evaluate_hints cx reason (Lazy.force return_hints) with
-            | HintAvailable (t, k) -> Some (t, k)
-            | _ -> None
-          in
-          let check =
-            Implicit_instantiation_check.of_call
-              t
-              (tparams_loc, tparams, t_out)
-              unknown_use
-              reason
-              {
-                call_this_t = Unsoundness.unresolved_any reason;
-                call_targs;
-                call_args_tlist;
-                call_tout = (reason, Tvar.mk_no_wrap cx reason);
-                call_strict_arity = true;
-                call_speculation_hint_state = None;
-                call_kind = RegularCallKind;
-              }
-          in
-          let subst_map =
-            Context.run_in_implicit_instantiation_mode cx (fun () ->
-                ImplicitInstantiation.solve_targs cx ~use_op:unknown_use ?return_hint check
-                |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
-            )
-          in
-          Flow_js.subst cx subst_map t_out)
       | t -> t
     in
     handle_poly (get_t cx t)

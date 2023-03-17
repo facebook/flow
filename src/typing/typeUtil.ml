@@ -916,6 +916,15 @@ let all_explicit_targs = function
         | _ -> None
     )
 
+let all_explicit_targ_ts = function
+  | None -> None
+  | Some targs ->
+    Base.List.fold_right targs ~init:(Some []) ~f:(fun targ acc ->
+        match (targ, acc) with
+        | (ExplicitArg t, Some acc) -> Some (t :: acc)
+        | _ -> None
+    )
+
 let tuple_length reason trust (num_req, num_total) =
   let t_of_n n =
     let r =
