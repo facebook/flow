@@ -248,6 +248,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method for_in_statement_lhs :
       ('M, 'T) Ast.Statement.ForIn.left -> ('N, 'U) Ast.Statement.ForIn.left
 
+    method for_in_left_declaration :
+      'M * ('M, 'T) Ast.Statement.VariableDeclaration.t ->
+      'N * ('N, 'U) Ast.Statement.VariableDeclaration.t
+
     method for_of_assignment_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
     method for_of_statement : ('M, 'T) Ast.Statement.ForOf.t -> ('N, 'U) Ast.Statement.ForOf.t

@@ -752,9 +752,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.ForIn.left =
       let open Ast.Statement.ForIn in
       match left with
-      | LeftDeclaration (annot, decl) ->
-        LeftDeclaration (this#on_loc_annot annot, this#variable_declaration decl)
+      | LeftDeclaration decl -> LeftDeclaration (this#for_in_left_declaration decl)
       | LeftPattern patt -> LeftPattern (this#for_in_assignment_pattern patt)
+
+    method for_in_left_declaration
+        ((annot, decl) : 'M * ('M, 'T) Ast.Statement.VariableDeclaration.t)
+        : 'N * ('N, 'U) Ast.Statement.VariableDeclaration.t =
+      (this#on_loc_annot annot, this#variable_declaration decl)
 
     method for_of_statement (stuff : ('M, 'T) Ast.Statement.ForOf.t)
         : ('N, 'U) Ast.Statement.ForOf.t =
