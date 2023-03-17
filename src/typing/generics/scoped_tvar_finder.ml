@@ -152,9 +152,8 @@ class finder cx =
       let _ = Base.List.map ~f:function_param params_list in
       let _ = Base.Option.map ~f:this#function_rest_param rest in
       let _ = Base.Option.map ~f:this#function_this_param this_ in
-
       let (_ : (ml, tl) Ast.Identifier.t option) = map_opt this#function_identifier ident in
-      let (_ : (ml, tl) Ast.Type.Predicate.t option) = map_opt this#type_predicate predicate in
+      let (_ : (ml, tl) Ast.Type.Predicate.t option) = map_opt this#predicate predicate in
       (* Check the function body in a scope that contains both the function's parameters and also any
          class type parameters if we're inside a class toplevel. *)
       ScopeHelper.in_function_scope gcx tparams this#set_gcx (fun () ->

@@ -1158,7 +1158,7 @@ module Make
           declare_function
         in
         let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-        let predicate = Base.Option.map ~f:Tast_utils.error_mapper#type_predicate predicate in
+        let predicate = Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate in
         ( loc,
           DeclareFunction
             { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments }
@@ -7225,7 +7225,7 @@ module Make
                       Error_message.(EUnsupportedSyntax (loc, PredicateFunctionAbstractReturnType)))
                   bounds
               in
-              (return_annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
+              (return_annotated_or_inferred, Some (Tast_utils.error_mapper#predicate pred))
           | (Some ((loc, { kind = Declared _; comments = _ }) as pred), _) ->
             let (annotated_or_inferred, _) =
               Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
@@ -7233,10 +7233,10 @@ module Make
             Flow_js.add_output
               cx
               Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
-            (annotated_or_inferred, Some (Tast_utils.error_mapper#type_predicate pred))
+            (annotated_or_inferred, Some (Tast_utils.error_mapper#predicate pred))
           | _ ->
             ( return_annotated_or_inferred,
-              Base.Option.map ~f:Tast_utils.error_mapper#type_predicate predicate
+              Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate
             )
         in
         let return_t =

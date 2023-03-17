@@ -55,7 +55,7 @@ class marker cx =
       end;
       super#expression expr
 
-    method! type_predicate (pred : (_, _) Ast.Type.Predicate.t) =
+    method! predicate (pred : (_, _) Ast.Type.Predicate.t) =
       let open Ast.Type.Predicate in
       let (annot, { kind; comments = _ }) = pred in
       let _annot' = this#on_loc_annot annot in

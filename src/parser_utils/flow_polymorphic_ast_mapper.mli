@@ -657,7 +657,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method type_args : ('M, 'T) Flow_ast.Type.TypeArgs.t -> ('N, 'U) Ast.Type.TypeArgs.t
 
-    method type_predicate : ('M, 'T) Flow_ast.Type.Predicate.t -> ('N, 'U) Ast.Type.Predicate.t
+    method predicate : ('M, 'T) Flow_ast.Type.Predicate.t -> ('N, 'U) Ast.Type.Predicate.t
 
     method typeof_type : ('M, 'T) Ast.Type.Typeof.t -> ('N, 'U) Ast.Type.Typeof.t
 

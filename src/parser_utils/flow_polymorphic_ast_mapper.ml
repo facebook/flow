@@ -488,7 +488,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { id = ident; annot; predicate; comments } = decl in
       let id' = this#function_identifier ident in
       let annot' = this#type_annotation annot in
-      let predicate' = Option.map ~f:this#type_predicate predicate in
+      let predicate' = Option.map ~f:this#predicate predicate in
       let comments' = this#syntax_opt comments in
       { id = id'; annot = annot'; predicate = predicate'; comments = comments' }
 
@@ -1058,8 +1058,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let indexed_access' = this#indexed_access_type indexed_access in
       { indexed_access = indexed_access'; optional }
 
-    method type_predicate ((annot, pred) : ('M, 'T) Ast.Type.Predicate.t)
-        : ('N, 'U) Ast.Type.Predicate.t =
+    method predicate ((annot, pred) : ('M, 'T) Ast.Type.Predicate.t) : ('N, 'U) Ast.Type.Predicate.t
+        =
       let open Ast.Type.Predicate in
       let { kind; comments } = pred in
       let annot' = this#on_loc_annot annot in
@@ -1307,7 +1307,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let params' = this#function_params params in
           let return' = this#type_annotation_hint return in
           let body' = this#function_body body in
-          let predicate' = Option.map ~f:this#type_predicate predicate in
+          let predicate' = Option.map ~f:this#predicate predicate in
           let sig_loc' = this#on_loc_annot sig_loc in
           let comments' = this#syntax_opt comments in
           {
