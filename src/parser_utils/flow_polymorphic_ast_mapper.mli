@@ -696,6 +696,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method type_params_opt :
       ('M, 'T) Ast.Type.TypeParams.t option -> (('N, 'U) Ast.Type.TypeParams.t option -> 'a) -> 'a
 
+    method type_params : ('M, 'T) Ast.Type.TypeParams.t -> ('N, 'U) Ast.Type.TypeParams.t
+
     method type_param : ('M, 'T) Ast.Type.TypeParam.t -> ('N, 'U) Ast.Type.TypeParam.t
 
     method type_param_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t

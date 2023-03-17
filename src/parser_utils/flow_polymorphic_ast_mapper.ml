@@ -1036,18 +1036,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           (('N, 'U) Ast.Type.TypeParams.t option -> 'a) ->
           'a =
       fun tparams f ->
-        let tparams' =
-          Option.map
-            ~f:(fun tparams ->
-              let open Ast.Type.TypeParams in
-              let (annot, { params = tps; comments }) = tparams in
-              let annot' = this#on_loc_annot annot in
-              let tps' = List.map ~f:this#type_param tps in
-              let comments' = this#syntax_with_internal_opt comments in
-              (annot', { params = tps'; comments = comments' }))
-            tparams
-        in
+        let tparams' = Option.map ~f:this#type_params tparams in
         f tparams'
+
+    method type_params (tparams : ('M, 'T) Ast.Type.TypeParams.t) : ('N, 'U) Ast.Type.TypeParams.t =
+      let open Ast.Type.TypeParams in
+      let (annot, { params = tps; comments }) = tparams in
+      let annot' = this#on_loc_annot annot in
+      let tps' = List.map ~f:this#type_param tps in
+      let comments' = this#syntax_with_internal_opt comments in
+      (annot', { params = tps'; comments = comments' })
 
     method type_param (tparam : ('M, 'T) Ast.Type.TypeParam.t) : ('N, 'U) Ast.Type.TypeParam.t =
       let open Ast.Type.TypeParam in
