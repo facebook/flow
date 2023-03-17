@@ -1015,8 +1015,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Generic.Identifier in
       let (annot, { qualification; id = id_ }) = qual in
       let qualification' = this#generic_identifier_type qualification in
-      let id' = this#t_identifier id_ in
+      let id' = this#member_type_identifier id_ in
       (this#on_loc_annot annot, { qualification = qualification'; id = id' })
+
+    method member_type_identifier (id : ('M, 'T) Flow_ast.Identifier.t)
+        : ('N, 'U) Flow_ast.Identifier.t =
+      this#t_identifier id
 
     method type_args (targs : ('M, 'T) Ast.Type.TypeArgs.t) : ('N, 'U) Ast.Type.TypeArgs.t =
       let open Ast.Type.TypeArgs in

@@ -309,6 +309,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Type.Generic.Identifier.qualified ->
       ('N, 'U) Ast.Type.Generic.Identifier.qualified
 
+    method member_type_identifier : ('M, 'T) Flow_ast.Identifier.t -> ('N, 'U) Flow_ast.Identifier.t
+
     method generic_type : ('M, 'T) Ast.Type.Generic.t -> ('N, 'U) Ast.Type.Generic.t
 
     method indexed_access_type :
