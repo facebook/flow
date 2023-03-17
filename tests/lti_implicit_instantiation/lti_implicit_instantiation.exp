@@ -415,7 +415,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s1.bad` because property `bad` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:47:6
-   47|   s1.bad; // error in LTI
+   47|   s1.bad; // error
             ^^^
 
 References:
@@ -429,7 +429,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s2.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:51:6
-   51|   s2.bad; // error in LTI
+   51|   s2.bad; // error
             ^^^
 
 References:
@@ -443,7 +443,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s2.bar` because property `bar` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:52:6
-   52|   s2.bar; // error in LTI
+   52|   s2.bar; // error
             ^^^
 
 References:
@@ -457,7 +457,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s2.baz` because property `baz` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:53:6
-   53|   s2.baz; // error in LTI
+   53|   s2.baz; // error
             ^^^
 
 References:
@@ -471,7 +471,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s3.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:57:6
-   57|   s3.bad; // error in LTI
+   57|   s3.bad; // error
             ^^^
 
 References:
@@ -485,7 +485,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s3.bar` because property `bar` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:58:6
-   58|   s3.bar; // error in LTI
+   58|   s3.bar; // error
             ^^^
 
 References:
@@ -499,7 +499,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s3.baz` because property `baz` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:59:6
-   59|   s3.baz; // error in LTI
+   59|   s3.baz; // error
             ^^^
 
 References:
@@ -513,7 +513,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s4.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:63:6
-   63|   s4.bad; // error in LTI
+   63|   s4.bad; // error
             ^^^
 
 References:
@@ -527,7 +527,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s4.bar` because property `bar` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:64:6
-   64|   s4.bar; // error in LTI
+   64|   s4.bar; // error
             ^^^
 
 References:
@@ -541,7 +541,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s4.baz` because property `baz` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:65:6
-   65|   s4.baz; // error in LTI
+   65|   s4.baz; // error
             ^^^
 
 References:
@@ -555,7 +555,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s5.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:69:6
-   69|   s5.bad; // error in LTI
+   69|   s5.bad; // error
             ^^^
 
 References:
@@ -569,7 +569,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s5.bar` because property `bar` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:70:6
-   70|   s5.bar; // error in LTI
+   70|   s5.bar; // error
             ^^^
 
 References:
@@ -583,7 +583,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s5.baz` because property `baz` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:71:6
-   71|   s5.baz; // error in LTI
+   71|   s5.baz; // error
             ^^^
 
 References:
@@ -597,7 +597,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s6.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:75:6
-   75|   s6.bad; // error in LTI
+   75|   s6.bad; // error
             ^^^
 
 References:
@@ -611,7 +611,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s6.bar` because property `bar` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:76:6
-   76|   s6.bar; // error in LTI
+   76|   s6.bar; // error
             ^^^
 
 References:
@@ -625,7 +625,7 @@ Error --------------------------------------------------------------------------
 Cannot get `s6.baz` because property `baz` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:77:6
-   77|   s6.baz; // error in LTI
+   77|   s6.baz; // error
             ^^^
 
 References:
@@ -639,7 +639,7 @@ Error --------------------------------------------------------------------------
 Cannot get `sr.bad` because property `bad` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:83:6
-   83|   sr.bad; // error in LTI
+   83|   sr.bad; // error
             ^^^
 
 References:
@@ -653,7 +653,7 @@ Error --------------------------------------------------------------------------
 Cannot get `o.cp` because property `cp` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:88:5
-   88|   o.cp; // error in LTI
+   88|   o.cp; // error
            ^^
 
 References:
@@ -667,7 +667,7 @@ Error --------------------------------------------------------------------------
 Cannot get `o.foo` because property `foo` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:89:5
-   89|   o.foo; // error in LTI
+   89|   o.foo; // error
            ^^^
 
 References:

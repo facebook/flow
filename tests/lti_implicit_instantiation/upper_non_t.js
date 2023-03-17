@@ -44,50 +44,50 @@ function spreads() {
   (s1.foo: number);
   (s1.bar: number);
   (s1.baz: number);
-  s1.bad; // error in LTI
+  s1.bad; // error
   declare function spread2<Props>({...Props, bar: number, baz: number}): Props;
   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
   (s2.foo: number);
-  s2.bad; // error in LTI
-  s2.bar; // error in LTI
-  s2.baz; // error in LTI
+  s2.bad; // error
+  s2.bar; // error
+  s2.baz; // error
   declare function spread3<Props>({...Props, ...T}): Props;
   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
   (s3.foo: number);
-  s3.bad; // error in LTI
-  s3.bar; // error in LTI
-  s3.baz; // error in LTI
+  s3.bad; // error
+  s3.bar; // error
+  s3.baz; // error
   declare function spread4<Props>({baz: number, bar: number, ...Props}): Props;
   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
   (s4.foo: number);
-  s4.bad; // error in LTI
-  s4.bar; // error in LTI
-  s4.baz; // error in LTI
+  s4.bad; // error
+  s4.bar; // error
+  s4.baz; // error
   declare function spread5<Props>({...T, ...Props}): Props;
   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
   (s5.foo: number);
-  s5.bad; // error in LTI
-  s5.bar; // error in LTI
-  s5.baz; // error in LTI
+  s5.bad; // error
+  s5.bar; // error
+  s5.baz; // error
   declare function spread6<Props>({hhh: number, ...Props, ...T}): Props;
   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
   (s6.foo: number);
-  s6.bad; // error in LTI
-  s6.bar; // error in LTI
-  s6.baz; // error in LTI
+  s6.bad; // error
+  s6.bar; // error
+  s6.baz; // error
 
   declare function spread_and_readonly<Props>($ReadOnly<{...Props}>): Props;
   const sr = spread_and_readonly({foo: 1, bar: ''});
   (sr.foo: number);
   (sr.bar: string);
-  sr.bad; // error in LTI
+  sr.bad; // error
 
   declare var cp: {|bar: number|};
   declare function optional<P>($ReadOnly<{|cp: P, foo?: string, ...P|}>): P;
   const o = optional({cp, foo: '', bar: 3}); // ok
-  o.cp; // error in LTI
-  o.foo; // error in LTI
-  (o.bar: number); // error in LTI
+  o.cp; // error
+  o.foo; // error
+  (o.bar: number); // error
 }
 
 function rests() {
