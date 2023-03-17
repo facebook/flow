@@ -1613,8 +1613,8 @@ and JSX : sig
       | NamespacedName of ('M, 'T) NamespacedName.t
 
     and ('M, 'T) value =
-      | Literal of 'T * 'M Literal.t
-      | ExpressionContainer of 'T * ('M, 'T) ExpressionContainer.t
+      | Literal of ('T * 'M Literal.t)
+      | ExpressionContainer of ('T * ('M, 'T) ExpressionContainer.t)
 
     and ('M, 'T) t' = {
       name: ('M, 'T) name;
