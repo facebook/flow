@@ -227,17 +227,17 @@ struct
        reason for specialization, either return the type argument or, when directed,
        look up the instantiation cache for an existing type argument for the same
        purpose and unify it with the supplied type argument. *)
-    let cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t =
-      match cache with
-      | None -> t
-      | Some _ ->
-        (match desc_of_reason reason_tapp with
+    let cache_instantiate cx trace ~use_op ?(cache = false) typeparam reason_op reason_tapp t =
+      if cache then (
+        match desc_of_reason reason_tapp with
         (* This reason description cannot be trusted for caching purposes. *)
         | RTypeAppImplicit _ -> t
         | _ ->
           let t_ = ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp in
           FlowJs.rec_unify cx trace ~use_op ~unify_any:true t t_;
-          t_)
+          t_
+      ) else
+        t
 
     let mk_targ = ImplicitTypeArgument.mk_targ
 
@@ -1271,7 +1271,7 @@ struct
         | (TypeAppT (reason_tapp, use_op, c, ts), PrivateMethodT (_, _, _, _, _, _, _, _)) ->
           let reason_op = reason_of_use_t u in
           let t =
-            mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp ~cache:[] c ts
+            mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp ~cache:true c ts
           in
           rec_flow cx trace (t, u)
         (* This is the second step in checking a TypeAppT (c, ts) ~> TypeAppT (c, ts).
@@ -2389,7 +2389,7 @@ struct
               ~use_op
               ~reason_op
               ~reason_tapp
-              ?cache
+              ~cache
               id
               tparams_loc
               xs
@@ -2588,66 +2588,58 @@ struct
                 return_hint;
               }
           )
-          when call_kind <> MapTypeKind ->
-          let arg_reasons =
-            Base.List.map
-              ~f:(function
-                | Arg t -> reason_of_t t
-                | SpreadArg t -> reason_of_t t)
-              calltype.call_args_tlist
-          in
-          begin
-            match all_explicit_targs calltype.call_targs with
-            | Some targs ->
-              let t_ =
-                instantiate_poly_call_or_new
-                  cx
-                  trace
-                  (tparams_loc, ids, t)
-                  targs
-                  ~use_op
-                  ~reason_op
-                  ~reason_tapp
-              in
-              rec_flow
+          when call_kind <> MapTypeKind -> begin
+          match all_explicit_targs calltype.call_targs with
+          | Some targs ->
+            let t_ =
+              instantiate_poly_call_or_new
                 cx
                 trace
-                ( t_,
-                  CallT
-                    {
-                      use_op;
-                      reason = reason_op;
-                      call_action = Funcalltype { calltype with call_targs = None };
-                      return_hint;
-                    }
-                )
-            | _ ->
-              let poly_t = (tparams_loc, ids, t) in
-              let check = Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype in
-              let t_ =
-                ImplicitInstantiationKit.run
-                  cx
-                  check
-                  ~cache:arg_reasons
-                  trace
-                  ~use_op
-                  ~reason_op
-                  ~reason_tapp
-                  ~return_hint
-              in
-              rec_flow
+                (tparams_loc, ids, t)
+                targs
+                ~use_op
+                ~reason_op
+                ~reason_tapp
+            in
+            rec_flow
+              cx
+              trace
+              ( t_,
+                CallT
+                  {
+                    use_op;
+                    reason = reason_op;
+                    call_action = Funcalltype { calltype with call_targs = None };
+                    return_hint;
+                  }
+              )
+          | _ ->
+            let poly_t = (tparams_loc, ids, t) in
+            let check = Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype in
+            let t_ =
+              ImplicitInstantiationKit.run
                 cx
+                check
+                ~cache:true
                 trace
-                ( t_,
-                  CallT
-                    {
-                      use_op;
-                      reason = reason_op;
-                      call_action = Funcalltype { calltype with call_targs = None };
-                      return_hint;
-                    }
-                )
-          end
+                ~use_op
+                ~reason_op
+                ~reason_tapp
+                ~return_hint
+            in
+            rec_flow
+              cx
+              trace
+              ( t_,
+                CallT
+                  {
+                    use_op;
+                    reason = reason_op;
+                    call_action = Funcalltype { calltype with call_targs = None };
+                    return_hint;
+                  }
+              )
+        end
         | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
             ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint }
           ) ->
@@ -6927,7 +6919,7 @@ struct
         ~use_op
         ~reason_op
         ~reason_tapp
-        ?cache:None
+        ~cache:false
         ?errs_ref
         (tparams_loc, xs, t)
         (List.rev ts)
@@ -6966,7 +6958,7 @@ struct
           rec_flow
             cx
             trace
-            (c, SpecializeT (unknown_use, reason_op, reason_tapp, None, Some ts, tout))
+            (c, SpecializeT (unknown_use, reason_op, reason_tapp, false, Some ts, tout))
       )
 
   (* Object assignment patterns. In the `Object.assign` model (chain_objects), an
@@ -9316,14 +9308,14 @@ struct
     typeapp reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
-  and mk_typeapp_instance_annot cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
+  and mk_typeapp_instance_annot cx ?trace ~use_op ~reason_op ~reason_tapp ?(cache = false) c ts =
     let t = Tvar.mk cx reason_tapp in
     flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
     mk_instance_raw cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
 
-  and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
+  and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp c ts =
     let t = Tvar.mk cx reason_tapp in
-    flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
+    flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, false, Some ts, t));
     mk_instance_source cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
 
   and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts =

@@ -83,7 +83,7 @@ module type KIT = sig
     Context.t ->
     Implicit_instantiation_check.t ->
     return_hint:Type.lazy_hint_t ->
-    ?cache:Reason.t list ->
+    ?cache:bool ->
     Type.trace ->
     use_op:Type.use_op ->
     reason_op:Reason.reason ->

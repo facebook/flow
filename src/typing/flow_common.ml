@@ -59,7 +59,7 @@ module type BASE = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
-    ?cache:Reason.reason list ->
+    ?cache:bool ->
     Type.t ->
     Type.t list ->
     Type.t
@@ -70,7 +70,6 @@ module type BASE = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
-    ?cache:Reason.reason list ->
     Type.t ->
     Type.t list ->
     Type.t
@@ -196,7 +195,7 @@ module type SUBTYPING = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.t ->
-    ?cache:Reason.t list ->
+    ?cache:bool ->
     ?errs_ref:Context.subst_cache_err list ref ->
     ?unify_bounds:bool ->
     ALoc.t * Type.typeparam Nel.t * Type.t ->
@@ -209,7 +208,7 @@ module type SUBTYPING = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
-    ?cache:Reason.reason Base.List.t ->
+    ?cache:bool ->
     ?unify_bounds:bool ->
     ALoc.t * Type.typeparam Nel.t * Type.t ->
     Type.t * (Type.t * Subst_name.t) list
@@ -229,7 +228,7 @@ module type SUBTYPING = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
-    ?cache:Reason.reason list ->
+    ?cache:bool ->
     Type.Poly.id ->
     ALoc.t ->
     Type.typeparam Nel.t ->

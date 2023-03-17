@@ -468,7 +468,7 @@ module Make
     let open TypeUtil in
     let reason = reason_of_t c in
     Tvar.mk_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (use_op, reason, reason, None, targs, tvar))
+        Flow.flow cx (c, SpecializeT (use_op, reason, reason, false, targs, tvar))
     )
 
   let statictype cx static_proto x =

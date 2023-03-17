@@ -587,7 +587,7 @@ module rec TypeTerm : sig
           The first reason is the reason why we're specializing. The second
           reason points to the type application itself
        **)
-    | SpecializeT of use_op * reason * reason * specialize_cache * t list option * t
+    | SpecializeT of use_op * reason * reason * bool * t list option * t
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * cont
     (* variance check on polymorphic types *)
@@ -935,8 +935,6 @@ module rec TypeTerm : sig
         return_hint: lazy_hint_t;
       }
     | OptNoMethodAction
-
-  and specialize_cache = reason list option
 
   and predicate =
     | AndP of predicate * predicate

@@ -1100,7 +1100,7 @@ module type KIT = sig
     Context.t ->
     Implicit_instantiation_check.t ->
     return_hint:Type.lazy_hint_t ->
-    ?cache:Reason.t list ->
+    ?cache:bool ->
     trace ->
     use_op:use_op ->
     reason_op:reason ->
@@ -1116,13 +1116,13 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   open Instantiation_helper
 
   let instantiate_poly_with_subst_map
-      cx ?cache trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
+      cx ~cache trace poly_t inferred_targ_map ~use_op ~reason_op ~reason_tapp =
     let inferred_targ_map =
       Subst_name.Map.map
         (fun { tparam; inferred } ->
           {
             inferred =
-              cache_instantiate cx trace ~use_op ?cache tparam reason_op reason_tapp inferred;
+              cache_instantiate cx trace ~use_op ~cache tparam reason_op reason_tapp inferred;
             tparam;
           })
         inferred_targ_map
@@ -1152,12 +1152,13 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     reposition cx ~trace (aloc_of_reason reason_tapp) (Subst.subst cx ~use_op subst_map poly_t)
 
   let run_pierce
-      cx check ?cache trace ~use_op ~reason_op ~reason_tapp ~allow_underconstrained ~return_hint =
+      cx check ~cache trace ~use_op ~reason_op ~reason_tapp ~allow_underconstrained ~return_hint =
     let (_, _, t) = check.Implicit_instantiation_check.poly_t in
     let targs_map = Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check in
-    instantiate_poly_with_subst_map cx ?cache trace t targs_map ~use_op ~reason_op ~reason_tapp
+    instantiate_poly_with_subst_map cx ~cache trace t targs_map ~use_op ~reason_op ~reason_tapp
 
-  let run cx check ~return_hint:(_, lazy_hint) ?cache trace ~use_op ~reason_op ~reason_tapp =
+  let run
+      cx check ~return_hint:(_, lazy_hint) ?(cache = false) trace ~use_op ~reason_op ~reason_tapp =
     let (check, in_nested_instantiation) =
       match check.Check.operation with
       | ( use_op,
@@ -1218,7 +1219,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
             ~allow_underconstrained
             ~return_hint
             check
-            ?cache
+            ~cache
             trace
             ~use_op
             ~reason_op

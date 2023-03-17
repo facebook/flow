@@ -434,9 +434,11 @@ and dump_use_t_ (depth, tvars) cx t =
     | SuperProp (_, p) -> spf "Super %s" (prop p)
     | MatchProp { prop_t = tin; _ } -> spf "Match %s" (kid tin)
   in
-  let specialize_cache = function
-    | None -> "None"
-    | Some rs -> spf "Some [%s]" (String.concat "; " @@ Base.List.map ~f:(dump_reason cx) rs)
+  let specialize_cache cache =
+    if cache then
+      "Some cache"
+    else
+      "None"
   in
   let try_flow = function
     | UnionCases (use_op, t, _rep, ts) ->
