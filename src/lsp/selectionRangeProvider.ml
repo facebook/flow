@@ -74,7 +74,7 @@ class selection_range_finder ~position =
     method! expression x = this#test super#expression x
 
     (* the arguments of a function call, including the parens *)
-    method! call_arguments x = this#test super#call_arguments x
+    method! arg_list x = this#test super#arg_list x
 
     (* the type args of a function call, including the <>'s *)
     method! call_type_args x = this#test super#call_type_args x

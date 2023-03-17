@@ -736,7 +736,7 @@ module Make
           | (_, Ast.Expression.Super _) ->
             (* Do not visit callee so that we can avoid a forward-reference error. *)
             ignore @@ Flow_ast_mapper.map_opt this#call_type_args targs;
-            ignore @@ this#call_arguments arguments;
+            ignore @@ this#arg_list arguments;
             (* Only after the super call, `this` and `super` are defined. *)
             this#init_this_super loc;
             expr
@@ -4066,7 +4066,7 @@ module Make
           this#havoc_current_env ~all:false;
         expr
 
-      method! call_arguments arg_list =
+      method! arg_list arg_list =
         let (_, { Ast.Expression.ArgList.arguments; comments = _ }) = arg_list in
         Base.List.iter arguments ~f:(fun arg ->
             let ((loc, _) as expr) =
@@ -4083,7 +4083,7 @@ module Make
               in
               env_state <- { env_state with write_entries }
         );
-        super#call_arguments arg_list
+        super#arg_list arg_list
 
       method! new_ loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
         ignore @@ super#new_ loc expr;
@@ -4966,7 +4966,7 @@ module Make
               List.map (fun arg -> RefinementKey.of_argument arg) arglist
           in
           ignore @@ this#expression callee;
-          ignore @@ this#call_arguments arguments;
+          ignore @@ this#arg_list arguments;
           this#havoc_current_env ~all:false;
           this#apply_latent_refinements callee refinement_keys
         | _ -> ignore @@ this#call loc call
@@ -5044,7 +5044,7 @@ module Make
             ignore @@ this#optional_chain callee;
             this#commit_refinement refi;
             let _targs' = Base.Option.map ~f:this#call_type_args targs in
-            let _arguments' = this#call_arguments arguments in
+            let _arguments' = this#arg_list arguments in
             this#havoc_current_env ~all:false
           | Member mem -> ignore @@ this#member loc mem
           | Call call -> ignore @@ this#call loc call

@@ -302,7 +302,7 @@ class ['loc] mapper =
       let { callee; targs; arguments; comments } = expr in
       let callee' = this#expression callee in
       let targs' = map_opt this#call_type_args targs in
-      let arguments' = this#call_arguments arguments in
+      let arguments' = this#arg_list arguments in
       let comments' = this#syntax_opt comments in
       if callee == callee' && targs == targs' && arguments == arguments' && comments == comments'
       then
@@ -310,7 +310,7 @@ class ['loc] mapper =
       else
         { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' }
 
-    method call_arguments (arg_list : ('loc, 'loc) Ast.Expression.ArgList.t) =
+    method arg_list (arg_list : ('loc, 'loc) Ast.Expression.ArgList.t) =
       let open Ast.Expression.ArgList in
       let (loc, { arguments; comments }) = arg_list in
       let arguments' = map_list this#expression_or_spread arguments in
@@ -2272,7 +2272,7 @@ class ['loc] mapper =
       let { callee; targs; arguments; comments } = expr in
       let callee' = this#expression callee in
       let targs' = map_opt this#call_type_args targs in
-      let arguments' = map_opt this#call_arguments arguments in
+      let arguments' = map_opt this#arg_list arguments in
       let comments' = this#syntax_opt comments in
       if callee == callee' && targs == targs' && arguments == arguments' && comments == comments'
       then

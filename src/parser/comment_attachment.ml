@@ -79,14 +79,14 @@ class ['loc] trailing_comments_remover ~after_pos =
     method! call _annot expr =
       let open Ast.Expression.Call in
       let { arguments; comments; _ } = expr in
-      let arguments' = this#call_arguments arguments in
+      let arguments' = this#arg_list arguments in
       let comments' = this#syntax_opt comments in
       if arguments == arguments' && comments == comments' then
         expr
       else
         { expr with arguments = arguments'; comments = comments' }
 
-    method! call_arguments arg_list =
+    method! arg_list arg_list =
       let open Ast.Expression.ArgList in
       let (loc, { arguments; comments }) = arg_list in
       id this#syntax_opt comments arg_list (fun comments' ->
@@ -248,7 +248,7 @@ class ['loc] trailing_comments_remover ~after_pos =
       match (targs, arguments) with
       (* new Callee<T>() *)
       | (_, Some _) ->
-        let arguments' = map_opt this#call_arguments arguments in
+        let arguments' = map_opt this#arg_list arguments in
         if arguments == arguments' && comments == comments' then
           expr
         else
