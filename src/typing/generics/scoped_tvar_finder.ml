@@ -334,11 +334,11 @@ class finder cx =
         super#binding_pattern ~kind expr
       | _ -> expr
 
-    method! t_pattern_identifier ?kind (((_, ty), _) as node) =
+    method! pattern_identifier ?kind (((_, ty), _) as node) =
       (* If `kind` is None, then this is the LHS of an assignment, while it it's Some _, it's a variable
          declaration. We only are concerned with declarations here: statement.ml guarantees that the type
          on a declaration is the general type of the variable in its environment, while assignments just
          have its specific type. *)
       Base.Option.iter ~f:(fun _ -> this#mark ty) kind;
-      super#t_pattern_identifier ?kind node
+      super#pattern_identifier ?kind node
   end

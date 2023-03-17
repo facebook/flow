@@ -315,9 +315,9 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       end;
       super#pattern ?kind pat
 
-    method! t_pattern_identifier ?kind (((loc, _), Flow_ast.Identifier.{ name; _ }) as ident) =
+    method! pattern_identifier ?kind (((loc, _), Flow_ast.Identifier.{ name; _ }) as ident) =
       match kind with
-      | None -> super#t_pattern_identifier ?kind ident
+      | None -> super#pattern_identifier ?kind ident
       | Some _ ->
         (* binding identifiers *)
         if this#covers_target loc then

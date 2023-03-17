@@ -365,10 +365,10 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
         _object
       | MemberExpression _ -> super#jsx_member_expression_object _object
 
-    method! t_pattern_identifier ?kind i =
+    method! pattern_identifier ?kind i =
       let ((loc, t), _) = i in
       acc <- f loc t acc;
-      super#t_pattern_identifier ?kind i
+      super#pattern_identifier ?kind i
 
     method top_level_program prog =
       acc <- init;

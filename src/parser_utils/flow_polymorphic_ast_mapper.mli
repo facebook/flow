@@ -645,7 +645,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method t_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
-    method t_pattern_identifier :
+    method pattern_identifier :
       ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method tagged_template :

@@ -300,7 +300,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       (annot', { expression = expression'; comments = comments' })
 
     method class_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
-      this#t_pattern_identifier ~kind:Ast.Variable.Let ident
+      this#pattern_identifier ~kind:Ast.Variable.Let ident
 
     method class_body (cls_body : ('M, 'T) Ast.Class.Body.t) : ('N, 'U) Ast.Class.Body.t =
       let open Ast.Class.Body in
@@ -531,7 +531,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.DeclareVariable.t =
       let open Ast.Statement.DeclareVariable in
       let { id = ident; annot; kind; comments } = decl in
-      let id' = this#t_pattern_identifier ~kind ident in
+      let id' = this#pattern_identifier ~kind ident in
       let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
       { id = id'; annot = annot'; kind; comments = comments' }
@@ -1418,7 +1418,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       (this#on_loc_annot * this#block) body
 
     method function_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
-      this#t_pattern_identifier ~kind:Ast.Variable.Var ident
+      this#pattern_identifier ~kind:Ast.Variable.Var ident
 
     method identifier ((annot, { Ast.Identifier.name; comments }) : ('M, 'M) Ast.Identifier.t)
         : ('N, 'N) Ast.Identifier.t =
@@ -1544,22 +1544,22 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.ImportDeclaration in
       ignore import_kind;
       let { kind; local; remote } = specifier in
-      let local' = Option.map ~f:this#t_pattern_identifier local in
-      let remote' = this#t_pattern_identifier remote in
+      let local' = Option.map ~f:this#pattern_identifier local in
+      let remote' = this#pattern_identifier remote in
       { kind; local = local'; remote = remote' }
 
     method import_default_specifier
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind) (id : ('M, 'T) Ast.Identifier.t)
         : ('N, 'U) Ast.Identifier.t =
       ignore import_kind;
-      this#t_pattern_identifier ~kind:Ast.Variable.Let id
+      this#pattern_identifier ~kind:Ast.Variable.Let id
 
     method import_namespace_specifier
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
         _loc
         (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       ignore import_kind;
-      this#t_pattern_identifier ~kind:Ast.Variable.Let id
+      this#pattern_identifier ~kind:Ast.Variable.Let id
 
     method jsx_element (expr : ('M, 'T) Ast.JSX.element) =
       let open Ast.JSX in
@@ -1944,14 +1944,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let comments' = this#syntax_with_internal_opt comments in
           Array { Array.elements = elements'; annot = annot'; comments = comments' }
         | Identifier { Identifier.name; annot; optional } ->
-          let name' = this#t_pattern_identifier ?kind name in
+          let name' = this#pattern_identifier ?kind name in
           let annot' = this#type_annotation_hint annot in
           Identifier { Identifier.name = name'; annot = annot'; optional }
         | Expression e -> Expression (this#pattern_expression e)
       )
 
-    method t_pattern_identifier ?kind (ident : ('M, 'T) Ast.Identifier.t)
-        : ('N, 'U) Ast.Identifier.t =
+    method pattern_identifier ?kind (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t
+        =
       ignore kind;
       this#t_identifier ident
 
@@ -1990,7 +1990,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method pattern_object_property_identifier_key ?kind (key : ('M, 'T) Ast.Identifier.t)
         : ('N, 'U) Ast.Identifier.t =
-      this#t_pattern_identifier ?kind key
+      this#pattern_identifier ?kind key
 
     method pattern_object_property_computed_key ?kind (key : ('M, 'T) Ast.ComputedKey.t)
         : ('N, 'U) Ast.ComputedKey.t =

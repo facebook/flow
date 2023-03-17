@@ -246,13 +246,13 @@ class ['M, 'T] searcher
       );
       super#pattern ?kind pat
 
-    method! t_pattern_identifier ?kind (annot, name) =
+    method! pattern_identifier ?kind (annot, name) =
       if kind != None && annot_covers_target annot then
         if in_require_declarator then
           this#request (Get_def_request.Type annot)
         else
           this#own_def (loc_of_annot annot);
-      super#t_pattern_identifier ?kind (annot, name)
+      super#pattern_identifier ?kind (annot, name)
 
     method! expression (annot, expr) =
       match (expr, module_ref_prefix, module_ref_prefix_LEGACY_INTEROP) with
