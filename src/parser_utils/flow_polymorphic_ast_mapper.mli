@@ -624,6 +624,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method statement_list : ('M, 'T) Flow_ast.Statement.t list -> ('N, 'U) Ast.Statement.t list
 
+    method statement_fork_point : ('M, 'T) Ast.Statement.t -> ('N, 'U) Ast.Statement.t list
+
     method string_literal : 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
 
     method super_expression : 'M Ast.Expression.Super.t -> 'N Ast.Expression.Super.t

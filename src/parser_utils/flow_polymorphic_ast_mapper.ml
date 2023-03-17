@@ -2071,7 +2071,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#statement_list stmts
 
     method statement_list (stmts : ('M, 'T) Ast.Statement.t list) : ('N, 'U) Ast.Statement.t list =
-      List.map ~f:this#statement stmts
+      List.bind ~f:this#statement_fork_point stmts
+
+    method statement_fork_point (stmt : ('M, 'T) Ast.Statement.t) : ('N, 'U) Ast.Statement.t list =
+      [this#statement stmt]
 
     method spread_element (expr : ('M, 'T) Ast.Expression.SpreadElement.t)
         : ('N, 'U) Ast.Expression.SpreadElement.t =
