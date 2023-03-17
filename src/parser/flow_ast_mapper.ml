@@ -1385,7 +1385,7 @@ class ['loc] mapper =
       else
         { indexed_access = indexed_access'; optional }
 
-    method string_literal_type _loc (lit : 'loc Ast.StringLiteral.t) =
+    method string_literal _loc (lit : 'loc Ast.StringLiteral.t) =
       let open Ast.StringLiteral in
       let { value; raw; comments } = lit in
       let comments' = this#syntax_opt comments in
@@ -1394,7 +1394,7 @@ class ['loc] mapper =
       else
         { value; raw; comments = comments' }
 
-    method number_literal_type _loc (lit : 'loc Ast.NumberLiteral.t) =
+    method number_literal _loc (lit : 'loc Ast.NumberLiteral.t) =
       let open Ast.NumberLiteral in
       let { value; raw; comments } = lit in
       let comments' = this#syntax_opt comments in
@@ -1403,7 +1403,7 @@ class ['loc] mapper =
       else
         { value; raw; comments = comments' }
 
-    method bigint_literal_type _loc (lit : 'loc Ast.BigIntLiteral.t) =
+    method bigint_literal _loc (lit : 'loc Ast.BigIntLiteral.t) =
       let open Ast.BigIntLiteral in
       let { value; raw; comments } = lit in
       let comments' = this#syntax_opt comments in
@@ -1412,7 +1412,7 @@ class ['loc] mapper =
       else
         { value; raw; comments = comments' }
 
-    method boolean_literal_type _loc (lit : 'loc Ast.BooleanLiteral.t) =
+    method boolean_literal _loc (lit : 'loc Ast.BooleanLiteral.t) =
       let open Ast.BooleanLiteral in
       let { value; comments } = lit in
       let comments' = this#syntax_opt comments in
@@ -1633,13 +1633,13 @@ class ['loc] mapper =
       | (loc, OptionalIndexedAccess ia) ->
         id_loc this#optional_indexed_access loc ia t (fun ia -> (loc, OptionalIndexedAccess ia))
       | (loc, StringLiteral lit) ->
-        id_loc this#string_literal_type loc lit t (fun lit -> (loc, StringLiteral lit))
+        id_loc this#string_literal loc lit t (fun lit -> (loc, StringLiteral lit))
       | (loc, NumberLiteral lit) ->
-        id_loc this#number_literal_type loc lit t (fun lit -> (loc, NumberLiteral lit))
+        id_loc this#number_literal loc lit t (fun lit -> (loc, NumberLiteral lit))
       | (loc, BigIntLiteral lit) ->
-        id_loc this#bigint_literal_type loc lit t (fun lit -> (loc, BigIntLiteral lit))
+        id_loc this#bigint_literal loc lit t (fun lit -> (loc, BigIntLiteral lit))
       | (loc, BooleanLiteral lit) ->
-        id_loc this#boolean_literal_type loc lit t (fun lit -> (loc, BooleanLiteral lit))
+        id_loc this#boolean_literal loc lit t (fun lit -> (loc, BooleanLiteral lit))
       | (loc, Union t') -> id_loc this#union_type loc t' t (fun t' -> (loc, Union t'))
       | (loc, Intersection t') ->
         id_loc this#intersection_type loc t' t (fun t' -> (loc, Intersection t'))

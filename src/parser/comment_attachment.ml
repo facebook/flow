@@ -466,7 +466,7 @@ let class_implements_remove_trailing env implements =
 
 let string_literal_remove_trailing env str =
   let { remove_trailing; _ } = trailing_and_remover env in
-  remove_trailing str (fun remover (loc, str) -> (loc, remover#string_literal_type loc str))
+  remove_trailing str (fun remover (loc, str) -> (loc, remover#string_literal loc str))
 
 let statement_add_comments
     ((loc, stmt) : (Loc.t, Loc.t) Statement.t) (comments : (Loc.t, unit) Syntax.t option) :

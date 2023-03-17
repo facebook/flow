@@ -1426,9 +1426,7 @@ module Statement
     | Explicit trailing -> ((source_loc, source), trailing)
     | Implicit { remove_trailing; _ } ->
       ( ( source_loc,
-          remove_trailing source (fun remover source ->
-              remover#string_literal_type source_loc source
-          )
+          remove_trailing source (fun remover source -> remover#string_literal source_loc source)
         ),
         []
       )
@@ -2099,7 +2097,7 @@ module Statement
         | Implicit { remove_trailing; _ } ->
           ( [],
             remove_trailing source (fun remover (loc, source) ->
-                (loc, remover#string_literal_type loc source)
+                (loc, remover#string_literal loc source)
             )
           )
       in

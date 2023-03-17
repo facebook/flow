@@ -24,7 +24,7 @@ class useless_mapper =
       | Number 4.0 -> { value = Number 5.0; raw = "5"; comments = None }
       | _ -> expr
 
-    method! string_literal_type _loc (lit : Loc.t Ast.StringLiteral.t) =
+    method! string_literal _loc (lit : Loc.t Ast.StringLiteral.t) =
       let open Ast.StringLiteral in
       let { value; comments; _ } = lit in
       if String.equal "RenameSL" value then

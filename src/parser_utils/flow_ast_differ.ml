@@ -266,13 +266,13 @@ let expand_loc_with_comments loc node =
     match node with
     | Literal (loc, lit) -> bounds (loc, lit) (fun collect (loc, lit) -> collect#literal loc lit)
     | StringLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#string_literal_type loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#string_literal loc lit)
     | NumberLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#number_literal_type loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#number_literal loc lit)
     | BigIntLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#bigint_literal_type loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#bigint_literal loc lit)
     | BooleanLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#boolean_literal_type loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#boolean_literal loc lit)
     | Statement (stmt, _) -> bounds stmt (fun collect stmt -> collect#statement stmt)
     | Expression (expr, _) -> bounds expr (fun collect expr -> collect#expression expr)
     | Pattern pat -> bounds pat (fun collect pat -> collect#pattern pat)
