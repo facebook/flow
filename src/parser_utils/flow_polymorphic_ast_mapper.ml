@@ -1118,14 +1118,19 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Typeof.Target in
       match git with
       | Unqualified i -> Unqualified (this#typeof_identifier i)
-      | Qualified (annot, { qualification; id = id_ }) ->
-        let qualification' = this#typeof_expression qualification in
-        let id' = this#typeof_member_identifier id_ in
-        Qualified (this#on_type_annot annot, { qualification = qualification'; id = id' })
+      | Qualified i -> Qualified (this#typeof_qualified_identifier i)
 
     method typeof_identifier id = this#t_identifier id
 
     method typeof_member_identifier id = this#t_identifier id
+
+    method typeof_qualified_identifier (qual : ('M, 'T) Ast.Type.Typeof.Target.qualified)
+        : ('N, 'U) Ast.Type.Typeof.Target.qualified =
+      let open Ast.Type.Typeof.Target in
+      let (annot, { qualification; id = id_ }) = qual in
+      let qualification' = this#typeof_expression qualification in
+      let id' = this#typeof_member_identifier id_ in
+      (this#on_type_annot annot, { qualification = qualification'; id = id' })
 
     method keyof_type (t : ('M, 'T) Ast.Type.Keyof.t) : ('N, 'U) Ast.Type.Keyof.t =
       let open Ast.Type.Keyof in

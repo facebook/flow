@@ -691,6 +691,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method typeof_member_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
+    method typeof_qualified_identifier :
+      ('M, 'T) Ast.Type.Typeof.Target.qualified -> ('N, 'U) Ast.Type.Typeof.Target.qualified
+
     method unary_expression : ('M, 'T) Ast.Expression.Unary.t -> ('N, 'U) Ast.Expression.Unary.t
 
     method union_type : ('M, 'T) Ast.Type.Union.t -> ('N, 'U) Ast.Type.Union.t
