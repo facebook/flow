@@ -69,3 +69,12 @@ function test8() {
   overload(foo || "", (s) => {}); // okay
   overload(foo || 42, (s) => {}); // error because we can't resolve overload
 }
+
+function test9() {
+  declare var f1: {| <T>(({| cb: T |}) => void): T |} & ((empty) => mixed);
+  declare var f2: (<T>(({| cb: T |}) => void) => T) & ((empty) => mixed);
+
+  (f1(x => (0: any)): {||});
+  (f2(x => (0: any)): {||});
+
+}
