@@ -1636,9 +1636,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.JSX.Attribute.value =
       let open Ast.JSX.Attribute in
       match value with
-      | Literal (annot, lit) -> Literal (this#on_type_annot annot, this#literal lit)
-      | ExpressionContainer (annot, expr) ->
-        ExpressionContainer (this#on_type_annot annot, this#jsx_expression expr)
+      | Literal lit -> Literal (this#jsx_attribute_value_literal lit)
+      | ExpressionContainer expr -> ExpressionContainer (this#jsx_attribute_value_expression expr)
+
+    method jsx_attribute_value_literal lit =
+      let (annot, lit) = lit in
+      (this#on_type_annot annot, this#literal lit)
+
+    method jsx_attribute_value_expression expr =
+      let (annot, expr) = expr in
+      (this#on_type_annot annot, this#jsx_expression expr)
 
     method jsx_children (children : 'M * ('M, 'T) Ast.JSX.child list)
         : 'N * ('N, 'U) Ast.JSX.child list =
