@@ -790,7 +790,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Option.map ~f:this#syntax comments in
       (annot', { argument = argument'; comments = comments' })
 
-    method function_this_constraint_type (frpt : ('M, 'T) Ast.Type.Function.ThisParam.t)
+    method function_this_param_type (frpt : ('M, 'T) Ast.Type.Function.ThisParam.t)
         : ('N, 'U) Ast.Type.Function.ThisParam.t =
       let open Ast.Type.Function.ThisParam in
       let (loc, { annot; comments }) = frpt in
@@ -811,7 +811,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         ft
       in
       this#type_params_opt tparams (fun tparams' ->
-          let this_' = Option.map ~f:this#function_this_constraint_type this_ in
+          let this_' = Option.map ~f:this#function_this_param_type this_ in
           let ps' = List.map ~f:this#function_param_type ps in
           let rpo' = Option.map ~f:this#function_rest_param_type rpo in
           let return' = this#type_ return in

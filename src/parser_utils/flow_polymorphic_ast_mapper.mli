@@ -273,7 +273,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method function_rest_param_type :
       ('M, 'T) Ast.Type.Function.RestParam.t -> ('N, 'U) Ast.Type.Function.RestParam.t
 
-    method function_this_constraint_type :
+    method function_this_param_type :
       ('M, 'T) Ast.Type.Function.ThisParam.t -> ('N, 'U) Ast.Type.Function.ThisParam.t
 
     method function_type : ('M, 'T) Ast.Type.Function.t -> ('N, 'U) Ast.Type.Function.t
