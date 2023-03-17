@@ -267,6 +267,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method for_statement_init : ('M, 'T) Ast.Statement.For.init -> ('N, 'U) Ast.Statement.For.init
 
+    method for_init_declaration :
+      'M * ('M, 'T) Ast.Statement.VariableDeclaration.t ->
+      'N * ('N, 'U) Ast.Statement.VariableDeclaration.t
+
     method function_ : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
     method function_body : ('M, 'T) Ast.Function.body -> ('N, 'U) Ast.Function.body

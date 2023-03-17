@@ -795,9 +795,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.For.init =
       let open Ast.Statement.For in
       match init with
-      | InitDeclaration (annot, decl) ->
-        InitDeclaration (this#on_loc_annot annot, this#variable_declaration decl)
+      | InitDeclaration decl -> InitDeclaration (this#for_init_declaration decl)
       | InitExpression expr -> InitExpression (this#expression expr)
+
+    method for_init_declaration ((annot, decl) : 'M * ('M, 'T) Ast.Statement.VariableDeclaration.t)
+        : 'N * ('N, 'U) Ast.Statement.VariableDeclaration.t =
+      (this#on_loc_annot annot, this#variable_declaration decl)
 
     method function_param_type (fpt : ('M, 'T) Ast.Type.Function.Param.t)
         : ('N, 'U) Ast.Type.Function.Param.t =
