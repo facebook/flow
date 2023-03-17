@@ -19,12 +19,15 @@ and union_flatten = function
   | UnionT (_, rep) -> union_flatten_list (UnionRep.members rep)
   | t -> [t]
 
+type inferred_targ = {
+  tparam: Type.typeparam;
+  inferred: Type.t;
+}
+
 module type OBSERVER = sig
-  type output
+  val on_pinned_tparam : Context.t -> Type.typeparam -> Type.t -> inferred_targ
 
-  val on_pinned_tparam : Context.t -> Type.typeparam -> Type.t -> output
-
-  val on_constant_tparam_missing_bounds : Context.t -> Type.typeparam -> output
+  val on_constant_tparam_missing_bounds : Context.t -> Type.typeparam -> inferred_targ
 
   val on_missing_bounds :
     Context.t ->
@@ -32,7 +35,7 @@ module type OBSERVER = sig
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
-    output
+    inferred_targ
 
   val on_upper_non_t :
     Context.t ->
@@ -41,12 +44,10 @@ module type OBSERVER = sig
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
-    output
+    inferred_targ
 end
 
 module type S = sig
-  type output
-
   module Flow : Flow_common.S
 
   val pin_type :
@@ -57,7 +58,7 @@ module type S = sig
     default_bound:Type.t option ->
     Reason.reason ->
     Type.t ->
-    output
+    inferred_targ
 
   val solve_targs :
     Context.t ->
@@ -65,22 +66,19 @@ module type S = sig
     ?allow_underconstrained:bool ->
     ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
-    output Subst_name.Map.t
+    inferred_targ Subst_name.Map.t
 
   val fold :
     implicit_instantiation_cx:Context.t ->
     cx:Context.t ->
-    f:(Context.t -> 'acc -> Check.t -> output Subst_name.Map.t -> 'acc) ->
+    f:(Context.t -> 'acc -> Check.t -> inferred_targ Subst_name.Map.t -> 'acc) ->
     init:'acc ->
     post:(cx:Context.t -> implicit_instantiation_cx:Context.t -> unit) ->
     Check.t list ->
     'acc
 end
 
-module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S with type output = Observer.output =
-struct
-  type output = Observer.output
-
+module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
   module Flow = Flow
 
   let get_t cx =
@@ -972,9 +970,7 @@ struct
 end
 
 module PinTypes (Flow : Flow_common.S) = struct
-  module Observer : OBSERVER with type output = Type.t = struct
-    type output = Type.t
-
+  module Observer : OBSERVER = struct
     let on_constant_tparam_missing_bounds cx tparam =
       Flow_js_utils.add_output
         cx
@@ -984,18 +980,18 @@ module PinTypes (Flow : Flow_common.S) = struct
               ImplicitInstantiationInvariant "Constant tparam is unsupported."
             )
         );
-      Type.AnyT.error tparam.Type.reason
+      { tparam; inferred = Type.AnyT.error tparam.Type.reason }
 
-    let on_pinned_tparam _cx _tparam inferred = inferred
+    let on_pinned_tparam _cx tparam inferred = { tparam; inferred }
 
-    let on_missing_bounds cx ~use_op:_ _tparam ~tparam_binder_reason ~instantiation_reason:_ =
-      Tvar.mk cx tparam_binder_reason
+    let on_missing_bounds cx ~use_op:_ tparam ~tparam_binder_reason ~instantiation_reason:_ =
+      { tparam; inferred = Tvar.mk cx tparam_binder_reason }
 
-    let on_upper_non_t cx ~use_op:_ _u _tparam ~tparam_binder_reason ~instantiation_reason:_ =
-      Tvar.mk cx tparam_binder_reason
+    let on_upper_non_t cx ~use_op:_ _u tparam ~tparam_binder_reason ~instantiation_reason:_ =
+      { tparam; inferred = Tvar.mk cx tparam_binder_reason }
   end
 
-  module M : S with type output = Type.t with module Flow = Flow = Make (Observer) (Flow)
+  module M : S with module Flow = Flow = Make (Observer) (Flow)
 
   let pin_type cx ~use_op reason t =
     let polarity = Polarity.Neutral in
@@ -1009,17 +1005,13 @@ module PinTypes (Flow : Flow_common.S) = struct
         is_this = false;
       }
     in
-    M.pin_type cx ~use_op tparam (Some polarity) ~default_bound:None reason t
+    let { inferred; _ } =
+      M.pin_type cx ~use_op tparam (Some polarity) ~default_bound:None reason t
+    in
+    inferred
 end
 
-type inferred_targ = {
-  tparam: Type.typeparam;
-  inferred: Type.t;
-}
-
-module Observer : OBSERVER with type output = inferred_targ = struct
-  type output = inferred_targ
-
+module Observer : OBSERVER = struct
   let any_error = AnyT.why (AnyError None)
 
   let mod_inferred_bound =
@@ -1097,9 +1089,7 @@ module Observer : OBSERVER with type output = inferred_targ = struct
     )
 end
 
-module Pierce : functor (Flow : Flow_common.S) ->
-  S with type output = inferred_targ with module Flow = Flow =
-  Make (Observer)
+module Pierce : functor (Flow : Flow_common.S) -> S with module Flow = Flow = Make (Observer)
 
 module type KIT = sig
   module Flow : Flow_common.S
