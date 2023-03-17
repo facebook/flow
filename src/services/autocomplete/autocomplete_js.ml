@@ -729,11 +729,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         )
       | _ -> super#type_ t
 
-    (* Don't autocomplete type alias names *)
-    method! type_alias_identifier id = id
-
-    (* Don't autocomplete type parameter names *)
-    method! type_param_identifier id = id
+    (* Don't autocomplete type identifier bindings *)
+    method! binding_type_identifier id = id
   end
 
 let autocomplete_id ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc

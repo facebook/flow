@@ -326,6 +326,12 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 
+    method type_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+
+    method type_identifier_reference : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+
+    method binding_type_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+
     method if_consequent_statement :
       has_else:bool -> ('M, 'T) Ast.Statement.t -> ('N, 'U) Ast.Statement.t
 

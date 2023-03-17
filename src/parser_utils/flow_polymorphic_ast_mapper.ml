@@ -442,7 +442,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Class.Implements.Interface in
       let (annot, { id = id_; targs }) = interface in
       let annot' = this#on_loc_annot annot in
-      let id' = this#t_identifier id_ in
+      let id' = this#type_identifier_reference id_ in
       let targs' = Option.map ~f:this#type_args targs in
       (annot', { id = id'; targs = targs' })
 
@@ -1007,7 +1007,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Type.Generic.Identifier.t =
       let open Ast.Type.Generic.Identifier in
       match git with
-      | Unqualified i -> Unqualified (this#t_identifier i)
+      | Unqualified i -> Unqualified (this#type_identifier_reference i)
       | Qualified qual -> Qualified (this#generic_qualified_identifier_type qual)
 
     method generic_qualified_identifier_type (qual : ('M, 'T) Ast.Type.Generic.Identifier.qualified)
@@ -1426,6 +1426,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments = this#syntax_opt comments in
       (annot, { Ast.Identifier.name; comments })
 
+    method type_identifier id = this#t_identifier id
+
+    method type_identifier_reference id = this#type_identifier id
+
+    method binding_type_identifier id = this#type_identifier id
+
     method t_identifier ((annot, { Ast.Identifier.name; comments }) : ('M, 'T) Ast.Identifier.t)
         : ('N, 'U) Ast.Identifier.t =
       let annot = this#on_type_annot annot in
@@ -1436,7 +1442,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.Interface.t =
       let open Ast.Statement.Interface in
       let { id = ident; tparams; extends; body; comments } = interface in
-      let id' = this#class_identifier ident in
+      let id' = this#binding_type_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let extends' = List.map ~f:(this#on_loc_annot * this#generic_type) extends in
           let body' = (this#on_loc_annot * this#object_type) body in
@@ -1877,7 +1883,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.OpaqueType.t =
       let open Ast.Statement.OpaqueType in
       let { id; tparams; impltype; supertype; comments } = otype in
-      let id' = this#type_alias_identifier id in
+      let id' = this#binding_type_identifier id in
       this#type_params_opt tparams (fun tparams' ->
           let impltype' = Option.map ~f:this#type_ impltype in
           let supertype' = Option.map ~f:this#type_ supertype in
@@ -2252,7 +2258,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.TypeAlias.t =
       let open Ast.Statement.TypeAlias in
       let { id; tparams; right; comments } = stuff in
-      let id' = this#type_alias_identifier id in
+      let id' = this#binding_type_identifier id in
       this#type_params_opt tparams (fun tparams' ->
           let right' = this#type_ right in
           let comments' = this#syntax_opt comments in
