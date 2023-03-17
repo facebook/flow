@@ -157,7 +157,7 @@ class finder cx =
       (* Check the function body in a scope that contains both the function's parameters and also any
          class type parameters if we're inside a class toplevel. *)
       ScopeHelper.in_function_scope gcx tparams this#set_gcx (fun () ->
-          let (_ : (ml, tl) Ast.Function.body) = this#function_body body in
+          let (_ : (ml, tl) Ast.Function.body) = this#function_body_any body in
           ()
       );
       node

@@ -6650,7 +6650,7 @@ module Make
                   let body =
                     Base.Option.value
                       !body_ref
-                      ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body)
+                      ~default:(Tast_utils.error_mapper#function_body_any func.Ast.Function.body)
                   in
                   let func_t =
                     Base.Option.value
@@ -7318,7 +7318,7 @@ module Make
       let { Ast.Function.params; body; _ } = func in
       let mapper = Typed_ast_utils.placeholder_mapper cx in
       let params_ast = mapper#function_params params in
-      let body_ast = mapper#function_body body in
+      let body_ast = mapper#function_body_any body in
       (fun_type, reconstruct_func params_ast body_ast)
     else
       let (params_ast, body_ast, _) = Func_stmt_sig.toplevels cx func_sig in

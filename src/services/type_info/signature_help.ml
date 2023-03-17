@@ -174,8 +174,8 @@ module Callee_finder = struct
         else
           body
 
-      method! function_body body =
-        let _ = super#function_body body in
+      method! function_body_any body =
+        let _ = super#function_body_any body in
         match body with
         | Flow_ast.Function.BodyBlock (loc, _) when this#covers_target loc -> raise (Found None)
         | _ -> body

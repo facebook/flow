@@ -273,7 +273,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method function_ : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
-    method function_body : ('M, 'T) Ast.Function.body -> ('N, 'U) Ast.Function.body
+    method function_body_any : ('M, 'T) Ast.Function.body -> ('N, 'U) Ast.Function.body
+
+    method function_body :
+      'M * ('M, 'T) Ast.Statement.Block.t -> 'N * ('N, 'U) Ast.Statement.Block.t
 
     method function_declaration : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 

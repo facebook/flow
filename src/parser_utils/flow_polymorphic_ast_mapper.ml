@@ -1347,7 +1347,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#function_params params in
           let return' = this#type_annotation_hint return in
-          let body' = this#function_body body in
+          let body' = this#function_body_any body in
           let predicate' = Option.map ~f:this#predicate predicate in
           let sig_loc' = this#on_loc_annot sig_loc in
           let comments' = this#syntax_opt comments in
@@ -1407,11 +1407,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       (loc', { annot = annot'; comments = comments' })
 
-    method function_body body =
+    method function_body_any (body : ('M, 'T) Ast.Function.body) : ('N, 'U) Ast.Function.body =
       let open Ast.Function in
       match body with
-      | BodyBlock body -> BodyBlock ((this#on_loc_annot * this#block) body)
+      | BodyBlock body -> BodyBlock (this#function_body body)
       | BodyExpression expr -> BodyExpression (this#expression expr)
+
+    method function_body (body : 'M * ('M, 'T) Ast.Statement.Block.t)
+        : 'N * ('N, 'U) Ast.Statement.Block.t =
+      (this#on_loc_annot * this#block) body
 
     method function_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ~kind:Ast.Variable.Var ident
