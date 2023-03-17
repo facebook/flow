@@ -45,6 +45,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method call_type_arg :
       ('M, 'T) Ast.Expression.CallTypeArg.t -> ('N, 'U) Ast.Expression.CallTypeArg.t
 
+    method catch_body : ('M, 'T) Ast.Statement.Block.t -> ('N, 'U) Ast.Statement.Block.t
+
     method catch_clause :
       ('M, 'T) Ast.Statement.Try.CatchClause.t' -> ('N, 'U) Ast.Statement.Try.CatchClause.t'
 

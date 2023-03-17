@@ -242,12 +242,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | Explicit t -> Explicit (this#type_ t)
       | Implicit t -> Implicit (this#implicit t)
 
+    method catch_body (body : ('M, 'T) Ast.Statement.Block.t) : ('N, 'U) Ast.Statement.Block.t =
+      this#block body
+
     method catch_clause (clause : ('M, 'T) Ast.Statement.Try.CatchClause.t')
         : ('N, 'U) Ast.Statement.Try.CatchClause.t' =
       let open Ast.Statement.Try.CatchClause in
       let { param; body; comments } = clause in
       let param' = Option.map ~f:this#catch_clause_pattern param in
-      let body' = (this#on_loc_annot * this#block) body in
+      let body' =
+        let (annot, body) = body in
+        (this#on_loc_annot annot, this#catch_body body)
+      in
       let comments' = this#syntax_opt comments in
       { param = param'; body = body'; comments = comments' }
 
