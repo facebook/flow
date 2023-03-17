@@ -1319,6 +1319,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method function_expression (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
       this#function_ expr
 
+    (** previously, we conflated [function_expression] and [class_method]. callers should be
+        updated to override those individually. *)
+    method function_expression_or_method (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t
+        =
+      this#function_ expr
+    [@@alert deprecated "Use either function_expression or class_method"]
+
     (* Internal helper for function declarations, function expressions and arrow functions *)
     method function_ (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
       let open Ast.Function in

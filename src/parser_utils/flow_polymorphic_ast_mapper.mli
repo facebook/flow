@@ -279,6 +279,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method function_expression : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
 
+    method function_expression_or_method : ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
+
     method function_param : ('M, 'T) Flow_ast.Function.Param.t -> ('N, 'U) Ast.Function.Param.t
 
     method function_params : ('M, 'T) Flow_ast.Function.Params.t -> ('N, 'U) Ast.Function.Params.t
