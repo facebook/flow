@@ -836,8 +836,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Object.Property in
       match opvt with
       | Init t -> Init (this#type_ t)
-      | Get (annot, ft) -> Get (this#on_loc_annot annot, this#function_type ft)
-      | Set (annot, ft) -> Set (this#on_loc_annot annot, this#function_type ft)
+      | Get t -> Get (this#object_type_property_getter t)
+      | Set t -> Set (this#object_type_property_setter t)
+
+    method object_type_property_getter getter =
+      let (annot, ft) = getter in
+      let annot' = this#on_loc_annot annot in
+      let ft' = this#function_type ft in
+      (annot', ft')
+
+    method object_type_property_setter setter =
+      let (annot, ft) = setter in
+      let annot' = this#on_loc_annot annot in
+      let ft' = this#function_type ft in
+      (annot', ft')
 
     method object_property_type (opt : ('M, 'T) Ast.Type.Object.Property.t)
         : ('N, 'U) Ast.Type.Object.Property.t =
@@ -860,7 +872,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         }
       )
 
-    method object_indexer_type (oit : ('M, 'T) Ast.Type.Object.Indexer.t)
+    method object_indexer_property_type (oit : ('M, 'T) Ast.Type.Object.Indexer.t)
         : ('N, 'U) Ast.Type.Object.Indexer.t =
       let open Ast.Type.Object.Indexer in
       let (annot, { id = id_; key; value; static; variance; comments }) = oit in
@@ -907,7 +919,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           )
       )
 
-    method object_internal_slot_type (islot : ('M, 'T) Ast.Type.Object.InternalSlot.t)
+    method object_internal_slot_property_type (islot : ('M, 'T) Ast.Type.Object.InternalSlot.t)
         : ('N, 'U) Ast.Type.Object.InternalSlot.t =
       let open Ast.Type.Object.InternalSlot in
       let (annot, { id = id_; value; optional; static; _method; comments }) = islot in
@@ -930,19 +942,29 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Object in
       match prop with
       | Property prop -> Property (this#object_property_type prop)
-      | SpreadProperty (annot, { SpreadProperty.argument; comments }) ->
-        let annot' = this#on_loc_annot annot in
-        let argument' = this#type_ argument in
-        let comments' = Option.map ~f:this#syntax comments in
-        SpreadProperty (annot', { SpreadProperty.argument = argument'; comments = comments' })
-      | Indexer indexer -> Indexer (this#object_indexer_type indexer)
-      | CallProperty (annot, { CallProperty.value; static; comments }) ->
-        let value' = (this#on_loc_annot * this#function_type) value in
-        let comments' = Option.map ~f:this#syntax comments in
-        CallProperty
-          (this#on_loc_annot annot, { CallProperty.value = value'; static; comments = comments' })
+      | SpreadProperty prop -> SpreadProperty (this#object_spread_property_type prop)
+      | Indexer indexer -> Indexer (this#object_indexer_property_type indexer)
+      | CallProperty prop -> CallProperty (this#object_call_property_type prop)
       | MappedType mapped_type -> MappedType (this#object_mapped_type mapped_type)
-      | InternalSlot islot -> InternalSlot (this#object_internal_slot_type islot)
+      | InternalSlot islot -> InternalSlot (this#object_internal_slot_property_type islot)
+
+    method object_spread_property_type (opt : ('M, 'T) Ast.Type.Object.SpreadProperty.t)
+        : ('N, 'U) Ast.Type.Object.SpreadProperty.t =
+      let open Ast.Type.Object.SpreadProperty in
+      let (annot, { argument; comments }) = opt in
+      let annot' = this#on_loc_annot annot in
+      let argument' = this#type_ argument in
+      let comments' = Option.map ~f:this#syntax comments in
+      (annot', { argument = argument'; comments = comments' })
+
+    method object_call_property_type (call : ('M, 'T) Ast.Type.Object.CallProperty.t)
+        : ('N, 'U) Ast.Type.Object.CallProperty.t =
+      let open Ast.Type.Object.CallProperty in
+      let (annot, { value; static; comments }) = call in
+      let annot' = this#on_loc_annot annot in
+      let value' = (this#on_loc_annot * this#function_type) value in
+      let comments' = Option.map ~f:this#syntax comments in
+      (annot', { value = value'; static; comments = comments' })
 
     method interface_type (i : ('M, 'T) Ast.Type.Interface.t) : ('N, 'U) Ast.Type.Interface.t =
       let open Ast.Type.Interface in

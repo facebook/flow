@@ -1263,25 +1263,23 @@ class ['loc] mapper =
     method object_type _loc (ot : ('loc, 'loc) Ast.Type.Object.t) =
       let open Ast.Type.Object in
       let { properties; exact; inexact; comments } = ot in
-      let properties' =
-        map_list
-          (fun p ->
-            match p with
-            | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
-            | SpreadProperty p' ->
-              id this#object_spread_property_type p' p (fun p' -> SpreadProperty p')
-            | Indexer p' -> id this#object_indexer_property_type p' p (fun p' -> Indexer p')
-            | InternalSlot p' ->
-              id this#object_internal_slot_property_type p' p (fun p' -> InternalSlot p')
-            | CallProperty p' -> id this#object_call_property_type p' p (fun p' -> CallProperty p')
-            | MappedType p' -> id this#object_mapped_type_property p' p (fun p' -> MappedType p'))
-          properties
-      in
+      let properties' = map_list this#object_type_property properties in
       let comments' = this#syntax_opt comments in
       if properties' == properties && comments == comments' then
         ot
       else
         { properties = properties'; exact; inexact; comments = comments' }
+
+    method object_type_property (p : ('loc, 'loc) Ast.Type.Object.property) =
+      let open Ast.Type.Object in
+      match p with
+      | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
+      | SpreadProperty p' -> id this#object_spread_property_type p' p (fun p' -> SpreadProperty p')
+      | Indexer p' -> id this#object_indexer_property_type p' p (fun p' -> Indexer p')
+      | InternalSlot p' ->
+        id this#object_internal_slot_property_type p' p (fun p' -> InternalSlot p')
+      | CallProperty p' -> id this#object_call_property_type p' p (fun p' -> CallProperty p')
+      | MappedType p' -> id this#object_mapped_type_property p' p (fun p' -> MappedType p')
 
     method interface_type _loc (i : ('loc, 'loc) Ast.Type.Interface.t) =
       let open Ast.Type.Interface in

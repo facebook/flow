@@ -436,14 +436,17 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method object_ : ('M, 'T) Ast.Expression.Object.t -> ('N, 'U) Ast.Expression.Object.t
 
-    method object_indexer_type :
+    method object_indexer_property_type :
       ('M, 'T) Ast.Type.Object.Indexer.t -> ('N, 'U) Ast.Type.Object.Indexer.t
 
     method object_mapped_type :
       ('M, 'T) Ast.Type.Object.MappedType.t -> ('N, 'U) Ast.Type.Object.MappedType.t
 
-    method object_internal_slot_type :
+    method object_internal_slot_property_type :
       ('M, 'T) Ast.Type.Object.InternalSlot.t -> ('N, 'U) Ast.Type.Object.InternalSlot.t
+
+    method object_call_property_type :
+      ('M, 'T) Ast.Type.Object.CallProperty.t -> ('N, 'U) Ast.Type.Object.CallProperty.t
 
     method object_key :
       ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
@@ -464,10 +467,19 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method object_property_value_type :
       ('M, 'T) Ast.Type.Object.Property.value -> ('N, 'U) Ast.Type.Object.Property.value
 
+    method object_type_property_getter :
+      'M * ('M, 'T) Ast.Type.Function.t -> 'N * ('N, 'U) Ast.Type.Function.t
+
+    method object_type_property_setter :
+      'M * ('M, 'T) Ast.Type.Function.t -> 'N * ('N, 'U) Ast.Type.Function.t
+
     method object_type : ('M, 'T) Ast.Type.Object.t -> ('N, 'U) Ast.Type.Object.t
 
     method object_type_property :
       ('M, 'T) Ast.Type.Object.property -> ('N, 'U) Ast.Type.Object.property
+
+    method object_spread_property_type :
+      ('M, 'T) Ast.Type.Object.SpreadProperty.t -> ('N, 'U) Ast.Type.Object.SpreadProperty.t
 
     method virtual on_loc_annot : 'M -> 'N
 
