@@ -598,7 +598,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method switch_case :
       ('M, 'T) Ast.Statement.Switch.Case.t' -> ('N, 'U) Ast.Statement.Switch.Case.t'
 
-    method t_function_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+    method function_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method t_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 

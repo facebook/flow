@@ -486,7 +486,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.DeclareFunction.t =
       let open Ast.Statement.DeclareFunction in
       let { id = ident; annot; predicate; comments } = decl in
-      let id' = this#t_function_identifier ident in
+      let id' = this#function_identifier ident in
       let annot' = this#type_annotation annot in
       let predicate' = Option.map ~f:this#type_predicate predicate in
       let comments' = this#syntax_opt comments in
@@ -1302,7 +1302,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       } =
         expr
       in
-      let ident' = Option.map ~f:this#t_function_identifier ident in
+      let ident' = Option.map ~f:this#function_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#function_params params in
           let return' = this#type_annotation_hint return in
@@ -1372,7 +1372,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | BodyBlock body -> BodyBlock ((this#on_loc_annot * this#block) body)
       | BodyExpression expr -> BodyExpression (this#expression expr)
 
-    method t_function_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
+    method function_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_pattern_identifier ~kind:Ast.Variable.Var ident
 
     method identifier ((annot, { Ast.Identifier.name; comments }) : ('M, 'M) Ast.Identifier.t)
