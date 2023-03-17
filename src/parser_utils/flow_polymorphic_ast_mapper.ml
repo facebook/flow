@@ -682,21 +682,28 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : 'N Ast.Statement.ExportNamedDeclaration.specifier =
       let open Ast.Statement.ExportNamedDeclaration in
       match spec with
-      | ExportSpecifiers specs -> ExportSpecifiers (List.map ~f:this#export_specifier specs)
-      | ExportBatchSpecifier (annot, name) ->
-        let annot' = this#on_loc_annot annot in
-        let name' = Option.map ~f:this#identifier name in
-        ExportBatchSpecifier (annot', name')
+      | ExportSpecifiers specs ->
+        ExportSpecifiers (List.map ~f:this#export_named_declaration_specifier specs)
+      | ExportBatchSpecifier batch -> ExportBatchSpecifier (this#export_batch_specifier batch)
 
     method export_source _loc lit = this#string_literal lit
 
-    method export_specifier (spec : 'M Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
+    method export_named_declaration_specifier
+        (spec : 'M Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
         : 'N Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t =
       let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
       let (annot, { local; exported }) = spec in
       let local' = this#identifier local in
       let exported' = Option.map ~f:this#identifier exported in
       (this#on_loc_annot annot, { local = local'; exported = exported' })
+
+    method export_batch_specifier
+        (spec : 'M Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t)
+        : 'N Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t =
+      let (annot, name) = spec in
+      let annot' = this#on_loc_annot annot in
+      let name' = Option.map ~f:this#identifier name in
+      (annot', name')
 
     method expression_statement (stmt : ('M, 'T) Ast.Statement.Expression.t)
         : ('N, 'U) Ast.Statement.Expression.t =
