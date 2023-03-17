@@ -1858,10 +1858,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Expression.Object.Property.key =
       let open Ast.Expression.Object.Property in
       match key with
-      | Literal (annot, lit) -> Literal (this#on_type_annot annot, this#literal lit)
+      | Literal literal -> Literal (this#object_key_literal literal)
       | Identifier ident -> Identifier (this#object_key_identifier ident)
       | PrivateName ident -> PrivateName (this#private_name ident)
       | Computed computed -> Computed (this#object_key_computed computed)
+
+    method object_key_literal literal =
+      let (annot, lit) = literal in
+      (this#on_type_annot annot, this#literal lit)
 
     method object_key_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_identifier ident

@@ -491,6 +491,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method object_key :
       ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
 
+    method object_key_literal : 'T * 'M Ast.Literal.t -> 'U * 'N Ast.Literal.t
+
     method object_key_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
     method object_key_computed : ('M, 'T) Ast.ComputedKey.t -> ('N, 'U) Ast.ComputedKey.t
