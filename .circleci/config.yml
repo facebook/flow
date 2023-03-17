@@ -352,7 +352,7 @@ jobs:
           path: dist/flow-osx-arm64.zip
           destination: flow-osx-arm64.zip
       - store_artifacts:
-          path: src/parser/dist/libflowparser-arm64.zip
+          path: src/parser/dist/libflowparser-osx-arm64.zip
           destination: libflowparser-osx-arm64.zip
 
   build_win:
