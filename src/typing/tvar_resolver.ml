@@ -106,24 +106,6 @@ class resolver ~no_lowers =
       | SpreadArg t ->
         let _ = this#type_ cx Polarity.Positive seen t in
         seen
-
-    method fun_call_type cx strategy t =
-      let {
-        call_this_t;
-        call_targs;
-        call_args_tlist;
-        call_tout = (r, id);
-        call_strict_arity = _;
-        call_speculation_hint_state = _;
-        call_kind = _;
-      } =
-        t
-      in
-      let _ = this#type_ cx Polarity.Positive strategy call_this_t in
-      let _ = Option.map (List.map (this#targ cx Polarity.Positive strategy)) call_targs in
-      let _ = List.map (this#call_arg cx strategy) call_args_tlist in
-      let _ = this#tvar cx Polarity.Positive strategy r id in
-      strategy
   end
 
 let run_conditionally cx f =
@@ -140,13 +122,6 @@ let resolve ?(no_lowers = default_no_lowers) cx t =
 let resolved_t ?(no_lowers = default_no_lowers) cx t =
   resolve ~no_lowers cx t;
   t
-
-let resolved_fun_call_type ?(no_lowers = default_no_lowers) cx funcalltype =
-  run_conditionally cx (fun () ->
-      let resolver = new resolver ~no_lowers in
-      resolver#fun_call_type cx ISet.empty funcalltype
-  );
-  funcalltype
 
 let resolved_call_arg ?(no_lowers = default_no_lowers) cx call_arg =
   run_conditionally cx (fun () ->

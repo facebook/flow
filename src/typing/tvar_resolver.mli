@@ -13,9 +13,6 @@ val resolve : ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.t -> unit
 
 val resolved_t : ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.t -> Type.t
 
-val resolved_fun_call_type :
-  ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.funcalltype -> Type.funcalltype
-
 val resolved_call_arg :
   ?no_lowers:(Reason.t -> Type.t) -> Context.t -> Type.call_arg -> Type.call_arg
 

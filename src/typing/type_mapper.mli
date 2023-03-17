@@ -60,10 +60,6 @@ class virtual ['a] t :
     method type_map : Context.t -> 'a -> Type.type_map -> Type.type_map
 
     method class_binding : Context.t -> 'a -> Type.class_binding -> Type.class_binding
-
-    method call_arg : Context.t -> 'a -> Type.call_arg -> Type.call_arg
-
-    method fun_call_type : Context.t -> 'a -> Type.funcalltype -> Type.funcalltype
   end
 
 val union_flatten : Context.t -> Type.t list -> Type.t list
