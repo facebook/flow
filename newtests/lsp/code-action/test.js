@@ -1,6 +1,6 @@
 /*
  * @flow
- * @noformat
+ * @format
  */
 
 import type {Suite} from 'flow-dev-tools/src/test/Suite';
@@ -435,21 +435,22 @@ module.exports = (suite(
                 ],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/prop-missing-bracket-syntax.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 3,
-                            character: 2,
+                    '<PLACEHOLDER_PROJECT_URL>/prop-missing-bracket-syntax.js':
+                      [
+                        {
+                          range: {
+                            start: {
+                              line: 3,
+                              character: 2,
+                            },
+                            end: {
+                              line: 3,
+                              character: 11,
+                            },
                           },
-                          end: {
-                            line: 3,
-                            character: 11,
-                          },
+                          newText: '"facebook"',
                         },
-                        newText: '"facebook"',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -1372,35 +1373,36 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-basic.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 4,
-                            character: 2,
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-basic.js':
+                      [
+                        {
+                          range: {
+                            start: {
+                              line: 4,
+                              character: 2,
+                            },
+                            end: {
+                              line: 5,
+                              character: 21,
+                            },
                           },
-                          end: {
-                            line: 5,
-                            character: 21,
-                          },
+                          newText: 'newFunction();',
                         },
-                        newText: 'newFunction();',
-                      },
-                      {
-                        range: {
-                          start: {
-                            line: 7,
-                            character: 1,
+                        {
+                          range: {
+                            start: {
+                              line: 7,
+                              character: 1,
+                            },
+                            end: {
+                              line: 7,
+                              character: 1,
+                            },
                           },
-                          end: {
-                            line: 7,
-                            character: 1,
-                          },
+                          newText:
+                            '\nfunction newFunction(): void {\n  console.log("foo");\n  console.log("bar");\n}',
                         },
-                        newText:
-                          '\nfunction newFunction(): void {\n  console.log("foo");\n  console.log("bar");\n}',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -1419,35 +1421,36 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-basic.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 4,
-                            character: 2,
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-basic.js':
+                      [
+                        {
+                          range: {
+                            start: {
+                              line: 4,
+                              character: 2,
+                            },
+                            end: {
+                              line: 5,
+                              character: 21,
+                            },
                           },
-                          end: {
-                            line: 5,
-                            character: 21,
-                          },
+                          newText: 'newFunction();',
                         },
-                        newText: 'newFunction();',
-                      },
-                      {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 25,
+                        {
+                          range: {
+                            start: {
+                              line: 6,
+                              character: 25,
+                            },
+                            end: {
+                              line: 6,
+                              character: 25,
+                            },
                           },
-                          end: {
-                            line: 6,
-                            character: 25,
-                          },
+                          newText:
+                            'function newFunction(): void {\n    console.log("foo");\n    console.log("bar");\n  }',
                         },
-                        newText:
-                          'function newFunction(): void {\n    console.log("foo");\n    console.log("bar");\n  }',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -1501,26 +1504,27 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-with-comments.js': [
-                      {
-                        range: {
-                          start: {line: 3, character: 2},
-                          end: {line: 6, character: 26},
-                        },
-                        newText: 'let {a, barr, fooo} = newFunction();',
-                      },
-                      {
-                        range: {
-                          start: {line: 9, character: 1},
-                          end: {
-                            line: 9,
-                            character: 1,
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-with-comments.js':
+                      [
+                        {
+                          range: {
+                            start: {line: 3, character: 2},
+                            end: {line: 6, character: 26},
                           },
+                          newText: 'let {a, barr, fooo} = newFunction();',
                         },
-                        newText:
-                          '\nfunction newFunction(): {| a: number, barr: number, fooo: number |} {\n  // comment before\n  let fooo = 3; // selected\n  let barr = 4; // selected\n  const a = 3; // selected\n  return { a, barr, fooo };\n}',
-                      },
-                    ],
+                        {
+                          range: {
+                            start: {line: 9, character: 1},
+                            end: {
+                              line: 9,
+                              character: 1,
+                            },
+                          },
+                          newText:
+                            '\nfunction newFunction(): {| a: number, barr: number, fooo: number |} {\n  // comment before\n  let fooo = 3; // selected\n  let barr = 4; // selected\n  const a = 3; // selected\n  return { a, barr, fooo };\n}',
+                        },
+                      ],
                   },
                 },
                 command: {
@@ -1539,23 +1543,24 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-with-comments.js': [
-                      {
-                        range: {
-                          start: {line: 3, character: 2},
-                          end: {line: 6, character: 26},
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-with-comments.js':
+                      [
+                        {
+                          range: {
+                            start: {line: 3, character: 2},
+                            end: {line: 6, character: 26},
+                          },
+                          newText: 'let {a, barr, fooo} = newFunction();',
                         },
-                        newText: 'let {a, barr, fooo} = newFunction();',
-                      },
-                      {
-                        range: {
-                          start: {line: 8, character: 15},
-                          end: {line: 8, character: 15},
+                        {
+                          range: {
+                            start: {line: 8, character: 15},
+                            end: {line: 8, character: 15},
+                          },
+                          newText:
+                            'function newFunction(): {| a: number, barr: number, fooo: number |} {\n    // comment before\n    let fooo = 3; // selected\n    let barr = 4; // selected\n    const a = 3; // selected\n    return { a, barr, fooo };\n  }',
                         },
-                        newText:
-                          'function newFunction(): {| a: number, barr: number, fooo: number |} {\n    // comment before\n    let fooo = 3; // selected\n    let barr = 4; // selected\n    const a = 3; // selected\n    return { a, barr, fooo };\n  }',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -1586,8 +1591,7 @@ module.exports = (suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri:
-            '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js',
         },
         range: {start: {line: 7, character: 2}, end: {line: 7, character: 19}},
         context: {
@@ -1605,31 +1609,32 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
-                      {
-                        range: {
-                          start: {line: 2, character: 0},
-                          end: {line: 2, character: 0},
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js':
+                      [
+                        {
+                          range: {
+                            start: {line: 2, character: 0},
+                            end: {line: 2, character: 0},
+                          },
+                          newText:
+                            'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
                         },
-                        newText:
-                          'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
-                      },
-                      {
-                        range: {
-                          start: {line: 7, character: 2},
-                          end: {line: 7, character: 13},
+                        {
+                          range: {
+                            start: {line: 7, character: 2},
+                            end: {line: 7, character: 13},
+                          },
+                          newText: '(newFunction)',
                         },
-                        newText: '(newFunction)',
-                      },
-                      {
-                        range: {
-                          start: {line: 8, character: 1},
-                          end: {line: 8, character: 1},
+                        {
+                          range: {
+                            start: {line: 8, character: 1},
+                            end: {line: 8, character: 1},
+                          },
+                          newText:
+                            '\nfunction newFunction(foo: Foo): void {\n  console.log(foo);\n}',
                         },
-                        newText:
-                          '\nfunction newFunction(foo: Foo): void {\n  console.log(foo);\n}',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -1648,23 +1653,24 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
-                      {
-                        range: {
-                          start: {line: 7, character: 2},
-                          end: {line: 7, character: 18},
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js':
+                      [
+                        {
+                          range: {
+                            start: {line: 7, character: 2},
+                            end: {line: 7, character: 18},
+                          },
+                          newText: 'newFunction()',
                         },
-                        newText: 'newFunction()',
-                      },
-                      {
-                        range: {
-                          start: {line: 7, character: 19},
-                          end: {line: 7, character: 19},
+                        {
+                          range: {
+                            start: {line: 7, character: 19},
+                            end: {line: 7, character: 19},
+                          },
+                          newText:
+                            '\nfunction newFunction(): void {\n    console.log(foo);\n  }',
                         },
-                        newText:
-                          '\nfunction newFunction(): void {\n    console.log(foo);\n  }',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -1684,8 +1690,7 @@ module.exports = (suite(
       ),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri:
-            '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js',
         },
         range: {start: {line: 6, character: 2}, end: {line: 6, character: 24}},
         context: {
@@ -1703,31 +1708,32 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
-                      {
-                        range: {
-                          start: {line: 2, character: 0},
-                          end: {line: 2, character: 0},
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js':
+                      [
+                        {
+                          range: {
+                            start: {line: 2, character: 0},
+                            end: {line: 2, character: 0},
+                          },
+                          newText:
+                            'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
                         },
-                        newText:
-                          'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
-                      },
-                      {
-                        range: {
-                          start: {line: 6, character: 14},
-                          end: {line: 6, character: 23},
+                        {
+                          range: {
+                            start: {line: 6, character: 14},
+                            end: {line: 6, character: 23},
+                          },
+                          newText: 'newFunction(getFoo2)',
                         },
-                        newText: 'newFunction(getFoo2)',
-                      },
-                      {
-                        range: {
-                          start: {line: 8, character: 1},
-                          end: {line: 8, character: 1},
+                        {
+                          range: {
+                            start: {line: 8, character: 1},
+                            end: {line: 8, character: 1},
+                          },
+                          newText:
+                            '\nfunction newFunction(getFoo2: () => Foo): Foo {\n  const foo = getFoo2();\n  return foo;\n}',
                         },
-                        newText:
-                          '\nfunction newFunction(getFoo2: () => Foo): Foo {\n  const foo = getFoo2();\n  return foo;\n}',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -1746,31 +1752,32 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
-                      {
-                        range: {
-                          start: {line: 2, character: 0},
-                          end: {line: 2, character: 0},
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js':
+                      [
+                        {
+                          range: {
+                            start: {line: 2, character: 0},
+                            end: {line: 2, character: 0},
+                          },
+                          newText:
+                            'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
                         },
-                        newText:
-                          'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
-                      },
-                      {
-                        range: {
-                          start: {line: 6, character: 14},
-                          end: {line: 6, character: 21},
+                        {
+                          range: {
+                            start: {line: 6, character: 14},
+                            end: {line: 6, character: 21},
+                          },
+                          newText: 'newFunction',
                         },
-                        newText: 'newFunction',
-                      },
-                      {
-                        range: {
-                          start: {line: 7, character: 19},
-                          end: {line: 7, character: 19},
+                        {
+                          range: {
+                            start: {line: 7, character: 19},
+                            end: {line: 7, character: 19},
+                          },
+                          newText:
+                            'function newFunction(): Foo {\n    const foo = getFoo2();\n    return foo;\n  }',
                         },
-                        newText:
-                          'function newFunction(): Foo {\n    const foo = getFoo2();\n    return foo;\n  }',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -1963,22 +1970,23 @@ module.exports = (suite(
                 diagnostics: [],
                 edit: {
                   changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-type-alias.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 3,
-                            character: 2,
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-type-alias.js':
+                      [
+                        {
+                          range: {
+                            start: {
+                              line: 3,
+                              character: 2,
+                            },
+                            end: {
+                              line: 3,
+                              character: 22,
+                            },
                           },
-                          end: {
-                            line: 3,
-                            character: 22,
-                          },
+                          newText:
+                            'type NewType = number;\n  const a: NewType = 3;',
                         },
-                        newText:
-                          'type NewType = number;\n  const a: NewType = 3;',
-                      },
-                    ],
+                      ],
                   },
                 },
                 command: {
@@ -2288,83 +2296,81 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Insert `await`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 5,
-                              "character": 4
-                            },
-                            "end": {
-                              "line": 5,
-                              "character": 9
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Insert `await`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 5,
+                            character: 4,
                           },
-                          "newText": "await foo()"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 5,
+                            character: 9,
+                          },
+                        },
+                        newText: 'await foo()',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "insert_await",
-                      "Insert `await`"
-                    ]
-                  }
                 },
-                {
-                  "title": "Insert `void`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 5,
-                              "character": 4
-                            },
-                            "end": {
-                              "line": 5,
-                              "character": 9
-                            }
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'insert_await',
+                    'Insert `await`',
+                  ],
+                },
+              },
+              {
+                title: 'Insert `void`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 5,
+                            character: 4,
                           },
-                          "newText": "void foo()"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 5,
+                            character: 9,
+                          },
+                        },
+                        newText: 'void foo()',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "insert_void",
-                      "Insert `void`"
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'insert_void',
+                    'Insert `void`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `unknown` type', [
       addFile('fix-unknown-type.js.ignored', 'fix-unknown-type.js'),
@@ -2388,50 +2394,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `mixed`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-unknown-type.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 9
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 16
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `mixed`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-unknown-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 9,
                           },
-                          "newText": "mixed"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 16,
+                          },
+                        },
+                        newText: 'mixed',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_unknown_type",
-                      "Convert to `mixed`"
-                    ]
-                  }
                 },
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-      )
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_unknown_type',
+                    'Convert to `mixed`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `never` type', [
       addFile('fix-never-type.js.ignored', 'fix-never-type.js'),
@@ -2455,50 +2459,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `empty`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-never-type.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 9
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 14
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `empty`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-never-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 9,
                           },
-                          "newText": "empty"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 14,
+                          },
+                        },
+                        newText: 'empty',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_never_type",
-                      "Convert to `empty`"
-                    ]
-                  }
                 },
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-      )
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_never_type',
+                    'Convert to `empty`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `undefined` type', [
       addFile('fix-undefined-type.js.ignored', 'fix-undefined-type.js'),
@@ -2522,50 +2524,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `void`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-undefined-type.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 9
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 18
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `void`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-undefined-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 9,
                           },
-                          "newText": "void"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 18,
+                          },
+                        },
+                        newText: 'void',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_undefined_type",
-                      "Convert to `void`"
-                    ]
-                  }
                 },
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-      )
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_undefined_type',
+                    'Convert to `void`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `keyof`', [
       addFile('fix-keyof.js.ignored', 'fix-keyof.js'),
@@ -2589,50 +2589,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `$Keys<T>`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-keyof.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 9
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 16
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `$Keys<T>`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-keyof.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 9,
                           },
-                          "newText": "$Keys<O>"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 16,
+                          },
+                        },
+                        newText: '$Keys<O>',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_keyof_type",
-                      "Convert to `$Keys<T>`"
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_keyof_type',
+                    'Convert to `$Keys<T>`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `extends` in type param', [
       addFile('fix-type-param-extends.js.ignored', 'fix-type-param-extends.js'),
@@ -2656,50 +2654,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `: T`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-type-param-extends.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 7
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 23
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `: T`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-type-param-extends.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 7,
                           },
-                          "newText": "A: string"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 23,
+                          },
+                        },
+                        newText: 'A: string',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_type_param_extends",
-                      "Convert to `: T`"
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_type_param_extends',
+                    'Convert to `: T`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `readonly` variance', [
       addFile('fix-readonly-variance.js.ignored', 'fix-readonly-variance.js'),
@@ -2723,50 +2719,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `+`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-readonly-variance.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 9
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 31
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `+`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-readonly-variance.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 9,
                           },
-                          "newText": "{ +foo: number }"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 31,
+                          },
+                        },
+                        newText: '{ +foo: number }',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_readonly_variance",
-                      "Convert to `+`"
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_readonly_variance',
+                    'Convert to `+`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `in` variance', [
       addFile('fix-in-variance.js.ignored', 'fix-in-variance.js'),
@@ -2790,50 +2784,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `-`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-in-variance.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 18
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 33
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `-`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-in-variance.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 18,
                           },
-                          "newText": ": (<-A>(A) => void)"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 33,
+                          },
+                        },
+                        newText: ': (<-A>(A) => void)',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_in_variance",
-                      "Convert to `-`"
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_in_variance',
+                    'Convert to `-`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `out` variance', [
       addFile('fix-out-variance.js.ignored', 'fix-out-variance.js'),
@@ -2857,50 +2849,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `+`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-out-variance.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 18
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 30
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `+`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-out-variance.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 18,
                           },
-                          "newText": ": (<+A>() => A)"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 30,
+                          },
+                        },
+                        newText: ': (<+A>() => A)',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_out_variance",
-                      "Convert to `+`"
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_out_variance',
+                    'Convert to `+`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `in out` variance', [
       addFile('fix-in-out-variance.js.ignored', 'fix-in-out-variance.js'),
@@ -2924,50 +2914,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Remove",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-in-out-variance.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 18
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 34
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Remove',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-in-out-variance.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 18,
                           },
-                          "newText": ": (<A>(A) => A)"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 34,
+                          },
+                        },
+                        newText: ': (<A>(A) => A)',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "remove_in_out_variance",
-                      "Remove"
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'remove_in_out_variance',
+                    'Remove',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `as` type cast', [
       addFile('fix-as-expression.js.ignored', 'fix-as-expression.js'),
@@ -2991,53 +2979,54 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to type cast `(<expr>: <type>)`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-as-expression.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 0
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 14
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to type cast `(<expr>: <type>)`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-as-expression.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 0,
                           },
-                          "newText": "(\"foo\": mixed)"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 14,
+                          },
+                        },
+                        newText: '("foo": mixed)',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_as_expression",
-                      "Convert to type cast `(<expr>: <type>)`",
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_as_expression',
+                    'Convert to type cast `(<expr>: <type>)`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `satisfies` type cast', [
-      addFile('fix-satisfies-expression.js.ignored', 'fix-satisfies-expression.js'),
+      addFile(
+        'fix-satisfies-expression.js.ignored',
+        'fix-satisfies-expression.js',
+      ),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -3058,53 +3047,54 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to type cast `(<expr>: <type>)`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-satisfies-expression.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 0
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 21
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to type cast `(<expr>: <type>)`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-satisfies-expression.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 0,
                           },
-                          "newText": "(\"foo\": mixed)"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 21,
+                          },
+                        },
+                        newText: '("foo": mixed)',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_satisfies_expression",
-                      "Convert to type cast `(<expr>: <type>)`",
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_satisfies_expression',
+                    'Convert to type cast `(<expr>: <type>)`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `readonly` array type', [
-      addFile('fix-readonly-array-type.js.ignored', 'fix-readonly-array-type.js'),
+      addFile(
+        'fix-readonly-array-type.js.ignored',
+        'fix-readonly-array-type.js',
+      ),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -3125,53 +3115,54 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `$ReadOnlyArray`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-readonly-array-type.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 9
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 26
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `$ReadOnlyArray`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-readonly-array-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 9,
                           },
-                          "newText": "$ReadOnlyArray<string>"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 26,
+                          },
+                        },
+                        newText: '$ReadOnlyArray<string>',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_readonly_array_type",
-                      "Convert to `$ReadOnlyArray`",
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_readonly_array_type',
+                    'Convert to `$ReadOnlyArray`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide quickfix for `readonly` tuple type', [
-      addFile('fix-readonly-tuple-type.js.ignored', 'fix-readonly-tuple-type.js'),
+      addFile(
+        'fix-readonly-tuple-type.js.ignored',
+        'fix-readonly-tuple-type.js',
+      ),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -3192,50 +3183,48 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Convert to `$ReadOnly`",
-                  "kind": "quickfix",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/fix-readonly-tuple-type.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 2,
-                              "character": 9
-                            },
-                            "end": {
-                              "line": 2,
-                              "character": 34
-                            }
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `$ReadOnly`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-readonly-tuple-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 9,
                           },
-                          "newText": "$ReadOnly<[string, number]>"
-                        }
-                      ]
-                    }
+                          end: {
+                            line: 2,
+                            character: 34,
+                          },
+                        },
+                        newText: '$ReadOnly<[string, number]>',
+                      },
+                    ],
                   },
-                  "command": {
-                    "title": "",
-                    "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-                    "arguments": [
-                      "textDocument/codeAction",
-                      "convert_readonly_tuple_type",
-                      "Convert to `$ReadOnly`",
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        )
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_readonly_tuple_type',
+                    'Convert to `$ReadOnly`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
     ]),
     test('provide codeAction for inserting jsdocs', [
       addFile('insert-jsdoc.js.ignored', 'insert-jsdoc.js'),
@@ -3259,149 +3248,145 @@ module.exports = (suite(
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
-          [
-            {
-              "method": "textDocument/codeAction",
-              "result": [
-                {
-                  "title": "Add JSDoc documentation",
-                  "kind": "refactor",
-                  "diagnostics": [],
-                  "edit": {
-                    "changes": {
-                      "<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js": [
-                        {
-                          "range": {
-                            "start": {
-                              "line": 3,
-                              "character": 0
-                            },
-                            "end": {
-                              "line": 3,
-                              "character": 0
-                            }
-                          },
-                          "newText": "/**\n * $0\n * @param x \n * @param y \n */\n"
-                        }
-                      ]
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          [
-            "textDocument/publishDiagnostics"
-          ],
-        ),
-        lspRequestAndWaitUntilResponse('textDocument/codeAction', {
-          textDocument: {
-            uri: '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js',
-          },
-          range: {
-            start: {
-              line: 8,
-              character: 18,
-            },
-            end: {
-              line: 8,
-              character: 18,
-            },
-          },
-          context: {
-            only: ['refactor'],
-            diagnostics: [],
-          },
-        }).verifyAllLSPMessagesInStep(
-            [
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
-                "method": "textDocument/codeAction",
-                "result": [
-                  {
-                    "title": "Add JSDoc documentation",
-                    "kind": "refactor",
-                    "diagnostics": [],
-                    "edit": {
-                      "changes": {
-                        "<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js": [
-                          {
-                            "range": {
-                              "start": {
-                                "line": 8,
-                                "character": 0
-                              },
-                              "end": {
-                                "line": 8,
-                                "character": 0
-                              }
-                            },
-                            "newText": "/**\n * $0\n * @param x \n * @param y \n */\n"
-                          }
-                        ]
-                      }
-                    }
-                  }
-                ]
-              }
-            ],
-            [
-              "textDocument/publishDiagnostics"
-            ],
-          ),
-          lspRequestAndWaitUntilResponse('textDocument/codeAction', {
-            textDocument: {
-              uri: '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js',
-            },
-            range: {
-              start: {
-                line: 11,
-                character: 18,
+                title: 'Add JSDoc documentation',
+                kind: 'refactor',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 0,
+                          },
+                        },
+                        newText:
+                          '/**\n * $0\n * @param x \n * @param y \n */\n',
+                      },
+                    ],
+                  },
+                },
               },
-              end: {
-                line: 11,
-                character: 18,
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js',
+        },
+        range: {
+          start: {
+            line: 8,
+            character: 18,
+          },
+          end: {
+            line: 8,
+            character: 18,
+          },
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Add JSDoc documentation',
+                kind: 'refactor',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 8,
+                            character: 0,
+                          },
+                          end: {
+                            line: 8,
+                            character: 0,
+                          },
+                        },
+                        newText:
+                          '/**\n * $0\n * @param x \n * @param y \n */\n',
+                      },
+                    ],
+                  },
+                },
               },
-            },
-            context: {
-              only: ['refactor'],
-              diagnostics: [],
-            },
-          }).verifyAllLSPMessagesInStep(
-              [
-                {
-                  "method": "textDocument/codeAction",
-                  "result": [
-                    {
-                      "title": "Add JSDoc documentation",
-                      "kind": "refactor",
-                      "diagnostics": [],
-                      "edit": {
-                        "changes": {
-                          "<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js": [
-                            {
-                              "range": {
-                                "start": {
-                                  "line": 11,
-                                  "character": 0
-                                },
-                                "end": {
-                                  "line": 11,
-                                  "character": 0
-                                }
-                              },
-                              "newText": "/**\n * $0\n */\n"
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                }
-              ],
-              [
-                "textDocument/publishDiagnostics"
-              ],
-            )
-    ])
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js',
+        },
+        range: {
+          start: {
+            line: 11,
+            character: 18,
+          },
+          end: {
+            line: 11,
+            character: 18,
+          },
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Add JSDoc documentation',
+                kind: 'refactor',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/insert-jsdoc.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 11,
+                            character: 0,
+                          },
+                          end: {
+                            line: 11,
+                            character: 0,
+                          },
+                        },
+                        newText: '/**\n * $0\n */\n',
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
   ],
 ): Suite);

@@ -1,6 +1,6 @@
 /*
  * @flow
- * @noformat
+ * @format
  */
 
 import type {Suite} from 'flow-dev-tools/src/test/Suite';
@@ -16,7 +16,7 @@ module.exports = (suite(
     lspRequestAndWaitUntilResponse,
     lspIgnoreStatusAndCancellation,
   }) => {
-    let requestSelectionRange = function(
+    let requestSelectionRange = function (
       uri: string,
       positions: Array<{|line: number, character: number|}>,
     ) {
