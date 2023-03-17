@@ -1365,7 +1365,7 @@ class ['loc] mapper =
       else
         { id = id'; targs = targs'; comments = comments' }
 
-    method indexed_access _loc (ia : ('loc, 'loc) Ast.Type.IndexedAccess.t) =
+    method indexed_access_type _loc (ia : ('loc, 'loc) Ast.Type.IndexedAccess.t) =
       let open Ast.Type.IndexedAccess in
       let { _object; index; comments } = ia in
       let _object' = this#type_ _object in
@@ -1376,10 +1376,10 @@ class ['loc] mapper =
       else
         { _object = _object'; index = index'; comments = comments' }
 
-    method optional_indexed_access loc (ia : ('loc, 'loc) Ast.Type.OptionalIndexedAccess.t) =
+    method optional_indexed_access_type loc (ia : ('loc, 'loc) Ast.Type.OptionalIndexedAccess.t) =
       let open Ast.Type.OptionalIndexedAccess in
       let { indexed_access; optional } = ia in
-      let indexed_access' = this#indexed_access loc indexed_access in
+      let indexed_access' = this#indexed_access_type loc indexed_access in
       if indexed_access' == indexed_access then
         ia
       else
@@ -1629,9 +1629,9 @@ class ['loc] mapper =
       | (loc, Interface i) -> id_loc this#interface_type loc i t (fun i -> (loc, Interface i))
       | (loc, Generic gt) -> id_loc this#generic_type loc gt t (fun gt -> (loc, Generic gt))
       | (loc, IndexedAccess ia) ->
-        id_loc this#indexed_access loc ia t (fun ia -> (loc, IndexedAccess ia))
+        id_loc this#indexed_access_type loc ia t (fun ia -> (loc, IndexedAccess ia))
       | (loc, OptionalIndexedAccess ia) ->
-        id_loc this#optional_indexed_access loc ia t (fun ia -> (loc, OptionalIndexedAccess ia))
+        id_loc this#optional_indexed_access_type loc ia t (fun ia -> (loc, OptionalIndexedAccess ia))
       | (loc, StringLiteral lit) ->
         id_loc this#string_literal loc lit t (fun lit -> (loc, StringLiteral lit))
       | (loc, NumberLiteral lit) ->
