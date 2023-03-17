@@ -365,6 +365,14 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
         _object
       | MemberExpression _ -> super#jsx_member_expression_object _object
 
+    method! import_named_specifier ~import_kind specifier =
+      let open Ast.Statement.ImportDeclaration in
+      ignore import_kind;
+      let { kind; local; remote } = specifier in
+      let local' = Base.Option.map ~f:this#pattern_identifier local in
+      let remote' = this#pattern_identifier remote in
+      { kind; local = local'; remote = remote' }
+
     method! pattern_identifier ?kind i =
       let ((loc, t), _) = i in
       acc <- f loc t acc;

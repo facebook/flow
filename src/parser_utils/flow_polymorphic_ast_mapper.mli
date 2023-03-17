@@ -354,6 +354,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Identifier.t ->
       ('N, 'U) Ast.Identifier.t
 
+    method remote_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+
     method import_named_specifier :
       import_kind:Ast.Statement.ImportDeclaration.import_kind ->
       ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier ->

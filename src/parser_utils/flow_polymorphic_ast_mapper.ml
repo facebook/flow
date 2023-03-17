@@ -1537,15 +1537,45 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let ident' = this#import_namespace_specifier ~import_kind annot ident in
         ImportNamespaceSpecifier (this#on_loc_annot annot, ident')
 
+    method remote_identifier id = this#t_identifier id
+
     method import_named_specifier
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
         (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier)
         : ('N, 'U) Ast.Statement.ImportDeclaration.named_specifier =
       let open Ast.Statement.ImportDeclaration in
-      ignore import_kind;
       let { kind; local; remote } = specifier in
-      let local' = Option.map ~f:this#pattern_identifier local in
-      let remote' = this#pattern_identifier remote in
+      let (is_type_remote, is_type_local) =
+        match (import_kind, kind) with
+        | (ImportType, _)
+        | (_, Some ImportType) ->
+          (true, true)
+        | (ImportTypeof, _)
+        | (_, Some ImportTypeof) ->
+          (false, true)
+        | _ -> (false, false)
+      in
+      let remote' =
+        match local with
+        | None ->
+          if is_type_remote then
+            this#binding_type_identifier remote
+          else
+            this#pattern_identifier ~kind:Ast.Variable.Let remote
+        | Some _ -> this#remote_identifier remote
+      in
+      let local' =
+        match local with
+        | None -> None
+        | Some ident ->
+          let local_visitor =
+            if is_type_local then
+              this#binding_type_identifier
+            else
+              this#pattern_identifier ~kind:Ast.Variable.Let
+          in
+          Some (local_visitor ident)
+      in
       { kind; local = local'; remote = remote' }
 
     method import_default_specifier
