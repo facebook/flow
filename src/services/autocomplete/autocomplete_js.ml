@@ -566,7 +566,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
               (used_keys, (ALoc.to_loc_exn spread_loc, spread_type) :: spreads)
         )
       in
-      Base.Option.iter ~f:(fun syntax -> ignore (this#syntax_with_internal syntax)) comments;
+      Base.Option.iter ~f:(fun syntax -> ignore (this#syntax syntax)) comments;
       Base.List.iter
         ~f:(fun prop ->
           ignore

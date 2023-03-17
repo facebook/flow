@@ -23,7 +23,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#on_loc_annot annot in
       let statements' = this#toplevel_statement_list statements in
       let interpreter' = Option.map ~f:this#interpreter_directive interpreter in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       let all_comments' = List.map ~f:this#comment all_comments in
       ( annot',
         {
@@ -97,6 +97,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let trailing' = List.map ~f:this#comment trailing in
         { leading = leading'; trailing = trailing'; internal }
 
+    method syntax_opt
+        : 'internal. ('M, 'internal) Ast.Syntax.t option -> ('N, 'internal) Ast.Syntax.t option =
+      Option.map ~f:this#syntax
+
     method syntax_with_internal (comments : ('M, 'M Ast.Comment.t list) Ast.Syntax.t)
         : ('N, 'N Ast.Comment.t list) Ast.Syntax.t =
       let open Ast.Syntax in
@@ -105,6 +109,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let trailing' = List.map ~f:this#comment trailing in
       let internal' = List.map ~f:this#comment internal in
       { leading = leading'; trailing = trailing'; internal = internal' }
+
+    method syntax_with_internal_opt
+        : ('M, 'M Ast.Comment.t list) Ast.Syntax.t option ->
+          ('N, 'N Ast.Comment.t list) Ast.Syntax.t option =
+      Option.map ~f:this#syntax_with_internal
 
     method expression ((annot, expr') : ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
       let open Ast.Expression in
@@ -148,14 +157,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { arguments; comments } = args in
       let annot' = this#on_loc_annot annot in
       let arguments' = List.map ~f:this#expression_or_spread arguments in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method array (expr : ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
       let open Ast.Expression in
       let { Array.elements; Array.comments } = expr in
       let elements' = List.map ~f:this#array_element elements in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { Array.elements = elements'; comments = comments' }
 
     method array_element (element : ('M, 'T) Ast.Expression.Array.element)
@@ -175,7 +184,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { operator; left; right; comments } = expr in
       let left' = this#assignment_pattern left in
       let right' = this#expression right in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { operator; left = left'; right = right'; comments = comments' }
 
     method binary (expr : ('M, 'T) Ast.Expression.Binary.t) : ('N, 'U) Ast.Expression.Binary.t =
@@ -183,21 +192,21 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { operator; left; right; comments } = expr in
       let left' = this#expression left in
       let right' = this#expression right in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { operator; left = left'; right = right'; comments = comments' }
 
     method block (stmt : ('M, 'T) Ast.Statement.Block.t) : ('N, 'U) Ast.Statement.Block.t =
       let open Ast.Statement.Block in
       let { body; comments } = stmt in
       let body' = this#statement_list body in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { body = body'; comments = comments' }
 
     method break (break : 'M Ast.Statement.Break.t) : 'N Ast.Statement.Break.t =
       let open Ast.Statement.Break in
       let { label; comments } = break in
       let label' = Option.map ~f:this#label_identifier label in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { label = label'; comments = comments' }
 
     method call _annot (expr : ('M, 'T) Ast.Expression.Call.t) : ('N, 'U) Ast.Expression.Call.t =
@@ -206,7 +215,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let callee' = this#expression callee in
       let targs' = Option.map ~f:this#call_type_args targs in
       let arguments' = this#arg_list arguments in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' }
 
     method optional_call annot (expr : ('M, 'T) Ast.Expression.OptionalCall.t)
@@ -223,7 +232,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { arguments; comments }) = pi in
       let annot' = this#on_loc_annot annot in
       let arguments' = List.map ~f:this#call_type_arg arguments in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method call_type_arg (x : ('M, 'T) Ast.Expression.CallTypeArg.t)
@@ -239,7 +248,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { param; body; comments } = clause in
       let param' = Option.map ~f:this#catch_clause_pattern param in
       let body' = (this#on_loc_annot * this#block) body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { param = param'; body = body'; comments = comments' }
 
     method class_declaration cls = this#class_ cls
@@ -250,7 +259,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Class in
       let { id; body; tparams; extends; implements; class_decorators; comments } = cls in
       let id' = Option.map ~f:this#class_identifier id in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       this#type_params_opt tparams (fun tparams' ->
           let extends' = Option.map ~f:this#class_extends extends in
           let body' = this#class_body body in
@@ -273,7 +282,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#on_loc_annot annot in
       let expr' = this#expression expr in
       let targs' = Option.map ~f:this#type_args targs in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { expr = expr'; targs = targs'; comments = comments' })
 
     method class_decorator (dec : ('M, 'T) Ast.Class.Decorator.t) : ('N, 'U) Ast.Class.Decorator.t =
@@ -281,7 +290,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { expression; comments }) = dec in
       let annot' = this#on_loc_annot annot in
       let expression' = this#expression expression in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { expression = expression'; comments = comments' })
 
     method class_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
@@ -292,7 +301,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { body; comments }) = cls_body in
       let annot' = this#on_loc_annot annot in
       let body' = List.map ~f:this#class_element body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { body = body'; comments = comments' })
 
     method class_element (elem : ('M, 'T) Ast.Class.Body.element) : ('N, 'U) Ast.Class.Body.element
@@ -312,7 +321,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let key' = this#class_method_key key in
       let value' = (this#on_loc_annot * this#function_expression) value in
       let decorators' = List.map ~f:this#class_decorator decorators in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { kind; key = key'; value = value'; static; decorators = decorators'; comments = comments' }
 
     method class_method_key key = this#class_key key
@@ -325,7 +334,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#type_annotation_hint annot in
       let variance' = Option.map ~f:this#variance variance in
       let decorators' = List.map ~f:this#class_decorator decorators in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       {
         key = key';
         value = value';
@@ -354,7 +363,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#type_annotation_hint annot in
       let variance' = Option.map ~f:this#variance variance in
       let decorators' = List.map ~f:this#class_decorator decorators in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       {
         key = key';
         value = value';
@@ -372,20 +381,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let test' = this#predicate_expression test in
       let consequent' = this#expression consequent in
       let alternate' = this#expression alternate in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
 
     method continue (cont : 'M Ast.Statement.Continue.t) : 'N Ast.Statement.Continue.t =
       let open Ast.Statement.Continue in
       let { label; comments } = cont in
       let label' = Option.map ~f:this#label_identifier label in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { label = label'; comments = comments' }
 
     method debugger (dbg : 'M Ast.Statement.Debugger.t) : 'N Ast.Statement.Debugger.t =
       let open Ast.Statement.Debugger in
       let { comments } = dbg in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { comments = comments' }
 
     method declare_class (decl : ('M, 'T) Ast.Statement.DeclareClass.t)
@@ -401,7 +410,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let extends' = Option.map ~f:(this#on_loc_annot * this#generic_type) extends in
           let mixins' = List.map ~f:(this#on_loc_annot * this#generic_type) mixins in
           let implements' = Option.map ~f:this#class_implements implements in
-          let comments' = Option.map ~f:this#syntax comments in
+          let comments' = this#syntax_opt comments in
           {
             id = id';
             tparams = tparams';
@@ -419,7 +428,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { interfaces; comments }) = implements in
       let annot' = this#on_loc_annot annot in
       let interfaces' = List.map ~f:this#class_implements_interface interfaces in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { interfaces = interfaces'; comments = comments' })
 
     method class_implements_interface (interface : ('M, 'T) Ast.Class.Implements.Interface.t)
@@ -448,7 +457,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       in
       let specifiers' = Option.map ~f:this#export_named_specifier specifiers in
       let declaration' = Option.map ~f:this#declare_export_declaration_decl declaration in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       {
         default = default';
         source = source';
@@ -480,7 +489,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let id' = this#t_function_identifier ident in
       let annot' = this#type_annotation annot in
       let predicate' = Option.map ~f:this#type_predicate predicate in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { id = id'; annot = annot'; predicate = predicate'; comments = comments' }
 
     method declare_interface (decl : ('M, 'T) Ast.Statement.Interface.t)
@@ -497,7 +506,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Literal (annot, name) -> Literal (this#on_type_annot annot, this#string_literal name)
       in
       let body' = (this#on_loc_annot * this#block) body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { id = id'; body = body'; kind; comments = comments' }
 
     method declare_module_exports (exports : ('M, 'T) Ast.Statement.DeclareModuleExports.t)
@@ -505,7 +514,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.DeclareModuleExports in
       let { annot; comments } = exports in
       let annot' = this#type_annotation annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { annot = annot'; comments = comments' }
 
     method declare_type_alias (decl : ('M, 'T) Ast.Statement.TypeAlias.t)
@@ -518,7 +527,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { id = ident; annot; kind; comments } = decl in
       let id' = this#t_pattern_identifier ~kind ident in
       let annot' = this#type_annotation annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { id = id'; annot = annot'; kind; comments = comments' }
 
     method do_while (stuff : ('M, 'T) Ast.Statement.DoWhile.t) : ('N, 'U) Ast.Statement.DoWhile.t =
@@ -526,13 +535,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { body; test; comments } = stuff in
       let body' = this#statement body in
       let test' = this#predicate_expression test in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { body = body'; test = test'; comments = comments' }
 
     method empty (empty : 'M Ast.Statement.Empty.t) : 'N Ast.Statement.Empty.t =
       let open Ast.Statement.Empty in
       let { comments } = empty in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { comments = comments' }
 
     method enum_declaration (enum : ('M, 'T) Ast.Statement.EnumDeclaration.t)
@@ -552,7 +561,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | (annot, BigIntBody bigint_body) ->
           (this#on_loc_annot annot, BigIntBody (this#enum_bigint_body bigint_body))
       in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { id = this#t_identifier id; body = body'; comments = comments' }
 
     method enum_boolean_body (body : 'M Ast.Statement.EnumDeclaration.BooleanBody.t)
@@ -560,7 +569,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.BooleanBody in
       let { members; explicit_type; has_unknown_members; comments } = body in
       let members' = List.map ~f:this#enum_boolean_member members in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { members = members'; explicit_type; has_unknown_members; comments = comments' }
 
     method enum_number_body (body : 'M Ast.Statement.EnumDeclaration.NumberBody.t)
@@ -568,7 +577,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.NumberBody in
       let { members; explicit_type; has_unknown_members; comments } = body in
       let members' = List.map ~f:this#enum_number_member members in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { members = members'; explicit_type; has_unknown_members; comments = comments' }
 
     method enum_string_body (body : 'M Ast.Statement.EnumDeclaration.StringBody.t)
@@ -580,7 +589,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Defaulted members -> Defaulted (List.map ~f:this#enum_defaulted_member members)
         | Initialized members -> Initialized (List.map ~f:this#enum_string_member members)
       in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { members = members'; explicit_type; has_unknown_members; comments = comments' }
 
     method enum_symbol_body (body : 'M Ast.Statement.EnumDeclaration.SymbolBody.t)
@@ -588,7 +597,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.SymbolBody in
       let { members; has_unknown_members; comments } = body in
       let members' = List.map ~f:this#enum_defaulted_member members in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { members = members'; has_unknown_members; comments = comments' }
 
     method enum_bigint_body (body : 'M Ast.Statement.EnumDeclaration.BigIntBody.t)
@@ -596,7 +605,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.BigIntBody in
       let { members; explicit_type; has_unknown_members; comments } = body in
       let members' = List.map ~f:this#enum_bigint_member members in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { members = members'; explicit_type; has_unknown_members; comments = comments' }
 
     method enum_defaulted_member (member : 'M Ast.Statement.EnumDeclaration.DefaultedMember.t)
@@ -647,7 +656,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { default; declaration; comments } = decl in
       let default' = this#on_loc_annot default in
       let declaration' = this#export_default_declaration_decl declaration in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { default = default'; declaration = declaration'; comments = comments' }
 
     method export_default_declaration_decl
@@ -669,7 +678,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       in
       let specifiers' = Option.map ~f:this#export_named_specifier specifiers in
       let declaration' = Option.map ~f:this#statement declaration in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       {
         export_kind;
         source = source';
@@ -710,7 +719,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.Expression in
       let { expression = expr; directive; comments } = stmt in
       let expression' = this#expression expr in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { expression = expression'; directive; comments = comments' }
 
     method expression_or_spread (expr_or_spread : ('M, 'T) Ast.Expression.expression_or_spread)
@@ -727,7 +736,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let left' = this#for_in_statement_lhs left in
       let right' = this#expression right in
       let body' = this#statement body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { left = left'; right = right'; body = body'; each; comments = comments' }
 
     method for_in_statement_lhs (left : ('M, 'T) Ast.Statement.ForIn.left)
@@ -745,7 +754,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let left' = this#for_of_statement_lhs left in
       let right' = this#expression right in
       let body' = this#statement body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { left = left'; right = right'; body = body'; await; comments = comments' }
 
     method for_of_statement_lhs (left : ('M, 'T) Ast.Statement.ForOf.left) =
@@ -762,7 +771,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let test' = Option.map ~f:this#predicate_expression test in
       let update' = Option.map ~f:this#expression update in
       let body' = this#statement body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { init = init'; test = test'; update = update'; body = body'; comments = comments' }
 
     method for_statement_init (init : ('M, 'T) Ast.Statement.For.init)
@@ -787,7 +796,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { argument; comments }) = frpt in
       let annot' = this#on_loc_annot annot in
       let argument' = this#function_param_type argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { argument = argument'; comments = comments' })
 
     method function_this_param_type (frpt : ('M, 'T) Ast.Type.Function.ThisParam.t)
@@ -796,7 +805,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (loc, { annot; comments }) = frpt in
       let loc' = this#on_loc_annot loc in
       let annot' = this#type_annotation annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (loc', { annot = annot'; comments = comments' })
 
     method function_type (ft : ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
@@ -815,8 +824,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let ps' = List.map ~f:this#function_param_type ps in
           let rpo' = Option.map ~f:this#function_rest_param_type rpo in
           let return' = this#type_ return in
-          let func_comments' = Option.map ~f:this#syntax func_comments in
-          let params_comments' = Option.map ~f:this#syntax_with_internal params_comments in
+          let func_comments' = this#syntax_opt func_comments in
+          let params_comments' = this#syntax_with_internal_opt params_comments in
           {
             params =
               ( this#on_loc_annot params_annot,
@@ -858,7 +867,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
       let variance' = Option.map ~f:this#variance variance in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       ( this#on_loc_annot annot,
         {
           key = key';
@@ -880,7 +889,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let key' = this#type_ key in
       let value' = this#type_ value in
       let variance' = Option.map ~f:this#variance variance in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       ( this#on_loc_annot annot,
         { id = id'; key = key'; value = value'; static; variance = variance'; comments = comments' }
       )
@@ -925,7 +934,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { id = id_; value; optional; static; _method; comments }) = islot in
       let id' = this#identifier id_ in
       let value' = this#type_ value in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       ( this#on_loc_annot annot,
         { id = id'; value = value'; optional; static; _method; comments = comments' }
       )
@@ -934,7 +943,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Object in
       let { properties; exact; inexact; comments } = ot in
       let properties' = List.map ~f:this#object_type_property properties in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { properties = properties'; exact; inexact; comments = comments' }
 
     method object_type_property (prop : ('M, 'T) Ast.Type.Object.property)
@@ -954,7 +963,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { argument; comments }) = opt in
       let annot' = this#on_loc_annot annot in
       let argument' = this#type_ argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { argument = argument'; comments = comments' })
 
     method object_call_property_type (call : ('M, 'T) Ast.Type.Object.CallProperty.t)
@@ -963,7 +972,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { value; static; comments }) = call in
       let annot' = this#on_loc_annot annot in
       let value' = (this#on_loc_annot * this#function_type) value in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { value = value'; static; comments = comments' })
 
     method interface_type (i : ('M, 'T) Ast.Type.Interface.t) : ('N, 'U) Ast.Type.Interface.t =
@@ -971,7 +980,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { extends; body; comments } = i in
       let extends' = List.map ~f:(this#on_loc_annot * this#generic_type) extends in
       let body' = (this#on_loc_annot * this#object_type) body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { extends = extends'; body = body'; comments = comments' }
 
     method generic_identifier_type (git : ('M, 'T) Ast.Type.Generic.Identifier.t)
@@ -989,7 +998,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { arguments; comments }) = targs in
       let annot' = this#on_loc_annot annot in
       let arguments' = List.map ~f:this#type_ arguments in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       (annot', { arguments = arguments'; comments = comments' })
 
     method type_params_opt
@@ -1005,7 +1014,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               let (annot, { params = tps; comments }) = tparams in
               let annot' = this#on_loc_annot annot in
               let tps' = List.map ~f:this#type_param tps in
-              let comments' = Option.map ~f:this#syntax_with_internal comments in
+              let comments' = this#syntax_with_internal_opt comments in
               (annot', { params = tps'; comments = comments' }))
             tparams
         in
@@ -1030,7 +1039,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { id; targs; comments } = gt in
       let id' = this#generic_identifier_type id in
       let targs' = Option.map ~f:this#type_args targs in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { id = id'; targs = targs'; comments = comments' }
 
     method indexed_access_type (ia : ('M, 'T) Ast.Type.IndexedAccess.t)
@@ -1039,7 +1048,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { _object; index; comments } = ia in
       let _object' = this#type_ _object in
       let index' = this#type_ index in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { _object = _object'; index = index'; comments = comments' }
 
     method optional_indexed_access_type (ia : ('M, 'T) Ast.Type.OptionalIndexedAccess.t)
@@ -1059,21 +1068,21 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Declared e -> Declared (this#expression e)
         | Inferred -> Inferred
       in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { kind = kind'; comments = comments' })
 
     method nullable_type (t : ('M, 'T) Ast.Type.Nullable.t) : ('N, 'U) Ast.Type.Nullable.t =
       let open Ast.Type.Nullable in
       let { argument; comments } = t in
       let argument' = this#type_ argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method typeof_type (t : ('M, 'T) Ast.Type.Typeof.t) : ('N, 'U) Ast.Type.Typeof.t =
       let open Ast.Type.Typeof in
       let { argument; comments } = t in
       let argument' = this#typeof_expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method typeof_expression (git : ('M, 'T) Ast.Type.Typeof.Target.t) =
@@ -1093,14 +1102,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Keyof in
       let { argument; comments } = t in
       let argument' = this#type_ argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method readonly_type (t : ('M, 'T) Ast.Type.ReadOnly.t) : ('N, 'U) Ast.Type.ReadOnly.t =
       let open Ast.Type.ReadOnly in
       let { argument; comments } = t in
       let argument' = this#type_ argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method tuple_element (element : ('M, 'T) Ast.Type.Tuple.element)
@@ -1135,14 +1144,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Tuple in
       let { elements; comments } = t in
       let elements' = List.map ~f:this#tuple_element elements in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { elements = elements'; comments = comments' }
 
     method array_type (t : ('M, 'T) Ast.Type.Array.t) : ('N, 'U) Ast.Type.Array.t =
       let open Ast.Type.Array in
       let { argument; comments } = t in
       let argument' = this#type_ argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method conditional_type (t : ('M, 'T) Ast.Type.Conditional.t) : ('N, 'U) Ast.Type.Conditional.t
@@ -1175,7 +1184,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let t0' = this#type_ t0 in
       let t1' = this#type_ t1 in
       let ts' = List.map ~f:this#type_ ts in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { types = (t0', t1', ts'); comments = comments' }
 
     method intersection_type (t : ('M, 'T) Ast.Type.Intersection.t)
@@ -1185,52 +1194,51 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let t0' = this#type_ t0 in
       let t1' = this#type_ t1 in
       let ts' = List.map ~f:this#type_ ts in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { types = (t0', t1', ts'); comments = comments' }
 
     method string_literal (t : 'M Ast.StringLiteral.t) : 'N Ast.StringLiteral.t =
       let open Ast.StringLiteral in
       let { value; raw; comments } = t in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { value; raw; comments = comments' }
 
     method number_literal (t : 'M Ast.NumberLiteral.t) : 'N Ast.NumberLiteral.t =
       let open Ast.NumberLiteral in
       let { value; raw; comments } = t in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { value; raw; comments = comments' }
 
     method bigint_literal (t : 'M Ast.BigIntLiteral.t) : 'N Ast.BigIntLiteral.t =
       let open Ast.BigIntLiteral in
       let { value; raw; comments } = t in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { value; raw; comments = comments' }
 
     method boolean_literal (t : 'M Ast.BooleanLiteral.t) : 'N Ast.BooleanLiteral.t =
       let open Ast.BooleanLiteral in
       let { value; comments } = t in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { value; comments = comments' }
 
     method type_ ((annot, t) : ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
       let open Ast.Type in
       ( this#on_type_annot annot,
         match t with
-        | Any comments -> Any (Option.map ~f:this#syntax comments)
-        | Mixed comments -> Mixed (Option.map ~f:this#syntax comments)
-        | Empty comments -> Empty (Option.map ~f:this#syntax comments)
-        | Void comments -> Void (Option.map ~f:this#syntax comments)
-        | Null comments -> Null (Option.map ~f:this#syntax comments)
-        | Symbol comments -> Symbol (Option.map ~f:this#syntax comments)
-        | Number comments -> Number (Option.map ~f:this#syntax comments)
-        | BigInt comments -> BigInt (Option.map ~f:this#syntax comments)
-        | String comments -> String (Option.map ~f:this#syntax comments)
-        | Boolean { raw; comments } ->
-          Boolean { raw; comments = Option.map ~f:this#syntax comments }
-        | Exists comments -> Exists (Option.map ~f:this#syntax comments)
-        | Unknown comments -> Unknown (Option.map ~f:this#syntax comments)
-        | Never comments -> Never (Option.map ~f:this#syntax comments)
-        | Undefined comments -> Undefined (Option.map ~f:this#syntax comments)
+        | Any comments -> Any (this#syntax_opt comments)
+        | Mixed comments -> Mixed (this#syntax_opt comments)
+        | Empty comments -> Empty (this#syntax_opt comments)
+        | Void comments -> Void (this#syntax_opt comments)
+        | Null comments -> Null (this#syntax_opt comments)
+        | Symbol comments -> Symbol (this#syntax_opt comments)
+        | Number comments -> Number (this#syntax_opt comments)
+        | BigInt comments -> BigInt (this#syntax_opt comments)
+        | String comments -> String (this#syntax_opt comments)
+        | Boolean { raw; comments } -> Boolean { raw; comments = this#syntax_opt comments }
+        | Exists comments -> Exists (this#syntax_opt comments)
+        | Unknown comments -> Unknown (this#syntax_opt comments)
+        | Never comments -> Never (this#syntax_opt comments)
+        | Undefined comments -> Undefined (this#syntax_opt comments)
         | Nullable t' -> Nullable (this#nullable_type t')
         | Array t' -> Array (this#array_type t')
         | Conditional t' -> Conditional (this#conditional_type t')
@@ -1258,7 +1266,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Expression.CallTypeArg.Implicit in
       let (annot, { comments }) = t in
       let annot' = this#on_type_annot annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { comments = comments' })
 
     method type_annotation ((annot, t_annot) : ('M, 'T) Ast.Type.annotation) =
@@ -1301,7 +1309,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let body' = this#function_body body in
           let predicate' = Option.map ~f:this#type_predicate predicate in
           let sig_loc' = this#on_loc_annot sig_loc in
-          let comments' = Option.map ~f:this#syntax comments in
+          let comments' = this#syntax_opt comments in
           {
             id = ident';
             params = params';
@@ -1322,7 +1330,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let params_list' = List.map ~f:this#function_param params_list in
       let rest' = Option.map ~f:this#function_rest_param rest in
       let this_' = Option.map ~f:this#function_this_param this_ in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       ( this#on_loc_annot annot,
         {
           Ast.Function.Params.params = params_list';
@@ -1346,7 +1354,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { argument; comments }) = expr in
       let annot' = this#on_loc_annot annot in
       let argument' = this#function_param_pattern argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { argument = argument'; comments = comments' })
 
     method function_this_param (this_param : ('M, 'T) Ast.Function.ThisParam.t)
@@ -1355,7 +1363,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (loc, { annot; comments }) = this_param in
       let loc' = this#on_loc_annot loc in
       let annot' = this#type_annotation annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (loc', { annot = annot'; comments = comments' })
 
     method function_body body =
@@ -1370,13 +1378,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method identifier ((annot, { Ast.Identifier.name; comments }) : ('M, 'M) Ast.Identifier.t)
         : ('N, 'N) Ast.Identifier.t =
       let annot = this#on_loc_annot annot in
-      let comments = Option.map ~f:this#syntax comments in
+      let comments = this#syntax_opt comments in
       (annot, { Ast.Identifier.name; comments })
 
     method t_identifier ((annot, { Ast.Identifier.name; comments }) : ('M, 'T) Ast.Identifier.t)
         : ('N, 'U) Ast.Identifier.t =
       let annot = this#on_type_annot annot in
-      let comments = Option.map ~f:this#syntax comments in
+      let comments = this#syntax_opt comments in
       (annot, { Ast.Identifier.name; comments })
 
     method interface (interface : ('M, 'T) Ast.Statement.Interface.t)
@@ -1387,7 +1395,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#type_params_opt tparams (fun tparams' ->
           let extends' = List.map ~f:(this#on_loc_annot * this#generic_type) extends in
           let body' = (this#on_loc_annot * this#object_type) body in
-          let comments' = Option.map ~f:this#syntax comments in
+          let comments' = this#syntax_opt comments in
           { id = id'; tparams = tparams'; extends = extends'; body = body'; comments = comments' }
       )
 
@@ -1399,7 +1407,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.PrivateName in
       let { name; comments } = ident in
       let annot' = this#on_loc_annot annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { name; comments = comments' })
 
     method computed_key ((annot, key) : ('M, 'T) Ast.ComputedKey.t) : ('N, 'U) Ast.ComputedKey.t =
@@ -1407,7 +1415,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { expression; comments } = key in
       let annot' = this#on_loc_annot annot in
       let expression' = this#expression expression in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { expression = expression'; comments = comments' })
 
     method import _annot (expr : ('M, 'T) Ast.Expression.Import.t)
@@ -1415,7 +1423,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Expression.Import in
       let { argument; comments } = expr in
       let argument' = this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method if_consequent_statement ~has_else (stmt : ('M, 'T) Ast.Statement.t)
@@ -1429,7 +1437,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { body; comments }) = altern in
       let annot' = this#on_loc_annot annot in
       let body' = this#statement body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { body = body'; comments = comments' })
 
     method if_statement (stmt : ('M, 'T) Ast.Statement.If.t) : ('N, 'U) Ast.Statement.If.t =
@@ -1440,7 +1448,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         this#if_consequent_statement ~has_else:(Option.is_some alternate) consequent
       in
       let alternate' = Option.map ~f:this#if_alternate_statement alternate in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
 
     method import_declaration _loc (decl : ('M, 'T) Ast.Statement.ImportDeclaration.t)
@@ -1453,7 +1461,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       in
       let specifiers' = Option.map ~f:(this#import_specifier ~import_kind) specifiers in
       let default' = Option.map ~f:(this#import_default_specifier ~import_kind) default in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       {
         import_kind;
         source = source';
@@ -1508,7 +1516,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let opening_element' = this#jsx_opening_element opening_element in
       let closing_element' = Option.map ~f:this#jsx_closing_element closing_element in
       let children' = this#jsx_children children in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       {
         opening_element = opening_element';
         closing_element = closing_element';
@@ -1522,7 +1530,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let opening' = this#on_loc_annot frag_opening_element in
       let closing' = this#on_loc_annot frag_closing_element in
       let children' = this#jsx_children frag_children in
-      let frag_comments' = Option.map ~f:this#syntax frag_comments in
+      let frag_comments' = this#syntax_opt frag_comments in
       {
         frag_opening_element = opening';
         frag_closing_element = closing';
@@ -1559,7 +1567,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.JSX.SpreadAttribute in
       let { argument; comments } = attr in
       let argument' = this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method jsx_attribute (attr : ('M, 'T) Ast.JSX.Attribute.t) : ('N, 'U) Ast.JSX.Attribute.t =
@@ -1613,7 +1621,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Expression expr -> Expression (this#expression expr)
         | EmptyExpression -> EmptyExpression
       in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       { expression = expression'; comments = comments' }
 
     method jsx_spread_child (jsx_spread_child : ('M, 'T) Ast.JSX.SpreadChild.t)
@@ -1621,7 +1629,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.JSX.SpreadChild in
       let { expression; comments } = jsx_spread_child in
       let expression' = this#expression expression in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { expression = expression'; comments = comments' }
 
     method jsx_element_name (name : ('M, 'T) Ast.JSX.name) : ('N, 'U) Ast.JSX.name =
@@ -1675,7 +1683,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.JSX.Identifier in
       let { name; comments } = id in
       let annot' = this#on_type_annot annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { name; comments = comments' })
 
     method labeled_statement (stmt : ('M, 'T) Ast.Statement.Labeled.t)
@@ -1684,20 +1692,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { label; body; comments } = stmt in
       let label' = this#label_identifier label in
       let body' = this#statement body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { label = label'; body = body'; comments = comments' }
 
     method literal (expr : 'M Ast.Literal.t) : 'N Ast.Literal.t =
       let open Ast.Literal in
       let { comments; _ } = expr in
-      { expr with comments = Option.map ~f:this#syntax comments }
+      { expr with comments = this#syntax_opt comments }
 
     method logical (expr : ('M, 'T) Ast.Expression.Logical.t) : ('N, 'U) Ast.Expression.Logical.t =
       let open Ast.Expression.Logical in
       let { operator; left; right; comments } = expr in
       let left' = this#expression left in
       let right' = this#expression right in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { operator; left = left'; right = right'; comments = comments' }
 
     method member (expr : ('M, 'T) Ast.Expression.Member.t) : ('N, 'U) Ast.Expression.Member.t =
@@ -1705,7 +1713,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { _object; property; comments } = expr in
       let _object' = this#expression _object in
       let property' = this#member_property property in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { _object = _object'; property = property'; comments = comments' }
 
     method optional_member (expr : ('M, 'T) Ast.Expression.OptionalMember.t)
@@ -1742,7 +1750,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       {
         meta = this#identifier meta;
         property = this#identifier property;
-        comments = Option.map ~f:this#syntax comments;
+        comments = this#syntax_opt comments;
       }
 
     method new_ (expr : ('M, 'T) Ast.Expression.New.t) : ('N, 'U) Ast.Expression.New.t =
@@ -1751,13 +1759,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let callee' = this#expression callee in
       let targs' = Option.map ~f:this#call_type_args targs in
       let arguments' = Option.map ~f:this#arg_list arguments in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { callee = callee'; targs = targs'; arguments = arguments'; comments = comments' }
 
     method object_ (expr : ('M, 'T) Ast.Expression.Object.t) : ('N, 'U) Ast.Expression.Object.t =
       let open Ast.Expression.Object in
       let { properties; comments } = expr in
-      let comments' = Option.map ~f:this#syntax_with_internal comments in
+      let comments' = this#syntax_with_internal_opt comments in
       let properties' = List.map ~f:this#object_property_or_spread_property properties in
       { properties = properties'; comments = comments' }
 
@@ -1785,12 +1793,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Get { key; value = (fn_annot, fn); comments } ->
           let key' = this#object_key key in
           let fn' = this#function_expression fn in
-          let comments' = Option.map ~f:this#syntax comments in
+          let comments' = this#syntax_opt comments in
           Get { key = key'; value = (this#on_loc_annot fn_annot, fn'); comments = comments' }
         | Set { key; value = (fn_annot, fn); comments } ->
           let key' = this#object_key key in
           let fn' = this#function_expression fn in
-          let comments' = Option.map ~f:this#syntax comments in
+          let comments' = this#syntax_opt comments in
           Set { key = key'; value = (this#on_loc_annot fn_annot, fn'); comments = comments' }
       )
 
@@ -1817,7 +1825,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#type_params_opt tparams (fun tparams' ->
           let impltype' = Option.map ~f:this#type_ impltype in
           let supertype' = Option.map ~f:this#type_ supertype in
-          let comments' = Option.map ~f:this#syntax comments in
+          let comments' = this#syntax_opt comments in
           {
             id = id';
             tparams = tparams';
@@ -1866,12 +1874,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Object { Object.properties; annot; comments } ->
           let properties' = List.map ~f:(this#pattern_object_p ?kind) properties in
           let annot' = this#type_annotation_hint annot in
-          let comments' = Option.map ~f:this#syntax_with_internal comments in
+          let comments' = this#syntax_with_internal_opt comments in
           Object { Object.properties = properties'; annot = annot'; comments = comments' }
         | Array { Array.elements; annot; comments } ->
           let elements' = List.map ~f:(this#pattern_array_e ?kind) elements in
           let annot' = this#type_annotation_hint annot in
-          let comments' = Option.map ~f:this#syntax_with_internal comments in
+          let comments' = this#syntax_with_internal_opt comments in
           Array { Array.elements = elements'; annot = annot'; comments = comments' }
         | Identifier { Identifier.name; annot; optional } ->
           let name' = this#t_pattern_identifier ?kind name in
@@ -1932,7 +1940,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Pattern.RestElement in
       let { argument; comments } = prop in
       let argument' = this#pattern_object_rest_property_pattern ?kind argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method pattern_object_property_pattern ?kind (expr : ('M, 'T) Ast.Pattern.t)
@@ -1969,7 +1977,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Pattern.RestElement in
       let { argument; comments } = elem in
       let argument' = this#pattern_array_rest_element_pattern ?kind argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method pattern_array_rest_element_pattern ?kind (expr : ('M, 'T) Ast.Pattern.t)
@@ -1991,7 +1999,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { argument; comments; return_out } = stmt in
       let return_out' = this#on_type_annot return_out in
       let argument' = Base.Option.map ~f:this#expression argument in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments'; return_out = return_out' }
 
     method sequence (expr : ('M, 'T) Ast.Expression.Sequence.t) : ('N, 'U) Ast.Expression.Sequence.t
@@ -1999,7 +2007,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Expression.Sequence in
       let { expressions; comments } = expr in
       let expressions' = List.map ~f:this#expression expressions in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { expressions = expressions'; comments = comments' }
 
     method toplevel_statement_list (stmts : ('M, 'T) Ast.Statement.t list)
@@ -2015,7 +2023,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { argument; comments }) = expr in
       let annot' = this#on_loc_annot annot in
       let argument' = this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { argument = argument'; comments = comments' })
 
     method spread_property (expr : ('M, 'T) Ast.Expression.Object.SpreadProperty.t)
@@ -2024,13 +2032,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { argument; comments }) = expr in
       let annot' = this#on_loc_annot annot in
       let argument' = this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { argument = argument'; comments = comments' })
 
     method super_expression (expr : 'M Ast.Expression.Super.t) : 'N Ast.Expression.Super.t =
       let open Ast.Expression.Super in
       let { comments } = expr in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { comments = comments' }
 
     method switch (switch : ('M, 'T) Ast.Statement.Switch.t) : ('N, 'U) Ast.Statement.Switch.t =
@@ -2039,7 +2047,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let exhaustive_out' = this#on_type_annot exhaustive_out in
       let discriminant' = this#expression discriminant in
       let cases' = List.map ~f:(this#on_loc_annot * this#switch_case) cases in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       {
         discriminant = discriminant';
         cases = cases';
@@ -2052,7 +2060,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { test; consequent; comments } = case in
       let test' = Option.map ~f:this#expression test in
       let consequent' = this#statement_list consequent in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { test = test'; consequent = consequent'; comments = comments' }
 
     method tagged_template (expr : ('M, 'T) Ast.Expression.TaggedTemplate.t)
@@ -2061,7 +2069,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { tag; quasi; comments } = expr in
       let tag' = this#expression tag in
       let quasi' = (this#on_loc_annot * this#template_literal) quasi in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { tag = tag'; quasi = quasi'; comments = comments' }
 
     method template_literal (expr : ('M, 'T) Ast.Expression.TemplateLiteral.t)
@@ -2070,7 +2078,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { quasis; expressions; comments } = expr in
       let quasis' = List.map ~f:this#template_literal_element quasis in
       let expressions' = List.map ~f:this#expression expressions in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { quasis = quasis'; expressions = expressions'; comments = comments' }
 
     method template_literal_element ((annot, elem) : 'M Ast.Expression.TemplateLiteral.Element.t)
@@ -2080,14 +2088,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method this_expression (expr : 'M Ast.Expression.This.t) : 'N Ast.Expression.This.t =
       let open Ast.Expression.This in
       let { comments } = expr in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { comments = comments' }
 
     method throw (stmt : ('M, 'T) Ast.Statement.Throw.t) : ('N, 'U) Ast.Statement.Throw.t =
       let open Ast.Statement.Throw in
       let { argument; comments } = stmt in
       let argument' = this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
     method try_catch (stmt : ('M, 'T) Ast.Statement.Try.t) : ('N, 'U) Ast.Statement.Try.t =
@@ -2096,7 +2104,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let block' = (this#on_loc_annot * this#block) block in
       let handler' = Option.map ~f:(this#on_loc_annot * this#catch_clause) handler in
       let finalizer' = Option.map ~f:(this#on_loc_annot * this#block) finalizer in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { block = block'; handler = handler'; finalizer = finalizer'; comments = comments' }
 
     method type_cast (expr : ('M, 'T) Ast.Expression.TypeCast.t)
@@ -2105,7 +2113,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { expression; annot; comments } = expr in
       let expression' = this#expression expression in
       let annot' = this#type_annotation annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { expression = expression'; annot = annot'; comments = comments' }
 
     method ts_type_cast (expr : ('M, 'T) Ast.Expression.TSTypeCast.t)
@@ -2119,7 +2127,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | As annot -> As (this#type_ annot)
         | Satisfies annot -> Satisfies (this#type_ annot)
       in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { expression = expression'; kind = kind'; comments = comments' }
 
     method unary_expression (expr : ('M, 'T) Ast.Expression.Unary.t)
@@ -2127,7 +2135,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Expression.Unary in
       let { argument; operator; comments } = expr in
       let argument' = this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; operator; comments = comments' }
 
     method update_expression (expr : ('M, 'T) Ast.Expression.Update.t)
@@ -2135,7 +2143,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Expression.Update in
       let { argument; operator; prefix; comments } = expr in
       let argument' = this#expression argument in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { argument = argument'; operator; prefix; comments = comments' }
 
     method variable_declaration (decl : ('M, 'T) Ast.Statement.VariableDeclaration.t)
@@ -2143,7 +2151,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.VariableDeclaration in
       let { declarations; kind; comments } = decl in
       let decls' = List.map ~f:(this#variable_declarator ~kind) declarations in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { declarations = decls'; kind; comments = comments' }
 
     method variable_declarator
@@ -2159,7 +2167,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Variance in
       let (annot, { kind; comments }) = variance in
       let annot' = this#on_loc_annot annot in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       (annot', { kind; comments = comments' })
 
     method while_ (stuff : ('M, 'T) Ast.Statement.While.t) : ('N, 'U) Ast.Statement.While.t =
@@ -2167,7 +2175,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { test; body; comments } = stuff in
       let test' = this#predicate_expression test in
       let body' = this#statement body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { test = test'; body = body'; comments = comments' }
 
     method with_ (stuff : ('M, 'T) Ast.Statement.With.t) : ('N, 'U) Ast.Statement.With.t =
@@ -2175,7 +2183,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { _object; body; comments } = stuff in
       let _object' = this#expression _object in
       let body' = this#statement body in
-      let comments' = Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       { _object = _object'; body = body'; comments = comments' }
 
     method type_alias (stuff : ('M, 'T) Ast.Statement.TypeAlias.t)
@@ -2185,7 +2193,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let id' = this#type_alias_identifier id in
       this#type_params_opt tparams (fun tparams' ->
           let right' = this#type_ right in
-          let comments' = Option.map ~f:this#syntax comments in
+          let comments' = this#syntax_opt comments in
           { id = id'; tparams = tparams'; right = right'; comments = comments' }
       )
 
@@ -2196,7 +2204,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Expression.Yield in
       let { argument; delegate; comments; result_out } = expr in
       let argument' = Base.Option.map ~f:this#expression argument in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = this#syntax_opt comments in
       let result_out' = this#on_type_annot result_out in
       { argument = argument'; delegate; comments = comments'; result_out = result_out' }
   end

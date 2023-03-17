@@ -97,8 +97,15 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method syntax : 'internal. ('M, 'internal) Ast.Syntax.t -> ('N, 'internal) Ast.Syntax.t
 
+    method syntax_opt :
+      'internal. ('M, 'internal) Ast.Syntax.t option -> ('N, 'internal) Ast.Syntax.t option
+
     method syntax_with_internal :
       ('M, 'M Ast.Comment.t list) Ast.Syntax.t -> ('N, 'N Ast.Comment.t list) Ast.Syntax.t
+
+    method syntax_with_internal_opt :
+      ('M, 'M Ast.Comment.t list) Ast.Syntax.t option ->
+      ('N, 'N Ast.Comment.t list) Ast.Syntax.t option
 
     method conditional :
       ('M, 'T) Ast.Expression.Conditional.t -> ('N, 'U) Ast.Expression.Conditional.t
