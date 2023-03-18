@@ -217,6 +217,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                |> use_t_result_of_t_option
            )
       | IdxUnwrapType
+      | MappedType _ (* TODO: Mapped Type reversals *)
       | OptionalIndexedAccessNonMaybeType _
       | OptionalIndexedAccessResultType _ ->
         UpperNonT u)
@@ -358,6 +359,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       (match tool with
       | Object.(ReadOnly | Partial | Required | ObjectRep | ObjectWiden _ | Object.ReactConfig _) ->
         identity_reverse_upper_bound cx tvar r tout
+      | Object.ObjectMap _ -> UpperNonT u (* TODO: reverse mapped types *)
       | Object.Spread (_, { Object.Spread.todo_rev; acc; _ }) ->
         let solution = merge_upper_bounds cx r tout in
         (match solution with

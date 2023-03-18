@@ -211,6 +211,8 @@ class ['a] t =
       | RestType (_, t) -> self#type_ cx pole_TODO acc t
       | CallType { from_maptype = _; args } -> self#list (self#type_ cx pole_TODO) acc args
       | TypeMap map -> self#type_map cx acc map
+      | MappedType { property_type; mapped_type_flags = _ } ->
+        self#type_ cx pole_TODO acc property_type
 
     method private custom_fun_kind cx acc =
       function

@@ -6880,6 +6880,7 @@ struct
           | ReactConfigType default_props ->
             ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
           | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
+          | MappedType _ -> failwith "Not yet implemented, never emitted"
         )
 
   and eval_keys cx ~trace reason t =

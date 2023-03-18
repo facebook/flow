@@ -516,6 +516,12 @@ class virtual ['a] t =
           t
         else
           ReactConfigType default_props'
+      | MappedType { property_type; mapped_type_flags } ->
+        let property_type' = self#type_ cx map_cx property_type in
+        if property_type' == property_type then
+          t
+        else
+          MappedType { property_type = property_type'; mapped_type_flags }
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType

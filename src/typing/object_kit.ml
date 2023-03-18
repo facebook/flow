@@ -657,6 +657,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       | Required -> object_required
       | ObjectRep -> object_rep
       | ObjectWiden id -> object_widen id
+      | Object.ObjectMap _ -> failwith "Not yet implemented, never emitted"
     in
     fun trace ->
       let add_output = Flow_js_utils.add_output ~trace in

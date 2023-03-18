@@ -53,6 +53,7 @@ let string_of_destructor = function
   | ReactElementRefType -> "ReactElementRef"
   | ReactConfigType _ -> "ReactConfig"
   | IdxUnwrapType -> "IdxUnwrapType"
+  | MappedType _ -> "MappedType"
 
 let string_of_destruct_kind = function
   | DestructAnnot -> "Annot"
@@ -641,6 +642,7 @@ and dump_use_t_ (depth, tvars) cx t =
             | Defaults _ -> "Defaults")
         )
       in
+      let object_map prop_type = spf "ObjectMap {prop_type: %s}" (kid prop_type) in
       let tool = function
         | ReadOnly -> "ReadOnly"
         | Partial -> "Partial"
@@ -650,6 +652,7 @@ and dump_use_t_ (depth, tvars) cx t =
         | Spread (options, state) -> spread options state
         | Rest (options, state) -> rest options state
         | ReactConfig state -> react_props state
+        | Object.ObjectMap { prop_type; mapped_type_flags = _ } -> object_map prop_type
       in
       (fun a b -> spf "(%s, %s)" (resolve_tool a) (tool b))
     )

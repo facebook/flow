@@ -1336,6 +1336,9 @@ module rec ConsGen : S = struct
         | ReactConfig _ -> error_internal cx "ReactConfig" op
         | ObjectRep -> error_internal cx "ObjectRep" op
         | ObjectWiden _ -> error_internal cx "ObjectWiden" op
+        | Object.ObjectMap _ ->
+          (* TODO(jmbrown): Annotation inference for Mapped Types *)
+          error_internal cx "ObjectMap" op
       )
     in
     let statics = get_statics in

@@ -377,6 +377,7 @@ end = struct
         | RestType _
         | ValuesType
         | TypeMap _
+        | MappedType _
         | ReactElementPropsType
         | ReactElementConfigType
         | ReactElementRefType
@@ -1613,6 +1614,7 @@ end = struct
       | T.IdxUnwrapType -> return (Ty.Utility (Ty.IdxUnwrapType ty))
       | T.RestType ((T.Object.Rest.Omit | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
+      | T.MappedType _ -> terr ~kind:BadEvalT ~msg:"Mapped types are not supported yet" None
 
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 

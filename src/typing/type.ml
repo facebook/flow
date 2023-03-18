@@ -1380,6 +1380,20 @@ module rec TypeTerm : sig
     | ReactElementRefType
     | ReactConfigType of t
     | IdxUnwrapType
+    | MappedType of {
+        property_type: t;
+        mapped_type_flags: mapped_type_flags;
+      }
+
+  and mapped_type_optionality =
+    | MakeOptional
+    | RemoveOptional
+    | KeepOptionality
+
+  and mapped_type_flags = {
+    variance: Polarity.t;
+    optional: mapped_type_optionality;
+  }
 
   and optional_indexed_access_index =
     | OptionalIndexedAccessStrLitIndex of name
@@ -2551,6 +2565,10 @@ and Object : sig
     | ReactConfig of ReactConfig.state
     | ObjectRep
     | ObjectWiden of ident
+    | ObjectMap of {
+        prop_type: TypeTerm.t;
+        mapped_type_flags: TypeTerm.mapped_type_flags;
+      }
 end =
   Object
 
@@ -3037,6 +3055,7 @@ module AConstraint = struct
             | ReactConfig _ -> "react config"
             | ObjectRep -> "object"
             | ObjectWiden _ -> "widening"
+            | ObjectMap _ -> "mapped type"
           )
       in
       replace_desc_reason desc r

@@ -1774,7 +1774,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           ( Acc.add_spread t acc,
             SpreadProperty (loc, { SpreadProperty.argument = argument_ast; comments })
           )
-        | MappedType (loc, _) as prop ->
+        | Ast.Type.Object.MappedType (loc, _) as prop ->
           Flow_js_utils.add_output
             cx
             Error_message.(EUnsupportedSyntax (loc, Error_message.MappedType));
@@ -2218,7 +2218,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               ( add_indexer ~static polarity ~key:k ~value:v x,
                 Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
               )
-            | MappedType (loc, _) as prop ->
+            | Ast.Type.Object.MappedType (loc, _) as prop ->
               Flow_js_utils.add_output
                 cx
                 Error_message.(EUnsupportedSyntax (loc, Error_message.MappedType));
