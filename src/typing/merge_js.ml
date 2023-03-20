@@ -206,12 +206,6 @@ let detect_unused_promises cx =
 
 let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors
 
-let detect_escaped_generics results =
-  Base.List.iter
-    ~f:(fun (cx, _, (_, { Flow_ast.Program.statements; _ })) ->
-      Generic_escape.scan_for_escapes cx ~add_output:Flow_js.add_output statements)
-    results
-
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
    * type without actually creating the flow so as not to disturb type inference.
@@ -523,7 +517,6 @@ let post_merge_checks cx master_cx ast tast metadata =
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
   detect_es6_import_export_errors cx metadata results;
-  detect_escaped_generics results;
   detect_matching_props_violations cx master_cx;
   detect_literal_subtypes cx;
   detect_unused_promises cx
