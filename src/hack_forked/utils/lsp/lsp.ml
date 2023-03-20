@@ -306,17 +306,28 @@ module CodeActionKind = struct
     let cons_to_end (ss : string list) (s : string) = Base.List.(fold_right ss ~f:cons ~init:[s]) in
     (fun (k, ks) s -> (k, cons_to_end ks s))
 
+  (* Some categories are handled specially in VS Code:
+     https://github.com/microsoft/vscode/blob/7c19b93062ae9990c1c9b3bf9e792f55a50db83a/src/vs/editor/contrib/codeAction/common/types.ts#L17-L26 *)
+
   (** Some of the constants defined by the spec *)
   let quickfix = kind_of_string "quickfix"
 
   let refactor = kind_of_string "refactor"
 
-  let refactor_extract = kind_of_string "refactor.extract"
+  let refactor_extract = sub_kind refactor "extract"
+
+  let refactor_inline = sub_kind refactor "inline"
+
+  let refactor_move = sub_kind refactor "move"
+
+  let refactor_rewrite = sub_kind refactor "rewrite"
 
   (** Document wide code actions *)
   let source = kind_of_string "source"
 
-  let source_organize_imports = kind_of_string "source.organizeImports"
+  let source_organize_imports = sub_kind source "organizeImports"
+
+  let source_fix_all = sub_kind source "fixAll"
 end
 
 (** Cancellation notification, method="$/cancelRequest" *)

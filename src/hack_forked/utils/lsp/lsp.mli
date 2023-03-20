@@ -219,9 +219,17 @@ module CodeActionKind : sig
 
   val refactor_extract : t
 
+  val refactor_inline : t
+
+  val refactor_move : t
+
+  val refactor_rewrite : t
+
   val source : t
 
   val source_organize_imports : t
+
+  val source_fix_all : t
 end
 
 module CodeActionClientCapabilities : sig
