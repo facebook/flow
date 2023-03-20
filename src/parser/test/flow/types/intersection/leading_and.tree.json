@@ -18,8 +18,8 @@
       "typeParameters":null,
       "right":{
         "type":"IntersectionTypeAnnotation",
-        "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":3,"column":10}},
-        "range":[13,30],
+        "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":3,"column":10}},
+        "range":[11,30],
         "types":[
           {
             "type":"StringTypeAnnotation",

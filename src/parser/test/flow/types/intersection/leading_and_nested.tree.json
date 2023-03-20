@@ -18,13 +18,13 @@
       "typeParameters":null,
       "right":{
         "type":"UnionTypeAnnotation",
-        "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":38}},
-        "range":[12,38],
+        "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":38}},
+        "range":[9,38],
         "types":[
           {
             "type":"IntersectionTypeAnnotation",
-            "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":27}},
-            "range":[12,27],
+            "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":27}},
+            "range":[10,27],
             "types":[
               {
                 "type":"StringTypeAnnotation",

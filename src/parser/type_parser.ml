@@ -135,6 +135,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | _ -> check_type
 
   and union env =
+    let start_loc = Peek.loc env in
     let leading =
       if Peek.token env = T_BIT_OR then (
         let leading = Peek.comments env in
@@ -144,7 +145,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         []
     in
     let left = intersection env in
-    union_with env ~leading left
+    union_with env ~leading ~start_loc left
 
   and union_with =
     let rec unions leading acc env =
@@ -160,13 +161,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             }
         | _ -> assert false
     in
-    fun env ?(leading = []) left ->
+    fun env ?(leading = []) ~start_loc left ->
       if Peek.token env = T_BIT_OR then
-        with_loc ~start_loc:(fst left) (unions leading [left]) env
+        with_loc ~start_loc (unions leading [left]) env
       else
         left
 
   and intersection env =
+    let start_loc = Peek.loc env in
     let leading =
       if Peek.token env = T_BIT_AND then (
         let leading = Peek.comments env in
@@ -176,7 +178,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         []
     in
     let left = anon_function_without_parens env in
-    intersection_with env ~leading left
+    intersection_with env ~leading ~start_loc left
 
   and intersection_with =
     let rec intersections leading acc env =
@@ -192,9 +194,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             }
         | _ -> assert false
     in
-    fun env ?(leading = []) left ->
+    fun env ?(leading = []) ~start_loc left ->
       if Peek.token env = T_BIT_AND then
-        with_loc ~start_loc:(fst left) (intersections leading [left]) env
+        with_loc ~start_loc (intersections leading [left]) env
       else
         left
 
@@ -824,8 +826,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         (generic_type_with_identifier env id
         |> postfix_with env ~start_loc
         |> anon_function_without_parens_with env
-        |> intersection_with env
-        |> union_with env
+        |> intersection_with ~start_loc env
+        |> union_with ~start_loc env
         |> conditional_with (Parser_env.with_no_conditional_type false env) ~start_loc
         )
 

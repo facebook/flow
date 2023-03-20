@@ -18,8 +18,8 @@
       "typeParameters":null,
       "right":{
         "type":"IntersectionTypeAnnotation",
-        "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":68}},
-        "range":[20,68],
+        "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":68}},
+        "range":[17,68],
         "types":[
           {
             "type":"FunctionTypeAnnotation",
@@ -46,6 +46,7 @@
                 "optional":false
               }
             ],
+            "this":null,
             "returnType":{
               "type":"NumberTypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":35},"end":{"line":1,"column":41}},
@@ -79,6 +80,7 @@
                 "optional":false
               }
             ],
+            "this":null,
             "returnType":{
               "type":"StringTypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":61},"end":{"line":1,"column":67}},

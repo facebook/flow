@@ -1480,22 +1480,6 @@ module.exports = {
     ],
     'Type Grouping': [
       'var a: (number)',
-      {
-        content: 'var a: (() => number) | () => string',
-        explanation: 'Esprima counts the parens in the type locs',
-        expected_differences: {
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.range.0': {
-            type: 'Wrong number',
-            expected: 7,
-            actual: 8
-          },
-          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.loc.start.column': {
-            type: 'Wrong number',
-            expected: 7,
-            actual: 8
-          }
-        }
-      },
       'var a: (A | B)',
       {
         content: 'var a: (typeof A)',
