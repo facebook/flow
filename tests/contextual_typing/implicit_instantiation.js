@@ -190,3 +190,11 @@ function test18() {
   declare function foo({||}): void;
   foo({bar: new Set([''])}); // error: there should be only one prop-missing error
 }
+
+function test19() {
+  declare var xs: Array<any>;
+
+  async function foo() {
+    const imageHashes: Array<string> = await Promise.all(xs); // ok
+  }
+}

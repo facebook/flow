@@ -5971,21 +5971,19 @@ struct
         has_unknown_react_mixins = _;
         inst_kind;
       } =
-    if Context.in_implicit_instantiation cx then (
-      any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow type_args;
-      match inst_kind with
-      | InterfaceKind { inline = true } ->
-        covariant_flow ~use_op static;
-        covariant_flow ~use_op super;
-        List.iter (covariant_flow ~use_op) implements;
-        let property_prop =
-          any_prop_properties cx trace ~use_op ~covariant_flow ~contravariant_flow any
-        in
-        property_prop (Context.find_props cx own_props);
-        property_prop (Context.find_props cx proto_props);
-        any_prop_call_prop cx ~use_op ~covariant_flow inst_call_t
-      | _ -> ()
-    )
+    any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow type_args;
+    match inst_kind with
+    | InterfaceKind { inline = true } ->
+      covariant_flow ~use_op static;
+      covariant_flow ~use_op super;
+      List.iter (covariant_flow ~use_op) implements;
+      let property_prop =
+        any_prop_properties cx trace ~use_op ~covariant_flow ~contravariant_flow any
+      in
+      property_prop (Context.find_props cx own_props);
+      property_prop (Context.find_props cx proto_props);
+      any_prop_call_prop cx ~use_op ~covariant_flow inst_call_t
+    | _ -> ()
 
   (* types trapped for any propagation. Returns true if this function handles the any case, either
      by propagating or by doing the trivial case. False if the usetype needs to be handled
