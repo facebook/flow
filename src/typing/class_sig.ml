@@ -503,8 +503,10 @@ module Make
       (* Constructors do not bind `this` *)
       let ts =
         List.rev_map
-          (fun { id_loc; this_write_loc = _; func_sig = t; set_asts = _; set_type = _ } ->
-            (id_loc, F.methodtype cx None (Type.dummy_this (aloc_of_reason s.instance.reason)) t))
+          (fun { id_loc; this_write_loc = _; func_sig = t; set_asts = _; set_type } ->
+            let t = F.methodtype cx None (Type.dummy_this (aloc_of_reason s.instance.reason)) t in
+            let () = Base.Option.iter id_loc ~f:(fun _loc -> set_type t) in
+            (id_loc, t))
           s.constructor
       in
       match ts with

@@ -891,3 +891,21 @@ default.js:5:18 {
   "start":18,
   "end":18
 }
+constructor.js:4:7 {
+  "types":{
+    "unevaluated":{"type":"(x: string) => void"},
+    "evaluated":{"type":"(x: string) => void"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"constructor.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":3,"offset":24},
+    "end":{"line":4,"column":13,"offset":35}
+  },
+  "path":"constructor.js",
+  "line":4,
+  "endline":4,
+  "start":3,
+  "end":13
+}

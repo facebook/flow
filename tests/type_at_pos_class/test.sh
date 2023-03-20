@@ -159,3 +159,7 @@ printf "default.js:4:17 "
 assert_ok "$FLOW" type-at-pos default.js 4 17 --strip-root --pretty
 printf "default.js:5:18 "
 assert_ok "$FLOW" type-at-pos default.js 5 18 --strip-root --pretty
+
+# constructor.js
+printf "constructor.js:4:7 "
+assert_ok "$FLOW" type-at-pos constructor.js 4 7 --strip-root --pretty
