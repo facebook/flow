@@ -6047,6 +6047,7 @@ struct
     | DestructuringT _
     | ElemT _
     | EnumExhaustiveCheckT _
+    | ConditionalT _
     | ExportNamedT _
     | ExportTypeT _
     | AssertExportIsTypeT _
@@ -6871,6 +6872,8 @@ struct
                 call_action = Funcalltype call;
                 return_hint = Type.hint_unavailable;
               }
+          | ConditionalType { tparams; extends_t; true_t; false_t } ->
+            ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout }
           | TypeMap tmap -> MapTypeT (use_op, reason, tmap, OpenT tout)
           | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
           | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
@@ -7908,6 +7911,7 @@ struct
               | FunReturnStatement _
               | GetProperty _
               | IndexedTypeAccess _
+              | ConditionalTypeEval _
               | SetProperty _
               | UpdateProperty _
               | JSXCreateElement _

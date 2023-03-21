@@ -80,6 +80,7 @@ and reason_of_use_t = function
   | EnumCastT { enum = (reason, _, _); _ } -> reason
   | EnumExhaustiveCheckT { reason; _ } -> reason
   | EqT { reason; _ } -> reason
+  | ConditionalT { reason; _ } -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _) -> reason
   | FunImplicitVoidReturnT { reason; _ } -> reason
@@ -251,6 +252,8 @@ and mod_reason_of_use_t f = function
   | EnumExhaustiveCheckT { reason; check; incomplete_out; discriminant_after_check } ->
     EnumExhaustiveCheckT { reason = f reason; check; incomplete_out; discriminant_after_check }
   | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
+  | ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout } ->
+    ConditionalT { use_op; reason = f reason; tparams; extends_t; true_t; false_t; tout }
   | ExportNamedT (reason, tmap, export_kind, t_out) ->
     ExportNamedT (f reason, tmap, export_kind, t_out)
   | ExportTypeT (reason, name, t, t_out) -> ExportTypeT (f reason, name, t, t_out)
@@ -375,6 +378,10 @@ let rec util_use_op_of_use_t :
   match u with
   | UseT (op, t) -> util op (fun op -> UseT (op, t))
   | BindT (op, r, f) -> util op (fun op -> BindT (op, r, f))
+  | ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout } ->
+    util use_op (fun use_op ->
+        ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout }
+    )
   | CallT { use_op; reason; call_action; return_hint } ->
     util use_op (fun use_op -> CallT { use_op; reason; call_action; return_hint })
   | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
@@ -551,6 +558,12 @@ let rec mod_loc_of_virtual_use_op f =
     | GetProperty reason -> GetProperty (mod_reason reason)
     | IndexedTypeAccess { _object; index } ->
       IndexedTypeAccess { _object = mod_reason _object; index = mod_reason index }
+    | ConditionalTypeEval { check_type_reason; extends_type_reason } ->
+      ConditionalTypeEval
+        {
+          check_type_reason = mod_reason check_type_reason;
+          extends_type_reason = mod_reason extends_type_reason;
+        }
     | Internal o -> Internal o
     | JSXCreateElement { op; component } ->
       JSXCreateElement { op = mod_reason op; component = mod_reason component }

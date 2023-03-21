@@ -73,6 +73,8 @@ type 'loc virtual_reason_desc =
   | RBigIntLit of string
   | RBooleanLit of bool
   | RIndexedAccess of { optional: bool }
+  | RConditionalType
+  | RInferType of string
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
@@ -279,7 +281,7 @@ let rec map_desc_locs f = function
     | RUntypedModule _ | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _
     | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _
     | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectMapi | RObjectKeyMirror
-    | RObjectMapConst | RIndexedAccess _ ) as r ->
+    | RObjectMapConst | RIndexedAccess _ | RConditionalType | RInferType _ ) as r ->
     r
   | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
@@ -550,6 +552,8 @@ let rec string_of_desc = function
       "optional indexed access"
     else
       "indexed access"
+  | RConditionalType -> "conditional type"
+  | RInferType name -> spf "infer type `%s`" name
   | RMatchingProp (k, v) -> spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
   | RObjectLit -> "object literal"
@@ -1342,6 +1346,8 @@ let classification_of_reason r =
   | RAnyExplicit
   | RAnyImplicit
   | RIndexedAccess _
+  | RConditionalType
+  | RInferType _
   | RMatchingProp _
   | RObject
   | RObjectLit

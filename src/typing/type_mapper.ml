@@ -504,6 +504,18 @@ class virtual ['a] t =
           t
         else
           CallType { from_maptype; args = args' }
+      | ConditionalType { tparams; extends_t; true_t; false_t } ->
+        let tparams' = ListUtils.ident_map (self#type_param cx map_cx) tparams in
+        let extends_t' = self#type_ cx map_cx extends_t in
+        let true_t' = self#type_ cx map_cx true_t in
+        let false_t' = self#type_ cx map_cx false_t in
+        if
+          tparams' == tparams && extends_t' == extends_t && true_t' == true_t && false_t' == false_t
+        then
+          t
+        else
+          ConditionalType
+            { tparams = tparams'; extends_t = extends_t'; true_t = true_t'; false_t = false_t' }
       | TypeMap tmap ->
         let tmap' = self#type_map cx map_cx tmap in
         if tmap' == tmap then

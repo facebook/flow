@@ -43,6 +43,7 @@ let string_of_destructor = function
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
   | CallType _ -> "CallType"
+  | ConditionalType _ -> "ConditionalType"
   | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
@@ -742,6 +743,21 @@ and dump_use_t_ (depth, tvars) cx t =
     | DebugPrintT _ -> p t
     | DebugSleepT _ -> p t
     | ElemT (_use_op, _reason, obj, _access) -> p ~extra:(spf "obj: %s" (kid obj)) t
+    | ConditionalT { tparams; extends_t; true_t; false_t; tout = (_, tout_id); _ } ->
+      p
+        ~extra:
+          (spf
+             "[%s] extends %s ? %s : %s => %s"
+             (String.concat
+                "; "
+                (Base.List.map tparams ~f:(fun tp -> Subst_name.string_of_subst_name tp.name))
+             )
+             (kid extends_t)
+             (kid true_t)
+             (kid false_t)
+             (tvar tout_id)
+          )
+        t
     | ExportNamedT (_, tmap, _export_kind, arg) ->
       p
         t

@@ -468,6 +468,17 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             | Op (GetProperty prop) -> `Root (prop, None, [text "Cannot get "; desc prop])
             | Op (IndexedTypeAccess { _object; index }) ->
               `Root (index, None, [text "Cannot access "; desc index; text " on "; desc _object])
+            | Op (ConditionalTypeEval { check_type_reason; extends_type_reason }) ->
+              `Root
+                ( check_type_reason,
+                  None,
+                  [
+                    text "Cannot check ";
+                    desc check_type_reason;
+                    text " against ";
+                    desc extends_type_reason;
+                  ]
+                )
             | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
             | Op (JSXCreateElement { op; component; _ }) ->
               `Root (op, Some component, [text "Cannot create "; desc component; text " element"])

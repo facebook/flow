@@ -176,6 +176,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ElementType _
       | ValuesType
       | CallType _
+      | ConditionalType _
       | TypeMap _
       | ReactElementRefType ->
         UpperEmpty
@@ -232,6 +233,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     (* Call related upper bounds are ignored because there is not enough info to reverse. *)
     | BindT _
     | CallT _
+    | ConditionalT _
     | MethodT _
     | PrivateMethodT _
     | ConstructorT _

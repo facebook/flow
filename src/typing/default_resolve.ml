@@ -80,6 +80,7 @@ let rec default_resolve_touts ~flow cx loc u =
     resolve_tvar call_tout
   | CallT { use_op = _; reason = _; call_action = ConcretizeCallee tout; return_hint = _ } ->
     resolve_tvar tout
+  | ConditionalT { tout; _ } -> resolve_tvar tout
   | MethodT (_, _, _, _, action, tout)
   | PrivateMethodT (_, _, _, _, _, _, action, tout) ->
     resolve tout;

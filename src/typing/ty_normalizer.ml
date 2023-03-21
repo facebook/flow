@@ -368,7 +368,8 @@ end = struct
         | ElementType _
         | OptionalIndexedAccessNonMaybeType _
         | OptionalIndexedAccessResultType _
-        | CallType _ ->
+        | CallType _
+        | ConditionalType _ ->
           true
         | ReadOnlyType
         | PartialType
@@ -1582,6 +1583,7 @@ end = struct
       | T.CallType { from_maptype = _; args = ts } ->
         let%map tys = mapM (type__ ~env) ts in
         Ty.Utility (Ty.Call (ty, tys))
+      | T.ConditionalType _ -> failwith "Conditional type printing is not implemented yet."
       | T.TypeMap (T.ObjectMap t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.ObjMap (ty, ty'))

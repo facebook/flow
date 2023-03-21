@@ -335,6 +335,10 @@ module rec TypeTerm : sig
         _object: 'loc virtual_reason;
         index: 'loc virtual_reason;
       }
+    | ConditionalTypeEval of {
+        check_type_reason: 'loc virtual_reason;
+        extends_type_reason: 'loc virtual_reason;
+      }
     | InitField of {
         op: 'loc virtual_reason;
         body: 'loc virtual_reason;
@@ -465,6 +469,15 @@ module rec TypeTerm : sig
         reason: reason;
         call_action: call_action;
         return_hint: lazy_hint_t;
+      }
+    | ConditionalT of {
+        use_op: use_op;
+        reason: reason;
+        tparams: typeparam list;
+        extends_t: t;
+        true_t: t;
+        false_t: t;
+        tout: tvar;
       }
     (* The last position is an optional type that probes into the type of the
        method called. This will be primarily used for type-table bookkeeping. *)
@@ -1373,6 +1386,12 @@ module rec TypeTerm : sig
     | CallType of {
         from_maptype: bool;
         args: t list;
+      }
+    | ConditionalType of {
+        tparams: typeparam list;
+        extends_t: t;
+        true_t: t;
+        false_t: t;
       }
     | TypeMap of type_map
     | ReactElementPropsType
@@ -3495,6 +3514,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | GeneratorYield { value = op }
   | GetProperty op
   | IndexedTypeAccess { index = op; _ }
+  | ConditionalTypeEval { check_type_reason = op; _ }
   | JSXCreateElement { op; _ }
   | ReactCreateElementCall { op; _ }
   | TypeApplication { type' = op }
@@ -3636,6 +3656,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | GeneratorYield _ -> "GeneratorYield"
   | GetProperty _ -> "GetProperty"
   | IndexedTypeAccess _ -> "IndexedTypeAccess"
+  | ConditionalTypeEval _ -> "ConditionalTypeEval"
   | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
   | JSXCreateElement _ -> "JSXCreateElement"
   | ReactCreateElementCall _ -> "ReactCreateElementCall"
@@ -3715,6 +3736,7 @@ let string_of_use_ctor = function
   | ElemT _ -> "ElemT"
   | EnumCastT _ -> "EnumCastT"
   | EnumExhaustiveCheckT _ -> "EnumExhaustiveCheckT"
+  | ConditionalT _ -> "ConditionalT"
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"

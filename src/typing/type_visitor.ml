@@ -210,6 +210,12 @@ class ['a] t =
         self#opt (self#object_kit_spread_operand_slice cx) acc head_slice
       | RestType (_, t) -> self#type_ cx pole_TODO acc t
       | CallType { from_maptype = _; args } -> self#list (self#type_ cx pole_TODO) acc args
+      | ConditionalType { tparams; extends_t; true_t; false_t } ->
+        let acc = self#list (self#type_param cx pole_TODO) acc tparams in
+        let acc = self#type_ cx pole_TODO acc extends_t in
+        let acc = self#type_ cx pole_TODO acc true_t in
+        let acc = self#type_ cx pole_TODO acc false_t in
+        acc
       | TypeMap map -> self#type_map cx acc map
       | MappedType { property_type; mapped_type_flags = _ } ->
         self#type_ cx pole_TODO acc property_type
