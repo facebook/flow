@@ -538,6 +538,10 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* We ran into an issue with Watchman *)
         | File_watcher_missed_changes
         (* Watchman restarted. We probably could survive this by recrawling *)
+        | Out_of_shared_memory
+        (* It's possible that restarting would GC enough to run for a while, but this
+           is a serious problem that should be investigated so as to not end up in a
+           crash loop. *)
         | Hash_table_full
         (* The hash table is full. It accumulates cruft, so restarting _might_ help, but
            if it's just too small, we could get stuck in a crash loop. Ideally we'd delete
@@ -560,8 +564,6 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (**** Things the server might exit with which the monitor can survive ****)
         | Server_out_of_date (* Server needs to restart, but monitor can survive *) ->
           (false, Some ServerStatus.Server_out_of_date)
-        | Out_of_shared_memory (* The monitor doesn't used sharedmem so we can survive *) ->
-          (false, Some ServerStatus.Out_of_shared_memory)
         | Killed_by_monitor (* The server died because we asked it to die *) -> (false, None)
         | Restart (* The server asked to be restarted *) -> (false, Some ServerStatus.Restart)
         (**** Unrelated exit codes. If we see them then something is wrong ****)
@@ -609,7 +611,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
      * will cause the bad command to consume retries and eventually exit. This doesn't prevent
      * future bad commands, but is better than the alternative.
      *)
-    signal = Sys.sigsegv
+    signal = Sys.sigsegv || signal = Sys.sigbus
 
   let wait_for_server_to_die monitor_options server =
     let pid = ServerInstance.pid_of server in
