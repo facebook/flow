@@ -506,6 +506,10 @@ and 'loc t' =
       reason_r: 'loc virtual_reason;
       kind: ArithKind.t;
     }
+  | EInvalidMappedType of {
+      loc: 'loc;
+      kind: invalid_mapped_type_error_kind;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -664,6 +668,13 @@ and ts_syntax_kind =
   | TSInOutVariance of [ `In | `Out | `InOut ]
   | TSTypeCast of [ `AsConst | `As | `Satisfies ]
   | TSReadonlyType of [ `Tuple | `Array ] option
+
+and invalid_mapped_type_error_kind =
+  | InterfaceOrDeclaredClass
+  | ExtraProperties
+  | RequiredInlineKeyof
+  | ExplicitExactOrInexact
+  | RemoveOptionality
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -1200,6 +1211,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_r = map_reason reason_r;
         kind;
       }
+  | EInvalidMappedType { loc; kind } -> EInvalidMappedType { loc = f loc; kind }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1451,6 +1463,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidCatchParameterAnnotation _
   | ETSSyntax _
   | EInvalidBinaryArith _
+  | EInvalidMappedType _
   | ETupleRequiredAfterOptional _ ->
     nope
 
@@ -1603,6 +1616,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EAnnotationInference (loc, _, _, _)
   | EAnnotationInferenceRecursive (loc, _)
   | EInvalidCatchParameterAnnotation loc
+  | EInvalidMappedType { loc; _ }
   | ETSSyntax { loc; _ } ->
     Some loc
   | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (poly_loc_of_reason reason_call)
@@ -4652,6 +4666,28 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             ref reason_r;
           ];
       }
+  | EInvalidMappedType { kind; _ } ->
+    let features =
+      match kind with
+      | InterfaceOrDeclaredClass ->
+        [text "Mapped Types are not supported in interfaces or declared classes."]
+      | ExtraProperties ->
+        [text "Mapped Types cannot be used when other properties or indexers are present."]
+      | RequiredInlineKeyof ->
+        [
+          text
+            "Fully general mapped types are not supported yet. All mapped types must use an inline keyof: ";
+          code "{[key in keyof O]: T}";
+          text ".";
+        ]
+      | ExplicitExactOrInexact ->
+        [
+          text "Mapped Types take on the exactness of the argument passed to keyof. They do not ";
+          text "support explicit exact or inexact syntax.";
+        ]
+      | RemoveOptionality -> [text "Mapped Types do not yet support optionality removal."]
+    in
+    Normal { features }
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -4912,6 +4948,7 @@ let error_code_of_message err : error_code option =
   | EImplicitInstantiationWidenedError _ -> None
   | EObjectThisReference _ -> Some ObjectThisReference
   | EInvalidDeclaration _ -> Some InvalidDeclaration
+  | EInvalidMappedType _ -> Some InvalidMappedType
   | EMalformedCode _
   | EUnusedSuppression _
   | EImportInternalReactServerModule _ ->

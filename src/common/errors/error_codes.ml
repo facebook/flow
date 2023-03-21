@@ -86,6 +86,7 @@ type error_code =
   | InvalidJsxDecl
   | InvalidJsxRuntimeDecl
   | InvalidLhs
+  | InvalidMappedType
   | InvalidModule
   | InvalidObjMap
   | InvalidObjMapi
@@ -275,6 +276,7 @@ let string_of_code : error_code -> string = function
   | InvalidJsxDecl -> "invalid-jsx-decl"
   | InvalidJsxRuntimeDecl -> "invalid-jsx-runtime-decl"
   | InvalidLhs -> "invalid-lhs"
+  | InvalidMappedType -> "invalid-mapped-type"
   | InvalidModule -> "invalid-module"
   | InvalidObjMap -> "invalid-obj-map"
   | InvalidObjMapi -> "invalid-obj-mapi"

@@ -1224,6 +1224,7 @@ end = struct
         let open Type in
         let%bind symbol =
           match kind with
+          | MappedTypeKind
           | TypeAliasKind
           | InstanceKind ->
             Reason_utils.local_type_alias_symbol env r
@@ -1723,6 +1724,7 @@ end = struct
       fun ~env r kind t ps ->
         match kind with
         | TypeAliasKind -> local env r t ps
+        | MappedTypeKind -> local env r t ps
         | ImportClassKind -> class_ env t
         | ImportEnumKind -> terr ~kind:(UnexpectedTypeCtor "EnumObjectT") None
         | ImportTypeofKind -> import env r t ps

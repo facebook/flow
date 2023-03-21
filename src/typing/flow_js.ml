@@ -6881,7 +6881,16 @@ struct
           | ReactConfigType default_props ->
             ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
           | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
-          | MappedType _ -> failwith "Not yet implemented, never emitted"
+          | MappedType { property_type; mapped_type_flags } ->
+            Object.(
+              ObjKitT
+                ( use_op,
+                  reason,
+                  Resolve Next,
+                  Object.ObjectMap { prop_type = property_type; mapped_type_flags },
+                  OpenT tout
+                )
+            )
         )
 
   and eval_keys cx ~trace reason t =

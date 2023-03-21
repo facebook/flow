@@ -76,6 +76,8 @@ val poly_type_of_tparam_list : Type.Poly.id -> ALoc.t -> Type.typeparam list -> 
 
 val poly_type_of_tparams : Type.Poly.id -> Type.typeparams -> Type.t -> Type.t
 
+val typeapp_with_use_op : reason -> Type.use_op -> Type.t -> Type.t list -> Type.t
+
 val typeapp : reason -> Type.t -> Type.t list -> Type.t
 
 val typeapp_annot : ALoc.t -> Type.t -> Type.t list -> Type.t

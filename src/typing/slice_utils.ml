@@ -1373,6 +1373,78 @@ let super
   | AnyT (_, src) -> return cx use_op (AnyT.why src reason)
   | _ -> next cx use_op tool reason (Nel.one acc)
 
+let map_object
+    poly_prop
+    { variance; optional = mapped_type_optionality }
+    cx
+    reason
+    use_op
+    { Object.reason = r; props; flags; generics = _; interface = _ } =
+  let mk_prop_type key_t prop_optional =
+    (* We persist the original use_op here so that errors involving the typeapp are positioned
+     * at the use site and not the typeapp site *)
+    let t = typeapp_with_use_op (reason_of_t poly_prop) use_op poly_prop [key_t] in
+    match mapped_type_optionality with
+    | MakeOptional -> optional t
+    | RemoveOptional ->
+      (* TODO(jmbrown): This is not supported yet and we error at the declaration site *)
+      t
+    | KeepOptionality ->
+      if prop_optional then
+        optional t
+      else
+        t
+  in
+  let mk_variance variance prop_polarity =
+    match variance with
+    | Polarity.Neutral -> prop_polarity
+    | _ -> variance
+  in
+  let is_prop_optional = function
+    | OptionalT _ -> true
+    | _ -> false
+  in
+  let props =
+    NameUtils.Map.mapi
+      (* Methods have no special consideration. There is no guarantee that the prop inserted by
+       * the mapped type is going to continue to be a function, so we transform it into a regular
+       * field. *)
+        (fun key { Object.prop_t; is_own = _; is_method = _; polarity = prop_polarity } ->
+        let key_t =
+          DefT
+            ( replace_desc_reason (RStringLit key) (reason_of_t prop_t),
+              bogus_trust (),
+              SingletonStrT key
+            )
+        in
+        let prop_optional = is_prop_optional prop_t in
+        let variance = mk_variance variance prop_polarity in
+        Field (None, mk_prop_type key_t prop_optional, variance))
+      props
+  in
+  let call = None in
+  let id = Context.generate_property_map cx props in
+  let proto = ObjProtoT reason in
+  let flags =
+    match flags.obj_kind with
+    | Indexed dict_t ->
+      let dict_optional = is_prop_optional dict_t.value in
+      let dict_t' =
+        {
+          dict_t with
+          value = mk_prop_type dict_t.key dict_optional;
+          dict_polarity = mk_variance variance dict_t.dict_polarity;
+        }
+      in
+      { flags with obj_kind = Indexed dict_t' }
+    | _ -> flags
+  in
+  let t = mk_object_def_type ~reason:r ~flags ~call id proto in
+  if flags.obj_kind = Exact then
+    ExactT (reason, t)
+  else
+    t
+
 let run
     (type a)
     ~add_output

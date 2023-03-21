@@ -1409,24 +1409,157 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             comments = func_comments;
           }
       )
-    | (loc, Object { Object.exact; properties; inexact; comments }) ->
+    | ( obj_loc,
+        Object
+          {
+            Object.exact;
+            properties =
+              [
+                Ast.Type.Object.MappedType
+                  ( mapped_type_loc,
+                    {
+                      Ast.Type.Object.MappedType.key_tparam;
+                      prop_type;
+                      source_type;
+                      variance;
+                      optional;
+                      comments = mapped_type_comments;
+                    }
+                  );
+              ];
+            inexact;
+            comments;
+          }
+      ) as ot ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(EUnsupportedSyntax (obj_loc, Error_message.MappedType));
+      (* Mapped types are implemented with the following limitations:
+         * 1. Mapped types cannot be declared with additional properties
+         * 2. Mapped types do not support explicit exact or inexact modifiers
+         * 3. Mapped types do not yet support optional property removal via -?
+         * 4. Mapped types must use an inline keyof
+         * All of these conditions are checked in this case, and the extra properties
+         * case is additionally checked in the normal object type case. If any of these
+         * conditions are violated then the result is Any *)
+      if exact || inexact then (
+        Flow_js_utils.add_output
+          cx
+          Error_message.(EInvalidMappedType { loc = obj_loc; kind = ExplicitExactOrInexact });
+        Tast_utils.error_mapper#type_ ot
+      ) else
+        let mapped_type_optionality =
+          Ast.Type.Object.MappedType.(
+            match optional with
+            | PlusOptional
+            | Optional ->
+              MakeOptional
+            | MinusOptional -> RemoveOptional
+            | NoOptionalFlag -> KeepOptionality
+          )
+        in
+        (match (source_type, mapped_type_optionality) with
+        | ( (keyof_loc, T.Keyof { T.Keyof.argument; comments = keyof_comments }),
+            (MakeOptional | KeepOptionality)
+          ) ->
+          let (((_, source_type), _) as source_ast) = convert cx tparams_map argument in
+          let source_ast =
+            ( (keyof_loc, source_type),
+              T.Keyof { T.Keyof.argument = source_ast; comments = keyof_comments }
+            )
+          in
+          let (tparam_ast, ({ name; _ } as tparam), tparam_t) =
+            mk_type_param cx ~from_infer_type:false tparams_map key_tparam
+          in
+          let tparams_map = Subst_name.Map.add name tparam_t tparams_map in
+          let ((prop_loc, prop_type), prop_type_ast) = convert cx tparams_map prop_type in
+          let type_t =
+            DefT (reason_of_t prop_type, bogus_trust (), TypeT (MappedTypeKind, prop_type))
+          in
+          let poly_prop_type =
+            poly_type_of_tparams
+              (Context.make_source_poly_id cx prop_loc)
+              (Some (fst key_tparam, Nel.one tparam))
+              type_t
+          in
+          let reason = mk_reason RObjectType prop_loc in
+          let defer_use_t =
+            TypeDestructorT
+              ( unknown_use,
+                reason,
+                MappedType
+                  {
+                    property_type = poly_prop_type;
+                    mapped_type_flags =
+                      { optional = mapped_type_optionality; variance = polarity cx variance };
+                  }
+              )
+          in
+          let eval_t = EvalT (source_type, defer_use_t, Type.Eval.generate_id ()) in
+          let poly_prop_type_ast = ((prop_loc, poly_prop_type), prop_type_ast) in
+          let prop_ast =
+            T.Object.MappedType
+              ( mapped_type_loc,
+                {
+                  Object.MappedType.source_type = source_ast;
+                  prop_type = poly_prop_type_ast;
+                  key_tparam = tparam_ast;
+                  variance;
+                  optional;
+                  comments = mapped_type_comments;
+                }
+              )
+          in
+          let obj_ast =
+            Ast.Type.Object { Ast.Type.Object.exact; properties = [prop_ast]; inexact; comments }
+          in
+          ((obj_loc, eval_t), obj_ast)
+        | (t, optionality) ->
+          (match t with
+          | (_, Ast.Type.Keyof _) -> ()
+          | _ ->
+            Flow_js_utils.add_output
+              cx
+              Error_message.(
+                EInvalidMappedType { loc = mapped_type_loc; kind = RequiredInlineKeyof }
+              ));
+          (match optionality with
+          | RemoveOptional ->
+            Flow_js_utils.add_output
+              cx
+              Error_message.(EInvalidMappedType { loc = mapped_type_loc; kind = RemoveOptionality })
+          | _ -> ());
+          Tast_utils.error_mapper#type_ ot)
+    | (loc, Object { Object.exact; properties; inexact; comments }) as ot ->
       let exact_by_default = Context.exact_by_default cx in
       let exact_type = exact || ((not inexact) && exact_by_default) in
-      let (t, properties) = convert_object cx tparams_map loc ~exact:exact_type properties in
-      let has_indexer =
+      let (has_indexer, mapped_type_loc) =
         properties
-        |> List.exists (fun property ->
+        |> List.fold_left
+             (fun (has_indexer, mapped_type_loc) property ->
                match property with
-               | Ast.Type.Object.Indexer _ -> true
-               | _ -> false
-           )
+               | Ast.Type.Object.Indexer _ -> (true, mapped_type_loc)
+               | Ast.Type.Object.MappedType (loc, _) -> (has_indexer, Some loc)
+               | _ -> (has_indexer, mapped_type_loc))
+             (false, None)
       in
-      if (not exact) && (not inexact) && not has_indexer then (
-        Flow_js_utils.add_output cx Error_message.(EAmbiguousObjectType loc);
-        if not exact_by_default then
-          Flow_js_utils.add_output cx Error_message.(EImplicitInexactObject loc)
-      );
-      ((loc, t), Object { Object.exact; properties; inexact; comments })
+      (match mapped_type_loc with
+      | Some mapped_type_loc ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(EUnsupportedSyntax (mapped_type_loc, Error_message.MappedType));
+        Flow_js_utils.add_output
+          cx
+          Error_message.(EInvalidMappedType { loc; kind = ExtraProperties });
+        Tast_utils.error_mapper#type_ ot
+      | None ->
+        let (t, properties) = convert_object cx tparams_map loc ~exact:exact_type properties in
+        if (not exact) && (not inexact) && not has_indexer then (
+          Flow_js_utils.add_output cx Error_message.(EAmbiguousObjectType loc);
+          if not exact_by_default then
+            Flow_js_utils.add_output cx Error_message.(EImplicitInexactObject loc)
+        );
+        ((loc, t), Object { Object.exact; properties; inexact; comments }))
     | (loc, Interface { Interface.extends; body; comments }) ->
       let ( body_loc,
             { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments }
@@ -1847,11 +1980,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           ( Acc.add_spread t acc,
             SpreadProperty (loc, { SpreadProperty.argument = argument_ast; comments })
           )
-        | Ast.Type.Object.MappedType (loc, _) as prop ->
-          Flow_js_utils.add_output
-            cx
-            Error_message.(EUnsupportedSyntax (loc, Error_message.MappedType));
-          (acc, Tast_utils.error_mapper#object_type_property prop)
+        | Object.MappedType _ ->
+          failwith "Unreachable until we support mapped types with additional properties"
       )
     in
     fun cx tparams_map loc ~exact properties ->
@@ -2294,7 +2424,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             | Ast.Type.Object.MappedType (loc, _) as prop ->
               Flow_js_utils.add_output
                 cx
-                Error_message.(EUnsupportedSyntax (loc, Error_message.MappedType));
+                Error_message.(EInvalidMappedType { loc; kind = InterfaceOrDeclaredClass });
               (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
             | Property
                 ( loc,

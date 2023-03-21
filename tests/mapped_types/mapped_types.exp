@@ -1,10 +1,525 @@
-Error -------------------------------------------------------------------------------------------- not_supported.js:2:11
+Error ------------------------------------------------------------------------------------ no_explicit_exactness.js:7:20
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+                         v----------
+   7| type MappedExact = {| // ERROR
+   8|   [key in keyof O]: number
+   9| |}
+      -^
+
+
+Error ------------------------------------------------------------------------------------ no_explicit_exactness.js:7:20
+
+Mapped Types take on the exactness of the argument passed to keyof. They do not support explicit exact or inexact
+syntax. [invalid-mapped-type]
+
+                         v----------
+   7| type MappedExact = {| // ERROR
+   8|   [key in keyof O]: number
+   9| |}
+      -^
+
+
+Error ----------------------------------------------------------------------------------- no_explicit_exactness.js:11:22
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+                            v---------
+   11| type MappedInexact = { // ERROR
+   12|   [key in keyof O]: number,
+   13|   ...
+   14| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------- no_explicit_exactness.js:11:22
+
+Mapped Types take on the exactness of the argument passed to keyof. They do not support explicit exact or inexact
+syntax. [invalid-mapped-type]
+
+                            v---------
+   11| type MappedInexact = { // ERROR
+   12|   [key in keyof O]: number,
+   13|   ...
+   14| }
+       ^
+
+
+Error ------------------------------------------------------------------------------------------- no_other_props.js:3:20
+
+Mapped Types cannot be used when other properties or indexers are present. [invalid-mapped-type]
+
+                         v
+   3| type MappedFirst = {
+   4|   [key in keyof {foo: number}]: number, // ERROR
+   5|   prop: number,
+   6| };
+      ^
+
+
+Error -------------------------------------------------------------------------------------------- no_other_props.js:4:3
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   4|   [key in keyof {foo: number}]: number, // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- no_other_props.js:7:19
+
+Mapped Types cannot be used when other properties or indexers are present. [invalid-mapped-type]
+
+                         v
+    7| type SliceFirst = {
+    8|   prop: number,
+    9|   [key in keyof {foo: number}]: number, // ERROR
+   10| };
+       ^
+
+
+Error -------------------------------------------------------------------------------------------- no_other_props.js:9:3
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   9|   [key in keyof {foo: number}]: number, // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ no_other_props.js:11:20
+
+Mapped Types cannot be used when other properties or indexers are present. [invalid-mapped-type]
+
+                          v
+   11| type SpreadFirst = {
+   12|   ...{prop: number},
+   13|   [key in keyof {foo: number}]: number, // ERROR
+   14| };
+       ^
+
+
+Error ------------------------------------------------------------------------------------------- no_other_props.js:13:3
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   13|   [key in keyof {foo: number}]: number, // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ no_other_props.js:15:21
+
+Mapped Types cannot be used when other properties or indexers are present. [invalid-mapped-type]
+
+                           v
+   15| type MappedLater1 = {
+   16|   ...{prop: number},
+   17|   foo: number,
+   18|   [key in keyof {foo: number}]: number, // ERROR
+   19| };
+       ^
+
+
+Error ------------------------------------------------------------------------------------------- no_other_props.js:18:3
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   18|   [key in keyof {foo: number}]: number, // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ no_other_props.js:20:21
+
+Mapped Types cannot be used when other properties or indexers are present. [invalid-mapped-type]
+
+                           v
+   20| type MappedLater2 = {
+   21|   foo: number,
+   22|   ...{prop: number},
+   23|   foo: number,
+   24|   [key in keyof {foo: number}]: number, // ERROR
+   25| };
+       ^
+
+
+Error ------------------------------------------------------------------------------------------- no_other_props.js:24:3
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   24|   [key in keyof {foo: number}]: number, // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- not_supported.js:2:10
 
 Mapped Types are not yet supported. [unsupported-syntax]
 
    2| type X = {[key in keyof O]: number}; // ERROR mapped types not yet supported
-                ^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- optionality.js:5:19
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   5|   type Preserve = {[key in keyof O]: O[key]};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
+
+Cannot cast `preserve` to object type because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-cast]
+
+   optionality.js:9:4
+   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+         ^^^^^^^^
+
+References:
+   optionality.js:1:30
+   1| type O = {foo: number, bar?: string};
+                                   ^^^^^^ [1]
+   optionality.js:9:34
+   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+                                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
+
+Cannot cast `preserve` to object type because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-cast]
+
+   optionality.js:9:4
+   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+         ^^^^^^^^
+
+References:
+   optionality.js:5:38
+   5|   type Preserve = {[key in keyof O]: O[key]};
+                                           ^^^^^^ [1]
+   optionality.js:9:34
+   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+                                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
+
+Cannot cast `preserve` to object type because number [1] is incompatible with string [2] in property `foo`.
+[incompatible-cast]
+
+   optionality.js:9:4
+   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+         ^^^^^^^^
+
+References:
+   optionality.js:5:38
+   5|   type Preserve = {[key in keyof O]: O[key]};
+                                           ^^^^^^ [1]
+   optionality.js:9:20
+   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- optionality.js:13:10
+
+Cannot cast object literal to `Preserve` because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-cast]
+
+   optionality.js:13:10
+   13|   ({foo: 'str', bar: 3}: Preserve); // ERROR
+                ^^^^^ [1]
+
+References:
+   optionality.js:5:38
+    5|   type Preserve = {[key in keyof O]: O[key]};
+                                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- optionality.js:13:22
+
+Cannot cast object literal to `Preserve` because number [1] is incompatible with string [2] in property `bar`.
+[incompatible-cast]
+
+   optionality.js:13:22
+   13|   ({foo: 'str', bar: 3}: Preserve); // ERROR
+                            ^ [1]
+
+References:
+   optionality.js:1:30
+    1| type O = {foo: number, bar?: string};
+                                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- optionality.js:17:14
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   17|   type Add = {[key in keyof O]+?: O[key]};
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- optionality.js:28:18
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   28|   type Removed = {[key in keyof O]-?: O[key]}; // ERROR
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- optionality.js:28:19
+
+Mapped Types do not yet support optionality removal. [invalid-mapped-type]
+
+   28|   type Removed = {[key in keyof O]-?: O[key]}; // ERROR
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- reasons.js:9:39
+
+string literal `bar` [1] is incompatible with string literal `foo` [2] in type argument `T`. [incompatible-type-arg]
+
+   reasons.js:9:39
+   9|   type FooBarObj = {foo: number, bar: number};
+                                            ^^^^^^ [1]
+
+References:
+   reasons.js:7:20
+   7|   type TakesFoo<T: 'foo'> = T;
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- reasons.js:12:26
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   12|   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:25
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+                               v
+   10| type Mapped<O: {...}> = {
+   11|   [key in keyof O]: Box<O[key]>,
+   12| };
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:26:4
+
+Cannot cast `badKey` to `Mapped` because property `bar` is missing in `Mapped` [1] but exists in object type [2].
+[prop-missing]
+
+   test.js:26:4
+   26|   (badKey: Mapped<O>); // ERROR
+          ^^^^^^
+
+References:
+   test.js:26:12
+   26|   (badKey: Mapped<O>); // ERROR
+                  ^^^^^^^^^ [1]
+   test.js:25:25
+   25|   declare const badKey: {bar: {contents: number}};
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:26:4
+
+Cannot cast `badKey` to `Mapped` because property `foo` is missing in object type [1] but exists in `Mapped` [2].
+[prop-missing]
+
+   test.js:26:4
+   26|   (badKey: Mapped<O>); // ERROR
+          ^^^^^^
+
+References:
+   test.js:25:25
+   25|   declare const badKey: {bar: {contents: number}};
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:26:12
+   26|   (badKey: Mapped<O>); // ERROR
+                  ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:29:4
+
+Cannot cast `badVal` to `Mapped` because string [1] is incompatible with number [2] in property `foo.contents`.
+[incompatible-cast]
+
+   test.js:29:4
+   29|   (badVal: Mapped<O>); // ERROR
+          ^^^^^^
+
+References:
+   test.js:28:42
+   28|   declare const badVal: {foo: {contents: string}};
+                                                ^^^^^^ [1]
+   test.js:1:18
+    1| type O = {| foo: number |}
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:5
+
+Mapped Types are not supported in interfaces or declared classes. [invalid-mapped-type]
+
+   35|     [x in keyof O]: number; // ERROR
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:38:5
+
+Mapped Types are not supported in interfaces or declared classes. [invalid-mapped-type]
+
+   38|     [x in keyof O]: number; // ERROR
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:4
+
+Cannot cast `mappedIndexer.foo` to number because `Box` [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:47:4
+   47|   (mappedIndexer.foo: number); // ERROR
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:11:21
+   11|   [key in keyof O]: Box<O[key]>,
+                           ^^^^^^^^^^^ [1]
+   test.js:47:23
+   47|   (mappedIndexer.foo: number); // ERROR
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:48:4
+
+Cannot cast `mappedIndexer.bar` to string because `Box` [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:48:4
+   48|   (mappedIndexer.bar: string); // ERROR
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:11:21
+   11|   [key in keyof O]: Box<O[key]>,
+                           ^^^^^^^^^^^ [1]
+   test.js:48:23
+   48|   (mappedIndexer.bar: string); // ERROR
+                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:57:29
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   57|   type ReadOnly<T: {...}> = {+[key in keyof T]: T[key]};
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:60:12
+
+Cannot assign `3` to `readonly.foo` because property `foo` is not writable. [cannot-write]
+
+   60|   readonly.foo = 3; // ERROR
+                  ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:62:30
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   62|   type WriteOnly<T: {...}> = {-[key in keyof T]: T[key]};
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:64:14
+
+Cannot get `writeonly.foo` because property `foo` is not readable. [cannot-read]
+
+   64|   (writeonly.foo: number); // ERROR
+                    ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:70:19
+
+Cannot assign `'str'` to `readonlyIndexer.qux` because property `qux` is not writable. [cannot-write]
+
+   70|   readonlyIndexer.qux = 'str'; // ERROR
+                         ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:75:28
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   75|   type Partial<T: {...}> = {[key in keyof T]?: T[key]};
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:77:4
+
+Cannot cast `partial.foo` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:77:4
+   77|   (partial.foo: number); // ERROR
+          ^^^^^^^^^^^
+
+References:
+   test.js:75:48
+   75|   type Partial<T: {...}> = {[key in keyof T]?: T[key]};
+                                                      ^^^^^^ [1]
+   test.js:77:17
+   77|   (partial.foo: number); // ERROR
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:81:4
+
+Cannot cast `partialIndexer.qux` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:81:4
+   81|   (partialIndexer.qux: string); // ERROR
+          ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:75:48
+   75|   type Partial<T: {...}> = {[key in keyof T]?: T[key]};
+                                                      ^^^^^^ [1]
+   test.js:81:24
+   81|   (partialIndexer.qux: string); // ERROR
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:88:38
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+                                            v
+   88|   type MappedConstrained<O: {...}> = {
+   89|     [key in keyof O]: ConstrainedBox<O[key]>, 
+   90|   };
+         ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:92:28
+
+Cannot instantiate `MappedConstrained` because number [1] is incompatible with string [2] in type argument `T`.
+[incompatible-type-arg]
+
+   test.js:92:28
+   92|   declare var constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:18
+    1| type O = {| foo: number |}
+                        ^^^^^^ [1]
+   test.js:87:26
+   87|   type ConstrainedBox<T: string> = Box<T>;
+                                ^^^^^^ [2]
 
 
 
-Found 1 error
+Found 44 errors

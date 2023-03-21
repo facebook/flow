@@ -1845,6 +1845,18 @@ let dump_error_message =
         (dump_reason cx reason_l)
         (dump_reason cx reason_r)
         (Type.ArithKind.string_of_arith_kind kind)
+    | EInvalidMappedType { loc; kind } ->
+      spf
+        "EInvalidMappedType (%s, %s)"
+        (string_of_aloc loc)
+        Error_message.(
+          match kind with
+          | InterfaceOrDeclaredClass -> "InterfaceOrDeclaredClass"
+          | ExtraProperties -> "ExtraProperties"
+          | RequiredInlineKeyof -> "RequiredInlineKeyof"
+          | ExplicitExactOrInexact -> "ExplicitExactOrInexact"
+          | RemoveOptionality -> "RemoveOptionality"
+        )
 
 module Verbose = struct
   let verbose_in_file cx verbose =

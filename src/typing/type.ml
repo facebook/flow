@@ -1522,6 +1522,7 @@ module rec TypeTerm : sig
     | ImportClassKind (* import type { SomeClass } from ... *)
     | ImportEnumKind
     | InstanceKind
+    | MappedTypeKind
 
   (*
      Terminology:
@@ -3882,6 +3883,7 @@ let string_of_type_t_kind = function
   | ImportClassKind -> "ImportClassKind"
   | ImportEnumKind -> "ImportEnumKind"
   | InstanceKind -> "InstanceKind"
+  | MappedTypeKind -> "MappedTypeKind"
 
 (** A setter's type is determined by its sole parameter.
 
