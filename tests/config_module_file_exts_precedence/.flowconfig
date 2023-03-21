@@ -1,6 +1,5 @@
 [options]
 all=true
-exact_by_default=false
 ; this ordering determines precedence
 module.file_ext=.zzz
 module.file_ext=.js

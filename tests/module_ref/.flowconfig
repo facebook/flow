@@ -6,7 +6,6 @@
 
 [options]
 all=false
-exact_by_default=false
 no_flowlib=true
 module.system=haste
 module.system.haste.module_ref_prefix=m#

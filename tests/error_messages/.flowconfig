@@ -1,5 +1,4 @@
 [options]
 module.system=haste
 all=true
-exact_by_default=false
 max_literal_length=20

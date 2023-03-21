@@ -2,4 +2,3 @@
 module.system=haste
 munge_underscores=true
 all=true
-exact_by_default=false

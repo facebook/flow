@@ -1,5 +1,4 @@
 [options]
 all=true
-exact_by_default=false
 module.missing_module_generators='.*\.foo$' -> 'make-foo'
 module.missing_module_generators='.*\.bar$' -> 'build bar'

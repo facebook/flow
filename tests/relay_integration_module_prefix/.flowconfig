@@ -1,6 +1,5 @@
 [options]
 all=true
-exact_by_default=false
 
 relay_integration=true
 relay_integration.module_prefix=./__generated__/

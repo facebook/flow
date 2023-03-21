@@ -3,4 +3,3 @@ module.system=haste
 no_flowlib=false
 lazy_mode=fs
 all=true
-exact_by_default=false

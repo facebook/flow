@@ -3,5 +3,4 @@
 
 [options]
 all=true
-exact_by_default=false
 trust_mode=check

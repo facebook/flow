@@ -6,7 +6,6 @@
 
 [options]
 all=true
-exact_by_default=false
 module.system=node
 
 module.name_mapper='1Doesnt\(Exist\)' -> '\1s'
