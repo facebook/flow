@@ -545,6 +545,51 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method private hoist_annotations f = f ()
 
+      method private scoped_infer_type_params ~in_tparam_scope loc tps =
+        if with_types then (
+          let open Ast.Type.TypeParam in
+          (* Unlike other tparams, infer types' tparams don't have an obvious order,
+             so bounds in infer cannot refer to other infer types in the same hoisted list. *)
+          Base.List.iter tps ~f:(fun (_, { bound; default; _ }) ->
+              ignore @@ this#type_annotation_hint bound;
+              ignore @@ Base.Option.map ~f:this#type_ default
+          );
+          let bindings =
+            Base.List.fold tps ~init:Bindings.empty ~f:(fun bindings (_, { name; _ }) ->
+                Bindings.add (name, Bindings.Type { imported = false }) bindings
+            )
+          in
+          this#with_bindings
+            loc
+            bindings
+            (fun () ->
+              Base.List.iter tps ~f:(fun (_, { name; _ }) ->
+                  ignore @@ this#binding_type_identifier name
+              );
+              in_tparam_scope ())
+            ()
+        ) else
+          in_tparam_scope ()
+
+      method! conditional_type t =
+        let open Ast.Type.Conditional in
+        let { check_type; extends_type; true_type; false_type; comments = _ } = t in
+        ignore @@ this#type_ check_type;
+        ignore @@ this#type_ extends_type;
+        let tparams =
+          Infer_type_hoister.hoist_infer_types extends_type
+          |> Base.List.map ~f:(fun (_, { Ast.Type.Infer.tparam; _ }) -> tparam)
+        in
+        this#scoped_infer_type_params
+          ~in_tparam_scope:(fun () -> ignore @@ this#type_ true_type)
+          (fst extends_type)
+          tparams;
+        ignore @@ this#type_ false_type;
+        t
+
+      (* Visits of infer type are skipped, because they are handled in conditional type above *)
+      method! infer_type t = t
+
       method private this_binding_function_id_opt ~fun_loc:_ ~has_this_annot:_ ident =
         Base.Option.iter ident ~f:(fun id -> ignore @@ this#function_identifier id)
 

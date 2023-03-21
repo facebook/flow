@@ -68,6 +68,31 @@ class type_parameter_mapper =
       rev_bound_tparams <- originally_bound_tparams;
       res
 
+    method! conditional_type t =
+      let open Ast.Type.Conditional in
+      let { check_type; extends_type; true_type; false_type; comments } = t in
+      let check_type' = self#type_ check_type in
+      let extends_type' = self#type_ extends_type in
+      let fake_tparams_opt =
+        let params =
+          Infer_type_hoister.hoist_infer_types extends_type
+          |> Base.List.map ~f:(fun (_, { Ast.Type.Infer.tparam; _ }) -> tparam)
+        in
+        match params with
+        | [] -> None
+        | (loc, _) :: _ -> Some (loc, { Ast.Type.TypeParams.params; comments = None })
+      in
+      let true_type' = self#type_params_opt fake_tparams_opt (fun _ -> self#type_ true_type) in
+      let false_type' = self#type_ false_type in
+      let comments' = self#syntax_opt comments in
+      {
+        check_type = check_type';
+        extends_type = extends_type';
+        true_type = true_type';
+        false_type = false_type';
+        comments = comments';
+      }
+
     (* Classes assume an additional "this" type parameter, which needs to be
        explicitly added to bound_tparams *)
     method! class_ cls =

@@ -4551,6 +4551,60 @@ var C: React.ComponentType;
           (2, 12) to (2, 17): (`React`)
         }] |}]
 
+let%expect_test "conditional_type_with_infer" =
+  print_ssa_test {|
+// TS behavior: https://www.typescriptlang.org/play?#code/C4TwDgpgBAYg9nKBeKBLAdgMwgJygQSggA9gJ0ATAZygAoNs8AhI086tLXKAYSgH5OjKABEoALiHcAogEoBUANr4ANExU8VIldIC6EpavWbtegNxA
+type Foo = infer A
+    extends (infer B extends infer C ? infer D : infer E)
+    ? [A,B,C,D,E]
+    : [A,B,C,D,E];
+|};
+    [%expect {|
+      [
+        (5, 7) to (5, 8) => {
+          Global A
+        };
+        (5, 9) to (5, 10) => {
+          (4, 19) to (4, 20): (`B`)
+        };
+        (5, 11) to (5, 12) => {
+          Global C
+        };
+        (5, 13) to (5, 14) => {
+          (4, 45) to (4, 46): (`D`)
+        };
+        (5, 15) to (5, 16) => {
+          (4, 55) to (4, 56): (`E`)
+        };
+        (6, 7) to (6, 8) => {
+          Global A
+        };
+        (6, 9) to (6, 10) => {
+          Global B
+        };
+        (6, 11) to (6, 12) => {
+          Global C
+        };
+        (6, 13) to (6, 14) => {
+          Global D
+        };
+        (6, 15) to (6, 16) => {
+          Global E
+        }] |}]
+
+let%expect_test "no_cyclic_infer" =
+print_ssa_test {|
+// TS behavior: https://www.typescriptlang.org/play?#code/C4TwDgpgBAYg9nKBeKBnYAnAlgOwOZQQAewEOAJqlAN5QCGAXFLgGYQZQCChJZlUAIQDcUAEZNW7QT1IUq3AL5QA-Gky4CTHAFcAtqPZCAUEA
+type Foo = string extends { a: infer A extends B, b: infer B extends A } ? string : number;
+|};[%expect {|
+      [
+        (3, 47) to (3, 48) => {
+          Global B
+        };
+        (3, 69) to (3, 70) => {
+          Global A
+        }] |}]
+
 let%expect_test "new_type_arg" =
   print_ssa_test {|
 type A = number;

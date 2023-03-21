@@ -248,6 +248,10 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
       | Ast.Variable.Const -> this#add_const_binding ?kind:None id);
       super#declare_variable loc decl
 
+    (* We intentionally skip the hoisting of infer type names,
+       since they are handled separately with its own hoister. *)
+    method! infer_type t = t
+
     method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
       if with_types then this#add_type_binding ~imported:false alias.id;
