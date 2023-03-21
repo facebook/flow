@@ -438,7 +438,7 @@ let add_output_generic ~src_cx:cx ~dst_cx ?trace msg =
         Trace.reasons_of_trace ~level:max_trace_depth trace
   in
   if Speculation.speculating cx then
-    if Error_message.is_lint_error msg then
+    if Error_message.defered_in_speculation msg then
       ignore @@ Speculation.defer_action cx (Speculation_state.ErrorAction msg)
     else (
       if Context.is_verbose cx then

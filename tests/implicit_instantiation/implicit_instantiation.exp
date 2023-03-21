@@ -114,42 +114,149 @@ References:
           ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:14:1
+
+Cannot call `C` because `K` [1] is underconstrained by call of `C` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
+
+   under_constrained_speculation.js:14:1
+   14| C(any_); // okay, we infer C<any, any>
+       ^
+
+References:
+   under_constrained_speculation.js:5:11
+    5|   static <K, V>(_: void): C<K, V>;
+                 ^ [1]
+   under_constrained_speculation.js:14:1
+   14| C(any_); // okay, we infer C<any, any>
+       ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:14:1
+
+Cannot call `C` because `V` [1] is underconstrained by call of `C` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
+
+   under_constrained_speculation.js:14:1
+   14| C(any_); // okay, we infer C<any, any>
+       ^
+
+References:
+   under_constrained_speculation.js:5:14
+    5|   static <K, V>(_: void): C<K, V>;
+                    ^ [1]
+   under_constrained_speculation.js:14:1
+   14| C(any_); // okay, we infer C<any, any>
+       ^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------- under_constrained_speculation.js:15:1
 
-Cannot call `C` because undefined [1] is incompatible with array type [2]. [incompatible-call]
+Cannot call `C` because `K` [1] is underconstrained by call of `C` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
 
    under_constrained_speculation.js:15:1
    15| C(undefined); // error branches are under-constrained for the first overload,
        ^
 
 References:
-   under_constrained_speculation.js:15:3
+   under_constrained_speculation.js:5:11
+    5|   static <K, V>(_: void): C<K, V>;
+                 ^ [1]
+   under_constrained_speculation.js:15:1
    15| C(undefined); // error branches are under-constrained for the first overload,
-         ^^^^^^^^^ [1]
-   under_constrained_speculation.js:6:23
-    6|   static <K, V>(iter: Array<[K, V]>): C<K, V>;
-                             ^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:15:1
+
+Cannot call `C` because `V` [1] is underconstrained by call of `C` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
+
+   under_constrained_speculation.js:15:1
+   15| C(undefined); // error branches are under-constrained for the first overload,
+       ^
+
+References:
+   under_constrained_speculation.js:5:14
+    5|   static <K, V>(_: void): C<K, V>;
+                    ^ [1]
+   under_constrained_speculation.js:15:1
+   15| C(undefined); // error branches are under-constrained for the first overload,
+       ^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:19:1
+
+Cannot call `foo` because `K` [1] is underconstrained by call of `foo` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   under_constrained_speculation.js:19:1
+   19| foo(any_); // error first overload selected, but K, V are under-constrained
+       ^^^
+
+References:
+   under_constrained_speculation.js:9:22
+    9| declare function foo<K, +V>(_: void): C<K, V>;
+                            ^ [1]
+   under_constrained_speculation.js:19:1
+   19| foo(any_); // error first overload selected, but K, V are under-constrained
+       ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:19:1
+
+Cannot call `foo` because `V` [1] is underconstrained by call of `foo` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   under_constrained_speculation.js:19:1
+   19| foo(any_); // error first overload selected, but K, V are under-constrained
+       ^^^
+
+References:
+   under_constrained_speculation.js:9:26
+    9| declare function foo<K, +V>(_: void): C<K, V>;
+                                ^ [1]
+   under_constrained_speculation.js:19:1
+   19| foo(any_); // error first overload selected, but K, V are under-constrained
+       ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------- under_constrained_speculation.js:20:1
 
-Cannot call `foo` because undefined [1] is incompatible with array type [2]. [incompatible-call]
+Cannot call `foo` because `K` [1] is underconstrained by call of `foo` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
 
    under_constrained_speculation.js:20:1
    20| foo(undefined); // error branches are under-constrained for the first overload,
        ^^^
 
 References:
-   under_constrained_speculation.js:20:5
+   under_constrained_speculation.js:9:22
+    9| declare function foo<K, +V>(_: void): C<K, V>;
+                            ^ [1]
+   under_constrained_speculation.js:20:1
    20| foo(undefined); // error branches are under-constrained for the first overload,
-           ^^^^^^^^^ [1]
-   under_constrained_speculation.js:10:34
-   10| declare function foo<K, V>(iter: Array<[K, V]>): C<K, V>;
-                                        ^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- under_constrained_speculation.js:20:1
+
+Cannot call `foo` because `V` [1] is underconstrained by call of `foo` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   under_constrained_speculation.js:20:1
+   20| foo(undefined); // error branches are under-constrained for the first overload,
+       ^^^
+
+References:
+   under_constrained_speculation.js:9:26
+    9| declare function foo<K, +V>(_: void): C<K, V>;
+                                ^ [1]
+   under_constrained_speculation.js:20:1
+   20| foo(undefined); // error branches are under-constrained for the first overload,
+       ^^^^^^^^^^^^^^ [2]
 
 
 
-Found 9 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
+Found 15 errors

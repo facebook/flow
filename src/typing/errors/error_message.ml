@@ -4646,7 +4646,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ];
       }
 
-let is_lint_error = function
+let defered_in_speculation = function
   | EUntypedTypeImport _
   | EUntypedImport _
   | ENonstrictImport _
@@ -4661,7 +4661,8 @@ let is_lint_error = function
   | EAmbiguousObjectType _
   | EEnumNotAllChecked { default_case = Some _; _ }
   | EUninitializedInstanceProperty _
-  | EUnusedPromise _ ->
+  | EUnusedPromise _
+  | EImplicitInstantiationUnderconstrainedError _ ->
     true
   | _ -> false
 

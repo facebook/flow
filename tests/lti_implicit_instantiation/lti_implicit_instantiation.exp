@@ -78,6 +78,24 @@ References:
                          ^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- issue_9015.js:20:3
+
+Cannot call `c.query` because `R` [1] is underconstrained by call of method `query` [2]. Either add explicit type
+arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   issue_9015.js:20:3
+   20| c.query('SELECT 1');
+         ^^^^^
+
+References:
+   issue_9015.js:14:9
+   14|   query<R>(config: string): Promise<ResultSet<R>>;
+               ^ [1]
+   issue_9015.js:20:1
+   20| c.query('SELECT 1');
+       ^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:2:7
 
 Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
@@ -970,4 +988,4 @@ References:
 
 
 
-Found 62 errors
+Found 63 errors
