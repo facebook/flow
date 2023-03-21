@@ -1,1 +1,38 @@
-Found 0 errors
+Error -------------------------------------------------------------------------------------------- invalid_infer.js:2:10
+
+Invalid infer type declaration. `infer` declarations are only permitted in the `extends` clause of a conditional type.
+[invalid-infer]
+
+   2|   let _: infer X;
+               ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- invalid_infer.js:5:10
+
+Invalid infer type declaration. `infer` declarations are only permitted in the `extends` clause of a conditional type.
+[invalid-infer]
+
+   5|   let _: infer A extends infer B ? infer C : infer D;
+               ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- invalid_infer.js:5:36
+
+Invalid infer type declaration. `infer` declarations are only permitted in the `extends` clause of a conditional type.
+[invalid-infer]
+
+   5|   let _: infer A extends infer B ? infer C : infer D;
+                                         ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- invalid_infer.js:5:46
+
+Invalid infer type declaration. `infer` declarations are only permitted in the `extends` clause of a conditional type.
+[invalid-infer]
+
+   5|   let _: infer A extends infer B ? infer C : infer D;
+                                                   ^^^^^^^
+
+
+
+Found 4 errors

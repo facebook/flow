@@ -80,6 +80,7 @@ type error_code =
   | InvalidIdx
   | InvalidImportStarUse
   | InvalidImportType
+  | InvalidInfer
   | InvalidInLhs
   | InvalidInRhs
   | InvalidJsxDecl
@@ -269,6 +270,7 @@ let string_of_code : error_code -> string = function
   | InvalidIdx -> "invalid-idx"
   | InvalidImportStarUse -> "invalid-import-star-use"
   | InvalidImportType -> "invalid-import-type"
+  | InvalidInfer -> "invalid-infer"
   | InvalidInLhs -> "invalid-in-lhs"
   | InvalidInRhs -> "invalid-in-rhs"
   | InvalidJsxDecl -> "invalid-jsx-decl"

@@ -53,6 +53,9 @@ module type S = sig
          method private this_binding_function_id_opt :
            fun_loc:L.t -> has_this_annot:bool -> (L.t, L.t) Flow_ast.Identifier.t option -> unit
 
+         method private extends_in_infer_type :
+           (L.t, L.t) Flow_ast.Type.t -> (L.t, L.t) Flow_ast.Type.t
+
          method private lambda :
            is_arrow:bool ->
            fun_loc:L.t ->

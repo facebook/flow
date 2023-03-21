@@ -575,7 +575,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let open Ast.Type.Conditional in
         let { check_type; extends_type; true_type; false_type; comments = _ } = t in
         ignore @@ this#type_ check_type;
-        ignore @@ this#type_ extends_type;
+        ignore @@ this#extends_in_infer_type extends_type;
         let tparams =
           Infer_type_hoister.hoist_infer_types extends_type
           |> Base.List.map ~f:(fun (_, { Ast.Type.Infer.tparam; _ }) -> tparam)
@@ -586,6 +586,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           tparams;
         ignore @@ this#type_ false_type;
         t
+
+      method private extends_in_infer_type = this#type_
 
       (* Visits of infer type are skipped, because they are handled in conditional type above *)
       method! infer_type t = t

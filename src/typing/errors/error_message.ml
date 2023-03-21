@@ -207,6 +207,7 @@ and 'loc t' =
   | ETypeParamMinArity of 'loc * int
   | ETooManyTypeArgs of 'loc virtual_reason * 'loc virtual_reason * int
   | ETooFewTypeArgs of 'loc virtual_reason * 'loc virtual_reason * int
+  | EInvalidInfer of 'loc
   | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
   | EInvalidExtends of 'loc virtual_reason
   | EPropertyTypeAnnot of 'loc
@@ -926,6 +927,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ETooManyTypeArgs (r1, r2, i) -> ETooManyTypeArgs (map_reason r1, map_reason r2, i)
   | ETooFewTypeArgs (r1, r2, i) -> ETooFewTypeArgs (map_reason r1, map_reason r2, i)
   | EInvalidTypeArgs (r1, r2) -> EInvalidTypeArgs (map_reason r1, map_reason r2)
+  | EInvalidInfer l -> EInvalidInfer (f l)
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
   | EPropertyTypeAnnot loc -> EPropertyTypeAnnot (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
@@ -1347,6 +1349,7 @@ let util_use_op_of_msg nope util = function
   | ETooManyTypeArgs (_, _, _)
   | ETooFewTypeArgs (_, _, _)
   | EInvalidTypeArgs (_, _)
+  | EInvalidInfer _
   | EInvalidExtends _
   | EPropertyTypeAnnot _
   | EExportsAnnot _
@@ -1550,6 +1553,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidPrototype (loc, _)
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
+  | EInvalidInfer loc
   | ENonstrictImport loc
   | EUnclearType loc
   | EDeprecatedBool loc
@@ -2081,6 +2085,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   | EInvalidTypeArgs (reason_main, reason_tapp) ->
     let features =
       [text "Cannot use "; ref reason_main; text " with "; ref reason_tapp; text " argument"]
+    in
+    Normal { features }
+  | EInvalidInfer _ ->
+    let features =
+      [
+        text "Invalid infer type declaration. ";
+        code "infer";
+        text " declarations are only permitted in the ";
+        code "extends";
+        text " clause of a conditional type.";
+      ]
     in
     Normal { features }
   | EInvalidExtends reason ->
@@ -4830,6 +4845,7 @@ let error_code_of_message err : error_code option =
   | EInvalidReactPropType _ -> Some InvalidPropType
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
+  | EInvalidInfer _ -> Some InvalidInfer
   | EInvalidExtends _ -> Some InvalidExtends
   | ELintSetting _ -> Some LintSetting
   | EMissingAnnotation _ -> Some MissingAnnot

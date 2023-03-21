@@ -880,6 +880,7 @@ module Make
     possible_labeled_continues: AbruptCompletion.t list;
     predicate_scope_names: SSet.t option;
     visiting_hoisted_type: bool;
+    in_conditional_type_extends: bool;
     jsx_base_name: string option;
   }
 
@@ -1284,6 +1285,7 @@ module Make
           possible_labeled_continues = [];
           predicate_scope_names = None;
           visiting_hoisted_type = false;
+          in_conditional_type_extends = false;
           jsx_base_name;
         }
 
@@ -2037,6 +2039,32 @@ module Make
           | Some abrupt_completion when not (filter abrupt_completion) ->
             raise (AbruptCompletion.Exn abrupt_completion)
           | _ -> ()
+
+      method! extends_in_infer_type t =
+        let saved_in_conditional_type_extends = env_state.in_conditional_type_extends in
+        env_state <- { env_state with in_conditional_type_extends = true };
+        let t' = this#type_ t in
+        env_state <-
+          { env_state with in_conditional_type_extends = saved_in_conditional_type_extends };
+        t'
+
+      method! type_ t =
+        match t with
+        | ( loc,
+            Ast.Type.Infer
+              {
+                Ast.Type.Infer.tparam = (_, { Ast.Type.TypeParam.name = (name_loc, _); _ });
+                comments = _;
+              }
+          )
+          when not env_state.in_conditional_type_extends ->
+          add_output (Error_message.EInvalidInfer loc);
+          let write_entries =
+            EnvMap.add_ordinary name_loc Env_api.NonAssigningWrite env_state.write_entries
+          in
+          env_state <- { env_state with write_entries };
+          t
+        | _ -> super#type_ t
 
       method! binding_type_identifier ident =
         let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
