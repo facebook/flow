@@ -9,9 +9,9 @@ for documentation. [incompatible-call]
                 ^
 
 References:
-   arity.js:1:26
-    1| function g<T: {}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity.js:1:29
+    1| function g<T: {...}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    arity.js:25:27
    25| type Columns = {[string]: number};
                                  ^^^^^^ [2]
@@ -35,9 +35,9 @@ for documentation. [incompatible-call]
                 ^
 
 References:
-   arity.js:1:26
-    1| function g<T: {}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity.js:1:29
+    1| function g<T: {...}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    arity.js:25:27
    25| type Columns = {[string]: number};
                                  ^^^^^^ [2]
@@ -76,9 +76,9 @@ Cannot return `g<...>(...)` because object type [1] is incompatible with `T` [2]
                 ^^^^^^^
 
 References:
-   arity.js:1:26
-    1| function g<T: {}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity.js:1:29
+    1| function g<T: {...}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    arity.js:17:32
    17| function f4<T: Columns>(o: T): T {
                                       ^ [2]
@@ -118,9 +118,9 @@ https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [incomp
                 ^
 
 References:
-   arity2.js:1:26
-    1| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity2.js:1:29
+    1| function g<T: {...}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    arity2.js:25:18
    25| type Columns = {[string]: number};
                         ^^^^^^ [2]
@@ -148,9 +148,9 @@ https://flow.org/en/docs/types/utilities/#toc-objmapi for documentation. [incomp
                 ^
 
 References:
-   arity2.js:1:26
-    1| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity2.js:1:29
+    1| function g<T: {...}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    arity2.js:25:18
    25| type Columns = {[string]: number};
                         ^^^^^^ [2]
@@ -193,9 +193,9 @@ Cannot return `g<...>(...)` because object type [1] is incompatible with `T` [2]
                 ^^^^^^^
 
 References:
-   arity2.js:1:26
-    1| function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   arity2.js:1:29
+    1| function g<T: {...}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    arity2.js:17:32
    17| function f4<T: Columns>(o: T): T {
                                       ^ [2]

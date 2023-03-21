@@ -898,8 +898,8 @@ import-rec-export.js:3:10 = {
 }
 import-star.js:5:7 = {
   "types":{
-    "unevaluated":{"type":"{|foo: () => MyUnionType|}"},
-    "evaluated":{"type":"{|foo: () => MyUnionType|}"}
+    "unevaluated":{"type":"{foo: () => MyUnionType}"},
+    "evaluated":{"type":"{foo: () => MyUnionType}"}
   },
   "reasons":[],
   "loc":{

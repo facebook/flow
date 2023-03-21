@@ -1,4 +1,4 @@
-function g<T: {}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
+function g<T: {...}>(o: T): $ObjMapi<T, typeof makeEditedColumn> {
   return o;
 }
 

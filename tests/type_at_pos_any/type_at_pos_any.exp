@@ -300,7 +300,7 @@ typed.js:15:27 = {
 }
 typed.js:16:5 = {
   "types":{
-    "unevaluated":{"type":"{f1: number, ...}[string]"},
+    "unevaluated":{"type":"{f1: number}[string]"},
     "evaluated":{"type":"any (implicit)"}
   },
   "reasons":[],

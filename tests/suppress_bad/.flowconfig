@@ -6,5 +6,4 @@
 
 [options]
 all=true
-exact_by_default=false
 suppress_comment=[

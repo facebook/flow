@@ -1,6 +1,6 @@
-lazy_ref.js:14:9 = {|default: React$AbstractComponent<empty, {|moo(x: string): void|}>|}
+lazy_ref.js:14:9 = {default: React$AbstractComponent<empty, {moo(x: string): void}>}
 lazy_ref.js:14:9,14:9
-lazy_ref.js:19:9 = Promise<{|+default: (x: Props) => Element<(x: Props) => Node>|}>
+lazy_ref.js:19:9 = Promise<{+default: (x: Props) => Element<(x: Props) => Node>}>
 lazy_ref.js:19:9,19:9
 react_component.js:3:9 = module "react"
 react_component.js:3:7,3:11

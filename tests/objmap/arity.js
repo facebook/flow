@@ -1,4 +1,4 @@
-function g<T: {}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
+function g<T: {...}>(o: T): $ObjMap<T, typeof makeEditedColumn> {
   return o;
 }
 
