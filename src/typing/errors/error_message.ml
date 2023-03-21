@@ -50,7 +50,6 @@ and 'loc t' =
   | EImportValueAsType of 'loc virtual_reason * string
   | EImportTypeAsTypeof of 'loc virtual_reason * string
   | EImportTypeAsValue of 'loc virtual_reason * string
-  | ERefineAsValue of 'loc virtual_reason * name
   | ENoDefaultExport of 'loc virtual_reason * string * string option
   | EOnlyDefaultExport of 'loc virtual_reason * string * string
   | ENoNamedExport of 'loc virtual_reason * string * string * string option
@@ -874,7 +873,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EImportValueAsType (r, s) -> EImportValueAsType (map_reason r, s)
   | EImportTypeAsTypeof (r, s) -> EImportTypeAsTypeof (map_reason r, s)
   | EImportTypeAsValue (r, s) -> EImportTypeAsValue (map_reason r, s)
-  | ERefineAsValue (r, s) -> ERefineAsValue (map_reason r, s)
   | ENoDefaultExport (r, s1, s2) -> ENoDefaultExport (map_reason r, s1, s2)
   | EOnlyDefaultExport (r, s1, s2) -> EOnlyDefaultExport (map_reason r, s1, s2)
   | ENoNamedExport (r, s1, s2, s3) -> ENoNamedExport (map_reason r, s1, s2, s3)
@@ -1325,7 +1323,6 @@ let util_use_op_of_msg nope util = function
   | EImportValueAsType (_, _)
   | EImportTypeAsTypeof (_, _)
   | EImportTypeAsValue (_, _)
-  | ERefineAsValue (_, _)
   | ENoDefaultExport (_, _, _)
   | EOnlyDefaultExport (_, _, _)
   | ENoNamedExport (_, _, _, _)
@@ -1491,7 +1488,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENoNamedExport (reason, _, _, _)
   | EOnlyDefaultExport (reason, _, _)
   | ENoDefaultExport (reason, _, _)
-  | ERefineAsValue (reason, _)
   | EImportTypeAsValue (reason, _)
   | EImportTypeAsTypeof (reason, _)
   | EExportValueAsType (reason, _)
@@ -1966,10 +1962,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " instead.";
       ]
     in
-    Normal { features }
-  | ERefineAsValue (_, name) ->
-    let (_, export) = msg_export "" (display_string_of_name name) in
-    let features = [text "Cannot refine "; export; text " as a value. "] in
     Normal { features }
   | ENoDefaultExport (_, module_name, suggestion) ->
     let features =
@@ -4881,7 +4873,6 @@ let error_code_of_message err : error_code option =
   (* We don't want these to be suppressible *)
   | ERecursionLimit (_, _) -> None
   | ERefineAnnot _ -> Some InvalidRefineTypeArg
-  | ERefineAsValue (_, _) -> Some RefineAsValue
   | EROArrayWrite _ -> Some CannotWrite
   | ESignatureVerification _ -> Some SignatureVerificationFailure
   | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous

@@ -130,7 +130,6 @@ type error_code =
   | ReassignEnum
   | ReassignImport
   | ReferenceBeforeDeclaration
-  | RefineAsValue
   | RequireExplicitEnumSwitchCases
   | SignatureVerificationFailure
   | SketchyNullBool
@@ -320,7 +319,6 @@ let string_of_code : error_code -> string = function
   | ReassignEnum -> "reassign-enum"
   | ReassignImport -> "reassign-import"
   | ReferenceBeforeDeclaration -> "reference-before-declaration"
-  | RefineAsValue -> "refine-as-value"
   | RequireExplicitEnumSwitchCases -> "require-explicit-enum-switch-cases"
   | SignatureVerificationFailure -> "signature-verification-failure"
   | SketchyNullBool -> "sketchy-null-bool"

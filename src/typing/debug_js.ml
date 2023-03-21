@@ -1203,8 +1203,6 @@ let dump_error_message =
       spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsValue (reason, str) ->
       spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
-    | ERefineAsValue (reason, name) ->
-      spf "ERefineAsValue (%s, %s)" (dump_reason cx reason) (display_string_of_name name)
     | ENoDefaultExport (reason, module_name, _) ->
       spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
     | EOnlyDefaultExport (reason, module_name, export_name) ->
