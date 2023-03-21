@@ -984,6 +984,39 @@ and merge_annot tps file = function
     let reason = Reason.(mk_annot_reason RInterfaceType loc) in
     let id = ALoc.id_none in
     merge_interface ~inline:true tps file reason id def []
+  | MappedTypeAnnot { loc; source_type; property_type; key_tparam; variance; optional } ->
+    let source_type = merge tps file source_type in
+    let (tp, _, tps) = merge_tparam tps file key_tparam in
+    let property_type =
+      let prop_type = merge tps file property_type in
+      let prop_reason = TypeUtil.reason_of_t prop_type in
+      let type_t = Type.(DefT (prop_reason, trust, TypeT (MappedTypeKind, prop_type))) in
+      let id = Context.make_source_poly_id file.cx loc in
+      Type.(
+        DefT
+          (prop_reason, trust, PolyT { tparams_loc = loc; tparams = Nel.one tp; t_out = type_t; id })
+      )
+    in
+    let optional =
+      Flow_ast.Type.Object.MappedType.(
+        match optional with
+        | PlusOptional
+        | Flow_ast.Type.Object.MappedType.Optional ->
+          Type.MakeOptional
+        | MinusOptional -> Type.RemoveOptional
+        | NoOptionalFlag -> Type.KeepOptionality
+      )
+    in
+    let mapped_type_flags = { Type.variance; optional } in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let reason = Reason.(mk_reason RObjectType loc) in
+    Type.(
+      EvalT
+        ( source_type,
+          TypeDestructorT (unknown_use, reason, MappedType { property_type; mapped_type_flags }),
+          id
+        )
+    )
 
 and merge_value tps file = function
   | ClassExpr (loc, def) ->

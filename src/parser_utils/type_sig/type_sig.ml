@@ -550,6 +550,14 @@ type ('loc, 'a) annot =
   | Trusted of 'loc * 'a
   | Private of 'loc * 'a
   | FunAnnot of 'loc * ('loc, 'a) fun_sig
+  | MappedTypeAnnot of {
+      loc: 'loc;
+      source_type: 'a;
+      property_type: 'a;
+      key_tparam: ('loc, 'a) tparam;
+      variance: Polarity.t;
+      optional: Flow_ast.Type.Object.MappedType.optional_flag;
+    }
   | ObjAnnot of {
       loc: 'loc;
       obj_kind: 'a obj_kind;

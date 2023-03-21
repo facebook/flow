@@ -1479,6 +1479,55 @@ and object_type =
     let { O.SpreadProperty.argument = t; comments = _ } = p in
     Acc.add_spread (annot opts scope tbls xs t) acc
   in
+  let mapped_type opts scope tbls xs p =
+    let (loc, { O.MappedType.source_type; prop_type; key_tparam; variance; optional; comments = _ })
+        =
+      p
+    in
+    let loc = push_loc tbls loc in
+    (* The source type does not have the key_tparam in scope, but we need to parse locs in syntax
+     * order or we will violate type sig invariants. I keep track of old xs to make sure we don't
+     * accidentally shadow a tparam in source_type *)
+    match (source_type, optional) with
+    | ( (_, Ast.Type.Keyof { Ast.Type.Keyof.argument = source_type; comments = _ }),
+        Ast.Type.Object.MappedType.(
+          PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag)
+      ) ->
+      let (key_loc, key_name) =
+        let ( _,
+              {
+                T.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ });
+                bound = _;
+                bound_kind = _;
+                variance = _;
+                default = _;
+              }
+            ) =
+          key_tparam
+        in
+        (push_loc tbls name_loc, name)
+      in
+      let source_type = annot opts scope tbls xs source_type in
+      let (key_tparam, xs) =
+        ( TParam
+            {
+              name_loc = key_loc;
+              name = key_name;
+              polarity = Polarity.Neutral;
+              bound = None;
+              default = None;
+            },
+          SSet.add key_name xs
+        )
+      in
+      let property_type = annot opts scope tbls xs prop_type in
+      Annot
+        (MappedTypeAnnot
+           { loc; source_type; property_type; key_tparam; variance = polarity variance; optional }
+        )
+    | _ -> Annot (Any loc)
+  in
+
   let dict opts scope tbls xs acc p =
     let { O.Indexer.id; key = k; value = v; static = _; variance; comments = _ } = p in
     let name =
@@ -1517,21 +1566,32 @@ and object_type =
   fun opts scope tbls xs loc o ->
     let { O.exact; inexact; properties; comments = _ } = o in
     let exact = exact || ((not inexact) && opts.exact_by_default) in
-    let acc =
-      List.fold_left
-        (fun acc -> function
-          | O.Property (_, p) -> prop opts scope tbls xs acc p
-          | O.SpreadProperty (_, p) -> spread opts scope tbls xs acc p
-          | O.Indexer (_, p) -> dict opts scope tbls xs acc p
-          | O.CallProperty (_, p) -> call opts scope tbls xs acc p
-          | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
-          | O.MappedType _ ->
-            (* TODO(jmbrown): Mapped types in type signatures *)
-            acc)
-        Acc.empty
-        properties
-    in
-    Acc.object_type loc ~exact acc
+    (* Mapped types do not allow extra properties yet. We syntactically match
+     * on objects with only a mapped type property and make other objects
+     * including a mapped type `any`.
+     *)
+    match properties with
+    | [O.MappedType p] -> mapped_type opts scope tbls xs p
+    | _ ->
+      let acc =
+        List.fold_left
+          (fun acc objprop ->
+            match acc with
+            | None -> None
+            | Some acc ->
+              (match objprop with
+              | O.Property (_, p) -> Some (prop opts scope tbls xs acc p)
+              | O.SpreadProperty (_, p) -> Some (spread opts scope tbls xs acc p)
+              | O.Indexer (_, p) -> Some (dict opts scope tbls xs acc p)
+              | O.CallProperty (_, p) -> Some (call opts scope tbls xs acc p)
+              | O.InternalSlot (_, p) -> Some (slot opts scope tbls xs acc p)
+              | O.MappedType _ -> None))
+          (Some Acc.empty)
+          properties
+      in
+      (match acc with
+      | None -> Annot (Any loc)
+      | Some acc -> Acc.object_type loc ~exact acc)
 
 and interface_def opts scope tbls xs extends properties =
   let module Acc = InterfaceAcc in
@@ -1622,10 +1682,9 @@ and interface_props =
         | O.Indexer (_, p) -> dict opts scope tbls xs acc p
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
-        | O.SpreadProperty _ -> acc
-        (* no spread in interface *)
+        | O.SpreadProperty _
         | O.MappedType _ ->
-          (* TODO(jmbrown): Mapped types in type signatures *)
+          (* no spread or mapped types in interface *)
           acc)
       acc
       properties
@@ -1708,10 +1767,9 @@ and declare_class_props =
         | O.Indexer (_, p) -> dict opts scope tbls xs acc p
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
-        | O.SpreadProperty _ -> acc
-        (* no spread in interface / declare class *)
+        | O.SpreadProperty _
         | O.MappedType _ ->
-          (* no mapped types in interface / declared class *)
+          (* no spread or mapped types in interface / declare class *)
           acc)
       acc
       properties
