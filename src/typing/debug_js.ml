@@ -550,7 +550,13 @@ and dump_use_t_ (depth, tvars) cx t =
           | (_, Some t) ->
             NameUtils.Map.add
               k
-              { Object.prop_t = t; is_own = true; is_method = false; polarity = Polarity.Neutral }
+              {
+                Object.prop_t = t;
+                is_own = true;
+                is_method = false;
+                polarity = Polarity.Neutral;
+                key_loc = Type.Property.first_loc p;
+              }
               acc
           | _ -> acc)
         prop_map

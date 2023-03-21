@@ -273,13 +273,13 @@ Mapped Types do not yet support optionality removal. [invalid-mapped-type]
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- reasons.js:9:39
+Error -------------------------------------------------------------------------------------------------- reasons.js:9:34
 
 string literal `bar` [1] is incompatible with string literal `foo` [2] in type argument `T`. [incompatible-type-arg]
 
-   reasons.js:9:39
+   reasons.js:9:34
    9|   type FooBarObj = {foo: number, bar: number};
-                                            ^^^^^^ [1]
+                                       ^^^ [1]
 
 References:
    reasons.js:7:20
@@ -287,11 +287,11 @@ References:
                          ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- reasons.js:12:26
+Error ------------------------------------------------------------------------------------------------- reasons.js:10:26
 
 Mapped Types are not yet supported. [unsupported-syntax]
 
-   12|   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR
+   10|   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

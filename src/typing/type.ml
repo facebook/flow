@@ -2507,6 +2507,7 @@ and Object : sig
     is_own: bool;
     is_method: bool;
     polarity: Polarity.t;
+    key_loc: ALoc.t option;
   }
 
   and dict = TypeTerm.dicttype option

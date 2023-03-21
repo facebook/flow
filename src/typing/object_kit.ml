@@ -144,11 +144,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let polarity = Polarity.Neutral in
         let props =
           NameUtils.Map.map
-            (fun { Object.prop_t = t; is_own = _; is_method; polarity = _ } ->
+            (fun { Object.prop_t = t; is_own = _; is_method; polarity = _; key_loc } ->
               if is_method then
-                Method (None, t)
+                Method (key_loc, t)
               else
-                Field (None, t, polarity))
+                Field (key_loc, t, polarity))
             props
         in
         let flags =
@@ -189,11 +189,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         let polarity = Polarity.Neutral in
         let props =
           NameUtils.Map.map
-            (fun { Object.prop_t = t; is_own = _; is_method; polarity = _ } ->
+            (fun { Object.prop_t = t; is_own = _; is_method; polarity = _; key_loc } ->
               if is_method then
-                Method (None, t)
+                Method (key_loc, t)
               else
-                Field (None, t, polarity))
+                Field (key_loc, t, polarity))
             props
         in
         let flags =
@@ -353,7 +353,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let props =
               NameUtils.Map.map
                 (fun (t, m) ->
-                  { Object.prop_t = t; is_own = true; is_method = m; polarity = Polarity.Neutral })
+                  {
+                    Object.prop_t = t;
+                    is_own = true;
+                    is_method = m;
+                    polarity = Polarity.Neutral;
+                    key_loc = None;
+                  })
                 pmap'
             in
             let slice' =
@@ -406,6 +412,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     is_own = true;
                     is_method = false;
                     polarity = prop_polarity;
+                    key_loc = None;
                   }
                   config_props
             )
@@ -442,9 +449,27 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     let p2 = Slice_utils.get_prop defaults_reason p2 defaults_dict in
                     match (p1, p2) with
                     | (None, None) -> None
-                    | (Some { Object.prop_t = t; is_own = _; is_method = m; polarity = _ }, None) ->
+                    | ( Some
+                          {
+                            Object.prop_t = t;
+                            is_own = _;
+                            is_method = m;
+                            polarity = _;
+                            key_loc = _;
+                          },
+                        None
+                      ) ->
                       Some (t, m)
-                    | (None, Some { Object.prop_t = t; is_own = _; is_method = m; polarity = _ }) ->
+                    | ( None,
+                        Some
+                          {
+                            Object.prop_t = t;
+                            is_own = _;
+                            is_method = m;
+                            polarity = _;
+                            key_loc = _;
+                          }
+                      ) ->
                       Some (t, m)
                     (* If a property is defined in both objects, and the first property's
                      * type includes void then we want to replace every occurrence of void
@@ -453,8 +478,22 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                      * `f(undefined)` and there is a default value for the first argument,
                      * then we will ignore the void type and use the type for the default
                      * parameter instead. *)
-                    | ( Some { Object.prop_t = t1; is_own = _; is_method = m1; polarity = _ },
-                        Some { Object.prop_t = t2; is_own = _; is_method = m2; polarity = _ }
+                    | ( Some
+                          {
+                            Object.prop_t = t1;
+                            is_own = _;
+                            is_method = m1;
+                            polarity = _;
+                            key_loc = _;
+                          },
+                        Some
+                          {
+                            Object.prop_t = t2;
+                            is_own = _;
+                            is_method = m2;
+                            polarity = _;
+                            key_loc = _;
+                          }
                       ) ->
                       (* Use CondT to replace void with t1. *)
                       let t =
@@ -511,7 +550,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | None ->
               let props =
                 NameUtils.Map.map
-                  (fun { Object.prop_t = t; is_own = _; is_method; polarity = _ } -> (t, is_method))
+                  (fun { Object.prop_t = t; is_own = _; is_method; polarity = _; key_loc = _ } ->
+                    (t, is_method))
                   config_props
               in
               (* Create a new dictionary from our config's dictionary with a
