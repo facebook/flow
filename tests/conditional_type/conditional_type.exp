@@ -1,3 +1,12 @@
+Error ---------------------------------------------------------------------------------------------------- basic.js:1:29
+
+Cannot check number literal `1` against `T` because number literal `1` [1] is not supported by unclassified use
+ConditionalT. [incompatible-use]
+
+   1| type BasicConditionalType = 1 extends infer T ? string : number;  // evals to string
+                                  ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- invalid_infer.js:2:10
 
 Invalid infer type declaration. `infer` declarations are only permitted in the `extends` clause of a conditional type.
@@ -35,4 +44,4 @@ Invalid infer type declaration. `infer` declarations are only permitted in the `
 
 
 
-Found 4 errors
+Found 5 errors
