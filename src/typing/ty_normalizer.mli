@@ -12,6 +12,7 @@ type error_kind =
   | BadBoundT
   | BadCallProp
   | BadClassT
+  | BadMappedType
   | BadThisClassT
   | BadPoly
   | BadTypeAlias

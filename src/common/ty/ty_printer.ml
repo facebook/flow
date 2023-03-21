@@ -279,6 +279,27 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         end
         | CallProp func -> fuse [type_function ~depth ~sep:(Atom ":") func]
         | SpreadProp t -> fuse [Atom "..."; type_ ~depth t]
+        | MappedTypeProp
+            { key_tparam = { tp_name; _ }; source; prop; flags = { polarity; optional } } ->
+          let optional_modifier =
+            match optional with
+            | KeepOptionality -> Empty
+            | RemoveOptional -> Atom "-?"
+            | MakeOptional -> Atom "?"
+          in
+          fuse
+            [
+              variance_ polarity;
+              Atom "[";
+              Atom tp_name;
+              Atom " in keyof ";
+              type_ ~depth source;
+              Atom "]";
+              optional_modifier;
+              Atom ":";
+              pretty_space;
+              type_ ~depth prop;
+            ]
     )
   and type_array ~depth { arr_readonly; arr_literal; arr_elt_t } =
     let arr =
@@ -322,6 +343,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       | IndexedObj d -> type_dict ~depth d :: props
       | InexactObj -> props @ [Atom "..."]
       | ExactObj -> props
+      | MappedTypeObj -> props
     in
     let o =
       list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props

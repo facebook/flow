@@ -762,3 +762,98 @@ Flags:
 ReadOnlyObj
 type-destructor.js:193:14,193:14
 
+mapped-type.js:7:6
+Flags:
+type MappedObj1 = {[key in keyof O]: number}
+= {|bar: number, foo: number|}
+mapped-type.js:7:6,7:15
+
+mapped-type.js:9:6
+Flags:
+type MappedObj2 = {[key in keyof O]: O[key]}
+= {|bar: string, foo: number|}
+mapped-type.js:9:6,9:15
+
+mapped-type.js:11:6
+Flags:
+type MappedObj3 = {-[key in keyof O]: O[key]}
+= {|-bar: string, -foo: number|}
+mapped-type.js:11:6,11:15
+
+mapped-type.js:13:6
+Flags:
+type MappedObj4 = {+[key in keyof O]: O[key]}
+= {|+bar: string, +foo: number|}
+mapped-type.js:13:6,13:15
+
+mapped-type.js:15:6
+Flags:
+type MappedObj5 = {[key in keyof O]?: O[key]}
+= {|bar?: string, foo?: number|}
+mapped-type.js:15:6,15:15
+
+mapped-type.js:17:6
+Flags:
+type MappedObj6 = {+[key in keyof O]?: O[key]}
+= {|+bar?: string, +foo?: number|}
+mapped-type.js:17:6,17:15
+
+mapped-type.js:19:6
+Flags:
+type MappedObj7 = {-[key in keyof O]?: O[key]}
+= {|-bar?: string, -foo?: number|}
+mapped-type.js:19:6,19:15
+
+mapped-type.js:23:6
+Flags:
+type MappedObj8 = {[key in keyof DifferingModifiers]: number}
+= {-bar: number, +baz: number, foo?: number, ...}
+mapped-type.js:23:6,23:15
+
+mapped-type.js:26:6
+Flags:
+type MappedObj9 = any (implicit)
+mapped-type.js:26:6,26:15
+
+mapped-type.js:30:6
+Flags:
+type Unevaluated1<T: {...}> = {[key in keyof T]: T[key]}
+= {...}
+mapped-type.js:30:6,30:17
+
+mapped-type.js:32:6
+Flags:
+type Unevaluated2<T: {...}> = {+[key in keyof T]: T[key]}
+= {...}
+mapped-type.js:32:6,32:17
+
+mapped-type.js:34:6
+Flags:
+type Unevaluated3<T: {...}> = {-[key in keyof T]: T[key]}
+= {...}
+mapped-type.js:34:6,34:17
+
+mapped-type.js:36:6
+Flags:
+type Unevaluated4<T: {...}> = {[key in keyof T]?: T[key]}
+= {...}
+mapped-type.js:36:6,36:17
+
+mapped-type.js:38:6
+Flags:
+type Unevaluated5<T: {...}> = {+[key in keyof T]?: T[key]}
+= {...}
+mapped-type.js:38:6,38:17
+
+mapped-type.js:40:6
+Flags:
+type Unevaluated6<T: {...}> = {-[key in keyof T]?: T[key]}
+= {...}
+mapped-type.js:40:6,40:17
+
+mapped-type.js:44:4
+Flags:
+{|bar: $ElementType<O, "bar">, foo: $ElementType<O, "foo">|}
+= {|bar: string, foo: number|}
+mapped-type.js:44:4,44:4
+

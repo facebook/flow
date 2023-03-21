@@ -82,6 +82,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                  []
                )
              | SpreadProp ty -> members_of_ty ty
+             (* TODO(jmbrown): Mapped Type autocomplete *)
+             | MappedTypeProp _ -> (NameUtils.Map.empty, [])
              | CallProp _ -> (NameUtils.Map.empty, [])
            in
            (NameUtils.Map.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2)

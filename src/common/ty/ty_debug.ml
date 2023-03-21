@@ -148,6 +148,8 @@ and dump_prop ~depth = function
   | NamedProp { name; prop; _ } -> dump_named_prop ~depth name prop
   | CallProp f -> dump_fun_t ~depth f
   | SpreadProp t -> dump_spread ~depth t
+  | MappedTypeProp { key_tparam; source; prop; flags } ->
+    dump_mapped_type ~depth key_tparam source prop flags
 
 and dump_named_prop ~depth x = function
   | Field { t; polarity; optional } ->
@@ -168,6 +170,18 @@ and dump_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
 
 and dump_spread ~depth t = spf "...%s" (dump_t ~depth t)
 
+and dump_mapped_type ~depth { tp_name; _ } source prop { optional; polarity } =
+  spf
+    "%s[%s in keyof %s]%s: %s"
+    (dump_polarity polarity)
+    tp_name
+    (dump_t ~depth source)
+    (match optional with
+    | KeepOptionality -> ""
+    | MakeOptional -> "?"
+    | RemoveOptional -> "-?")
+    (dump_t ~depth prop)
+
 and dump_obj ~depth { obj_kind; obj_props; _ } =
   match obj_kind with
   | ExactObj -> spf "{|%s|}" (dump_list (dump_prop ~depth) obj_props)
@@ -175,6 +189,7 @@ and dump_obj ~depth { obj_kind; obj_props; _ } =
   | IndexedObj d ->
     let dict = dump_dict ~depth d in
     spf "{%s, %s}" (dump_list (dump_prop ~depth) obj_props) dict
+  | MappedTypeObj -> spf "{%s}" (dump_list (dump_prop ~depth) obj_props)
 
 and dump_arr ~depth { arr_readonly; arr_elt_t; _ } =
   let ctor =
@@ -467,6 +482,7 @@ let json_of_elt ~strip_root =
         | ExactObj -> JSON_String "Exact"
         | InexactObj -> JSON_String "Inexact"
         | IndexedObj d -> json_of_dict d
+        | MappedTypeObj -> JSON_String "MappedType"
       in
       [
         ( "def_loc",
@@ -529,7 +545,33 @@ let json_of_elt ~strip_root =
           ]
         | CallProp ft ->
           [("kind", JSON_String "CallProp"); ("prop", JSON_Object (json_of_fun_t ft))]
-        | SpreadProp t -> [("kind", JSON_String "SpreadProp"); ("prop", json_of_t t)])
+        | SpreadProp t -> [("kind", JSON_String "SpreadProp"); ("prop", json_of_t t)]
+        | MappedTypeProp
+            { key_tparam = { tp_name; _ }; source; prop; flags = { optional; polarity } } ->
+          let optional_str =
+            match optional with
+            | KeepOptionality -> "KeepOptionality"
+            | RemoveOptional -> "RemoveOptional"
+            | MakeOptional -> "MakeOptional"
+          in
+          [
+            ("kind", JSON_String "MappedTypeProp");
+            ( "prop",
+              JSON_Object
+                [
+                  ("key_tparam", JSON_String tp_name);
+                  ("source", json_of_t source);
+                  ("prop", json_of_t prop);
+                  ( "flags",
+                    JSON_Object
+                      [
+                        ("polarity", json_of_polarity polarity);
+                        ("optional", JSON_String optional_str);
+                      ]
+                  );
+                ]
+            );
+          ])
     )
   and json_of_dict { dict_polarity; dict_name; dict_key; dict_value } =
     Hh_json.(

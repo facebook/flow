@@ -29,6 +29,7 @@ type error_kind =
   | BadBoundT
   | BadCallProp
   | BadClassT
+  | BadMappedType
   | BadThisClassT
   | BadPoly
   | BadTypeAlias
@@ -51,6 +52,7 @@ let error_kind_to_string = function
   | BadBoundT -> "Unbound type parameter"
   | BadCallProp -> "Bad call property"
   | BadClassT -> "Bad class"
+  | BadMappedType -> "Bad mapped type"
   | BadThisClassT -> "Bad this class"
   | BadPoly -> "Bad polymorphic type"
   | BadTypeAlias -> "Bad type alias"
@@ -363,6 +365,7 @@ end = struct
     | Env.EvaluateSome ->
       T.(
         (match d with
+        | MappedType _
         | NonMaybeType
         | PropertyType _
         | ElementType _
@@ -378,7 +381,6 @@ end = struct
         | RestType _
         | ValuesType
         | TypeMap _
-        | MappedType _
         | ReactElementPropsType
         | ReactElementConfigType
         | ReactElementRefType
@@ -827,6 +829,9 @@ end = struct
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in
         Ty.Generic (symbol, Ty.EnumKind, None)
       | DefT (_, _, CharSetT s) -> return (Ty.CharSet (String_utils.CharSet.to_string s))
+      (* MappedTypeKind TypeTs do not appear at the top-level-- they are created as the prop_type
+       * in a MappedType destructor *)
+      | DefT (_, _, TypeT (MappedTypeKind, t)) -> type__ ~env t
       (* Top-level only *)
       | DefT (_, _, TypeT _)
       | ModuleT _ ->
@@ -1224,7 +1229,6 @@ end = struct
         let open Type in
         let%bind symbol =
           match kind with
-          | MappedTypeKind
           | TypeAliasKind
           | InstanceKind ->
             Reason_utils.local_type_alias_symbol env r
@@ -1233,6 +1237,8 @@ end = struct
           | ImportEnumKind ->
             Reason_utils.imported_type_alias_symbol env r
           | OpaqueKind -> Reason_utils.opaque_type_alias_symbol env r
+          | MappedTypeKind ->
+            terr ~kind:BadMappedType ~msg:"Mapped types should not be passed to type_t_app" None
           | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"TypeParamKind" None
         in
         mk_generic ~env symbol Ty.TypeAliasKind tparams targs
@@ -1254,6 +1260,14 @@ end = struct
         let open Type in
         match t with
         | AnyT _ -> type__ ~env t
+        | DefT
+            ( reason,
+              _,
+              PolyT { tparams = _; t_out = DefT (_, _, TypeT (MappedTypeKind, inner_t)); _ }
+            ) ->
+          (match targs with
+          | Some targs -> type_app_t ~env ~cont:type__ reason unknown_use t targs
+          | None -> type__ ~env inner_t)
         | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
         | ThisClassT (_, t, _, _)
         | DefT (_, _, TypeT (_, t)) ->
@@ -1556,6 +1570,38 @@ end = struct
         in
         mk_spread ty target prefix_tys head_slice
 
+    and mapped_type ~env source property_type mapped_type_flags =
+      let%bind (key_tparam, prop) =
+        Type.TypeTerm.(
+          match property_type with
+          | DefT (_, _, PolyT { tparams = (key_tparam, []); t_out; _ }) ->
+            let%bind key_tparam_ty = type_param ~env key_tparam in
+            let env = Env.add_typeparam env key_tparam in
+            let%bind property_ty = type__ ~env t_out in
+            return (key_tparam_ty, property_ty)
+          | _ -> terr ~kind:BadMappedType (Some property_type)
+        )
+      in
+      let { Type.TypeTerm.variance; optional } = mapped_type_flags in
+      let optional =
+        match optional with
+        | Type.MakeOptional -> Ty.MakeOptional
+        | Type.RemoveOptional -> Ty.RemoveOptional
+        | Type.KeepOptionality -> Ty.KeepOptionality
+      in
+      let flags = { Ty.optional; polarity = type_polarity variance } in
+      let prop = Ty.(MappedTypeProp { key_tparam; source; prop; flags }) in
+      let obj_t =
+        {
+          Ty.obj_def_loc = None;
+          obj_frozen = false;
+          obj_literal = None;
+          obj_props = [prop];
+          obj_kind = Ty.MappedTypeObj;
+        }
+      in
+      return (Ty.Obj obj_t)
+
     and type_destructor_unevaluated ~env t d =
       let%bind ty = type__ ~env t in
       match d with
@@ -1617,7 +1663,8 @@ end = struct
       | T.IdxUnwrapType -> return (Ty.Utility (Ty.IdxUnwrapType ty))
       | T.RestType ((T.Object.Rest.Omit | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
-      | T.MappedType _ -> terr ~kind:BadEvalT ~msg:"Mapped types are not supported yet" None
+      | T.MappedType { property_type; mapped_type_flags } ->
+        mapped_type ~env ty property_type mapped_type_flags
 
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 
@@ -1724,7 +1771,6 @@ end = struct
       fun ~env r kind t ps ->
         match kind with
         | TypeAliasKind -> local env r t ps
-        | MappedTypeKind -> local env r t ps
         | ImportClassKind -> class_ env t
         | ImportEnumKind -> terr ~kind:(UnexpectedTypeCtor "EnumObjectT") None
         | ImportTypeofKind -> import env r t ps
@@ -1732,6 +1778,11 @@ end = struct
         | TypeParamKind -> type_param env r t
         (* The following cases are not common *)
         | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
+        | MappedTypeKind ->
+          terr
+            ~kind:BadTypeAlias
+            ~msg:"Mapped Types should never be appear as a regular type alias"
+            (Some t)
 
     (* The normalizer input, Type.t, is a rather flat structure. It encompasses types
      * that expressions might have (e.g. number, string, object), but also types that
@@ -1776,6 +1827,11 @@ end = struct
         return (Ty.Decl Ty.(EnumDecl symbol))
       in
       let singleton_poly ~env ~orig_t tparams = function
+        | DefT (_, _, TypeT (MappedTypeKind, _)) as t ->
+          terr
+            ~kind:BadMappedType
+            ~msg:"Mapped Type properties should never appear in the toplevels"
+            (Some t)
         (* Imported interfaces *)
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst

@@ -227,6 +227,7 @@ let type_ options =
         let%map p = obj_index_prop d in
         let properties = T.Object.Indexer (Loc.none, p) :: properties in
         (false, false, properties)
+      | MappedTypeObj -> return (false, false, properties)
     in
     let t = (Loc.none, T.Object { T.Object.exact; inexact; properties; comments = None }) in
     match o.obj_literal with
@@ -244,6 +245,9 @@ let type_ options =
     | SpreadProp t ->
       let%map p = obj_spread_prop t in
       T.Object.SpreadProperty p
+    | MappedTypeProp { key_tparam; source; prop; flags } ->
+      let%map p = obj_mapped_type_prop key_tparam source prop flags in
+      T.Object.MappedType p
   and obj_named_prop =
     let to_key x =
       if Ty_printer.property_key_quotes_needed x then
@@ -324,6 +328,32 @@ let type_ options =
   and obj_spread_prop t =
     let%map t = type_ t in
     (Loc.none, { T.Object.SpreadProperty.argument = t; comments = None })
+  and obj_mapped_type_prop key_tparam source prop { optional; polarity } =
+    let%bind source_type = type_ source in
+    let keyof_source_type =
+      (Loc.none, T.Keyof { T.Keyof.argument = source_type; comments = None })
+    in
+    let%bind prop_type = type_ prop in
+    let%map key_tparam = type_param key_tparam in
+    let optional =
+      T.Object.MappedType.(
+        match optional with
+        | KeepOptionality -> NoOptionalFlag
+        | RemoveOptional -> MinusOptional
+        | MakeOptional -> Optional
+      )
+    in
+    let variance = variance_ polarity in
+    ( Loc.none,
+      {
+        T.Object.MappedType.key_tparam;
+        prop_type;
+        source_type = keyof_source_type;
+        variance;
+        optional;
+        comments = None;
+      }
+    )
   and arr { arr_readonly; arr_elt_t; arr_literal; _ } =
     let%map t = type_ arr_elt_t in
     if arr_readonly then

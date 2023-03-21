@@ -130,6 +130,7 @@ and obj_kind =
   | ExactObj
   | InexactObj
   | IndexedObj of dict
+  | MappedTypeObj
 
 and obj_t = {
   obj_def_loc: aloc option;
@@ -177,6 +178,12 @@ and prop =
     }
   | CallProp of fun_t
   | SpreadProp of t
+  | MappedTypeProp of {
+      key_tparam: type_param;
+      source: t;
+      prop: t;
+      flags: mapped_type_flags;
+    }
 
 and named_prop =
   | Field of {
@@ -192,6 +199,16 @@ and prop_source =
   | Interface
   | PrimitiveProto of string
   | Other
+
+and mapped_type_optional_flag =
+  | RemoveOptional
+  | KeepOptionality
+  | MakeOptional
+
+and mapped_type_flags = {
+  optional: mapped_type_optional_flag;
+  polarity: polarity;
+}
 
 and dict = {
   dict_polarity: polarity;
@@ -528,6 +545,7 @@ class ['A] comparator_ty =
       | ExactObj -> 0
       | InexactObj -> 1
       | IndexedObj _ -> 2
+      | MappedTypeObj -> 3
 
     method tag_of_any_kind _ =
       function
@@ -560,6 +578,7 @@ class ['A] comparator_ty =
       | NamedProp _ -> 0
       | CallProp _ -> 1
       | SpreadProp _ -> 2
+      | MappedTypeProp _ -> 3
 
     method tag_of_named_prop _env =
       function
