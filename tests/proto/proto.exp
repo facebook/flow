@@ -491,20 +491,5 @@ References:
                          ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- ternary-crash.js:2:33
 
-Cannot get `err.constructor` because property `constructor` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   ternary-crash.js:2:33
-      2| const constructor = (typeof err.constructor === 'function') ? err.constructor : Error;
-                                         ^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:1581:5
-   1581|     constructor (message?: mixed): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 35 errors
+Found 34 errors

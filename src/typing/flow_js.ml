@@ -5001,8 +5001,9 @@ struct
                   lookup_action = ReadProp { use_op; obj_t = l; tout };
                   method_accessible =
                     begin
-                      match l with
-                      | DefT (_, _, InstanceT _) -> false
+                      match (l, propref) with
+                      | (_, Named (_, OrdinaryName "constructor")) -> true
+                      | (DefT (_, _, InstanceT _), _) -> false
                       | _ -> true
                     end;
                   ids = Some Properties.Set.empty;
