@@ -5,26 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let create_cx_with_context_optimizer init_cx master_cx ~reducer ~f =
-  let file = Context.file init_cx in
-  let metadata = Context.metadata init_cx in
-  let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
-  let ccx = Context.make_ccx master_cx in
-  let res = f () in
-  Context.merge_into
-    ccx
-    {
-      Type.TypeContext.graph = reducer#get_reduced_graph;
-      trust_graph = reducer#get_reduced_trust_graph;
-      property_maps = reducer#get_reduced_property_maps;
-      call_props = reducer#get_reduced_call_props;
-      export_maps = reducer#get_reduced_export_maps;
-      evaluated = reducer#get_reduced_evaluated;
-    };
-  let cx = Context.make ccx metadata file aloc_table Context.PostInference in
-  (cx, res)
-
-let detect_sketchy_null_checks cx master_cx =
+let detect_sketchy_null_checks cx =
   let add_error ~loc ~null_loc kind falsy_loc =
     Error_message.ESketchyNullLint { kind; loc; null_loc; falsy_loc } |> Flow_js.add_output cx
   in
@@ -63,36 +44,6 @@ let detect_sketchy_null_checks cx master_cx =
     let open ExistsCheck in
     let checks = Context.exists_checks cx in
     if not @@ ALocMap.is_empty checks then
-      let reducer =
-        object
-          inherit
-            Context_optimizer.context_optimizer
-              ~no_lowers:(fun _ r -> Type.EmptyT.make r (Type.bogus_trust ())) as super
-
-          method! type_ cx pole t =
-            let open Type in
-            match t with
-            | ModuleT _
-            | EvalT _
-            | ThisClassT _
-            | TypeDestructorTriggerT _
-            | DefT
-                ( _,
-                  _,
-                  ( InstanceT _ | ClassT _ | FunT _ | ArrT _ | ObjT _ | PolyT _
-                  | ReactAbstractComponentT _ )
-                ) ->
-              t
-            | _ -> super#type_ cx pole t
-        end
-      in
-
-      let (cx, checks) =
-        create_cx_with_context_optimizer cx master_cx ~reducer ~f:(fun () ->
-            ALocMap.map (Type.TypeSet.map (reducer#type_ cx Polarity.Neutral)) checks
-        )
-      in
-
       let rec make_checks seen cur_checks loc t =
         let open Type in
         let open TypeUtil in
@@ -270,59 +221,7 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
-class resolver_visitor =
-  (* TODO: replace this with the context_optimizer *)
-  let no_lowers _cx r = Type.Unsoundness.merged_any r in
-  object (self)
-    inherit [unit] Type_mapper.t as super
-
-    method! type_ cx map_cx t =
-      let open Type in
-      match t with
-      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty:true ~no_lowers cx r id
-      | EvalT (t', dt, _id) ->
-        let t'' = self#type_ cx map_cx t' in
-        let dt' = self#defer_use_type cx map_cx dt in
-        if t' == t'' && dt == dt' then
-          t
-        else
-          Flow_cache.Eval.id cx t'' dt'
-      | _ -> super#type_ cx map_cx t
-
-    (* Only called from type_ and the CreateObjWithComputedPropT use case *)
-    method tvar _cx _seen _r id = id
-
-    (* overridden in type_ *)
-    method eval_id _cx _map_cx _id = assert false
-
-    method props cx map_cx id =
-      let props_map = Context.find_props cx id in
-      let props_map' =
-        NameUtils.Map.ident_map (Type.Property.ident_map_t (self#type_ cx map_cx)) props_map
-      in
-      let id' =
-        if props_map == props_map' then
-          id
-        (* When mapping results in a new property map, we have to use a
-           generated id, rather than a location from source. *)
-        else
-          Context.generate_property_map cx props_map'
-      in
-      id'
-
-    (* These should already be fully-resolved. *)
-    method exports _cx _map_cx id = id
-
-    method call_prop cx map_cx id =
-      let t = Context.find_call cx id in
-      let t' = self#type_ cx map_cx t in
-      if t == t' then
-        id
-      else
-        Context.make_call_prop cx t'
-  end
-
-let detect_matching_props_violations init_cx master_cx =
+let detect_matching_props_violations cx =
   let open Type in
   let peek =
     let open Type in
@@ -352,78 +251,56 @@ let detect_matching_props_violations init_cx master_cx =
     | _ -> false
   in
   let matching_props_checks =
-    Base.List.filter_map (Context.matching_props init_cx) ~f:(fun (prop_name, other_loc, obj_loc) ->
-        let env = Context.environment init_cx in
-        Env.check_readable init_cx Env_api.ExpressionLoc other_loc;
+    Base.List.filter_map (Context.matching_props cx) ~f:(fun (prop_name, other_loc, obj_loc) ->
+        let env = Context.environment cx in
+        Env.check_readable cx Env_api.ExpressionLoc other_loc;
         let sentinel =
           Base.Option.value_exn (Loc_env.find_write env Env_api.ExpressionLoc other_loc)
         in
-        match peek init_cx sentinel with
+        match peek cx sentinel with
+        (* Limit the check to promitive literal sentinels *)
         | [t] when is_lit t ->
-          let obj_t = Env.provider_type_for_def_loc init_cx env obj_loc in
-          Some (sentinel, prop_name, sentinel, obj_t)
+          let obj_t = Env.provider_type_for_def_loc cx env obj_loc in
+          Some (TypeUtil.reason_of_t sentinel, prop_name, sentinel, obj_t)
         | _ -> None
     )
   in
-  match matching_props_checks with
-  | [] -> ()
-  | _ ->
-    let reducer =
-      let no_lowers _cx r = Type.Unsoundness.merged_any r in
-      new Context_optimizer.context_optimizer ~no_lowers
+  let step (reason, key, sentinel, obj) =
+    let use_op =
+      Op
+        (MatchingProp
+           {
+             op = reason;
+             obj = TypeUtil.reason_of_t obj;
+             key;
+             sentinel_reason = TypeUtil.reason_of_t sentinel;
+           }
+        )
     in
-    let step cx (reason, key, sentinel, obj) =
-      (* Limit the check to promitive literal sentinels *)
-      let use_op =
-        Op
-          (MatchingProp
-             {
-               op = reason;
-               obj = TypeUtil.reason_of_t obj;
-               key;
-               sentinel_reason = TypeUtil.reason_of_t sentinel;
-             }
-          )
-      in
-      (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
-         `sentinel` rather than the other way around. *)
-      Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
-    in
-    let (cx, checks) =
-      create_cx_with_context_optimizer init_cx master_cx ~reducer ~f:(fun () ->
-          Base.List.map matching_props_checks ~f:(fun (reason, prop_name, sentinel, obj_t) ->
-              ( TypeUtil.reason_of_t reason,
-                prop_name,
-                reducer#type_ init_cx Polarity.Neutral sentinel,
-                reducer#type_ init_cx Polarity.Neutral obj_t
-              )
-          )
-      )
-    in
-    Base.List.iter ~f:(step cx) checks;
-    let new_errors = Context.errors cx in
-    Flow_error.ErrorSet.iter (Context.add_error init_cx) new_errors
+    (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
+       `sentinel` rather than the other way around. *)
+    Flow_js.flow cx (MatchingPropT (reason, key, sentinel), UseT (use_op, drop_generic obj))
+  in
+  Base.List.iter ~f:step matching_props_checks
 
 let detect_literal_subtypes =
   let open Type in
-  let lb_visitor = new resolver_visitor in
-  let ub_visitor =
-    let rec unwrap = function
-      | GenericT { bound; _ } -> unwrap bound
-      | t -> t
-    in
-    object (_self)
-      inherit resolver_visitor as super
-
-      method! type_ cx map_cx t = t |> super#type_ cx map_cx |> unwrap
-    end
+  let no_lowers _cx r = Type.Unsoundness.merged_any r in
+  let rec unwrap = function
+    | GenericT { bound; _ } -> unwrap bound
+    | t -> t
   in
   fun cx ->
     let checks = Context.literal_subtypes cx in
     List.iter
       (fun (loc, check) ->
         let env = Context.environment cx in
-        let u_def = Env.provider_type_for_def_loc cx env loc in
+        let u_def =
+          match Env.provider_type_for_def_loc cx env loc with
+          | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty:true ~no_lowers cx r id
+          | t -> t
+        in
+        let u_def = unwrap u_def in
         let l =
           match check with
           | Env_api.SingletonNum (lit_loc, sense, num, raw) ->
@@ -436,12 +313,10 @@ let detect_literal_subtypes =
             let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
             DefT (reason, bogus_trust (), StrT (Literal (Some sense, Reason.OrdinaryName str)))
         in
-        let l = lb_visitor#type_ cx () l in
-        let u_def = ub_visitor#type_ cx () u_def in
         Flow_js.flow cx (l, UseT (Op (Internal Refinement), u_def)))
       checks
 
-let check_constrained_writes init_cx =
+let check_constrained_writes cx =
   let prepare_checks ~resolve_t checks =
     Base.List.map
       ~f:(fun (t, use_op, u_def) ->
@@ -462,19 +337,19 @@ let check_constrained_writes init_cx =
         let u = UseT (use_op, u_def) in
         match t with
         | OpenT (_, id) ->
-          let (_, constraints) = Context.find_constraints init_cx id in
+          let (_, constraints) = Context.find_constraints cx id in
           begin
             match constraints with
             | Unresolved { lower; _ } ->
               TypeMap.bindings lower
               |> Base.List.map ~f:(fun (t, (_, use_op)) ->
                      let t = resolve_t t in
-                     (t, mk_use_op (Flow_js.flow_use_op init_cx use_op u))
+                     (t, mk_use_op (Flow_js.flow_use_op cx use_op u))
                  )
             | Resolved (use_op, _)
             | FullyResolved (use_op, _) ->
               let t = resolve_t t in
-              [(t, mk_use_op (Flow_js.flow_use_op init_cx use_op u))]
+              [(t, mk_use_op (Flow_js.flow_use_op cx use_op u))]
           end
         | _ ->
           let t = resolve_t t in
@@ -483,12 +358,12 @@ let check_constrained_writes init_cx =
     |> List.flatten
   in
 
-  let checks = Context.constrained_writes init_cx in
+  let checks = Context.constrained_writes cx in
   if not @@ Base.List.is_empty checks then (
-    let (cx, checks) = (init_cx, prepare_checks ~resolve_t:(fun t -> t) checks) in
+    let (cx, checks) = (cx, prepare_checks ~resolve_t:(fun t -> t) checks) in
     Base.List.iter ~f:(Flow_js.flow cx) checks;
     let new_errors = Context.errors cx in
-    Flow_error.ErrorSet.iter (Context.add_error init_cx) new_errors
+    Flow_error.ErrorSet.iter (Context.add_error cx) new_errors
   )
 
 let get_lint_severities metadata strict_mode lint_severities =
@@ -508,16 +383,16 @@ let get_lint_severities metadata strict_mode lint_severities =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx master_cx ast tast metadata =
+let post_merge_checks cx ast tast metadata =
   let results = [(cx, ast, tast)] in
   check_constrained_writes cx;
-  detect_sketchy_null_checks cx master_cx;
+  detect_sketchy_null_checks cx;
   detect_non_voidable_properties cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
   detect_es6_import_export_errors cx metadata results;
-  detect_matching_props_violations cx master_cx;
+  detect_matching_props_violations cx;
   detect_literal_subtypes cx;
   detect_unused_promises cx
 

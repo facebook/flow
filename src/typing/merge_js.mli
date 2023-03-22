@@ -9,7 +9,6 @@ val optimize_builtins : Context.t -> unit
 
 val post_merge_checks :
   Context.t ->
-  Context.master_context ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Context.metadata ->
