@@ -240,8 +240,8 @@ type ComponentType<Props> =
   | Class<React.Component<Props, any>>;
 ```
 
-> **Note:** In 0.89.0+, `React.ComponentType<Config>` is an alias for `React.AbstractComponent<Config, any>`,
-which represents a component with config type Config and any instance type.
+> **Note:** In 0.100.0+, `React.ComponentType<Config>` is an alias for `React.AbstractComponent<Config, mixed>`,
+which represents a component with config type Config and `mixed` instance type.
 
 
 ## `React.StatelessFunctionalComponent<Props>` {#toc-react-statelessfunctionalcomponent}
