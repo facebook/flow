@@ -158,6 +158,20 @@ module Make (L : Loc_sig.S) = struct
     in
     List.rev scopes
 
+  let closest_enclosing_scope info loc in_range =
+    let (scope_id, _) =
+      IMap.fold
+        (fun this_scope_id this_scope (prev_scope_id, prev_scope) ->
+          if in_range loc this_scope.Scope.loc && in_range this_scope.Scope.loc prev_scope.Scope.loc
+          then
+            (this_scope_id, this_scope)
+          else
+            (prev_scope_id, prev_scope))
+        info.scopes
+        (0, scope info 0)
+    in
+    scope_id
+
   let is_local_use { scopes; _ } use =
     IMap.exists (fun _ scope -> L.LMap.mem use scope.Scope.locals) scopes
 

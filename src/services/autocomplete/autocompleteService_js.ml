@@ -415,19 +415,7 @@ let local_value_identifiers
   in
   let open Scope_api.With_Loc in
   (* get the innermost scope enclosing the requested location *)
-  let (ac_scope_id, _) =
-    IMap.fold
-      (fun this_scope_id this_scope (prev_scope_id, prev_scope) ->
-        if
-          Reason.in_range ac_loc this_scope.Scope.loc
-          && Reason.in_range this_scope.Scope.loc prev_scope.Scope.loc
-        then
-          (this_scope_id, this_scope)
-        else
-          (prev_scope_id, prev_scope))
-      scope_info.scopes
-      (0, scope scope_info 0)
-  in
+  let ac_scope_id = closest_enclosing_scope scope_info ac_loc Reason.in_range in
   (* gather all in-scope variables *)
   let names_and_locs =
     fold_scope_chain

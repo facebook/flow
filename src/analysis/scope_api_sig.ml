@@ -62,6 +62,8 @@ module type S = sig
      associated, one for the name and one for the params/body). *)
   val scope_of_loc : info -> L.t -> scope list
 
+  val closest_enclosing_scope : info -> L.t -> (L.t -> L.t -> bool) -> scope
+
   val all_uses : info -> uses
 
   val defs_of_all_uses : info -> use_def_map
