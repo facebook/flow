@@ -146,6 +146,16 @@ let exec entry param ic oc =
    *)
   let () = Unix.set_close_on_exec (descr_of_in_channel ic) in
   let () = Unix.set_close_on_exec (descr_of_out_channel oc) in
+
+  (* At least on Windows, if this daemon process exits without gracefully
+     closing its open sockets, the OS does a "hard close". this causes the
+     receiving end to raise WSAECONNRESET when it calls `recv()`, even if
+     there is data available to be read (like this process's response). *)
+  Stdlib.at_exit (fun () ->
+      Timeout.close_in_noerr ic;
+      close_out_noerr oc
+  );
+
   let f = Entry.find entry in
   try
     f param (ic, oc);
