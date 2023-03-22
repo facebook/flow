@@ -719,6 +719,9 @@ module Make
               discriminant_after_check;
             }
         );
+      (* We need to fully resolve all types attached to AST,
+         because the post inference pass might inspect them. *)
+      Tvar_resolver.resolve cx exhaustive_check_incomplete_out;
       let ast =
         ( switch_loc,
           Switch
@@ -2344,6 +2347,14 @@ module Make
         end;
         res
     in
+    (* We need to fully resolve all types attached to AST,
+       because the post inference pass might inspect them. *)
+    (match res with
+    | (_, Ast.Expression.OptionalCall { Ast.Expression.OptionalCall.filtered_out = (_, t); _ })
+    | (_, Ast.Expression.OptionalMember { Ast.Expression.OptionalMember.filtered_out = (_, t); _ })
+    | (_, Ast.Expression.Yield { Ast.Expression.Yield.result_out = (_, t); _ }) ->
+      Tvar_resolver.resolve cx t
+    | _ -> ());
     Tvar_resolver.resolve cx t;
     res
 
