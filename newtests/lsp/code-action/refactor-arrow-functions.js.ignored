@@ -1,0 +1,9 @@
+// @flow
+
+declare function foo(f: () => string): void;
+
+foo(() => "foo");
+
+foo(() => {
+  return "foo";
+});

@@ -1188,6 +1188,9 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
         let uri = TextDocumentIdentifier.(textDocument.uri) in
         let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
         let lsp_init_params = Persistent_connection.lsp_initialize_params client in
+        let scope_info =
+          Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:false ast
+        in
         let code_actions =
           Code_action_service.code_actions_at_loc
             ~options
@@ -1199,6 +1202,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
             ~tolerable_errors
             ~ast
             ~typed_ast
+            ~scope_info
             ~parse_errors
             ~diagnostics
             ~only
