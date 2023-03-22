@@ -57,11 +57,7 @@ exception Found of context_node list
 
 class mapper target =
   object (this)
-    inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
-
-    method loc_annot_contains_target annot = Loc.contains annot target
-
-    method private is_target = Loc.equal target
+    inherit Flow_ast_contains_mapper.mapper target as super
 
     val mutable context = []
 

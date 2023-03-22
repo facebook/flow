@@ -7,7 +7,7 @@
 
 class mapper target f =
   object (this)
-    inherit Autofix_mapper.mapper target as super
+    inherit Flow_ast_contains_mapper.mapper target as super
 
     method! type_ t =
       let (loc, t') = t in

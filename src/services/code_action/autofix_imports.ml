@@ -752,16 +752,16 @@ module Identifier_finder = struct
 
   class mapper target =
     object (this)
-      inherit Autofix_mapper.mapper target
+      inherit Flow_ast_contains_mapper.mapper target
 
       method! identifier id =
         let (loc, _) = id in
-        if this#loc_annot_contains_target loc then raise (Found Value_identifier);
+        if this#target_contained_by loc then raise (Found Value_identifier);
         id
 
       method! type_identifier id =
         let (loc, _) = id in
-        if this#loc_annot_contains_target loc then raise (Found Type_identifier);
+        if this#target_contained_by loc then raise (Found Type_identifier);
         id
     end
 end

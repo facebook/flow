@@ -7,7 +7,7 @@
 
 class mapper target operator =
   object (this)
-    inherit Autofix_mapper.mapper target as super
+    inherit Flow_ast_contains_mapper.mapper target as super
 
     method! statement stmt =
       let open Flow_ast in

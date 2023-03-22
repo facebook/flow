@@ -53,7 +53,7 @@ end
 
 class mapper target =
   object (this)
-    inherit Autofix_mapper.mapper target as super
+    inherit Flow_ast_contains_mapper.mapper target as super
 
     method private is_constructor =
       Flow_ast.(

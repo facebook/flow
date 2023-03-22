@@ -9,35 +9,39 @@
    to a target from being mapped over and rebuilt. It doesn't prune the
    space as much as is possible, but doing so results in a much less
    maintainable piece of code. *)
-class virtual ['L] mapper =
+class mapper target =
   object (this)
-    inherit ['L] Flow_ast_mapper.mapper as super
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-    method virtual loc_annot_contains_target : 'L -> bool
+    method target_contains loc = Loc.contains target loc
+
+    method target_contained_by loc = Loc.contains loc target
+
+    method is_target loc = Loc.equal target loc
 
     method! program ((l, { Flow_ast.Program.all_comments; _ }) as x) =
       if
-        this#loc_annot_contains_target l
-        || Base.List.exists all_comments ~f:(fun (loc, _) -> this#loc_annot_contains_target loc)
+        this#target_contained_by l
+        || Base.List.exists all_comments ~f:(fun (loc, _) -> this#target_contained_by loc)
       then
         super#program x
       else
         x
 
     method! statement ((l, _) as x) =
-      if this#loc_annot_contains_target l then
+      if this#target_contained_by l then
         super#statement x
       else
         x
 
     method! comment ((l, _) as x) =
-      if this#loc_annot_contains_target l then
+      if this#target_contained_by l then
         super#comment x
       else
         x
 
     method! expression ((l, _) as x) =
-      if this#loc_annot_contains_target l then
+      if this#target_contained_by l then
         super#expression x
       else
         x
