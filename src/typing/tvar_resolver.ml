@@ -122,24 +122,3 @@ let resolve ?(no_lowers = default_no_lowers) cx t =
 let resolved_t ?(no_lowers = default_no_lowers) cx t =
   resolve ~no_lowers cx t;
   t
-
-let resolved_call_arg ?(no_lowers = default_no_lowers) cx call_arg =
-  run_conditionally cx (fun () ->
-      let resolver = new resolver ~no_lowers in
-      resolver#call_arg cx ISet.empty call_arg
-  );
-  call_arg
-
-let resolved_type_args ?(no_lowers = default_no_lowers) cx targs =
-  run_conditionally cx (fun () ->
-      let resolver = new resolver ~no_lowers in
-      Option.map (List.map (resolver#targ cx Polarity.Positive ISet.empty)) targs
-  );
-  targs
-
-let resolved_typeparam ?(no_lowers = default_no_lowers) cx typeparam =
-  run_conditionally cx (fun () ->
-      let resolver = new resolver ~no_lowers in
-      resolver#type_param cx Polarity.Positive ISet.empty typeparam
-  );
-  typeparam
