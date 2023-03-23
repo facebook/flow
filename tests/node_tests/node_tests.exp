@@ -1543,8 +1543,8 @@ Cannot call `inspector.open` with `'8080'` bound to `port` because string [1] is
                         ^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:3098:12
-   3098|     port?: number,
+   <BUILTINS>/node.js:3158:12
+   3158|     port?: number,
                     ^^^^^^ [2]
 
 
@@ -1558,8 +1558,8 @@ Cannot call `inspector.open` with `127001` bound to `host` because number [1] is
                               ^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:3099:12
-   3099|     host?: string,
+   <BUILTINS>/node.js:3159:12
+   3159|     host?: string,
                     ^^^^^^ [2]
 
 
@@ -1573,8 +1573,8 @@ Cannot call `inspector.open` with `1000` bound to `wait` because number [1] is i
                                                   ^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:3100:12
-   3100|     wait?: boolean
+   <BUILTINS>/node.js:3160:12
+   3160|     wait?: boolean
                     ^^^^^^^ [2]
 
 
@@ -1587,8 +1587,8 @@ Cannot cast `inspector.open()` to string because undefined [1] is incompatible w
           ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3101:6
-   3101|   ): void;
+   <BUILTINS>/node.js:3161:6
+   3161|   ): void;
               ^^^^ [1]
    inspector/inspector.js:16:21
      16| (inspector.open() : string); // error
@@ -1604,8 +1604,8 @@ Cannot cast `inspector.close()` to string because undefined [1] is incompatible 
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3103:29
-   3103|   declare function close(): void;
+   <BUILTINS>/node.js:3163:29
+   3163|   declare function close(): void;
                                      ^^^^ [1]
    inspector/inspector.js:24:22
      24| (inspector.close() : string); // error
@@ -1621,8 +1621,8 @@ Cannot cast `inspector.url()` to number because string [1] is incompatible with 
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3104:28
-   3104|   declare function url() : string | void;
+   <BUILTINS>/node.js:3164:28
+   3164|   declare function url() : string | void;
                                     ^^^^^^ [1]
    inspector/inspector.js:36:20
      36| (inspector.url() : number); // error
@@ -1638,8 +1638,8 @@ Cannot cast `inspector.url()` to number because undefined [1] is incompatible wi
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3104:37
-   3104|   declare function url() : string | void;
+   <BUILTINS>/node.js:3164:37
+   3164|   declare function url() : string | void;
                                              ^^^^ [1]
    inspector/inspector.js:36:20
      36| (inspector.url() : number); // error
@@ -1656,8 +1656,8 @@ Cannot cast `inspector.waitForDebugger()` to number because undefined [1] is inc
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3106:39
-   3106|   declare function waitForDebugger(): void;
+   <BUILTINS>/node.js:3166:39
+   3166|   declare function waitForDebugger(): void;
                                                ^^^^ [1]
    inspector/inspector.js:44:32
      44| (inspector.waitForDebugger() : number); // error
@@ -1673,8 +1673,8 @@ Cannot call `inspector.connect` because property `connect` is missing in module 
                     ^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3096:16
-   3096| declare module 'inspector' {
+   <BUILTINS>/node.js:3156:16
+   3156| declare module 'inspector' {
                         ^^^^^^^^^^^ [1]
 
 
@@ -1688,8 +1688,8 @@ Cannot call `inspector.connectToMainThread` because property `connectToMainThrea
                     ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3096:16
-   3096| declare module 'inspector' {
+   <BUILTINS>/node.js:3156:16
+   3156| declare module 'inspector' {
                         ^^^^^^^^^^^ [1]
 
 
@@ -1702,8 +1702,8 @@ Cannot call `inspector.disconnect` because property `disconnect` is missing in m
                     ^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3096:16
-   3096| declare module 'inspector' {
+   <BUILTINS>/node.js:3156:16
+   3156| declare module 'inspector' {
                         ^^^^^^^^^^^ [1]
 
 
@@ -1716,13 +1716,13 @@ Cannot call `session.post` because function [1] requires another argument. [inco
                  ^^^^
 
 References:
-   <BUILTINS>/node.js:3113:5
+   <BUILTINS>/node.js:3173:5
              v----
-   3113|     post(
-   3114|       method: string,
-   3115|       params?: Object,
-   3116|       callback?: Function
-   3117|     ): void;
+   3173|     post(
+   3174|       method: string,
+   3175|       params?: Object,
+   3176|       callback?: Function
+   3177|     ): void;
              ------^ [1]
 
 
@@ -1735,13 +1735,13 @@ Cannot call `session.post` because function [1] requires another argument. [inco
                   ^^^^
 
 References:
-   <BUILTINS>/node.js:3113:5
+   <BUILTINS>/node.js:3173:5
              v----
-   3113|     post(
-   3114|       method: string,
-   3115|       params?: Object,
-   3116|       callback?: Function
-   3117|     ): void;
+   3173|     post(
+   3174|       method: string,
+   3175|       params?: Object,
+   3176|       callback?: Function
+   3177|     ): void;
              ------^ [1]
 
 
@@ -1754,8 +1754,8 @@ Cannot cast `session.post()` to string because undefined [1] is incompatible wit
           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3117:8
-   3117|     ): void;
+   <BUILTINS>/node.js:3177:8
+   3177|     ): void;
                 ^^^^ [1]
    inspector/inspector.js:90:19
      90| (session.post() : string); // error
@@ -1838,26 +1838,26 @@ References:
    process/emitWarning.js:10:1
      10| process.emitWarning(); // error
          ^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:3142:24
-   3142|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:3202:24
+   3202|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:3142:33
-   3142|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:3202:33
+   3202|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:3143:3
-   3143|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3203:3
+   3203|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:3144:3
-   3144|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3204:3
+   3204|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:3145:3
+   <BUILTINS>/node.js:3205:3
            v-----------
-   3145|   emitWarning(
-   3146|     warning: string,
-   3147|     type: string,
-   3148|     code: string,
-   3149|     ctor?: (...empty) => mixed
-   3150|   ): void;
+   3205|   emitWarning(
+   3206|     warning: string,
+   3207|     type: string,
+   3208|     code: string,
+   3209|     ctor?: (...empty) => mixed
+   3210|   ): void;
            ------^ [6]
 
 
@@ -1876,14 +1876,14 @@ References:
    process/emitWarning.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:3143:24
-   3143|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3203:24
+   3203|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:3144:24
-   3144|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3204:24
+   3204|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:3146:14
-   3146|     warning: string,
+   <BUILTINS>/node.js:3206:14
+   3206|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1901,11 +1901,11 @@ References:
    process/emitWarning.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:3144:38
-   3144|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:3204:38
+   3204|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:3147:11
-   3147|     type: string,
+   <BUILTINS>/node.js:3207:11
+   3207|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1921,8 +1921,8 @@ References:
    process/emitWarning.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:3148:11
-   3148|     code: string,
+   <BUILTINS>/node.js:3208:11
+   3208|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1936,8 +1936,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3142:41
-   3142|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:3202:41
+   3202|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/emitWarning.js:14:31
      14| (process.emitWarning("blah"): string); // error
@@ -2008,8 +2008,8 @@ type [2]. [incompatible-call]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:3171:21
-   3171|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:3231:21
+   3231|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -2023,8 +2023,8 @@ Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:3131:32
-   3131|   allowedNodeEnvironmentFlags: Set<string>;
+   <BUILTINS>/node.js:3191:32
+   3191|   allowedNodeEnvironmentFlags: Set<string>;
                                         ^^^^^^^^^^^ [1]
    process/process.js:5:39
       5| (process.allowedNodeEnvironmentFlags: string); // error
@@ -2276,8 +2276,8 @@ Cannot cast `url.parse(...).query` to empty because string [1] is incompatible w
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2362:12
-   2362|     query: string | null
+   <BUILTINS>/node.js:2422:12
+   2422|     query: string | null
                     ^^^^^^ [1]
    url/url.js:4:50
       4| (url.parse('http://example.com/?foo=bar').query: empty); // error, string | null
@@ -2293,8 +2293,8 @@ Cannot cast `url.parse(...).query` to empty because null [1] is incompatible wit
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2362:21
-   2362|     query: string | null
+   <BUILTINS>/node.js:2422:21
+   2422|     query: string | null
                              ^^^^ [1]
    url/url.js:4:50
       4| (url.parse('http://example.com/?foo=bar').query: empty); // error, string | null
@@ -2310,8 +2310,8 @@ Cannot cast `url.parse(...).query` to empty because object type [1] is incompati
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2367:12
-   2367|     query: { [string]: string, ... }
+   <BUILTINS>/node.js:2427:12
+   2427|     query: { [string]: string, ... }
                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    url/url.js:5:56
       5| (url.parse('http://example.com/?foo=bar', true).query: empty); // error, object
@@ -2327,8 +2327,8 @@ Cannot cast `url.parse(...).query` to empty because string [1] is incompatible w
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2354:12
-   2354|     query: string | null | { [string]: string, ... },
+   <BUILTINS>/node.js:2414:12
+   2414|     query: string | null | { [string]: string, ... },
                     ^^^^^^ [1]
    url/url.js:8:70
       8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
@@ -2344,8 +2344,8 @@ Cannot cast `url.parse(...).query` to empty because null [1] is incompatible wit
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2354:21
-   2354|     query: string | null | { [string]: string, ... },
+   <BUILTINS>/node.js:2414:21
+   2414|     query: string | null | { [string]: string, ... },
                              ^^^^ [1]
    url/url.js:8:70
       8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
@@ -2361,8 +2361,8 @@ Cannot cast `url.parse(...).query` to empty because object type [1] is incompati
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2354:28
-   2354|     query: string | null | { [string]: string, ... },
+   <BUILTINS>/node.js:2414:28
+   2414|     query: string | null | { [string]: string, ... },
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    url/url.js:8:70
       8|   (url.parse('http://example.com/?foo=bar', parseQueryString).query: empty); // error, string | null | object
