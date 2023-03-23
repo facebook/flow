@@ -3499,5 +3499,70 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics'],
       ),
     ]),
+    test('provide quickfix for `$Partial`', [
+      addFile('fix-partial-type.js.ignored', 'fix-partial-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-partial-type.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 9,
+          },
+          end: {
+            line: 1,
+            character: 17,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `Partial<T>`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-partial-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 1,
+                            character: 9,
+                          },
+                          end: {
+                            line: 1,
+                            character: 17,
+                          },
+                        },
+                        newText: 'Partial',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_$Partial_type',
+                    'Convert to `Partial<T>`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
   ],
 ): Suite);
