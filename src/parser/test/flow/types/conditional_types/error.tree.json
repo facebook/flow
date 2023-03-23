@@ -81,7 +81,7 @@
             "loc":{"source":null,"start":{"line":3,"column":5},"end":{"line":3,"column":62}},
             "range":[138,195],
             "typeAnnotation":{
-              "type":"ConditionalType",
+              "type":"ConditionalTypeAnnotation",
               "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":62}},
               "range":[140,195],
               "checkType":{
@@ -90,7 +90,7 @@
                 "range":[140,146]
               },
               "extendsType":{
-                "type":"InferType",
+                "type":"InferTypeAnnotation",
                 "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":44}},
                 "range":[155,177],
                 "typeParameter":{

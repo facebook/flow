@@ -37,7 +37,7 @@ function custom_ast_types(fork) {
     .field('variance', or(def('Variance'), null))
     .field('optional', or('PlusOptional', 'MinusOptional', 'Optional', null));
 
-  def('ConditionalType')
+  def('ConditionalTypeAnnotation')
     .bases('FlowType')
     .build('checkType', 'extendsType', 'trueType', 'falseType')
     .field('checkType', def('FlowType'))
@@ -45,7 +45,7 @@ function custom_ast_types(fork) {
     .field('trueType', def('FlowType'))
     .field('falseType', def('FlowType'));
 
-  def('InferType')
+  def('InferTypeAnnotation')
     .bases('FlowType')
     .build('typeParameter')
     .field('typeParameter', def('TypeParameter'));
