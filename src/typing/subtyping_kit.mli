@@ -11,6 +11,8 @@ module type INPUT = sig
   include Flow_common.BUILTINS
 
   include Flow_common.SUBTYPING
+
+  include Flow_common.REACT
 end
 
 module type OUTPUT = sig

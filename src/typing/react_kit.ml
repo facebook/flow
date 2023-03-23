@@ -10,290 +10,250 @@ open Type
 open TypeUtil
 open React
 
-let err_incompatible cx trace ~use_op reason tool =
-  let err =
-    match tool with
-    | GetProps _
-    | GetConfig _
-    | GetRef _
-    | CreateElement0 _
-    | CreateElement _
-    | ConfigCheck _ ->
-      Error_message.ENotAReactComponent { reason; use_op }
-    | GetConfigType _ -> Error_message.EInvalidReactConfigType { reason; use_op }
-    | SimplifyPropType (tool, _) -> Error_message.EInvalidReactPropType { reason; use_op; tool }
-  in
-  Flow_js_utils.add_output cx ~trace err
-
-let component_class
-    cx
-    reason
-    ~(get_builtin_typeapp :
-       Context.t -> ?trace:Type.trace -> reason -> name -> Type.t list -> Type.t
-       )
-    props =
-  DefT
-    ( reason,
-      bogus_trust (),
-      ClassT
-        (get_builtin_typeapp cx reason (OrdinaryName "React$Component") [props; Tvar.mk cx reason])
-    )
-
-let get_intrinsic
-    cx
-    trace
-    component
-    ~reason_op
-    artifact
-    literal
-    prop
-    ~rec_flow
-    ~(get_builtin_type :
-       Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
-       ) =
-  let reason = reason_of_t component in
-  (* Get the internal $JSXIntrinsics map. *)
-  let intrinsics =
-    let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) (loc_of_t component) in
-    get_builtin_type cx ~trace reason (OrdinaryName "$JSXIntrinsics")
-  in
-  (* Create a use_op for the upcoming operations. *)
-  let use_op =
-    Op
-      (ReactGetIntrinsic
-         {
-           literal =
-             (match literal with
-             | Literal (_, name) -> replace_desc_reason (RIdentifier name) reason
-             | _ -> reason);
-         }
-      )
-  in
-  (* GetPropT with a non-literal when there is not a dictionary will propagate
-   * any. Run the HasOwnPropT check to give the user an error if they use a
-   * non-literal without a dictionary. *)
-  (match literal with
-  | Literal _ -> ()
-  | _ ->
-    rec_flow
-      cx
-      trace
-      (intrinsics, HasOwnPropT (use_op, reason, DefT (reason, bogus_trust (), StrT literal))));
-
-  (* Create a type variable which will represent the specific intrinsic we
-   * find in the intrinsics map. *)
-  let intrinsic = Tvar.mk_no_wrap cx reason in
-  (* Get the intrinsic from the map. *)
-  rec_flow
-    cx
-    trace
-    ( intrinsics,
-      GetPropT
-        ( use_op,
-          reason,
-          None,
-          (match literal with
-          | Literal (_, name) -> Named (replace_desc_reason (RReactElement (Some name)) reason, name)
-          | _ -> Computed component),
-          (reason, intrinsic)
-        )
-    );
-
-  (* Get the artifact from the intrinsic. *)
-  let propref =
-    let name =
-      match artifact with
-      | `Props -> "props"
-      | `Instance -> "instance"
-    in
-    Named (replace_desc_reason (RCustom name) reason_op, OrdinaryName name)
-  in
-  (* TODO: if intrinsic is null, we will treat it like prototype termination,
-   * but we should error like a GetPropT would instead. *)
-  rec_flow
-    cx
-    trace
-    ( OpenT (reason, intrinsic),
-      LookupT
-        {
-          reason = reason_op;
-          lookup_kind = Strict reason_op;
-          ts = [];
-          propref;
-          lookup_action = LookupProp (unknown_use, prop);
-          method_accessible = true;
-          ids = Some Properties.Set.empty;
-        }
-    )
-
-(* Lookup the defaultProps of a component and flow with upper depending
- * on the given polarity.
- *)
-let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
-  let name = OrdinaryName "defaultProps" in
-  let reason_missing = replace_desc_reason RReactDefaultProps (reason_of_t component) in
-  let reason_prop = replace_desc_reason (RProperty (Some name)) reason_op in
-  let lookup_kind =
-    NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
-  in
-  let propref = Named (reason_prop, name) in
-  let action = LookupProp (unknown_use, Field (None, upper, pole)) in
-  (* Lookup the `defaultProps` property. *)
-  rec_flow
-    cx
-    trace
-    ( component,
-      LookupT
-        {
-          reason = reason_op;
-          lookup_kind;
-          ts = [];
-          propref;
-          lookup_action = action;
-          method_accessible = true;
-          ids = Some Properties.Set.empty;
-        }
-    )
-
-(* Get a type for the default props of a component. If a component has no
- * default props then either the type will be Some {||} or we will
- * return None. *)
-let get_defaults cx trace component ~reason_op ~rec_flow =
-  match drop_generic component with
-  | DefT (_, _, ClassT _)
-  | DefT (_, _, FunT _)
-  | DefT (_, _, ObjT _) ->
-    let tvar = Tvar.mk cx reason_op in
-    lookup_defaults cx trace component ~reason_op ~rec_flow tvar Polarity.Positive;
-    Some tvar
-  | DefT (_, _, ReactAbstractComponentT _) -> None
-  (* Everything else will not have default props we should diff out. *)
-  | _ -> None
-
-let props_to_tout
-    cx
-    trace
-    component
-    ~use_op
-    ~reason_op
-    ~(rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit)
-    ~rec_flow
-    ~(get_builtin_type :
-       Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
-       )
-    u
-    tout =
-  match drop_generic component with
-  (* Class components or legacy components. *)
-  | DefT (_, _, ClassT _) ->
-    let props = Tvar.mk cx reason_op in
-    rec_flow_t ~use_op:unknown_use cx trace (props, tout);
-    rec_flow cx trace (component, ReactPropsToOut (reason_op, props))
-  (* Stateless functional components. *)
-  | DefT (_, _, FunT _)
-  | DefT (_, _, ObjT { call_t = Some _; _ }) ->
-    rec_flow cx trace (component, ReactPropsToOut (reason_op, tout))
-  (* Special case for intrinsic components. *)
-  | DefT (_, _, StrT lit) ->
-    get_intrinsic
-      cx
-      trace
-      component
-      ~reason_op
-      ~rec_flow
-      ~get_builtin_type
-      `Props
-      lit
-      (Field (None, tout, Polarity.Positive))
-  (* any and any specializations *)
-  | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
-  | DefT (reason, trust, ReactAbstractComponentT _) ->
-    rec_flow_t ~use_op:unknown_use cx trace (MixedT.why reason trust, tout)
-  (* ...otherwise, error. *)
-  | _ -> err_incompatible cx trace ~use_op (reason_of_t component) u
-
-(* Creates the type that we expect for a React config by diffing out default
- * props with ObjKitT(Rest). The config does not include types for `key`
- * or `ref`.
- *
- * There is some duplication between the logic used here to get a config type
- * and ObjKitT(ReactConfig). In create_element, we want to produce a props
- * object from the config object and the defaultProps object. This way we can
- * add a lower bound to components who have a type variable for props. e.g.
- *
- *     const MyComponent = props => null;
- *     <MyComponent foo={42} />;
- *
- * Here, MyComponent has no annotation for props so Flow must infer a type.
- * However, get_config must produce a valid type from only the component type.
- *
- * This approach may stall if props never gets a lower bound. Using the result
- * of get_config as an upper bound won't give props a lower bound. However,
- * the places in which this approach stalls are the same places as other type
- * destructor annotations. Like object spread, $Diff, and $Rest. *)
-let get_config
-    cx
-    trace
-    component
-    ~use_op
-    ~reason_op
-    ~(rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit)
-    ~rec_flow
-    ~(rec_unify :
-       Context.t -> Type.trace -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
-       )
-    ~get_builtin_type
-    u
-    pole
-    tout =
-  match drop_generic component with
-  | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
-    let use_op = Frame (ReactGetConfig { polarity = pole }, use_op) in
-    begin
-      match pole with
-      | Polarity.Positive -> rec_flow_t ~use_op cx trace (config, tout)
-      | Polarity.Negative -> rec_flow_t ~use_op cx trace (tout, config)
-      | Polarity.Neutral -> rec_unify cx trace ~use_op tout config
-    end
-  | _ ->
-    let reason_component = reason_of_t component in
-    let props =
-      Tvar.mk_where
-        cx
-        (replace_desc_reason RReactProps reason_component)
-        (props_to_tout
-           cx
-           trace
-           component
-           ~use_op
-           ~reason_op:reason_component
-           ~rec_flow_t
-           ~rec_flow
-           ~get_builtin_type
-           u
-        )
-    in
-    let defaults = get_defaults cx trace component ~reason_op ~rec_flow in
-    (match defaults with
-    | None -> rec_flow cx trace (props, UseT (use_op, tout))
-    | Some defaults ->
-      Object.(
-        Object.Rest.(
-          let tool = Resolve Next in
-          let state = One defaults in
-          rec_flow
-            cx
-            trace
-            (props, ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge pole, state), tout))
-        )
-      ))
-
 module type REACT = sig
   val run : Context.t -> Type.trace -> use_op:use_op -> reason -> Type.t -> Type.React.tool -> unit
+
+  val component_class : Context.t -> Reason.reason -> Type.t -> Type.t
+
+  val get_config :
+    Context.t ->
+    Type.trace ->
+    Type.t ->
+    use_op:use_op ->
+    reason_op:reason ->
+    Type.React.tool ->
+    Polarity.t ->
+    Type.t ->
+    unit
+
+  val err_incompatible :
+    Context.t -> Type.trace -> use_op:use_op -> reason -> Type.React.tool -> unit
 end
 
 module Kit (Flow : Flow_common.S) : REACT = struct
   include Flow
+
+  let err_incompatible cx trace ~use_op reason tool =
+    let err =
+      match tool with
+      | GetProps _
+      | GetConfig _
+      | GetRef _
+      | CreateElement0 _
+      | CreateElement _
+      | ConfigCheck _ ->
+        Error_message.ENotAReactComponent { reason; use_op }
+      | GetConfigType _ -> Error_message.EInvalidReactConfigType { reason; use_op }
+      | SimplifyPropType (tool, _) -> Error_message.EInvalidReactPropType { reason; use_op; tool }
+    in
+    Flow_js_utils.add_output cx ~trace err
+
+  let component_class cx reason props =
+    DefT
+      ( reason,
+        bogus_trust (),
+        ClassT
+          (Flow.get_builtin_typeapp
+             cx
+             reason
+             (OrdinaryName "React$Component")
+             [props; Tvar.mk cx reason]
+          )
+      )
+
+  let get_intrinsic cx trace component ~reason_op artifact literal prop =
+    let reason = reason_of_t component in
+    (* Get the internal $JSXIntrinsics map. *)
+    let intrinsics =
+      let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) (loc_of_t component) in
+      get_builtin_type cx ~trace reason (OrdinaryName "$JSXIntrinsics")
+    in
+    (* Create a use_op for the upcoming operations. *)
+    let use_op =
+      Op
+        (ReactGetIntrinsic
+           {
+             literal =
+               (match literal with
+               | Literal (_, name) -> replace_desc_reason (RIdentifier name) reason
+               | _ -> reason);
+           }
+        )
+    in
+    (* GetPropT with a non-literal when there is not a dictionary will propagate
+     * any. Run the HasOwnPropT check to give the user an error if they use a
+     * non-literal without a dictionary. *)
+    (match literal with
+    | Literal _ -> ()
+    | _ ->
+      rec_flow
+        cx
+        trace
+        (intrinsics, HasOwnPropT (use_op, reason, DefT (reason, bogus_trust (), StrT literal))));
+
+    (* Create a type variable which will represent the specific intrinsic we
+     * find in the intrinsics map. *)
+    let intrinsic = Tvar.mk_no_wrap cx reason in
+    (* Get the intrinsic from the map. *)
+    rec_flow
+      cx
+      trace
+      ( intrinsics,
+        GetPropT
+          ( use_op,
+            reason,
+            None,
+            (match literal with
+            | Literal (_, name) ->
+              Named (replace_desc_reason (RReactElement (Some name)) reason, name)
+            | _ -> Computed component),
+            (reason, intrinsic)
+          )
+      );
+
+    (* Get the artifact from the intrinsic. *)
+    let propref =
+      let name =
+        match artifact with
+        | `Props -> "props"
+        | `Instance -> "instance"
+      in
+      Named (replace_desc_reason (RCustom name) reason_op, OrdinaryName name)
+    in
+    (* TODO: if intrinsic is null, we will treat it like prototype termination,
+     * but we should error like a GetPropT would instead. *)
+    rec_flow
+      cx
+      trace
+      ( OpenT (reason, intrinsic),
+        LookupT
+          {
+            reason = reason_op;
+            lookup_kind = Strict reason_op;
+            ts = [];
+            propref;
+            lookup_action = LookupProp (unknown_use, prop);
+            method_accessible = true;
+            ids = Some Properties.Set.empty;
+          }
+      )
+
+  (* Lookup the defaultProps of a component and flow with upper depending
+   * on the given polarity.
+   *)
+  let lookup_defaults cx trace component ~reason_op upper pole =
+    let name = OrdinaryName "defaultProps" in
+    let reason_missing = replace_desc_reason RReactDefaultProps (reason_of_t component) in
+    let reason_prop = replace_desc_reason (RProperty (Some name)) reason_op in
+    let lookup_kind =
+      NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
+    in
+    let propref = Named (reason_prop, name) in
+    let action = LookupProp (unknown_use, Field (None, upper, pole)) in
+    (* Lookup the `defaultProps` property. *)
+    rec_flow
+      cx
+      trace
+      ( component,
+        LookupT
+          {
+            reason = reason_op;
+            lookup_kind;
+            ts = [];
+            propref;
+            lookup_action = action;
+            method_accessible = true;
+            ids = Some Properties.Set.empty;
+          }
+      )
+
+  (* Get a type for the default props of a component. If a component has no
+   * default props then either the type will be Some {||} or we will
+   * return None. *)
+  let get_defaults cx trace component ~reason_op =
+    match drop_generic component with
+    | DefT (_, _, ClassT _)
+    | DefT (_, _, FunT _)
+    | DefT (_, _, ObjT _) ->
+      let tvar = Tvar.mk cx reason_op in
+      lookup_defaults cx trace component ~reason_op tvar Polarity.Positive;
+      Some tvar
+    | DefT (_, _, ReactAbstractComponentT _) -> None
+    (* Everything else will not have default props we should diff out. *)
+    | _ -> None
+
+  let props_to_tout cx trace component ~use_op ~reason_op u tout =
+    match drop_generic component with
+    (* Class components or legacy components. *)
+    | DefT (_, _, ClassT _) ->
+      let props = Tvar.mk cx reason_op in
+      rec_flow_t ~use_op:unknown_use cx trace (props, tout);
+      rec_flow cx trace (component, ReactPropsToOut (reason_op, props))
+    (* Stateless functional components. *)
+    | DefT (_, _, FunT _)
+    | DefT (_, _, ObjT { call_t = Some _; _ }) ->
+      rec_flow cx trace (component, ReactPropsToOut (reason_op, tout))
+    (* Special case for intrinsic components. *)
+    | DefT (_, _, StrT lit) ->
+      get_intrinsic cx trace component ~reason_op `Props lit (Field (None, tout, Polarity.Positive))
+    (* any and any specializations *)
+    | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
+    | DefT (reason, trust, ReactAbstractComponentT _) ->
+      rec_flow_t ~use_op:unknown_use cx trace (MixedT.why reason trust, tout)
+    (* ...otherwise, error. *)
+    | _ -> err_incompatible cx trace ~use_op (reason_of_t component) u
+
+  (* Creates the type that we expect for a React config by diffing out default
+   * props with ObjKitT(Rest). The config does not include types for `key`
+   * or `ref`.
+   *
+   * There is some duplication between the logic used here to get a config type
+   * and ObjKitT(ReactConfig). In create_element, we want to produce a props
+   * object from the config object and the defaultProps object. This way we can
+   * add a lower bound to components who have a type variable for props. e.g.
+   *
+   *     const MyComponent = props => null;
+   *     <MyComponent foo={42} />;
+   *
+   * Here, MyComponent has no annotation for props so Flow must infer a type.
+   * However, get_config must produce a valid type from only the component type.
+   *
+   * This approach may stall if props never gets a lower bound. Using the result
+   * of get_config as an upper bound won't give props a lower bound. However,
+   * the places in which this approach stalls are the same places as other type
+   * destructor annotations. Like object spread, $Diff, and $Rest. *)
+  let get_config cx trace component ~use_op ~reason_op u pole tout =
+    match drop_generic component with
+    | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
+      let use_op = Frame (ReactGetConfig { polarity = pole }, use_op) in
+      begin
+        match pole with
+        | Polarity.Positive -> rec_flow_t ~use_op cx trace (config, tout)
+        | Polarity.Negative -> rec_flow_t ~use_op cx trace (tout, config)
+        | Polarity.Neutral -> rec_unify cx trace ~use_op tout config
+      end
+    | _ ->
+      let reason_component = reason_of_t component in
+      let props =
+        Tvar.mk_where
+          cx
+          (replace_desc_reason RReactProps reason_component)
+          (props_to_tout cx trace component ~use_op ~reason_op:reason_component u)
+      in
+      let defaults = get_defaults cx trace component ~reason_op in
+      (match defaults with
+      | None -> rec_flow cx trace (props, UseT (use_op, tout))
+      | Some defaults ->
+        Object.(
+          Object.Rest.(
+            let tool = Resolve Next in
+            let state = One defaults in
+            rec_flow
+              cx
+              trace
+              (props, ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge pole, state), tout))
+          )
+        ))
 
   let run cx trace ~use_op reason_op l u =
     let err_incompatible reason = err_incompatible cx trace ~use_op reason u in
@@ -367,7 +327,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | (DefT (_, _, NullT) | DefT (_, _, VoidT)) as t -> Ok (f t)
       | t -> Error (reason_of_t t)
     in
-    let get_intrinsic = get_intrinsic cx trace l ~reason_op ~rec_flow ~get_builtin_type in
+    let get_intrinsic = get_intrinsic cx trace l ~reason_op in
     (* This function creates a constraint *from* tin *to* props so that props is
      * an upper bound on tin. This is important because when the type of a
      * component's props is inferred (such as when a stateless functional
@@ -399,9 +359,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* ...otherwise, error. *)
       | _ -> err_incompatible (reason_of_t component)
     in
-    let props_to_tout =
-      props_to_tout cx trace l ~use_op ~reason_op ~rec_flow_t ~rec_flow ~get_builtin_type u
-    in
+    let props_to_tout = props_to_tout cx trace l ~use_op ~reason_op u in
     let coerce_children_args (children, children_spread) =
       match (children, children_spread) with
       (* If we have no children and no variable spread argument then React will
@@ -512,7 +470,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             ),
             (* For class components and function components we want to lookup the
              * static default props property so that we may add it to our config input. *)
-            get_defaults cx trace l ~reason_op ~rec_flow
+            get_defaults cx trace l ~reason_op
           )
       in
       (* Use object spread to add children to config (if we have children)
@@ -667,20 +625,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         trace
         (get_builtin_typeapp cx ~trace elem_reason (OrdinaryName "React$Element") [component], tout)
     in
-    let get_config =
-      get_config
-        cx
-        trace
-        l
-        ~use_op
-        ~reason_op
-        ~rec_flow
-        ~rec_flow_t
-        ~rec_unify
-        ~get_builtin_type
-        u
-        Polarity.Positive
-    in
+    let get_config = get_config cx trace l ~use_op ~reason_op u Polarity.Positive in
     let get_config_with_props_and_defaults default_props tout =
       Object.(
         Object.Rest.(

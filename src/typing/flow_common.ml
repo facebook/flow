@@ -235,6 +235,8 @@ module type SUBTYPING = sig
     Type.t ->
     Type.t list ->
     Type.t
+
+  val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
 end
 
 module type EVAL = sig
@@ -266,7 +268,16 @@ module type EVAL = sig
 end
 
 module type REACT = sig
-  val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  val react_get_config :
+    Context.t ->
+    Type.trace ->
+    Type.t ->
+    use_op:ALoc.t Type.virtual_use_op ->
+    reason_op:Reason.reason ->
+    Type.React.tool ->
+    Polarity.t ->
+    Type.t ->
+    unit
 end
 
 module type S = sig

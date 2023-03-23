@@ -2792,11 +2792,7 @@ struct
 
         (* props is invariant in the class *)
         | (DefT (r, _, ClassT _), (ReactPropsToOut (_, props) | ReactInToProps (_, props))) ->
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (l, React_kit.component_class cx r ~get_builtin_typeapp props)
+          rec_flow_t ~use_op:unknown_use cx trace (l, ReactJs.component_class cx r props)
         (* Functions with rest params or that are predicates cannot be React components *)
         | ( DefT (reason, _, FunT (_, { params; rest_param = None; predicate = None; _ })),
             ReactPropsToOut (_, props)
@@ -2819,7 +2815,7 @@ struct
             trace
             (return_t, get_builtin_type cx reason_op (OrdinaryName "React$Node"))
         | (DefT (r, _, FunT _), (ReactInToProps (_, props) | ReactPropsToOut (_, props))) ->
-          React_kit.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
+          ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
         | ( DefT (r, _, ObjT { call_t = Some id; _ }),
             (ReactInToProps (_, props) | ReactPropsToOut (_, props))
           ) -> begin
@@ -2828,12 +2824,12 @@ struct
             | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
             (* Keep the object's reason for better error reporting *)
             rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
-          | _ -> React_kit.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
+          | _ -> ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
         end
         | (AnyT _, ReactPropsToOut (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (l, props)
         | (AnyT _, ReactInToProps (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (props, l)
         | (DefT (r, _, _), (ReactPropsToOut (_, props) | ReactInToProps (_, props))) ->
-          React_kit.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
+          ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
         (***********************************************)
         (* function types deconstruct into their parts *)
         (***********************************************)
@@ -9667,6 +9663,8 @@ module rec FlowJs : Flow_common.S = struct
   let widen_obj_type = ObjectKit.widen_obj_type
 
   let perform_read_prop_action = GetPropTKit.perform_read_prop_action
+
+  let react_get_config = React.get_config
 end
 
 include FlowJs

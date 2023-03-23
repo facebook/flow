@@ -19,6 +19,8 @@ module type INPUT = sig
   include Flow_common.BUILTINS
 
   include Flow_common.SUBTYPING
+
+  include Flow_common.REACT
 end
 
 module type OUTPUT = sig
@@ -1157,20 +1159,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
         DefT (_reasonu, _, ReactAbstractComponentT { config; instance })
       ) ->
       (* Contravariant config check *)
-      React_kit.get_config
+      Flow.react_get_config
         cx
         trace
         l
         ~use_op
         ~reason_op:reasonl
-        ~rec_flow
-        ~rec_flow_t
-        ~rec_unify
-        ~get_builtin_type
         (React.GetConfig l)
         Polarity.Negative
         config;
-
       (* check instancel <: instanceu *)
       rec_flow_t cx trace ~use_op (this, instance)
     (* Function Component ~> AbstractComponent *)
