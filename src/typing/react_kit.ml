@@ -5,34 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Flow_js_utils
 open Reason
 open Type
 open TypeUtil
 open React
 
-let err_incompatible
-    cx
-    trace
-    ~use_op
-    ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit)
-    reason
-    tool =
-  React.(
-    let err =
-      match tool with
-      | GetProps _
-      | GetConfig _
-      | GetRef _
-      | CreateElement0 _
-      | CreateElement _
-      | ConfigCheck _ ->
-        Error_message.ENotAReactComponent { reason; use_op }
-      | GetConfigType _ -> Error_message.EInvalidReactConfigType { reason; use_op }
-      | SimplifyPropType (tool, _) -> Error_message.EInvalidReactPropType { reason; use_op; tool }
-    in
-    add_output cx ~trace err
-  )
+let err_incompatible cx trace ~use_op reason tool =
+  let err =
+    match tool with
+    | GetProps _
+    | GetConfig _
+    | GetRef _
+    | CreateElement0 _
+    | CreateElement _
+    | ConfigCheck _ ->
+      Error_message.ENotAReactComponent { reason; use_op }
+    | GetConfigType _ -> Error_message.EInvalidReactConfigType { reason; use_op }
+    | SimplifyPropType (tool, _) -> Error_message.EInvalidReactPropType { reason; use_op; tool }
+  in
+  Flow_js_utils.add_output cx ~trace err
 
 let component_class
     cx
@@ -190,7 +181,6 @@ let props_to_tout
     ~(get_builtin_type :
        Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
        )
-    ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit)
     u
     tout =
   match drop_generic component with
@@ -220,7 +210,7 @@ let props_to_tout
   | DefT (reason, trust, ReactAbstractComponentT _) ->
     rec_flow_t ~use_op:unknown_use cx trace (MixedT.why reason trust, tout)
   (* ...otherwise, error. *)
-  | _ -> err_incompatible cx trace ~use_op ~add_output (reason_of_t component) u
+  | _ -> err_incompatible cx trace ~use_op (reason_of_t component) u
 
 (* Creates the type that we expect for a React config by diffing out default
  * props with ObjKitT(Rest). The config does not include types for `key`
@@ -253,7 +243,6 @@ let get_config
        Context.t -> Type.trace -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
        )
     ~get_builtin_type
-    ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit)
     u
     pole
     tout =
@@ -281,7 +270,6 @@ let get_config
            ~rec_flow_t
            ~rec_flow
            ~get_builtin_type
-           ~add_output
            u
         )
     in
@@ -308,7 +296,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
   include Flow
 
   let run cx trace ~use_op reason_op l u =
-    let err_incompatible reason = err_incompatible cx trace ~use_op ~add_output reason u in
+    let err_incompatible reason = err_incompatible cx trace ~use_op reason u in
     (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce
        some outflow, usually some flavor of `any`, along with an error. However,
        not every unexpected inflow should cause an error. For example, `any`
@@ -412,17 +400,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | _ -> err_incompatible (reason_of_t component)
     in
     let props_to_tout =
-      props_to_tout
-        cx
-        trace
-        l
-        ~use_op
-        ~reason_op
-        ~rec_flow_t
-        ~rec_flow
-        ~get_builtin_type
-        ~add_output
-        u
+      props_to_tout cx trace l ~use_op ~reason_op ~rec_flow_t ~rec_flow ~get_builtin_type u
     in
     let coerce_children_args (children, children_spread) =
       match (children, children_spread) with
@@ -700,7 +678,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         ~rec_flow_t
         ~rec_unify
         ~get_builtin_type
-        ~add_output
         u
         Polarity.Positive
     in

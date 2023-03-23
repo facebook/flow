@@ -2819,8 +2819,7 @@ struct
             trace
             (return_t, get_builtin_type cx reason_op (OrdinaryName "React$Node"))
         | (DefT (r, _, FunT _), (ReactInToProps (_, props) | ReactPropsToOut (_, props))) ->
-          React.GetProps props
-          |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
+          React_kit.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
         | ( DefT (r, _, ObjT { call_t = Some id; _ }),
             (ReactInToProps (_, props) | ReactPropsToOut (_, props))
           ) -> begin
@@ -2829,15 +2828,12 @@ struct
             | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
             (* Keep the object's reason for better error reporting *)
             rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
-          | _ ->
-            React.GetProps props
-            |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
+          | _ -> React_kit.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
         end
         | (AnyT _, ReactPropsToOut (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (l, props)
         | (AnyT _, ReactInToProps (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (props, l)
         | (DefT (r, _, _), (ReactPropsToOut (_, props) | ReactInToProps (_, props))) ->
-          React.GetProps props
-          |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~add_output r
+          React_kit.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
         (***********************************************)
         (* function types deconstruct into their parts *)
         (***********************************************)

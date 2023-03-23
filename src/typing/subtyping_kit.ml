@@ -1167,7 +1167,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ~rec_flow_t
         ~rec_unify
         ~get_builtin_type
-        ~add_output
         (React.GetConfig l)
         Polarity.Negative
         config;
