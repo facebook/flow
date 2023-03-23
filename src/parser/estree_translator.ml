@@ -1684,7 +1684,7 @@ with type t = Impl.t = struct
         loc { Type.Conditional.check_type; extends_type; true_type; false_type; comments } =
       node
         ?comments
-        "ConditionalType"
+        "ConditionalTypeAnnotation"
         loc
         [
           ("checkType", _type check_type);
@@ -1693,7 +1693,7 @@ with type t = Impl.t = struct
           ("falseType", _type false_type);
         ]
     and infer_type loc { Type.Infer.tparam; comments } =
-      node ?comments "InferType" loc [("typeParameter", type_param tparam)]
+      node ?comments "InferTypeAnnotation" loc [("typeParameter", type_param tparam)]
     and generic_type_qualified_identifier (loc, { Type.Generic.Identifier.id; qualification }) =
       let qualification =
         match qualification with
