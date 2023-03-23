@@ -2065,9 +2065,8 @@ let handle_persistent_signaturehelp_lsp
       | Error _ ->
         Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason:"Failed to normalize type" metadata)))
 
-let find_local_references ~reader ~options ~client ~profiling ~env pos :
-    ((FindRefsTypes.find_refs_found * Types_js_types.file_artifacts) option, string) result
-    * Hh_json.json option =
+let get_file_artifacts ~options ~client ~profiling ~env pos :
+    ((Types_js_types.file_artifacts * File_key.t) option, string) result * Hh_json.json option =
   let file_input = file_input_of_text_document_position ~client pos in
   match of_file_input ~options ~env file_input with
   | Error (Failed reason) -> (Error reason, None)
@@ -2086,43 +2085,65 @@ let find_local_references ~reader ~options ~client ~profiling ~env pos :
         file_key
         parse_result
     in
-
     (match file_artifacts_result with
     | Error _parse_errors ->
       let err_str = "Couldn't parse file in parse_artifacts" in
       let json_props = add_cache_hit_data_to_json [] did_hit_cache in
       (Error err_str, Some (Hh_json.JSON_Object json_props))
-    | Ok (parse_artifacts, typecheck_artifacts) ->
-      let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
-      let local_refs =
-        FindRefs_js.find_local_refs
-          ~reader
-          ~options
-          ~file_key
-          ~parse_artifacts
-          ~typecheck_artifacts
-          ~line
-          ~col
-      in
-      let extra_data =
-        Some
-          (Hh_json.JSON_Object
-             [
-               ( "result",
-                 Hh_json.JSON_String
-                   (match local_refs with
-                   | Ok _ -> "SUCCESS"
-                   | _ -> "FAILURE")
-               );
-             ]
-          )
-      in
-      (match local_refs with
-      | Ok (Some ref_info) ->
-        let file_artifacts = (parse_artifacts, typecheck_artifacts) in
-        (Ok (Some (ref_info, file_artifacts)), extra_data)
-      | Ok None -> (Ok None, extra_data)
-      | Error s -> (Error s, extra_data)))
+    | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
+
+let find_local_references ~reader ~options ~file_artifacts file_key pos :
+    (FindRefsTypes.find_refs_found option, string) result * Hh_json.json option =
+  let (parse_artifacts, typecheck_artifacts) = file_artifacts in
+  let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
+  let local_refs =
+    FindRefs_js.find_local_refs
+      ~reader
+      ~options
+      ~file_key
+      ~parse_artifacts
+      ~typecheck_artifacts
+      ~line
+      ~col
+  in
+  let extra_data =
+    Some
+      (Hh_json.JSON_Object
+         [
+           ( "result",
+             Hh_json.JSON_String
+               (match local_refs with
+               | Ok _ -> "SUCCESS"
+               | _ -> "FAILURE")
+           );
+         ]
+      )
+  in
+  match local_refs with
+  | Ok (Some ref_info) -> (Ok (Some ref_info), extra_data)
+  | Ok None -> (Ok None, extra_data)
+  | Error s -> (Error s, extra_data)
+
+let map_local_refs ~reader ~options ~client ~profiling ~env ~f text_doc_position =
+  let (file_artifacts_opt, extra_parse_data) =
+    get_file_artifacts ~options ~client ~profiling ~env text_doc_position
+  in
+  match file_artifacts_opt with
+  | Ok (Some (file_artifacts, file_key)) ->
+    let (local_refs, extra_data) =
+      find_local_references ~reader ~options ~file_artifacts file_key text_doc_position
+    in
+    let mapped_refs =
+      match local_refs with
+      | Ok (Some (_name, refs)) -> Ok (Base.List.map ~f refs)
+      | Ok None ->
+        (* e.g. if it was requested on a place that's not even an identifier *)
+        Ok []
+      | Error _ as err -> err
+    in
+    (mapped_refs, extra_data)
+  | Ok None -> (Ok [], extra_parse_data)
+  | Error _ as err -> (err, extra_parse_data)
 
 let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~client ~profiling ~env
     =
@@ -2130,20 +2151,11 @@ let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~cl
   let document_uri =
     text_doc_position.TextDocumentPositionParams.textDocument.TextDocumentIdentifier.uri
   in
-  let (local_refs, extra_data) =
-    find_local_references ~reader ~options ~client ~profiling ~env text_doc_position
+  let ref_to_location (_, loc) =
+    { Location.uri = document_uri; range = Flow_lsp_conversions.loc_to_lsp_range loc }
   in
-  let result =
-    match local_refs with
-    | Ok (Some ((_name, refs), _file_artifacts)) ->
-      let ref_to_location (_, loc) =
-        { Location.uri = document_uri; range = Flow_lsp_conversions.loc_to_lsp_range loc }
-      in
-      Ok (Base.List.map ~f:ref_to_location refs)
-    | Ok None ->
-      (* e.g. if it was requested on a place that's not even an identifier *)
-      Ok []
-    | Error _ as err -> err
+  let (result, extra_data) =
+    map_local_refs ~reader ~options ~client ~profiling ~env ~f:ref_to_location text_doc_position
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2155,24 +2167,15 @@ let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~cl
 
 let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
-  let (local_refs, extra_data) =
-    find_local_references ~reader ~options ~client ~profiling ~env params
+  (* All the locs are implicitly in the same file *)
+  let ref_to_highlight (_, loc) =
+    {
+      DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
+      kind = Some DocumentHighlight.Text;
+    }
   in
-  let result =
-    match local_refs with
-    | Ok (Some ((_name, refs), _file_artifacts)) ->
-      (* All the locs are implicitly in the same file *)
-      let ref_to_highlight (_, loc) =
-        {
-          DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
-          kind = Some DocumentHighlight.Text;
-        }
-      in
-      Ok (Base.List.map ~f:ref_to_highlight refs)
-    | Ok None ->
-      (* e.g. if it was requested on a place that's not even an identifier *)
-      Ok []
-    | Error _ as err -> err
+  let (result, extra_data) =
+    map_local_refs ~reader ~options ~client ~profiling ~env ~f:ref_to_highlight params
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2185,41 +2188,55 @@ let handle_persistent_document_highlight
 let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   let Rename.{ textDocument; position; newName } = params in
   let text_doc_position = TextDocumentPositionParams.{ textDocument; position } in
-  let (local_refs, extra_data) =
-    find_local_references ~reader ~options ~client ~profiling ~env text_doc_position
-  in
-  let result =
-    match local_refs with
-    | Ok (Some ((_name, refs), (parse_artifacts, _typecheck_artifacts))) ->
-      let ast =
-        match parse_artifacts with
-        | Types_js_types.Parse_artifacts { ast; _ } -> ast
+  let (result, extra_data) =
+    let (file_artifacts_opt, extra_parse_data) =
+      get_file_artifacts ~options ~client ~profiling ~env text_doc_position
+    in
+    match file_artifacts_opt with
+    | Ok (Some (file_artifacts, file_key)) ->
+      let (local_refs, extra_data) =
+        find_local_references ~reader ~options ~file_artifacts file_key text_doc_position
       in
-      let ref_map =
-        List.fold_left
-          (fun acc (ref_kind, loc) -> Loc_collections.LocMap.add loc ref_kind acc)
-          Loc_collections.LocMap.empty
-          refs
-      in
-      let new_ast = RenameMapper.rename ~targets:ref_map ~new_name:newName ast in
-      let diff = Flow_ast_differ.program Flow_ast_differ.Standard ast new_ast in
-      let opts =
-        Js_layout_generator.
-          {
-            default_opts with
-            bracket_spacing = Options.format_bracket_spacing options;
-            single_quotes = Options.format_single_quotes options;
-          }
-      in
+      let (parse_artifacts, _typecheck_artifacts) = file_artifacts in
       let edits =
-        Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-        |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+        match local_refs with
+        | Ok (Some (_name, refs)) ->
+          let ast =
+            match parse_artifacts with
+            | Types_js_types.Parse_artifacts { ast; _ } -> ast
+          in
+          let ref_map =
+            List.fold_left
+              (fun acc (ref_kind, loc) -> Loc_collections.LocMap.add loc ref_kind acc)
+              Loc_collections.LocMap.empty
+              refs
+          in
+          let new_ast = RenameMapper.rename ~targets:ref_map ~new_name:newName ast in
+          let diff = Flow_ast_differ.program Flow_ast_differ.Standard ast new_ast in
+          let opts =
+            Js_layout_generator.
+              {
+                default_opts with
+                bracket_spacing = Options.format_bracket_spacing options;
+                single_quotes = Options.format_single_quotes options;
+              }
+          in
+          let edits =
+            Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+            |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+          in
+          Ok
+            {
+              WorkspaceEdit.changes = UriMap.singleton textDocument.TextDocumentIdentifier.uri edits;
+            }
+        | Ok None ->
+          (* e.g. if it was requested on a place that's not even an identifier *)
+          Ok { WorkspaceEdit.changes = UriMap.empty }
+        | Error _ as err -> err
       in
-      Ok { WorkspaceEdit.changes = UriMap.singleton textDocument.TextDocumentIdentifier.uri edits }
-    | Ok None ->
-      (* e.g. if it was requested on a place that's not even an identifier *)
-      Ok { WorkspaceEdit.changes = UriMap.empty }
-    | Error _ as err -> err
+      (edits, extra_data)
+    | Ok None -> (Ok { WorkspaceEdit.changes = UriMap.empty }, extra_parse_data)
+    | Error _ as err -> (err, extra_parse_data)
   in
   let metadata = with_data ~extra_data metadata in
   match result with
