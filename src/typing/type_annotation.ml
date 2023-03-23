@@ -756,8 +756,16 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (EvalT (t, TypeDestructorT (use_op reason, reason, NonMaybeType), mk_eval_id cx loc))
                 targs
           )
+        (* Deprecated former alias of `Partial` *)
+        | "$Partial" ->
+          error_type
+            cx
+            loc
+            Error_message.(
+              EDeprecatedUtilityWithReplacement { loc; kind = DeprecatedUtility.Partial }
+            )
+            t_ast
         (* Partial<T> makes all of `T`'s properties optional *)
-        | "$Partial"
         | "Partial" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in

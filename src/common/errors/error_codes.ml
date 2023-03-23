@@ -22,6 +22,7 @@ type error_code =
   | ClassObject
   | DefaultImportAccess
   | DeprecatedType
+  | DeprecatedUtility
   | DuplicateClassMember
   | DuplicateEnumInit
   | DuplicateFlowDecl
@@ -212,6 +213,7 @@ let string_of_code : error_code -> string = function
   | ClassObject -> "class-object-subtyping"
   | DefaultImportAccess -> "default-import-access"
   | DeprecatedType -> "deprecated-type"
+  | DeprecatedUtility -> "deprecated-utility"
   | DuplicateClassMember -> "duplicate-class-member"
   | EmptyArrayNoAnnot -> "missing-empty-array-annot"
   | DuplicateEnumInit -> "duplicate-enum-init"

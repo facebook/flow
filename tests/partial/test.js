@@ -62,6 +62,3 @@ let f8 : Partial<JFace> = {x : "", y : "", z : undefined};
 let f9 : Partial<JFace> = {x : null}; // error
 let f10 : Partial<JFace> = {z : 3}; // error
 let f11 : Partial<JFace> = {x : 3}; // error
-
-// Old alias still works (for now)
-({}: $Partial<{x: string, y: string}>); // OK
