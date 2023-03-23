@@ -23,6 +23,16 @@ module InvalidCharSetSet = Flow_set.Make (struct
   let compare = Stdlib.compare
 end)
 
+module DeprecatedUtility = struct
+  type t = Partial
+
+  let deprecated_of_kind = function
+    | Partial -> "$Partial"
+
+  let replacement_of_kind = function
+    | Partial -> "Partial"
+end
+
 type t = ALoc.t t'
 
 and 'loc t' =
@@ -313,6 +323,10 @@ and 'loc t' =
   | ENonstrictImport of 'loc
   | EUnclearType of 'loc
   | EDeprecatedBool of 'loc
+  | EDeprecatedUtilityWithReplacement of {
+      loc: 'loc;
+      kind: DeprecatedUtility.t;
+    }
   | EUnsafeGettersSetters of 'loc
   | EUnusedSuppression of 'loc
   | ECodelessSuppression of 'loc * string
@@ -996,6 +1010,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENonstrictImport loc -> ENonstrictImport (f loc)
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedBool loc -> EDeprecatedBool (f loc)
+  | EDeprecatedUtilityWithReplacement { loc; kind } ->
+    EDeprecatedUtilityWithReplacement { loc = f loc; kind }
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
   | ECodelessSuppression (loc, c) -> ECodelessSuppression (f loc, c)
@@ -1415,6 +1431,7 @@ let util_use_op_of_msg nope util = function
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedBool _
+  | EDeprecatedUtilityWithReplacement _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
   | ECodelessSuppression _
@@ -1566,6 +1583,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENonstrictImport loc
   | EUnclearType loc
   | EDeprecatedBool loc
+  | EDeprecatedUtilityWithReplacement { loc; _ }
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
@@ -3489,6 +3507,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EDeprecatedBool _ ->
     Normal { features = [text "Deprecated type. Use "; code "boolean"; text " instead."] }
+  | EDeprecatedUtilityWithReplacement { kind; _ } ->
+    let deprecated_name = DeprecatedUtility.deprecated_of_kind kind in
+    let replacement_name = DeprecatedUtility.replacement_of_kind kind in
+    let features =
+      [
+        text "Use ";
+        code replacement_name;
+        text " instead of ";
+        code deprecated_name;
+        text " - the latter is deprecated.";
+      ]
+    in
+    Normal { features }
   | EUnsafeGettersSetters _ ->
     Normal { features = [text "Getters and setters can have side effects and are unsafe."] }
   | EUnusedSuppression _ -> Normal { features = [text "Unused suppression comment."] }
@@ -4801,6 +4832,7 @@ let error_code_of_message err : error_code option =
   | EComputedPropertyWithMultipleLowerBounds _ -> Some InvalidComputedProp
   | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
   | EDebugPrint (_, _) -> None
+  | EDeprecatedUtilityWithReplacement _ -> Some DeprecatedUtility
   | EDocblockError (_, err) -> begin
     match err with
     | MultipleFlowAttributes -> Some DuplicateFlowDecl
