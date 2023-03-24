@@ -1,5 +1,3 @@
-/* @flow */
-
 class A<T> {
   p: T;
   constructor(p: T) {
@@ -48,9 +46,3 @@ var g_default: G<string> = new G('hello');
 (g_default.p: boolean); // Error string ~> boolean
 
 class H<S = T, T = string> {} // Error - can't refer to T before it's defined
-
-class I<T: ?string = *> extends A<T> {}
-
-var i_number: I<number> = new I(123); // Error number ~> ?string
-var i_void: I<void> = new I();
-var i_default: I<> = new I('hello');

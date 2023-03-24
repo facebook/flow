@@ -6,7 +6,7 @@ if (document_body == null) throw new Error("document.body == null");
 let tests = [
   // basic functionality
   function() {
-    const i: NodeIterator<*,*> = document.createNodeIterator(document_body);
+    const i = document.createNodeIterator(document_body);
     const filter: NodeFilter = i.filter;
     const response:
       typeof NodeFilter.FILTER_ACCEPT |
@@ -15,7 +15,7 @@ let tests = [
       filter.acceptNode(document_body);
   },
   function() {
-    const w: TreeWalker<*,*> = document.createTreeWalker(document_body);
+    const w = document.createTreeWalker(document_body);
     const filter: NodeFilter = w.filter;
     const response:
       typeof NodeFilter.FILTER_ACCEPT |

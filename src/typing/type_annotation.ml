@@ -1622,7 +1622,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           }
       )
     | (loc, (Exists _ as t_ast)) ->
-      add_unclear_type_error_if_not_lib_file cx loc;
+      Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ExistsType));
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
 
   and convert_list =

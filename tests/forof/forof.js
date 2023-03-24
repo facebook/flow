@@ -33,13 +33,6 @@ function testMap1(map: Map<string, number>): void {
   }
 }
 
-function testMap2(map: Map<*, *>): void {
-  for (var elem of map) {
-    (elem: [number, string]); // Any tuple is fine
-    (elem: number); // Error - tuple ~> number
-  }
-}
-
 function testSet1(set: Set<string>): void {
   for (var x of set) {
     (x: number); // Error - string ~> number

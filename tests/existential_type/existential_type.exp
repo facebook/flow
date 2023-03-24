@@ -1,0 +1,10 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:1:10
+
+The existential type `*` is deprecated. This syntax is no longer supported. [unsupported-syntax]
+
+   1| type T = *; // ERROR: unsupported syntax
+               ^
+
+
+
+Found 1 error

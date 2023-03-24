@@ -15,7 +15,7 @@ function myEnhancer<A, B>(mapper: B => A): HOC<A, B> {
   return (comp: Comp<A>) => (props: B) => comp(mapper(props));
 }
 
-const enhancer: HOC<*, { p: number, e: string }> = compose(
+const enhancer: HOC<any, { p: number, e: string }> = compose(
   myEnhancer((props: {e: string, p: number, ...}) => ({
     p: `${props.p * 3}`,
   })),

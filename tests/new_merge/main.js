@@ -85,9 +85,6 @@ import { x as x19, y as y19, z as z19 } from './spread';
 (y19: { a: number }); // error undefined ~> number
 (z19: empty); // okay any ~> empty (error on def site)
 
-import C20 from './existential';
-(C20: empty); // error C ~> empty
-
 import { type T as T21 } from './mk_instance_poly';
 declare var t21: T21;
 (t21.c: empty); // okay - this is already an error at the definition site

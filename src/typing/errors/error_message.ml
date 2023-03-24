@@ -599,6 +599,7 @@ and internal_error =
 and 'loc unsupported_syntax =
   | AnnotationInsideDestructuring
   | ConditionalType
+  | ExistsType
   | MetaPropertyExpression
   | ObjectPropertyLiteralNonString
   | ObjectPropertyGetSet
@@ -723,7 +724,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   in
   let map_unsupported_syntax = function
     | PredicateInvalidParameter reason -> PredicateInvalidParameter (map_reason reason)
-    | ( ConditionalType | MetaPropertyExpression | ObjectPropertyLiteralNonString
+    | ( ConditionalType | ExistsType | MetaPropertyExpression | ObjectPropertyLiteralNonString
       | ObjectPropertyGetSet | ObjectPropertyComputedGetSet | InvariantSpreadArgument
       | ClassPropertyLiteral | ClassPropertyComputed | RequireDynamicArgument
       | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
@@ -2668,6 +2669,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       match unsupported_syntax with
       | MetaPropertyExpression -> [text "Not supported."]
       | ConditionalType -> [text "Conditional types are not yet supported."]
+      | ExistsType ->
+        [
+          text "The existential type ";
+          code "*";
+          text " is deprecated. This syntax is no longer supported.";
+        ]
       | AnnotationInsideDestructuring ->
         [
           text "Annotations inside of destructuring are not supported. ";
@@ -3497,10 +3504,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "any";
         text ", ";
         code "Object";
-        text ", ";
-        code "Function";
         text ", or ";
-        code "*";
+        code "Function";
         text " types is not safe!";
       ]
     in
