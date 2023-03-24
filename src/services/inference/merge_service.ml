@@ -579,7 +579,7 @@ let mk_check options ~reader ~master_cx () =
         ~on_timer:(fun run_time ->
           Hh_logger.info
             "[%d] Slow CHECK (%f seconds so far): %s"
-            (Unix.getpid ())
+            (Sys_utils.get_pretty_pid ())
             run_time
             file_str;
           Base.Option.iter check_timeout ~f:(fun check_timeout ->
@@ -598,7 +598,7 @@ let mk_check options ~reader ~master_cx () =
       if Build_mode.dev then
         Exception.reraise exc
       else
-        prerr_endlinef "(%d) check_job THROWS: %s\n" (Unix.getpid ()) exn_str;
+        prerr_endlinef "(%d) check_job THROWS: %s\n" (Sys_utils.get_pretty_pid ()) exn_str;
       let file_loc = Loc.{ none with source = Some file } |> ALoc.of_loc in
       (* We can't pattern match on the exception type once it's marshalled
          back to the master process, so we pattern match on it here to create
