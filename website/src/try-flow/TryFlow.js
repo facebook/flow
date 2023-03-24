@@ -18,6 +18,7 @@ import type {AsyncFlow} from './init-flow';
 
 function getASTJSON(flow: AsyncFlow, value: string) {
   const options = {
+    enums: true,
     esproposal_class_instance_fields: true,
     esproposal_class_static_fields: true,
     esproposal_decorators: true,
