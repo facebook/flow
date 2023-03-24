@@ -981,8 +981,6 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
-            let leading = leading @ Peek.comments env in
-            Expect.token env T_LBRACKET;
             let id =
               if Peek.ith_token ~i:1 env = T_COLON then (
                 let id = identifier_name env in
@@ -1008,6 +1006,69 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       in
       Type.Object.Indexer indexer
     in
+
+    let mapped_type env start_loc variance ~leading =
+      let mapped_type =
+        with_loc
+          ~start_loc
+          (fun env ->
+            let ((key_name_loc, _) as key_id) = type_identifier env in
+            let key_tparam =
+              {
+                Type.TypeParam.name = key_id;
+                bound = Ast.Type.Missing key_name_loc;
+                variance = None;
+                default = None;
+                bound_kind = Type.TypeParam.Colon;
+              }
+            in
+            (* We already checked in mapped_type_or_indexer that the next token was an
+             * "in" identifier. Now we eat it. *)
+            Eat.token env;
+            let source_type = _type env in
+            Expect.token env T_RBRACKET;
+            let optional =
+              Type.Object.MappedType.(
+                match Peek.token env with
+                | T_PLING ->
+                  Eat.token env;
+                  Optional
+                | T_PLUS ->
+                  Eat.token env;
+                  Expect.token env T_PLING;
+                  PlusOptional
+                | T_MINUS ->
+                  Eat.token env;
+                  Expect.token env T_PLING;
+                  MinusOptional
+                | _ -> NoOptionalFlag
+              )
+            in
+            Expect.token env T_COLON;
+            let prop_type = _type env in
+            let trailing = Eat.trailing_comments env in
+            {
+              Type.Object.MappedType.key_tparam = (key_name_loc, key_tparam);
+              source_type;
+              prop_type;
+              variance;
+              optional;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
+          env
+      in
+      Type.Object.MappedType mapped_type
+    in
+
+    let mapped_type_or_indexer env start_loc static variance ~leading =
+      let leading = leading @ Peek.comments env in
+      Expect.token env T_LBRACKET;
+      match Peek.ith_token ~i:1 env with
+      | T_IDENTIFIER { raw = "in"; _ } when static = None ->
+        mapped_type env start_loc variance ~leading
+      | _ -> indexer_property env start_loc static variance ~leading
+    in
+
     let internal_slot env start_loc static ~leading =
       let islot =
         with_loc
@@ -1256,7 +1317,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         | T_LBRACKET ->
           error_unexpected_variance env variance;
           internal_slot env start_loc static ~leading
-        | _ -> indexer_property env start_loc static variance ~leading)
+        | _ -> mapped_type_or_indexer env start_loc static variance ~leading)
       | T_LESS_THAN
       | T_LPAREN ->
         (* Note that `static(): void` is a static callable property if we

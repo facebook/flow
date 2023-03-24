@@ -2924,4 +2924,22 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "const x = () => {};";
            assert_statement_string ~ctxt ~pretty:true "const x = () => y = 123;"
          );
+         ( "mapped_types" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "type T = { [key in keyof O]: T };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { +[key in keyof O]: T };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { -[key in keyof O]: T };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { [key in keyof O]+?: T };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { [key in keyof O]-?: T };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { [key in keyof O]?: T };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { +[key in keyof O]: T };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { -[key in keyof O]: T };";
+           assert_statement_string ~ctxt ~pretty:false "type T={[key in keyof O]:T};";
+           assert_statement_string ~ctxt ~pretty:false "type T={+[key in keyof O]:T};";
+           assert_statement_string ~ctxt ~pretty:false "type T={-[key in keyof O]:T};";
+           assert_statement_string ~ctxt ~pretty:false "type T={[key in keyof O]+?:T};";
+           assert_statement_string ~ctxt ~pretty:false "type T={[key in keyof O]-?:T};";
+           assert_statement_string ~ctxt ~pretty:false "type T={[key in keyof O]?:T};";
+           assert_statement_string ~ctxt ~pretty:false "type T={+[key in keyof O]:T};";
+           assert_statement_string ~ctxt ~pretty:false "type T={-[key in keyof O]:T};"
+         );
        ]

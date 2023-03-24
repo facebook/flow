@@ -3635,6 +3635,7 @@ and type_object_property ~opts =
             Atom "]";
             optional_token;
             Atom ":";
+            pretty_space;
             type_ ~opts prop_type;
           ]
       )
