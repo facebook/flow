@@ -129,6 +129,7 @@ end = struct
         | SpreadProperty _
         | Indexer _
         | InternalSlot _
+        | MappedType _
         | CallProperty _ ->
           None
     )

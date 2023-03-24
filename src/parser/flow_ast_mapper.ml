@@ -1232,6 +1232,34 @@ class ['loc] mapper =
       else
         (loc, { value = (value_loc, value'); static; comments = comments' })
 
+    method object_mapped_type_property (mt : ('loc, 'loc) Ast.Type.Object.MappedType.t) =
+      let open Ast.Type.Object.MappedType in
+      let (loc, { key_tparam; prop_type; source_type; variance; comments; optional }) = mt in
+      let key_tparam' = this#type_param key_tparam in
+      let prop_type' = this#type_ prop_type in
+      let source_type' = this#type_ source_type in
+      let variance' = this#variance_opt variance in
+      let comments' = this#syntax_opt comments in
+      if
+        key_tparam' == key_tparam
+        && prop_type' == prop_type
+        && source_type' == source_type
+        && variance' == variance
+        && comments' == comments
+      then
+        mt
+      else
+        ( loc,
+          {
+            key_tparam = key_tparam';
+            prop_type = prop_type';
+            source_type = source_type';
+            variance = variance';
+            comments = comments';
+            optional;
+          }
+        )
+
     method object_type _loc (ot : ('loc, 'loc) Ast.Type.Object.t) =
       let open Ast.Type.Object in
       let { properties; exact; inexact; comments } = ot in
@@ -1245,7 +1273,8 @@ class ['loc] mapper =
             | Indexer p' -> id this#object_indexer_property_type p' p (fun p' -> Indexer p')
             | InternalSlot p' ->
               id this#object_internal_slot_property_type p' p (fun p' -> InternalSlot p')
-            | CallProperty p' -> id this#object_call_property_type p' p (fun p' -> CallProperty p'))
+            | CallProperty p' -> id this#object_call_property_type p' p (fun p' -> CallProperty p')
+            | MappedType p' -> id this#object_mapped_type_property p' p (fun p' -> MappedType p'))
           properties
       in
       let comments' = this#syntax_opt comments in

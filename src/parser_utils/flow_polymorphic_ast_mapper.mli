@@ -435,6 +435,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method object_indexer_type :
       ('M, 'T) Ast.Type.Object.Indexer.t -> ('N, 'U) Ast.Type.Object.Indexer.t
 
+    method object_mapped_type :
+      ('M, 'T) Ast.Type.Object.MappedType.t -> ('N, 'U) Ast.Type.Object.MappedType.t
+
     method object_internal_slot_type :
       ('M, 'T) Ast.Type.Object.InternalSlot.t -> ('N, 'U) Ast.Type.Object.InternalSlot.t
 

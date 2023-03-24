@@ -866,6 +866,40 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         { id = id'; key = key'; value = value'; static; variance = variance'; comments = comments' }
       )
 
+    method object_mapped_type (omt : ('M, 'T) Ast.Type.Object.MappedType.t)
+        : ('N, 'U) Ast.Type.Object.MappedType.t =
+      let open Ast.Type.Object.MappedType in
+      let (annot, { key_tparam; prop_type; source_type; variance; optional; comments }) = omt in
+      (* Source type does not have the tparams in scope, so we visit it first *)
+      let source_type' = this#type_ source_type in
+      (* We visit this with type_params_opt intentionally because this method is relied upon in
+       * subclasses to be called at every location that binds tparams. This is unfortunate and
+       * forces this method to write some pretty hacky code. *)
+      let fake_tparams_opt =
+        Some (fst key_tparam, { Ast.Type.TypeParams.params = [key_tparam]; comments = None })
+      in
+      this#type_params_opt fake_tparams_opt (fun fake_tparams_opt' ->
+          let fake_tparams = Base.Option.value_exn fake_tparams_opt' in
+          let key_tparam' =
+            match (snd fake_tparams).Ast.Type.TypeParams.params with
+            | [key] -> key
+            | _ -> failwith "Illegal mapped type"
+          in
+          let prop_type' = this#type_ prop_type in
+          let variance' = Option.map ~f:this#variance variance in
+          let comments' = Option.map ~f:this#syntax comments in
+          ( this#on_loc_annot annot,
+            {
+              key_tparam = key_tparam';
+              source_type = source_type';
+              prop_type = prop_type';
+              variance = variance';
+              optional;
+              comments = comments';
+            }
+          )
+      )
+
     method object_internal_slot_type (islot : ('M, 'T) Ast.Type.Object.InternalSlot.t)
         : ('N, 'U) Ast.Type.Object.InternalSlot.t =
       let open Ast.Type.Object.InternalSlot in
@@ -900,6 +934,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let comments' = Option.map ~f:this#syntax comments in
         CallProperty
           (this#on_loc_annot annot, { CallProperty.value = value'; static; comments = comments' })
+      | MappedType mapped_type -> MappedType (this#object_mapped_type mapped_type)
       | InternalSlot islot -> InternalSlot (this#object_internal_slot_type islot)
 
     method interface_type (i : ('M, 'T) Ast.Type.Interface.t) : ('N, 'U) Ast.Type.Interface.t =
