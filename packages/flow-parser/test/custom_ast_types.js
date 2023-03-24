@@ -20,6 +20,23 @@ function custom_ast_types(fork) {
   /////////
   // flow
   /////////
+  def('ObjectTypeAnnotation').field('properties', [
+    or(
+      def('ObjectTypeProperty'),
+      def('ObjectTypeSpreadProperty'),
+      def('ObjectTypeMappedTypeProperty'),
+    ),
+  ]);
+
+  def('ObjectTypeMappedTypeProperty')
+    .bases('Node')
+    .build('keyTparam', 'propType', 'sourceType', 'variance', 'optional')
+    .field('keyTparam', def('TypeParameter'))
+    .field('propType', def('FlowType'))
+    .field('sourceType', def('FlowType'))
+    .field('variance', or(def('Variance'), null))
+    .field('optional', or('PlusOptional', 'MinusOptional', 'Optional', null));
+
   def('ConditionalTypeAnnotation')
     .bases('FlowType')
     .build('checkType', 'extendsType', 'trueType', 'falseType')
