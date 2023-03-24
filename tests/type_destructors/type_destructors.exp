@@ -127,9 +127,9 @@ Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with 
         ^^^^ [1]
 
 References:
-   non_maybe_type.js:57:49
-   57| type NonMaybeNumber = $NonMaybeType<$Values<{a: number, b: void}>>;
-                                                       ^^^^^^ [2]
+   non_maybe_type.js:59:8
+   59| (true: NonMaybeNumber); // Error
+              ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:60:2
@@ -141,9 +141,9 @@ Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatibl
         ^^^^^^^^^ [1]
 
 References:
-   non_maybe_type.js:57:49
-   57| type NonMaybeNumber = $NonMaybeType<$Values<{a: number, b: void}>>;
-                                                       ^^^^^^ [2]
+   non_maybe_type.js:60:13
+   60| (undefined: NonMaybeNumber); // Error
+                   ^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- property_type.js:1:18
