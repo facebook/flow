@@ -691,6 +691,19 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         this#scoped_type_params tparams ~in_tparam_scope;
         ft
 
+      method! object_mapped_type_property mt =
+        let open Ast.Type.Object.MappedType in
+        let (_, { key_tparam; prop_type; source_type; variance = _; optional = _; comments = _ }) =
+          mt
+        in
+        let tparams =
+          Some (fst key_tparam, { Ast.Type.TypeParams.params = [key_tparam]; comments = None })
+        in
+        ignore @@ this#type_ source_type;
+        let in_tparam_scope () = ignore @@ this#type_ prop_type in
+        this#scoped_type_params tparams ~in_tparam_scope;
+        mt
+
       method! class_expression loc cls =
         let { Ast.Class.id; _ } = cls in
         let bindings =

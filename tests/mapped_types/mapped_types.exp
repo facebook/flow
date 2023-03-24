@@ -6,13 +6,5 @@ Mapped Types are not yet supported. [unsupported-syntax]
                 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- not_supported.js:2:12
 
-Internal error: expected env entry for write location(2, 11) to (2, 14)
-
-   2| type X = {[key in keyof O]: number}; // ERROR mapped types not yet supported
-                 ^^^
-
-
-
-Found 2 errors
+Found 1 error
