@@ -6699,6 +6699,9 @@ struct
             let repos = Some (r, use_desc) in
             let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
             rec_flow_t cx trace ~use_op:unknown_use (GenericT { reason; name; id; bound = t }, x)
+          | EvalT _ ->
+            let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
+            rec_flow_t cx trace ~use_op:unknown_use (t, x)
           | AnnotT (r, t, use_desc) ->
             let repos = Some (r, use_desc) in
             let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in

@@ -114,9 +114,9 @@ Cannot access string literal `b` on indexed access because property `b` is missi
                   ^^^
 
 References:
-   optional.js:18:15
-   18| type Y = {|a: ?{|b: Z, opt_b: ?Z|}|};
-                     ^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:20:5
+   20| (1: Y["a"]["b"]?.["c"]); // Error - access `b` on undefined
+           ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ optional.js:21:23
@@ -129,9 +129,9 @@ Cannot access string literal `c` on optional indexed access because property `c`
                              ^^^
 
 References:
-   optional.js:18:31
-   18| type Y = {|a: ?{|b: Z, opt_b: ?Z|}|};
-                                     ^^ [1]
+   optional.js:21:5
+   21| (1: Y["a"]?.["opt_b"]["c"]); // Error - access `c` on undefined
+           ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ optional.js:22:21
@@ -483,9 +483,9 @@ Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with 
          ^^^^ [1]
 
 References:
-   optional.js:3:10
-     3|     bar: number,
-                 ^^^^^^ [2]
+   optional.js:122:8
+   122| (true: NonMaybeNumber); // Error
+               ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ optional.js:123:2
@@ -497,9 +497,9 @@ Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatibl
          ^^^^^^^^^ [1]
 
 References:
-   optional.js:3:10
-     3|     bar: number,
-                 ^^^^^^ [2]
+   optional.js:123:13
+   123| (undefined: NonMaybeNumber); // Error
+                    ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- optional_import.js:5:2
