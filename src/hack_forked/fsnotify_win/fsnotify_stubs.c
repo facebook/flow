@@ -102,17 +102,17 @@ static value parse_events(struct events* events) {
 
       // Relative path in UTF16. Not null-terminated!
       const wchar_t* filename = fileInfo->FileName;
-      // Length of relative path in UTF16. Does not include final NULL.
-      size_t wlen = fileInfo->FileNameLength;
+      // Length of relative path in characters. Does not include final NULL.
+      size_t wchars = fileInfo->FileNameLength / sizeof(wchar_t);
       // Length of the relative path in UTF8.
-      int slen = win_wide_char_to_multi_byte(filename, wlen, NULL, 0);
+      int slen = win_wide_char_to_multi_byte(filename, wchars, NULL, 0);
 
       // Allocate the absolute path, including a slash
       path_value = caml_alloc_string(wpath_len + 1 + slen);
       char* path = (char*)String_val(path_value);
       strncpy(path, events->wpath, wpath_len);
       path[wpath_len] = '\\';
-      win_wide_char_to_multi_byte(filename, wlen, path + wpath_len + 1, slen);
+      win_wide_char_to_multi_byte(filename, wchars, path + wpath_len + 1, slen);
 
       // normalize slashes
       //
