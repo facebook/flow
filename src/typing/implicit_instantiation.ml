@@ -68,6 +68,17 @@ module type S = sig
     Check.t ->
     inferred_targ Subst_name.Map.t
 
+  val solve_conditional_type_targs :
+    Context.t ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    reason:Reason.reason ->
+    tparams:Type.typeparam list ->
+    check_t:Type.t ->
+    extends_t:Type.t ->
+    true_t:Type.t ->
+    Type.t Subst_name.Map.t option
+
   val fold :
     implicit_instantiation_cx:Context.t ->
     cx:Context.t ->
@@ -80,6 +91,7 @@ end
 
 module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
   module Flow = Flow
+  module SpeculationKit = Speculation_kit.Make (Flow)
 
   let get_t cx =
     let no_lowers _cx r = Type.Unsoundness.merged_any r in
@@ -959,6 +971,69 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               (Flow_error.ErrorSet.union init_errors implicit_instantiation_errors))
     )
 
+  let solve_conditional_type_targs cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t =
+    let (subst_map, inferred_targ_list) =
+      Base.List.fold
+        tparams
+        ~init:(Subst_name.Map.empty, [])
+        ~f:(fun (subst_map, inferred_targ_and_bound_list) tparam ->
+          let targ = Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason reason in
+          ( Subst_name.Map.add tparam.name targ subst_map,
+            (tparam.name, targ, tparam.bound) :: inferred_targ_and_bound_list
+          )
+      )
+    in
+    let speculative_subtyping_succeeds ~upper_unresolved use_op l u =
+      match
+        SpeculationKit.try_singleton_throw_on_failure
+          cx
+          trace
+          reason
+          ~upper_unresolved
+          l
+          (UseT (use_op, u))
+      with
+      | exception Flow_js_utils.SpeculationSingletonError -> false
+      | _ -> true
+    in
+    if
+      speculative_subtyping_succeeds
+        ~upper_unresolved:true
+        use_op
+        check_t
+        (Subst.subst cx ~use_op:unknown_use subst_map extends_t)
+    then
+      let (tparams_map, tparams_set) =
+        Base.List.fold
+          tparams
+          ~init:(Subst_name.Map.empty, Subst_name.Set.empty)
+          ~f:(fun (tparams_map, tparams_set) tparam ->
+            ( Subst_name.Map.add tparam.name tparam tparams_map,
+              Subst_name.Set.add tparam.name tparams_set
+            )
+        )
+      in
+      let (marked_tparams, _) =
+        let visitor = new implicit_instantiation_visitor ~tparams_map in
+        visitor#type_ cx Polarity.Positive (Marked.empty, tparams_set) true_t
+      in
+      Base.List.fold_until
+        inferred_targ_list
+        ~init:Subst_name.Map.empty
+        ~finish:(fun r -> Some r)
+        ~f:(fun map (name, targ, bound) ->
+          let tparam = Subst_name.Map.find name tparams_map in
+          let polarity = Marked.get name marked_tparams in
+          let { inferred; _ } =
+            pin_type cx ~use_op tparam polarity ~default_bound:None reason targ
+          in
+          if speculative_subtyping_succeeds ~upper_unresolved:false unknown_use inferred bound then
+            Base.Continue_or_stop.Continue (Subst_name.Map.add name inferred map)
+          else
+            Base.Continue_or_stop.Stop None)
+    else
+      None
+
   let fold ~implicit_instantiation_cx ~cx ~f ~init ~post implicit_instantiation_checks =
     let r =
       Base.List.fold_left
@@ -1100,7 +1175,7 @@ module type KIT = sig
 
   module Instantiation_helper : Flow_js_utils.Instantiation_helper_sig
 
-  val run :
+  val run_call :
     Context.t ->
     Implicit_instantiation_check.t ->
     return_hint:Type.lazy_hint_t ->
@@ -1109,6 +1184,18 @@ module type KIT = sig
     use_op:use_op ->
     reason_op:reason ->
     reason_tapp:reason ->
+    Type.t
+
+  val run_conditional :
+    Context.t ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    reason:Reason.reason ->
+    tparams:Type.typeparam list ->
+    check_t:Type.t ->
+    extends_t:Type.t ->
+    true_t:Type.t ->
+    false_t:Type.t ->
     Type.t
 end
 
@@ -1155,13 +1242,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
        );
     reposition cx ~trace (aloc_of_reason reason_tapp) (Subst.subst cx ~use_op subst_map poly_t)
 
-  let run_pierce
-      cx check ~cache trace ~use_op ~reason_op ~reason_tapp ~allow_underconstrained ~return_hint =
-    let (_, _, t) = check.Implicit_instantiation_check.poly_t in
-    let targs_map = Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check in
-    instantiate_poly_with_subst_map cx ~cache trace t targs_map ~use_op ~reason_op ~reason_tapp
-
-  let run
+  let run_call
       cx check ~return_hint:(_, lazy_hint) ?(cache = false) trace ~use_op ~reason_op ~reason_tapp =
     let (check, in_nested_instantiation) =
       match check.Check.operation with
@@ -1218,13 +1299,13 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     in
     let f () =
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          run_pierce
+          let (_, _, t) = check.Implicit_instantiation_check.poly_t in
+          instantiate_poly_with_subst_map
             cx
-            ~allow_underconstrained
-            ~return_hint
-            check
             ~cache
             trace
+            t
+            (Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check)
             ~use_op
             ~reason_op
             ~reason_tapp
@@ -1234,4 +1315,26 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       Context.run_in_synthesis_mode cx f |> snd
     else
       f ()
+
+  let run_conditional cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t ~false_t =
+    if Context.in_implicit_instantiation cx then
+      (* When we are in nested instantiation, we can't meaningfully decide which branch to take,
+         so we will give up and produce placeholder instead. *)
+      Context.mk_placeholder cx reason
+    else
+      Context.run_in_implicit_instantiation_mode cx (fun () ->
+          match
+            Pierce.solve_conditional_type_targs
+              cx
+              trace
+              ~use_op
+              ~reason
+              ~tparams
+              ~check_t
+              ~extends_t
+              ~true_t
+          with
+          | None -> false_t
+          | Some subst_map -> Subst.subst cx ~use_op:unknown_use subst_map true_t
+      )
 end

@@ -56,6 +56,17 @@ module type S = sig
     Check.t ->
     inferred_targ Subst_name.Map.t
 
+  val solve_conditional_type_targs :
+    Context.t ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    reason:Reason.reason ->
+    tparams:Type.typeparam list ->
+    check_t:Type.t ->
+    extends_t:Type.t ->
+    true_t:Type.t ->
+    Type.t Subst_name.Map.t option
+
   val fold :
     implicit_instantiation_cx:Context.t ->
     cx:Context.t ->
@@ -79,7 +90,7 @@ module type KIT = sig
 
   module Instantiation_helper : Flow_js_utils.Instantiation_helper_sig
 
-  val run :
+  val run_call :
     Context.t ->
     Implicit_instantiation_check.t ->
     return_hint:Type.lazy_hint_t ->
@@ -88,6 +99,18 @@ module type KIT = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
+    Type.t
+
+  val run_conditional :
+    Context.t ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    reason:Reason.reason ->
+    tparams:Type.typeparam list ->
+    check_t:Type.t ->
+    extends_t:Type.t ->
+    true_t:Type.t ->
+    false_t:Type.t ->
     Type.t
 end
 

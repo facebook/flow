@@ -2617,7 +2617,7 @@ struct
             let poly_t = (tparams_loc, ids, t) in
             let check = Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype in
             let t_ =
-              ImplicitInstantiationKit.run
+              ImplicitInstantiationKit.run_call
                 cx
                 check
                 ~cache:true
@@ -2665,7 +2665,7 @@ struct
             let poly_t = (tparams_loc, ids, t) in
             let check = Implicit_instantiation_check.of_ctor l poly_t use_op reason_op targs args in
             let t_ =
-              ImplicitInstantiationKit.run
+              ImplicitInstantiationKit.run_call
                 cx
                 check
                 trace
@@ -2725,7 +2725,7 @@ struct
                 children
             in
             let t_ =
-              ImplicitInstantiationKit.run
+              ImplicitInstantiationKit.run_call
                 cx
                 check
                 trace
@@ -4181,6 +4181,23 @@ struct
         (*****************)
         | (_, DestructuringT (reason, kind, selector, tout, id)) ->
           destruct cx ~trace reason kind l selector tout id
+        (**************)
+        (* conditional type *)
+        (**************)
+        | (check_t, ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout }) ->
+          let result =
+            ImplicitInstantiationKit.run_conditional
+              cx
+              trace
+              ~use_op
+              ~reason
+              ~tparams
+              ~check_t
+              ~extends_t
+              ~true_t
+              ~false_t
+          in
+          rec_flow_t cx trace ~use_op (result, OpenT tout)
         (**************)
         (* object kit *)
         (**************)
