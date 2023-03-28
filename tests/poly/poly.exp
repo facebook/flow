@@ -511,24 +511,6 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
 
-Cannot return `f` because `S` [1] is incompatible with number [2] in property `a` of the return value.
-[incompatible-return]
-
-   subtyping.js:73:51
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                                         ^
-
-References:
-   subtyping.js:72:38
-   72| (f: <S: string, T: number>() => { a: S, b: T })
-                                            ^ [1]
-   subtyping.js:73:38
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                            ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
-
 Cannot return `f` because string [1] is incompatible with `T` [2] in property `a` of the return value.
 [incompatible-return]
 
@@ -547,7 +529,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
 
-Cannot return `f` because `T` [1] is incompatible with string [2] in property `b` of the return value.
+Cannot return `f` because number [1] is incompatible with `S` [2] in property `a` of the return value.
 [incompatible-return]
 
    subtyping.js:73:51
@@ -555,12 +537,12 @@ Cannot return `f` because `T` [1] is incompatible with string [2] in property `b
                                                          ^
 
 References:
-   subtyping.js:72:44
-   72| (f: <S: string, T: number>() => { a: S, b: T })
-                                                  ^ [1]
-   subtyping.js:73:44
+   subtyping.js:73:38
    73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                                  ^ [2]
+                                            ^ [1]
+   subtyping.js:72:38
+   72| (f: <S: string, T: number>() => { a: S, b: T })
+                                            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
@@ -578,6 +560,24 @@ References:
                                                   ^ [1]
    subtyping.js:73:44
    73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+                                                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
+
+Cannot return `f` because string [1] is incompatible with `T` [2] in property `b` of the return value.
+[incompatible-return]
+
+   subtyping.js:73:51
+   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+                                                         ^
+
+References:
+   subtyping.js:73:44
+   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+                                                  ^ [1]
+   subtyping.js:72:44
+   72| (f: <S: string, T: number>() => { a: S, b: T })
                                                   ^ [2]
 
 

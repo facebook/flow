@@ -18,19 +18,19 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:10:2
 
-Cannot cast `o1` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:10:2
    10| (o1: {|x?: X|}); // Error: x is not optional
         ^^
 
 References:
-   type.js:6:22
-    6| type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
-                            ^ [1]
    type.js:10:12
    10| (o1: {|x?: X|}); // Error: x is not optional
-                  ^ [2]
+                  ^ [1]
+   type.js:6:22
+    6| type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
+                            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:11:2
@@ -71,19 +71,19 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:12:2
 
-Cannot cast `o1` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:12:2
    12| (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
         ^^
 
 References:
-   type.js:6:22
-    6| type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
-                            ^ [1]
    type.js:12:12
    12| (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
-                  ^ [2]
+                  ^ [1]
+   type.js:6:22
+    6| type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
+                            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:13:2
@@ -428,36 +428,36 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:40:2
 
-Cannot cast `o4` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
+Cannot cast `o4` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:40:2
    40| (o4: {|x?: X|}); // Error: x is not optional and missing y
         ^^
 
 References:
-   type.js:36:22
-   36| type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
-                            ^ [1]
    type.js:40:12
    40| (o4: {|x?: X|}); // Error: x is not optional and missing y
-                  ^ [2]
+                  ^ [1]
+   type.js:36:22
+   36| type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
+                            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:42:2
 
-Cannot cast `o4` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
+Cannot cast `o4` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type.js:42:2
    42| (o4: {|x?: X, y?: Y|}); // Error: x is not optional
         ^^
 
 References:
-   type.js:36:22
-   36| type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
-                            ^ [1]
    type.js:42:12
    42| (o4: {|x?: X, y?: Y|}); // Error: x is not optional
-                  ^ [2]
+                  ^ [1]
+   type.js:36:22
+   36| type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
+                            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:43:2
@@ -1304,36 +1304,36 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:100:2
 
-Cannot cast `o17` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
+Cannot cast `o17` to object type because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type_dict.js:100:2
    100| (o17: {|[string]: Y | void|}); // OK
          ^^^
 
 References:
-   type_dict.js:98:23
-    98| type O17 = $Rest<{|x: X, [string]: Y|}, {|x: X, [string]: Y|}>;
-                              ^ [1]
    type_dict.js:100:19
    100| (o17: {|[string]: Y | void|}); // OK
-                          ^ [2]
+                          ^ [1]
+   type_dict.js:98:23
+    98| type O17 = $Rest<{|x: X, [string]: Y|}, {|x: X, [string]: Y|}>;
+                              ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:100:2
 
-Cannot cast `o17` to object type because `X` [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
+Cannot cast `o17` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
 
    type_dict.js:100:2
    100| (o17: {|[string]: Y | void|}); // OK
          ^^^
 
 References:
-   type_dict.js:98:23
-    98| type O17 = $Rest<{|x: X, [string]: Y|}, {|x: X, [string]: Y|}>;
-                              ^ [1]
    type_dict.js:100:23
    100| (o17: {|[string]: Y | void|}); // OK
-                              ^^^^ [2]
+                              ^^^^ [1]
+   type_dict.js:98:23
+    98| type O17 = $Rest<{|x: X, [string]: Y|}, {|x: X, [string]: Y|}>;
+                              ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:100:2

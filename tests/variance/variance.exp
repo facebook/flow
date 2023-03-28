@@ -72,35 +72,35 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:4
 
-Cannot cast `rwB` to `RWA` because `B` [1] is incompatible with `A` [2] in property `p`. [incompatible-cast]
+Cannot cast `rwB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
 
    test.js:61:4
    61|   (rwB: RWA); // error
           ^^^
 
 References:
-   test.js:9:17
-    9| type RWB = {|p: B|}
-                       ^ [1]
    test.js:6:17
     6| type RWA = {|p: A|}
+                       ^ [1]
+   test.js:9:17
+    9| type RWB = {|p: B|}
                        ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:4
 
-Cannot cast `drwB` to `dRWA` because `B` [1] is incompatible with `A` [2] in the indexer property. [incompatible-cast]
+Cannot cast `drwB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
 
    test.js:62:4
    62|   (drwB: dRWA); // error
           ^^^^
 
 References:
-   test.js:26:24
-   26| type dRWB = {[string]: B};
-                              ^ [1]
    test.js:23:24
    23| type dRWA = {[string]: A};
+                              ^ [1]
+   test.js:26:24
+   26| type dRWB = {[string]: B};
                               ^ [2]
 
 

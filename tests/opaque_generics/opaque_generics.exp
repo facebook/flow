@@ -40,19 +40,19 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:24:12
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
 
    importtest-polarity.js:24:12
    24|     return x;
                   ^
 
 References:
-   importtest-polarity.js:23:29
-   23| function test6(x: Invariant<number>) : Invariant<number | string> { // Error: number ~> number | string
-                                   ^^^^^^ [1]
    importtest-polarity.js:23:59
    23| function test6(x: Invariant<number>) : Invariant<number | string> { // Error: number ~> number | string
-                                                                 ^^^^^^ [2]
+                                                                 ^^^^^^ [1]
+   importtest-polarity.js:23:29
+   23| function test6(x: Invariant<number>) : Invariant<number | string> { // Error: number ~> number | string
+                                   ^^^^^^ [2]
    test-polarity.js:18:30
    18| export opaque type Invariant<T> = Baz<T>;
                                     ^ [3]
@@ -80,19 +80,19 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:37:12
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `S` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `S` [3]. [incompatible-return]
 
    importtest-polarity.js:37:12
    37|     return x;
                   ^
 
 References:
-   importtest-polarity.js:36:23
-   36| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                             ^^^^^^ [1]
    importtest-polarity.js:36:81
    36| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                       ^^^^^^ [2]
+                                                                                       ^^^^^^ [1]
+   importtest-polarity.js:36:23
+   36| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                             ^^^^^^ [2]
    test-polarity.js:19:24
    19| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
                               ^ [3]

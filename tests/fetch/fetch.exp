@@ -314,7 +314,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
 `cache`. [incompatible-call]
 
    request.js:6:35
@@ -322,17 +322,17 @@ Cannot call `Request` with `c` bound to `init` because literal union [1] is inco
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1615:12
-   1615|     cache: CacheType;
-                    ^^^^^^^^^ [1]
    <BUILTINS>/bom.js:1561:11
    1561|   cache?: CacheType,
-                   ^^^^^^^^^ [2]
+                   ^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1615:12
+   1615|     cache: CacheType;
+                    ^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
 `credentials`. [incompatible-call]
 
    request.js:6:35
@@ -340,17 +340,17 @@ Cannot call `Request` with `c` bound to `init` because literal union [1] is inco
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1616:18
-   1616|     credentials: CredentialsType;
-                          ^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:1562:17
    1562|   credentials?: CredentialsType,
-                         ^^^^^^^^^^^^^^^ [2]
+                         ^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1616:18
+   1616|     credentials: CredentialsType;
+                          ^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompatible with array type [2] in property
+Cannot call `Request` with `c` bound to `init` because array type [1] is incompatible with `Headers` [2] in property
 `headers`. [incompatible-call]
 
    request.js:6:35
@@ -358,17 +358,17 @@ Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompat
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1617:14
-   1617|     headers: Headers;
-                      ^^^^^^^ [1]
    <BUILTINS>/bom.js:1563:13
    1563|   headers?: HeadersInit,
-                     ^^^^^^^^^^^ [2]
+                     ^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1617:14
+   1617|     headers: Headers;
+                      ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompatible with object type [2] in property
+Cannot call `Request` with `c` bound to `init` because object type [1] is incompatible with `Headers` [2] in property
 `headers`. [incompatible-call]
 
    request.js:6:35
@@ -376,17 +376,17 @@ Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompat
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1617:14
-   1617|     headers: Headers;
-                      ^^^^^^^ [1]
    <BUILTINS>/bom.js:1563:13
    1563|   headers?: HeadersInit,
-                     ^^^^^^^^^^^ [2]
+                     ^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1617:14
+   1617|     headers: Headers;
+                      ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with `Headers` [2] in property
 `headers`. [incompatible-call]
 
    request.js:6:35
@@ -394,17 +394,17 @@ Cannot call `Request` with `c` bound to `init` because `Headers` [1] is incompat
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1617:14
-   1617|     headers: Headers;
-                      ^^^^^^^ [1]
    <BUILTINS>/bom.js:1563:13
    1563|   headers?: HeadersInit,
-                     ^^^^^^^^^^^ [2]
+                     ^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1617:14
+   1617|     headers: Headers;
+                      ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because string [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with string [2] in property
 `integrity`. [incompatible-call]
 
    request.js:6:35
@@ -412,17 +412,17 @@ Cannot call `Request` with `c` bound to `init` because string [1] is incompatibl
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1618:16
-   1618|     integrity: string;
-                        ^^^^^^ [1]
    <BUILTINS>/bom.js:1564:15
    1564|   integrity?: string,
-                       ^^^^^^ [2]
+                       ^^^^^^ [1]
+   <BUILTINS>/bom.js:1618:16
+   1618|     integrity: string;
+                        ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because string [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with string [2] in property
 `method`. [incompatible-call]
 
    request.js:6:35
@@ -430,17 +430,17 @@ Cannot call `Request` with `c` bound to `init` because string [1] is incompatibl
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1619:13
-   1619|     method: string;
-                     ^^^^^^ [1]
    <BUILTINS>/bom.js:1566:12
    1566|   method?: string,
-                    ^^^^^^ [2]
+                    ^^^^^^ [1]
+   <BUILTINS>/bom.js:1619:13
+   1619|     method: string;
+                     ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
 `mode`. [incompatible-call]
 
    request.js:6:35
@@ -448,17 +448,17 @@ Cannot call `Request` with `c` bound to `init` because literal union [1] is inco
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1620:11
-   1620|     mode: ModeType;
-                   ^^^^^^^^ [1]
    <BUILTINS>/bom.js:1567:10
    1567|   mode?: ModeType,
-                  ^^^^^^^^ [2]
+                  ^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1620:11
+   1620|     mode: ModeType;
+                   ^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
 `redirect`. [incompatible-call]
 
    request.js:6:35
@@ -466,17 +466,17 @@ Cannot call `Request` with `c` bound to `init` because literal union [1] is inco
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1621:15
-   1621|     redirect: RedirectType;
-                       ^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:1568:14
    1568|   redirect?: RedirectType,
-                      ^^^^^^^^^^^^ [2]
+                      ^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1621:15
+   1621|     redirect: RedirectType;
+                       ^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because string [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with string [2] in property
 `referrer`. [incompatible-call]
 
    request.js:6:35
@@ -484,17 +484,17 @@ Cannot call `Request` with `c` bound to `init` because string [1] is incompatibl
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1622:15
-   1622|     referrer: string;
-                       ^^^^^^ [1]
    <BUILTINS>/bom.js:1569:14
    1569|   referrer?: string,
-                      ^^^^^^ [2]
+                      ^^^^^^ [1]
+   <BUILTINS>/bom.js:1622:15
+   1622|     referrer: string;
+                       ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
-Cannot call `Request` with `c` bound to `init` because literal union [1] is incompatible with undefined [2] in property
+Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
 `referrerPolicy`. [incompatible-call]
 
    request.js:6:35
@@ -502,12 +502,12 @@ Cannot call `Request` with `c` bound to `init` because literal union [1] is inco
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1623:21
-   1623|     referrerPolicy: ReferrerPolicyType;
-                             ^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:1570:20
    1570|   referrerPolicy?: ReferrerPolicyType,
-                            ^^^^^^^^^^^^^^^^^^ [2]
+                            ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:1623:21
+   1623|     referrerPolicy: ReferrerPolicyType;
+                             ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:8:32

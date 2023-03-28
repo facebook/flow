@@ -232,6 +232,116 @@ let ordered_reasons ((rl, ru) as reasons) =
 let error_of_msg ~trace_reasons ~source_file (msg : 'loc Error_message.t') : 'loc t =
   { loc = loc_of_msg msg; msg; source_file; trace_reasons }
 
+(* Flip the lower/upper reasons of a frame_use_op. *)
+let flip_frame = function
+  | ArrayElementCompatibility c -> ArrayElementCompatibility { lower = c.upper; upper = c.lower }
+  | FunCompatibility c -> FunCompatibility { lower = c.upper; upper = c.lower }
+  | FunParam c -> FunParam { c with lower = c.upper; upper = c.lower }
+  | FunRestParam c -> FunRestParam { lower = c.upper; upper = c.lower }
+  | FunReturn c -> FunReturn { lower = c.upper; upper = c.lower }
+  | IndexerKeyCompatibility c -> IndexerKeyCompatibility { lower = c.upper; upper = c.lower }
+  | PropertyCompatibility c -> PropertyCompatibility { c with lower = c.upper; upper = c.lower }
+  | ReactConfigCheck -> ReactConfigCheck
+  | TupleElementCompatibility c ->
+    TupleElementCompatibility { c with lower = c.upper; upper = c.lower }
+  | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
+  | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | ObjMapFunCompatibility _
+    | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam
+    | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _ ) as use_op ->
+    use_op
+
+let post_process_errors original_errors =
+  (* Unification produces two errors. One for both sides. For example,
+   * {p: number} ~> {p: string} errors on both number ~> string and
+   * string ~> number. Showing both errors to our user is often redundant.
+   * So we use this utility to flip the string ~> number case and produce an
+   * error identical to one we've produced before. These two errors will be
+   * deduped by the filter below. *)
+  let dedupe_by_flip =
+    (* Loop over through the use_op chain. *)
+    let rec loop = function
+      (* Roots don't flip. *)
+      | Op _ as use_op -> (false, use_op)
+      (* Start flipping if we are on the reverse side of unification. *)
+      | Frame (UnifyFlip, use_op) ->
+        let (flip, use_op) = loop use_op in
+        (not flip, use_op)
+      (* If we are in flip mode then flip our frame. *)
+      | Frame (frame, use_op) ->
+        let (flip, use_op) = loop use_op in
+        if flip then
+          (true, Frame (flip_frame frame, use_op))
+        else
+          (false, Frame (frame, use_op))
+    in
+    fun (lower, upper) use_op ->
+      let (flip, use_op) = loop use_op in
+      if flip then
+        ((upper, lower), use_op)
+      else
+        ((lower, upper), use_op)
+  in
+  let retain_error error =
+    let open Error_message in
+    let is_not_duplicate new_msg =
+      let e' = { error with msg = new_msg } in
+      not @@ ErrorSet.mem e' original_errors
+    in
+    (* The error will be retained, if dedupe_by_flip doesn't change the error,
+       or the error is unique even after deduplication. *)
+    match msg_of_error error with
+    | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
+      let ((reason_lower', reason_upper), use_op) =
+        dedupe_by_flip (reason_lower, reason_upper) use_op
+      in
+      reason_lower = reason_lower'
+      || is_not_duplicate
+           (EIncompatibleDefs { use_op; reason_lower = reason_lower'; reason_upper; branches })
+    | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
+      let ((reason_lower', reason_upper), use_op) =
+        dedupe_by_flip (reason_lower, reason_upper) use_op
+      in
+      reason_lower = reason_lower'
+      || is_not_duplicate (EExpectedStringLit { reason_lower = reason_lower'; reason_upper; use_op })
+    | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
+      let ((reason_lower', reason_upper), use_op) =
+        dedupe_by_flip (reason_lower, reason_upper) use_op
+      in
+      reason_lower = reason_lower'
+      || is_not_duplicate (EExpectedNumberLit { reason_lower = reason_lower'; reason_upper; use_op })
+    | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
+      let ((reason_lower', reason_upper), use_op) =
+        dedupe_by_flip (reason_lower, reason_upper) use_op
+      in
+      reason_lower = reason_lower'
+      || is_not_duplicate
+           (EExpectedBooleanLit { reason_lower = reason_lower'; reason_upper; use_op })
+    | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
+      let ((reason_lower', reason_upper), use_op) =
+        dedupe_by_flip (reason_lower, reason_upper) use_op
+      in
+      reason_lower = reason_lower'
+      || is_not_duplicate (EExpectedBigIntLit { reason_lower = reason_lower'; reason_upper; use_op })
+    | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
+      let ((reason_lower', reason_upper), use_op) =
+        dedupe_by_flip (reason_lower, reason_upper) use_op
+      in
+      reason_lower = reason_lower'
+      || is_not_duplicate
+           (EIncompatibleWithUseOp { reason_lower = reason_lower'; reason_upper; use_op })
+    | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type } ->
+      let ((reason_lower', reason_upper), use_op) =
+        dedupe_by_flip (reason_lower, reason_upper) use_op
+      in
+      reason_lower = reason_lower'
+      || is_not_duplicate
+           (EEnumIncompatible
+              { reason_lower = reason_lower'; reason_upper; use_op; representation_type }
+           )
+    | _ -> true
+  in
+  ErrorSet.filter retain_error original_errors
+
 let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Errors.printable_error
     =
   Errors.(
@@ -265,55 +375,6 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
     in
     let info_of_reason (r : concrete_reason) = mk_info r [] in
     let trace_infos = Base.List.map ~f:info_of_reason trace_reasons in
-    (* Flip the lower/upper reasons of a frame_use_op. *)
-    let flip_frame = function
-      | ArrayElementCompatibility c ->
-        ArrayElementCompatibility { lower = c.upper; upper = c.lower }
-      | FunCompatibility c -> FunCompatibility { lower = c.upper; upper = c.lower }
-      | FunParam c -> FunParam { c with lower = c.upper; upper = c.lower }
-      | FunRestParam c -> FunRestParam { lower = c.upper; upper = c.lower }
-      | FunReturn c -> FunReturn { lower = c.upper; upper = c.lower }
-      | IndexerKeyCompatibility c -> IndexerKeyCompatibility { lower = c.upper; upper = c.lower }
-      | PropertyCompatibility c -> PropertyCompatibility { c with lower = c.upper; upper = c.lower }
-      | ReactConfigCheck -> ReactConfigCheck
-      | TupleElementCompatibility c ->
-        TupleElementCompatibility { c with lower = c.upper; upper = c.lower }
-      | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
-      | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | ObjMapFunCompatibility _
-        | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam
-        | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _ ) as use_op ->
-        use_op
-    in
-    (* Unification produces two errors. One for both sides. For example,
-     * {p: number} ~> {p: string} errors on both number ~> string and
-     * string ~> number. Showing both errors to our user is often redundant.
-     * So we use this utility to flip the string ~> number case and produce an
-     * error identical to one we've produced before. These two errors will be
-     * deduped in our PrintableErrorSet. *)
-    let dedupe_by_flip =
-      (* Loop over through the use_op chain. *)
-      let rec loop = function
-        (* Roots don't flip. *)
-        | Op _ as use_op -> (false, use_op)
-        (* Start flipping if we are on the reverse side of unification. *)
-        | Frame (UnifyFlip, use_op) ->
-          let (flip, use_op) = loop use_op in
-          (not flip, use_op)
-        (* If we are in flip mode then flip our frame. *)
-        | Frame (frame, use_op) ->
-          let (flip, use_op) = loop use_op in
-          if flip then
-            (true, Frame (flip_frame frame, use_op))
-          else
-            (false, Frame (frame, use_op))
-      in
-      fun (lower, upper) use_op ->
-        let (flip, use_op) = loop use_op in
-        if flip then
-          ((upper, lower), use_op)
-        else
-          ((lower, upper), use_op)
-    in
     (* In friendly error messages, we always want to point to a value as the
      * primary location. Or an annotation on a value. Normally, values are found
      * in the lower bound. However, in contravariant positions this flips. In this
@@ -792,7 +853,6 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
      *
      * This is a specialization of mk_incompatible_use_error. *)
     let mk_incompatible_error ?additional_message lower upper use_op =
-      let ((lower, upper), use_op) = dedupe_by_flip (lower, upper) use_op in
       let ((lower, upper), use_op) = flip_contravariant (lower, upper) use_op in
       let make_error loc message =
         let message =
