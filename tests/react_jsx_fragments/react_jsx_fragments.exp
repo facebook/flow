@@ -14,20 +14,20 @@ Unexpected token `<`, expected the token `>`
          ^
 
 
-Error ------------------------------------------------------------------------------ nonmatching_closing_element.js:1:17
+Error ------------------------------------------------------------------------------- nonmatching_closing_element.js:1:5
 
 Expected corresponding JSX closing tag for JSX fragment
 
    1| <></elementName>; // Error: `elementName` is not a valid token here.
-                      ^
+          ^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------ nonmatching_opening_element.js:1:17
+Error ------------------------------------------------------------------------------ nonmatching_opening_element.js:1:14
 
 Expected corresponding JSX closing tag for elementName
 
    1| <elementName></>; // Error: `elementName` is not a valid token here.
-                      ^
+                   ^^^
 
 
 

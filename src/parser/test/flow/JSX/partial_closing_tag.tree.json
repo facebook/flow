@@ -5,7 +5,7 @@
       "message":"Unexpected token `<`, expected the token `>`"
     },
     {
-      "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":3,"column":0}},
+      "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":10}},
       "message":"Expected corresponding JSX closing tag for bar"
     }
   ],

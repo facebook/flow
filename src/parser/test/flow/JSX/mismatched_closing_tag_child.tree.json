@@ -1,7 +1,7 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":3,"column":8},"end":{"line":4,"column":0}},
+      "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":7}},
       "message":"Expected corresponding JSX closing tag for bar"
     }
   ],
