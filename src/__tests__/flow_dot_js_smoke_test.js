@@ -20,11 +20,16 @@ const libFile = 'lib.js';
 flow.registerFile(libFile, `declare var MyGlobal: string;`);
 flow.initBuiltins([libFile]);
 
-if (flow.checkContent('test.js', 'MyGlobal;').length > 0) {
+const config = {
+  react_runtime: 'classic',
+  exact_by_default: true,
+};
+
+if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
   throw 'There should be no errors if the library is correctly registered.';
 }
 if (
-  flow.checkContent('test.js', 'MyGloba;')[0].message[0].descr !==
+  flow.checkContent('test.js', 'MyGloba;', config)[0].message[0].descr !==
   'Cannot resolve name `MyGloba`. [cannot-resolve-name]'
 ) {
   throw 'Referring to non-existent global should be an error.';
@@ -36,6 +41,7 @@ if (
 const Bar = '123';
 function Foo(x: string) {}
 <Bar />; // ok`,
+    config,
   ).length > 0
 ) {
   throw 'There should be no errors if jsx pragma is correctly parsed.';

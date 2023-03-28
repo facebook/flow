@@ -7,6 +7,19 @@
  * @format
  */
 
+.editorContainer {
+    position: relative;
+}
+
+.tryEditorConfig {
+    position: absolute;
+    width: 100%;
+    height: calc(100vh - var(--ifm-navbar-height) - 40px);
+    z-index: 10;
+    background-color: white;
+    padding: 1rem;
+}
+
 .tryEditor {
     display: flex;
     flex: 1;
@@ -63,9 +76,8 @@
 }
 
 .selectedTab {
-    background: #f7f7f7;
-    border-bottom: 1px solid #f7f7f7;
-    margin-bottom: -1px;
+    background: white;
+    border-bottom: 2px solid #404040;
 }
 
 .loader {

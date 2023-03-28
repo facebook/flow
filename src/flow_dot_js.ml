@@ -163,11 +163,29 @@ let init_builtins filenames =
   in
   master_cx_ref := Some (root, master_cx)
 
-let infer_and_merge ~root filename docblock ast file_sig =
+(* Keep this in sync with configSchema below.
+ *
+ * Precondition: the js_config_object must be validated by try-flow to match the schema shape. *)
+let merge_custom_check_config js_config_object metadata =
+  let react_runtime =
+    match Js.Unsafe.get js_config_object "react_runtime" |> Js.to_string with
+    | "automatic" -> Options.ReactRuntimeAutomatic
+    | "classic" -> Options.ReactRuntimeClassic
+    | s -> failwith ("Unsupported config option: " ^ s)
+  in
+  let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
+  let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
+  { metadata with Context.react_runtime; exact_by_default; enable_enums }
+
+let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   (* create cx *)
   let master_cx = get_master_cx root in
   let ccx = Context.make_ccx master_cx in
-  let metadata = stub_metadata ~root ~checked:true |> Context.docblock_overrides docblock in
+  let metadata =
+    stub_metadata ~root ~checked:true
+    |> merge_custom_check_config js_config_object
+    |> Context.docblock_overrides docblock
+  in
   (* flow.js does not use abstract locations, so this is not used *)
   let aloc_table = lazy (ALoc.empty_table filename) in
   let cx = Context.make ccx metadata filename aloc_table Context.Checking in
@@ -195,7 +213,7 @@ let infer_and_merge ~root filename docblock ast file_sig =
   Merge_js.post_merge_checks cx ast typed_ast metadata;
   (cx, typed_ast)
 
-let check_content ~filename ~content =
+let check_content ~filename ~content ~js_config_object =
   let stdin_file = Some (Path.make_unsafe filename, content) in
   let root = Path.dummy_path in
   let filename = File_key.SourceFile filename in
@@ -206,7 +224,7 @@ let check_content ~filename ~content =
       let (_, docblock) =
         Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
       in
-      let (cx, _) = infer_and_merge ~root filename docblock ast file_sig in
+      let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
       let suppressions = Error_suppressions.empty in
       (* TODO: support suppressions *)
       let errors = Context.errors cx in
@@ -266,10 +284,10 @@ let init_builtins_js js_libs =
 
 let check_js js_file = check (Js.to_string js_file)
 
-let check_content_js js_file js_content =
+let check_content_js js_file js_content js_config_object =
   let filename = Js.to_string js_file in
   let content = Js.to_string js_content in
-  check_content ~filename ~content
+  check_content ~filename ~content ~js_config_object
 
 let mk_loc file line col =
   {
@@ -278,7 +296,7 @@ let mk_loc file line col =
     _end = { Loc.line; column = col + 1 };
   }
 
-let infer_type filename content line col : Loc.t * (string, string) result =
+let infer_type filename content line col js_config_object : Loc.t * (string, string) result =
   let filename = File_key.SourceFile filename in
   let root = Path.dummy_path in
   match parse_content filename content with
@@ -288,7 +306,7 @@ let infer_type filename content line col : Loc.t * (string, string) result =
     let (_, docblock) =
       Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
     in
-    let (cx, typed_ast) = infer_and_merge ~root filename docblock ast file_sig in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
     let file = Context.file cx in
     let loc = mk_loc filename line col in
     let open Query_types in
@@ -330,7 +348,7 @@ let types_to_json types ~strip_root =
     )
   )
 
-let dump_types js_file js_content =
+let dump_types js_file js_content js_config_object =
   let filename = File_key.SourceFile (Js.to_string js_file) in
   let root = Path.dummy_path in
   let content = Js.to_string js_content in
@@ -341,7 +359,7 @@ let dump_types js_file js_content =
     let (_, docblock) =
       Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
     in
-    let (cx, typed_ast) = infer_and_merge ~root filename docblock ast file_sig in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
     let printer = Ty_printer.string_of_elt_single_line ~exact_by_default:true in
     let types =
       Query_types.dump_types
@@ -355,12 +373,12 @@ let dump_types js_file js_content =
     let types_json = types_to_json types ~strip_root in
     js_of_json types_json
 
-let type_at_pos js_file js_content js_line js_col =
+let type_at_pos js_file js_content js_line js_col js_config_object =
   let filename = Js.to_string js_file in
   let content = Js.to_string js_content in
   let line = Js.parseInt js_line in
   let col = Js.parseInt js_col in
-  match infer_type filename content line col with
+  match infer_type filename content line col js_config_object with
   | (_, Ok resp) -> Js.string resp
   | (_, _) -> failwith "Error"
 
@@ -371,6 +389,33 @@ let exports =
     let exports = Js.Unsafe.obj [||] in
     Js.Unsafe.set Js.Unsafe.global "flow" exports;
     exports
+
+let () =
+  Js.Unsafe.set
+    exports
+    "configSchema"
+    (Js.string
+       {|
+[
+  {
+    "key": "react_runtime",
+    "type": "enum",
+    "choices": ["classic", "automatic"],
+    "default": "classic"
+  },
+  {
+    "key": "exact_by_default",
+    "type": "bool",
+    "default": true
+  },
+  {
+    "key": "enums",
+    "type": "bool",
+    "default": true
+  }
+]
+|}
+    )
 
 let () =
   Js.Unsafe.set

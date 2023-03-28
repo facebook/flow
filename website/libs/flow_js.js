@@ -29,18 +29,41 @@ declare type FlowJsError = {
   extra: $ReadOnlyArray<FlowJsErrorMessageInformation>,
 };
 
-declare type FlowJsOptions = {
+declare type FlowJsParseOptions = {
   esproposal_class_instance_fields: boolean,
   esproposal_class_static_fields: boolean,
   esproposal_decorators: boolean,
   esproposal_export_star_as: boolean,
   esproposal_optional_chaining: boolean,
   esproposal_nullish_coalescing: boolean,
+  enums?: boolean,
   types?: boolean,
 };
 
+declare type FlowJsConfigSchema = Array<
+  | {
+      key: string,
+      type: 'enum',
+      choices: Array<string>,
+      default: string,
+    }
+  | {key: string, type: 'bool', default: boolean},
+>;
+
 declare type FlowJs = {
-  checkContent(filename: string, body: string): $ReadOnlyArray<FlowJsError>,
-  typeAtPos(filename: string, body: string, line: number, col: number): string,
-  parse(body: string, options: FlowJsOptions): interface {},
+  flowVersion: string,
+  configSchema?: string,
+  checkContent(
+    filename: string,
+    body: string,
+    options: {[string]: mixed},
+  ): $ReadOnlyArray<FlowJsError>,
+  typeAtPos(
+    filename: string,
+    body: string,
+    line: number,
+    col: number,
+    options: {[string]: mixed},
+  ): string,
+  parse(body: string, options: FlowJsParseOptions): interface {},
 };
