@@ -1,3 +1,12 @@
+### 0.202.1
+
+Misc:
+* Fix a crash when using `experimental.channel_mode=socket` on Windows
+
+Parser:
+* Add "ObjectTypeMappedTypeProperty" node for mapped types
+* Change "ConditionalType" and "InferType" nodes to "ConditionalTypeAnnotation" and "InferTypeAnnotation"
+
 ### 0.202.0
 
 Likely to cause new Flow errors:
