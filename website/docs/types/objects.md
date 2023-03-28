@@ -175,76 +175,50 @@ The empty object can be interpreted as a [dictionary](#toc-objects-as-maps), if 
 const dict: {[string]: number} = {}; // Works!
 ```
 
-## Exact object types {#toc-exact-object-types}
+## Exact and inexact object types {#toc-exact-object-types}
 
-In Flow, it is considered safe to pass an object with extra properties where
-a normal object type is expected.
+Eact object types are the default (as of version 0.202), unless you have set [`exact_by_default=false`](../../config/options#toc-exact-by-default-boolean) in your `.flowconfig`.
+
+Inexact objects (denoted with the `...`) allow extra properties to be passed in:
 
 ```js flow-check
-// @flow
-function method(obj: { foo: string }) {
+function method(obj: {foo: string, ...}) {
   // ...
 }
 
-method({
-  foo: "test", // Works!
-  bar: 42      // Works!
-});
+method({foo: "test", bar: 42}); // Works!
 ```
 
 > **Note:** This is because of ["width subtyping"](../../lang/width-subtyping).
 
-Sometimes it is useful to disable this behavior and only allow a specific set
-of properties. For this, Flow supports "exact" object types.
-
-```js
-{| foo: string, bar: number |}
-```
-
-You can denote exact object types by adding a pair of "vertical bars" or "pipes" to the inside of the curly braces.
-If you want to make them the default when writing object types, you can add [`exact_by_default=true`](../../config/options/#toc-exact-by-default-boolean)
-to your `.flowconfig` options.
-
-Unlike regular object types, it is not valid to pass an object with "extra"
-properties to an exact object type.
+But exact object types do not:
 
 ```js flow-check
-// @flow
-var foo: {| foo: string |} = { foo: "Hello", bar: "World!" }; // Error!
+function method(obj: {foo: string}) {
+  // ...
+}
+
+method({foo: "test", bar: 42}); // Error!
+```
+
+If you have set `exact_by_default=false`, you can denote exact object types by adding a pair of "vertical bars" or "pipes" to the inside of the curly braces:
+
+```js flow-check
+const x: {|foo: string|} = {foo: "Hello", bar: "World!"}; // Error!
 ```
 
 Intersections of exact object types may not work as you expect. If you need to combine exact object types, use object type spread:
 
 ```js flow-check
-// @flow
-
-type FooT = {| foo: string |};
-type BarT = {| bar: number |};
+type FooT = {foo: string};
+type BarT = {bar: number};
 
 type FooBarFailT = FooT & BarT;
-type FooBarT = {| ...FooT, ...BarT |};
+type FooBarT = {...FooT, ...BarT};
 
-const fooBarFail: FooBarFailT = { foo: '123', bar: 12 }; // Error!
-const fooBar: FooBarT = { foo: '123', bar: 12 }; // Works!
+const fooBarFail: FooBarFailT = {foo: '123', bar: 12}; // Error!
+const fooBar: FooBarT = {foo: '123', bar: 12}; // Works!
 ```
-
-## Explicit inexact object types {#toc-explicit-inexact-object-types}
-
-In addition to the default `{}` syntax, you can explicitly indicate an inexact
-object by using an ellipsis at the end of your property list:
-
-```js flow-check
-// @flow
-
-type Inexact = {foo: number, ...};
-```
-
-[Flow is planning to make object types exact by default](https://medium.com/flow-type/on-the-roadmap-exact-objects-by-default-16b72933c5cf).
-This is available via an [option in your flowconfig](../../config/options/#toc-exact-by-default-boolean).
-You can also read our [upgrade guide](https://medium.com/flow-type/how-to-upgrade-to-exact-by-default-object-type-syntax-7aa44b4d08ab)
-for steps to enable this option in your own project.
-
-In a project using exact-by-default syntax, the explicit inexact object type syntax is the only way to express an inexact object type.
 
 ## Objects as maps {#toc-objects-as-maps}
 
@@ -310,10 +284,10 @@ function add(id: number, name: string) {
 > be deprecated and removed in a future version of Flow.
 
 Sometimes it is useful to write types that accept arbitrary objects, for
-those you should write `{}` like this:
+those you should write `{...}` like this:
 
 ```js
-function method(obj: {}) {
+function method(obj: {...}) {
   // ...
 }
 ```

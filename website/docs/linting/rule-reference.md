@@ -11,7 +11,17 @@ flag. It's not allowed in comments at all because it would have different
 semantics than would be expected.
 
 ### `ambiguous-object-type` {#toc-ambiguous-object-type}
-Like [`implicit-inexact-object`](#toc-implicit-inexact-object), except triggers even when the `exact_by_default` option is set to `true`.
+Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
+
+This lint setting is ignored when [`exact_by_default`](../../config/options/#toc-exact-by-default-boolean) is set to `false`.
+
+```js flow-check
+// flowlint ambiguous-object-type:error
+
+type A = {x: number}; // Error
+type B = {x: number, ...} // Ok
+type C = {| x: number |} // Ok
+```
 
 ### `deprecated-type` {#toc-deprecated-type}
 Triggered on the `bool` type, which is just an alias for `boolean`. Just use `boolean` instead.
@@ -23,17 +33,7 @@ type A = Array<bool>; // Error
 ```
 
 ### `implicit-inexact-object` {#toc-implicit-inexact-object}
-Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
-
-This lint setting is ignored when [`exact_by_default`](../../config/options/#toc-exact-by-default-boolean) is set to `true`.
-
-```js flow-check
-// flowlint implicit-inexact-object:error
-
-type A = {x: number}; // Error
-type B = {x: number, ...} // Ok
-type C = {| x: number |} // Ok
-```
+Like [`ambiguous-object-type`](#toc-ambiguous-object-type), except triggers even when the `exact_by_default` option is set to `false`.
 
 ### `nonstrict-import` {#toc-nonstrict-import}
 Used in conjuction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.

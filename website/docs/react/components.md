@@ -194,16 +194,16 @@ don't have to add any type annotations to use default props.
 If you would like to add a type annotation to `defaultProps` you can define the
 type as
 ```js flow-check
-type DefaultProps = {|
+type DefaultProps = {
   foo: number,
-|}
+};
 ```
 and spread that into the `Props` type:
 ```js
 type Props = {
   ...DefaultProps,
   bar: string,
-}
+};
 ```
 This way you avoid duplicating the properties that happen to have a default value.
 

@@ -125,7 +125,7 @@ the type position must be a subtype of the type in the super type position.
 
 ```js flow-check
 opaque type Bad: string = number; // Error: number is not a subtype of string
-opaque type Good: {x: string} = {x: string, y: number};
+opaque type Good: {x: string, ...} = {x: string, y: number};
 ```
 
 ### Generics {#toc-generics}
@@ -134,7 +134,7 @@ Opaque type aliases can also have their own [generics](../generics/),
 and they work exactly as generics do in regular [type aliases](../aliases#toc-type-alias-generics)
 
 ```js flow-check
-opaque type MyObject<A, B, C>: { foo: A, bar: B } = {
+opaque type MyObject<A, B, C>: {foo: A, bar: B, ...} = {
   foo: A,
   bar: B,
   baz: C,

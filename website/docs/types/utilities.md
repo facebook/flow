@@ -135,12 +135,12 @@ type MappedObj = $ReadOnly<$ObjMap<Obj, TypeFn>> // Still read-only
 
 ## `$Exact<T>` {#toc-exact}
 
-`$Exact<{name: string}>` is a synonym for `{| name: string |}` as in the [Object documentation](../objects/#toc-exact-object-types).
+`$Exact<{name: string, ...}>` is a synonym for `{name: string}` as in the [Object documentation](../objects/#toc-exact-object-types).
 
 ```js flow-check
 // @flow
-type ExactUser = $Exact<{name: string}>;
-type ExactUserShorthand = {| name: string |};
+type ExactUser = $Exact<{name: string, ...}>;
+type ExactUserShorthand = {name: string};
 
 const user2 = {name: 'John Wilkes Booth'};
 // These will both be satisfied because they are equivalent
@@ -154,7 +154,7 @@ As the name hints, `$Diff<A, B>` is the type representing the set difference of 
 
 ```js flow-check
 // @flow
-type Props = { name: string, age: number };
+type Props = {name: string, age: number, ...};
 type DefaultProps = { age: number };
 type RequiredProps = $Diff<Props, DefaultProps>;
 
@@ -202,11 +202,14 @@ type Props = { name: string, age: number };
 
 const props: Props = {name: 'Jon', age: 42};
 const {age, ...otherProps} = props;
-(otherProps: $Rest<Props, {|age: number|}>);
+(otherProps: $Rest<Props, {age: number}>);
 otherProps.age;  // Error
 ```
 
-The main difference with [`$Diff<A, B>`](#toc-diff), is that `$Rest<A, B>` aims to represent the true runtime rest operation, which implies that exact object types are treated differently in `$Rest<A, B>`. For example, `$Rest<{|n: number|}, {}>` will result in `{|n?: number|}` because an in-exact empty object may have an `n` property, while `$Diff<{|n: number|}, {}>` will result in `{|n: number|}`.
+The main difference with [`$Diff<A, B>`](#toc-diff), is that `$Rest<A, B>` aims to represent the true runtime rest operation,
+which implies that exact object types are treated differently in `$Rest<A, B>`.
+For example, `$Rest<{n: number}, {...}>` will result in `{n?: number}` because an in-exact empty object may have an `n` property,
+while `$Diff<{n: number}, {...}>` will result in `{n: number}`.
 
 ## `$PropertyType<T, k>` {#toc-propertytype}
 
@@ -530,7 +533,7 @@ Let's see a couple of examples:
 // @flow
 
 // Takes an object type, returns the type of its `prop` key
-type ExtractPropType = <T>({prop: T}) => T;
+type ExtractPropType = <T>({prop: T, ...}) => T;
 type Obj = {prop: number};
 type PropType = $Call<ExtractPropType, Obj>;  // Call `ExtractPropType` with `Obj` as an argument
 type Nope = $Call<ExtractPropType, {nope: number}>;  // Error: argument doesn't match `Obj`.
@@ -561,14 +564,14 @@ Let's look at a couple of more advanced examples:
 // @flow
 
 // Extracting deeply nested types:
-type NestedObj = {|
+type NestedObj = {
   +status: ?number,
-  +data: ?$ReadOnlyArray<{|
-    +foo: ?{|
+  +data: ?$ReadOnlyArray<{
+    +foo: ?{
        +bar: number,
-    |},
-  |}>,
-|};
+    },
+  }>,
+};
 
 // If you wanted to extract the type for `bar`, you could use $Call:
 type BarType = $Call<
@@ -578,6 +581,7 @@ type BarType = $Call<
         +bar: ?T
       },
     }>,
+    ...
   }) => T,
   NestedObj,
 >;

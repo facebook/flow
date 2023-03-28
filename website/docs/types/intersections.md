@@ -10,9 +10,9 @@ which is the combination of other object types. For this, Flow supports
 
 ```js flow-check
 // @flow
-type A = { a: number };
-type B = { b: boolean };
-type C = { c: string };
+type A = {a: number, ...};
+type B = {b: boolean, ...};
+type C = {c: string, ...};
 
 function method(value: A & B & C) {
   // ...
@@ -63,9 +63,9 @@ types***.
 
 ```js flow-check
 // @flow
-type A = { a: number };
-type B = { b: boolean };
-type C = { c: string };
+type A = {a: number, ...};
+type B = {b: boolean, ...};
+type C = {c: string, ...};
 
 function method(value: A & B & C) {
   var a: A = value;
@@ -141,16 +141,16 @@ a better suited candidate for library definitions, where implementations are omi
 
 ## Intersections of object types {#toc-intersections-of-object-types}
 
-When you create an intersection of object types, you merge all of their
+When you create an intersection of inexact object types, you merge all of their
 properties together.
 
-For example, when you create an intersection of two objects with different sets
+For example, when you create an intersection of two inexact objects with different sets
 of properties, it will result in an object with all of the properties.
 
 ```js flow-check
 // @flow
-type One = { foo: number };
-type Two = { bar: boolean };
+type One = {foo: number, ...};
+type Two = {bar: boolean, ...};
 
 type Both = One & Two;
 
@@ -164,13 +164,13 @@ When you have properties that overlap by having the same name, Flow follows the 
 strategy as with overloaded functions: it will return the type of the first property
 that matches this name.
 
-For example, if you merge two objects with a property named `prop`, first with a
+For example, if you merge two inexact objects with a property named `prop`, first with a
 type of number and second with a type of boolean, accessing `prop` will return
 `number`.
 
 ```js flow-check
-type One = { prop: number };
-type Two = { prop: boolean };
+type One = {prop: number, ...};
+type Two = {prop: boolean, ...};
 
 declare var both: One & Two;
 

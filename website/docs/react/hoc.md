@@ -24,7 +24,7 @@ Let's start with the simplest HOC:
 ```js flow-check
 import * as React from 'react';
 
-function trivialHOC<Config: {}>(
+function trivialHOC<Config: {...}>(
   Component: React.AbstractComponent<Config>
 ): React.AbstractComponent<Config> {
   return Component;
@@ -50,10 +50,10 @@ types using object type spread.
 ```js flow-check
 import * as React from 'react';
 
-type InjectedProps = {| foo: number |}
+type InjectedProps = {foo: number}
 
 function injectProp<Config>(
-  Component: React.AbstractComponent<{| ...Config, ...InjectedProps |}>
+  Component: React.AbstractComponent<{...Config, ...InjectedProps}>
 ): React.AbstractComponent<Config> {
   return function WrapperComponent(
     props: Config,
@@ -62,11 +62,11 @@ function injectProp<Config>(
   };
 }
 
-class MyComponent extends React.Component<{|
+class MyComponent extends React.Component<{
   a: number,
   b: number,
   ...InjectedProps,
-|}> {}
+}> {}
 
 const MyEnhancedComponent = injectProp(MyComponent);
 
@@ -83,10 +83,10 @@ type `void`.
 ```js flow-check
 import * as React from 'react';
 
-type InjectedProps = {| foo: number |}
+type InjectedProps = {foo: number}
 
 function injectProp<Config>(
-  Component: React.AbstractComponent<{| ...Config, ...InjectedProps |}>
+  Component: React.AbstractComponent<{...Config, ...InjectedProps}>
 ): React.AbstractComponent<Config> {
   return function WrapperComponent(
     props: Config,
@@ -95,11 +95,11 @@ function injectProp<Config>(
   };
 }
 
-class MyComponent extends React.Component<{|
+class MyComponent extends React.Component<{
   a: number,
   b: number,
   ...InjectedProps,
-|}> {}
+}> {}
 
 const MyEnhancedComponent = injectProp(MyComponent);
 
@@ -118,21 +118,21 @@ of the component, we can use [`React.forwardRef`](https://reactjs.org/docs/forwa
 ```js flow-check
 import * as React from 'react';
 
-type InjectedProps = {| foo: number |}
+type InjectedProps = {foo: number}
 
 function injectAndPreserveInstance<Config, Instance>(
-  Component: React.AbstractComponent<{| ...Config, ...InjectedProps |}, Instance>
+  Component: React.AbstractComponent<{...Config, ...InjectedProps}, Instance>
 ): React.AbstractComponent<Config, Instance> {
   return React.forwardRef<Config, Instance>((props, ref) =>
       <Component ref={ref} foo={3} {...props} />
   );
 }
 
-class MyComponent extends React.Component<{|
+class MyComponent extends React.Component<{
   a: number,
   b: number,
   ...InjectedProps,
-|}> {}
+}> {}
 
 const MyEnhancedComponent = injectAndPreserveInstance(MyComponent);
 
@@ -148,13 +148,13 @@ If you try to export a wrapped component, chances are that you'll run into a mis
 ```js flow-check
 import * as React from 'react';
 
-function trivialHOC<Config: {}>(
+function trivialHOC<Config: {...}>(
   Component: React.AbstractComponent<Config>,
 ): React.AbstractComponent<Config> {
   return Component;
 }
 
-type DefaultProps = {| foo: number |};
+type DefaultProps = {foo: number};
 type Props = {...DefaultProps, bar: number};
 
 class MyComponent extends React.Component<Props> {
@@ -181,13 +181,13 @@ comes in handy! We can use the type for Props and DefaultProps to calculate the
 //@flow
 import * as React from 'react';
 
-function trivialHOC<Config: {}>(
+function trivialHOC<Config: {...}>(
   Component: React.AbstractComponent<Config>,
 ): React.AbstractComponent<Config> {
   return Component;
 }
 
-type DefaultProps = {| foo: number |};
+type DefaultProps = {foo: number};
 type Props = {...DefaultProps, bar: number};
 
 class MyComponent extends React.Component<Props> {

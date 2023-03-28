@@ -97,7 +97,13 @@ The default value for `emoji` is `false`.
 
 #### `exact_by_default` _`(boolean)`_ {#toc-exact-by-default-boolean}
 
-Set this to `true` to indicate that Flow should interpret object types as exact by default.
+When set to `true` (the default as of version 0.202), Flow interprets object types as exact by default:
+
+```js flow-check
+type O1 = {foo: number} // exact
+type O2 = {| foo: number |} // exact
+type O3 = {foo: number, ...} // inexact
+```
 
 When this flag is `false`, Flow has the following behavior:
 
@@ -107,17 +113,10 @@ type O2 = {| foo: number |} // exact
 type O3 = {foo: number, ...} // inexact
 ```
 
-When this flag is `true`, Flow has the following behavior:
+- From inception to Flow version 0.199, the default value of the flag was `false`.
+- In versions 0.200 and 0.201, the flag was required to be explicitly set to either `true` or `false`.
+- From version 0.202, the default value is `true`.
 
-```js flow-check
-type O1 = {foo: number} // exact
-type O2 = {| foo: number |} // exact
-type O3 = {foo: number, ...} // inexact
-```
-
-From inception to Flow version 0.199, the default value of the flag was `false`.
-In versions 0.200 and 0.201, the flag is required to be explicitly set to either `true` or `false`.
-From version 0.202, the default value will be `true`.
 You can read more about this change in our blog post about making [exact by object types by default, by default](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69).
 
 #### `experimental.const_params` _`(boolean)`_ {#toc-experimental-const-params-boolean}

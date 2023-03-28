@@ -173,12 +173,12 @@ You can use any kind of literal type, including numbers and booleans.
 ### Disjoint unions with exact types {#toc-disjoint-unions-with-exact-types}
 
 Disjoint unions require you to use a single property to distinguish each object
-type. You cannot distinguish two different objects by different properties.
+type. You cannot distinguish two different inexact objects by different properties.
 
 ```js flow-check
 // @flow
-type Success = { success: true, value: boolean };
-type Failed  = { error: true, message: string };
+type Success = {success: true, value: boolean, ...};
+type Failed  = {error: true, message: string, ...};
 
 function handleResponse(response:  Success | Failed) {
   if (response.success) {
@@ -189,12 +189,12 @@ function handleResponse(response:  Success | Failed) {
 ```
 
 This is because in Flow it is okay to pass an object value with more properties
-than the object type expects (because of width subtyping).
+than the inexact object type expects (because of width subtyping).
 
 ```js flow-check
 // @flow
-type Success = { success: true, value: boolean };
-type Failed  = { error: true, message: string };
+type Success = {success: true, value: boolean, ...};
+type Failed  = {error: true, message: string, ...};
 
 function handleResponse(response:  Success | Failed) {
   // ...
@@ -215,8 +215,8 @@ However, to get around this you could use **exact object types**.
 
 ```js flow-check
 // @flow
-type Success = {| success: true, value: boolean |};
-type Failed  = {| error: true, message: string |};
+type Success = {success: true, value: boolean};
+type Failed  = {error: true, message: string};
 
 type Response = Success | Failed;
 

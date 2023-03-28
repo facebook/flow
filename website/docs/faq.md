@@ -179,19 +179,19 @@ fn(arr);
 
 [Example](https://flow.org/try/#0PTAEAEDMBsHsHcBQiSgOoEsAuALWBXLUAJwFMBDAE1gDtoBPALmQGNaBnIyGgRlAF5QACnLFijUAEEx5egB5OxDDQDmoAD4ACmvgC2AI1LEAfAEoBx0AG9EASFSjiAOgAO+djiE8ATAGZzqAByAPIAKgCiAIRSMvKKyiqWLuTs7KSUoMqg5DQZ5JBYRqC4GOyZRPAE0HnQ7LCZNCzQ+JSkoDoGRmUYkNnQcPDpdmRY+MQ02WIA3IgAvqwcRI48EtLEsgpYSqqWggDaAOTk+iwHALozKGDcPCJiplOgqHIAtG+g+I2wurqkNFywYigIzEQHsSKRZCoN4w2Fw+EIxFIqFgABKFGodHoLwAbl0MLRmIg2DROKBuN4BMJHBIACToqjBLFrDbxVQabR6Qwmcz8Sw2UCCp5gRyudyeXzeHgBMAhCLRADKyhYbXoBEmbXcCVA9IxTIYLPkTmNljV+FALByNFgRDcHmyNHoJXZWHq2GGpFG40mxDmC1JSzE3lWsU220SVMOx1OF2QFLuxG8DyAA).
 
-## Why can't I pass `{ a: string }` to a function that takes `{ a: string | number }`
+## Why can't I pass `{a: string}` to a function that takes `{a: string | number}`
 
 The function argument allows `string` values in its field, but in this case Flow prevents the original object from having a `number` written to it. Within the body of the function you would be able to mutate the object so that the property `a` would receive a `number`, causing the type of the original object to no longer be accurate. You can fix this error by making the property covariant (read-only): `{ +a: string | number }`. This prevents the function body from writing to the property, making it safe to pass more restricted types to the function.
 
 As an example, this would not work:
 
 ```js flow-check
-const fn = (obj: {| a: string | number |}) => {
+const fn = (obj: {a: string | number}) => {
   // obj.a = 123;
   return obj;
 };
 
-const object: {| a: string |} = {a: 'str' };
+const object: {a: string} = {a: 'str' };
 
 fn(object); // Error!
 ```
@@ -199,12 +199,12 @@ fn(object); // Error!
 but with a covariant property you can achieve what you were looking for:
 
 ```js flow-check
-const fn = (obj: {| +a: string | number |}) => {
-  // obj.a = 123 NOTE! Since you are using covariant {| +a: string | number |}, you can't mutate it
+const fn = (obj: {+a: string | number}) => {
+  // obj.a = 123 NOTE! Since you are using covariant {+a: string | number}, you can't mutate it
   return obj;
 };
 
-const object: {| a: string |} = { a: 'str' };
+const object: {a: string} = { a: 'str' };
 
 fn(object);
 ```

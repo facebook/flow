@@ -244,7 +244,7 @@ Instead, you could add a type to your generic like you would with a function
 parameter.
 
 ```js flow-check
-function logFoo<T: { foo: string }>(obj: T): T {
+function logFoo<T: {foo: string, ...}>(obj: T): T {
   console.log(obj.foo); // Works!
   return obj;
 }

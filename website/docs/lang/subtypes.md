@@ -84,14 +84,13 @@ the keys of another object, then it may be a subtype.
 
 For example, if we had an `ObjectA` which contained the key `foo`, and an
 `ObjectB` which contained the keys `foo` and `bar`. Then it's possible that
-`ObjectB` is a subtype of `ObjectA`.
+`ObjectB` is a subtype of `ObjectA`, if `ObjectA` is inexact.
 
 ```js flow-check
-// @flow
-type ObjectA = { foo: string };
-type ObjectB = { foo: string, bar: number };
+type ObjectA = {foo: string, ...};
+type ObjectB = {foo: string, bar: number};
 
-let objectB: ObjectB = { foo: 'test', bar: 42 };
+let objectB: ObjectB = {foo: 'test', bar: 42};
 let objectA: ObjectA = objectB; // Works!
 ```
 
@@ -100,12 +99,10 @@ But we also need to compare the types of the values. If both objects had a key
 be the subtype of the other.
 
 ```js flow-check
-// @flow
-type ObjectA = { foo: string };
-type ObjectB = { foo: number, bar: number };
+type ObjectA = {foo: string, ...};
+type ObjectB = {foo: number, bar: number};
 
 let objectB: ObjectB = { foo: 1, bar: 2 };
-// $ExpectError
 let objectA: ObjectA = objectB; // Error!
 ```
 
