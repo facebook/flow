@@ -1746,26 +1746,29 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         BooleanLiteral { t with BooleanLiteral.comments = merge_comments comments }
     )
 
+  let predicate_checks_contents env ~leading =
+    let open Ast.Type.Predicate in
+    if Peek.token env = T_LPAREN then (
+      let leading = leading @ Peek.comments env in
+      Expect.token env T_LPAREN;
+      Eat.push_lex_mode env Lex_mode.NORMAL;
+      let exp = Parse.conditional env in
+      Eat.pop_lex_mode env;
+      Expect.token env T_RPAREN;
+      let trailing = Eat.trailing_comments env in
+      { kind = Declared exp; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    ) else
+      let trailing = Eat.trailing_comments env in
+      {
+        kind = Ast.Type.Predicate.Inferred;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+      }
+
   let predicate =
     with_loc (fun env ->
-        let open Ast.Type.Predicate in
         let leading = Peek.comments env in
         Expect.token env T_CHECKS;
-        if Peek.token env = T_LPAREN then (
-          let leading = leading @ Peek.comments env in
-          Expect.token env T_LPAREN;
-          Eat.push_lex_mode env Lex_mode.NORMAL;
-          let exp = Parse.conditional env in
-          Eat.pop_lex_mode env;
-          Expect.token env T_RPAREN;
-          let trailing = Eat.trailing_comments env in
-          { kind = Declared exp; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        ) else
-          let trailing = Eat.trailing_comments env in
-          {
-            kind = Ast.Type.Predicate.Inferred;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          }
+        predicate_checks_contents env ~leading
     )
 
   let predicate_opt env =
@@ -1774,12 +1777,20 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_CHECKS -> Some (predicate env)
     | _ -> None
 
+  let no_annot_predicate env =
+    let env = with_no_anon_function_type false env in
+    with_loc
+      (fun env ->
+        Expect.token env T_COLON;
+        let leading = Peek.comments env in
+        Expect.token env T_CHECKS;
+        predicate_checks_contents env ~leading)
+      env
+
   let annotation_and_predicate_opt env =
     let open Ast.Type in
     match (Peek.token env, Peek.ith_token ~i:1 env) with
-    | (T_COLON, T_CHECKS) ->
-      Expect.token env T_COLON;
-      (Missing (Peek.loc_skip_lookahead env), predicate_opt env)
+    | (T_COLON, T_CHECKS) -> (Missing (Peek.loc_skip_lookahead env), Some (no_annot_predicate env))
     | (T_COLON, _) ->
       let annotation =
         let annotation = annotation_opt env in

@@ -202,7 +202,7 @@ function inferredPredicateWithType(arg       )                  {
   return !!arg;
 }
 
-function inferredPredicateWithoutType(arg       ):         {
+function inferredPredicateWithoutType(arg       )          {
   return !!arg;
 }
 
