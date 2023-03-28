@@ -198,7 +198,11 @@ class MyClass {
 }
 
 // Inferred predicate
-function testit(arg: mixed): boolean %checks {
+function inferredPredicateWithType(arg: mixed): boolean %checks {
+  return !!arg;
+}
+
+function inferredPredicateWithoutType(arg: mixed): %checks {
   return !!arg;
 }
 

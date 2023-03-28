@@ -159,7 +159,11 @@ class MyClass {
 }
 
 // Inferred predicate
-function testit(arg) {
+function inferredPredicateWithType(arg) {
+  return !!arg;
+}
+
+function inferredPredicateWithoutType(arg): {
   return !!arg;
 }
 
