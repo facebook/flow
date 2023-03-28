@@ -10,8 +10,6 @@
 import React, {useState, type MixedElement} from 'react';
 import clsx from 'clsx';
 import styles from './TryFlow.module.css';
-import TryFlowEditor from './TryFlowEditor';
-import initFlow from './init-flow';
 
 function ErrorMessage({msg}: {msg: FlowJsErrorMessage}) {
   if (msg.loc && msg.context != null) {

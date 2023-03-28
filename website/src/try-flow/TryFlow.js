@@ -9,67 +9,149 @@
 
 import React, {useState, useEffect, useRef, type MixedElement} from 'react';
 import clsx from 'clsx';
+import Editor from '@monaco-editor/react';
 import * as LZString from 'lz-string';
 import styles from './TryFlow.module.css';
-import TryFlowEditor, {monaco} from './TryFlowEditor';
+import TryFlowConfigEditor from './TryFlowConfigEditor';
 import TryFlowResults from './TryFlowResults';
-import initFlow from './init-flow';
-import type {AsyncFlow} from './init-flow';
+import {monaco, setTypeAtPosFunction} from './configured-monaco';
+import FlowJsServices from './flow-services';
+import createTokensProvider from './tokens-theme-provider';
+import flowLanguageConfiguration from './flow-configuration.json';
 
-function getASTJSON(flow: AsyncFlow, value: string) {
-  const options = {
-    enums: true,
-    esproposal_class_instance_fields: true,
-    esproposal_class_static_fields: true,
-    esproposal_decorators: true,
-    esproposal_export_star_as: true,
-    esproposal_optional_chaining: true,
-    esproposal_nullish_coalescing: true,
-    types: true,
-  };
-  return flow.parse(value, options).then(ast => JSON.stringify(ast, null, 2));
-}
+const TRY_FLOW_LAST_CONTENT_STORAGE_KEY = 'tryFlowLastContent';
+const DEFAULT_FLOW_PROGRAM = `/* @flow */
 
-function asSeverity(severity: string) {
-  switch (severity) {
-    case 'error':
-      return monaco.MarkerSeverity.Error;
-    case 'warning':
-      return monaco.MarkerSeverity.Warning;
-    default:
-      return monaco.MarkerSeverity.Hint;
+function foo(x: ?number): string {
+  if (x) {
+    return x;
   }
+  return "default string";
+}
+`;
+
+type InitialStateFromStorageAndURI = {
+  code: string,
+  config: ?{[string]: mixed},
+  version: ?string,
+};
+
+function getHashedValue(hash: ?string): ?InitialStateFromStorageAndURI {
+  if (hash == null) return null;
+  if (hash[0] !== '#' || hash.length < 2) return null;
+  const version = hash.slice(1, 2);
+  const encoded = hash.slice(2);
+  if (version === '0' && encoded.match(/^[a-zA-Z0-9+/=_-]+$/)) {
+    return {
+      code: LZString.decompressFromEncodedURIComponent(encoded),
+      config: null,
+      version: null,
+    };
+  }
+  if (version === '1' && encoded.match(/^[a-zA-Z0-9+/=_-]+$/)) {
+    try {
+      const {code, config, version} = JSON.parse(
+        LZString.decompressFromEncodedURIComponent(encoded),
+      );
+      if (
+        typeof code === 'string' &&
+        (config == null || typeof config === 'object') &&
+        (version == null || typeof version === 'string')
+      ) {
+        return {code, config, version};
+      }
+    } catch {}
+  }
+  return null;
 }
 
-type ValidateResult = $ReadOnly<
-  | {
-      kind: 'success',
-      errors: $ReadOnlyArray<FlowJsError>,
-      value: string,
-    }
-  | {
-      kind: 'error',
-      internalError: string,
-    },
->;
-
-function validateFlowCode(
-  flow: Promise<AsyncFlow>,
-  model: any,
-  callback: ValidateResult => void,
+function setHashedValue(
+  flowService: ?FlowJsServices,
+  version: string,
+  code: string,
 ) {
-  Promise.resolve(flow)
-    .then(flowProxy => flowProxy.checkContent('-', model.getValue()))
-    .then(errors => {
+  const compressed = LZString.compressToEncodedURIComponent(
+    JSON.stringify({config: flowService?.config, code, version}),
+  );
+  window.location.hash = `1${compressed}`;
+  localStorage.setItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY, location.hash);
+}
+
+const initialStateFromStorageAndURI: InitialStateFromStorageAndURI =
+  getHashedValue(location.hash) ||
+    getHashedValue(localStorage.getItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY)) || {
+      code: DEFAULT_FLOW_PROGRAM,
+      version: null,
+      config: null,
+    };
+
+export default function TryFlow({
+  defaultFlowVersion,
+  flowVersions,
+}: {
+  defaultFlowVersion: string,
+  flowVersions: $ReadOnlyArray<string>,
+}): MixedElement {
+  const [flowVersion, setFlowVersion] = useState(
+    initialStateFromStorageAndURI.version || defaultFlowVersion,
+  );
+  const [errors, setErrors] = useState([]);
+  const [internalError, setInternalError] = useState('');
+  const [astJSON, setASTJSON] = useState('{}');
+  const [loading, setLoading] = useState(true);
+  const [flowService, setFlowService] = useState((null: ?FlowJsServices));
+  const [activeToolbarTab, setActiveToolbarTab] = useState(
+    ('code': 'code' | 'config'),
+  );
+
+  useEffect(() => {
+    setLoading(true);
+    FlowJsServices.init(flowVersion).then(f => {
+      setFlowService(existing =>
+        existing == null
+          ? // Only the initial init will use the config encoded in the starting URI
+            f.withUpdatedConfig(initialStateFromStorageAndURI.config)
+          : f,
+      );
+      setLoading(false);
+    });
+  }, [flowVersion]);
+
+  useEffect(() => {
+    forceRecheck();
+  }, [flowService]);
+
+  function forceRecheck() {
+    setTypeAtPosFunction(flowService);
+
+    const model = monaco.editor.getModels()[0];
+    if (model == null || flowService == null) return;
+    const value = model.getValue();
+
+    // typecheck on edit
+    try {
+      const errors = flowService.checkContent('-', model.getValue());
       const markers = errors.map(err => {
         const messages = err.message;
         const firstLoc = messages[0].loc;
         const message = messages.map(msg => msg.descr).join('\n');
+        let severity;
+        switch (err.level) {
+          case 'error':
+            severity = monaco.MarkerSeverity.Error;
+            break;
+          case 'warning':
+            severity = monaco.MarkerSeverity.Warning;
+            break;
+          default:
+            severity = monaco.MarkerSeverity.Hint;
+            break;
+        }
         return {
           // the code is also in the message, so don't also include it here.
           // but if we fixed the message, we'd do this:
           // code: Array.isArray(err.error_codes) ? err.error_codes[0] : undefined,
-          severity: asSeverity(err.level),
+          severity,
           message: message,
           source: firstLoc.source,
           startLineNumber: firstLoc.start.line,
@@ -81,89 +163,79 @@ function validateFlowCode(
         };
       });
       monaco.editor.setModelMarkers(model, 'default', markers);
-      callback({kind: 'success', errors, value: model.getValue()});
-    })
-    .catch(e => callback({kind: 'error', internalError: JSON.stringify(e)}));
-}
-
-type Props = {defaultFlowVersion: string, flowVersions: $ReadOnlyArray<string>};
-
-export default function TryFlow({
-  defaultFlowVersion,
-  flowVersions,
-}: Props): MixedElement {
-  const [flowVersion, setFlowVersion] = useState(defaultFlowVersion);
-  const [loading, setLoading] = useState(true);
-  const [supportsParse, setSupportParse] = useState(false);
-  const [errors, setErrors] = useState([]);
-  const [internalError, setInternalError] = useState('');
-  const [astJSON, setASTJSON] = useState('{}');
-
-  const flowRef = useRef(initFlow(flowVersion));
-  const editorRef = useRef(null);
-  flowRef.current.then(() => setLoading(false));
-
-  useEffect(() => {
-    flowRef.current?.then(flow => flow.supportsParse().then(setSupportParse));
-  }, [flowVersion]);
-
-  function changeFlowVersion(event: SyntheticInputEvent<>) {
-    const version = event.target.value;
-    setLoading(true);
-    setFlowVersion(version);
-    flowRef.current = initFlow(version);
-    flowRef.current.then(() => setLoading(false));
-  }
-
-  function onValidate(result: ValidateResult) {
-    if (result.kind === 'error') {
-      setInternalError(result.internalError);
+      setInternalError('');
+      setErrors(errors);
+      if (flowService?.supportsParse) {
+        setASTJSON(flowService.parseAstToJsonString(value));
+      }
+    } catch (e) {
+      console.error(e);
+      setInternalError(JSON.stringify(e));
       setErrors([]);
       setASTJSON('{}');
-    } else {
-      setInternalError('');
-      setErrors(result.errors);
-      flowRef.current.then(flow => {
-        if (supportsParse) {
-          getASTJSON(flow, result.value).then(setASTJSON);
-        }
-      });
     }
-  }
 
-  function onCodeChange() {
-    const model = monaco.editor.getModels()[0];
-    if (model == null) return;
-    const value = model.getValue();
-    const flow = flowRef.current;
-
-    // typecheck on edit
-    validateFlowCode(flow, model, onValidate);
     // update the URL
-    const encoded = LZString.compressToEncodedURIComponent(value);
-    window.location.hash = `0${encoded}`;
-    localStorage.setItem('tryFlowLastContent', location.hash);
+    setHashedValue(flowService, flowVersion, value);
   }
 
   return (
     <div className={styles.tryEditor}>
       <div className={styles.code}>
-        <TryFlowEditor
-          key={flowVersion}
-          editorRef={editorRef}
-          flowRef={flowRef}
-          onCodeChange={onCodeChange}
-        />
+        <div className={styles.editorContainer}>
+          <ul className={styles.toolbar}>
+            <li
+              className={clsx(
+                styles.tab,
+                activeToolbarTab === 'code' && styles.selectedTab,
+              )}
+              onClick={() => setActiveToolbarTab('code')}>
+              Code
+            </li>
+            <li
+              className={clsx(
+                styles.tab,
+                activeToolbarTab === 'config' && styles.selectedTab,
+              )}
+              onClick={() => setActiveToolbarTab('config')}>
+              Config
+            </li>
+          </ul>
+          <div
+            style={{display: activeToolbarTab === 'config' ? 'block' : 'none'}}
+            className={styles.tryEditorConfig}>
+            <TryFlowConfigEditor
+              flowService={flowService}
+              setConfig={config =>
+                setFlowService(flowService?.withUpdatedConfig(config))
+              }
+            />
+          </div>
+          <Editor
+            defaultValue={initialStateFromStorageAndURI.code}
+            defaultLanguage="flow"
+            theme="vs-light"
+            height="calc(100vh - var(--ifm-navbar-height) - 40px)"
+            onChange={forceRecheck}
+            onMount={forceRecheck}
+            options={{
+              minimap: {enabled: false},
+              hover: {enabled: true, above: false},
+              scrollBeyondLastLine: false,
+              overviewRulerBorder: false,
+            }}
+          />
+        </div>
       </div>
       <TryFlowResults
         flowVersion={flowVersion}
         flowVersions={flowVersions}
-        changeFlowVersion={changeFlowVersion}
+        changeFlowVersion={event => setFlowVersion(event.target.value)}
         loading={loading}
         errors={errors}
         internalError={internalError}
         ast={
-          supportsParse
+          flowService?.supportsParse
             ? astJSON
             : 'AST output is not supported in this version of Flow.'
         }
