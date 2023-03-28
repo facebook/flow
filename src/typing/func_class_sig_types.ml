@@ -87,7 +87,6 @@ module Func = struct
       reason: Reason.t;
       kind: kind;
       tparams: Type.typeparams;
-      tparams_map: Type.t Subst_name.Map.t;
       fparams: func_params;
       body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
       return_t: Type.annotated_or_inferred;
@@ -106,7 +105,6 @@ module Func = struct
       reason: Reason.t;
       kind: kind;
       tparams: Type.typeparams;
-      tparams_map: Type.t Subst_name.Map.t;
       fparams: func_params;
       body: (ALoc.t, ALoc.t) Ast.Function.body option;
       return_t: Type.annotated_or_inferred;

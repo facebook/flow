@@ -2161,7 +2161,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           Func_type_sig.Types.reason;
           kind = Func_class_sig_types.Func.Ordinary;
           tparams;
-          tparams_map;
           fparams;
           body = None;
           return_t = Annotated return_t;

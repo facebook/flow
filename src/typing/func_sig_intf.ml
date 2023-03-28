@@ -33,8 +33,6 @@ module type S = sig
       from this module to evaluate the initializer in the appropriate context,
       where `this` and `super` point to the appropriate types. *)
   val field_initializer :
-    Type.t Subst_name.Map.t ->
-    (* type params map *)
     Reason.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (* annot loc *)

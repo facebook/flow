@@ -6385,7 +6385,7 @@ module Make
           end;
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
           ( Infer
-              ( Func_stmt_sig.field_initializer tparams_map reason expr annot_loc annot_or_inferred,
+              ( Func_stmt_sig.field_initializer reason expr annot_loc annot_or_inferred,
                 (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
               ),
             fun () ->
@@ -7283,7 +7283,6 @@ module Make
             Func_stmt_sig_types.reason;
             kind;
             tparams;
-            tparams_map;
             fparams;
             body;
             return_t;

@@ -197,7 +197,6 @@ struct
       T.reason;
       kind = Ctor;
       tparams = None;
-      tparams_map = Subst_name.Map.empty;
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
@@ -205,12 +204,11 @@ struct
       statics = None;
     }
 
-  let field_initializer tparams_map reason expr annot_loc return_annot_or_inferred =
+  let field_initializer reason expr annot_loc return_annot_or_inferred =
     {
       T.reason;
       kind = FieldInit expr;
       tparams = None;
-      tparams_map;
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = return_annot_or_inferred;
