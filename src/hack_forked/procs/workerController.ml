@@ -102,10 +102,6 @@ type worker = {
    * workers. For example, this can be useful to handle exceptions uniformly
    * across workers regardless what workload is called on them. *)
   call_wrapper: call_wrapper option;
-  (* On Unix, Worker sends status messages over this fd to this Controller. On
-   * Windows, it doesn't send anything, so don't try to read from it (it should
-   * be set to None). *)
-  controller_fd: Unix.file_descr option;
   (* Sanity check: is the worker still available ? *)
   mutable killed: bool;
   (* Sanity check: is the worker currently busy ? *)
@@ -147,7 +143,7 @@ let wrap_request w f x =
 
 type 'a entry_state = 'a * Caml.Gc.control * SharedMem.handle * int
 
-type 'a entry = ('a entry_state * Unix.file_descr option, request, void) Daemon.entry
+type 'a entry = ('a entry_state, request, void) Daemon.entry
 
 let entry_counter = ref 0
 
@@ -175,7 +171,7 @@ let register_entry_point ~restore =
 let workers = ref []
 
 (* Build one worker. *)
-let make_one ?call_wrapper controller_fd spawn id =
+let make_one ?call_wrapper spawn id =
   if id >= max_workers then failwith "Too many workers";
 
   let prespawned =
@@ -184,57 +180,28 @@ let make_one ?call_wrapper controller_fd spawn id =
     else
       Some (spawn ())
   in
-  let worker =
-    { call_wrapper; controller_fd; id; busy = false; killed = false; prespawned; spawn }
-  in
+  let worker = { call_wrapper; id; busy = false; killed = false; prespawned; spawn } in
   workers := worker :: !workers;
   worker
 
 (* Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
 let make ~channel_mode ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
-  let setup_controller_fd () =
-    if use_prespawned then
-      let (parent_fd, child_fd) = Unix.pipe () in
-      (* parent_fd is only used in this process. Don't leak it to children.
-       * This will auto-close parent_fd in children created with Daemon.spawn
-       * since Daemon.spawn uses exec. *)
-      let () = Unix.set_close_on_exec parent_fd in
-      (Some parent_fd, Some child_fd)
-    else
-      (* We don't use the side channel on Windows. *)
-      (None, None)
-  in
-  let spawn worker_id name child_fd () =
+  let spawn worker_id name () =
     Unix.clear_close_on_exec heap_handle;
 
-    (* Daemon.spawn runs exec after forking. We explicitly *do* want to "leak"
-     * child_fd to this one spawned process because it will be using that FD to
-     * send messages back up to us. Close_on_exec is probably already false, but
-     * we force it again to be false here just in case. *)
-    Base.Option.iter child_fd ~f:Unix.clear_close_on_exec;
     let state = (saved_state, gc_control, heap_handle, worker_id) in
     let handle =
-      Daemon.spawn
-        ~channel_mode
-        ~name
-        (Daemon.null_fd (), Unix.stdout, Unix.stderr)
-        entry
-        (state, child_fd)
+      Daemon.spawn ~channel_mode ~name (Daemon.null_fd (), Unix.stdout, Unix.stderr) entry state
     in
     Unix.set_close_on_exec heap_handle;
-
-    (* This process no longer needs child_fd after its spawned the child.
-     * Messages are read using controller_fd. *)
-    Base.Option.iter child_fd ~f:Unix.close;
     handle
   in
   let made_workers = ref [] in
   let pretty_pid = Sys_utils.get_pretty_pid () in
   for n = 1 to nbr_procs do
-    let (controller_fd, child_fd) = setup_controller_fd () in
     let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pretty_pid in
-    made_workers := make_one ?call_wrapper controller_fd (spawn n name child_fd) n :: !made_workers
+    made_workers := make_one ?call_wrapper (spawn n name) n :: !made_workers
   done;
   !made_workers
 

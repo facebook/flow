@@ -12,13 +12,6 @@ and serializer = { send: 'a. 'a -> unit }
 type job_status = Job_terminated of Unix.process_status
 
 val win32_worker_main :
-  ('a -> unit) ->
-  'a * Unix.file_descr option ->
-  request Daemon.in_channel * 'c Daemon.out_channel ->
-  'd
+  ('a -> unit) -> 'a -> request Daemon.in_channel * 'c Daemon.out_channel -> 'd
 
-val unix_worker_main :
-  ('a -> unit) ->
-  'a * Unix.file_descr option ->
-  request Daemon.in_channel * 'c Daemon.out_channel ->
-  'd
+val unix_worker_main : ('a -> unit) -> 'a -> request Daemon.in_channel * 'c Daemon.out_channel -> 'd

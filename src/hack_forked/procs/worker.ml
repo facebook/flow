@@ -166,29 +166,9 @@ let worker_main ic oc =
     Printf.printf "Worker %d exception: %s\n%!" pid e_str;
     exit 2
 
-let win32_worker_main restore (state, _controller_fd) (ic, oc) =
+let win32_worker_main restore state (ic, oc) =
   restore state;
   worker_main ic oc
-
-let maybe_send_status_to_controller fd status =
-  match fd with
-  | None -> ()
-  | Some fd ->
-    let to_controller fd msg = ignore (Marshal_tools.to_fd_with_preamble fd msg : int) in
-    (match status with
-    | Unix.WEXITED 0 -> ()
-    | Unix.WEXITED 1 ->
-      (* 1 is an expected exit code. On unix systems, when the controller
-       * process exits, the pipe becomes readable. We fork a new clone, which
-       * reads 0 bytes and exits with code 1. In this case, the controller is
-       * dead so trying to write a message to the controller willcause an
-       * exception *)
-      ()
-    | _ ->
-      Timeout.with_timeout
-        ~timeout:10
-        ~on_timeout:(fun _ -> Hh_logger.log "Timed out sending status to controller")
-        ~do_:(fun _ -> to_controller fd (Job_terminated status)))
 
 (* On Unix each job runs in a forked clone process. The first thing these clones
  * do is deserialize a marshaled closure which is the job.
@@ -217,13 +197,8 @@ let dummy_closure () = ()
  * and `exit 3` respectively. Thus some resolution is lost. So if
  * the underling Clone is for example SIGKILL'd by the OOM killer,
  * then the owning process won't be aware of it.
- *
- * To regain this lost resolution, controller_fd can be optionally set. The
- * real exit statuses (includinng WSIGNALED and WSTOPPED) will be sent over
- * this file descriptor to the Controller when the Clone exits
- * abnormally (non-zero exit code).
  *)
-let unix_worker_main restore (state, controller_fd) (ic, oc) =
+let unix_worker_main restore state (ic, oc) =
   restore state;
 
   (* see dummy_closure above *)
@@ -244,7 +219,6 @@ let unix_worker_main restore (state, controller_fd) (ic, oc) =
       | pid ->
         (* Wait for the clone to terminate... *)
         let status = snd (Sys_utils.waitpid_non_intr [] pid) in
-        let () = maybe_send_status_to_controller controller_fd status in
         (match status with
         | Unix.WEXITED 0 -> ()
         | Unix.WEXITED 1 -> raise End_of_file
