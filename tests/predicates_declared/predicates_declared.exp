@@ -73,12 +73,12 @@ References:
                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ sanity-pred-with-body.js:4:34
+Error ------------------------------------------------------------------------------------ sanity-pred-with-body.js:4:42
 
 Cannot declare predicate when a function body is present. [unsupported-syntax]
 
    4| function pred(x: mixed): boolean %checks(typeof x === "string") { // error: cannot use pred type here
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                               ^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------- sanity-return-type.js:1:47

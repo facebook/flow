@@ -7237,13 +7237,13 @@ module Make
                   bounds
               in
               (return_annotated_or_inferred, Some (Tast_utils.error_mapper#predicate pred))
-          | (Some ((loc, { kind = Declared _; comments = _ }) as pred), _) ->
+          | (Some ((loc, { kind = Declared (expr_loc, _); comments = _ }) as pred), _) ->
             let (annotated_or_inferred, _) =
               Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
             in
             Flow_js.add_output
               cx
-              Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationForImplementation));
+              Error_message.(EUnsupportedSyntax (expr_loc, PredicateDeclarationForImplementation));
             (annotated_or_inferred, Some (Tast_utils.error_mapper#predicate pred))
           | _ ->
             ( return_annotated_or_inferred,
