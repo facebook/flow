@@ -292,9 +292,7 @@ struct
     | [] -> AnyT.error reason
 
   let toplevels cx x =
-    let { T.reason = reason_fn; kind; tparams_map; fparams; body; ret_annot_loc; return_t; _ } =
-      x
-    in
+    let { T.reason = reason_fn; kind; fparams; body; ret_annot_loc; return_t; _ } = x in
     let body_loc =
       let open Ast.Function in
       match body with
@@ -319,17 +317,6 @@ struct
       in
       Env.set_scope_kind cx var_scope_kind
     in
-
-    (* bind type params *)
-    Subst_name.Map.iter
-      (fun name t ->
-        let r = reason_of_t t in
-        let loc = aloc_of_reason r in
-        if Subst_name.string_of_subst_name name <> "this" then
-          ()
-        else
-          Env.bind_this_tparam (DefT (r, bogus_trust (), TypeT (TypeParamKind, t))) loc)
-      tparams_map;
 
     (* add param bindings *)
     let params_ast = F.eval cx fparams in

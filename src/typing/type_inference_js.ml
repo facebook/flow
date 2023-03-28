@@ -526,7 +526,9 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
     Context.add_error_suppressions cx suppressions;
     List.iter (Flow_js.add_output cx) suppression_errors;
 
-    (Env.init_builtins_from_libdef cx, t_stmts)
+    let builtins = Env.init_builtins_from_libdef cx in
+
+    (builtins, t_stmts)
   with
   | Env_api.Env_invariant (loc, inv) ->
     let loc = Base.Option.value ~default:prog_aloc loc in

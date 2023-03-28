@@ -72,8 +72,6 @@ val bind_class_instance_super : Context.t -> Type.t -> ALoc.t -> unit
 
 val bind_class_static_super : Context.t -> Type.t -> ALoc.t -> unit
 
-val bind_this_tparam : Type.t -> ALoc.t -> unit
-
 val init_var : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit
 
 val init_let : Context.t -> use_op:Type.use_op -> Type.t -> ALoc.t -> unit

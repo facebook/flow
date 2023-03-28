@@ -78,8 +78,6 @@ let is_provider cx id_loc =
   let { Loc_env.var_info = { Env_api.providers; _ }; _ } = Context.environment cx in
   Env_api.Provider_api.is_provider providers id_loc
 
-let this_type_params = ref ALocMap.empty
-
 (* We don't want the new-env to throw if we encounter some new case in the wild for which we did
  * not adequately prepare. Instead, we return `any` in prod mode, but still crash in build mode.
  *)
@@ -521,14 +519,6 @@ let get_module_exports cx loc =
   let env = Context.environment cx in
   t_option_value_exn cx loc (Loc_env.find_write env Env_api.DeclareModuleExportsLoc loc)
 
-let get_this_type_param_if_necessary ~otherwise name loc =
-  if name = OrdinaryName "this" then
-    match ALocMap.find_opt loc !this_type_params with
-    | Some t -> t
-    | None -> otherwise ()
-  else
-    otherwise ()
-
 let get_refinement cx key loc =
   let reason = mk_reason (Key.reason_desc key) loc in
   match read_entry ~lookup_mode:ForValue cx loc reason with
@@ -538,19 +528,15 @@ let get_refinement cx key loc =
 let get_var ?(lookup_mode = ForValue) cx name loc =
   ignore lookup_mode;
   let name = OrdinaryName name in
-  get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
-      read_entry_exn ~lookup_mode cx loc (mk_reason (RIdentifier name) loc)
-  )
+  read_entry_exn ~lookup_mode cx loc (mk_reason (RIdentifier name) loc)
 
 let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
-  get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
-      let desc =
-        match desc with
-        | Some desc -> desc
-        | None -> RIdentifier name
-      in
-      read_entry_exn ~lookup_mode cx loc (mk_reason desc loc)
-  )
+  let desc =
+    match desc with
+    | Some desc -> desc
+    | None -> RIdentifier name
+  in
+  read_entry_exn ~lookup_mode cx loc (mk_reason desc loc)
 
 let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
   let t = query_var ~lookup_mode cx name ?desc loc in
@@ -760,8 +746,6 @@ let bind_class_instance_super cx t loc =
 
 let bind_class_static_super cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.ClassStaticSuperLoc loc
-
-let bind_this_tparam t loc = this_type_params := ALocMap.add loc t !this_type_params
 
 let init_var cx ~use_op t loc = init_entry cx ~use_op t loc
 
