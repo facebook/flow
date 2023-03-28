@@ -191,6 +191,8 @@ module Make
     val is_projection : t -> bool
 
     val debug_to_string : (int -> refinement) -> t -> string
+
+    val clear : unit -> unit
   end = struct
     let curr_id = ref 0
 
@@ -276,6 +278,8 @@ module Make
 
     (* Ensure we only produce one unique val for the same Loc *)
     let val_one_cache : (Reason.t, t) Hashtbl.t = Hashtbl.create 0
+
+    let clear () = Hashtbl.reset val_one_cache
 
     let is_global_undefined t =
       match t.write_state with
@@ -5632,6 +5636,7 @@ module Make
 
     let env_walk = new name_resolver cx lib exclude_syms prepass providers loc in
     let completion_state = env_walk#visit_program program in
+    Val.clear ();
     (* Fill in dead code reads *)
     let dead_code_marker =
       new dead_code_marker cx env_walk#jsx_base_name env_walk#values env_walk#write_entries
