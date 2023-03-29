@@ -272,6 +272,18 @@ and dump_t ?(depth = 10) t =
         (dump_t ~depth index)
         optional
     | CharSet s -> spf "CharSet (%s)" s
+    | Conditional { check_type; extends_type; true_type; false_type } ->
+      spf
+        "Conditional (%s, %s, %s, %s)"
+        (dump_t ~depth check_type)
+        (dump_t ~depth extends_type)
+        (dump_t ~depth true_type)
+        (dump_t ~depth false_type)
+    | Infer (s, b) ->
+      spf
+        "Infer (%s, %s)"
+        (dump_symbol s)
+        (Base.Option.value_map ~default:"None" ~f:(dump_t ~depth) b)
 
 and dump_class_decl ~depth (name, ps) =
   spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
@@ -342,6 +354,8 @@ let string_of_ctor_t = function
   | Utility _ -> "Utility"
   | IndexedAccess _ -> "IndexedAccess"
   | CharSet _ -> "CharSet"
+  | Conditional _ -> "Conditional"
+  | Infer _ -> "Infer"
 
 let string_of_ctor_decl = function
   | TypeAliasDecl _ -> "TypeAlias"
@@ -438,6 +452,18 @@ let json_of_elt ~strip_root =
           ("object", json_of_t _object); ("index", json_of_t index); ("optional", JSON_Bool optional);
         ]
       | CharSet s -> [("literal", JSON_String s)]
+      | Conditional { check_type; extends_type; true_type; false_type } ->
+        [
+          ("check", json_of_t check_type);
+          ("extends", json_of_t extends_type);
+          ("true", json_of_t true_type);
+          ("false", json_of_t false_type);
+        ]
+      | Infer (s, b) ->
+        [
+          ("name", json_of_symbol s);
+          ("bound", Base.Option.value_map ~default:JSON_Null ~f:json_of_t b);
+        ]
     )
   and json_of_generic (s, k, targs_opt) =
     json_of_targs targs_opt

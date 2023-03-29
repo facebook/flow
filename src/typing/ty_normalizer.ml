@@ -695,9 +695,26 @@ end = struct
           else
             let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
             type_variable ~env ~cont:type__ root_id
-      | GenericT { bound; reason; name; _ } ->
+      | GenericT { bound; reason; name; id; _ } ->
         let loc = Reason.def_aloc_of_reason reason in
-        let default _ = type__ ~env bound in
+        let default _ =
+          let pred { T.name = tp_name; reason = tp_reason; _ } =
+            let tp_id =
+              Generic.make_bound_id
+                (tp_reason |> Reason.def_aloc_of_reason |> Context.make_aloc_id env.Env.genv.Env.cx)
+                tp_name
+            in
+            name = tp_name && id = tp_id
+          in
+          match List.find_opt pred env.Env.infer_tparams with
+          | Some { T.name; reason; bound; _ } ->
+            let symbol =
+              symbol_from_reason env reason (OrdinaryName (Subst_name.string_of_subst_name name))
+            in
+            let%map bound = param_bound ~env bound in
+            Ty.Infer (symbol, bound)
+          | None -> type__ ~env bound
+        in
         lookup_tparam ~default env bound name loc
       | AnnotT (_, t, _) -> type__ ~env ?id t
       | EvalT (t, d, id') ->
@@ -1630,7 +1647,12 @@ end = struct
       | T.CallType { from_maptype = _; args = ts } ->
         let%map tys = mapM (type__ ~env) ts in
         Ty.Utility (Ty.Call (ty, tys))
-      | T.ConditionalType _ -> failwith "Conditional type printing is not implemented yet."
+      | T.ConditionalType { tparams; extends_t; true_t; false_t } ->
+        let check_type = ty in
+        let%bind extends_type = type__ ~env:{ env with Env.infer_tparams = tparams } extends_t in
+        let%bind true_type = type__ ~env:(List.fold_left Env.add_typeparam env tparams) true_t in
+        let%map false_type = type__ ~env false_t in
+        Ty.Conditional { check_type; extends_type; true_type; false_type }
       | T.TypeMap (T.ObjectMap t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.ObjMap (ty, ty'))

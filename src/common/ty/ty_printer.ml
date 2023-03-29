@@ -136,6 +136,42 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
     | CharSet s ->
       fuse [Atom "$CharSet"; Atom "<"; fuse (in_quotes ~prefer_single_quotes s); Atom ">"]
+    | Conditional { check_type; extends_type; true_type; false_type } ->
+      group
+        [
+          fuse
+            [
+              type_with_parens ~depth check_type;
+              space;
+              Atom "extends";
+              space;
+              type_with_parens ~depth extends_type;
+            ];
+          Indent
+            (fuse
+               [
+                 pretty_line;
+                 Atom "?";
+                 pretty_space;
+                 type_ ~depth true_type;
+                 pretty_line;
+                 Atom ":";
+                 pretty_space;
+                 type_ ~depth false_type;
+               ]
+            );
+        ]
+    | Infer ({ sym_name = name; _ }, b) ->
+      fuse
+        [
+          Atom "infer";
+          space;
+          fuse
+            [
+              identifier name;
+              option ~f:(fun t -> fuse [space; Atom "extends"; space; type_ ~depth t]) b;
+            ];
+        ]
   and type_generic ~depth g =
     let ({ sym_name = name; _ }, _, targs) = g in
     let name = identifier name in
@@ -387,7 +423,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     match t with
     | Fun _
     | Union _
-    | Inter _ ->
+    | Inter _
+    | Conditional _ ->
       wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
   and enum_decl { sym_name = name; _ } = fuse [Atom "enum"; space; identifier name]

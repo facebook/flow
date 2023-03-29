@@ -147,6 +147,7 @@ type t = {
      the actual bounds and return those instead. So the normalized type here would
      be: Empty | Mixed, which simplifies to Mixed. *)
   tparams_rev: Type.typeparam list;
+  infer_tparams: Type.typeparam list;
   (* In determining whether a symbol is Local, Imported, Remote, etc, it is
      useful to keep a map of imported names and the corresponding
      location available. We can then make this decision by comparing the
@@ -183,6 +184,7 @@ let init ~options ~genv ~tparams_rev ~imported_names =
     genv;
     depth = 0;
     tparams_rev;
+    infer_tparams = [];
     imported_names;
     under_type_alias = SymbolSet.empty;
     seen_tvar_ids = ISet.empty;

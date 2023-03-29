@@ -154,6 +154,35 @@ let type_ options =
     | CharSet s ->
       let id = id_from_string "CharSet" in
       return (mk_generic_type id (Some (mk_targs [(Loc.none, T.StringLiteral (str_lit s))])))
+    | Conditional { check_type; extends_type; true_type; false_type } ->
+      let%bind check_type = type_ check_type in
+      let%bind extends_type = type_ extends_type in
+      let%bind true_type = type_ true_type in
+      let%map false_type = type_ false_type in
+      just'
+        (T.Conditional
+           { T.Conditional.check_type; extends_type; true_type; false_type; comments = None }
+        )
+    | Infer (s, b) ->
+      let%bind id = id_from_symbol s in
+      let%map bound =
+        match b with
+        | None -> return (T.Missing Loc.none)
+        | Some b ->
+          let%map bound = type_ b in
+          T.Available (just' bound)
+      in
+      let tparam =
+        just'
+          {
+            T.TypeParam.name = id;
+            bound;
+            bound_kind = T.TypeParam.Extends;
+            variance = None;
+            default = None;
+          }
+      in
+      just' (T.Infer { T.Infer.tparam; comments = None })
     | TypeOf (TSymbol name) ->
       let%map id = id_from_symbol name in
       just' (T.Typeof { T.Typeof.argument = mk_typeof_expr id; comments = None })

@@ -50,7 +50,9 @@ let lsp_completion_of_type =
   | TypeOf _
   | Utility _
   | IndexedAccess _
-  | CharSet _ ->
+  | CharSet _
+  | Conditional _
+  | Infer _ ->
     Lsp.Completion.Variable
 
 let lsp_completion_of_decl =

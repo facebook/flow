@@ -58,6 +58,13 @@ type t =
       index: t;
       optional: bool;
     }
+  | Conditional of {
+      check_type: t;
+      extends_type: t;
+      true_type: t;
+      false_type: t;
+    }
+  | Infer of symbol * t option
 
 (* Recursive variable *)
 and generic_t = symbol * gen_kind * t list option
@@ -518,6 +525,8 @@ class ['A] comparator_ty =
       | Union _ -> 25
       | InlineInterface _ -> 26
       | CharSet _ -> 27
+      | Conditional _ -> 28
+      | Infer _ -> 29
 
     method tag_of_decl _ =
       function
@@ -716,7 +725,8 @@ let mk_exact ty =
   | Arr _
   | Tup _
   | InlineInterface _
-  | CharSet _ ->
+  | CharSet _
+  | Infer _ ->
     ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
@@ -727,7 +737,8 @@ let mk_exact ty =
   | Inter _
   | TypeOf _
   | Utility _
-  | IndexedAccess _ ->
+  | IndexedAccess _
+  | Conditional _ ->
     Utility (Exact ty)
 
 let mk_array ~readonly ~literal t =
