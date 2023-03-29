@@ -81,7 +81,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:17
 
-Cannot assign `a` to `p3` because string [1] is incompatible with undefined [1] in property `x`. [incompatible-type]
+Cannot assign `a` to `p3` because undefined [1] is incompatible with string [1] in property `x`. [incompatible-type]
 
    test.js:25:17
    25| let p3 : PFoo = a; // error

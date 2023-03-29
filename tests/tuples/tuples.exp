@@ -321,17 +321,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:14:4
 
-Cannot cast `single` to `WithOpt` because undefined (out of bounds tuple access at index 1) [1] is incompatible with
-string [2] in index 1. [incompatible-cast]
+Cannot cast `single` to `WithOpt` because string [1] is incompatible with undefined (out of bounds tuple access at index
+1) [2] in index 1. [incompatible-cast]
 
    optional.js:14:4
    14|   (single: WithOpt); // ERROR
-          ^^^^^^ [1]
+          ^^^^^^ [2]
 
 References:
    optional.js:9:32
     9| type WithOpt = [a: number, b?: string];
-                                      ^^^^^^ [2]
+                                      ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:21:4
@@ -1099,19 +1099,19 @@ Cannot get `b[0]` because tuple element at index `0` [1] labeled `foo` is not re
 
 Error ------------------------------------------------------------------------------------------------- variance.js:25:2
 
-Cannot cast `c` to tuple type because string [1] is incompatible with undefined [2] in index 0. [incompatible-cast]
+Cannot cast `c` to tuple type because undefined [1] is incompatible with string [2] in index 0. [incompatible-cast]
 
    variance.js:25:2
    25| (c: [foo: string | void]); // ERROR
         ^
 
 References:
-   variance.js:19:16
-   19| type C = [foo: string];
-                      ^^^^^^ [1]
    variance.js:25:20
    25| (c: [foo: string | void]); // ERROR
-                          ^^^^ [2]
+                          ^^^^ [1]
+   variance.js:19:16
+   19| type C = [foo: string];
+                      ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:26:2
@@ -1323,34 +1323,40 @@ Cannot assign `"s"` to `inter[0]` because tuple element at index `0` [1] is not 
        ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ variance.js:80:12
+Error ------------------------------------------------------------------------------------------------ variance.js:80:11
 
-Cannot cast array literal to tuple type because number literal `1` [1] is incompatible with number [2] in index 0.
+Cannot cast array literal to tuple type because number [1] is incompatible with number literal `1` [2] in index 0.
 [incompatible-cast]
 
-   variance.js:80:12
+   variance.js:80:11
    80| (([1, 2]: [1, 2]): [number, number]); // ERROR
-                  ^ [1]
+                 ^^^^^^
 
 References:
    variance.js:80:21
    80| (([1, 2]: [1, 2]): [number, number]); // ERROR
-                           ^^^^^^ [2]
+                           ^^^^^^ [1]
+   variance.js:80:12
+   80| (([1, 2]: [1, 2]): [number, number]); // ERROR
+                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ variance.js:80:15
+Error ------------------------------------------------------------------------------------------------ variance.js:80:11
 
-Cannot cast array literal to tuple type because number literal `2` [1] is incompatible with number [2] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with number literal `2` [2] in index 1.
 [incompatible-cast]
 
-   variance.js:80:15
+   variance.js:80:11
    80| (([1, 2]: [1, 2]): [number, number]); // ERROR
-                     ^ [1]
+                 ^^^^^^
 
 References:
    variance.js:80:29
    80| (([1, 2]: [1, 2]): [number, number]); // ERROR
-                                   ^^^^^^ [2]
+                                   ^^^^^^ [1]
+   variance.js:80:15
+   80| (([1, 2]: [1, 2]): [number, number]); // ERROR
+                     ^ [2]
 
 
 

@@ -483,9 +483,9 @@ Cannot cast `preserve` to object type because string [1] is incompatible with nu
          ^^^^^^^^
 
 References:
-   optionality.js:1:30
-   1| type O = {foo: number, bar?: string};
-                                   ^^^^^^ [1]
+   optionality.js:5:38
+   5|   type Preserve = {[key in keyof O]: O[key]};
+                                           ^^^^^^ [1]
    optionality.js:9:34
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
                                        ^^^^^^ [2]
@@ -493,7 +493,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
 
-Cannot cast `preserve` to object type because string [1] is incompatible with number [2] in property `bar`.
+Cannot cast `preserve` to object type because number [1] is incompatible with string [2] in property `bar`.
 [incompatible-cast]
 
    optionality.js:9:4
@@ -501,12 +501,12 @@ Cannot cast `preserve` to object type because string [1] is incompatible with nu
          ^^^^^^^^
 
 References:
-   optionality.js:5:38
-   5|   type Preserve = {[key in keyof O]: O[key]};
-                                           ^^^^^^ [1]
    optionality.js:9:34
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
-                                       ^^^^^^ [2]
+                                       ^^^^^^ [1]
+   optionality.js:1:30
+   1| type O = {foo: number, bar?: string};
+                                   ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- optionality.js:9:4

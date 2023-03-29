@@ -59,24 +59,6 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- distributive.js:8:4
 
-Cannot cast `arrUnion` to `ToArray` because number [1] is incompatible with string [2] in array element.
-[incompatible-cast]
-
-   distributive.js:8:4
-   8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
-         ^^^^^^^^
-
-References:
-   distributive.js:5:33
-   5|   declare const arrUnion: Array<number> | Array<string>;
-                                      ^^^^^^ [1]
-   distributive.js:8:22
-   8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
-                           ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- distributive.js:8:4
-
 Cannot cast `arrUnion` to `ToArray` because string [1] is incompatible with number [2] in array element.
 [incompatible-cast]
 
@@ -85,12 +67,30 @@ Cannot cast `arrUnion` to `ToArray` because string [1] is incompatible with numb
          ^^^^^^^^
 
 References:
-   distributive.js:5:49
+   distributive.js:8:22
+   8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
+                           ^^^^^^ [1]
+   distributive.js:5:33
    5|   declare const arrUnion: Array<number> | Array<string>;
-                                                      ^^^^^^ [1]
+                                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- distributive.js:8:4
+
+Cannot cast `arrUnion` to `ToArray` because number [1] is incompatible with string [2] in array element.
+[incompatible-cast]
+
+   distributive.js:8:4
+   8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
+         ^^^^^^^^
+
+References:
    distributive.js:8:31
    8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [1]
+   distributive.js:5:49
+   5|   declare const arrUnion: Array<number> | Array<string>;
+                                                      ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ extraction.js:4:4

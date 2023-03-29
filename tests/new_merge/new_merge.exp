@@ -232,19 +232,19 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:54:38
 
-Cannot assign `x14` to `y14` because `B` [1] is incompatible with `A` [2] in array element. [incompatible-type]
+Cannot assign `x14` to `y14` because `A` [1] is incompatible with `B` [2] in array element. [incompatible-type]
 
    main.js:54:38
    54| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
                                             ^^^
 
 References:
-   unification.js:6:29
-    6| declare export var x: Array<B/* tvar 1 */>;
-                                   ^ [1]
    main.js:54:18
    54| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
-                        ^^^ [2]
+                        ^^^ [1]
+   unification.js:6:29
+    6| declare export var x: Array<B/* tvar 1 */>;
+                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:58:2

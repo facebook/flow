@@ -930,17 +930,17 @@ References:
 
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:49:37
 
-Cannot assign object literal to `e1` because unknown element of empty array [1] is incompatible with string [2] in array
+Cannot assign object literal to `e1` because string [1] is incompatible with unknown element of empty array [2] in array
 element of property `arr`. [incompatible-type]
 
    sentinel_refinements.js:49:37
    49| const e1: A = { __type__: a(), arr: [] }; // // err
-                                           ^^ [1]
+                                           ^^ [2]
 
 References:
    sentinel_refinements.js:5:38
     5| type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
-                                            ^^^^^^ [2]
+                                            ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:50:43
@@ -962,17 +962,17 @@ References:
 
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:51:32
 
-Cannot create `CompAProp` element because unknown element of empty array [1] is incompatible with string [2] in array
+Cannot create `CompAProp` element because string [1] is incompatible with unknown element of empty array [2] in array
 element of property `arr`. [incompatible-type]
 
    sentinel_refinements.js:51:32
    51| <CompAProp __type__={a()} arr={[]} />; // // err
-                                      ^^ [1]
+                                      ^^ [2]
 
 References:
    sentinel_refinements.js:5:38
     5| type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
-                                            ^^^^^^ [2]
+                                            ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:38

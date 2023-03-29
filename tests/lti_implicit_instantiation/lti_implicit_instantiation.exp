@@ -832,7 +832,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:134:4
 
-Cannot cast `d1` to object type because string [1] is incompatible with number [2] in property `foo`.
+Cannot cast `d1` to object type because number [1] is incompatible with string [2] in property `foo`.
 [incompatible-cast]
 
    upper_non_t.js:134:4
@@ -840,12 +840,12 @@ Cannot cast `d1` to object type because string [1] is incompatible with number [
            ^^
 
 References:
-   upper_non_t.js:129:45
-   129|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
-                                                    ^^^^^^ [1]
    upper_non_t.js:134:24
    134|   (d1: {|foo: string | number, bar: number|}); // error
-                               ^^^^^^ [2]
+                               ^^^^^^ [1]
+   upper_non_t.js:129:45
+   129|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+                                                    ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:135:6

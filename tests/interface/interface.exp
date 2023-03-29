@@ -274,19 +274,19 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:29:2
 
-Cannot cast `new D` to `J` because number [1] is incompatible with undefined [2] in property `x`. [incompatible-cast]
+Cannot cast `new D` to `J` because undefined [1] is incompatible with number [2] in property `x`. [incompatible-cast]
 
    interface.js:29:2
    29| (new D : J); // error, x is invariant
         ^^^^^
 
 References:
-   interface.js:26:6
-   26|   x: number;
-            ^^^^^^ [1]
    interface.js:22:7
    22|   x?: number;
-             ^^^^^^ [2]
+             ^^^^^^ [1]
+   interface.js:26:6
+   26|   x: number;
+            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ interface.js:38:2
@@ -374,7 +374,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:51:2
 
-Cannot cast `o4` to interface type because string literal `asdf` [1] is incompatible with string [2] in the indexer
+Cannot cast `o4` to interface type because string [1] is incompatible with string literal `asdf` [2] in the indexer
 property's key. [incompatible-cast]
 
    interface.js:51:2
@@ -382,12 +382,12 @@ property's key. [incompatible-cast]
         ^^
 
 References:
-   interface.js:49:20
-   49| declare var o4 : {["asdf"] : number};
-                          ^^^^^^ [1]
    interface.js:51:19
    51| (o4 : interface {[string] : number}); // error
-                         ^^^^^^ [2]
+                         ^^^^^^ [1]
+   interface.js:49:20
+   49| declare var o4 : {["asdf"] : number};
+                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ interface.js:59:2

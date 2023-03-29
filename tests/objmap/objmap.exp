@@ -861,7 +861,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:11:2
 
-Cannot cast `o3.b` to array type because number [1] is incompatible with undefined [2] in array element.
+Cannot cast `o3.b` to array type because undefined [1] is incompatible with number [2] in array element.
 [incompatible-cast]
 
    optional.js:11:2
@@ -869,12 +869,12 @@ Cannot cast `o3.b` to array type because number [1] is incompatible with undefin
         ^^^^
 
 References:
-   optional.js:3:41
-    3| declare var o3: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;
-                                               ^^^^^^ [1]
    optional.js:11:23
    11| (o3.b: Array<number | void>); // Error: void ~> array
-                             ^^^^ [2]
+                             ^^^^ [1]
+   optional.js:3:41
+    3| declare var o3: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;
+                                               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:15:2
@@ -896,7 +896,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:15:2
 
-Cannot cast `o6.b` to array type because number [1] is incompatible with undefined [2] in array element.
+Cannot cast `o6.b` to array type because undefined [1] is incompatible with number [2] in array element.
 [incompatible-cast]
 
    optional.js:15:2
@@ -904,12 +904,12 @@ Cannot cast `o6.b` to array type because number [1] is incompatible with undefin
         ^^^^
 
 References:
-   optional.js:7:42
-    7| declare var o6: $ObjMapi<{a: number, b?: number}, <T>(any, T) => Array<T>>;
-                                                ^^^^^^ [1]
    optional.js:15:23
    15| (o6.b: Array<number | void>); // Error: void ~> array
-                             ^^^^ [2]
+                             ^^^^ [1]
+   optional.js:7:42
+    7| declare var o6: $ObjMapi<{a: number, b?: number}, <T>(any, T) => Array<T>>;
+                                                ^^^^^^ [2]
 
 
 
