@@ -4462,9 +4462,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           else
             [
               code "Promise";
-              text " in sync scope is unused.";
               text
-                "Promises must be handled by calling .then with a rejection handler, .catch, or .finally.";
+                " in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or .finally.";
             ]
           );
       }

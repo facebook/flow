@@ -16,7 +16,7 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:5
 
-`Promise` in sync scope is unused.Promises must be handled by calling .then with a rejection handler, .catch, or
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
    31|     foo(); // error
@@ -25,7 +25,7 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:5
 
-`Promise` in sync scope is unused.Promises must be handled by calling .then with a rejection handler, .catch, or
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
    32|     foo().then(() => {}); // error
@@ -34,7 +34,7 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:5
 
-`Promise` in sync scope is unused.Promises must be handled by calling .then with a rejection handler, .catch, or
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
    33|     foo().then(() => {}).then(() => {}); // error
