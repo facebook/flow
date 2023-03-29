@@ -688,6 +688,22 @@ let ast_transforms_of_error ?loc = function
       ]
     else
       []
+  | Error_message.EDeprecatedUtilityWithReplacement { kind; loc = error_loc } ->
+    let deprecated_name = Error_message.DeprecatedUtility.deprecated_of_kind kind in
+    let replacement_name = Error_message.DeprecatedUtility.replacement_of_kind kind in
+    let title = Printf.sprintf "Convert to `%s<T>`" replacement_name in
+    let diagnostic_title = Printf.sprintf "convert_%s_type" deprecated_name in
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title;
+          diagnostic_title;
+          transform = Autofix_utility_type.convert_utility_type kind;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
