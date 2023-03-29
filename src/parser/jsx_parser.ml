@@ -189,6 +189,11 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
         let name = identifier env in
         JSX.Identifier name
 
+  let loc_of_name = function
+    | JSX.Identifier (loc, _) -> loc
+    | JSX.NamespacedName (loc, _) -> loc
+    | JSX.MemberExpression (loc, _) -> loc
+
   let attribute env =
     with_loc
       (fun env ->
@@ -419,14 +424,15 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
           | Ok (`Element { JSX.Opening.name = opening_name; _ }) ->
             let opening_name = normalize opening_name in
             if normalize name <> opening_name then
-              error env (Parse_error.ExpectedJSXClosingTag opening_name)
-          | Ok `Fragment -> error env (Parse_error.ExpectedJSXClosingTag "JSX fragment")
+              error_at env (loc_of_name name, Parse_error.ExpectedJSXClosingTag opening_name)
+          | Ok `Fragment ->
+            error_at env (loc_of_name name, Parse_error.ExpectedJSXClosingTag "JSX fragment")
           | Error _ -> ());
           loc
         | `Fragment loc ->
           (match snd opening_element with
           | Ok (`Element { JSX.Opening.name = opening_name; _ }) ->
-            error env (Parse_error.ExpectedJSXClosingTag (normalize opening_name))
+            error_at env (loc, Parse_error.ExpectedJSXClosingTag (normalize opening_name))
           | Ok `Fragment -> ()
           | Error _ -> ());
           loc
