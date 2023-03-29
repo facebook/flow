@@ -9,16 +9,12 @@ literal values, but can also use literal values as types.
 For example, instead of accepting `number` type, we could accept only the
 literal value `2`.
 
-```js
-// @flow
-function acceptsTwo(value: 2) {
-  // ...
-}
+```js flow-check
+function acceptsTwo(value: 2) { /* ... */ }
 
 acceptsTwo(2);   // Works!
-// $ExpectError
+
 acceptsTwo(3);   // Error!
-// $ExpectError
 acceptsTwo("2"); // Error!
 ```
 
@@ -32,7 +28,6 @@ You can use primitive values for these types:
 Using these with [union types](../unions) is powerful:
 
 ```js flow-check
-// @flow
 function getColor(name: "success" | "warning" | "danger") {
   switch (name) {
     case "success" : return "green";
@@ -43,6 +38,8 @@ function getColor(name: "success" | "warning" | "danger") {
 
 getColor("success"); // Works!
 getColor("danger");  // Works!
-// $ExpectError
+
 getColor("error");   // Error!
 ```
+
+Consider using [Flow Enums](../../enums) instead of unions of literal types, if they fit your use-case.
