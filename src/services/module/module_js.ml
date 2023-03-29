@@ -73,31 +73,24 @@ let choose_provider_and_warn_about_duplicates =
  * regexp string. For the node module system, we go a step further and only
  * choose candidates that match the string *and* are a valid, resolvable path.
  *)
-let module_name_candidates_cache = Hashtbl.create 50
-
 let module_name_candidates ~options name =
-  match Hashtbl.find_opt module_name_candidates_cache name with
-  | Some candidates -> candidates
-  | None ->
-    let mappers = Options.module_name_mappers options in
-    let root = Options.root options in
-    let expand_project_root_token = Files.expand_project_root_token ~root in
-    let map_name mapped_names (regexp, template) =
-      let new_name =
-        name
-        (* First we apply the mapper *)
-        |> Str.global_replace regexp template
-        (* Then we replace the PROJECT_ROOT placeholder. *)
-        |> expand_project_root_token
-      in
-      if new_name = name then
-        mapped_names
-      else
-        new_name :: mapped_names
+  let mappers = Options.module_name_mappers options in
+  let root = Options.root options in
+  let expand_project_root_token = Files.expand_project_root_token ~root in
+  let map_name mapped_names (regexp, template) =
+    let new_name =
+      name
+      (* First we apply the mapper *)
+      |> Str.global_replace regexp template
+      (* Then we replace the PROJECT_ROOT placeholder. *)
+      |> expand_project_root_token
     in
-    let candidates = Nel.rev (name, List.fold_left map_name [] mappers) in
-    Hashtbl.add module_name_candidates_cache name candidates;
-    candidates
+    if new_name = name then
+      mapped_names
+    else
+      new_name :: mapped_names
+  in
+  Nel.rev (name, List.fold_left map_name [] mappers)
 
 type package_incompatible_reason =
   | New  (** Didn't exist before, now it exists *)
