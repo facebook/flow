@@ -2291,15 +2291,16 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       in
       Base.List.iter opening_attributes ~f:(function
           | Opening.Attribute (_, { Attribute.name; value }) ->
-            let hints =
+            let (hints, name_loc) =
               match name with
-              | Ast.JSX.Attribute.Identifier (_, { Ast.JSX.Identifier.name = "ref"; comments = _ })
+              | Ast.JSX.Attribute.Identifier (loc, { Ast.JSX.Identifier.name = "ref"; comments = _ })
                 ->
-                ref_hints
-              | Ast.JSX.Attribute.Identifier (_, { Ast.JSX.Identifier.name; comments = _ }) ->
-                decompose_hints (Decomp_ObjProp name) hints
-              | Ast.JSX.Attribute.NamespacedName _ -> []
+                (ref_hints, Some loc)
+              | Ast.JSX.Attribute.Identifier (loc, { Ast.JSX.Identifier.name; comments = _ }) ->
+                (decompose_hints (Decomp_ObjProp name) hints, Some loc)
+              | Ast.JSX.Attribute.NamespacedName _ -> ([], None)
             in
+            Base.Option.iter name_loc ~f:(fun name_loc -> this#record_hint name_loc hints);
             Base.Option.iter value ~f:(fun value ->
                 match value with
                 | Attribute.Literal (loc, _) -> this#record_hint loc hints

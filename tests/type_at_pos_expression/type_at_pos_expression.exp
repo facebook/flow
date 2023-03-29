@@ -80,7 +80,7 @@ jsx.js:7:12 = {
   "end":14
 }
 jsx.js:7:16 = {
-  "types":{"unevaluated":{"type":"A"},"evaluated":{"type":"A"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -128,7 +128,7 @@ jsx.js:7:29 = {
   "end":32
 }
 jsx.js:7:35 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -143,7 +143,7 @@ jsx.js:7:35 = {
   "end":39
 }
 jsx.js:7:55 = {
-  "types":{"unevaluated":{"type":"boolean"},"evaluated":{"type":"boolean"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
   "reasons":[],
   "loc":{
     "source":"jsx.js",

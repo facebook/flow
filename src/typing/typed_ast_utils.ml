@@ -290,6 +290,17 @@ module Type_at_pos = struct
           self#annot_with_tparams (self#find_loc loc t)
         else
           super#implicit impl
+
+      method! jsx_attribute_name_identifier (((loc, _), _) as id) =
+        if self#covers_target loc then
+          let reason = Reason.mk_reason (Reason.RCustom "jsx attr") loc in
+          let (_, lazy_hint) = Env.get_hint cx loc in
+          lazy_hint reason
+          |> Type_hint.with_hint_result
+               ~ok:(fun t -> self#annot_with_tparams (self#find_loc loc t))
+               ~error:(fun () -> super#jsx_attribute_name_identifier id)
+        else
+          super#jsx_attribute_name_identifier id
     end
 
   let find cx typed_ast loc =

@@ -230,7 +230,7 @@ objects-requires.js:18:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -249,7 +249,7 @@ objects-requires.js:20:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"2"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -268,7 +268,7 @@ objects-requires.js:22:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"3"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -287,7 +287,7 @@ objects-requires.js:24:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"4"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -306,7 +306,7 @@ objects-requires.js:30:6
 Flags: --strip-root --pretty
 {
   "documentation":"foo is an identifier property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -325,7 +325,7 @@ objects-requires.js:32:6
 Flags: --strip-root --pretty
 {
   "documentation":"bar is a getter property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"2"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -344,7 +344,7 @@ objects-requires.js:34:6
 Flags: --strip-root --pretty
 {
   "documentation":"baz is an identifier property with variance",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"3"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
@@ -363,7 +363,7 @@ objects-requires.js:36:6
 Flags: --strip-root --pretty
 {
   "documentation":"qux is a literal property",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"4"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"objects-requires.js",
