@@ -323,16 +323,30 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:12
 
-Cannot return `true` because boolean [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `true` because boolean [1] is incompatible with `conditional type` [2]. [incompatible-return]
 
    generic.js:4:12
    4|     return true; // error
                  ^^^^ [1]
 
 References:
-   generic.js:2:76
+   generic.js:2:43
    2| function generic_in_check_type<T>(x: T) : [T] extends [string] ? boolean : number {
-                                                                                 ^^^^^^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- generic.js:6:12
+
+Cannot return `1` because number [1] is incompatible with `conditional type` [2]. [incompatible-return]
+
+   generic.js:6:12
+   6|     return 1; // error
+                 ^ [1]
+
+References:
+   generic.js:2:43
+   2| function generic_in_check_type<T>(x: T) : [T] extends [string] ? boolean : number {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:12:2
@@ -372,16 +386,30 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generic.js:17:12
 
-Cannot return `true` because boolean [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `true` because boolean [1] is incompatible with `conditional type` [2]. [incompatible-return]
 
    generic.js:17:12
    17|     return true; // error
                   ^^^^ [1]
 
 References:
-   generic.js:15:77
+   generic.js:15:44
    15| function generic_in_extends_type<T>(x: T): [string] extends [T] ? boolean : number {
-                                                                                   ^^^^^^ [2]
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- generic.js:19:12
+
+Cannot return `1` because number [1] is incompatible with `conditional type` [2]. [incompatible-return]
+
+   generic.js:19:12
+   19|     return 1; // error
+                  ^ [1]
+
+References:
+   generic.js:15:44
+   15| function generic_in_extends_type<T>(x: T): [string] extends [T] ? boolean : number {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:25:2
@@ -418,6 +446,57 @@ References:
    generic.js:26:30
    26| (generic_in_extends_type(1): empty); // error
                                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- generic.js:29:21
+
+Cannot assign `x` to `y` because conditional type [1] is incompatible with string [2]. [incompatible-type]
+
+   generic.js:29:21
+   29|   const y: string = x; // error
+                           ^
+
+References:
+   generic.js:28:53
+   28| function assign_from_generic_conditional_type<T>(x: string extends T ? boolean : number): void {
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   generic.js:29:12
+   29|   const y: string = x; // error
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- generic.js:38:7
+
+Cannot assign `y` to `x` because conditional type [1] is incompatible with `conditional type` [2]. [incompatible-type]
+
+   generic.js:38:7
+   38|   x = y; // expected error
+             ^
+
+References:
+   generic.js:35:6
+   35|   y: string extends S ? boolean : number,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   generic.js:34:6
+   34|   x: string extends T ? boolean : number,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- generic.js:39:7
+
+Cannot assign `z` to `x` because conditional type [1] is incompatible with `conditional type` [2]. [incompatible-type]
+
+   generic.js:39:7
+   39|   x = z; // unfortunate error, but this is sound.
+             ^
+
+References:
+   generic.js:36:6
+   36|   z: string extends T ? boolean : number,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   generic.js:34:6
+   34|   x: string extends T ? boolean : number,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- invalid_infer.js:2:10
@@ -475,4 +554,4 @@ References:
 
 
 
-Found 32 errors
+Found 37 errors

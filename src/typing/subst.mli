@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val free_var_finder : Context.t -> ?bound:Subst_name.Set.t -> Type.t -> Subst_name.Set.t
+
 val subst :
   Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t Subst_name.Map.t -> Type.t -> Type.t
 

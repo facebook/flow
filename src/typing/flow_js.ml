@@ -4185,19 +4185,44 @@ struct
         (* conditional type *)
         (**************)
         | (check_t, ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout }) ->
-          let result =
-            ImplicitInstantiationKit.run_conditional
-              cx
-              trace
-              ~use_op
-              ~reason
-              ~tparams
-              ~check_t
-              ~extends_t
-              ~true_t
-              ~false_t
-          in
-          rec_flow_t cx trace ~use_op (result, OpenT tout)
+          if
+            Subst_name.Set.is_empty (Subst.free_var_finder cx check_t)
+            && Subst_name.Set.is_empty
+                 (Subst.free_var_finder
+                    cx
+                    ~bound:
+                      (tparams
+                      |> Base.List.map ~f:(fun tparam -> tparam.name)
+                      |> Subst_name.Set.of_list
+                      )
+                    extends_t
+                 )
+          then
+            let result =
+              ImplicitInstantiationKit.run_conditional
+                cx
+                trace
+                ~use_op
+                ~reason
+                ~tparams
+                ~check_t
+                ~extends_t
+                ~true_t
+                ~false_t
+            in
+            rec_flow_t cx trace ~use_op (result, OpenT tout)
+          else
+            (* A conditional type with GenericTs in check type and extends type is tricky.
+               We often cannot decide which branch we should take. To maintain soundness
+               in the most general case, we make the type abstract. *)
+            let generic_t =
+              let name = Subst_name.Synthetic ("conditional type", []) in
+              let id = Context.make_generic_id cx name (aloc_of_reason reason) in
+              let reason = update_desc_reason invalidate_rtype_alias reason in
+              let bound = MixedT.make reason (bogus_trust ()) in
+              GenericT { reason; name; id; bound }
+            in
+            rec_flow_t cx trace ~use_op (generic_t, OpenT tout)
         (**************)
         (* object kit *)
         (**************)
