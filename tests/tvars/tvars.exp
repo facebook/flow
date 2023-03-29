@@ -9,7 +9,9 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 Error ------------------------------------------------------------------------------- fully_resolved_unification.js:20:2
 
 Cannot cast `x` to array type because object type [1] is incompatible with unknown element of empty array [2] in array
-element. [incompatible-cast]
+element. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-cast]
 
    fully_resolved_unification.js:20:2
    20| (x: Array<{bar: string}>); // ERROR

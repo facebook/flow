@@ -626,6 +626,15 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                   ]
               in
               `Explanation (use_op, message)
+            | Frame (UnifyFlip, Frame (ArrayElementCompatibility { lower; upper }, use_op)) ->
+              let message =
+                [
+                  text "Arrays are invariantly typed. See ";
+                  text
+                    "https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number";
+                ]
+              in
+              `Explanation (Frame (ArrayElementCompatibility { lower; upper }, use_op), message)
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
             | Frame (FunParam { n; lower; name; _ }, (Frame (FunCompatibility _, _) as use_op)) ->

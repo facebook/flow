@@ -232,7 +232,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:54:38
 
-Cannot assign `x14` to `y14` because `A` [1] is incompatible with `B` [2] in array element. [incompatible-type]
+Cannot assign `x14` to `y14` because `A` [1] is incompatible with `B` [2] in array element. Arrays are invariantly
+typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    main.js:54:38
    54| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error

@@ -931,7 +931,9 @@ References:
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:49:37
 
 Cannot assign object literal to `e1` because string [1] is incompatible with unknown element of empty array [2] in array
-element of property `arr`. [incompatible-type]
+element of property `arr`. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    sentinel_refinements.js:49:37
    49| const e1: A = { __type__: a(), arr: [] }; // // err
@@ -963,7 +965,9 @@ References:
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:51:32
 
 Cannot create `CompAProp` element because string [1] is incompatible with unknown element of empty array [2] in array
-element of property `arr`. [incompatible-type]
+element of property `arr`. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    sentinel_refinements.js:51:32
    51| <CompAProp __type__={a()} arr={[]} />; // // err
