@@ -1,3 +1,39 @@
+### 0.203.0
+
+Likely to cause new Flow errors:
+* `$Partial` has been renamed to `Partial`, use the latter instead. [Read the blog post for more details](https://medium.com/flow-type/announcing-partial-required-flow-utility-types-catch-annotations-3a32f0bf2a20).
+* Support for `inference_mode` config and related infra such as codemods were removed. You should follow the instructions in the [Local Type Inference for Flow blog post](https://medium.com/flow-type/local-type-inference-for-flow-aaa65d071347) to switch to use LTI before upgrading if you haven't already done so.
+* We replaced the implementation which checks nested `$Call` and `$ObjMap` during the check of a polymorphic function call. As a result, more underconstrained errors or type incompatibility errors might appear.
+* Removed the `sharedmemory.log_level` flowconfig option and the `--sharedmemory-log-level` command line option.
+
+IDE:
+* Implement linked editing for JSX elements.
+* Added code actions for adding/removing braces from arrow functions.
+* Adds a quick fix from the deprecated `$Partial` to `Partial`.
+
+Notable bug fixes:
+* Fixed a bug that caused instances of nested utility types to be considered equivalent to `empty`. e.g. [try Flow example](https://flow.org/try/#0JAKALgngDgpgBAFTgXjgbwIYC44H40BGO+AHjgM5gBOAlgHYDmANHBDnQK4C2BMVAvoIDcIcNHgAhFHAAkAOQD2dALIYIvBOIA8CANoByDPoC6uAHQGCJgHwiAxkspwicKajRk4+gBY19LNjgAZn4hOAB6cLg6BTg+KgUqUUhYOAB5AEZpGQARGgAzfK0JFjRArhoSGAATflsQBzonBQIAKwycTOkPHB8-UIiomLiqBKSxVLSAJmy8wq15JVV1GE1YHQMjUwt9K2NrUvLKmrqRSLgLgD1XAFUAcRwwX3I4FPgAdwwXxvIaar4anEuFBIA1HGA4C1WlNOjN3J4+voBudyLEnjQXl9fgw6FwYHQIVQMBiYJi6CMxkA).
+* Make Flow's behavior more consistent by not erroring on `.constructor` accesses. e.g. [try Flow example](https://flow.org/try/#0MYGwhgzhAEDC0G8BQ1rAPYDsIBcBOArsDungBQCUiKqaWu0AHtALzQ4AWAlhAHQbZ8REngDc0APQT23GAHdI0MCDwBTMABMAntEzocSzNFV48pGqi4AzaGU49+9IcVKsWbWFQSTpeuTJ5oQOUIdF19Q2NTc1paKWheRItoAF8aNJSgA).
+* Fixed the file watcher not reacting to any changes on Windows.
+* Improve the error messages when `underconstrained-implicit-instantiation` errors are raised in overloaded function calls. e.g. [try Flow example](https://flow.org/try/#0C4TwDgpgBAShDOBXANsAyhYAeGB7A7gHxQC8UA3gFBQ1QDUATgQMK6IB2wAXFO4gLYAjCAwA01WowLweAQQYMAhiBwFC4gL4BuSpQCWnEQDNFAY2hpEg-nuDBFg5NCq0oSa7Z4AKAJSliAG64egAmmrohEKbIigzQ0Yrw8FDMyHoQnBQSNKa47PDADIimwLgMvjxBoeKuAI6IIiowhF7ZrlC57EZ6AOY8BQwGPTW0PjwACkw28BA4CCjomDiE6m31jVgAijyWHnYOTi1trp3dfVCbIzRjF+GUkQlxUAGxHTyp6Zw6lKYAdOsMEBeADkaAAogAZMHMAAqUAAjMCfFooAB6VFQERMBi8AhQRJIfgIKD4aBgPSmADWEBCUGAAAtoN0GAUoLgAiJkLhFCEfv8GoCvOR3DZuFBfP4oBxIt12DSNMjKEA)
+* We now propagate `any` to instance types' type arguments. As a result, some spurious errors under LTI might be fixed (e.g. [try Flow example](https://flow.org/try/#0CYUwxgNghgTiAEA3W8AeBnAXPAgjGUAngDxQB2hAfANwBQtU6hZY8AZgK4sAuAlgPZl2-fgAoAlPADetePDCD03eLwC2UAOYgAEowAWILLnxFiSmLzIbK8ALzwoAdyi9lABRj9VvdCAB0UBAQohji1PAA9BHwZPzwqvxw8OgADhwW-Bzo8CD4iei0AL5AA)), and some new errors might be revealed.
+* Fixed the hover type result when an enum object type appears nested in another type structure. e.g. [try Flow example](https://flow.org/try/#0FAUwdgrgtgBAojA3gX2AYwPZgM4BcYgwC8MuAThIQPzwwBcMADANzAD0bMXMAejAO6EwGfjGwALETAAGuAJ4AHEBgBmtAD4xIUAEYgy0mOP0ggA).
+* Fixed the hover type on certain kinds of union types. e.g. [try Flow example](https://flow.org/try/#0KYOwrgtgBAolDeBBANFAQgXwFAGMD2IAzgC5Q5QC8sAdDgIYkAUA5IswJRQD8XNiA3FgD0QqGKgA9KMQCeAB2BQAliABmeAE4Q6xJQSj6ABjkPLCUEHgDuUVUoAewACZA).
+* Fixed the hover type on class constructors.
+
+Misc:
+* [Try Flow's](https://flow.org/try) behavior can now be configured.
+
+Parser:
+* Leading `(`, `&` and `|` are now included in intersection and union ranges, respectively.
+* Improve error recovery for mismatched JSX tags.
+
+Library Definitions:
+* Change `setState` in React lib defs to use `$ReadOnly<Partial<T>>` instead of `$Shape<T>`.
+* Make `$ReadOnlySet` entry type covariant.
+* Expand the `Performance` typing with the `eventCounts` property, [according to the W3C standard](https://www.w3.org/TR/event-timing/#sec-event-counts).
+* Adjust the type definitions of the `mark` and `measure` properties on `Performance` interface according to the W3C standard.
+
 ### 0.202.1
 
 Misc:
