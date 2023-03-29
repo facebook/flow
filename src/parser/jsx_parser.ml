@@ -189,6 +189,37 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
         let name = identifier env in
         JSX.Identifier name
 
+  let names_are_equal =
+    let identifiers_are_equal a b =
+      let (_, { JSX.Identifier.name = a; _ }) = a in
+      let (_, { JSX.Identifier.name = b; _ }) = b in
+      String.equal a b
+    in
+    let rec member_expressions_are_equal a b =
+      let (_, { JSX.MemberExpression._object = a_obj; property = a_prop }) = a in
+      let (_, { JSX.MemberExpression._object = b_obj; property = b_prop }) = b in
+      let objs_equal =
+        match (a_obj, b_obj) with
+        | (JSX.MemberExpression.Identifier a, JSX.MemberExpression.Identifier b) ->
+          identifiers_are_equal a b
+        | (JSX.MemberExpression.MemberExpression a, JSX.MemberExpression.MemberExpression b) ->
+          member_expressions_are_equal a b
+        | _ -> false
+      in
+      objs_equal && identifiers_are_equal a_prop b_prop
+    in
+    let namespaced_names_are_equal a b =
+      let (_, { JSX.NamespacedName.namespace = a_ns; name = a_name }) = a in
+      let (_, { JSX.NamespacedName.namespace = b_ns; name = b_name }) = b in
+      identifiers_are_equal a_ns b_ns && identifiers_are_equal a_name b_name
+    in
+    fun a b ->
+      match (a, b) with
+      | (JSX.Identifier a, JSX.Identifier b) -> identifiers_are_equal a b
+      | (JSX.MemberExpression a, JSX.MemberExpression b) -> member_expressions_are_equal a b
+      | (JSX.NamespacedName a, JSX.NamespacedName b) -> namespaced_names_are_equal a b
+      | _ -> false
+
   let loc_of_name = function
     | JSX.Identifier (loc, _) -> loc
     | JSX.NamespacedName (loc, _) -> loc
@@ -422,9 +453,10 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
         | `Element (loc, { JSX.Closing.name }) ->
           (match snd opening_element with
           | Ok (`Element { JSX.Opening.name = opening_name; _ }) ->
-            let opening_name = normalize opening_name in
-            if normalize name <> opening_name then
-              error_at env (loc_of_name name, Parse_error.ExpectedJSXClosingTag opening_name)
+            if not (names_are_equal name opening_name) then
+              error_at
+                env
+                (loc_of_name name, Parse_error.ExpectedJSXClosingTag (normalize opening_name))
           | Ok `Fragment ->
             error_at env (loc_of_name name, Parse_error.ExpectedJSXClosingTag "JSX fragment")
           | Error _ -> ());
