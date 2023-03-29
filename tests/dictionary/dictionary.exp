@@ -552,7 +552,9 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:233:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element. [prop-missing]
+exists in object type [2] in array element. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[prop-missing]
 
    dictionary.js:233:10
    233|   return x; // error: if allowed, could write {p:X,q:Y} into returned array
@@ -1004,7 +1006,9 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:47:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element. [prop-missing]
+exists in object type [2] in array element. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[prop-missing]
 
    incompatible.js:47:10
    47|   return x;

@@ -115,7 +115,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:21:43
 
-Cannot assign `a.getAll(...)` to `a2` because number [1] is incompatible with string [2] in array element.
+Cannot assign `a.getAll(...)` to `a2` because number [1] is incompatible with string [2] in array element. Arrays are
+invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    FormData.js:21:43
@@ -133,7 +135,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:22:41
 
-Cannot assign `a.getAll(...)` to `a3` because `Blob` [1] is incompatible with `File` [2] in array element.
+Cannot assign `a.getAll(...)` to `a3` because `Blob` [1] is incompatible with `File` [2] in array element. Arrays are
+invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    FormData.js:22:41
