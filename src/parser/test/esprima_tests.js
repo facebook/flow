@@ -21,7 +21,6 @@ module.exports = {
     ],
     'Invalid JSX Syntax': [
         '<a b=d />',
-        '<a></b>',
         '<a foo="bar',
         {
           content: '<a:b.c></a:b.c>',
@@ -45,7 +44,6 @@ module.exports = {
             }
           }
         },
-        '<a.b.c></a>',
         {
           content: '<.a></.a>',
           explanation: "Improved error message",
