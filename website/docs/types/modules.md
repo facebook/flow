@@ -5,13 +5,13 @@ slug: /types/modules
 
 ## Importing and exporting types {#toc-importing-and-exporting-types}
 
-It is often useful to share types in between modules (files). In Flow, you can export type aliases, interfaces, and classes from one file and import them in another.
+It is often useful to share types between modules (files).
+In Flow, you can export type aliases, interfaces, and classes from one file and import them in another.
 
 **`exports.js`**
 
-```js
-// @flow
-export default class Foo {};
+```js flow-check
+export default class MyClass {};
 export type MyObject = { /* ... */ };
 export interface MyInterface { /* ... */ };
 ```
@@ -19,35 +19,31 @@ export interface MyInterface { /* ... */ };
 **`imports.js`**
 
 ```js
-// @flow
-import type Foo, {MyObject, MyInterface} from './exports';
+import type MyClass, {MyObject, MyInterface} from './exports';
 ```
 
-> ***Don't forget to mention `@flow` on top of file, otherwise flow won't report errors***.
+> ***Don't forget to add `@flow` at the top of your file, otherwise Flow won't report errors***.
 
-## Importing and exporting values {#toc-importing-and-exporting-values}
+## Importing and exporting values as types {#toc-importing-and-exporting-values}
 
-Flow also supports importing the type of values exported by other modules using
-[`typeof`](../typeof/).
+Flow also supports importing the type of values exported by other modules using [`typeof`](../typeof/).
 
 **`exports.js`**
 
-```js
-// @flow
+```js flow-check
 const myNumber = 42;
 export default myNumber;
-export class MyClass {
-  // ...
-}
+export class MyClass { /* ... */ };
 ```
 
 **`imports.js`**
 
 ```js
-// @flow
-import typeof myNumber from './exports';
+import typeof MyNumber from './exports';
 import typeof {MyClass} from './exports';
+
+const x: MyNumber = 1; // Works: like using `number`
 ```
 
-Just like other type imports, this code will be stripped away by a compiler and
-will not add a dependency on the other module.
+Just like other type imports, this code can be stripped away by a compiler so
+that it does not add a runtime dependency on the other module.

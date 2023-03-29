@@ -86,7 +86,7 @@ Because type casts work the same as all other type annotations, you can only
 cast values to less specific types. You cannot change the type or make it
 something more specific.
 
-But you can use any to cast to whatever type you want.
+But you can use [any](../any) to cast to whatever type you want.
 
 ```js flow-check
 let value = 42;
@@ -126,7 +126,7 @@ based on another object.
 If we cast through any, we can return a type which is more useful.
 
 ```js flow-check
-function cloneObject<T: { [key: string]: mixed }>(obj: T): T {
+function cloneObject<T: {+[key: string]: mixed }>(obj: T): T {
   const clone: {[string]: mixed} = {};
 
   Object.keys(obj).forEach(key => {
