@@ -489,7 +489,7 @@ module rec Parse : PARSER = struct
         ({ Ast.Statement.Block.body; comments }, contains_use_strict)
     )
 
-  and jsx_element_or_fragment = JSX.element_or_fragment
+  and jsx_element_or_fragment = JSX.element_or_fragment ~parent_opening_name:None
 
   and pattern = Pattern.pattern
 
