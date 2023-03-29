@@ -357,53 +357,91 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
           `Fragment)
       env
 
-  let rec child env =
+  let child_is_unpaired opening_name = function
+    | ( _,
+        JSX.Element
+          {
+            JSX.opening_element = (_, { JSX.Opening.name = child_opening_name; _ });
+            closing_element = Some (_, { JSX.Closing.name = child_closing_name; _ });
+            _;
+          }
+      ) ->
+      (not (names_are_equal child_opening_name child_closing_name))
+      && names_are_equal opening_name child_closing_name
+    | _ -> false
+
+  let rec child ~parent_opening_name env =
     match Peek.token env with
     | T_LCURLY -> expression_container_or_spread_child env
     | T_JSX_TEXT (loc, value, raw) as token ->
       Expect.token env token;
       (loc, JSX.Text { JSX.Text.value; raw })
     | _ ->
-      (match element_or_fragment env with
+      (match element_or_fragment ~parent_opening_name env with
       | (loc, `Element element) -> (loc, JSX.Element element)
       | (loc, `Fragment fragment) -> (loc, JSX.Fragment fragment))
 
   and element =
     let children_and_closing =
-      let rec children_and_closing env acc =
+      let rec children_and_closing ~parent_opening_name ~opening_name env acc =
         let previous_loc = last_loc env in
-        match Peek.token env with
-        | T_LESS_THAN ->
-          Eat.push_lex_mode env Lex_mode.JSX_TAG;
-          begin
-            match (Peek.token env, Peek.ith_token ~i:1 env) with
-            | (T_LESS_THAN, T_EOF)
-            | (T_LESS_THAN, T_DIV) ->
-              let closing =
-                match closing_element env with
-                | (loc, `Element ec) -> `Element (loc, ec)
-                | (loc, `Fragment) -> `Fragment loc
-              in
-              (* We double pop to avoid going back to childmode and re-lexing the
-               * lookahead *)
-              Eat.double_pop_lex_mode env;
-              (List.rev acc, previous_loc, closing)
-            | _ ->
-              let child =
-                match element env with
-                | (loc, `Element e) -> (loc, JSX.Element e)
-                | (loc, `Fragment f) -> (loc, JSX.Fragment f)
-              in
-              children_and_closing env (child :: acc)
-          end
-        | T_EOF ->
-          error_unexpected env;
-          (List.rev acc, previous_loc, `None)
-        | _ -> children_and_closing env (child env :: acc)
+        match (acc, opening_name) with
+        | (last_child :: rest, Some opening_name) when child_is_unpaired opening_name last_child ->
+          (* if the last child's opening and closing tags don't match, and the
+             child's closing tag matches ours, then we're in a situation like
+             <a><b></b><c></a>, where opening_name = a and the child has opening
+             tag c and closing tag a.
+
+             steal the closing tag from the last child, so that <c> has no
+             closing tag, but <a>...</a> is properly paired. *)
+          let (last_child, closing) =
+            match last_child with
+            | (loc, JSX.Element ({ JSX.closing_element = Some closing; children; _ } as child)) ->
+              let (child_loc, _) = children in
+              let loc = Loc.btwn loc child_loc in
+              let last_child = (loc, JSX.Element { child with JSX.closing_element = None }) in
+              (last_child, `Element closing)
+            | _ -> (last_child, `None)
+          in
+          Eat.pop_lex_mode env;
+          (List.rev (last_child :: rest), previous_loc, closing)
+        | _ ->
+          (match Peek.token env with
+          | T_LESS_THAN ->
+            Eat.push_lex_mode env Lex_mode.JSX_TAG;
+            begin
+              match (Peek.token env, Peek.ith_token ~i:1 env) with
+              | (T_LESS_THAN, T_EOF)
+              | (T_LESS_THAN, T_DIV) ->
+                let closing =
+                  match closing_element env with
+                  | (loc, `Element ec) -> `Element (loc, ec)
+                  | (loc, `Fragment) -> `Fragment loc
+                in
+                (* We double pop to avoid going back to childmode and re-lexing the
+                 * lookahead *)
+                Eat.double_pop_lex_mode env;
+                (List.rev acc, previous_loc, closing)
+              | _ ->
+                let child =
+                  match element ~parent_opening_name:opening_name env with
+                  | (loc, `Element e) -> (loc, JSX.Element e)
+                  | (loc, `Fragment f) -> (loc, JSX.Fragment f)
+                in
+                children_and_closing ~parent_opening_name ~opening_name env (child :: acc)
+            end
+          | T_EOF ->
+            error_unexpected env;
+            (List.rev acc, previous_loc, `None)
+          | _ ->
+            let child = child ~parent_opening_name:opening_name env in
+            children_and_closing ~parent_opening_name ~opening_name env (child :: acc))
       in
-      fun env ->
+      fun ~parent_opening_name ~opening_name env ->
         let start_loc = Peek.loc env in
-        let (children, last_child_loc, closing) = children_and_closing env [] in
+        let (children, last_child_loc, closing) =
+          children_and_closing ~parent_opening_name ~opening_name env []
+        in
         let last_child_loc =
           match last_child_loc with
           | Some x -> x
@@ -435,7 +473,15 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
       | (_, Ok `Fragment) -> false
       | (_, Error _) -> true
     in
-    fun env ->
+    let name_of_opening = function
+      | (_, Ok (`Element { JSX.Opening.name; _ }))
+      | (_, Error (`Element { JSX.Opening.name; _ })) ->
+        Some name
+      | (_, Ok `Fragment)
+      | (_, Error `Fragment) ->
+        None
+    in
+    fun ~parent_opening_name env ->
       let leading = Peek.comments env in
       let opening_element = opening_element env in
       Eat.pop_lex_mode env;
@@ -444,7 +490,8 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
           (with_loc (fun _ -> []) env, `None)
         else (
           Eat.push_lex_mode env Lex_mode.JSX_CHILD;
-          children_and_closing env
+          let opening_name = name_of_opening opening_element in
+          children_and_closing ~parent_opening_name ~opening_name env
         )
       in
       let trailing = Eat.trailing_comments env in
@@ -453,10 +500,23 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
         | `Element (loc, { JSX.Closing.name }) ->
           (match snd opening_element with
           | Ok (`Element { JSX.Opening.name = opening_name; _ }) ->
-            if not (names_are_equal name opening_name) then
-              error_at
-                env
-                (loc_of_name name, Parse_error.ExpectedJSXClosingTag (normalize opening_name))
+            if not (names_are_equal name opening_name) then (
+              match parent_opening_name with
+              | Some parent_opening_name when names_are_equal parent_opening_name name ->
+                (* the opening and closing tags don't match, but the closing
+                   tag matches the parent's opening tag. the parent is going
+                   to steal the closing tag away from this tag, so error on
+                   the opening tag instead. *)
+                error_at
+                  env
+                  ( loc_of_name opening_name,
+                    Parse_error.MissingJSXClosingTag (normalize opening_name)
+                  )
+              | _ ->
+                error_at
+                  env
+                  (loc_of_name name, Parse_error.ExpectedJSXClosingTag (normalize opening_name))
+            )
           | Ok `Fragment ->
             error_at env (loc_of_name name, Parse_error.ExpectedJSXClosingTag "JSX fragment")
           | Error _ -> ());
@@ -503,7 +563,7 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
 
       (Loc.btwn (fst opening_element) end_loc, result)
 
-  and element_or_fragment env =
+  and element_or_fragment ~parent_opening_name env =
     Eat.push_lex_mode env Lex_mode.JSX_TAG;
-    element env
+    element ~parent_opening_name env
 end

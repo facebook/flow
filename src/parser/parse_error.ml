@@ -102,6 +102,7 @@ type t =
   | LiteralShorthandProperty
   | MalformedUnicode
   | MethodInDestructuring
+  | MissingJSXClosingTag of string
   | MissingTypeParam
   | MissingTypeParamDefault
   | MultipleDefaultsInSwitch
@@ -380,6 +381,8 @@ module PP = struct
     | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
     | MalformedUnicode -> "Malformed unicode"
     | MethodInDestructuring -> "Object pattern can't contain methods"
+    | MissingJSXClosingTag name ->
+      Printf.sprintf "JSX element %s has no corresponding closing tag." name
     | MissingTypeParam -> "Expected at least one type parameter."
     | MissingTypeParamDefault ->
       "Type parameter declaration needs a default, since a preceding type parameter declaration has a default."
