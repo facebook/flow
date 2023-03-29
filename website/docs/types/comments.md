@@ -7,8 +7,6 @@ Flow supports a comment-based syntax, which makes it possible to use Flow
 without having to compile your files.
 
 ```js flow-check
-// @flow
-
 /*::
 type MyAlias = {
   foo: number,
@@ -21,7 +19,7 @@ function method(value /*: MyAlias */) /*: boolean */ {
   return value.bar;
 }
 
-method({ foo: 1, bar: true, baz: ["oops"] });
+method({foo: 1, bar: true, baz: ["oops"]});
 ```
 
 These comments allow Flow to work in plain JavaScript files without any
@@ -31,17 +29,17 @@ additional work.
 
 There are two primary pieces of the syntax: type includes and type annotations.
 
-### Comment type include {#toc-comment-type-include}
+### Type include comments {#toc-comment-type-include}
 
 If you want to have Flow treat a comment as if it were normal syntax, you can
-do so by adding a double colon `::` to the start of the comment.
+do so by adding a double colon `::` to the start of the comment:
 
-```js
+```js flow-check
 /*::
-type Foo = {
+type MyAlias = {
   foo: number,
   bar: boolean,
-  baz: string
+  baz: string,
 };
 */
 
@@ -50,13 +48,13 @@ class MyClass {
 }
 ```
 
-This includes the code into the syntax that Flow sees.
+This includes the code into the syntax that Flow sees:
 
-```js
-type Foo = {
+```js flow-check
+type MyAlias = {
   foo: number,
   bar: boolean,
-  baz: string
+  baz: string,
 };
 
 class MyClass {
@@ -64,22 +62,22 @@ class MyClass {
 }
 ```
 
-But JavaScript ignores these comments, so all it has is the valid syntax.
+But JavaScript ignores these comments, so your code is valid JavaScript syntax:
 
-```js
+```js flow-check
 class MyClass {
 
 }
 ```
 
-This syntax is also available in a `flow-include` form.
+This syntax is also available in a `flow-include` form:
 
-```js
+```js flow-check
 /*flow-include
-type Foo = {
+type MyAlias = {
   foo: number,
   bar: boolean,
-  baz: string
+  baz: string,
 };
 */
 
@@ -88,23 +86,22 @@ class MyClass {
 }
 ```
 
-### Comment type annotation {#toc-comment-type-annotation}
+### Type annotation comments {#toc-comment-type-annotation}
 
 Instead of typing out a full include every time, you can also use the type
 annotation shorthand with a single colon `:` at the start of the comment.
 
-```js
+```js flow-check
 function method(param /*: string */) /*: number */ {
-  // ...
+  return 1;
 }
 ```
 
-This would be the same as including a type annotation inside an include
-comment.
+This would be the same as including a type annotation inside an include comment.
 
-```js
+```js flow-check
 function method(param /*:: : string */) /*:: : number */ {
-  // ...
+  return 1;
 }
 ```
 
