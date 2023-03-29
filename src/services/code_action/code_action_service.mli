@@ -44,6 +44,7 @@ val code_actions_at_loc :
   tolerable_errors:File_sig.With_Loc.tolerable_error list ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  scope_info:Scope_api.With_Loc.info ->
   parse_errors:(Loc.t * Parse_error.t) Base.List.t ->
   diagnostics:Lsp.PublishDiagnostics.diagnostic list ->
   only:Lsp.CodeActionKind.t list option ->

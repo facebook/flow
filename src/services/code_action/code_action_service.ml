@@ -18,6 +18,8 @@ let include_quick_fixes only = include_code_action ~only Lsp.CodeActionKind.quic
 
 let include_extract_refactors only = include_code_action ~only Lsp.CodeActionKind.refactor_extract
 
+let include_rewrite_refactors only = include_code_action ~only Lsp.CodeActionKind.refactor_rewrite
+
 let include_add_missing_imports_action only = include_code_action ~only add_missing_imports_kind
 
 let include_organize_imports_actions only =
@@ -157,6 +159,29 @@ let insert_jsdoc_code_actions ~options ~ast uri loc =
         };
     ]
   | _ -> []
+
+let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc =
+  if include_rewrite_refactors only then
+    match Refactor_arrow_functions.add_or_remove_braces ~ast ~scope_info loc with
+    | Some (ast', title) ->
+      ast'
+      |> Flow_ast_differ.program Flow_ast_differ.Standard ast
+      |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+      |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+      |> fun edits ->
+      let open Lsp in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title;
+            kind = CodeActionKind.refactor_rewrite;
+            diagnostics = [];
+            action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+          };
+      ]
+    | _ -> []
+  else
+    []
 
 let main_of_package ~reader package_dir =
   let file_key = File_key.JsonFile (package_dir ^ "/package.json") in
@@ -861,6 +886,7 @@ let code_actions_at_loc
     ~tolerable_errors
     ~ast
     ~typed_ast
+    ~scope_info
     ~parse_errors
     ~diagnostics
     ~only
@@ -900,6 +926,7 @@ let code_actions_at_loc
         uri
         loc
     @ insert_jsdoc_code_actions ~options ~ast uri loc
+    @ refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
   in
   let error_fixes =
     code_actions_of_errors

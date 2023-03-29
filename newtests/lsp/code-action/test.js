@@ -3388,5 +3388,116 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics'],
       ),
     ]),
+    test('provide codeAction for refactoring arrow functions', [
+      addFile(
+        'refactor-arrow-functions.js.ignored',
+        'refactor-arrow-functions.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-arrow-functions.js',
+        },
+        range: {
+          start: {
+            line: 4,
+            character: 10,
+          },
+          end: {
+            line: 4,
+            character: 10,
+          },
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Add braces to arrow function',
+                kind: 'refactor.rewrite',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-arrow-functions.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 4,
+                            character: 4,
+                          },
+                          end: {
+                            line: 4,
+                            character: 15,
+                          },
+                        },
+                        newText: '() => {\n  return "foo";\n}',
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-arrow-functions.js',
+        },
+        range: {
+          start: {
+            line: 7,
+            character: 5,
+          },
+          end: {
+            line: 7,
+            character: 5,
+          },
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Remove braces from arrow function',
+                kind: 'refactor.rewrite',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-arrow-functions.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 6,
+                            character: 4,
+                          },
+                          end: {
+                            line: 8,
+                            character: 1,
+                          },
+                        },
+                        newText: '() => "foo"',
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
   ],
 ): Suite);
