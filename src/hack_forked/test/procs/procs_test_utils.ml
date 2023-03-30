@@ -23,6 +23,12 @@ let try_finalize f x finally y =
   res
 
 let make_workers n =
+  let worker_mode =
+    if Sys.win32 then
+      Worker.Spawned
+    else
+      Worker.Prespawned_should_fork
+  in
   let default_sharedmem_config =
     let gig = 1024 * 1024 * 1024 in
     { SharedMem.heap_size = 20 * gig; hash_table_pow = 18 }
@@ -35,6 +41,7 @@ let make_workers n =
   let gc_control = Caml.Gc.get () in
   let workers =
     MultiWorkerLwt.make
+      ~worker_mode
       ~channel_mode:`pipe
       ~saved_state:()
       ~entry

@@ -9,9 +9,11 @@ type request = Request of (serializer -> unit)
 
 and serializer = { send: 'a. 'a -> unit }
 
+type worker_mode =
+  | Prespawned_should_fork
+  | Spawned
+
 type job_status = Job_terminated of Unix.process_status
 
-val win32_worker_main :
-  ('a -> unit) -> 'a -> request Daemon.in_channel * 'c Daemon.out_channel -> 'd
-
-val unix_worker_main : ('a -> unit) -> 'a -> request Daemon.in_channel * 'c Daemon.out_channel -> 'd
+val worker_main :
+  ('a -> worker_mode) -> 'a -> request Daemon.in_channel * 'c Daemon.out_channel -> 'd

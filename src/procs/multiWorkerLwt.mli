@@ -29,6 +29,7 @@ val next2 :
 
 (* Creates a pool of workers. *)
 val make :
+  worker_mode:Worker.worker_mode ->
   channel_mode:[ `pipe | `socket ] ->
   saved_state:'a ->
   entry:'a WorkerController.entry ->

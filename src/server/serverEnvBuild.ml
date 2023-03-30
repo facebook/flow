@@ -76,8 +76,14 @@ let make_genv ~options ~init_id handle =
     let num_workers = Options.max_workers options in
     if num_workers > 0 then
       let gc_control = worker_gc_control options in
+      let worker_mode =
+        if Sys.win32 then
+          Worker.Spawned
+        else
+          Worker.Prespawned_should_fork
+      in
       let channel_mode = Options.channel_mode options in
-      Some (ServerWorker.make ~n:num_workers ~channel_mode ~gc_control ~init_id handle)
+      Some (ServerWorker.make ~n:num_workers ~worker_mode ~channel_mode ~gc_control ~init_id handle)
     else
       None
   in

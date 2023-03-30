@@ -7,6 +7,7 @@
 
 val make :
   n:int ->
+  worker_mode:Worker.worker_mode ->
   channel_mode:[ `pipe | `socket ] ->
   gc_control:Gc.control ->
   init_id:string ->

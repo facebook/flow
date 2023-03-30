@@ -45,6 +45,7 @@ val register_entry_point : restore:('a -> worker_id:int -> unit) -> 'a entry
 
 (* Creates a pool of workers. *)
 val make :
+  worker_mode:Worker.worker_mode ->
   channel_mode:[ `pipe | `socket ] ->
   saved_state:'a ->
   entry:'a entry ->

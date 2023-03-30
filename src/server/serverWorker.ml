@@ -40,8 +40,9 @@ end
    [Daemon.check_entry_point]. *)
 let entry = WorkerController.register_entry_point ~restore:ServerWorkerState.restore
 
-let make ~n ~channel_mode ~gc_control ~init_id heap_handle =
+let make ~n ~worker_mode ~channel_mode ~gc_control ~init_id heap_handle =
   MultiWorkerLwt.make
+    ~worker_mode
     ~channel_mode
     ~saved_state:(ServerWorkerState.save ~init_id)
     ~entry

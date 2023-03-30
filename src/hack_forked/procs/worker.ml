@@ -20,16 +20,31 @@ type request = Request of (serializer -> unit)
 
 and serializer = { send: 'a. 'a -> unit }
 
+type worker_mode =
+  | Prespawned_should_fork
+  | Spawned
+
 type job_status = Job_terminated of Unix.process_status
 
 exception Connection_closed
+
+(* On Unix each job runs in a forked clone process. The first thing these clones
+ * do is deserialize a marshaled closure which is the job.
+ *
+ * The marshaled representation of a closure includes a MD5 digest of the code
+ * segment and an offset. The digest is lazily computed, but if it has not been
+ * computed before the fork, then each forked process will need to compute it.
+ *
+ * To avoid this, we deserialize a dummy closure before forking, so that we only
+ * need to calculate the digest once per worker instead of once per job. *)
+let dummy_closure () = ()
 
 (*****************************************************************************
  * Entry point for spawned worker.
  *
  *****************************************************************************)
 
-let worker_job_main ic oc =
+let worker_job_main infd outfd =
   let start_user_time = ref 0. in
   let start_system_time = ref 0. in
   let start_minor_words = ref 0. in
@@ -40,8 +55,6 @@ let worker_job_main ic oc =
   let start_compactions = ref 0 in
   let start_wall_time = ref 0. in
   let start_proc_fs_status = ref None in
-  let infd = Daemon.descr_of_in_channel ic in
-  let outfd = Daemon.descr_of_out_channel oc in
   let result_sent = ref false in
   let send_result data =
     (* If we got this far, the job is complete and we should send the results
@@ -171,77 +184,60 @@ let worker_job_main ic oc =
     Printf.printf "Worker %d exception: %s\n%!" pid e_str;
     exit 2
 
-let win32_worker_main restore state (ic, oc) =
-  restore state;
-  worker_job_main ic oc;
-  exit 0
-
-(* On Unix each job runs in a forked clone process. The first thing these clones
- * do is deserialize a marshaled closure which is the job.
- *
- * The marshaled representation of a closure includes a MD5 digest of the code
- * segment and an offset. The digest is lazily computed, but if it has not been
- * computed before the fork, then each forked process will need to compute it.
- *
- * To avoid this, we deserialize a dummy closure before forking, so that we only
- * need to calculate the digest once per worker instead of once per job. *)
-let dummy_closure () = ()
-
-(**
- * On Windows, the Worker is a process and runs the job directly. See above.
- *
- * On Unix, the Worker forks Clone processes and reaps them with waitpid.
- * The Clone runs the actual job and sends the results over the oc.
- * If the Clone exits normally (exit code 0), the Worker keeps living and
- * waits for the next incoming job before forking a new Clone.
- *
- * If the Clone exits with a non-zero code, the Worker also exits with the
- * same code. Thus, the owning process of this Worker can just waitpid
- * directly on this process and see correct exit codes.
- *
- * Except `WSIGNALED i` and `WSTOPPED i` are all compressed to `exit 2`
- * and `exit 3` respectively. Thus some resolution is lost. So if
- * the underling Clone is for example SIGKILL'd by the OOM killer,
- * then the owning process won't be aware of it.
- *)
-let unix_worker_main restore state (ic, oc) =
-  restore state;
-
-  (* see dummy_closure above *)
-  ignore Marshal.(from_bytes (to_bytes dummy_closure [Closures]) 0);
-
-  let in_fd = Daemon.descr_of_in_channel ic in
+let worker_loop handler infd outfd =
   try
     while true do
       (* Wait for an incoming job : is there something to read?
-         But we don't read it yet. It will be read by the forked clone. *)
-      let (readyl, _, _) = Sys_utils.select_non_intr [in_fd] [] [] (-1.0) in
-      if readyl = [] then exit 0;
-
-      (* We fork a clone for every incoming request.
-         And let it die after one request. This is the quickest GC. *)
-      match Fork.fork () with
-      | 0 ->
-        worker_job_main ic oc;
-        exit 0
-      | pid ->
-        (* Wait for the clone to terminate... *)
-        let status = snd (Sys_utils.waitpid_non_intr [] pid) in
-        (match status with
-        | Unix.WEXITED 0 -> ()
-        | Unix.WEXITED 1 -> raise End_of_file
-        | Unix.WEXITED code ->
-          Printf.printf "Worker exited (code: %d)\n" code;
-          flush stdout;
-          Stdlib.exit code
-        | Unix.WSIGNALED x ->
-          let sig_str = PrintSignal.string_of_signal x in
-          Printf.printf "Worker interrupted with signal: %s\n" sig_str;
-          exit 2
-        | Unix.WSTOPPED x ->
-          Printf.printf "Worker stopped with signal: %d\n" x;
-          exit 3)
-    done;
-    assert false
+         But we don't read it yet. It will be read by the handler. *)
+      let (readyl, _, _) = Sys_utils.select_non_intr [infd] [] [] (-1.0) in
+      if readyl = [] then raise End_of_file;
+      handler infd outfd
+    done
   with
-  | End_of_file -> exit 0
+  | End_of_file -> ()
+
+(* The fork handler creates forks for each job and reaps them with waitpid.
+ * The forked process runs the actual job and sends the results over outfd.
+ *
+ * If the forked process exits with a non-zero code, the worker also exits with
+ * the same code. Thus, the owning process of this Worker can just waitpid
+ * directly on this process and see correct exit codes.
+ *
+ * Except `WSIGNALED i` and `WSTOPPED i` are all compressed to `exit 2` and
+ * `exit 3` respectively. Thus some resolution is lost. So if the underling
+ * forked process is for example SIGKILL'd by the OOM killer, then the owning
+ * process won't be aware of it.
+ *)
+let fork_handler infd outfd =
+  match Fork.fork () with
+  | 0 ->
+    worker_job_main infd outfd;
+    exit 0
+  | pid ->
+    (* Wait for the clone to terminate... *)
+    let status = snd (Sys_utils.waitpid_non_intr [] pid) in
+    (match status with
+    | Unix.WEXITED 0 -> ()
+    | Unix.WEXITED 1 -> raise End_of_file
+    | Unix.WEXITED code ->
+      Printf.printf "Worker exited (code: %d)\n" code;
+      flush stdout;
+      Stdlib.exit code
+    | Unix.WSIGNALED x ->
+      let sig_str = PrintSignal.string_of_signal x in
+      Printf.printf "Worker interrupted with signal: %s\n" sig_str;
+      exit 2
+    | Unix.WSTOPPED x ->
+      Printf.printf "Worker stopped with signal: %d\n" x;
+      exit 3)
+
+let worker_main restore state (ic, oc) =
+  let infd = Daemon.descr_of_in_channel ic in
+  let outfd = Daemon.descr_of_out_channel oc in
+  (match restore state with
+  | Spawned -> worker_job_main infd outfd
+  | Prespawned_should_fork ->
+    (* see dummy_closure above *)
+    ignore Marshal.(from_bytes (to_bytes dummy_closure [Closures]) 0);
+    worker_loop fork_handler infd outfd);
+  exit 0

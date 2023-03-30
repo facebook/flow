@@ -69,9 +69,6 @@ let () =
     Some (Printf.sprintf "Worker_failed (process_id = %d): %s" id (failure_to_string failure))
   | _ -> None
 
-(* Should we 'prespawn' the worker ? *)
-let use_prespawned = not Sys.win32
-
 (* The maximum amount of workers *)
 let max_workers = 1000
 
@@ -123,7 +120,7 @@ let spawn w =
 (* If the worker isn't prespawned, close the worker *)
 let close_noerr w h = if Option.is_none w.prespawned then Daemon.close_noerr h
 
-type 'a entry_state = 'a * Caml.Gc.control * SharedMem.handle * int
+type 'a entry_state = 'a * Caml.Gc.control * SharedMem.handle * int * Worker.worker_mode
 
 type 'a entry = ('a entry_state, request, void) Daemon.entry
 
@@ -131,19 +128,14 @@ let entry_counter = ref 0
 
 let register_entry_point ~restore =
   Int.incr entry_counter;
-  let restore (st, gc_control, heap_handle, worker_id) =
+  let restore (st, gc_control, heap_handle, worker_id, worker_mode) =
     restore st ~worker_id;
     SharedMem.connect heap_handle ~worker_id;
-    Caml.Gc.set gc_control
+    Caml.Gc.set gc_control;
+    worker_mode
   in
   let name = Printf.sprintf "worker_%d" !entry_counter in
-  Daemon.register_entry_point
-    name
-    ( if Sys.win32 then
-      win32_worker_main restore
-    else
-      unix_worker_main restore
-    )
+  Daemon.register_entry_point name (worker_main restore)
 
 (**************************************************************************
  * Creates a pool of workers.
@@ -153,14 +145,13 @@ let register_entry_point ~restore =
 let workers = ref []
 
 (* Build one worker. *)
-let make_one spawn id =
+let make_one worker_mode spawn id =
   if id >= max_workers then failwith "Too many workers";
 
   let prespawned =
-    if not use_prespawned then
-      None
-    else
-      Some (spawn ())
+    match worker_mode with
+    | Spawned -> None
+    | Prespawned_should_fork -> Some (spawn ())
   in
   let worker = { id; busy = false; killed = false; prespawned; spawn } in
   workers := worker :: !workers;
@@ -168,11 +159,11 @@ let make_one spawn id =
 
 (* Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
-let make ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
+let make ~worker_mode ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   let spawn worker_id name () =
     Unix.clear_close_on_exec heap_handle;
 
-    let state = (saved_state, gc_control, heap_handle, worker_id) in
+    let state = (saved_state, gc_control, heap_handle, worker_id, worker_mode) in
     let handle =
       Daemon.spawn ~channel_mode ~name (Daemon.null_fd (), Unix.stdout, Unix.stderr) entry state
     in
@@ -183,7 +174,7 @@ let make ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   let pretty_pid = Sys_utils.get_pretty_pid () in
   for n = 1 to nbr_procs do
     let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pretty_pid in
-    made_workers := make_one (spawn n name) n :: !made_workers
+    made_workers := make_one worker_mode (spawn n name) n :: !made_workers
   done;
   !made_workers
 
