@@ -917,28 +917,38 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         let errors_before_using_return_hint = Context.errors cx in
         let has_new_errors = init_errors != errors_before_using_return_hint in
         let (inferred_targ_list, marked_tparams, tparams_map, has_new_errors) =
-          Base.Option.value_map
-            return_hint
-            ~default:(inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
-            ~f:(fun (hint, kind) ->
-              Flow.flow_t cx (tout, hint);
-              let errors_after_using_return_hint = Context.errors cx in
-              let return_hint_has_errors =
-                errors_before_using_return_hint != errors_after_using_return_hint
+          match return_hint with
+          | None -> (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
+          | Some (hint, kind) ->
+            (* Protect the effect of return hint constraining against speculative exns *)
+            let speculative_exn =
+              match Flow.flow_t cx (tout, hint) with
+              | exception (Flow_js_utils.SpeculativeError _ as e) -> Some (Exception.wrap e)
+              | () -> None
+            in
+            let errors_after_using_return_hint = Context.errors cx in
+            let return_hint_has_errors =
+              errors_before_using_return_hint != errors_after_using_return_hint
+            in
+            if
+              (Base.Option.is_some speculative_exn || return_hint_has_errors)
+              && kind = Hint.BestEffortHint
+            then (
+              (* Restore state *)
+              Context.restore_cache_snapshot cx cache_snapshot;
+              Context.reset_errors cx init_errors;
+              (* Re-run the implicit instantiation *)
+              let (inferred_targ_list, marked_tparams, tparams_map, _tout) =
+                implicitly_instantiate cx check
               in
-              if return_hint_has_errors && kind = Hint.BestEffortHint then begin
-                (* Restore state *)
-                Context.restore_cache_snapshot cx cache_snapshot;
-                Context.reset_errors cx init_errors;
-                (* Re-run the implicit instantiation *)
-                let (inferred_targ_list, marked_tparams, tparams_map, _tout) =
-                  implicitly_instantiate cx check
-                in
-                let has_new_errors = init_errors != Context.errors cx in
-                (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
-              end else
-                (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
-          )
+              let has_new_errors = init_errors != Context.errors cx in
+              (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
+            ) else (
+              (* We're keeping the results with the current hint, but if there was
+               * an exception that we caught, we need to rethrow it. *)
+              Base.Option.iter speculative_exn ~f:Exception.reraise;
+              (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
+            )
         in
         Context.reset_errors cx Flow_error.ErrorSet.empty;
         Exception.protect
