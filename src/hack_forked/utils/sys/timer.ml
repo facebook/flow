@@ -136,9 +136,8 @@ let set_timer ~interval ~callback =
   id
 
 let cancel_timer id =
-  cancelled := ISet.add id !cancelled;
   match !current_timer with
   | Some timer when timer.id = id ->
     current_timer := None;
     schedule ()
-  | _ -> ()
+  | _ -> cancelled := ISet.add id !cancelled
