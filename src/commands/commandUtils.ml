@@ -1435,6 +1435,7 @@ let make_options
       };
     opt_log_saving = FlowConfig.log_saving flowconfig;
     opt_log_file;
+    opt_long_lived_workers = FlowConfig.long_lived_workers flowconfig;
     (* Not user-configurable for now, but set to false for some codemods. *)
     opt_any_propagation = true;
   }

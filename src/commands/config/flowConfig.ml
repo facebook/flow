@@ -86,6 +86,7 @@ module Opts = struct
     include_warnings: bool;
     lazy_mode: lazy_mode option;
     log_saving: Options.log_saving SMap.t;
+    long_lived_workers: bool;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
@@ -207,6 +208,7 @@ module Opts = struct
       include_warnings = false;
       lazy_mode = None;
       log_saving = SMap.empty;
+      long_lived_workers = false;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
       max_literal_length = 100;
@@ -372,14 +374,22 @@ module Opts = struct
   let max_rss_bytes_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v })
 
-  let channel_mode_parser ~cond =
+  let channel_mode_parser ~enabled =
     enum
       [("pipe", `pipe); ("socket", `socket)]
       (fun opts v ->
-        if cond () then
+        if enabled then
           Ok { opts with channel_mode = Some v }
         else
           Ok opts)
+
+  let long_lived_workers_parser ~enabled =
+    boolean (fun opts v ->
+        if enabled then
+          Ok { opts with long_lived_workers = v }
+        else
+          Ok opts
+    )
 
   let file_ext_parser =
     string
@@ -739,8 +749,10 @@ module Opts = struct
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
-      ("experimental.channel_mode", channel_mode_parser ~cond:(Fun.const true));
-      ("experimental.channel_mode.windows", channel_mode_parser ~cond:(Fun.const Sys.win32));
+      ("experimental.channel_mode", channel_mode_parser ~enabled:true);
+      ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
+      ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
+      ("experimental.long_lived_workers.windows", long_lived_workers_parser ~enabled:Sys.win32);
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
@@ -1429,6 +1441,8 @@ let lazy_mode c = c.options.Opts.lazy_mode
 let lint_severities c = c.lint_severities
 
 let log_saving c = c.options.Opts.log_saving
+
+let long_lived_workers c = c.options.Opts.long_lived_workers
 
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 
