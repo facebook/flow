@@ -8,26 +8,9 @@ advanced React patterns. In previous sections we have seen a few of them. The
 following is a complete reference for each of these types along with some
 examples for how/where to use them.
 
-Table of contents:
-
-- [`React.Node`](#toc-react-node)
-- [`React.Element<typeof Component>`](#toc-react-element)
-- [`React.ChildrenArray<T>`](#toc-react-childrenarray)
-- [`React.AbstractComponent<Config, Instance>`](#toc-react-abstractcomponent)
-- [`React.ComponentType<Props>`](#toc-react-componenttype)
-- [`React.StatelessFunctionalComponent<Props>`](#toc-react-statelessfunctionalcomponent)
-- [`React.ElementType`](#toc-react-elementtype)
-- [`React.Key`](#toc-react-key)
-- [`React.Ref<typeof Component>`](#toc-react-ref)
-- [`React.ElementProps<typeof Component>`](#toc-react-elementprops)
-- [`React.ElementConfig<typeof Component>`](#toc-react-elementconfig)
-- [`React.ElementRef<typeof Component>`](#toc-react-elementref)
-- [`React.Config<Props, DefaultProps>`](#toc-react-config)
-
 These types are all exported as named type exports from the `react` module. If
 you want to access them as members on the `React` object (e.g.
-[`React.Node`](#toc-react-node) or
-[`React.StatelessFunctionalComponent`](#toc-react-statelessfunctionalcomponent)) and
+[`React.Node`](#toc-react-node)) and
 you are importing React as an ES module then you should import `React` as a
 namespace:
 
@@ -81,21 +64,10 @@ This represents any node that can be rendered in a React application.
 `React.Node` can be null, a boolean, a number, a string, a React
 element, or an array of any of those types recursively.
 
-If you need a return type for your component `render()` methods then you should use `React.Node`.
-However, if you need a generic type for a children prop, use `?React.Node`;
-children can be undefined, when `render()` can't return `undefined`.
+`React.Node` is a good default to use to annotate the return type of a function component
+and class render methods. You can also use it to type elements your component takes in as children.
 
-Here is an example of `React.Node` being used as the return type to `render()`:
-
-```js
-class MyComponent extends React.Component<{}> {
-  render(): React.Node {
-    // ...
-  }
-}
-```
-
-It may also be used as the return type of a stateless functional component:
+Here is an example of `React.Node` being used as the return type to a function component:
 
 ```js
 function MyComponent(props: {}): React.Node {
@@ -103,9 +75,14 @@ function MyComponent(props: {}): React.Node {
 }
 ```
 
-You don't need to annotate the return type of either your `render()` method or a
-stateless functional component. However, if you want to annotate the return type
-then `React.Node` is the generic to use.
+It may also be used as the return type of a class `render` method:
+```js
+class MyComponent extends React.Component<{}> {
+  render(): React.Node {
+    // ...
+  }
+}
+```
 
 Here is an example of `React.Node` as the prop type for children:
 
@@ -118,12 +95,6 @@ function MyComponent({ children }: { children: React.Node }) {
 All `react-dom` JSX intrinsics have `React.Node` as their children type.
 `<div>`, `<span>`, and all the rest.
 
-The definition of `React.Node` can be roughly approximated with a
-[`React.ChildrenArray<T>`](#toc-react-childrenarray):
-
-```js
-type Node = React.ChildrenArray<void | null | boolean | string | number | React.Element<any>>;
-```
 
 ## `React.Element<typeof Component>` {#toc-react-element}
 
@@ -134,9 +105,9 @@ const element: React.Element<'div'> = <div />;
 ```
 
 `React.Element<typeof Component>` is also the return type of
-`React.createElement()`.
+`React.createElement()`/`React.jsx()`.
 
-A `React.Element<typeof Component>` takes a single type argument,
+A `React.Element` takes a single type argument,
 `typeof Component`. `typeof Component` is the component type of the React
 element. For an intrinsic element, `typeof Component` will be the string literal
 for the intrinsic you used. Here are a few examples with DOM intrinsics:
@@ -147,27 +118,25 @@ for the intrinsic you used. Here are a few examples with DOM intrinsics:
 (<div />: React.Element<'span'>); // Error: div is not a span.
 ```
 
-`typeof Component` can also be your React class component or stateless
-functional component.
+`typeof Component` can also be your React class component or function component.
 
 ```js
-class Foo extends React.Component<{}> {}
-function Bar(props: {}) {}
+function Foo(props: {}) {}
+class Bar extends React.Component<{}> {}
 
 (<Foo />: React.Element<typeof Foo>); // OK
 (<Bar />: React.Element<typeof Bar>); // OK
 (<Foo />: React.Element<typeof Bar>); // Error: Foo is not Bar
 ```
 
-Take note of the `typeof`, it is required! `Foo` without `typeof` would be the
-type of an instance of `Foo`. So: `(new Foo(): Foo)`. We want the type *of*
-`Foo` not the type of an instance of `Foo`. So: `(Foo: typeof Foo)`.
-`Class<Foo>` would also work here, but we prefer `typeof` for consistency with
-stateless functional components.
+Take note of the `typeof`, it is required! We want to get the
+type *of* the value `Foo`. `(Foo: Foo)` is an error because `Foo` cannot be used
+as a type, so the following is correct: `(Foo: typeof Foo)`.
 
-We also need `typeof` for `Bar` because `Bar` is a value. So we want to get the
-type *of* the value `Bar`. `(Bar: Bar)` is an error because `Bar` cannot be used
-as a type, so the following is correct: `(Bar: typeof Bar)`.
+`Bar` without `typeof` would be the type of an instance of `Bar`: `(new Bar(): Bar)`.
+We want the type *of* `Bar` not the type of an instance of `Bar`.
+`Class<Bar>` would also work here, but we prefer `typeof` for consistency
+with function components.
 
 ## `React.ChildrenArray<T>` {#toc-react-childrenarray}
 
@@ -193,11 +162,14 @@ const array: Array<number> = React.Children.toArray(children);
 
 ## `React.AbstractComponent<Config, Instance>` {#toc-react-abstractcomponent}
 
-`React.AbstractComponent<Config, Instance>` (v0.89.0+) represents a component with
+`React.AbstractComponent<Config, Instance>` represents a component with
 a config of type Config and instance of type Instance.
 
-Instance is optional and is mixed by default.
+The `Config` of a component is the type of the object you need to pass in to JSX in order
+to create an element with that component. The `Instance` of a component is the type of the value
+that is written to the `current` field of a ref object passed into the `ref` prop in JSX.
 
+Config is required, but Instance is optional and defaults to mixed.
 
 A class or function component with config `Config` may be used in places that expect
 `React.AbstractComponent<Config>`.
@@ -205,62 +177,9 @@ A class or function component with config `Config` may be used in places that ex
 This is Flow's most abstract representation of a React component, and is most useful for
 writing HOCs and library definitions.
 
-## `React.ComponentType<Props>` {#toc-react-componenttype}
-
-This is a union of a class component or a stateless functional component. This
-is the type you want to use for functions that receive or return React
-components such as higher-order components or other utilities.
-
-Here is how you may use `React.ComponentType<Props>` with
-[`React.Element<typeof Component>`](#toc-react-element) to construct a component
-with a specific set of props:
-
-```js
-type Props = {
-  foo: number,
-  bar: number,
-};
-
-function createMyElement<C: React.ComponentType<Props>>(
-  Component: C,
-): React.Element<C> {
-  return <Component foo={1} bar={2} />;
-}
-```
-
-`React.ComponentType<Props>` does not include intrinsic JSX element types like
-`div` or `span`. See [`React.ElementType`](#toc-react-elementtype) if you also want
-to include JSX intrinsics.
-
-The definition for `React.ComponentType<Props>` is roughly:
-
-```js
-type ComponentType<Props> =
-  | React.StatelessFunctionalComponent<Props>
-  | Class<React.Component<Props, any>>;
-```
-
-> **Note:** In 0.100.0+, `React.ComponentType<Config>` is an alias for `React.AbstractComponent<Config, mixed>`,
-which represents a component with config type Config and `mixed` instance type.
-
-
-## `React.StatelessFunctionalComponent<Props>` {#toc-react-statelessfunctionalcomponent}
-
-This is the type of a React stateless functional component.
-
-The definition for `React.StatelessFunctionalComponent<Props>` is roughly:
-
-```js
-type StatelessFunctionalComponent<Props> =
-  (props: Props) => React.Node;
-```
-
-There is a little bit more to the definition of
-`React.StatelessFunctionalComponent<Props>` for context and props.
-
 ## `React.ElementType` {#toc-react-elementtype}
 
-Similar to [`React.ComponentType<Props>`](#toc-react-componenttype) except it also
+Similar to [`React.AbstractComponent<Props>`](#toc-react-abstractcomponent) except it also
 includes JSX intrinsics (strings).
 
 The definition for `React.ElementType` is roughly:
@@ -268,7 +187,7 @@ The definition for `React.ElementType` is roughly:
 ```js
 type ElementType =
   | string
-  | React.ComponentType<any>;
+  | React.AbstractComponent<empty, mixed>;
 ```
 
 ## `React.MixedElement` {#toc-react-mixedelement}
@@ -293,16 +212,16 @@ type Key = string | number;
 ## `React.Ref<typeof Component>` {#toc-react-ref}
 
 The type of the [ref prop on React elements][]. `React.Ref<typeof Component>`
-could be a string or a ref function.
+could be a string, ref object, or ref function.
 
-[ref prop on React elements]: https://facebook.github.io/react/docs/refs-and-the-dom.html
+[ref prop on React elements]: https://react.dev/learn/manipulating-the-dom-with-refs
 
 The ref function will take one and only argument which will be the element
 instance which is retrieved using
 [`React.ElementRef<typeof Component>`](#toc-react-elementref) or null since
 [React will pass null into a ref function when unmounting][].
 
-[React will pass null into a ref function when unmounting]: https://facebook.github.io/react/docs/refs-and-the-dom.html#adding-a-ref-to-a-dom-element
+[React will pass null into a ref function when unmounting]: https://react.dev/learn/manipulating-the-dom-with-refs#how-to-manage-a-list-of-refs-using-a-ref-callback
 
 Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component`
 must be the type *of* a React component so you need to use `typeof` as in
@@ -314,24 +233,15 @@ The definition for `React.Ref<typeof Component>` is roughly:
 type Ref<C> =
   | string
   | (instance: React.ElementRef<C> | null) => mixed;
+  | { -current: React$ElementRef<ElementType> | null, ... }
 ```
-
-## `React.ElementProps<typeof Component>` {#toc-react-elementprops}
-
-Gets the props for a React element type, *without* preserving the optionality of `defaultProps`.
-`typeof Component` could be the type of a React class component, a stateless functional component, or a JSX intrinsic string.
-This type is used for the `props` property on [`React.Element<typeof Component>`](#toc-react-element).
-
-Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
-type *of* a React component so you need to use `typeof` as in
-`React.ElementProps<typeof MyComponent>`.
-
-> **Note:** Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is more often the right choice, especially for simple props pass-through as with [higher-order components](../hoc/#toc-supporting-defaultprops-with-react-elementconfig).
 
 ## `React.ElementConfig<typeof Component>` {#toc-react-elementconfig}
 
-Like `React.ElementProps<typeof Component>` this utility gets the type of a
-component's props but *preserves* the optionality of `defaultProps`!
+This utility gets the type of the object that you must pass in to a
+component in order to instantiate it via `createElement()` or `jsx()`.
+
+Importantly, props with defaults are optional in the resulting type.
 
 For example,
 
@@ -357,15 +267,30 @@ Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component`
 type *of* a React component so you need to use `typeof` as in
 `React.ElementProps<typeof MyComponent>`.
 
+
+## `React.ElementProps<typeof Component>` {#toc-react-elementprops}
+
+> **Note:** Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is more often the right choice, especially for simple props pass-through as with [higher-order components](../hoc/#toc-supporting-defaultprops-with-react-elementconfig).
+You probably should not use ElementProps.
+
+Gets the props for a React element type, *without* preserving the optionality of `defaultProps`.
+`typeof Component` could be the type of a React class component, a function component, or a JSX intrinsic string.
+This type is used for the `props` property on [`React.Element<typeof Component>`](#toc-react-element).
+
+Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
+type *of* a React component so you need to use `typeof` as in
+`React.ElementProps<typeof MyComponent>`.
+
 ## `React.ElementRef<typeof Component>` {#toc-react-elementref}
 
 Gets the instance type for a React element. The instance will be different for
 various component types:
 
+- React.AbstractComponent<Config, Instance> will return the Instance type.
 - React class components will be the class instance. So if you had
   `class Foo extends React.Component<{}> {}` and used
   `React.ElementRef<typeof Foo>` then the type would be the instance of `Foo`.
-- React stateless functional components do not have a backing instance and so
+- React function components do not have a backing instance and so
   `React.ElementRef<typeof Bar>` (when `Bar` is `function Bar() {}`) will give
   you the undefined type.
 - JSX intrinsics like `div` will give you their DOM instance. For
