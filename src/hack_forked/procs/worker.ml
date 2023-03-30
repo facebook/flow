@@ -12,7 +12,7 @@
  * be called at the end of the request ir order to send back the result
  * to the worker process (this is "internal business", this is not visible
  * outside this module). The clone process will provide the expected
- * function. cf 'send_result' in 'worker_main'.
+ * function. cf 'send_result' in 'worker_job_main'.
  *
  *****************************************************************************)
 
@@ -29,7 +29,7 @@ exception Connection_closed
  *
  *****************************************************************************)
 
-let worker_main ic oc =
+let worker_job_main ic oc =
   let start_user_time = ref 0. in
   let start_system_time = ref 0. in
   let start_minor_words = ref 0. in
@@ -141,7 +141,7 @@ let worker_main ic oc =
     start_compactions := gc.Gc.compactions;
     start_wall_time := Unix.gettimeofday ();
     start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
-    (try do_process { send = send_result } with
+    try do_process { send = send_result } with
     | WorkerCancel.Worker_should_cancel ->
       (* The cancelling controller will ignore result of cancelled job anyway (see
        * wait_for_cancel function), so we can send back anything. Write twice, since
@@ -152,8 +152,7 @@ let worker_main ic oc =
           ignore (Marshal_tools.to_fd_with_preamble outfd "anything")
         with
         | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
-      ));
-    exit 0
+      )
   with
   | Connection_closed -> exit 1
   | SharedMem.Out_of_shared_memory -> Exit.(exit Out_of_shared_memory)
@@ -174,7 +173,8 @@ let worker_main ic oc =
 
 let win32_worker_main restore state (ic, oc) =
   restore state;
-  worker_main ic oc
+  worker_job_main ic oc;
+  exit 0
 
 (* On Unix each job runs in a forked clone process. The first thing these clones
  * do is deserialize a marshaled closure which is the job.
@@ -221,7 +221,9 @@ let unix_worker_main restore state (ic, oc) =
       (* We fork a clone for every incoming request.
          And let it die after one request. This is the quickest GC. *)
       match Fork.fork () with
-      | 0 -> worker_main ic oc
+      | 0 ->
+        worker_job_main ic oc;
+        exit 0
       | pid ->
         (* Wait for the clone to terminate... *)
         let status = snd (Sys_utils.waitpid_non_intr [] pid) in
