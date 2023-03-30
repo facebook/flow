@@ -27,6 +27,8 @@ show_help() {
   echo "        quiet output (hides status, just prints results)"
   echo "    -s"
   echo "        test saved state"
+  echo "    -L"
+  echo "        test long-lived workers"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -50,8 +52,9 @@ verbose=0
 quiet=0
 relative="."
 check_only=0
-export saved_state filter check_only
-while getopts "b:d:f:clqxrst:vh?" opt; do
+long_lived_workers=0
+export saved_state filter check_only long_lived_workers
+while getopts "b:d:f:clqxrsLt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -81,6 +84,9 @@ while getopts "b:d:f:clqxrst:vh?" opt; do
     saved_state=1
     printf "Testing saved state by running all tests using saved state\\n"
     ;;
+  L)
+    long_lived_workers=1
+    ;;
   v)
     verbose=1
     ;;
@@ -98,6 +104,9 @@ shift $((OPTIND-1))
 if [ -n "$specific_test" ]; then
   if [[ "$saved_state" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
+  fi
+  if [[ "$long_lived_workers" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-long-lived-workers$/\1/')
   fi
 
   filter="^$specific_test$"
@@ -259,6 +268,8 @@ if [[ "$list_tests" -eq 1 ]]; then
 
       if [[ "$saved_state" -eq 1 ]]; then
         echo "$name-saved-state"
+      elif [[ "$long_lived_workers" -eq 1 ]]; then
+        echo "$name-long-lived-workers"
       else
         echo "$name"
       fi

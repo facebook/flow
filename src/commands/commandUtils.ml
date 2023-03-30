@@ -843,6 +843,7 @@ module Options_flags = struct
     wait_for_recheck: bool option;
     include_suppressions: bool;
     estimate_recheck_time: bool option;
+    long_lived_workers: bool option;
     distributed: bool;
   }
 end
@@ -909,6 +910,7 @@ let options_flags =
       include_suppressions
       trust_mode
       estimate_recheck_time
+      long_lived_workers
       distributed =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
@@ -937,6 +939,7 @@ let options_flags =
         abstract_locations;
         include_suppressions;
         estimate_recheck_time;
+        long_lived_workers;
         distributed;
       }
   in
@@ -1001,6 +1004,7 @@ let options_flags =
       (* restarting to save time is a hack and should be removed. this should
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
+      |> flag "--long-lived-workers" (optional bool) ~doc:"" ~env:"FLOW_LONG_LIVED_WORKERS"
       |> flag "--distributed" truthy ~doc:""
     )
 
@@ -1433,7 +1437,10 @@ let make_options
       };
     opt_log_saving = FlowConfig.log_saving flowconfig;
     opt_log_file;
-    opt_long_lived_workers = FlowConfig.long_lived_workers flowconfig;
+    opt_long_lived_workers =
+      Option.value
+        options_flags.long_lived_workers
+        ~default:(FlowConfig.long_lived_workers flowconfig);
     (* Not user-configurable for now, but set to false for some codemods. *)
     opt_any_propagation = true;
   }

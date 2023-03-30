@@ -73,6 +73,7 @@ let dummy_options_flags =
     wait_for_recheck = None;
     include_suppressions = false;
     estimate_recheck_time = None;
+    long_lived_workers = None;
     distributed = false;
   }
 
