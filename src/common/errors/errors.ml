@@ -946,6 +946,41 @@ let loc_of_printable_error_for_compare ((_, _, err) : 'a printable_error) =
     | { loc; _ } -> loc
   )
 
+let patch_misplaced_error
+    ~strip_root source_file ((error_kind, message_list, friendly) : 'loc printable_error) =
+  let open Friendly in
+  let { message; _ } = friendly in
+  let message =
+    match message with
+    | Normal ({ message; _ } as normal) ->
+      let is_lib =
+        match source_file with
+        | File_key.LibFile _ -> true
+        | _ -> false
+      in
+      let filename = File_key.to_string source_file in
+      let filename =
+        if is_lib then
+          relative_lib_path ~strip_root filename
+        else
+          relative_path ~strip_root filename
+      in
+      let message_feature =
+        Inline
+          [
+            Text ". (FLOW BUG: This is a misplaced error. The original error was raised in file ";
+            Code filename;
+            Text ")";
+          ]
+      in
+      let message = message @ [message_feature] in
+      Normal { normal with message }
+    | Speculation _ ->
+      (* TODO this patch does not render well for speculative errors *)
+      message
+  in
+  (error_kind, message_list, { friendly with message })
+
 let locs_of_printable_error =
   let locs_of_message locs message =
     Friendly.(

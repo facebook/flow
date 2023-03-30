@@ -317,6 +317,7 @@ let run_merge_service
 
 let mk_intermediate_result_callback ~reader ~options ~persistent_connections suppressions =
   let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
+  let root = Options.root options in
   let send_errors_over_connection =
     match persistent_connections with
     | None -> (fun _ -> ())
@@ -327,7 +328,6 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       let open Errors in
       let curr_errors = ref ConcreteLocPrintableErrorSet.empty in
       let curr_warnings = ref ConcreteLocPrintableErrorSet.empty in
-      let root = Options.root options in
       let file_options = Some (Options.file_options options) in
       let filter = Error_suppressions.filter_suppressed_errors ~root ~file_options in
       fun (lazy results) ->
@@ -401,12 +401,12 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
                let errors =
                  errors
                  |> Flow_error.concretize_errors loc_of_aloc
-                 |> Flow_error.make_errors_printable
+                 |> Flow_error.make_errors_printable ~strip_root:(Some root)
                in
                let warnings =
                  warnings
                  |> Flow_error.concretize_errors loc_of_aloc
-                 |> Flow_error.make_errors_printable
+                 |> Flow_error.make_errors_printable ~strip_root:(Some root)
                in
                (file, errors, warnings) :: acc
              | Error msg ->
@@ -414,7 +414,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
                let errors =
                  errors
                  |> Flow_error.concretize_errors loc_of_aloc
-                 |> Flow_error.make_errors_printable
+                 |> Flow_error.make_errors_printable ~strip_root:(Some root)
                in
                let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
                (file, errors, warnings) :: acc)
@@ -975,7 +975,9 @@ end = struct
             Flow_error.ErrorSet.empty
         in
         let error_set =
-          error_set |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
+          error_set
+          |> Flow_error.concretize_errors loc_of_aloc
+          |> Flow_error.make_errors_printable ~strip_root:(Some (Options.root options))
         in
         if not (Errors.ConcreteLocPrintableErrorSet.is_empty error_set) then
           Persistent_connection.update_clients

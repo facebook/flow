@@ -21,8 +21,9 @@ open Utils_js
  * 3. Throw away the collated errors when lazy mode adds more dependents or dependencies to the
  *    checked set
  * *)
-let regenerate ~reader =
+let regenerate ~reader ~options =
   let open Errors in
+  let root = Options.root options in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let add_suppression_warnings checked unused warnings =
     (* For each unused suppression, create an warning *)
@@ -46,7 +47,7 @@ let regenerate ~reader =
             let err =
               let msg = Error_message.EUnusedSuppression loc in
               Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
-              |> Flow_error.make_error_printable
+              |> Flow_error.make_error_printable ~strip_root:(Some root)
             in
             let file_warnings =
               FilenameMap.find_opt source_file warnings
@@ -69,7 +70,7 @@ let regenerate ~reader =
         let err =
           Error_message.ECodelessSuppression (loc, code)
           |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-          |> Flow_error.make_error_printable
+          |> Flow_error.make_error_printable ~strip_root:(Some root)
         in
         let file_warnings =
           FilenameMap.find_opt source_file warnings
@@ -93,7 +94,7 @@ let regenerate ~reader =
     let (file_errs, file_suppressed, unused) =
       file_errs
       |> Flow_error.concretize_errors loc_of_aloc
-      |> Flow_error.make_errors_printable
+      |> Flow_error.make_errors_printable ~strip_root:(Some root)
       |> Error_suppressions.filter_suppressed_errors ~root ~file_options suppressions ~unused
     in
     let errors = f filename file_errs errors in
@@ -107,7 +108,7 @@ let regenerate ~reader =
       let err =
         Error_message.EDuplicateModuleProvider { module_name; provider; conflict }
         |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:duplicate
-        |> Flow_error.make_error_printable
+        |> Flow_error.make_error_printable ~strip_root:(Some root)
       in
       Errors.ConcreteLocPrintableErrorSet.add err acc
     in
@@ -117,7 +118,7 @@ let regenerate ~reader =
     in
     SMap.fold f
   in
-  fun ~options env ->
+  fun env ->
     MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
     let { local_errors; duplicate_providers; merge_errors; warnings; suppressions } = env.errors in
     let collated_errorset =
