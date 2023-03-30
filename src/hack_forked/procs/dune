@@ -7,7 +7,7 @@
 (library
  (name procs_procs)
  (wrapped false)
- (modules mem_profile worker workerController)
+ (modules worker workerController)
  (preprocess
   (pps lwt_ppx))
  (libraries

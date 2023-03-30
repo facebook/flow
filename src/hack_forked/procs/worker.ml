@@ -52,7 +52,6 @@ let worker_main ic oc =
      *
      * (In practice, none of the code below should observe a cancel request) *)
     WorkerCancel.with_no_cancellations @@ fun () ->
-    Mem_profile.stop ();
     let tm = Unix.times () in
     let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
     let end_system_time = tm.Unix.tms_stime +. tm.Unix.tms_cstime in
@@ -142,7 +141,6 @@ let worker_main ic oc =
     start_compactions := gc.Gc.compactions;
     start_wall_time := Unix.gettimeofday ();
     start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
-    Mem_profile.start ();
     (try do_process { send = send_result } with
     | WorkerCancel.Worker_should_cancel ->
       (* The cancelling controller will ignore result of cancelled job anyway (see
