@@ -588,7 +588,8 @@ let mk_check options ~reader ~master_cx () =
           ))
         ~f:(fun () -> Ok (check_file file))
     with
-    | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc ->
+    | ( WorkerCancel.Worker_should_cancel | SharedMem.Out_of_shared_memory | SharedMem.Heap_full
+      | SharedMem.Hash_table_full ) as exc ->
       raise exc
     (* A catch all suppression is probably a bad idea... *)
     | unwrapped_exc ->

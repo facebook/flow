@@ -133,7 +133,7 @@ let check_canceled =
   fun () ->
     let n = (!count + 1) mod 128 in
     count := n;
-    if n = 0 then WorkerCancel.check_should_exit ()
+    if n = 0 then WorkerCancel.check_should_cancel ()
 
 let strict_equatable_error cond_context (l, r) =
   let comparison_error =
@@ -729,7 +729,7 @@ struct
         | (DefT (_, _, NumT (Literal (_, (n, _)))), DebugSleepT _) ->
           let n = ref n in
           while !n > 0.0 do
-            WorkerCancel.check_should_exit ();
+            WorkerCancel.check_should_cancel ();
             Unix.sleepf (min !n 1.0);
             n := !n -. 1.
           done

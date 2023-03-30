@@ -24,13 +24,6 @@ type job_status = Job_terminated of Unix.process_status
 
 exception Connection_closed
 
-let on_job_cancelled parent_outfd =
-  (* The cancelling controller will ignore result of cancelled job anyway (see
-   * wait_for_cancel function), so we can send back anything. Write twice, since
-   * the normal response writes twice too *)
-  Marshal_tools.to_fd_with_preamble parent_outfd "anything" |> ignore;
-  Marshal_tools.to_fd_with_preamble parent_outfd "anything" |> ignore
-
 (*****************************************************************************
  * Entry point for spawned worker.
  *
@@ -49,7 +42,16 @@ let worker_main ic oc =
   let start_proc_fs_status = ref None in
   let infd = Daemon.descr_of_in_channel ic in
   let outfd = Daemon.descr_of_out_channel oc in
+  let result_sent = ref false in
   let send_result data =
+    (* If we got this far, the job is complete and we should send the results
+     * back to the server, even if we try to cancel at this point. If a cancel
+     * request is handled during this block, then we will get a cancel exception
+     * when we return. We set the `result_sent` flag to avoid sending the dummy
+     * result in the exception handler.
+     *
+     * (In practice, none of the code below should observe a cancel request) *)
+    WorkerCancel.with_no_cancellations @@ fun () ->
     Mem_profile.stop ();
     let tm = Unix.times () in
     let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
@@ -95,8 +97,6 @@ let worker_main ic oc =
       | _ -> ()
     end;
 
-    (* If we got so far, just let it finish "naturally" *)
-    WorkerCancel.set_on_worker_cancelled (fun () -> ());
     let len =
       Measure.time "worker_send_response" (fun () ->
           try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data with
@@ -118,7 +118,7 @@ let worker_main ic oc =
       try Marshal_tools.to_fd_with_preamble outfd stats with
       | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
     in
-    ()
+    result_sent := true
   in
   try
     try
@@ -129,7 +129,6 @@ let worker_main ic oc =
             | End_of_file -> raise Connection_closed
         )
       in
-      WorkerCancel.set_on_worker_cancelled (fun () -> on_job_cancelled outfd);
       let tm = Unix.times () in
       let gc = Gc.quick_stat () in
       Sys_utils.start_gc_profiling ();
@@ -149,6 +148,15 @@ let worker_main ic oc =
       exit 0
     with
     | Connection_closed -> exit 1
+    | WorkerCancel.Worker_should_cancel ->
+      (* The cancelling controller will ignore result of cancelled job anyway (see
+       * wait_for_cancel function), so we can send back anything. Write twice, since
+       * the normal response writes twice too *)
+      if not !result_sent then (
+        ignore (Marshal_tools.to_fd_with_preamble outfd "anything");
+        ignore (Marshal_tools.to_fd_with_preamble outfd "anything")
+      );
+      exit 0
     | SharedMem.Out_of_shared_memory -> Exit.(exit Out_of_shared_memory)
     | SharedMem.Hash_table_full -> Exit.(exit Hash_table_full)
     | SharedMem.Heap_full -> Exit.(exit Heap_full)

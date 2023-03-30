@@ -11,7 +11,7 @@ function hh_counter_next() {
   return ++__hh_counter;
 }
 
-//Provides: hh_check_should_exit
-function hh_check_should_exit() {
+//Provides: hh_check_should_cancel
+function hh_check_should_cancel() {
   return;
 }

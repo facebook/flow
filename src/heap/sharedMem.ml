@@ -312,12 +312,6 @@ module HashtblSegment (Key : Key) = struct
 
   external hh_remove : hash -> unit = "hh_remove"
 
-  let hh_add x y = WorkerCancel.with_worker_exit (fun () -> hh_add x y)
-
-  let hh_mem x = WorkerCancel.with_worker_exit (fun () -> hh_mem x)
-
-  let hh_get x = WorkerCancel.with_worker_exit (fun () -> hh_get x)
-
   let hash_of_key =
     let prefix = Prefix.make () in
     (fun k -> Digest.string (Prefix.make_key prefix (Key.to_string k)))
@@ -377,12 +371,8 @@ struct
 
   external hh_deserialize : _ addr -> Value.t = "hh_deserialize"
 
-  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x (tag_val Serialized_tag))
-
-  let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
-
   let add key value =
-    let addr = hh_store value in
+    let addr = hh_store value (tag_val Serialized_tag) in
     ignore (Tbl.add key addr)
 
   let mem = Tbl.mem

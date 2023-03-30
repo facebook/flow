@@ -242,8 +242,8 @@ typedef struct {
    */
   size_t log_level;
 
-  /* Initially 0; set to 1 to signal that workers should exit */
-  size_t workers_should_exit;
+  /* Initially 0; set to 1 to signal that workers should cancel */
+  size_t workers_should_cancel;
 
   /* A counter increasing globally across all forks. */
   alignas(128) uintnat counter;
@@ -445,7 +445,7 @@ static uintnat early_counter = 0;
  * starting at 1. This is an offset into the worker local values in the heap. */
 static size_t worker_id = 0;
 
-static size_t worker_can_exit = 1;
+static size_t worker_can_cancel = 1;
 
 CAMLprim value hh_used_heap_size(value unit) {
   CAMLparam1(unit);
@@ -877,41 +877,41 @@ static void assert_not_master(void) {
 CAMLprim value hh_stop_workers(value unit) {
   CAMLparam1(unit);
   assert_master();
-  info->workers_should_exit = 1;
+  info->workers_should_cancel = 1;
   CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_resume_workers(value unit) {
   CAMLparam1(unit);
   assert_master();
-  info->workers_should_exit = 0;
+  info->workers_should_cancel = 0;
   CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_set_can_worker_stop(value val) {
   CAMLparam1(val);
-  worker_can_exit = Bool_val(val);
+  worker_can_cancel = Bool_val(val);
   CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_get_can_worker_stop(value unit) {
   CAMLparam1(unit);
-  CAMLreturn(Val_bool(worker_can_exit));
+  CAMLreturn(Val_bool(worker_can_cancel));
 }
 
-static void check_should_exit(void) {
+static void check_should_cancel(void) {
   assert(info != NULL);
-  if (worker_can_exit && info->workers_should_exit) {
+  if (worker_can_cancel && info->workers_should_cancel) {
     static const value* exn = NULL;
     if (!exn)
-      exn = caml_named_value("worker_should_exit");
+      exn = caml_named_value("worker_should_cancel");
     caml_raise_constant(*exn);
   }
 }
 
-CAMLprim value hh_check_should_exit(value unit) {
+CAMLprim value hh_check_should_cancel(value unit) {
   CAMLparam1(unit);
-  check_should_exit();
+  check_should_cancel();
   CAMLreturn(Val_unit);
 }
 
@@ -1489,7 +1489,7 @@ CAMLprim value hh_ml_alloc(value wsize) {
 /*****************************************************************************/
 CAMLprim value hh_store_ocaml(value v, value tag_val) {
   CAMLparam1(v);
-  check_should_exit();
+  check_should_cancel();
 
   char *serialized, *compressed;
   intnat serialized_size;
@@ -1610,7 +1610,7 @@ static void raise_hash_table_full(void) {
 /*****************************************************************************/
 CAMLprim value hh_add(value key, value addr) {
   CAMLparam2(key, addr);
-  check_should_exit();
+  check_should_cancel();
 
   uint64_t elt_hash = get_hash(key);
   addr_t elt_addr = Long_val(addr);
@@ -1698,7 +1698,7 @@ static size_t find_slot(value key, helt_t* elt) {
 /*****************************************************************************/
 CAMLprim value hh_mem(value key) {
   CAMLparam1(key);
-  check_should_exit();
+  check_should_cancel();
   helt_t elt;
   find_slot(key, &elt);
   CAMLreturn(Val_bool(elt.hash != 0 && elt.addr != NULL_ADDR));
@@ -1710,7 +1710,7 @@ CAMLprim value hh_mem(value key) {
 CAMLprim value hh_deserialize(value addr_val) {
   CAMLparam1(addr_val);
   CAMLlocal1(result);
-  check_should_exit();
+  check_should_cancel();
 
   heap_entry_t* entry = Entry_of_addr(Long_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
@@ -1733,7 +1733,7 @@ CAMLprim value hh_deserialize(value addr_val) {
 /*****************************************************************************/
 CAMLprim value hh_get(value key) {
   CAMLparam1(key);
-  check_should_exit();
+  check_should_cancel();
 
   helt_t elt;
   find_slot(key, &elt);
