@@ -90,7 +90,6 @@ module Opts = struct
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
-    max_rss_bytes_for_check_per_worker: int;
     max_seconds_for_check_per_worker: float;
     max_workers: int option;
     merge_timeout: int option;
@@ -212,7 +211,6 @@ module Opts = struct
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
       max_literal_length = 100;
-      max_rss_bytes_for_check_per_worker = (* 200MB *) 200 * 1024 * 1024;
       max_seconds_for_check_per_worker = 5.0;
       max_workers = None;
       merge_timeout = Some 100;
@@ -370,9 +368,6 @@ module Opts = struct
 
   let max_seconds_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
-
-  let max_rss_bytes_for_check_per_worker_parser =
-    uint (fun opts v -> Ok { opts with max_rss_bytes_for_check_per_worker = v })
 
   let channel_mode_parser ~enabled =
     enum
@@ -816,7 +811,6 @@ module Opts = struct
       ("traces", uint (fun opts v -> Ok { opts with traces = v }));
       ("trust_mode", trust_mode_parser);
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
-      ("types_first.max_rss_bytes_for_check_per_worker", max_rss_bytes_for_check_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
@@ -1449,8 +1443,6 @@ let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 let max_header_tokens c = c.options.Opts.max_header_tokens
 
 let max_literal_length c = c.options.Opts.max_literal_length
-
-let max_rss_bytes_for_check_per_worker c = c.options.Opts.max_rss_bytes_for_check_per_worker
 
 let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_per_worker
 

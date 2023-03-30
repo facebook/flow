@@ -1405,8 +1405,6 @@ let make_options
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
         (FlowConfig.relay_integration_module_prefix_includes flowconfig);
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
-    opt_max_rss_bytes_for_check_per_worker =
-      FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
     opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
     opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
     opt_strict_es6_import_export_excludes =
