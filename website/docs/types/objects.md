@@ -3,13 +3,13 @@ title: Object Types
 slug: /types/objects
 ---
 
-Objects can be used in many different ways in JavaScript. There are a number of
-different ways to type them in order to support all the different use cases.
+Objects can be used in many different ways in JavaScript.
+There are a number of ways to type them in order to support the different use cases.
 
-In Flow, there are two different kinds of object types: exact object types and inexact object types.
-
-In general, we recommend using [exact object types](#toc-exact-object-types) whenever possible. Exact object types are more
-precise and interact better with other type system features, like spreads.
+- Exact object types: An object which has exactly a set of properties, e.g. `{a: number}`. We recommend using exact object types rather than inexact ones, as they are more precise and interact better with other type system features, like [spreads](#object-type-spread).
+- [Inexact object types](#exact-and-inexact-object-types): An object with at least a set of properties, but potentially other, unknown ones, e.g. `{a: number, ...}`.
+- [Objects with indexers](#toc-objects-as-maps): An object that can used as a map from a key type to a value type, e.g. `{[string]: boolean}`.
+- [Interfaces](../interfaces): Interfaces are separate from object types. Only they can describe instances of classes. E.g. `interfaces {a: number}`.
 
 ## Object type syntax {#toc-object-type-syntax}
 
@@ -18,9 +18,8 @@ possible. Using curly braces `{}` and name-value pairs using a colon `:` split
 by commas `,`.
 
 ```js flow-check
-// @flow
-var obj1: { foo: boolean } = { foo: true };
-var obj2: {
+const obj1: {foo: boolean} = {foo: true};
+const obj2: {
   foo: number,
   bar: boolean,
   baz: string,
@@ -31,9 +30,6 @@ var obj2: {
 };
 ```
 
-> **Note:** Previously object types used semicolons `;` for splitting
-> name-value pairs. While the syntax is still valid, you should use commas `,`.
-
 ### Optional object type properties {#toc-optional-object-type-properties}
 
 In JavaScript, accessing a property that doesn't exist evaluates to
@@ -41,9 +37,7 @@ In JavaScript, accessing a property that doesn't exist evaluates to
 turns these into type errors.
 
 ```js flow-check
-// @flow
-var obj = { foo: "bar" };
-// $ExpectError
+const obj = {foo: "bar"};
 obj.bar; // Error!
 ```
 
@@ -52,11 +46,9 @@ an _optional property_ by adding a question mark `?` after the property name in
 the object type.
 
 ```js flow-check
-// @flow
-var obj: { foo?: boolean } = {};
+const obj: {foo?: boolean} = {};
 
 obj.foo = true;    // Works!
-// $ExpectError
 obj.foo = 'hello'; // Error!
 ```
 
@@ -64,16 +56,13 @@ In addition to their set value type, these optional properties can either be
 `void` or omitted altogether. However, they cannot be `null`.
 
 ```js flow-check
-// @flow
-function acceptsObject(value: { foo?: string }) {
-  // ...
-}
+function acceptsObject(value: {foo?: string}) { /* ... */ }
 
-acceptsObject({ foo: "bar" });     // Works!
-acceptsObject({ foo: undefined }); // Works!
-// $ExpectError
-acceptsObject({ foo: null });      // Error!
-acceptsObject({});                 // Works!
+acceptsObject({foo: "bar"});     // Works!
+acceptsObject({foo: undefined}); // Works!
+acceptsObject({});               // Works!
+
+acceptsObject({foo: null});      // Error!
 ```
 
 ### Object methods {#toc-object-methods}
@@ -81,21 +70,19 @@ acceptsObject({});                 // Works!
 Method syntax in objects has the same runtime behavior as a function property. These two objects are equivalent at runtime:
 
 ```js flow-check
-// @flow
-let a = {
-  foo : function () { return 3; }
+const a = {
+  foo: function () { return 3; }
 };
-let b = {
+const b = {
   foo() { return 3; }
 }
 ```
 
 However, despite their equivalent runtime behavior, Flow checks them slightly differently. In particular, object
-properties written with method syntax are read-only; Flow will not allow you to write a new value to them.
+properties written with method syntax are [read-only](../../lang/variance); Flow will not allow you to write a new value to them.
 
 ```js flow-check
-// @flow
-let b = {
+const b = {
   foo() { return 3; }
 }
 b.foo = () => { return 2; } // Error!
@@ -105,20 +92,19 @@ Additionally, object methods do not allow the use of `this` in their bodies, in 
 for their `this` parameters. Prefer to reference the object by name instead of using `this`.
 
 ```js flow-check
-// @flow
-let a = {
-  x : 3,
-  foo() { return this.x; } // error!
+const a = {
+  x: 3,
+  foo() { return this.x; } // Error!
 }
-let b = {
-  x : 3,
-  foo(): number { return b.x; } // works!
+const b = {
+  x: 3,
+  foo(): number { return b.x; } // Works!
 }
 ```
 
 ## Object type inference {#toc-object-type-inference}
 
-> NOTE: The behavior of empty object literals has changed as of version 0.191 -
+> NOTE: The behavior of empty object literals has changed in version 0.191 -
 > see this [blog post](https://medium.com/flow-type/improved-handling-of-the-empty-object-in-flow-ead91887e40c) for more details.
 
 When you create an object value, its type is set at the creation point. You cannot add new properties,
@@ -137,7 +123,7 @@ obj.UNKNOWN; // Error - prop `UNKNOWN` is not in the object value
 obj.foo = true; // Error - `foo` is of type `number`
 ```
 
-If you supply an annotation, you can add properties missing in the object value as optional properties:
+If you supply a type annotation, you can add properties missing in the object value as optional properties:
 
 ```js flow-check
 const obj: {
@@ -169,22 +155,42 @@ const foo: number | string = obj.foo; // Works!
 obj.foo = "hi"; // Works!
 ```
 
-The empty object can be interpreted as a [dictionary](#toc-objects-as-maps), if you supply the appropriate annotation:
+The empty object can be interpreted as a [dictionary](#toc-objects-as-maps), if you supply the appropriate type annotation:
 
 ```js flow-check
 const dict: {[string]: number} = {}; // Works!
 ```
 
-## Exact and inexact object types {#toc-exact-object-types}
+You may need to add type annotations to an object literal, if it references itself recursively (beyond simple cases):
+
+```js flow-check
+const Utils = { // Error
+  foo() {
+    return Utils.bar();
+  },
+  bar() {
+    return 1;
+  }
+};
+
+const FixedUtils = { // Works!
+  foo(): number {
+    return FixedUtils.bar();
+  },
+  bar(): number {
+    return 1;
+  }
+};
+```
+
+## Exact and inexact object types
 
 Exact object types are the default (as of version 0.202), unless you have set [`exact_by_default=false`](../../config/options#toc-exact-by-default-boolean) in your `.flowconfig`.
 
 Inexact objects (denoted with the `...`) allow extra properties to be passed in:
 
 ```js flow-check
-function method(obj: {foo: string, ...}) {
-  // ...
-}
+function method(obj: {foo: string, ...}) { /* ... */ }
 
 method({foo: "test", bar: 42}); // Works!
 ```
@@ -194,9 +200,7 @@ method({foo: "test", bar: 42}); // Works!
 But exact object types do not:
 
 ```js flow-check
-function method(obj: {foo: string}) {
-  // ...
-}
+function method(obj: {foo: string}) { /* ... */ }
 
 method({foo: "test", bar: 42}); // Error!
 ```
@@ -207,23 +211,96 @@ If you have set `exact_by_default=false`, you can denote exact object types by a
 const x: {|foo: string|} = {foo: "Hello", bar: "World!"}; // Error!
 ```
 
-Intersections of exact object types may not work as you expect. If you need to combine exact object types, use object type spread:
+[Intersections](../intersections) of exact object types may not work as you expect. If you need to combine exact object types, use [object type spread](#object-type-spread):
 
 ```js flow-check
 type FooT = {foo: string};
 type BarT = {bar: number};
 
-type FooBarFailT = FooT & BarT;
 type FooBarT = {...FooT, ...BarT};
-
-const fooBarFail: FooBarFailT = {foo: '123', bar: 12}; // Error!
 const fooBar: FooBarT = {foo: '123', bar: 12}; // Works!
+
+type FooBarFailT = FooT & BarT;
+const fooBarFail: FooBarFailT = {foo: '123', bar: 12}; // Error!
+```
+
+## Object type spread
+
+Just like you can spread object values, you can also spread object types:
+
+```js flow-check
+type ObjA = {
+  a: number,
+  b: string,
+};
+
+const x: ObjA = {a: 1, b: "hi"};
+
+type ObjB = {
+  ...ObjA,
+  c: boolean,
+};
+
+const y: ObjB = {a: 1, b: 'hi', c: true}; // Works!
+const z: ObjB = {...x, c: true}; // Works!
+```
+
+You have to be careful spreading inexact objects.
+The resulting object must also be inexact,
+and the spread inexact object may have unknown properties that can override previous properties in unknown ways:
+
+```js flow-check
+type Inexact = {
+  a: number,
+  b: string,
+  ...
+};
+
+type ObjB = { // Error!
+  c: boolean,
+  ...Inexact,
+};
+
+const x: ObjB = {a:1, b: 'hi', c: true};
+```
+
+The same issue exists with objects with [indexers](#toc-objects-as-maps), as they also have unknown keys:
+
+```js flow-check
+type Dict = {
+  [string]: number,
+};
+
+type ObjB = { // Error!
+  c: boolean,
+  ...Dict,
+};
+
+const x: ObjB = {a: 1, b: 2, c: true};
+```
+
+Spreading an object value at runtime only spreads "own" properties, that is properties that are on the object directly, not the prototype chain.
+Object type spread works in the same way.
+Because of this, you can't spread [interfaces](../interfaces), as they don't track whether a property is "own" or not:
+
+```js flow-check
+interface Iface {
+  a: number;
+  b: string;
+}
+
+type ObjB = { // Error!
+  c: boolean,
+  ...Iface,
+};
+
+const x: ObjB = {a: 1, b: 'hi', c: true};
 ```
 
 ## Objects as maps {#toc-objects-as-maps}
 
-Newer versions of the JavaScript standard include a `Map` class, but it is
-still very common to use objects as maps as well. In this use case, an object
+JavaScript includes a [`Map`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) class,
+but it is still very common to use objects as maps as well. In this use case, an object
 will likely have properties added to it and retrieved throughout its lifecycle.
 Furthermore, the property keys may not even be known statically, so writing out
 a type annotation would not be possible.
@@ -233,18 +310,16 @@ For objects like these, Flow provides a special kind of property, called an
 that matches the indexer key type.
 
 ```js flow-check
-// @flow
-var o: { [string]: number } = {};
+const o: {[string]: number} = {};
 o["foo"] = 0;
 o["bar"] = 1;
-var foo: number = o["foo"];
+const foo: number = o["foo"];
 ```
 
 An indexer can be optionally named, for documentation purposes:
 
 ```js flow-check
-// @flow
-var obj: { [user_id: number]: string } = {};
+const obj: {[user_id: number]: string} = {};
 obj[1] = "Julia";
 obj[2] = "Camille";
 obj[3] = "Justin";
@@ -257,15 +332,14 @@ at runtime. It is the programmer's responsibility to ensure the access is safe,
 as with arrays.
 
 ```js flow-check
-var obj: { [number]: string } = {};
+const obj: {[number]: string} = {};
 obj[42].length; // No type error, but will throw at runtime
 ```
 
 Indexer properties can be mixed with named properties:
 
 ```js flow-check
-// @flow
-var obj: {
+const obj: {
   size: number,
   [id: number]: string
 } = {
@@ -278,44 +352,42 @@ function add(id: number, name: string) {
 }
 ```
 
-### `Object` Type {#toc-object-type}
+## Arbitrary objects
 
-> NOTE: For new code, prefer `any` or `{ [key: string]: any}`. `Object` is an alias to [`any`](../any) and will
-> be deprecated and removed in a future version of Flow.
+The `Object` type is just an alias for [`any`](../any), so it's unsafe to use.
+If you want to use the concept of "an arbitrary object" safely, there are a couple of patterns you could use.
 
-Sometimes it is useful to write types that accept arbitrary objects, for
-those you should write `{...}` like this:
+An empty inexact object `{...}` accepts any object:
 
-```js
-function method(obj: {...}) {
+```js flow-check
+function func(obj: {...}) {
   // ...
 }
+
+func({}); // Works!
+func({a: 1, b: "foo"}); // Works!
 ```
 
-However, if you need to opt-out of the type checker, and don't want to go all
-the way to `any`, you could use `{ [key: string]: any}`. (Note that [`any`](../any) is unsafe and
-should be avoided). For historical reasons, the `Object` keyword is still available.
-In previous versions of Flow, `Object` was the same
-as `{ [key: string]: any}`.
+It's often the right choice for a [generic](../generics) bounded to accept any object:
 
-For example, the following code will not report any errors:
-
-```js
-function method(obj: { [key: string]: any }) {
-  obj.foo = 42;               // Works.
-  let bar: boolean = obj.bar; // Works.
-  obj.baz.bat.bam.bop;        // Works.
+```js flow-check
+function func<T: {...}>(obj: T) {
+  // ...
 }
 
-method({ baz: 3.14, bar: "hello" });
+func({}); // Works!
+func({a: 1, b: "foo"}); // Works!
 ```
 
-Neither will this:
+However, you can't access any properties off of `{...}`.
 
-```js
-function method(obj: Object) {
-  obj = 10;
+You can also try using a [dictionary](#toc-objects-as-maps) with [`mixed`](../mixed) values, which would allow you to access any property (with a resulting `mixed` type):
+
+```js flow-check
+function func(obj: {+[string]: mixed}) {
+  const x: mixed = obj['bar'];
 }
 
-method({ baz: 3.14, bar: "hello" });
+func({}); // Works!
+func({a: 1, b: "foo"}); // Works!
 ```
