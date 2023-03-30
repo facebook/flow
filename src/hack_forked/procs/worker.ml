@@ -21,6 +21,7 @@ type request = Request of (serializer -> unit)
 and serializer = { send: 'a. 'a -> unit }
 
 type worker_mode =
+  | Prespawned_long_lived
   | Prespawned_should_fork
   | Spawned
 
@@ -239,5 +240,6 @@ let worker_main restore state (ic, oc) =
   | Prespawned_should_fork ->
     (* see dummy_closure above *)
     ignore Marshal.(from_bytes (to_bytes dummy_closure [Closures]) 0);
-    worker_loop fork_handler infd outfd);
+    worker_loop fork_handler infd outfd
+  | Prespawned_long_lived -> worker_loop worker_job_main infd outfd);
   exit 0

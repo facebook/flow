@@ -151,7 +151,9 @@ let make_one worker_mode spawn id =
   let prespawned =
     match worker_mode with
     | Spawned -> None
-    | Prespawned_should_fork -> Some (spawn ())
+    | Prespawned_long_lived
+    | Prespawned_should_fork ->
+      Some (spawn ())
   in
   let worker = { id; busy = false; killed = false; prespawned; spawn } in
   workers := worker :: !workers;

@@ -10,6 +10,7 @@ type request = Request of (serializer -> unit)
 and serializer = { send: 'a. 'a -> unit }
 
 type worker_mode =
+  | Prespawned_long_lived
   | Prespawned_should_fork
   | Spawned
 
