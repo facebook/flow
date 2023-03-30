@@ -635,7 +635,6 @@ let () =
   let workers =
     MultiWorkerLwt.make
       ~channel_mode:`pipe
-      ~call_wrapper:None
       ~saved_state:()
       ~entry
       ~nbr_procs:num_workers

@@ -77,8 +77,6 @@ let max_workers = 1000
 
 type void (* an empty type *)
 
-type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
-
 (*****************************************************************************
  * Everything we need to know about a worker.
  *
@@ -92,16 +90,6 @@ type worker = {
    * worker-local data. As such, the numbering is important. The IDs must be
    * dense and start at 1. (0 is the controller process offset.) *)
   id: int;
-  (* The call wrapper will wrap any workload sent to the worker (via "call"
-   * below) before invoking the workload.
-   *
-   * That is, when calling the worker with workload `f x`, it will be wrapped
-   * as `wrap (f x)`.
-   *
-   * This allows universal handling of workload at the time we create the actual
-   * workers. For example, this can be useful to handle exceptions uniformly
-   * across workers regardless what workload is called on them. *)
-  call_wrapper: call_wrapper option;
   (* Sanity check: is the worker still available ? *)
   mutable killed: bool;
   (* Sanity check: is the worker currently busy ? *)
@@ -135,12 +123,6 @@ let spawn w =
 (* If the worker isn't prespawned, close the worker *)
 let close_noerr w h = if Option.is_none w.prespawned then Daemon.close_noerr h
 
-(* If there is a call_wrapper, apply it and create the Request *)
-let wrap_request w f x =
-  match w.call_wrapper with
-  | Some { wrap } -> Request (fun { send } -> send (wrap f x))
-  | None -> Request (fun { send } -> send (f x))
-
 type 'a entry_state = 'a * Caml.Gc.control * SharedMem.handle * int
 
 type 'a entry = ('a entry_state, request, void) Daemon.entry
@@ -171,7 +153,7 @@ let register_entry_point ~restore =
 let workers = ref []
 
 (* Build one worker. *)
-let make_one ?call_wrapper spawn id =
+let make_one spawn id =
   if id >= max_workers then failwith "Too many workers";
 
   let prespawned =
@@ -180,13 +162,13 @@ let make_one ?call_wrapper spawn id =
     else
       Some (spawn ())
   in
-  let worker = { call_wrapper; id; busy = false; killed = false; prespawned; spawn } in
+  let worker = { id; busy = false; killed = false; prespawned; spawn } in
   workers := worker :: !workers;
   worker
 
 (* Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
-let make ~channel_mode ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
+let make ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   let spawn worker_id name () =
     Unix.clear_close_on_exec heap_handle;
 
@@ -201,14 +183,14 @@ let make ~channel_mode ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control 
   let pretty_pid = Sys_utils.get_pretty_pid () in
   for n = 1 to nbr_procs do
     let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pretty_pid in
-    made_workers := make_one ?call_wrapper (spawn n name) n :: !made_workers
+    made_workers := make_one (spawn n name) n :: !made_workers
   done;
   !made_workers
 
 (** Sends a request to call `f x` on `worker` *)
 let send worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
   let outfd = Lwt_unix.unix_file_descr outfd_lwt in
-  let request = wrap_request worker f x in
+  let request = Request (fun { send } -> send (f x)) in
   try%lwt
     (* Wait in an lwt-friendly manner for the worker to be writable (should be instant) *)
     let%lwt () = Lwt_unix.wait_write outfd_lwt in

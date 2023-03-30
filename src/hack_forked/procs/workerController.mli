@@ -39,8 +39,6 @@ exception Worker_failed_to_send_job of send_job_failure
 (* The type of a worker visible to the outside world *)
 type worker
 
-type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
-
 type 'a entry
 
 val register_entry_point : restore:('a -> worker_id:int -> unit) -> 'a entry
@@ -48,8 +46,6 @@ val register_entry_point : restore:('a -> worker_id:int -> unit) -> 'a entry
 (* Creates a pool of workers. *)
 val make :
   channel_mode:[ `pipe | `socket ] ->
-  call_wrapper:(* See docs in WorkerController.worker for call_wrapper. *)
-    call_wrapper option ->
   saved_state:'a ->
   entry:'a entry ->
   nbr_procs:int ->
