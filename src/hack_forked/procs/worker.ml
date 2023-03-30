@@ -121,46 +121,46 @@ let worker_main ic oc =
     result_sent := true
   in
   try
-    try
-      Measure.push_global ();
-      let (Request do_process) =
-        Measure.time "worker_read_request" (fun () ->
-            try Marshal_tools.from_fd_with_preamble infd with
-            | End_of_file -> raise Connection_closed
-        )
-      in
-      let tm = Unix.times () in
-      let gc = Gc.quick_stat () in
-      Sys_utils.start_gc_profiling ();
+    Measure.push_global ();
+    let (Request do_process) =
+      Measure.time "worker_read_request" (fun () ->
+          try Marshal_tools.from_fd_with_preamble infd with
+          | End_of_file -> raise Connection_closed
+      )
+    in
+    let tm = Unix.times () in
+    let gc = Gc.quick_stat () in
+    Sys_utils.start_gc_profiling ();
 
-      start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
-      start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
-      start_minor_words := gc.Gc.minor_words;
-      start_promoted_words := gc.Gc.promoted_words;
-      start_major_words := gc.Gc.major_words;
-      start_minor_collections := gc.Gc.minor_collections;
-      start_major_collections := gc.Gc.major_collections;
-      start_compactions := gc.Gc.compactions;
-      start_wall_time := Unix.gettimeofday ();
-      start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
-      Mem_profile.start ();
-      do_process { send = send_result };
-      exit 0
-    with
-    | Connection_closed -> exit 1
+    start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
+    start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
+    start_minor_words := gc.Gc.minor_words;
+    start_promoted_words := gc.Gc.promoted_words;
+    start_major_words := gc.Gc.major_words;
+    start_minor_collections := gc.Gc.minor_collections;
+    start_major_collections := gc.Gc.major_collections;
+    start_compactions := gc.Gc.compactions;
+    start_wall_time := Unix.gettimeofday ();
+    start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
+    Mem_profile.start ();
+    (try do_process { send = send_result } with
     | WorkerCancel.Worker_should_cancel ->
       (* The cancelling controller will ignore result of cancelled job anyway (see
        * wait_for_cancel function), so we can send back anything. Write twice, since
        * the normal response writes twice too *)
       if not !result_sent then (
-        ignore (Marshal_tools.to_fd_with_preamble outfd "anything");
-        ignore (Marshal_tools.to_fd_with_preamble outfd "anything")
-      );
-      exit 0
-    | SharedMem.Out_of_shared_memory -> Exit.(exit Out_of_shared_memory)
-    | SharedMem.Hash_table_full -> Exit.(exit Hash_table_full)
-    | SharedMem.Heap_full -> Exit.(exit Heap_full)
+        try
+          ignore (Marshal_tools.to_fd_with_preamble outfd "anything");
+          ignore (Marshal_tools.to_fd_with_preamble outfd "anything")
+        with
+        | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
+      ));
+    exit 0
   with
+  | Connection_closed -> exit 1
+  | SharedMem.Out_of_shared_memory -> Exit.(exit Out_of_shared_memory)
+  | SharedMem.Hash_table_full -> Exit.(exit Hash_table_full)
+  | SharedMem.Heap_full -> Exit.(exit Heap_full)
   | e ->
     let exn = Exception.wrap e in
     let e_str =
