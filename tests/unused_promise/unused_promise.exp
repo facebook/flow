@@ -41,5 +41,77 @@ Error --------------------------------------------------------------------------
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:37:5
 
-Found 5 errors
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   37|     b && foo(); // error
+           ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:38:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   38|     b && foo() && b; // error
+           ^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:39:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   39|     b && b && foo(); // error
+           ^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   40|     foo() && foo(); // error
+           ^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:41:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   41|     foo().catch(() => {}) && foo(); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   42|     foo() && foo().catch(() => {}); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:51:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   51|     b ? foo() : 3; // error
+           ^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:52:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   52|     b ? 3 : foo(); // error
+           ^^^^^^^^^^^^^^
+
+
+
+Found 13 errors

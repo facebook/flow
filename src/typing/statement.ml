@@ -282,9 +282,14 @@ module Make
         | _ -> ()
         )
 
-  let is_promise_handled =
+  (* Given the expression of a statement expression, returns a list of child
+     expressions which are _potentially_ unhandled promises. At this point,
+     we don't know if they are actually of type Promise. We will determine that
+     later, but we don't need to even check that if we can tell that the
+     expression is being handled ("used") syntactically here. *)
+  let rec syntactically_unhandled_promises ((_, expr_ast) as expr) =
     let open Flow_ast.Expression in
-    function
+    match expr_ast with
     | Assignment _
     (* Call to `catch` or `finally` with one argument *)
     | Call
@@ -317,8 +322,18 @@ module Make
           arguments = (_, { ArgList.arguments = _ :: _ :: _; _ });
           _;
         } ->
-      true
-    | _ -> false
+      []
+    (* Recurse into logical operands for expressions like `condition && somePromise();` *)
+    | Logical { Logical.left; right; _ } ->
+      Base.List.unordered_append
+        (syntactically_unhandled_promises left)
+        (syntactically_unhandled_promises right)
+    (* Recurse into conditional operands for expressions like `b ? x : somePromise();` *)
+    | Conditional { Conditional.consequent; alternate; _ } ->
+      Base.List.unordered_append
+        (syntactically_unhandled_promises consequent)
+        (syntactically_unhandled_promises alternate)
+    | _ -> [expr]
 
   module Func_stmt_params =
     Func_params.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params_types)
@@ -440,9 +455,9 @@ module Make
         ((loc, Block { Block.body; comments }), abnormal_opt)
     | (loc, Expression { Expression.expression = e; directive; comments }) ->
       let expr = expression cx e in
-      let ((_, expr_t), expr_ast) = expr in
-      if not (is_promise_handled expr_ast) then
-        Context.mark_maybe_unused_promise cx loc expr_t ~async:(Env.in_async_scope cx);
+      Base.List.iter (syntactically_unhandled_promises expr) ~f:(fun ((_, expr_t), _) ->
+          Context.mark_maybe_unused_promise cx loc expr_t ~async:(Env.in_async_scope cx)
+      );
       (loc, Expression { Expression.expression = expr; directive; comments })
     (* Refinements for `if` are derived by the following Hoare logic rule:
 
