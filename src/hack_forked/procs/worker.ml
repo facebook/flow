@@ -55,7 +55,6 @@ let worker_job_main infd outfd =
   let start_major_collections = ref 0 in
   let start_compactions = ref 0 in
   let start_wall_time = ref 0. in
-  let start_proc_fs_status = ref None in
   let result_sent = ref false in
   let send_result data =
     (* If we got this far, the job is complete and we should send the results
@@ -101,15 +100,6 @@ let worker_job_main infd outfd =
     Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
     Measure.sample "compactions" (float (end_compactions - !start_compactions));
 
-    begin
-      match (!start_proc_fs_status, ProcFS.status_for_pid (Unix.getpid ())) with
-      | (Some { ProcFS.rss_total = start; _ }, Ok { ProcFS.rss_total = total; rss_hwm = hwm; _ }) ->
-        Measure.sample "worker_rss_start" (float start);
-        Measure.sample "worker_rss_delta" (float (total - start));
-        Measure.sample "worker_rss_hwm_delta" (float (hwm - start))
-      | _ -> ()
-    end;
-
     let len =
       Measure.time "worker_send_response" (fun () ->
           try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data with
@@ -154,7 +144,6 @@ let worker_job_main infd outfd =
     start_major_collections := gc.Gc.major_collections;
     start_compactions := gc.Gc.compactions;
     start_wall_time := Unix.gettimeofday ();
-    start_proc_fs_status := ProcFS.status_for_pid (Unix.getpid ()) |> Base.Result.ok;
     try do_process { send = send_result } with
     | WorkerCancel.Worker_should_cancel ->
       (* The cancelling controller will ignore result of cancelled job anyway (see
