@@ -177,7 +177,7 @@ const dict: {[string]: number} = {}; // Works!
 
 ## Exact and inexact object types {#toc-exact-object-types}
 
-Eact object types are the default (as of version 0.202), unless you have set [`exact_by_default=false`](../../config/options#toc-exact-by-default-boolean) in your `.flowconfig`.
+Exact object types are the default (as of version 0.202), unless you have set [`exact_by_default=false`](../../config/options#toc-exact-by-default-boolean) in your `.flowconfig`.
 
 Inexact objects (denoted with the `...`) allow extra properties to be passed in:
 
