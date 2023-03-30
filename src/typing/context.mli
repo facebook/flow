@@ -494,6 +494,8 @@ val fix_cache : t -> Type.t Type.FixCacheMap.t ref
 
 val spread_cache : t -> Spread_cache.t ref
 
+val const_fold_cache : t -> int Type.ConstFoldMap.t IMap.t ref
+
 val exhaustive_check : t -> ALoc.t -> ALoc.t list * bool
 
 val speculation_state : t -> Speculation_state.t

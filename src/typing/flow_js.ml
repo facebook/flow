@@ -95,27 +95,20 @@ end
  * to stop doing constant folding.
  *)
 
-module ConstFoldMap = WrappedMap.Make (struct
-  type t = reason * int
-
-  let compare = Stdlib.compare
-end)
-
 module ConstFoldExpansion : sig
-  val guard : int -> reason * int -> (int -> 't) -> 't
+  val guard : Context.t -> int -> reason * int -> (int -> 't) -> 't
 end = struct
-  let rmaps : int ConstFoldMap.t IMap.t ref = ref IMap.empty
-
-  let get_rmap id = IMap.find_opt id !rmaps |> Base.Option.value ~default:ConstFoldMap.empty
+  let get_rmap cache id = IMap.find_opt id cache |> Base.Option.value ~default:ConstFoldMap.empty
 
   let increment reason_with_pos rmap =
     match ConstFoldMap.find_opt reason_with_pos rmap with
     | None -> (0, ConstFoldMap.add reason_with_pos 1 rmap)
     | Some count -> (count, ConstFoldMap.add reason_with_pos (count + 1) rmap)
 
-  let guard id reason_with_pos f =
-    let (count, rmap) = get_rmap id |> increment reason_with_pos in
-    rmaps := IMap.add id rmap !rmaps;
+  let guard cx id reason_with_pos f =
+    let cache = Context.const_fold_cache cx in
+    let (count, rmap) = get_rmap !cache id |> increment reason_with_pos in
+    cache := IMap.add id rmap !cache;
     f count
 end
 
@@ -2074,7 +2067,7 @@ struct
                *)
               let reason_elemt = reason_of_t elemt in
               let pos = Base.List.length rrt_resolved in
-              ConstFoldExpansion.guard id (reason_elemt, pos) (fun recursion_depth ->
+              ConstFoldExpansion.guard cx id (reason_elemt, pos) (fun recursion_depth ->
                   match recursion_depth with
                   | 0 ->
                     (* The first time we see this, we process it normally *)
@@ -2116,7 +2109,7 @@ struct
             | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
               let reason_elemt = reason_of_t elemt in
               let pos = Base.List.length rrt_resolved in
-              ConstFoldExpansion.guard id (reason_elemt, pos) (fun recursion_depth ->
+              ConstFoldExpansion.guard cx id (reason_elemt, pos) (fun recursion_depth ->
                   match recursion_depth with
                   | 0 ->
                     (* The first time we see this, we process it normally *)
@@ -3827,7 +3820,7 @@ struct
         | ( DefT (reason_obj, _, ObjT { props_tmap; flags = { obj_kind; _ }; _ }),
             ObjRestT (reason_op, xs, t, id)
           ) ->
-          ConstFoldExpansion.guard id (reason_obj, 0) (function
+          ConstFoldExpansion.guard cx id (reason_obj, 0) (function
               | 0 ->
                 let o =
                   Flow_js_utils.objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs
@@ -7136,7 +7129,7 @@ struct
       (* Union resolution can fall prey to the same sort of infinite recursion that array spreads can, so
          we can use the same constant folding guard logic that arrays do. To more fully understand how that works,
          see the comment there. *)
-      ConstFoldExpansion.guard id (reason_elemt, pos) (function
+      ConstFoldExpansion.guard cx id (reason_elemt, pos) (function
           | 0 -> continue (l :: resolved)
           (* Unions are idempotent, so we can just skip any duplicated elements *)
           | 1 -> continue resolved

@@ -145,6 +145,7 @@ type component_t = {
   eval_repos_cache: Type.t Type.EvalReposCacheMap.t ref;
   fix_cache: Type.t Type.FixCacheMap.t ref;
   spread_cache: Spread_cache.t ref;
+  const_fold_cache: int Type.ConstFoldMap.t IMap.t ref;
   speculation_state: Speculation_state.t;
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
@@ -340,6 +341,7 @@ let make_ccx master_cx =
     eval_repos_cache = ref Type.EvalReposCacheMap.empty;
     fix_cache = ref Type.FixCacheMap.empty;
     spread_cache = ref IMap.empty;
+    const_fold_cache = ref IMap.empty;
     speculation_state = ref [];
     annot_graph = IMap.empty;
     exhaustive_checks = ALocMap.empty;
@@ -724,6 +726,7 @@ type cache_snapshot = {
   snapshot_eval_repos_cache: Type.t Type.EvalReposCacheMap.t;
   snapshot_fix_cache: Type.t Type.FixCacheMap.t;
   snapshot_spread_cache: Spread_cache.t;
+  snapshot_const_fold_cache: int Type.ConstFoldMap.t IMap.t;
   snapshot_instantiation_cache: Type.t Reason.ImplicitInstantiationReasonMap.t;
   snapshot_evaluated: Type.t Type.Eval.Map.t;
 }
@@ -738,6 +741,7 @@ let take_cache_snapshot cx =
     snapshot_eval_repos_cache = !(cx.ccx.eval_repos_cache);
     snapshot_fix_cache = !(cx.ccx.fix_cache);
     snapshot_spread_cache = !(cx.ccx.spread_cache);
+    snapshot_const_fold_cache = !(cx.ccx.const_fold_cache);
     snapshot_instantiation_cache = !(cx.ccx.instantiation_cache);
     snapshot_evaluated = cx.ccx.sig_cx.evaluated;
   }
@@ -751,6 +755,7 @@ let restore_cache_snapshot cx snapshot =
     snapshot_eval_repos_cache;
     snapshot_fix_cache;
     snapshot_spread_cache;
+    snapshot_const_fold_cache;
     snapshot_instantiation_cache;
     snapshot_evaluated;
   } =
@@ -766,6 +771,7 @@ let restore_cache_snapshot cx snapshot =
   cx.ccx.fix_cache := snapshot_fix_cache;
   cx.ccx.instantiation_cache := snapshot_instantiation_cache;
   cx.ccx.spread_cache := snapshot_spread_cache;
+  cx.ccx.const_fold_cache := snapshot_const_fold_cache;
   set_evaluated cx snapshot_evaluated
 
 let run_and_rolled_back_cache cx f =
@@ -1016,6 +1022,8 @@ let eval_repos_cache cx = cx.ccx.eval_repos_cache
 let fix_cache cx = cx.ccx.fix_cache
 
 let spread_cache cx = cx.ccx.spread_cache
+
+let const_fold_cache cx = cx.ccx.const_fold_cache
 
 let exhaustive_check cx loc = ALocMap.find loc cx.ccx.exhaustive_checks
 

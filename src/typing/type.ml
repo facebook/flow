@@ -3184,6 +3184,12 @@ module FixCacheMap = WrappedMap.Make (struct
   let compare = Stdlib.compare
 end)
 
+module ConstFoldMap = WrappedMap.Make (struct
+  type t = reason * int
+
+  let compare = Stdlib.compare
+end)
+
 (* Type scheme: a type and an attendant environment of type parameters.
  * See normalizer for use. *)
 module TypeScheme = struct
