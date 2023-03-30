@@ -217,7 +217,7 @@ let unix_worker_main restore state (ic, oc) =
     while true do
       (* Wait for an incoming job : is there something to read?
          But we don't read it yet. It will be read by the forked clone. *)
-      let (readyl, _, _) = Unix.select [in_fd] [] [] (-1.0) in
+      let (readyl, _, _) = Sys_utils.select_non_intr [in_fd] [] [] (-1.0) in
       if readyl = [] then exit 0;
 
       (* We fork a clone for every incoming request.
