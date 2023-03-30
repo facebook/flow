@@ -59,6 +59,7 @@ let set_server_options
     ~lazy_mode:_
     ~abstract_locations:_
     ~max_workers:_
+    ~long_lived_workers:_
     ~enabled_rollouts:_
     ~debug:_
     ~log_saving:_

@@ -48,34 +48,59 @@ let (set_server_options, dump_server_options) =
         "off"
     in
     let max_workers = Options.max_workers server_options in
+    let long_lived_workers = Options.long_lived_workers server_options in
     let enabled_rollouts = Options.enabled_rollouts server_options in
     let debug = Options.is_debug_mode server_options in
     let log_saving = Options.log_saving server_options in
     let log_file = Options.log_file server_options |> Path.to_string in
-    (lazy_mode, abstract_locations, max_workers, enabled_rollouts, debug, log_saving, log_file)
+    ( lazy_mode,
+      abstract_locations,
+      max_workers,
+      long_lived_workers,
+      enabled_rollouts,
+      debug,
+      log_saving,
+      log_file
+    )
   in
   let set_server_options ~server_options =
-    let (lazy_mode, abstract_locations, max_workers, enabled_rollouts, debug, log_saving, log_file)
-        =
+    let ( lazy_mode,
+          abstract_locations,
+          max_workers,
+          long_lived_workers,
+          enabled_rollouts,
+          debug,
+          log_saving,
+          log_file
+        ) =
       format server_options
     in
     FlowEventLogger.set_server_options
       ~lazy_mode
       ~abstract_locations
       ~max_workers
+      ~long_lived_workers
       ~enabled_rollouts
       ~debug
       ~log_saving
       ~log_file
   in
   let dump_server_options ~server_options ~log =
-    let (lazy_mode, abstract_locations, max_workers, enabled_rollouts, debug, log_saving, _log_file)
-        =
+    let ( lazy_mode,
+          abstract_locations,
+          max_workers,
+          long_lived_workers,
+          enabled_rollouts,
+          debug,
+          log_saving,
+          _log_file
+        ) =
       format server_options
     in
     log (Printf.sprintf "lazy_mode=%s" lazy_mode);
     log (Printf.sprintf "abstract_locations=%s" abstract_locations);
     log (Printf.sprintf "max_workers=%d" max_workers);
+    log (Printf.sprintf "long_lived_workers=%b" long_lived_workers);
     log (Printf.sprintf "debug=%b" debug);
     SMap.iter
       (fun method_name Options.{ threshold_time_ms; limit; rate } ->
