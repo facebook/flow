@@ -246,7 +246,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         Flow_error.ConcreteErrorSet.fold
           (fun error acc ->
             let errors =
-              Flow_error.ConcreteErrorSet.singleton error |> Flow_error.make_errors_printable
+              Flow_error.ConcreteErrorSet.singleton error
+              |> Flow_error.make_errors_printable ~strip_root:(Some (Context.root cx))
             in
             let (errors, _, _) =
               Error_suppressions.filter_suppressed_errors

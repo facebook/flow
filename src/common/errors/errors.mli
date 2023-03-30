@@ -98,6 +98,9 @@ val loc_of_printable_error : 'loc printable_error -> 'loc
 
 val locs_of_printable_error : 'loc printable_error -> 'loc list
 
+val patch_misplaced_error :
+  strip_root:Path.t option -> File_key.t -> 'loc printable_error -> 'loc printable_error
+
 val kind_of_printable_error : 'loc printable_error -> error_kind
 
 val code_of_printable_error : 'loc printable_error -> Error_codes.error_code option

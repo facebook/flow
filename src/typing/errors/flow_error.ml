@@ -342,8 +342,8 @@ let post_process_errors original_errors =
   in
   ErrorSet.filter retain_error original_errors
 
-let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Errors.printable_error
-    =
+let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t) :
+    Loc.t Errors.printable_error =
   Errors.(
     let {
       loc : Loc.t option;
@@ -841,7 +841,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             let score = score_of_msg msg in
             let error =
               error_of_msg ~trace_reasons:[] ~source_file msg
-              |> make_error_printable ~speculation:true
+              |> make_error_printable ~strip_root ~speculation:true
             in
             (score, error))
           branches
@@ -1203,41 +1203,53 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       mk_use_op_error (loc_of_reason lower) use_op message
     in
 
-    match (loc, friendly_message_of_msg msg) with
-    | (Some loc, Error_message.Normal { features }) ->
-      mk_error ~trace_infos ~kind loc (code_of_error error) features
-    | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
-    | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
-      mk_prop_missing_error loc prop reason_obj use_op suggestion
-    | ( None,
-        PropPolarityMismatch
-          { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op }
-      ) ->
-      mk_prop_polarity_mismatch_error
-        prop
-        (reason_lower, polarity_lower)
-        (reason_upper, polarity_upper)
-        use_op
-    | (None, IncompatibleUse { loc; upper_kind; reason_lower; reason_upper; use_op }) ->
-      mk_incompatible_use_error loc upper_kind reason_lower reason_upper use_op
-    | (None, Incompatible { reason_lower; reason_upper; use_op }) ->
-      mk_incompatible_error reason_lower reason_upper use_op
-    | (None, IncompatibleTrust { reason_lower; reason_upper; use_op }) ->
-      mk_trust_incompatible_error reason_lower reason_upper use_op
-    | (None, IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }) ->
-      mk_incompatible_error ~additional_message:suggestion reason_lower reason_upper use_op
-    | (None, Error_message.Speculation { loc; use_op; branches }) ->
-      mk_use_op_speculation_error loc use_op branches
-    | (None, Error_message.Normal _)
-    | (Some _, _) ->
-      raise (ImproperlyFormattedError msg)
+    let printable_error =
+      match (loc, friendly_message_of_msg msg) with
+      | (Some loc, Error_message.Normal { features }) ->
+        mk_error ~trace_infos ~kind loc (code_of_error error) features
+      | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
+      | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
+        mk_prop_missing_error loc prop reason_obj use_op suggestion
+      | ( None,
+          PropPolarityMismatch
+            { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op }
+        ) ->
+        mk_prop_polarity_mismatch_error
+          prop
+          (reason_lower, polarity_lower)
+          (reason_upper, polarity_upper)
+          use_op
+      | (None, IncompatibleUse { loc; upper_kind; reason_lower; reason_upper; use_op }) ->
+        mk_incompatible_use_error loc upper_kind reason_lower reason_upper use_op
+      | (None, Incompatible { reason_lower; reason_upper; use_op }) ->
+        mk_incompatible_error reason_lower reason_upper use_op
+      | (None, IncompatibleTrust { reason_lower; reason_upper; use_op }) ->
+        mk_trust_incompatible_error reason_lower reason_upper use_op
+      | (None, IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }) ->
+        mk_incompatible_error ~additional_message:suggestion reason_lower reason_upper use_op
+      | (None, Error_message.Speculation { loc; use_op; branches }) ->
+        mk_use_op_speculation_error loc use_op branches
+      | (None, Error_message.Normal _)
+      | (Some _, _) ->
+        raise (ImproperlyFormattedError msg)
+    in
+    (* Patch errors that will be located in files other than source_file. *)
+    let loc = Errors.loc_of_printable_error printable_error in
+    let patched_printable_error =
+      match Loc.source loc with
+      | Some file
+        when (not speculation) && (not (File_key.is_lib_file source_file)) && file <> source_file ->
+        patch_misplaced_error ~strip_root source_file printable_error
+      | _ -> printable_error
+    in
+    patched_printable_error
   )
 
 let concretize_errors loc_of_aloc set =
   ErrorSet.fold (concretize_error loc_of_aloc %> ConcreteErrorSet.add) set ConcreteErrorSet.empty
 
-let make_errors_printable set =
+let make_errors_printable ~strip_root set =
   ConcreteErrorSet.fold
-    (make_error_printable ~speculation:false %> Errors.ConcreteLocPrintableErrorSet.add)
+    (make_error_printable ~strip_root ~speculation:false %> Errors.ConcreteLocPrintableErrorSet.add)
     set
     Errors.ConcreteLocPrintableErrorSet.empty

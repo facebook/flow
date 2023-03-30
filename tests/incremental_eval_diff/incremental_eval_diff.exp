@@ -1,7 +1,8 @@
 No errors!
 Error -------------------------------------------------------------------------------------------------------- a.js:8:17
 
-null or undefined [1] is not an object. [not-an-object]
+null or undefined [1] is not an object. (FLOW BUG: This is a misplaced error. The original error was raised in file
+`b.js`). [not-an-object]
 
    a.js:8:17
    8| export type A = $Values<T>;

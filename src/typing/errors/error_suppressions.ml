@@ -311,7 +311,9 @@ let filter_suppressed_error_set ~root ~file_options ~loc_of_aloc suppressions er
   Flow_error.ErrorSet.filter
     (fun error ->
       let error =
-        error |> Flow_error.concretize_error loc_of_aloc |> Flow_error.make_error_printable
+        error
+        |> Flow_error.concretize_error loc_of_aloc
+        |> Flow_error.make_error_printable ~strip_root:(Some root)
       in
       match check ~root ~file_options error suppressions empty (* unused *) with
       | None -> false

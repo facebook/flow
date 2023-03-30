@@ -116,13 +116,17 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
       aloc_tables
       severity_cover
   in
+  let root = Options.root options in
   let errors =
-    errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
+    errors
+    |> Flow_error.concretize_errors loc_of_aloc
+    |> Flow_error.make_errors_printable ~strip_root:(Some root)
   in
   let warnings =
-    warnings |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
+    warnings
+    |> Flow_error.concretize_errors loc_of_aloc
+    |> Flow_error.make_errors_printable ~strip_root:(Some root)
   in
-  let root = Options.root options in
   let file_options = Some (Options.file_options options) in
   (* Filter out suppressed errors *)
   let (errors, _, _) =
@@ -153,6 +157,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
   (errors, warnings)
 
 let printable_errors_of_file_artifacts_result ~options ~env filename result =
+  let root = Options.root options in
   let reader = State_reader.create () in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   match result with
@@ -163,7 +168,9 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
     (errors, warnings)
   | Error errors ->
     let errors =
-      errors |> Flow_error.concretize_errors loc_of_aloc |> Flow_error.make_errors_printable
+      errors
+      |> Flow_error.concretize_errors loc_of_aloc
+      |> Flow_error.make_errors_printable ~strip_root:(Some root)
     in
     (errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
