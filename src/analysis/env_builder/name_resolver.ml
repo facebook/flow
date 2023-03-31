@@ -1578,14 +1578,20 @@ module Make
        * as an argument. Variables not passed into the function are havoced if
        * the invalidation api says they can be invalidated.
        *)
-      method apply_latent_refinements ((callee_loc, _) as callee) refinement_keys_by_arg =
+      method apply_latent_refinements refinement_keys_by_arg latent_callee =
+        let callee_loc =
+          match latent_callee with
+          | LatentSimple (callee_loc, _)
+          | LatentMember ((callee_loc, _), _) ->
+            callee_loc
+        in
         List.iteri
           (fun index -> function
             | None -> ()
             | Some key ->
               this#add_single_refinement
                 key
-                (L.LSet.singleton callee_loc, LatentR { func = callee; index = index + 1 }))
+                (L.LSet.singleton callee_loc, LatentR { func = latent_callee; index = index + 1 }))
           refinement_keys_by_arg
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
@@ -4941,17 +4947,12 @@ module Make
           ignore @@ this#binary loc expr
 
       method call_refinement loc call =
+        let open Ast.Expression in
         match call with
         | {
-         Flow_ast.Expression.Call.callee;
+         Call.callee;
          targs = _;
-         arguments =
-           ( _,
-             {
-               Flow_ast.Expression.ArgList.arguments = [Flow_ast.Expression.Expression arg];
-               comments = _;
-             }
-           );
+         arguments = (_, { ArgList.arguments = [Expression arg]; comments = _ });
          comments = _;
         }
           when Flow_ast_utils.is_call_to_is_array callee ->
@@ -4966,14 +4967,9 @@ module Make
           ignore @@ this#optional_chain arg;
           this#commit_refinement refi
         (* Latent refinements are only applied on function calls where the function call is an identifier *)
-        | {
-         Flow_ast.Expression.Call.callee = (_, Flow_ast.Expression.Identifier _) as callee;
-         arguments;
-         _;
-        }
-          when not (Flow_ast_utils.is_call_to_invariant callee) ->
+        | { Call.callee; arguments; _ } when not (Flow_ast_utils.is_call_to_invariant callee) ->
           (* This case handles predicate functions. We ensure that this
-           * is not a call to invariant and that the callee is an identifier.
+           * is not a call to invariant.
            * The only other criterion that must be met for this call to produce
            * a refinement is that the arguments cannot contain a spread.
            *
@@ -4986,9 +4982,9 @@ module Make
            *
            * We should strongly consider disallowing the same refinement key to
            * appear multiple times in the arguments. *)
-          let { Flow_ast.Expression.ArgList.arguments = arglist; _ } = snd arguments in
+          let { ArgList.arguments = arglist; _ } = snd arguments in
           let is_spread = function
-            | Flow_ast.Expression.Spread _ -> true
+            | Spread _ -> true
             | _ -> false
           in
           let refinement_keys =
@@ -5000,7 +4996,21 @@ module Make
           ignore @@ this#expression callee;
           ignore @@ this#arg_list arguments;
           this#havoc_current_env ~all:false;
-          this#apply_latent_refinements callee refinement_keys
+          let latent_callee =
+            match callee with
+            | (_, Identifier _) -> Some (LatentSimple callee)
+            | ( _,
+                Member
+                  {
+                    Member._object = (_, Identifier _) as obj;
+                    property = Member.PropertyIdentifier (_, { Ast.Identifier.name; _ });
+                    _;
+                  }
+              ) ->
+              Some (LatentMember (obj, name))
+            | _ -> None
+          in
+          Base.Option.iter latent_callee ~f:(this#apply_latent_refinements refinement_keys)
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement

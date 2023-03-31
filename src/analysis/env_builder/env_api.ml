@@ -113,6 +113,10 @@ module type S = sig
   type values = read L.LMap.t
 
   module Refi : sig
+    type latent_callee =
+      | LatentSimple of (L.t, L.t) Ast.Expression.t
+      | LatentMember of (L.t, L.t) Ast.Expression.t * string
+
     type refinement_kind =
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
@@ -153,7 +157,7 @@ module type S = sig
       (* The location here is the location of expr in x.foo === expr *)
       | SentinelR of string * L.t
       | LatentR of {
-          func: (L.t, L.t) Ast.Expression.t;
+          func: latent_callee;
           index: int;
         }
       | PropExistsR of {
@@ -377,6 +381,11 @@ module Make
   and write_locs = write_loc list
 
   module Refi = struct
+    type latent_callee =
+      | LatentSimple of (L.t, L.t) Ast.Expression.t
+      | LatentMember of (L.t, L.t) Ast.Expression.t * string
+    [@@deriving show { with_path = false }]
+
     type refinement_kind =
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
@@ -416,7 +425,7 @@ module Make
         }
       | SentinelR of string * L.t
       | LatentR of {
-          func: (L.t, L.t) Ast.Expression.t;
+          func: latent_callee;
           index: int;
         }
       | PropExistsR of {

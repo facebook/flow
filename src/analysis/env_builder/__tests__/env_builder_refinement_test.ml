@@ -3784,10 +3784,10 @@ if (y.f(x, y)) {
           (4, 4) to (4, 5): (`y`)
         };
         (11, 2) to (11, 3) => {
-          (2, 4) to (2, 5): (`x`)
+          {refinement = LatentR (index = 1); writes = (2, 4) to (2, 5): (`x`)}
         };
         (12, 2) to (12, 3) => {
-          (4, 4) to (4, 5): (`y`)
+          {refinement = LatentR (index = 2); writes = (4, 4) to (4, 5): (`y`)}
         }] |}]
 
 let%expect_test "heap_refinement_basic" =

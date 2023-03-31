@@ -11,78 +11,13 @@ open Hint
 open Utils_js
 module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
 module PinTypes = Implicit_instantiation.PinTypes (Flow_js.FlowJs)
+module SpeculationFlow = Speculation_flow
 
 let with_hint_result ~ok ~error = function
   | HintAvailable (t, _) -> ok t
   | _ -> error ()
 
 exception UnconstrainedTvarException
-
-module SpeculationFlow = struct
-  module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
-
-  let flow_t cx reason ~upper_unresolved (l, u) =
-    SpeculationKit.try_singleton_throw_on_failure
-      cx
-      Trace.dummy_trace
-      ~upper_unresolved
-      reason
-      l
-      (UseT (unknown_use, u))
-
-  (* Returns a list of concrete types after breaking up unions, maybe types, etc *)
-  let possible_concrete_types cx reason t =
-    let id = Tvar.mk_no_wrap cx reason in
-    Flow_js.flow cx (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeHintT id)));
-    Flow_js_utils.possible_types cx id
-
-  let try_singleton_no_throws cx reason ~upper_unresolved t u =
-    try
-      SpeculationKit.try_singleton_throw_on_failure
-        cx
-        Trace.dummy_trace
-        reason
-        ~upper_unresolved
-        t
-        u;
-      true
-    with
-    | Flow_js_utils.SpeculationSingletonError -> false
-
-  let resolved_lower_flow cx r (l, u) =
-    match possible_concrete_types cx r l with
-    | [] -> ()
-    | [l] -> Flow_js.flow cx (l, u)
-    | ls ->
-      if
-        not
-          (Base.List.fold ls ~init:false ~f:(fun acc l ->
-               let r = try_singleton_no_throws cx r ~upper_unresolved:true l u in
-               acc || r
-           )
-          )
-      then
-        raise Flow_js_utils.SpeculationSingletonError
-
-  let resolved_lower_flow_t cx r (l, u) = resolved_lower_flow cx r (l, UseT (unknown_use, u))
-
-  let resolved_upper_flow_t cx r (l, u) =
-    match possible_concrete_types cx r u with
-    | [] -> ()
-    | [u] -> Flow_js.flow_t cx (l, u)
-    | us ->
-      if
-        not
-          (Base.List.fold us ~init:false ~f:(fun acc u ->
-               let r =
-                 try_singleton_no_throws cx r ~upper_unresolved:false l (UseT (unknown_use, u))
-               in
-               acc || r
-           )
-          )
-      then
-        raise Flow_js_utils.SpeculationSingletonError
-end
 
 let in_sandbox_cx cx t ~f =
   Context.run_and_rolled_back_cache cx (fun () ->
@@ -343,13 +278,6 @@ and type_of_hint_decomposition cx op reason t =
       )
   in
 
-  let get_method_type t propref =
-    Tvar.mk_where cx reason (fun prop_t ->
-        let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction, prop_t) in
-        SpeculationFlow.resolved_lower_flow cx reason (t, use_t)
-    )
-  in
-
   let map_intersection t ~f =
     match get_t cx t with
     | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map (fun t -> f (get_t cx t)) rep)
@@ -358,7 +286,7 @@ and type_of_hint_decomposition cx op reason t =
 
   let get_constructor_type t =
     let get_constructor_method_type t =
-      get_method_type t (Named (reason, OrdinaryName "constructor"))
+      SpeculationFlow.get_method_type cx t reason (Named (reason, OrdinaryName "constructor"))
     in
     let mod_ctor_return instance_type = function
       | DefT
@@ -515,8 +443,13 @@ and type_of_hint_decomposition cx op reason t =
         )
       | Decomp_JsxRef -> Flow_js.get_builtin_typeapp cx reason (OrdinaryName "React$Ref") [t]
       | Decomp_MethodElem ->
-        get_method_type t (Computed (DefT (reason, bogus_trust (), StrT AnyLiteral)))
-      | Decomp_MethodName name -> get_method_type t (Named (reason, OrdinaryName name))
+        SpeculationFlow.get_method_type
+          cx
+          t
+          reason
+          (Computed (DefT (reason, bogus_trust (), StrT AnyLiteral)))
+      | Decomp_MethodName name ->
+        SpeculationFlow.get_method_type cx t reason (Named (reason, OrdinaryName name))
       | Decomp_MethodPrivateName (name, class_stack) ->
         let env = Context.environment cx in
         Context.set_environment cx { env with Loc_env.class_stack };
