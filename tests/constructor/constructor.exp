@@ -49,14 +49,6 @@ References:
                           ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- constructor.js:25:22
-
-Class constructor may not be async. [invalid-constructor-definition]
-
-   25|   async constructor() { }
-                            
-
-
 Error ---------------------------------------------------------------------- exported_nonvoid_return_constructor.js:2:18
 
 Cannot return object type because object type [1] is incompatible with constructor void return [2].
@@ -84,6 +76,14 @@ References:
    invalid.js:1:1
    1| function C(this: {a: number}, a: number) {
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- invalid_async.js:2:9
+
+Constructor can't be an async function.
+
+   2|   async constructor() { }
+              ^^^^^^^^^^^
 
 
 

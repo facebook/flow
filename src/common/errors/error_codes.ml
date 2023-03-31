@@ -67,7 +67,6 @@ type error_code =
   | InvalidCompare
   | InvalidComputedProp
   | InvalidConstructor
-  | InvalidConstructorDefinition
   | InvalidEnumAccess
   | InvalidExact
   | InvalidExhaustiveCheck
@@ -258,7 +257,6 @@ let string_of_code : error_code -> string = function
   | InvalidCompare -> "invalid-compare"
   | InvalidComputedProp -> "invalid-computed-prop"
   | InvalidConstructor -> "invalid-constructor"
-  | InvalidConstructorDefinition -> "invalid-constructor-definition"
   | InvalidEnumAccess -> "invalid-enum-access"
   | InvalidExact -> "invalid-exact"
   | InvalidExhaustiveCheck -> "invalid-exhaustive-check"

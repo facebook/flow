@@ -1664,8 +1664,6 @@ let dump_error_message =
         spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason)
       )
     | EInvalidConstructor reason -> spf "EInvalidConstructor (%s)" (dump_reason cx reason)
-    | EInvalidConstructorDefinition { loc; _ } ->
-      spf "EInvalidConstructorDefinition (%s)" (string_of_aloc loc)
     | EInvalidPrototype (loc, reason) ->
       spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
     | EUnnecessaryOptionalChain (loc, _) -> spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)

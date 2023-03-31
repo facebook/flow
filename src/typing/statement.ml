@@ -7001,15 +7001,7 @@ module Make
     let function_kind cx ~body ~constructor ~async ~generator ~predicate ~params ~ret_loc =
       let open Func_class_sig_types.Func in
       match (constructor, async, generator, predicate) with
-      | (true, false, false, None) -> Ctor
-      | (true, _, _, _) ->
-        Flow.add_output
-          cx
-          Error_message.(
-            EInvalidConstructorDefinition
-              { loc = ret_loc; async; generator; predicate = Base.Option.is_some predicate }
-          );
-        Ctor
+      | (true, _, _, _) -> Ctor
       | (false, true, true, None) -> AsyncGenerator { return_loc = ret_loc }
       | (false, true, false, None) -> Async
       | (false, false, true, None) -> Generator { return_loc = ret_loc }

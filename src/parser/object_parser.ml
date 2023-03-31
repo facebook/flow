@@ -626,6 +626,15 @@ module Object
     in
     (extends, implements)
 
+  let key_is_constructor key =
+    match key with
+    | Ast.Expression.Object.Property.Identifier
+        (key_loc, { Identifier.name = "constructor"; comments = _ })
+    | Ast.Expression.Object.Property.Literal
+        (key_loc, { Literal.value = Literal.String "constructor"; _ }) ->
+      Some key_loc
+    | _ -> None
+
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
   let class_element =
@@ -633,6 +642,11 @@ module Object
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true true) env
       in
+      ( if not static then
+        match key_is_constructor key with
+        | Some key_loc -> error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
+        | None -> ()
+      );
       let open Ast.Class in
       Body.Method
         ( loc,
@@ -650,6 +664,11 @@ module Object
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true false) env
       in
+      ( if not static then
+        match key_is_constructor key with
+        | Some key_loc -> error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
+        | None -> ()
+      );
       let open Ast.Class in
       Body.Method
         ( loc,
@@ -780,15 +799,10 @@ module Object
         error_unsupported_declare env declare;
         error_unsupported_variance env variance;
         let (kind, env) =
-          match (static, key) with
-          | ( false,
-              Ast.Expression.Object.Property.Identifier
-                (_, { Identifier.name = "constructor"; comments = _ })
-            )
-          | ( false,
-              Ast.Expression.Object.Property.Literal
-                (_, { Literal.value = Literal.String "constructor"; _ })
-            ) ->
+          match (static, key_is_constructor key) with
+          | (false, Some key_loc) ->
+            if async then error_at env (key_loc, Parse_error.ConstructorCannotBeAsync);
+            if generator then error_at env (key_loc, Parse_error.ConstructorCannotBeGenerator);
             (Ast.Class.Method.Constructor, env |> with_allow_super Super_prop_or_call)
           | _ -> (Ast.Class.Method.Method, env |> with_allow_super Super_prop)
         in

@@ -1138,26 +1138,6 @@ language/expressions/class/elements/syntax/early-errors/grammar-privatename-iden
   Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwnj-error.js (default)
   Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-gen.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-gen.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-meth.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-meth.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-gen.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-gen.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-get.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-get.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-set.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-set.js (default)
-  Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-static-async-gen-meth-prototype.js (strict mode)
   Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-static-async-gen-meth-prototype.js (default)
@@ -3182,26 +3162,6 @@ language/statements/class/elements/syntax/early-errors/grammar-privatename-ident
   Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwnj-error.js (default)
   Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-gen.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-gen.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-meth.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-meth.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-gen.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-gen.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-get.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-get.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-set.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-set.js (default)
-  Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-static-async-gen-meth-prototype.js (strict mode)
   Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-static-async-gen-meth-prototype.js (default)
@@ -3668,8 +3628,8 @@ language/statements/variable/static-init-await-binding-valid.js (default)
   Unexpected token `{`, expected an identifier at (15, 9) to (15, 10)
 
 === Summary ===
-Passed:  84697 (97.88%)
-Failed:  1832 (2.12%)
+Passed:  84717 (97.90%)
+Failed:  1812 (2.09%)
 Errored: 2 (0.00%)
 
 Features:
@@ -3678,9 +3638,9 @@ Features:
   Symbol: 2593/2603 (99.62%)
   arbitrary-module-namespace-names: 20/32 (62.50%)
   arrow-function: 1478/1496 (98.80%)
-  async-functions: 1212/1292 (93.81%)
-  async-iteration: 9620/9728 (98.89%)
-  class: 8991/9241 (97.29%)
+  async-functions: 1216/1292 (94.12%)
+  async-iteration: 9624/9728 (98.93%)
+  class: 9011/9241 (97.51%)
   class-fields-private: 1945/2001 (97.20%)
   class-fields-private-in: 16/38 (42.11%)
   class-fields-public: 3962/4098 (96.68%)
@@ -3693,7 +3653,7 @@ Features:
   destructuring-assignment: 217/221 (98.19%)
   dynamic-import: 999/1128 (88.56%)
   export-star-as-namespace-from-module: 34/38 (89.47%)
-  generators: 7948/8030 (98.98%)
+  generators: 7952/8030 (99.03%)
   globalThis: 127/145 (87.59%)
   import-assertions: 12/169 (7.10%)
   import.meta: 38/46 (82.61%)

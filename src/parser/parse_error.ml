@@ -15,6 +15,9 @@ type t =
   | AwaitAsIdentifierReference
   | AwaitInAsyncFormalParameters
   | ComputedShorthandProperty
+  | ConstructorCannotBeAccessor
+  | ConstructorCannotBeAsync
+  | ConstructorCannotBeGenerator
   | DeclareAsync
   | DeclareClassElement
   | DeclareClassFieldInitializer
@@ -196,6 +199,9 @@ module PP = struct
     | AwaitAsIdentifierReference -> "`await` is an invalid identifier in async functions"
     | AwaitInAsyncFormalParameters -> "`await` is not allowed in async function parameters."
     | ComputedShorthandProperty -> "Computed properties must have a value."
+    | ConstructorCannotBeAccessor -> "Constructor can't be an accessor."
+    | ConstructorCannotBeAsync -> "Constructor can't be an async function."
+    | ConstructorCannotBeGenerator -> "Constructor can't be a generator."
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. "
       ^ "It is sufficient for your declare function to just have a Promise return type."
