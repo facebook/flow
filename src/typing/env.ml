@@ -279,7 +279,10 @@ let rec predicate_of_refinement cx =
       let reason = mk_reason (RCustom "Function call") obj_loc in
       let obj_t = read_entry_exn ~lookup_mode:ForValue cx obj_loc reason in
       let propref = Named (reason, OrdinaryName proj) in
-      let t = Speculation_flow.get_method_type_no_throw cx obj_t reason propref in
+      let t =
+        Speculation_flow.get_method_type_opt cx obj_t reason propref
+        |> Option.value ~default:(AnyT.untyped reason)
+      in
       LatentP (t, index)
     | PropExistsR { propname; loc } ->
       PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)

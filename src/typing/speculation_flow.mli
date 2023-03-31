@@ -5,19 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val flow_t : Context.t -> Reason.reason -> upper_unresolved:bool -> Type.t * Type.t -> unit
+val is_flow_successful :
+  Context.t -> Reason.reason -> upper_unresolved:bool -> Type.t -> Type.use_t -> bool
+
+val get_method_type_opt : Context.t -> Type.t -> Reason.reason -> Type.propref -> Type.t option
 
 val possible_concrete_types : Context.t -> Reason.t -> Type.t -> Type.t list
 
-val try_singleton_no_throws :
-  Context.t -> Reason.reason -> upper_unresolved:bool -> Type.t -> Type.use_t -> bool
+(* NOTE The unsafe functions below may throw SpeculationSingletonError exception *)
 
-val resolved_lower_flow : Context.t -> Reason.t -> Type.t * Type.use_t -> unit
+val flow_t_unsafe : Context.t -> Reason.reason -> upper_unresolved:bool -> Type.t * Type.t -> unit
 
-val resolved_lower_flow_t : Context.t -> Reason.t -> Type.t * Type.t -> unit
+val resolved_lower_flow_unsafe : Context.t -> Reason.t -> Type.t * Type.use_t -> unit
 
-val resolved_upper_flow_t : Context.t -> Reason.t -> Type.t * Type.t -> unit
+val resolved_lower_flow_t_unsafe : Context.t -> Reason.t -> Type.t * Type.t -> unit
 
-val get_method_type : Context.t -> Type.t -> Reason.reason -> Type.propref -> Type.t
+val resolved_upper_flow_t_unsafe : Context.t -> Reason.t -> Type.t * Type.t -> unit
 
-val get_method_type_no_throw : Context.t -> Type.t -> Reason.reason -> Type.propref -> Type.t
+val get_method_type_unsafe : Context.t -> Type.t -> Reason.reason -> Type.propref -> Type.t
