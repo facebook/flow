@@ -21,7 +21,7 @@ export default function TryFlowPage(): React.MixedElement {
   return (
     <Layout
       // $FlowFixMe[prop-missing]
-      title={siteConfig.title}
+      title="Try Flow: the Flow Playground"
       // $FlowFixMe[prop-missing]
       description={siteConfig.description}
       noFooter>
