@@ -138,6 +138,7 @@ let do_parse ~parsing_options ~info content file =
     parse_node_main_fields = node_main_fields;
     parse_distributed = distributed;
     parse_enable_conditional_types = _;
+    parse_enable_mapped_types = _;
   } =
     parsing_options
   in

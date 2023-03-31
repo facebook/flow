@@ -119,6 +119,7 @@ let stub_metadata ~root ~checked =
     haste_module_ref_prefix = None;
     haste_module_ref_prefix_LEGACY_INTEROP = None;
     ignore_non_literal_requires = false;
+    mapped_type = true;
     max_literal_length = 100;
     max_trace_depth = 0;
     max_workers = 0;

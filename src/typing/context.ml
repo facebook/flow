@@ -44,6 +44,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   haste_module_ref_prefix_LEGACY_INTEROP: string option;
   ignore_non_literal_requires: bool;
+  mapped_type: bool;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -232,6 +233,7 @@ let metadata_of_options options =
     haste_module_ref_prefix = Options.haste_module_ref_prefix options;
     haste_module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
+    mapped_type = Options.mapped_type options;
     max_literal_length = Options.max_literal_length options;
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
@@ -440,6 +442,8 @@ let goals cx = cx.ccx.goal_map
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let conditional_type cx = cx.metadata.conditional_type
+
+let mapped_type cx = cx.metadata.mapped_type
 
 let aloc_tables cx = cx.ccx.aloc_tables
 

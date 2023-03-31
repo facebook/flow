@@ -87,6 +87,7 @@ module Opts = struct
     lazy_mode: lazy_mode option;
     log_saving: Options.log_saving SMap.t;
     long_lived_workers: bool;
+    mapped_type: bool;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
@@ -208,6 +209,7 @@ module Opts = struct
       lazy_mode = None;
       log_saving = SMap.empty;
       long_lived_workers = false;
+      mapped_type = false;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
       max_literal_length = 100;
@@ -737,6 +739,7 @@ module Opts = struct
       ( "experimental.conditional_type",
         boolean (fun opts v -> Ok { opts with conditional_type = Some v })
       );
+      ("experimental.mapped_type", boolean (fun opts v -> Ok { opts with mapped_type = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1437,6 +1440,8 @@ let lint_severities c = c.lint_severities
 let log_saving c = c.options.Opts.log_saving
 
 let long_lived_workers c = c.options.Opts.long_lived_workers
+
+let mapped_type c = c.options.Opts.mapped_type
 
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 

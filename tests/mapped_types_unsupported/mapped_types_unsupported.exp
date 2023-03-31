@@ -1,0 +1,10 @@
+Error -------------------------------------------------------------------------------------------- not_supported.js:2:10
+
+Mapped Types are not yet supported. [unsupported-syntax]
+
+   2| type X = {[key in keyof O]: number}; // ERROR mapped types not yet supported
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error

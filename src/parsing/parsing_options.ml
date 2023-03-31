@@ -30,6 +30,7 @@ type t = {
   parse_node_main_fields: string list;
   parse_distributed: bool;
   parse_enable_conditional_types: bool;
+  parse_enable_mapped_types: bool;
 }
 
 let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict ~docblock options =
@@ -66,4 +67,5 @@ let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict ~docblock opti
     parse_node_main_fields = Options.node_main_fields options;
     parse_distributed = Options.distributed options;
     parse_enable_conditional_types = Options.conditional_type options;
+    parse_enable_mapped_types = Options.mapped_type options;
   }

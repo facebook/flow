@@ -153,6 +153,8 @@ val log_saving : config -> Options.log_saving SMap.t
 
 val long_lived_workers : config -> bool
 
+val mapped_type : config -> bool
+
 val max_files_checked_per_worker : config -> int
 
 val max_header_tokens : config -> int

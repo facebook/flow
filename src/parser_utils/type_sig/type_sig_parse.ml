@@ -1478,7 +1478,8 @@ and object_type =
     | ( (_, Ast.Type.Keyof { Ast.Type.Keyof.argument = source_type; comments = _ }),
         Ast.Type.Object.MappedType.(
           PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag)
-      ) ->
+      )
+      when opts.mapped_type ->
       let (key_loc, key_name) =
         let ( _,
               {

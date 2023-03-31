@@ -62,6 +62,7 @@ let sig_opts =
     enable_relay_integration = false;
     relay_integration_module_prefix = None;
     conditional_type = true;
+    mapped_type = true;
   }
 
 let print_index exports =

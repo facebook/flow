@@ -1439,18 +1439,22 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             comments;
           }
       ) as ot ->
-      Flow_js_utils.add_output
-        cx
-        Error_message.(EUnsupportedSyntax (obj_loc, Error_message.MappedType));
-      (* Mapped types are implemented with the following limitations:
-         * 1. Mapped types cannot be declared with additional properties
-         * 2. Mapped types do not support explicit exact or inexact modifiers
-         * 3. Mapped types do not yet support optional property removal via -?
-         * 4. Mapped types must use an inline keyof
-         * All of these conditions are checked in this case, and the extra properties
-         * case is additionally checked in the normal object type case. If any of these
-         * conditions are violated then the result is Any *)
-      if exact || inexact then (
+      if not (Context.mapped_type cx) then (
+        Flow_js_utils.add_output
+          cx
+          Error_message.(EUnsupportedSyntax (obj_loc, Error_message.MappedType));
+        Tast_utils.error_mapper#type_ ot
+      ) else if
+          (* Mapped types are implemented with the following limitations:
+             * 1. Mapped types cannot be declared with additional properties
+             * 2. Mapped types do not support explicit exact or inexact modifiers
+             * 3. Mapped types do not yet support optional property removal via -?
+             * 4. Mapped types must use an inline keyof
+             * All of these conditions are checked in this case, and the extra properties
+             * case is additionally checked in the normal object type case. If any of these
+             * conditions are violated then the result is Any *)
+          exact || inexact
+        then (
         Flow_js_utils.add_output
           cx
           Error_message.(EInvalidMappedType { loc = obj_loc; kind = ExplicitExactOrInexact });
@@ -1553,9 +1557,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (match mapped_type_loc with
       | Some mapped_type_loc ->
-        Flow_js_utils.add_output
-          cx
-          Error_message.(EUnsupportedSyntax (mapped_type_loc, Error_message.MappedType));
+        if not (Context.mapped_type cx) then
+          Flow_js_utils.add_output
+            cx
+            Error_message.(EUnsupportedSyntax (mapped_type_loc, Error_message.MappedType));
         Flow_js_utils.add_output
           cx
           Error_message.(EInvalidMappedType { loc; kind = ExtraProperties });

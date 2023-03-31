@@ -34,6 +34,7 @@ let run ctxt expected name content =
         parse_node_main_fields = [];
         parse_distributed = false;
         parse_enable_conditional_types = false;
+        parse_enable_mapped_types = false;
       }
   in
   let result = do_parse ~parsing_options ~info content file in

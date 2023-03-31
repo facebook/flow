@@ -64,6 +64,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   haste_module_ref_prefix_LEGACY_INTEROP: string option;
   ignore_non_literal_requires: bool;
+  mapped_type: bool;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -160,6 +161,8 @@ val goals : t -> Type.t IMap.t
 val exact_by_default : t -> bool
 
 val conditional_type : t -> bool
+
+val mapped_type : t -> bool
 
 val file : t -> File_key.t
 

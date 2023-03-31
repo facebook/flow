@@ -96,6 +96,7 @@ type t = {
   opt_log_file: Path.t;
   opt_log_saving: log_saving SMap.t;
   opt_long_lived_workers: bool;
+  opt_mapped_type: bool;
   opt_max_files_checked_per_worker: int;
   opt_max_header_tokens: int;
   opt_max_literal_length: int;
@@ -219,6 +220,8 @@ let log_file opts = opts.opt_log_file
 let log_saving opts = opts.opt_log_saving
 
 let long_lived_workers opts = opts.opt_long_lived_workers
+
+let mapped_type opts = opts.opt_mapped_type
 
 let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 

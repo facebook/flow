@@ -1,2 +1,3 @@
 [options]
 all=true
+experimental.mapped_type=true

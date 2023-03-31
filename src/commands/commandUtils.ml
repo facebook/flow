@@ -1345,6 +1345,7 @@ let make_options
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
     opt_conditional_type = Base.Option.value (FlowConfig.conditional_type flowconfig) ~default:false;
+    opt_mapped_type = FlowConfig.mapped_type flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
     opt_estimate_recheck_time =
