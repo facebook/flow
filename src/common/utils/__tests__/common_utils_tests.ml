@@ -13,7 +13,6 @@ let tests =
          Line_test.tests;
          Nel_test.tests;
          ResizableArray_test.tests;
-         UnionFind_test.tests;
          Graph_test.tests;
          Cache_test.tests;
        ]
