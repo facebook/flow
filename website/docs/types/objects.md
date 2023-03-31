@@ -11,8 +11,6 @@ There are a number of ways to type them in order to support the different use ca
 - [Objects with indexers](#toc-objects-as-maps): An object that can used as a map from a key type to a value type, e.g. `{[string]: boolean}`.
 - [Interfaces](../interfaces): Interfaces are separate from object types. Only they can describe instances of classes. E.g. `interfaces {a: number}`.
 
-## Object type syntax {#toc-object-type-syntax}
-
 Object types try to match the syntax for objects in JavaScript as much as
 possible. Using curly braces `{}` and name-value pairs using a colon `:` split
 by commas `,`.
@@ -30,7 +28,7 @@ const obj2: {
 };
 ```
 
-### Optional object type properties {#toc-optional-object-type-properties}
+## Optional object type properties {#toc-optional-object-type-properties}
 
 In JavaScript, accessing a property that doesn't exist evaluates to
 `undefined`. This is a common source of errors in JavaScript programs, so Flow
@@ -65,7 +63,69 @@ acceptsObject({});               // Works!
 acceptsObject({foo: null});      // Error!
 ```
 
-### Object methods {#toc-object-methods}
+
+To make all properties in an object type optional, you can use the [`Partial`](../utilities/#toc-partial) utility type:
+
+```js flow-check
+type Obj = {
+  foo: string,
+};
+
+type PartialObj = Partial<Obj>; // Same as `{foo?: string}`
+```
+
+To make all properties in an object type required, you can use the [`Required`](../utilities/#toc-required) utility type:
+
+```js flow-check
+type PartialObj = {
+  foo?: string,
+};
+
+type Obj = Required<PartialObj>; // Same as `{foo: string}`
+```
+
+## Read-only object properties
+
+You can add [variance](../../lang/variance) annotations to your object properties.
+
+To mark a property as read-only, you can use the `+`:
+
+```js flow-check
+type Obj = {
+  +foo: string,
+};
+
+function func(o: Obj) {
+  const x: string = o.foo; // Works!
+  o.foo = 'hi'; // Error!
+}
+```
+
+To make all object properties in an object type read-only, you can use the [`$ReadOnly`](../utilities/#toc-readonly) utility type:
+
+```js flow-check
+type Obj = {
+  foo: string,
+};
+
+type ReadOnlyObj = $ReadOnly<Obj>; // Same as `{+foo: string}`
+```
+
+You can also mark your properties as write-only with `-`:
+
+```js flow-check
+type Obj = {
+  -foo: string,
+};
+
+function func(o: Obj) {
+  const x: string = o.foo; // Error!
+  o.foo = 'hi'; // Works!
+}
+```
+
+
+## Object methods {#toc-object-methods}
 
 Method syntax in objects has the same runtime behavior as a function property. These two objects are equivalent at runtime:
 
@@ -350,6 +410,65 @@ function add(id: number, name: string) {
   obj[id] = name;
   obj.size++;
 }
+```
+
+You can mark an indexer property as read-only (or write-only) using [variance](../../lang/variance) annotations:
+
+```js flow-check
+type ReadOnly = {+[string]: number};
+type WriteOnly = {-[string]: number};
+```
+
+## Keys, values, and indexed access
+
+You can extract the keys of an object type using the [`$Keys`](../utilities/#toc-keys) utility type:
+
+```js flow-check
+type Obj = {
+  foo: string,
+  bar: number,
+};
+
+type T = $Keys<Obj>;
+
+function acceptsKeys(k: T) { /* ... */ }
+
+acceptsKeys('foo'); // Works!
+acceptsKeys('bar'); // Works!
+acceptsKeys('hi'); // Error!
+```
+
+You can extract the values of an object type using the [`$Values`](../utilities/#toc-values) utility type:
+
+```js flow-check
+type Obj = {
+  foo: string,
+  bar: number,
+};
+
+type T = $Values<Obj>;
+
+function acceptsValues(v: T) { /* ... */ }
+
+acceptsValues(2); // Works!
+acceptsValues('hi'); // Works!
+acceptsValues(true); // Error!
+```
+
+You can get the type of an object type's specific property using [indexed access types](../indexed-access):
+
+```js flow-check
+type Obj = {
+  foo: string,
+  bar: number,
+};
+
+type T = Obj['foo'];
+
+function acceptsStr(x: T) { /* ... */ }
+
+acceptsStr('hi'); // Works!
+acceptsStr(1); // Error!
 ```
 
 ## Arbitrary objects
