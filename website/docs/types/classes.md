@@ -126,7 +126,9 @@ a.#internalMethod(); // Error!
 a.publicApi(); // Works!
 ```
 
-Flow may require return type annotations on methods if they call (or are called by) other methods in their return value:
+Flow requires return type annotations on methods in most cases.
+This is because it is common to reference `this` inside of a method, and `this` is typed as the instance of the class -
+but to know the type of the class we need to know the return type of its methods!
 
 ```js flow-check
 class MyClass {
