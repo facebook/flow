@@ -8,10 +8,6 @@
 open Utils_js
 open Docblock_parser
 
-type types_mode =
-  | TypesAllowed
-  | TypesForbiddenByDefault
-
 (* result of individual parse *)
 type result =
   | Parse_ok of {
@@ -65,32 +61,10 @@ type results = {
   dirty_modules: Modulename.Set.t;
 }
 
-type parse_options = {
-  parse_types_mode: types_mode;
-  parse_use_strict: bool;
-  parse_prevent_munge: bool;
-  parse_module_ref_prefix: string option;
-  parse_module_ref_prefix_LEGACY_INTEROP: string option;
-  parse_facebook_fbt: string option;
-  parse_suppress_types: SSet.t;
-  parse_max_literal_len: int;
-  parse_exact_by_default: bool;
-  parse_enable_enums: bool;
-  parse_enable_relay_integration: bool;
-  parse_relay_integration_excludes: Str.regexp list;
-  parse_relay_integration_module_prefix: string option;
-  parse_relay_integration_module_prefix_includes: Str.regexp list;
-  parse_node_main_fields: string list;
-  parse_distributed: bool;
-}
-
-val make_parse_options :
-  ?types_mode:types_mode -> ?use_strict:bool -> Docblock.t -> Options.t -> parse_options
-
 (* Use default values for the various settings that parse takes. Each one can be overridden
    individually *)
 val parse_with_defaults :
-  ?types_mode:types_mode ->
+  ?types_mode:Parsing_options.types_mode ->
   ?use_strict:bool ->
   reader:Mutator_state_reader.t ->
   Options.t ->
@@ -101,7 +75,7 @@ val parse_with_defaults :
 val reparse_with_defaults :
   transaction:Transaction.t ->
   reader:Mutator_state_reader.t ->
-  ?types_mode:types_mode ->
+  ?types_mode:Parsing_options.types_mode ->
   ?use_strict:bool ->
   ?with_progress:bool ->
   workers:MultiWorkerLwt.worker list option ->
@@ -121,7 +95,7 @@ val parse_package_json_file :
 
 (* parse contents of a file *)
 val do_parse :
-  parse_options:parse_options ->
+  parsing_options:Parsing_options.t ->
   info:Docblock.t ->
   string ->
   (* contents of the file *)

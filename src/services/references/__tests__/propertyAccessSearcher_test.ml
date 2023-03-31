@@ -13,28 +13,29 @@ let run ctxt expected name content =
   let (_docblock_errors, info) =
     Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens file content)
   in
-  let parse_options =
-    {
-      parse_types_mode = TypesAllowed;
-      parse_use_strict = true;
-      parse_prevent_munge = false;
-      parse_module_ref_prefix = None;
-      parse_module_ref_prefix_LEGACY_INTEROP = None;
-      parse_facebook_fbt = None;
-      (* following options unused in classic mode *)
-      parse_suppress_types = SSet.empty;
-      parse_max_literal_len = 0;
-      parse_exact_by_default = false;
-      parse_enable_enums = false;
-      parse_enable_relay_integration = false;
-      parse_relay_integration_excludes = [];
-      parse_relay_integration_module_prefix = None;
-      parse_relay_integration_module_prefix_includes = [];
-      parse_node_main_fields = [];
-      parse_distributed = false;
-    }
+  let parsing_options =
+    Parsing_options.
+      {
+        parse_types_mode = TypesAllowed;
+        parse_use_strict = true;
+        parse_prevent_munge = false;
+        parse_module_ref_prefix = None;
+        parse_module_ref_prefix_LEGACY_INTEROP = None;
+        parse_facebook_fbt = None;
+        (* following options unused in classic mode *)
+        parse_suppress_types = SSet.empty;
+        parse_max_literal_len = 0;
+        parse_exact_by_default = false;
+        parse_enable_enums = false;
+        parse_enable_relay_integration = false;
+        parse_relay_integration_excludes = [];
+        parse_relay_integration_module_prefix = None;
+        parse_relay_integration_module_prefix_includes = [];
+        parse_node_main_fields = [];
+        parse_distributed = false;
+      }
   in
-  let result = do_parse ~parse_options ~info content file in
+  let result = do_parse ~parsing_options ~info content file in
   let ast =
     match result with
     | Parse_ok { ast; _ } -> ast

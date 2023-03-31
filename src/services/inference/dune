@@ -9,6 +9,7 @@
   flow_monitor_rpc
   flow_parser
   flow_parsing
+  flow_parsing_options
   flow_procs
   flow_saved_state_fb_fetcher
   flow_server_env

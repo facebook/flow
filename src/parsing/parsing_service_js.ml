@@ -8,6 +8,7 @@
 open Utils_js
 open Sys_utils
 open Docblock_parser
+open Parsing_options
 
 type result =
   | Parse_ok of {
@@ -74,32 +75,6 @@ let empty_result =
   }
 
 (**************************** internal *********************************)
-(* TODO: add TypesForbidden (disables types even on files with @flow) and
-   TypesAllowedByDefault (enables types even on files without @flow, but allows
-   something like @noflow to disable them) *)
-type types_mode =
-  | TypesAllowed
-  | TypesForbiddenByDefault
-
-type parse_options = {
-  parse_types_mode: types_mode;
-  parse_use_strict: bool;
-  parse_prevent_munge: bool;
-  parse_module_ref_prefix: string option;
-  parse_module_ref_prefix_LEGACY_INTEROP: string option;
-  parse_facebook_fbt: string option;
-  parse_suppress_types: SSet.t;
-  parse_max_literal_len: int;
-  parse_exact_by_default: bool;
-  parse_enable_enums: bool;
-  parse_enable_relay_integration: bool;
-  parse_relay_integration_excludes: Str.regexp list;
-  parse_relay_integration_module_prefix: string option;
-  parse_relay_integration_module_prefix_includes: Str.regexp list;
-  parse_node_main_fields: string list;
-  parse_distributed: bool;
-}
-
 let parse_source_file ~types ~use_strict content file =
   let parse_options =
     Some
@@ -144,7 +119,7 @@ let types_checked types_mode info =
     | Some Docblock.OptInStrictLocal ->
       true)
 
-let do_parse ~parse_options ~info content file =
+let do_parse ~parsing_options ~info content file =
   let {
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
@@ -163,7 +138,7 @@ let do_parse ~parse_options ~info content file =
     parse_node_main_fields = node_main_fields;
     parse_distributed = distributed;
   } =
-    parse_options
+    parsing_options
   in
   try
     match file with
@@ -306,7 +281,7 @@ let fold_failed acc worker_mutator file_key file_opt hash module_name error =
 let reducer
     ~worker_mutator
     ~reader
-    ~parse_options
+    ~parsing_options
     ~skip_changed
     ~skip_unchanged
     ~max_header_tokens
@@ -369,10 +344,10 @@ let reducer
               info
           in
           begin
-            match do_parse ~parse_options ~info content file_key with
+            match do_parse ~parsing_options ~info content file_key with
             | Parse_ok
                 { ast; file_sig; exports; imports; locs; type_sig; cas_digest; tolerable_errors } ->
-              (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
+              (* if parsing_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
               let file_sig = (file_sig, tolerable_errors) in
               let module_name = exported_module file_key (`Module info) in
@@ -505,7 +480,7 @@ let next_of_filename_set ?(with_progress = false) workers filenames =
 let parse
     ~worker_mutator
     ~reader
-    ~parse_options
+    ~parsing_options
     ~skip_changed
     ~skip_unchanged
     ~profile
@@ -519,7 +494,7 @@ let parse
     reducer
       ~worker_mutator
       ~reader
-      ~parse_options
+      ~parsing_options
       ~skip_changed
       ~skip_unchanged
       ~max_header_tokens
@@ -557,7 +532,7 @@ let parse
 let reparse
     ~transaction
     ~reader
-    ~parse_options
+    ~parsing_options
     ~profile
     ~max_header_tokens
     ~noflow
@@ -571,7 +546,7 @@ let reparse
     parse
       ~worker_mutator
       ~reader
-      ~parse_options
+      ~parsing_options
       ~skip_changed:false
       ~skip_unchanged:true
       ~profile
@@ -585,56 +560,18 @@ let reparse
   Parsing_heaps.Reparse_mutator.record_not_found master_mutator results.not_found;
   Lwt.return results
 
-let make_parse_options_internal ?(types_mode = TypesAllowed) ?use_strict ~docblock options =
-  let use_strict =
-    match use_strict with
-    | Some use_strict -> use_strict
-    | None -> Options.modules_are_use_strict options
-  in
-  let module_ref_prefix = Options.haste_module_ref_prefix options in
-  let module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options in
-  let facebook_fbt = Options.facebook_fbt options in
-  let prevent_munge =
-    let default = not (Options.should_munge_underscores options) in
-    match docblock with
-    | Some docblock -> Docblock.preventMunge docblock || default
-    | None -> default
-  in
-  {
-    parse_types_mode = types_mode;
-    parse_use_strict = use_strict;
-    parse_prevent_munge = prevent_munge;
-    parse_module_ref_prefix = module_ref_prefix;
-    parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
-    parse_facebook_fbt = facebook_fbt;
-    parse_suppress_types = Options.suppress_types options;
-    parse_max_literal_len = Options.max_literal_length options;
-    parse_exact_by_default = Options.exact_by_default options;
-    parse_enable_enums = Options.enums options;
-    parse_enable_relay_integration = Options.enable_relay_integration options;
-    parse_relay_integration_excludes = Options.relay_integration_excludes options;
-    parse_relay_integration_module_prefix = Options.relay_integration_module_prefix options;
-    parse_relay_integration_module_prefix_includes =
-      Options.relay_integration_module_prefix_includes options;
-    parse_node_main_fields = Options.node_main_fields options;
-    parse_distributed = Options.distributed options;
-  }
-
-let make_parse_options ?types_mode ?use_strict docblock options =
-  make_parse_options_internal ?types_mode ?use_strict ~docblock:(Some docblock) options
-
 let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode ~use_strict options
   in
-  let parse_options = make_parse_options_internal ~use_strict ~types_mode ~docblock:None options in
+  let parsing_options = make_parsing_options ~use_strict ~types_mode ~docblock:None options in
   let exported_module = Module_js.exported_module ~options in
   (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
     ~worker_mutator
     ~reader
-    ~parse_options
+    ~parsing_options
     ~skip_changed:false
     ~skip_unchanged:false
     ~profile
@@ -649,12 +586,12 @@ let reparse_with_defaults
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode ~use_strict options
   in
-  let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
+  let parsing_options = make_parsing_options ~types_mode ~use_strict ~docblock:None options in
   let exported_module = Module_js.exported_module ~options in
   reparse
     ~transaction
     ~reader
-    ~parse_options
+    ~parsing_options
     ~profile
     ~max_header_tokens
     ~noflow
@@ -693,7 +630,7 @@ let ensure_parsed ~reader options workers files =
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
   in
   let next = MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts) in
-  let parse_options = make_parse_options_internal ~types_mode ~use_strict ~docblock:None options in
+  let parsing_options = make_parsing_options ~types_mode ~use_strict ~docblock:None options in
   let exported_module = Module_js.exported_module ~options in
   let%lwt {
         parsed = _;
@@ -708,7 +645,7 @@ let ensure_parsed ~reader options workers files =
     parse
       ~worker_mutator
       ~reader
-      ~parse_options
+      ~parsing_options
       ~skip_changed:true
       ~skip_unchanged:false
       ~profile

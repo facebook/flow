@@ -33,7 +33,7 @@ type lib_result =
 
 let parse_lib_file ~reader options file =
   (* types are always allowed in lib files *)
-  let types_mode = Parsing.TypesAllowed in
+  let types_mode = Parsing_options.TypesAllowed in
   (* lib files are always "use strict" *)
   let use_strict = true in
   try%lwt

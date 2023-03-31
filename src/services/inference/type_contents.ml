@@ -19,14 +19,18 @@ type parse_contents_return =
 let do_parse_wrapper ~options filename contents =
   let types_mode =
     if Options.all options then
-      Parsing_service_js.TypesAllowed
+      Parsing_options.TypesAllowed
     else
-      Parsing_service_js.TypesForbiddenByDefault
+      Parsing_options.TypesForbiddenByDefault
   in
   let max_tokens = Options.max_header_tokens options in
   let (docblock_errors, docblock) = Docblock_parser.parse_docblock ~max_tokens filename contents in
-  let parse_options = Parsing_service_js.make_parse_options ~types_mode docblock options in
-  let parse_result = Parsing_service_js.do_parse ~parse_options ~info:docblock contents filename in
+  let parsing_options =
+    Parsing_options.make_parsing_options ~types_mode ~docblock:(Some docblock) options
+  in
+  let parse_result =
+    Parsing_service_js.do_parse ~parsing_options ~info:docblock contents filename
+  in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; _ } ->
     Parsed
