@@ -33,6 +33,7 @@ let run ctxt expected name content =
         parse_relay_integration_module_prefix_includes = [];
         parse_node_main_fields = [];
         parse_distributed = false;
+        parse_enable_conditional_types = false;
       }
   in
   let result = do_parse ~parsing_options ~info content file in

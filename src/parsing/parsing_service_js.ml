@@ -137,6 +137,7 @@ let do_parse ~parsing_options ~info content file =
     parse_relay_integration_module_prefix_includes = relay_integration_module_prefix_includes;
     parse_node_main_fields = node_main_fields;
     parse_distributed = distributed;
+    parse_enable_conditional_types = _;
   } =
     parsing_options
   in

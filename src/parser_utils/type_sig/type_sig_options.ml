@@ -18,6 +18,7 @@ type t = {
   enable_enums: bool;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
+  conditional_type: bool;
 }
 
 let of_parsing_options
@@ -51,6 +52,7 @@ let of_parsing_options
     module_ref_prefix = parsing_options.parse_module_ref_prefix;
     module_ref_prefix_LEGACY_INTEROP = parsing_options.parse_module_ref_prefix_LEGACY_INTEROP;
     enable_enums = parsing_options.parse_enable_enums;
+    conditional_type = parsing_options.parse_enable_conditional_types;
   }
 
 let of_options options ~munge ~ignore_static_propTypes ~facebook_keyMirror =
@@ -67,4 +69,5 @@ let of_options options ~munge ~ignore_static_propTypes ~facebook_keyMirror =
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
+    conditional_type = Options.conditional_type options;
   }

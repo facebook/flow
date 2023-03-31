@@ -29,6 +29,7 @@ type t = {
   parse_relay_integration_module_prefix_includes: Str.regexp list;
   parse_node_main_fields: string list;
   parse_distributed: bool;
+  parse_enable_conditional_types: bool;
 }
 
 let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict ~docblock options =
@@ -64,4 +65,5 @@ let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict ~docblock opti
       Options.relay_integration_module_prefix_includes options;
     parse_node_main_fields = Options.node_main_fields options;
     parse_distributed = Options.distributed options;
+    parse_enable_conditional_types = Options.conditional_type options;
   }

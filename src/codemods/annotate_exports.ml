@@ -76,6 +76,7 @@ module SignatureVerification = struct
         enable_enums = Options.enums options;
         enable_relay_integration = Options.enable_relay_integration options;
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;
+        conditional_type = true;
       }
     in
     let (sig_errors, locs, _) =

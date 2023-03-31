@@ -192,6 +192,7 @@ let sig_options
     ?module_ref_prefix_LEGACY_INTEROP
     ?(enable_enums = true)
     ?(enable_relay_integration = false)
+    ?(conditional_type = true)
     ?relay_integration_module_prefix
     () =
   {
@@ -207,6 +208,7 @@ let sig_options
     enable_enums;
     enable_relay_integration;
     relay_integration_module_prefix;
+    conditional_type;
   }
 
 let parse_and_pack_module ~strict sig_opts contents =
@@ -224,6 +226,7 @@ let print_sig
     ?module_ref_prefix_LEGACY_INTEROP
     ?enable_enums
     ?enable_relay_integration
+    ?conditional_type
     ?relay_integration_module_prefix
     contents_indent =
   let contents = dedent_trim contents_indent in
@@ -239,6 +242,7 @@ let print_sig
       ?module_ref_prefix_LEGACY_INTEROP
       ?enable_enums
       ?enable_relay_integration
+      ?conditional_type
       ?relay_integration_module_prefix
       ()
   in
