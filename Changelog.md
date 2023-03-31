@@ -1,3 +1,9 @@
+### 0.203.1
+
+Misc:
+
+* Add useful information to poorly located error messages. For example, for code like this [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdS4AHCGlwACXP10YjARSJZDGNEYC8RgCQAlbEIDyUGvwA8wGoAfADcADpQImB0mEYAbrZGAI42dmj0yEYAgmhoWAHWtrj2YZGRNBjG9AYlQkXp9AAycPTGzl68AFYYeAB0iTREGPQAFKnF9vQAlH0wdLij0xFQNXb1aSUZLW1ORgDafUdrdQ1bza24ALp9J6ORRuO4AIysKbgATNNOwQ9G-8kXrdIOZ8FAsJQ+jQIGAsJUAMIQci6WwYJ4fYEQUHgyjfAA+ePezz6cCiXCMAFp3hjSSJOKxIss2CB4lM4NBqPEAAx9D5cgDMfS5IDUQA) where the error points to a library definition, the error message will show the file that caused the error.
+
 ### 0.203.0
 
 Likely to cause new Flow errors:
