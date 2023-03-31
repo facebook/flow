@@ -19,23 +19,9 @@
 
 open Type_sig
 open Type_sig_collections
+open Type_sig_options
 module Ast = Flow_ast
 module Option = Base.Option
-
-type options = {
-  suppress_types: SSet.t;
-  munge: bool;
-  ignore_static_propTypes: bool;
-  facebook_keyMirror: bool;
-  facebook_fbt: string option;
-  max_literal_len: int;
-  exact_by_default: bool;
-  module_ref_prefix: string option;
-  module_ref_prefix_LEGACY_INTEROP: string option;
-  enable_enums: bool;
-  enable_relay_integration: bool;
-  relay_integration_module_prefix: string option;
-}
 
 (* This type encodes the fixed point of parsed signatures. Of particular note
  * here are the Ref and Err constructors.

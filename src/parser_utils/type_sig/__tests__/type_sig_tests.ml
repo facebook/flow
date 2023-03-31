@@ -195,7 +195,7 @@ let sig_options
     ?relay_integration_module_prefix
     () =
   {
-    Parse.suppress_types;
+    Type_sig_options.suppress_types;
     munge;
     ignore_static_propTypes;
     facebook_keyMirror;

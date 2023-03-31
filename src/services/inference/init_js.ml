@@ -131,20 +131,11 @@ let load_lib_files ~ccx ~options ~reader files =
   let builtin_exports =
     if ok then
       let sig_opts =
-        {
-          Type_sig_parse.suppress_types = Options.suppress_types options;
-          munge = (* libs shouldn't have private fields *) false;
-          ignore_static_propTypes = true;
-          facebook_keyMirror = (* irrelevant for libs *) false;
-          facebook_fbt = Options.facebook_fbt options;
-          max_literal_len = Options.max_literal_length options;
-          exact_by_default = Options.exact_by_default options;
-          module_ref_prefix = Options.haste_module_ref_prefix options;
-          module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options;
-          enable_enums = Options.enums options;
-          enable_relay_integration = Options.enable_relay_integration options;
-          relay_integration_module_prefix = Options.relay_integration_module_prefix options;
-        }
+        Type_sig_options.of_options
+          options
+          ~munge:false
+          ~ignore_static_propTypes:true
+          ~facebook_keyMirror:false
       in
       let (_builtin_errors, _builtin_locs, builtins) =
         Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts

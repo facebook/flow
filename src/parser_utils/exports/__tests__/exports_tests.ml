@@ -49,7 +49,7 @@ let make_test_formatter () =
 
 let sig_opts =
   {
-    Type_sig_parse.suppress_types = SSet.empty;
+    Type_sig_options.suppress_types = SSet.empty;
     munge = false;
     ignore_static_propTypes = false;
     facebook_keyMirror = false;

@@ -126,10 +126,10 @@ let do_parse ~parsing_options ~info content file =
     parse_prevent_munge = prevent_munge;
     parse_module_ref_prefix = module_ref_prefix;
     parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
-    parse_facebook_fbt = facebook_fbt;
-    parse_suppress_types = suppress_types;
-    parse_max_literal_len = max_literal_len;
-    parse_exact_by_default = exact_by_default;
+    parse_facebook_fbt = _;
+    parse_suppress_types = _;
+    parse_max_literal_len = _;
+    parse_exact_by_default = _;
     parse_enable_enums = enable_enums;
     parse_enable_relay_integration = enable_relay_integration;
     parse_relay_integration_excludes = relay_integration_excludes;
@@ -192,20 +192,13 @@ let do_parse ~parsing_options ~info content file =
             { ast; file_sig; tolerable_errors; parse_errors = Nel.of_list_exn parse_errors }
         else
           let sig_opts =
-            {
-              Type_sig_parse.suppress_types;
-              munge = not prevent_munge;
-              ignore_static_propTypes;
-              facebook_keyMirror;
-              facebook_fbt;
-              max_literal_len;
-              exact_by_default;
-              module_ref_prefix;
-              module_ref_prefix_LEGACY_INTEROP;
-              enable_enums;
-              enable_relay_integration;
-              relay_integration_module_prefix;
-            }
+            Type_sig_options.of_parsing_options
+              parsing_options
+              ~enable_relay_integration
+              ~relay_integration_module_prefix
+              ~munge:(not prevent_munge)
+              ~ignore_static_propTypes
+              ~facebook_keyMirror
           in
           let (sig_errors, locs, type_sig) =
             let strict = Docblock.is_strict info in
