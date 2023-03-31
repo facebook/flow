@@ -3,9 +3,9 @@ title: Interface Types
 slug: /types/interfaces
 ---
 
-Classes in Flow are nominally typed. This means that when you have two separate
+[Classes](../classes) in Flow are [nominally typed](../../lang/nominal-structural). This means that when you have two separate
 classes you cannot use one in place of the other even when they have the same
-exact properties and methods.
+exact properties and methods:
 
 ```js flow-check
 class Foo {
@@ -16,7 +16,6 @@ class Bar {
   serialize(): string { return '[Bar]'; }
 }
 
-// $ExpectError
 const foo: Foo = new Bar(); // Error!
 ```
 
@@ -47,7 +46,11 @@ class Foo {
   a: number;
 }
 
-(new Foo() : interface { a : number });
+function getNumber(o: interface {a: number}): number {
+  return o.a;
+}
+
+getNumber(new Foo()); // Works!
 ```
 
 You can also use `implements` to tell Flow that you want the class to match an
@@ -64,8 +67,7 @@ class Foo implements Serializable {
 }
 
 class Bar implements Serializable {
-  // $ExpectError
-  serialize(): string { return 42; } // Error!
+  serialize(): number { return 42; } // Error!
 }
 ```
 
@@ -76,6 +78,30 @@ class Foo implements Bar, Baz {
   // ...
 }
 ```
+
+Interfaces can describe both instances and objects, unlike object types which can only describe objects:
+
+```js flow-check
+class Foo {
+  a: number;
+}
+const foo = new Foo();
+const o: {a: number} = {a: 1};
+
+interface MyInterface {
+  a: number;
+}
+
+function acceptsMyInterface(x: MyInterface) { /* ... */ }
+acceptsMyInterface(o); // Works!
+acceptsMyInterface(foo); // Works!
+
+function acceptsObj(x: {a: number, ...}) { /* ... */ }
+acceptsObj(o); // Works!
+acceptsObj(foo); // Error!
+```
+
+Unlike objects, interfaces cannot be [exact](../objects/#exact-and-inexact-object-types), as they can always have other, unknown properties.
 
 ## Interface Syntax {#toc-interface-syntax}
 
@@ -88,12 +114,11 @@ interface MyInterface {
 }
 ```
 
-The syntax of the block matches the syntax of object types and has all of the
-same features.
+The syntax of the block matches the syntax of object types.
 
 ### Interface Methods {#toc-interface-methods}
 
-You can add methods to interfaces following the same syntax as class methods. Any `this` parameters you
+You can add methods to interfaces following the same syntax as class methods. Any [`this` parameters](../functions/#this-parameter) you
 provide are also subject to the same restrictions as class methods.
 
 ```js flow-check
@@ -104,10 +129,26 @@ interface MyInterface {
 
 Also like [class methods](../classes#toc-class-methods), interface methods must also remain bound to the interface on which they were defined.
 
+You can define [overloaded methods](../intersections/#declaring-overloaded-functions) by declaring the same method name multiple times with different type signatures:
+
+```js flow-check
+interface MyInterface {
+  method(value: string): string;
+  method(value: boolean): boolean;
+}
+
+function func(a: MyInterface) {
+  const x: string = a.method('hi'); // Works!
+  const y: boolean = a.method(true); // Works!
+
+  const z: boolean = a.method('hi'); // Error!
+}
+```
+
 ### Interface Properties {#toc-interface-properties}
 
 You can add properties to interfaces following the same syntax as class
-properties.
+properties:
 
 ```js flow-check
 interface MyInterface {
@@ -115,7 +156,7 @@ interface MyInterface {
 }
 ```
 
-Interface properties can be optional as well.
+Interface properties can be optional as well:
 
 ```js flow-check
 interface MyInterface {
@@ -125,8 +166,8 @@ interface MyInterface {
 
 ### Interfaces as maps {#toc-interfaces-as-maps}
 
-You can create ["indexer properties"](../objects#toc-objects-as-maps) the same
-way as with objects.
+You can create [indexer properties](../objects#toc-objects-as-maps) the same
+way as with objects:
 
 ```js flow-check
 interface MyInterface {
@@ -136,7 +177,7 @@ interface MyInterface {
 
 ### Interface Generics {#toc-interface-generics}
 
-Interfaces can also have their own [generics](../generics/).
+Interfaces can also have their own [generics](../generics/):
 
 ```js flow-check
 interface MyInterface<A, B, C> {
@@ -146,7 +187,7 @@ interface MyInterface<A, B, C> {
 ```
 
 Interface generics are [parameterized](../generics#toc-parameterized-generics).
-When you use an interface you need to pass parameters for each of its generics.
+When you use an interface you need to pass parameters for each of its generics:
 
 ```js flow-check
 interface MyInterface<A, B, C> {
@@ -155,14 +196,12 @@ interface MyInterface<A, B, C> {
   baz: C;
 }
 
-var val: MyInterface<number, boolean, string> = {
+const val: MyInterface<number, boolean, string> = {
   foo: 1,
   bar: true,
   baz: 'three',
 };
 ```
-
-<!-- [TODO: Overloading interface methods -->
 
 ## Interface property variance (read-only and write-only) {#toc-interface-property-variance-read-only-and-write-only}
 
@@ -180,7 +219,7 @@ interface MyInterface {
 #### Covariant (read-only) properties on interfaces {#toc-covariant-read-only-properties-on-interfaces}
 
 You can make a property covariant by adding a plus symbol `+` in front of the
-property name.
+property name:
 
 ```js flow-check
 interface MyInterface {
@@ -188,34 +227,40 @@ interface MyInterface {
 }
 ```
 
-This allows you to pass a more specific type in place of that property.
+This allows you to pass a more specific type in place of that property:
 
 ```js flow-check
-// @flow
-interface Invariant {  property: number | string }
-interface Covariant { +readOnly: number | string }
+interface Invariant {
+  property: number | string;
+}
+interface Covariant {
+  +readOnly: number | string;
+}
 
-var x : { property : number } = { property : 42 };
-var y : { readOnly : number } = { readOnly : 42 };
+const x: {property: number} = {property: 42};
+const y: {readOnly: number} = {readOnly: 42};
 
-var value1: Invariant = x; // Error!
-var value2: Covariant = y; // Works
+const value1: Invariant = x; // Error!
+const value2: Covariant = y; // Works
 ```
 
 Because of how covariance works, covariant properties also become read-only
 when used. Which can be useful over normal properties.
 
 ```js flow-check
-// @flow
-interface Invariant {  property: number | string }
-interface Covariant { +readOnly: number | string }
+interface Invariant {
+  property: number | string;
+}
+interface Covariant {
+  +readOnly: number | string;
+}
 
-function method1(value: Invariant) {
+function func1(value: Invariant) {
   value.property;        // Works!
   value.property = 3.14; // Works!
 }
 
-function method2(value: Covariant) {
+function func2(value: Covariant) {
   value.readOnly;        // Works!
   value.readOnly = 3.14; // Error!
 }
@@ -235,31 +280,36 @@ interface InterfaceName {
 This allows you to pass a less specific type in place of that property.
 
 ```js flow-check
-// @flow
-interface Invariant     {  property: number }
-interface Contravariant { -writeOnly: number }
+interface Invariant {
+  property: number;
+}
+interface Contravariant {
+  -writeOnly: number;
+}
 
-var numberOrString = Math.random() > 0.5 ? 42 : 'forty-two';
+const numberOrString = Math.random() > 0.5 ? 42 : 'forty-two';
 
-// $ExpectError
-var value1: Invariant     = { property: numberOrString };  // Error!
-var value2: Contravariant = { writeOnly: numberOrString }; // Works!
+const value1: Invariant     = {property: numberOrString};  // Error!
+const value2: Contravariant = {writeOnly: numberOrString}; // Works!
 ```
 
 Because of how contravariance works, contravariant properties also become
 write-only when used. Which can be useful over normal properties.
 
 ```js flow-check
-interface Invariant     {   property: number }
-interface Contravariant { -writeOnly: number }
+interface Invariant {
+  property: number;
+}
+interface Contravariant {
+  -writeOnly: number;
+}
 
-function method1(value: Invariant) {
+function func1(value: Invariant) {
   value.property;        // Works!
   value.property = 3.14; // Works!
 }
 
-function method2(value: Contravariant) {
-  // $ExpectError
+function func2(value: Contravariant) {
   value.writeOnly;        // Error!
   value.writeOnly = 3.14; // Works!
 }
