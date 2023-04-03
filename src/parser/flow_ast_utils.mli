@@ -35,6 +35,8 @@ val is_call_to_object_dot_freeze : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val is_call_to_object_static_method : ('a, 'b) Flow_ast.Expression.t -> bool
 
+val is_super_member_access : ('a, 'b) Flow_ast.Expression.Member.t -> bool
+
 val negate_number_literal : float * string -> float * string
 
 val negate_bigint_literal : int64 option * string -> int64 option * string

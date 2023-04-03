@@ -2262,7 +2262,9 @@ let autocomplete_get_results
                 errors_to_log = result_id.errors_to_log @ result_member.errors_to_log;
               })
         | _ -> AcResult result_id)
-      | Ac_member { obj_type; in_optional_chain; bracket_syntax; member_loc; is_type_annotation } ->
+      | Ac_member
+          { obj_type; in_optional_chain; bracket_syntax; member_loc; is_type_annotation; is_super }
+        ->
         autocomplete_member
           ~env
           ~reader
@@ -2283,7 +2285,7 @@ let autocomplete_get_results
           ~bracket_syntax
           ~member_loc
           ~is_type_annotation
-          ~force_instance:false
+          ~force_instance:is_super
       | Ac_jsx_element { type_ } ->
         autocomplete_jsx_element
           ~env

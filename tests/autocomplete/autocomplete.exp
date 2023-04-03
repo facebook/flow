@@ -11898,3 +11898,7 @@ Flags: --lsp
   }
 }
 
+super_member.js:9:11
+Flags: --pretty
+{"result":[{"name":"foo","type":"() => void"}]}
+

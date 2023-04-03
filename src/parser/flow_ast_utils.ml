@@ -180,6 +180,10 @@ let is_call_to_object_static_method callee =
     true
   | _ -> false
 
+let is_super_member_access = function
+  | { Flow_ast.Expression.Member._object = (_, Flow_ast.Expression.Super _); _ } -> true
+  | _ -> false
+
 let loc_of_statement = fst
 
 let loc_of_expression = fst

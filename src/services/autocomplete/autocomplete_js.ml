@@ -43,6 +43,7 @@ type autocomplete_type =
       (* loc of `.foo` or `[foo]` *)
       member_loc: Loc.t option;
       is_type_annotation: bool;
+      is_super: bool;
     }  (** member expressions *)
   | Ac_jsx_element of { type_: Type.t }  (** JSX element name *)
   | Ac_jsx_attribute of {
@@ -189,6 +190,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.Expression.Member in
       let { _object = ((obj_loc, obj_type), _); property; comments = _ } = expr in
       let member_loc = Some (compute_member_loc ~expr_loc ~obj_loc) in
+      let is_super = Flow_ast_utils.is_super_member_access expr in
       begin
         match property with
         | PropertyIdentifier ((prop_loc, _), { Flow_ast.Identifier.name; _ })
@@ -203,6 +205,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = None;
                  member_loc;
                  is_type_annotation = false;
+                 is_super;
                }
             )
         | PropertyExpression
@@ -222,6 +225,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = Some (this#default_ac_id type_);
                  member_loc;
                  is_type_annotation = false;
+                 is_super;
                }
             )
         | _ -> ()
@@ -253,6 +257,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = None;
                  member_loc;
                  is_type_annotation = false;
+                 is_super = false;
                }
             )
         | PropertyExpression
@@ -272,6 +277,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = Some (this#default_ac_id type_);
                  member_loc;
                  is_type_annotation = false;
+                 is_super = false;
                }
             )
         | _ -> ()
@@ -307,6 +313,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                        bracket_syntax = None;
                        member_loc = None;
                        is_type_annotation = false;
+                       is_super = false;
                      }
                   )
               | _ -> ())
@@ -506,6 +513,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = None;
                  member_loc = Some (compute_member_loc ~expr_loc ~obj_loc:loc);
                  is_type_annotation = false;
+                 is_super = false;
                }
             )
         | _ -> ()
@@ -665,6 +673,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                bracket_syntax = Some (this#default_ac_id index_type);
                member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
                is_type_annotation = true;
+               is_super = false;
              }
           )
       | _ -> ());
@@ -701,6 +710,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                bracket_syntax = Some (this#default_ac_id index_type);
                member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
                is_type_annotation = true;
+               is_super = false;
              }
           )
       | _ -> ());

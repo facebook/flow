@@ -43,6 +43,7 @@ type autocomplete_type =
       (* loc of `.foo` or `[foo]` *)
       member_loc: Loc.t option;
       is_type_annotation: bool;
+      is_super: bool;
     }  (** member expressions *)
   | Ac_jsx_element of { type_: Type.t }  (** JSX element name *)
   | Ac_jsx_attribute of {
