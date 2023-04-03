@@ -1,33 +1,71 @@
-
-Trace `ParentFoo` back to its def
-main.js:6:5,6:13
+destructuring.js:7:4
+Flags:
 Parent.js:4:19,4:27
-Parent.js:3:7,3:15
 
-Trace `Parent2` back to its def (TODO #2)
-main.js:11:5,11:11
-main.js:11:5,11:11
+destructuring.js:9:4
+Flags:
+destructuring.js:6:5,6:13
+
+assignment.js:8:6
+Flags:
+assignment.js:7:7,7:13
+
+assignment.js:10:6
+Flags:
+assignment.js:7:7,7:13
+
+assignment.js:16:15
+Flags:
 Parent.js:4:18,4:28
 
-Trace `Parent3` back to its def
-main.js:16:5,16:11
+assignment.js:23:6
+Flags:
+assignment.js:22:7,22:13
 
-Trace `Parent` back to its def
-Parent.js:4:18,4:28
-Parent.js:4:18,4:28
-
-Trace `NonDestructuredFoo` back to its def
-Parent.js:3:25,3:29
-Parent.js:3:25,3:29
-Parent.js:3:20,3:22
-
-Trace `ParentFoo` back to its def
-require.js:4:4
+require.js:5:6
 Flags:
 Parent.js:3:19,3:30
 
+require.js:10:8
+Flags:
+Parent.js:4:18,4:28
 
-React class and attribute expressions
+require.js:15:29
+Flags:
+Parent.js:4:18,4:28
+
+require.js:21:8
+Flags:
+Parent.js:3:25,3:29
+
+require.js:23:4
+Flags:
+Parent.js:3:25,3:29
+
+require.js:26:44
+Flags:
+Parent.js:3:20,3:22
+
+require.js:33:11
+Flags:
+Child.js:4:20,4:27
+
+require.js:35:19
+Flags:
+Parent.js:3:20,3:22
+
+require.js:43:10
+Flags:
+require.js:43:9,43:15
+
+require.js:45:8
+Flags:
+require.js:43:9,43:15
+
+require.js:49:8
+Flags:
+Parent.js:4:18,4:28
+
 react.js:11:3
 Flags:
 react.js:6:7,6:7
@@ -48,32 +86,38 @@ react.js:24:12
 Flags:
 react.js:9:5,9:7
 
-
-Inheritance
 override.js:8:19
 Flags:
-override.js:11:3,11:10
+override.js:12:3,12:10
 
-override.js:12:11
+override.js:10:19
+Flags:
+override.js:12:3,12:10
+
+override.js:13:11
 Flags:
 override.js:4:3,4:10
 
-override.js:14:11
+override.js:15:11
 Flags:
 override.js:4:3,4:10
 
+import.js:3:15
+Flags:
+types.js:3:13,3:15
 
-Directly jump to required/imported modules (TODO #2)
-Parent.js:4:18,4:28
+import.js:6:24
+Flags:
 types.js:0:1,0:0
+
+import.js:9:25
+Flags:
 types.js:3:13,3:15
-types.js:3:13,3:15
+
 module_ref.js:3:4
 Flags:
 Parent.js:4:18,4:28
 
-
-Refinements
 refinements.js:10:9
 Flags:
 refinements.js:4:3,4:6
@@ -82,8 +126,6 @@ refinements.js:12:9
 Flags:
 refinements.js:4:3,4:6
 
-
-declare var
 declare.js:4:3
 Flags:
 declare.js:3:13,3:15
@@ -100,12 +142,3 @@ declare.js:15:5
 Flags:
 declare.js:14:15,14:17
 
-
-Shadowing `require`
-main.js:27:7,27:13
-main.js:28:7,28:13
-Child.js:4:18,4:41
-
-Chaining `require`s through multiple files
-Child.js:4:20,4:27
-Parent.js:3:20,3:22
