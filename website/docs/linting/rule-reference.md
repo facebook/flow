@@ -114,14 +114,13 @@ If `count` is, say, `5`, then this displays "[5 comments]". However, if `count` 
 ```
 
 ### `unclear-type` {#toc-unclear-type}
-Triggers when you use `any`, `Object`, `Function`, or `*` as type annotations. These
+Triggers when you use `any`, `Object`, or `Function` as type annotations. These
 types are unsafe.
 
 ```js flow-check
 // flowlint unclear-type:error
 
 declare const a: any; // Error
-declare const b: *; // Error
 declare const c: Object; // Error
 declare const d: Function; // Error
 ```

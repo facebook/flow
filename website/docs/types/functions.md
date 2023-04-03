@@ -373,3 +373,6 @@ function func<TArgs: $ReadOnlyArray<mixed>, TReturn>(
 const f: (boolean, string, number) => Array<string> =
   func((x: string, y: number) => x.slice(y)); // OK
 ```
+
+The type `Function` is just an alias for [`any`](../any), and is unsafe.
+You can ban its use in your code with the [unclear-type lint](../../linting/rule-reference/#toc-unclear-type).

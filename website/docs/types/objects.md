@@ -473,8 +473,7 @@ acceptsStr(1); // Error!
 
 ## Arbitrary objects
 
-The `Object` type is just an alias for [`any`](../any), so it's unsafe to use.
-If you want to use the concept of "an arbitrary object" safely, there are a couple of patterns you could use.
+If you want to accept an arbitrary object safely, there are a couple of patterns you could use.
 
 An empty inexact object `{...}` accepts any object:
 
@@ -510,3 +509,6 @@ function func(obj: {+[string]: mixed}) {
 func({}); // Works!
 func({a: 1, b: "foo"}); // Works!
 ```
+
+The type `Object` is just an alias for [`any`](../any), and is unsafe.
+You can ban its use in your code with the [unclear-type lint](../../linting/rule-reference/#toc-unclear-type).
