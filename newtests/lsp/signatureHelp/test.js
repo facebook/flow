@@ -22,6 +22,7 @@ module.exports = (suite(
           'nestedFunctions.js',
           'paramDocumentation.js',
           'tupleRestParam.js',
+          'member_callee.js',
         ),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
@@ -373,6 +374,123 @@ module.exports = (suite(
                           kind: 'markdown',
                           value:
                             'baz - the second and third summands\nbaz.x (optional)  - the second summand\nbaz.y (optional, defaults to 0)  - the third summand',
+                        },
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/member_callee.js',
+          },
+          position: {line: 17, character: 3},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string): void',
+                    documentation: {
+                      kind: 'markdown',
+                      value: 'foo',
+                    },
+                    parameters: [
+                      {
+                        label: 'x: string',
+                        documentation: {
+                          kind: 'markdown',
+                          value: 'x - a string',
+                        },
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/member_callee.js',
+          },
+          position: {line: 21, character: 3},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(y: number): void',
+                    documentation: {
+                      kind: 'markdown',
+                      value: 'bar',
+                    },
+                    parameters: [
+                      {
+                        label: 'y: number',
+                        documentation: {
+                          kind: 'markdown',
+                          value: 'y - a number',
+                        },
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/member_callee.js',
+          },
+          position: {line: 33, character: 3},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(z: bigint): void',
+                    documentation: {
+                      kind: 'markdown',
+                      value: 'baz',
+                    },
+                    parameters: [
+                      {
+                        label: 'z: bigint',
+                        documentation: {
+                          kind: 'markdown',
+                          value: 'z - a bigint',
                         },
                       },
                     ],

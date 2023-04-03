@@ -144,7 +144,19 @@ module Callee_finder = struct
         this#short_circuit loc expr super#expression
 
       method! call annot expr =
-        let { Flow_ast.Expression.Call.callee = ((callee_loc, t), _); arguments; _ } = expr in
+        let { Flow_ast.Expression.Call.callee = ((callee_loc, t), callee_expr); arguments; _ } =
+          expr
+        in
+        let callee_loc =
+          let open Flow_ast.Expression in
+          let open Member in
+          match callee_expr with
+          | Member { property = PropertyIdentifier ((loc, _), _); _ }
+          | Member { property = PropertyPrivateName (loc, _); _ }
+          | Member { property = PropertyExpression ((loc, _), _); _ } ->
+            loc
+          | _ -> callee_loc
+        in
         let (args_loc, { Flow_ast.Expression.ArgList.arguments; comments = _ }) = arguments in
         let inside_loc =
           (* exclude the parens *)
