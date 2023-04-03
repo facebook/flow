@@ -626,13 +626,12 @@ module Object
     in
     (extends, implements)
 
-  let key_is_constructor key =
+  let string_value_of_key key =
     match key with
-    | Ast.Expression.Object.Property.Identifier
-        (key_loc, { Identifier.name = "constructor"; comments = _ })
-    | Ast.Expression.Object.Property.Literal
-        (key_loc, { Literal.value = Literal.String "constructor"; _ }) ->
-      Some key_loc
+    | Ast.Expression.Object.Property.Identifier (key_loc, { Identifier.name; comments = _ })
+    | Ast.Expression.Object.Property.Literal (key_loc, { Literal.value = Literal.String name; _ })
+      ->
+      Some (key_loc, name)
     | _ -> None
 
   (* In the ES6 draft, all elements are methods. No properties (though there
@@ -642,11 +641,17 @@ module Object
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true true) env
       in
-      ( if not static then
-        match key_is_constructor key with
-        | Some key_loc -> error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
-        | None -> ()
-      );
+      (match (static, string_value_of_key key) with
+      | (false, Some (key_loc, "constructor")) ->
+        error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
+      | (true, Some (key_loc, "prototype")) ->
+        error_at
+          env
+          ( key_loc,
+            Parse_error.InvalidClassMemberName
+              { name = "prototype"; static; method_ = false; private_ = false }
+          )
+      | _ -> ());
       let open Ast.Class in
       Body.Method
         ( loc,
@@ -664,11 +669,17 @@ module Object
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true false) env
       in
-      ( if not static then
-        match key_is_constructor key with
-        | Some key_loc -> error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
-        | None -> ()
-      );
+      (match (static, string_value_of_key key) with
+      | (false, Some (key_loc, "constructor")) ->
+        error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
+      | (true, Some (key_loc, "prototype")) ->
+        error_at
+          env
+          ( key_loc,
+            Parse_error.InvalidClassMemberName
+              { name = "prototype"; static; method_ = false; private_ = false }
+          )
+      | _ -> ());
       let open Ast.Class in
       Body.Method
         ( loc,
@@ -799,11 +810,19 @@ module Object
         error_unsupported_declare env declare;
         error_unsupported_variance env variance;
         let (kind, env) =
-          match (static, key_is_constructor key) with
-          | (false, Some key_loc) ->
+          match (static, string_value_of_key key) with
+          | (false, Some (key_loc, "constructor")) ->
             if async then error_at env (key_loc, Parse_error.ConstructorCannotBeAsync);
             if generator then error_at env (key_loc, Parse_error.ConstructorCannotBeGenerator);
             (Ast.Class.Method.Constructor, env |> with_allow_super Super_prop_or_call)
+          | (true, Some (key_loc, "prototype")) ->
+            error_at
+              env
+              ( key_loc,
+                Parse_error.InvalidClassMemberName
+                  { name = "prototype"; static; method_ = true; private_ = false }
+              );
+            (Ast.Class.Method.Method, env |> with_allow_super Super_prop)
           | _ -> (Ast.Class.Method.Method, env |> with_allow_super Super_prop)
         in
         let key = object_key_remove_trailing env key in
