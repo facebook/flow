@@ -142,3 +142,7 @@ declare.js:15:5
 Flags:
 declare.js:14:15,14:17
 
+static.js:7:6
+Flags:
+static.js:4:10,4:12
+
