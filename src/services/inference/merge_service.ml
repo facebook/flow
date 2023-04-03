@@ -511,25 +511,16 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
 let with_async_logging_timer ~interval ~on_timer ~f =
   let start_time = Unix.gettimeofday () in
   let timer = ref None in
-  let cancel_timer () = Base.Option.iter ~f:Timer.cancel_timer !timer in
-  let rec run_timer ?(first_run = false) () =
-    ( if not first_run then
-      let run_time = Unix.gettimeofday () -. start_time in
-      on_timer run_time
-    );
-    timer := Some (Timer.set_timer ~interval ~callback:run_timer)
+  let rec run_timer () = timer := Some (Timer.set_timer ~interval ~callback)
+  and callback () =
+    let run_time = Unix.gettimeofday () -. start_time in
+    on_timer run_time;
+    run_timer ()
   in
   (* Timer is unimplemented in Windows. *)
-  if not Sys.win32 then run_timer ~first_run:true ();
-  let ret =
-    try f () with
-    | e ->
-      let exn = Exception.wrap e in
-      cancel_timer ();
-      Exception.reraise exn
-  in
-  cancel_timer ();
-  ret
+  if not Sys.win32 then run_timer ();
+  let finally () = Base.Option.iter ~f:Timer.cancel_timer !timer in
+  Fun.protect ~finally f
 
 let merge_job ~mutator ~reader ~options ~job =
   let f acc (Merge_stream.Component ((leader, _) as component)) =
