@@ -2734,7 +2734,7 @@ let%expect_test "function_predicates_3" =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:16-21]))}];
            rest_param = None; this_param = None;
-           return = (Err [1:31]); predicate = (Some ([1:34-52], (Some (NullP "x"))))};
+           return = (Err [1:22]); predicate = (Some ([1:34-52], (Some (NullP "x"))))};
          statics = {}}
     1. DeclareFun {id_loc = [2:24-27];
          name = "foo"; fn_loc = [2:27-46];
@@ -2749,9 +2749,9 @@ let%expect_test "function_predicates_3" =
          tail = []}
 
     Errors:
-    ([1:31],
+    ([1:22],
      (SigError
-        (Signature_error.ExpectedAnnotation ([1:31], Expected_annotation_sort.FunctionReturn)))) |}]
+        (Signature_error.ExpectedAnnotation ([1:22], Expected_annotation_sort.FunctionReturn)))) |}]
 
 let%expect_test "function_predicates_4" =
   print_sig {|

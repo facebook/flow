@@ -1790,7 +1790,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   let annotation_and_predicate_opt env =
     let open Ast.Type in
     match (Peek.token env, Peek.ith_token ~i:1 env) with
-    | (T_COLON, T_CHECKS) -> (Missing (Peek.loc_skip_lookahead env), Some (no_annot_predicate env))
+    | (T_COLON, T_CHECKS) ->
+      let loc = Peek.loc_skip_lookahead env in
+      let predicate = no_annot_predicate env in
+      (Missing loc, Some predicate)
     | (T_COLON, _) ->
       let annotation =
         let annotation = annotation_opt env in
