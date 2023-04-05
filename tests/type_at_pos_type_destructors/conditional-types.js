@@ -8,7 +8,9 @@ type T3 = Array<string> extends $ReadOnlyArray<infer X> ? X : empty;
 //   ^
 
 // Test on nested extends
-type T4 = string extends (infer X extends (infer X extends string) ? string : number) ? string : number;
+type T4_1 = string extends (infer X extends (infer X extends string) ? string : number) ? string : number;
+//   ^
+type T4_2 = string extends (infer X extends (infer Y extends string) ? string : number) ? string : number;
 //   ^
 
 // Test that we can distinguish infer type with non-infer type with the same name.

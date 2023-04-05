@@ -47,6 +47,22 @@ let visitor =
         in
         { free; bound }
       | _ -> super#type_ cx pole { bound; free } t
+
+    method! destructor cx { bound; free } t =
+      match t with
+      | ConditionalType { tparams; extends_t; true_t; false_t } ->
+        let orig_bound = bound in
+        let pole = Polarity.Neutral in
+        let { bound; free } = self#type_ cx pole { bound; free } false_t in
+        let { bound; free } =
+          Base.List.fold tparams ~init:{ bound; free } ~f:(fun { bound; free } tp ->
+              self#type_param cx pole { free; bound = Subst_name.Set.add tp.name bound } tp
+          )
+        in
+        let { bound; free } = self#type_ cx pole { bound; free } extends_t in
+        let { bound = _; free } = self#type_ cx pole { bound; free } true_t in
+        { bound = orig_bound; free }
+      | _ -> super#destructor cx { bound; free } t
   end
 
 let free_var_finder cx ?(bound = Subst_name.Set.empty) t =

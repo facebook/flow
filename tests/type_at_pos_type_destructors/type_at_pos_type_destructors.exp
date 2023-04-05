@@ -18,41 +18,51 @@ conditional-types.js:7:6,7:7
 
 conditional-types.js:11:6
 Flags:
-type T4 = string extends (infer X extends infer X extends string
+type T4_1 = string extends (infer X extends infer X extends string
   ? string
   : number)
   ? string
   : number
 = string
-conditional-types.js:11:6,11:7
+conditional-types.js:11:6,11:9
 
-conditional-types.js:15:6
+conditional-types.js:13:6
+Flags:
+type T4_2 = string extends (infer X extends infer Y extends string
+  ? string
+  : number)
+  ? string
+  : number
+= string
+conditional-types.js:13:6,13:9
+
+conditional-types.js:17:6
 Flags:
 type T5 = string extends {bar: String, foo: infer String, ...} ? string : number
 = number
-conditional-types.js:15:6,15:7
+conditional-types.js:17:6,17:7
 
-conditional-types.js:19:6
+conditional-types.js:21:6
 Flags:
 type T6 = string extends {bar: <T>(T) => void, foo: infer T, ...}
   ? string
   : number
 = number
-conditional-types.js:19:6,19:7
+conditional-types.js:21:6,21:7
 
-conditional-types.js:23:6
+conditional-types.js:25:6
 Flags:
 type T7<T> = T extends infer T ? string : number
 = mixed
-conditional-types.js:23:6,23:7
+conditional-types.js:25:6,25:7
 
-conditional-types.js:27:6
+conditional-types.js:29:6
 Flags:
 type T8<T> = T extends {bar: <T>(T) => void, foo: infer T, ...}
   ? string
   : number
 = mixed
-conditional-types.js:27:6,27:7
+conditional-types.js:29:6,29:7
 
 exact.js:4:6
 Flags:
