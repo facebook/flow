@@ -3455,35 +3455,6 @@ module Make
         Some ((loc, lhs_t), call_ast { Call.callee; targs; arguments; comments } lhs_t)
       | Member
           {
-            Member._object =
-              ( object_loc,
-                Identifier
-                  ( id_loc,
-                    { Ast.Identifier.name = "ReactGraphQL" | "ReactGraphQLLegacy"; comments = _ }
-                  )
-              );
-            property =
-              Member.PropertyIdentifier
-                (ploc, ({ Ast.Identifier.name = "Mixin"; comments = _ } as name));
-            comments;
-          } ->
-        let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
-        let lhs_t = Flow.get_builtin cx (OrdinaryName "ReactGraphQLMixin") reason in
-        Some
-          ( (loc, lhs_t),
-            (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
-            let t = AnyT.at Untyped object_loc in
-            let property = Member.PropertyIdentifier ((ploc, t), name) in
-            member_ast
-              {
-                Member._object = ((object_loc, t), Identifier ((id_loc, t), name));
-                property;
-                comments;
-              }
-              lhs_t
-          )
-      | Member
-          {
             Member._object = (super_loc, Super super);
             property =
               Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
