@@ -94,7 +94,7 @@ module type S = sig
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
 
-  val resolve_id : Context.t -> Type.ident -> Type.t -> unit
+  val resolve_id : Context.t -> Reason.t -> Type.ident -> Type.t -> unit
 
   val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
 
@@ -245,7 +245,7 @@ module rec ConsGen : S = struct
 
     let unresolved_id = Avar.unresolved
 
-    let resolve_id cx _trace ~use_op:_ (_, id) t = ConsGen.resolve_id cx id t
+    let resolve_id cx _trace ~use_op:_ (reason, id) t = ConsGen.resolve_id cx reason id t
   end
 
   module InstantiationKit = Flow_js_utils.Instantiation_kit (Instantiation_helper)
@@ -388,7 +388,7 @@ module rec ConsGen : S = struct
     | (_, { A.constraints = A.Annot_resolved; _ }) -> get_fully_resolved_type cx id
     | (_, { A.constraints = A.Annot_unresolved _; _ }) ->
       let t = error_recursive cx reason in
-      resolve_id cx id t;
+      resolve_id cx reason id t;
       t
     | (root_id, { A.constraints = A.Annot_op { id = dep_id; _ }; _ }) ->
       let (_, { A.constraints = dep_constraint; _ }) = Context.find_avar cx dep_id in
@@ -400,7 +400,7 @@ module rec ConsGen : S = struct
             deps
       );
       let t = error_recursive cx reason in
-      resolve_id cx id t;
+      resolve_id cx reason id t;
       t
 
   and mk_lazy_tvar cx reason f =
@@ -423,7 +423,7 @@ module rec ConsGen : S = struct
   and mk_sig_tvar cx reason (resolved : Type.t Lazy.t) =
     let f id =
       let t = Lazy.force resolved in
-      resolve_id cx id t
+      resolve_id cx reason id t
     in
     mk_lazy_tvar cx reason f
 
@@ -432,54 +432,25 @@ module rec ConsGen : S = struct
    *    record it as fully resolved in the type graph. *
    *  - If [t] is an OpenT (_, id2), then we unify [id1] and [id2]. (See merge_ids.)
    *)
-  and resolve_id cx id t =
+  and resolve_id cx reason id t =
     let module A = Type.AConstraint in
     let module C = Type.Constraint in
-    match t with
-    | Type.OpenT (_, id2) -> merge_ids cx id id2
-    | _ ->
-      let (root_id1, root1) = Context.find_avar cx id in
-      Context.add_avar cx root_id1 A.fully_resolved_node;
-      Context.add_tvar cx root_id1 (C.fully_resolved_node t);
-      let dependents1 = deps_of_constraint root1.A.constraints in
-      resolve_dependent_set cx dependents1 t
+    let t =
+      match t with
+      | Type.OpenT (_, id2) -> ensure_annot_resolved cx reason id2
+      | _ -> t
+    in
+    let (root_id1, root1) = Context.find_avar cx id in
+    Context.add_avar cx root_id1 A.fully_resolved_node;
+    Context.add_tvar cx root_id1 (C.fully_resolved_node t);
+    let dependents1 = deps_of_constraint root1.A.constraints in
+    resolve_dependent_set cx reason dependents1 t
 
-  (** Makes id1 a goto node to id2. It also appends depndents of id1 to those of id2.
-   *  If id2 is a resolved node, then dependents can be immediately resolved using
-   *  the resolved type of id2. *)
-  and goto cx id1 dependents1 (id2, root2) =
-    let module A = Type.AConstraint in
-    let module T = Type.Constraint in
-    Context.add_tvar cx id1 (T.Goto id2);
-    Context.add_avar cx id1 (A.Goto id2);
-    match root2.A.constraints with
-    | (A.Annot_op _ | A.Annot_unresolved _) as constraint_ ->
-      update_deps_of_constraint ~f:(ISet.union dependents1) constraint_
-    | A.Annot_resolved ->
-      let t = get_fully_resolved_type cx id2 in
-      resolve_dependent_set cx dependents1 t
-
-  (** Similar to Flow_js.merge_ids. Uses rank information to determine which one
-   *  of [id1] and [id2] will become the goto node and which one the root. *)
-  and merge_ids cx id1 id2 =
-    let module A = Type.AConstraint in
-    let ((id1, root1), (id2, root2)) = (Context.find_avar cx id1, Context.find_avar cx id2) in
-    if id1 = id2 then
-      ()
-    else if root1.A.rank < root2.A.rank then
-      let deps1 = deps_of_constraint root1.A.constraints in
-      goto cx id1 deps1 (id2, root2)
-    else if root2.A.rank < root1.A.rank then
-      let deps2 = deps_of_constraint root2.A.constraints in
-      goto cx id2 deps2 (id1, root1)
-    else (
-      Context.add_avar cx id2 (A.Root { root2 with A.rank = root1.A.rank + 1 });
-      let deps1 = deps_of_constraint root1.A.constraints in
-      goto cx id1 deps1 (id2, root2)
-    )
-
-  and resolve_dependent_set cx dependents t =
-    Context.iter_annot_dependent_set cx (fun id op -> resolve_id cx id (elab_t cx t op)) dependents
+  and resolve_dependent_set cx reason dependents t =
+    Context.iter_annot_dependent_set
+      cx
+      (fun id op -> resolve_id cx reason id (elab_t cx t op))
+      dependents
 
   and elab_open cx ~seen reason id op =
     if ISet.mem id seen then
@@ -1178,7 +1149,7 @@ module rec ConsGen : S = struct
 
   and get_builtin cx ?trace:_ x reason =
     let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in
-    let f id = resolve_id cx id builtin in
+    let f id = resolve_id cx reason id builtin in
     mk_lazy_tvar cx reason f
 
   and specialize cx t use_op reason_op reason_tapp ts =
@@ -1192,7 +1163,7 @@ module rec ConsGen : S = struct
     | Some ts -> specialize cx c unknown_use reason_op reason_tapp (Some ts)
 
   and mk_type_reference cx reason c =
-    let f id = resolve_id cx id (elab_t cx c (Annot_UseT_TypeT reason)) in
+    let f id = resolve_id cx reason id (elab_t cx c (Annot_UseT_TypeT reason)) in
     let tvar = mk_lazy_tvar cx reason f in
     AnnotT (reason, tvar, false)
 
@@ -1218,7 +1189,7 @@ module rec ConsGen : S = struct
     let open Type in
     let f id =
       let t = elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason_name, name))) in
-      resolve_id cx id t
+      resolve_id cx reason id t
     in
     mk_lazy_tvar cx reason f
 
@@ -1232,7 +1203,7 @@ module rec ConsGen : S = struct
   and assert_export_is_type cx reason name t =
     let f id =
       let t = elab_t cx t (Annot_AssertExportIsTypeT (reason, Reason.OrdinaryName name)) in
-      resolve_id cx id t
+      resolve_id cx reason id t
     in
     mk_lazy_tvar cx reason f
 

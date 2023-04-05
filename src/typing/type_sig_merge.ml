@@ -1505,7 +1505,7 @@ and merge_class tps infer_tps file reason id def =
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
     let t = TypeUtil.this_class_type inst false (Subst_name.Name "this") in
-    ConsGen.resolve_id file.cx rec_type t;
+    ConsGen.resolve_id file.cx reason rec_type t;
     t
   in
   merge_tparams_targs tps infer_tps file reason t tparams
@@ -1786,7 +1786,7 @@ let merge_declare_class file reason id def =
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
     let t = TypeUtil.this_class_type inst false (Subst_name.Name "this") in
-    ConsGen.resolve_id file.cx rec_type t;
+    ConsGen.resolve_id file.cx reason rec_type t;
     t
   in
   merge_tparams_targs SMap.empty SMap.empty file reason t tparams
