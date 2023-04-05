@@ -471,6 +471,15 @@ type ('loc, 'a) annot =
   | Exact of 'loc * 'a
   | Rest of 'loc * 'a * 'a
   | ExportsT of 'loc * string
+  | Conditional of {
+      loc: 'loc;
+      distributive_tparam: ('loc, 'a) tparam option;
+      infer_tparams: ('loc, 'a) tparams;
+      check_type: 'a;
+      extends_type: 'a;
+      true_type: 'a;
+      false_type: 'a;
+    }
   | Call of {
       loc: 'loc;
       fn: 'a;

@@ -429,9 +429,9 @@ let merge_exports =
       |> ConsGen.export_named file.cx reason Type.ExportType type_exports
       |> copy_star_exports file reason (stars, type_stars)
 
-let rec merge tps file = function
-  | Pack.Annot t -> merge_annot tps file t
-  | Pack.Value t -> merge_value tps file t
+let rec merge tps infer_tps file = function
+  | Pack.Annot t -> merge_annot tps infer_tps file t
+  | Pack.Value t -> merge_value tps infer_tps file t
   | Pack.Ref ref -> merge_ref file (fun t _ _ -> t) ref
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
@@ -440,15 +440,15 @@ let rec merge tps file = function
     in
     merge_tyref file f name
   | Pack.TyRefApp { loc; name; targs } ->
-    let targs = List.map (merge tps file) targs in
+    let targs = List.map (merge tps infer_tps file) targs in
     let f t _ _ = TypeUtil.typeapp_annot loc t targs in
     merge_tyref file f name
   | Pack.AsyncVoidReturn loc -> async_void_return file loc
   | Pack.Pattern i -> Lazy.force (Patterns.get file.patterns i)
   | Pack.Err loc -> Type.(AnyT.at (AnyError None) loc)
   | Pack.Eval (loc, t, op) ->
-    let t = merge tps file t in
-    let op = merge_op tps file op in
+    let t = merge tps infer_tps file t in
+    let op = merge_op tps infer_tps file op in
     eval file loc t op
   | Pack.Require { loc; index } -> require file loc index ~legacy_interop:false
   | Pack.ImportDynamic { loc; index } ->
@@ -462,7 +462,7 @@ let rec merge tps file = function
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
     Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "$Flow$ModuleRef") [t]
 
-and merge_annot tps file = function
+and merge_annot tps infer_tps file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
   | Mixed loc -> Type.MixedT.at loc trust
   | Empty loc -> Type.EmptyT.at loc trust
@@ -474,25 +474,25 @@ and merge_annot tps file = function
   | String loc -> Type.StrT.at loc trust
   | Boolean loc -> Type.BoolT.at loc trust
   | Exists loc -> Type.AnyT.at Type.AnnotatedAny loc
-  | Optional t -> TypeUtil.optional (merge tps file t)
+  | Optional t -> TypeUtil.optional (merge tps infer_tps file t)
   | Maybe (loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let desc = TypeUtil.desc_of_t t in
     let reason = Reason.(mk_annot_reason (RMaybe desc) loc) in
     Type.MaybeT (reason, t)
   | Union { loc; t0; t1; ts } ->
     let reason = Reason.(mk_annot_reason RUnionType loc) in
-    let t0 = merge tps file t0 in
-    let t1 = merge tps file t1 in
+    let t0 = merge tps infer_tps file t0 in
+    let t1 = merge tps infer_tps file t1 in
     (* NB: tail-recursive map in case of very large types *)
-    let ts = Base.List.map ~f:(merge tps file) ts in
+    let ts = Base.List.map ~f:(merge tps infer_tps file) ts in
     Type.(UnionT (reason, UnionRep.make t0 t1 ts))
   | Intersection { loc; t0; t1; ts } ->
     let reason = Reason.(mk_annot_reason RIntersectionType loc) in
-    let t0 = merge tps file t0 in
-    let t1 = merge tps file t1 in
+    let t0 = merge tps infer_tps file t0 in
+    let t1 = merge tps infer_tps file t1 in
     (* NB: tail-recursive map in case of very large types *)
-    let ts = Base.List.map ~f:(merge tps file) ts in
+    let ts = Base.List.map ~f:(merge tps infer_tps file) ts in
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
   | Tuple { loc; elems_rev; arity } ->
     let reason = Reason.(mk_annot_reason RTupleType loc) in
@@ -503,7 +503,7 @@ and merge_annot tps file = function
         elems_rev
         ~init:([], [])
         ~f:(fun (els, ts) (TupleElement { name; t; polarity; optional }) ->
-          let t = merge tps file t in
+          let t = merge tps infer_tps file t in
           let t =
             if optional then
               TypeUtil.optional t
@@ -525,11 +525,11 @@ and merge_annot tps file = function
     Type.(DefT (reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.(DefT (reason, trust, ArrT (ArrayAT (t, None))))
   | ReadOnlyArray (loc, t) ->
     let reason = Reason.(mk_annot_reason RROArrayType loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.(DefT (reason, trust, ArrT (ROArrayAT t)))
   | SingletonString (loc, str) ->
     let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName str)) loc) in
@@ -546,10 +546,15 @@ and merge_annot tps file = function
   | Typeof { loc; qname; t } ->
     let qname = String.concat "." qname in
     let reason = Reason.(mk_reason (RTypeof qname) loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     ConsGen.mk_typeof_annotation file.cx reason t
   | Bound { ref_loc; name } ->
-    TypeUtil.mod_reason_of_t (Reason.repos_reason ref_loc) (SMap.find name tps)
+    let t =
+      match SMap.find_opt name infer_tps with
+      | Some (name_loc, t) when name_loc = ref_loc -> t
+      | _ -> SMap.find name tps
+    in
+    TypeUtil.mod_reason_of_t (Reason.repos_reason ref_loc) t
   | TEMPORARY_Number (loc, num, raw) ->
     let reason = Reason.(mk_annot_reason RNumber loc) in
     Type.(DefT (reason, trust, NumT (Literal (None, (num, raw)))))
@@ -564,7 +569,7 @@ and merge_annot tps file = function
     let reason = Reason.(mk_annot_reason RBoolean loc) in
     Type.(DefT (reason, trust, BoolT (Some b)))
   | TEMPORARY_Object t ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let open Type in
     (match t with
     | ExactT (_, DefT (r, trust, ObjT o))
@@ -582,18 +587,18 @@ and merge_annot tps file = function
     | _ -> t)
   | TEMPORARY_Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayLit loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.(DefT (reason, trust, ArrT (ArrayAT (t, None))))
   | AnyWithLowerBound (_loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.AnyT.annot (TypeUtil.reason_of_t t)
   | AnyWithUpperBound (_loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.AnyT.annot (TypeUtil.reason_of_t t)
   | PropertyType { loc; obj; prop } ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$PropertyType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let obj = merge tps file obj in
+    let obj = merge tps infer_tps file obj in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(
       EvalT
@@ -605,14 +610,14 @@ and merge_annot tps file = function
   | ElementType { loc; obj; elem } ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$ElementType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let obj = merge tps file obj in
-    let index_type = merge tps file elem in
+    let obj = merge tps infer_tps file obj in
+    let index_type = merge tps infer_tps file elem in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.ElementType { index_type }), id))
   | OptionalIndexedAccessNonMaybeType { loc; obj; index } ->
     let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
-    let object_type = merge tps file obj in
-    let index_type = merge tps file index in
+    let object_type = merge tps infer_tps file obj in
+    let index_type = merge tps infer_tps file index in
     let object_reason = TypeUtil.reason_of_t object_type in
     let index_reason = TypeUtil.reason_of_t index_type in
     let use_op =
@@ -633,7 +638,7 @@ and merge_annot tps file = function
   | OptionalIndexedAccessResultType { loc; non_maybe_result; void_loc } ->
     let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
     let void_reason = Reason.(mk_reason RVoid void_loc) in
-    let non_maybe_result_type = merge tps file non_maybe_result in
+    let non_maybe_result_type = merge tps infer_tps file non_maybe_result in
     Type.EvalT
       ( non_maybe_result_type,
         Type.TypeDestructorT
@@ -646,11 +651,11 @@ and merge_annot tps file = function
   | NonMaybeType (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$NonMaybeType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, Type.NonMaybeType), id))
   | Shape (_loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let desc = TypeUtil.desc_of_t t in
     let loc = TypeUtil.loc_of_t t in
     let reason = Reason.(mk_reason (RShapeOf desc) loc) in
@@ -658,8 +663,8 @@ and merge_annot tps file = function
   | Diff (loc, t1, t2) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$Diff")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t1 = merge tps file t1 in
-    let t2 = merge tps file t2 in
+    let t1 = merge tps infer_tps file t1 in
+    let t2 = merge tps infer_tps file t2 in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(
       EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id)
@@ -667,41 +672,41 @@ and merge_annot tps file = function
   | ReadOnly (loc, t) ->
     let reason = Reason.(mk_reason RReadOnlyType loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), id))
   | Partial (loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let reason = Reason.(mk_reason (RPartialOf (TypeUtil.desc_of_t t)) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, PartialType), id))
   | Required (loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let reason = Reason.(mk_reason (RRequiredOf (TypeUtil.desc_of_t t)) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, RequiredType), id))
   | Keys (loc, t) ->
     let reason = Reason.(mk_reason RKeySet loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.KeysT (reason, t)
   | Values (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$Values")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ValuesType), id))
   | Exact (loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let desc = TypeUtil.desc_of_t t in
     let reason = Reason.(mk_annot_reason (RExactType desc) loc) in
     Type.ExactT (reason, t)
   | Rest (loc, t1, t2) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$Rest")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t1 = merge tps file t1 in
-    let t2 = merge tps file t2 in
+    let t1 = merge tps infer_tps file t1 in
+    let t2 = merge tps infer_tps file t2 in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
@@ -709,45 +714,101 @@ and merge_annot tps file = function
     let m_name = Reason.internal_module_name ref in
     let module_t = Flow_js_utils.lookup_builtin_strict file.cx m_name reason in
     ConsGen.cjs_require file.cx module_t reason false false
+  | Conditional
+      { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
+    ->
+    let reason = Reason.(mk_reason RConditionalType loc) in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let convert distributive_tparam_name tps =
+      let check_t = merge tps infer_tps file check_type in
+      let (tps_for_true_type, infer_tps_for_extends_types, infer_tparams) =
+        let (new_tps, new_infer_tps, rev_tparams) =
+          Base.List.fold
+            ~f:(fun (new_tps, new_infer_tps, rev_tparams) tp ->
+              let (TParam { name_loc; _ }) = tp in
+              let (tp, (name, _, t, _), _) = merge_tparam ~from_infer:true tps infer_tps file tp in
+              let name = Subst_name.string_of_subst_name name in
+              let new_tps = SMap.add name t new_tps in
+              (* It's possible that for a given conditional extends type scope,
+                 both a regular generic type and infer type exists. e.g.
+                 type Both<T> = string extends [T, infer T] ? ... : ...
+                 To distinguish, we attach additional def_loc information for infer type. *)
+              let new_infer_tps = SMap.add name (name_loc, t) new_infer_tps in
+              (new_tps, new_infer_tps, tp :: rev_tparams))
+            ~init:(SMap.empty, SMap.empty, [])
+            (match infer_tparams with
+            | Mono -> []
+            | Poly (_, tp, tps') -> tp :: tps')
+        in
+        (SMap.union new_tps tps, new_infer_tps, List.rev rev_tparams)
+      in
+      let extends_t = merge tps infer_tps_for_extends_types file extends_type in
+      let true_t = merge tps_for_true_type infer_tps file true_type in
+      let false_t = merge tps infer_tps file false_type in
+      let use_op =
+        Type.Op
+          (Type.ConditionalTypeEval
+             {
+               check_type_reason = TypeUtil.reason_of_t check_t;
+               extends_type_reason = TypeUtil.reason_of_t extends_t;
+             }
+          )
+      in
+      Type.(
+        EvalT
+          ( check_t,
+            TypeDestructorT
+              ( use_op,
+                reason,
+                ConditionalType
+                  { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
+              ),
+            id
+          )
+      )
+    in
+    (match distributive_tparam with
+    | None -> convert None tps
+    | Some (TParam { name; _ }) -> convert (Some (Subst_name.Name name)) tps)
   | Call { loc; fn; args } ->
     let reason = Reason.(mk_reason RFunctionCallType loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let fn = merge tps file fn in
-    let args = List.map (merge tps file) args in
+    let fn = merge tps infer_tps file fn in
+    let args = List.map (merge tps infer_tps file) args in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (fn, TypeDestructorT (use_op, reason, CallType { from_maptype = false; args }), id))
   | TupleMap { loc; tup; fn } ->
     let reason = Reason.(mk_reason RTupleMap loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let tup = merge tps file tup in
-    let fn = merge tps file fn in
+    let tup = merge tps infer_tps file tup in
+    let fn = merge tps infer_tps file fn in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (tup, TypeDestructorT (use_op, reason, TypeMap (Type.TupleMap fn)), id))
   | ObjMap { loc; obj; fn } ->
     let reason = Reason.(mk_reason RObjectMap loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let obj = merge tps file obj in
-    let fn = merge tps file fn in
+    let obj = merge tps infer_tps file obj in
+    let fn = merge tps infer_tps file fn in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMap fn)), id))
   | ObjMapi { loc; obj; fn } ->
     let reason = Reason.(mk_reason RObjectMapi loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let obj = merge tps file obj in
-    let fn = merge tps file fn in
+    let obj = merge tps infer_tps file obj in
+    let fn = merge tps infer_tps file fn in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapi fn)), id))
   | ObjKeyMirror { loc; obj } ->
     let reason = Reason.(mk_reason RObjectKeyMirror loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let obj = merge tps file obj in
+    let obj = merge tps infer_tps file obj in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap ObjectKeyMirror), id))
   | ObjMapConst { loc; obj; t } ->
     let reason = Reason.(mk_reason RObjectMapConst loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let obj = merge tps file obj in
-    let t = merge tps file t in
+    let obj = merge tps infer_tps file obj in
+    let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapConst t)), id))
   | CharSet (loc, str) ->
@@ -757,7 +818,7 @@ and merge_annot tps file = function
     let reason = Reason.(mk_annot_reason (RCustom reason_str) loc) in
     Type.(DefT (reason, trust, CharSetT chars))
   | ClassT (loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let desc = TypeUtil.desc_of_t t in
     let reason = Reason.(mk_reason (RStatics desc) loc) in
     Type.DefT (reason, trust, Type.ClassT t)
@@ -787,23 +848,23 @@ and merge_annot tps file = function
     Type.CustomFunT (reason, Type.Compose true)
   | ReactAbstractComponent { loc; config; instance } ->
     let reason = Reason.(mk_reason (RCustom "AbstractComponent") loc) in
-    let config = merge tps file config in
-    let instance = merge tps file instance in
+    let config = merge tps infer_tps file config in
+    let instance = merge tps infer_tps file instance in
     Type.(DefT (reason, trust, ReactAbstractComponentT { config; instance }))
   | ReactConfig { loc; props; default } ->
     let reason = Reason.(mk_reason RReactConfig loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let props = merge tps file props in
-    let default = merge tps file default in
+    let props = merge tps infer_tps file props in
+    let default = merge tps infer_tps file default in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (props, TypeDestructorT (use_op, reason, ReactConfigType default), id))
   | ReactPropTypePrimitive (loc, t) ->
     let reason = Reason.(mk_reason RFunctionType loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.(CustomFunT (reason, ReactPropType (React.PropType.Primitive (false, t))))
   | ReactPropTypePrimitiveRequired (loc, t) ->
     let reason = Reason.(mk_reason RFunctionType loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.(CustomFunT (reason, ReactPropType (React.PropType.Primitive (true, t))))
   | ReactPropTypeArrayOf loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
@@ -832,35 +893,35 @@ and merge_annot tps file = function
     Type.CustomFunT (reason, Type.ReactCloneElement)
   | ReactElementFactory (loc, t) ->
     let reason = Reason.(mk_reason RFunctionType loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.CustomFunT (reason, Type.ReactElementFactory t)
   | ReactElementProps (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementPropsType), id))
   | ReactElementConfig (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementConfigType), id))
   | ReactElementRef (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementRef")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementRefType), id))
   | FacebookismIdxUnwrapper (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$Facebookism$IdxUnwrapper")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, IdxUnwrapType), id))
   | FacebookismIdxWrapper (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$Facebookism$IdxWrapper")) loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.(DefT (reason, trust, IdxWrapper t))
   | FlowDebugPrint loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
@@ -894,19 +955,19 @@ and merge_annot tps file = function
     DefT (fun_reason, trust, FunT (statics, functiontype))
   | Refine { loc; base; fn_pred; index } ->
     let reason = Reason.(mk_reason (RCustom "refined type") loc) in
-    let base = merge tps file base in
-    let fn_pred = merge tps file fn_pred in
+    let base = merge tps infer_tps file base in
+    let fn_pred = merge tps infer_tps file fn_pred in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (base, LatentPredT (reason, Type.LatentP (fn_pred, index)), id))
   | Trusted (loc, t) -> begin
-    match merge tps file t with
+    match merge tps infer_tps file t with
     | Type.DefT (r, trust, def_t) ->
       let reason = Reason.(mk_annot_reason (RTrusted (desc_of_reason r)) loc) in
       Type.(DefT (reason, trust, def_t))
     | _ -> Type.(AnyT.at (AnyError None) loc)
   end
   | Private (loc, t) -> begin
-    match merge tps file t with
+    match merge tps infer_tps file t with
     | Type.DefT (r, trust, def_t) ->
       let reason = Reason.(mk_annot_reason (RPrivate (desc_of_reason r)) loc) in
       Type.(DefT (reason, trust, def_t))
@@ -914,17 +975,19 @@ and merge_annot tps file = function
   end
   | FunAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
-    let statics = merge_fun_statics tps file reason SMap.empty in
-    merge_fun tps file reason def statics
+    let statics = merge_fun_statics tps infer_tps file reason SMap.empty in
+    merge_fun tps infer_tps file reason def statics
   | ObjAnnot { loc; props; proto; obj_kind } ->
     let reason = Reason.(mk_annot_reason RObjectType loc) in
     let obj_kind =
       match obj_kind with
       | ExactObj -> Type.Exact
       | InexactObj -> Type.Inexact
-      | IndexedObj dict -> Type.Indexed ((merge_dict tps file) dict)
+      | IndexedObj dict -> Type.Indexed ((merge_dict tps infer_tps file) dict)
     in
-    let props = SMap.map (merge_obj_annot_prop tps file) props |> NameUtils.namemap_of_smap in
+    let props =
+      SMap.map (merge_obj_annot_prop tps infer_tps file) props |> NameUtils.namemap_of_smap
+    in
     let mk_object call proto =
       let t = Obj_type.mk_with_proto file.cx reason proto ?call ~props ~obj_kind ~loc in
       if obj_kind = Type.Exact then
@@ -938,7 +1001,7 @@ and merge_annot tps file = function
       | ObjAnnotImplicitProto -> mk_object None (Type.ObjProtoT reason)
       | ObjAnnotExplicitProto (loc, t) ->
         let reason = Reason.(mk_reason RPrototype loc) in
-        let proto = ConsGen.obj_test_proto file.cx reason (merge tps file t) in
+        let proto = ConsGen.obj_test_proto file.cx reason (merge tps infer_tps file t) in
         let proto = ConsGen.mk_typeof_annotation file.cx reason proto in
         mk_object None proto
       | ObjAnnotCallable { ts_rev } ->
@@ -946,7 +1009,7 @@ and merge_annot tps file = function
         let ts =
           Nel.rev_map
             (fun t ->
-              let t = merge tps file t in
+              let t = merge tps infer_tps file t in
               mk_object (Some t) proto)
             ts_rev
         in
@@ -960,12 +1023,14 @@ and merge_annot tps file = function
     let reason = Reason.(mk_annot_reason RObjectType loc) in
     let target = Type.Object.Spread.Annot { make_exact = exact } in
     let merge_slice dict props =
-      let dict = Option.map ~f:(merge_dict tps file) dict in
-      let prop_map = SMap.map (merge_obj_annot_prop tps file) props |> NameUtils.namemap_of_smap in
+      let dict = Option.map ~f:(merge_dict tps infer_tps file) dict in
+      let prop_map =
+        SMap.map (merge_obj_annot_prop tps infer_tps file) props |> NameUtils.namemap_of_smap
+      in
       { Type.Object.Spread.reason; prop_map; dict; generics = Generic.spread_empty }
     in
     let merge_elem = function
-      | ObjSpreadAnnotElem t -> Type.Object.Spread.Type (merge tps file t)
+      | ObjSpreadAnnotElem t -> Type.Object.Spread.Type (merge tps infer_tps file t)
       | ObjSpreadAnnotSlice { dict; props } -> Type.Object.Spread.Slice (merge_slice dict props)
     in
     let (t, todo_rev, head_slice) =
@@ -983,12 +1048,12 @@ and merge_annot tps file = function
   | InlineInterface (loc, def) ->
     let reason = Reason.(mk_annot_reason RInterfaceType loc) in
     let id = ALoc.id_none in
-    merge_interface ~inline:true tps file reason id def []
+    merge_interface ~inline:true tps infer_tps file reason id def []
   | MappedTypeAnnot { loc; source_type; property_type; key_tparam; variance; optional } ->
-    let source_type = merge tps file source_type in
-    let (tp, _, tps) = merge_tparam tps file key_tparam in
+    let source_type = merge tps infer_tps file source_type in
+    let (tp, _, tps) = merge_tparam ~from_infer:false tps infer_tps file key_tparam in
     let property_type =
-      let prop_type = merge tps file property_type in
+      let prop_type = merge tps infer_tps file property_type in
       let prop_reason = TypeUtil.reason_of_t prop_type in
       let type_t = Type.(DefT (prop_reason, trust, TypeT (MappedTypeKind, prop_type))) in
       let id = Context.make_source_poly_id file.cx loc in
@@ -1018,12 +1083,12 @@ and merge_annot tps file = function
         )
     )
 
-and merge_value tps file = function
+and merge_value tps infer_tps file = function
   | ClassExpr (loc, def) ->
     let name = "<<anonymous class>>" in
     let reason = Type.DescFormat.instance_reason (Reason.OrdinaryName name) loc in
     let id = Context.make_aloc_id file.cx loc in
-    merge_class tps file reason id def
+    merge_class tps infer_tps file reason id def
   | FunExpr { loc; async = _; generator = _; def; statics } ->
     (* RFunctionType should be Reason.func_reason instead, but this matches the
      * behavior of types-first where function bindings are converted to declared
@@ -1031,8 +1096,8 @@ and merge_value tps file = function
      *
      * TODO Fix once T71257430 is closed. *)
     let reason = Reason.(mk_reason RFunctionType loc) in
-    let statics = merge_fun_statics tps file reason statics in
-    merge_fun tps file reason def statics
+    let statics = merge_fun_statics tps infer_tps file reason statics in
+    merge_fun tps infer_tps file reason def statics
   | StringVal loc ->
     let reason = Reason.(mk_reason RString loc) in
     Type.(DefT (reason, trust, StrT AnyLiteral))
@@ -1069,21 +1134,25 @@ and merge_value tps file = function
       | None -> Type.ObjProtoT reason
       | Some (loc, t) ->
         let reason = Reason.(mk_reason RPrototype loc) in
-        let proto = ConsGen.obj_test_proto file.cx reason (merge tps file t) in
+        let proto = ConsGen.obj_test_proto file.cx reason (merge tps infer_tps file t) in
         ConsGen.mk_typeof_annotation file.cx reason proto
     in
-    let props = SMap.map (merge_obj_value_prop tps file) props |> NameUtils.namemap_of_smap in
+    let props =
+      SMap.map (merge_obj_value_prop tps infer_tps file) props |> NameUtils.namemap_of_smap
+    in
     Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen
   | ObjSpreadLit { loc; frozen; proto; elems_rev } ->
     let reason = obj_lit_reason ~frozen loc in
     (* TODO: fix spread to use provided __proto__ prop *)
     ignore proto;
     let merge_slice props =
-      let prop_map = SMap.map (merge_obj_value_prop tps file) props |> NameUtils.namemap_of_smap in
+      let prop_map =
+        SMap.map (merge_obj_value_prop tps infer_tps file) props |> NameUtils.namemap_of_smap
+      in
       { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
     in
     let merge_elem = function
-      | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge tps file t)
+      | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge tps infer_tps file t)
       | ObjValueSpreadSlice props -> Type.Object.Spread.Slice (merge_slice props)
     in
     let (t, todo_rev, head_slice) =
@@ -1121,9 +1190,9 @@ and merge_value tps file = function
     ConsGen.object_spread file.cx use_op reason target state t
   | ArrayLit (loc, t, ts) ->
     let reason = Reason.(mk_reason RArrayLit loc) in
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     (* NB: tail-recursive map in case of very large literals *)
-    let ts = Base.List.map ~f:(merge tps file) ts in
+    let ts = Base.List.map ~f:(merge tps infer_tps file) ts in
     let t =
       match (t, ts) with
       | (t, []) -> t
@@ -1131,23 +1200,23 @@ and merge_value tps file = function
     in
     Type.(DefT (reason, trust, ArrT (ArrayAT (t, None))))
 
-and merge_accessor tps file = function
+and merge_accessor tps infer_tps file = function
   | Get (loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.Get (Some loc, t)
   | Set (loc, t) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.Set (Some loc, t)
   | GetSet (gloc, gt, sloc, st) ->
-    let gt = merge tps file gt in
-    let st = merge tps file st in
+    let gt = merge tps infer_tps file gt in
+    let st = merge tps infer_tps file st in
     Type.GetSet (Some gloc, gt, Some sloc, st)
 
-and merge_obj_value_prop tps file = function
+and merge_obj_value_prop tps infer_tps file = function
   | ObjValueField (id_loc, t, polarity) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.Field (Some id_loc, t, polarity)
-  | ObjValueAccess x -> merge_accessor tps file x
+  | ObjValueAccess x -> merge_accessor tps infer_tps file x
   | ObjValueMethod { id_loc; fn_loc; async = _; generator = _; def } ->
     (* RFunctionType should be Reason.func_reason instead, but this matches the
      * behavior of types-first where function bindings are converted to declared
@@ -1155,15 +1224,15 @@ and merge_obj_value_prop tps file = function
      *
      * TODO Fix once T71257430 is closed. *)
     let reason = Reason.(mk_reason RFunctionType fn_loc) in
-    let statics = merge_fun_statics tps file reason SMap.empty in
-    let t = merge_fun tps file reason def statics in
+    let statics = merge_fun_statics tps infer_tps file reason SMap.empty in
+    let t = merge_fun tps infer_tps file reason def statics in
     Type.Method (Some id_loc, t)
 
-and merge_class_prop tps file = function
+and merge_class_prop tps infer_tps file = function
   | ObjValueField (id_loc, t, polarity) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.Field (Some id_loc, t, polarity)
-  | ObjValueAccess x -> merge_accessor tps file x
+  | ObjValueAccess x -> merge_accessor tps infer_tps file x
   | ObjValueMethod { id_loc; fn_loc; async = _; generator = _; def } ->
     (* RFunctionType should be Reason.func_reason instead, but this matches the
      * behavior of types-first where function bindings are converted to declared
@@ -1172,30 +1241,30 @@ and merge_class_prop tps file = function
      * TODO Fix once T71257430 is closed. *)
     let reason = Reason.(mk_reason RFunctionType fn_loc) in
     let statics = Type.dummy_static reason in
-    let t = merge_fun ~is_method:true tps file reason def statics in
+    let t = merge_fun ~is_method:true tps infer_tps file reason def statics in
     Type.Method (Some id_loc, t)
 
-and merge_obj_annot_prop tps file = function
+and merge_obj_annot_prop tps infer_tps file = function
   | ObjAnnotField (id_loc, t, polarity) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.Field (Some id_loc, t, polarity)
-  | ObjAnnotAccess x -> merge_accessor tps file x
+  | ObjAnnotAccess x -> merge_accessor tps infer_tps file x
   | ObjAnnotMethod { id_loc; fn_loc; def } ->
     let reason = Reason.(mk_annot_reason RFunctionType fn_loc) in
-    let statics = merge_fun_statics tps file reason SMap.empty in
-    let t = merge_fun tps file reason def statics in
+    let statics = merge_fun_statics tps infer_tps file reason SMap.empty in
+    let t = merge_fun tps infer_tps file reason def statics in
     Type.Method (Some id_loc, t)
 
-and merge_interface_prop tps file = function
+and merge_interface_prop tps infer_tps file = function
   | InterfaceField (id_loc, t, polarity) ->
-    let t = merge tps file t in
+    let t = merge tps infer_tps file t in
     Type.Field (id_loc, t, polarity)
-  | InterfaceAccess x -> merge_accessor tps file x
+  | InterfaceAccess x -> merge_accessor tps infer_tps file x
   | InterfaceMethod ms ->
     let merge_method fn_loc def =
       let reason = Reason.(mk_reason RFunctionType fn_loc) in
       let statics = Type.dummy_static reason in
-      merge_fun ~is_method:true tps file reason def statics
+      merge_fun ~is_method:true tps infer_tps file reason def statics
     in
     let finish = function
       | (t, []) -> t
@@ -1213,19 +1282,19 @@ and merge_interface_prop tps file = function
     let acc = Nel.one (merge_method fn_loc def) in
     loop acc id_loc ms
 
-and merge_dict tps file (ObjDict { name; polarity; key; value }) =
-  let key = merge tps file key in
-  let value = merge tps file value in
+and merge_dict tps infer_tps file (ObjDict { name; polarity; key; value }) =
+  let key = merge tps infer_tps file key in
+  let value = merge tps infer_tps file value in
   { Type.dict_name = name; dict_polarity = polarity; key; value }
 
-and merge_tparams_targs tps file reason t = function
+and merge_tparams_targs tps infer_tps file reason t = function
   | Mono -> t (tps, [])
   | Poly (tparams_loc, tp, tps') ->
     let poly_reason = Reason.(update_desc_reason (fun d -> RPolyType d) reason) in
     let (tps, rev_tparams, rev_tparam_tuples) =
       Base.List.fold_left
         ~f:(fun (tps, rev_tparams, rev_tparam_tuples) tp ->
-          let (tp, tuple, tps) = merge_tparam tps file tp in
+          let (tp, tuple, tps) = merge_tparam ~from_infer:false tps infer_tps file tp in
           (tps, tp :: rev_tparams, tuple :: rev_tparam_tuples))
         ~init:(tps, [], [])
         (tp :: tps')
@@ -1236,32 +1305,40 @@ and merge_tparams_targs tps file reason t = function
     let id = Context.make_source_poly_id file.cx tparams_loc in
     Type.(DefT (poly_reason, trust, PolyT { tparams_loc; tparams; t_out; id }))
 
-and merge_tparam tps file tp =
+and merge_tparam ~from_infer tps infer_tps file tp =
   let (TParam { name_loc; name; polarity; bound; default }) = tp in
   let reason = Reason.(mk_reason (RType (OrdinaryName name)) name_loc) in
   let bound =
     match bound with
     | None -> Type.(DefT (reason, trust, MixedT Mixed_everything))
-    | Some t -> merge tps file t
+    | Some t -> merge tps infer_tps file t
   in
   let default =
     match default with
     | None -> None
-    | Some t -> Some (merge tps file t)
+    | Some t -> Some (merge tps infer_tps file t)
   in
-  let tp =
-    { Type.reason; name = Subst_name.Name name; polarity; bound; default; is_this = false }
+  let subst_name =
+    if from_infer && SMap.mem name tps then
+      (* We perform the same alpha rename as the one in type_annotation.ml to
+         distinguish infer tparam vs regular tparam that has the same name. *)
+      Subst.new_name
+        (Subst_name.Name name)
+        (tps |> SMap.keys |> List.map (fun n -> Subst_name.Name n) |> Subst_name.Set.of_list)
+    else
+      Subst_name.Name name
   in
+  let tp = { Type.reason; name = subst_name; polarity; bound; default; is_this = false } in
   let t = Flow_js_utils.generic_of_tparam file.cx ~f:(fun x -> x) tp in
   (tp, (Subst_name.Name name, reason, t, polarity), SMap.add name t tps)
 
-and merge_op tps file op = map_op (merge tps file) op
+and merge_op tps infer_tps file op = map_op (merge tps infer_tps file) op
 
-and merge_interface ~inline tps file reason id def =
+and merge_interface ~inline tps infer_tps file reason id def =
   let (InterfaceSig { extends; props; calls }) = def in
   let super =
     let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
-    let ts = List.map (merge tps file) extends in
+    let ts = List.map (merge tps infer_tps file) extends in
     let ts =
       if calls = [] then
         ts
@@ -1284,7 +1361,7 @@ and merge_interface ~inline tps file reason id def =
     let open Reason in
     SMap.fold
       (fun k prop (own, proto) ->
-        let t = merge_interface_prop tps file prop in
+        let t = merge_interface_prop tps infer_tps file prop in
         match prop with
         | InterfaceField _ -> (NameUtils.Map.add (OrdinaryName k) t own, proto)
         | InterfaceAccess _
@@ -1294,7 +1371,7 @@ and merge_interface ~inline tps file reason id def =
       (NameUtils.Map.empty, NameUtils.Map.empty)
   in
   let inst_call_t =
-    let ts = List.rev_map (merge tps file) calls in
+    let ts = List.rev_map (merge tps infer_tps file) calls in
     match ts with
     | [] -> None
     | [t] -> Some (Context.make_call_prop file.cx t)
@@ -1320,7 +1397,7 @@ and merge_interface ~inline tps file reason id def =
     in
     DefT (reason, trust, InstanceT (static, super, [], insttype))
 
-and merge_class_extends tps file this reason extends mixins =
+and merge_class_extends tps infer_tps file this reason extends mixins =
   let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
   let (super, static_proto) =
     match extends with
@@ -1328,16 +1405,16 @@ and merge_class_extends tps file this reason extends mixins =
     | ClassImplicitExtends -> (Type.ObjProtoT super_reason, Type.FunProtoT super_reason)
     | ClassExplicitExtends { loc; t } ->
       let reason_op = Reason.mk_reason (Reason.RCustom "class extends") loc in
-      let t = specialize file reason_op (merge tps file t) in
+      let t = specialize file reason_op (merge tps infer_tps file t) in
       let t = TypeUtil.this_typeapp ~annot_loc:loc t this None in
       (t, TypeUtil.class_type t)
     | ClassExplicitExtendsApp { loc; t; targs } ->
-      let t = merge tps file t in
-      let targs = List.map (merge tps file) targs in
+      let t = merge tps infer_tps file t in
+      let targs = List.map (merge tps infer_tps file) targs in
       let t = TypeUtil.this_typeapp ~annot_loc:loc t this (Some targs) in
       (t, TypeUtil.class_type t)
   in
-  let mixins_rev = List.rev_map (merge_class_mixin tps file this) mixins in
+  let mixins_rev = List.rev_map (merge_class_mixin tps infer_tps file this) mixins in
   let super =
     match List.rev_append mixins_rev [super] with
     | [] -> failwith "impossible"
@@ -1363,17 +1440,17 @@ and merge_class_mixin =
     let reason = Reason.(mk_annot_reason (RType (OrdinaryName name)) loc) in
     ConsGen.mixin file.cx reason t
   in
-  fun tps file this -> function
+  fun tps infer_tps file this -> function
     | ClassMixin { loc; t } ->
       let reason_op = Reason.mk_reason (Reason.RCustom "class mixins") loc in
       let t = specialize file reason_op (merge_mixin_ref file loc t) in
       TypeUtil.this_typeapp ~annot_loc:loc t this None
     | ClassMixinApp { loc; t; targs } ->
       let t = merge_mixin_ref file loc t in
-      let targs = List.map (merge tps file) targs in
+      let targs = List.map (merge tps infer_tps file) targs in
       TypeUtil.this_typeapp ~annot_loc:loc t this (Some targs)
 
-and merge_class tps file reason id def =
+and merge_class tps infer_tps file reason id def =
   let (ClassSig { tparams; extends; implements; static_props; own_props; proto_props }) = def in
   let t (tps, targs) =
     let this_reason = Reason.(replace_desc_reason RThisType reason) in
@@ -1391,23 +1468,23 @@ and merge_class tps file reason id def =
       in
       Flow_js_utils.generic_of_tparam file.cx ~f:(fun x -> x) this_tp
     in
-    let (super, static_proto) = merge_class_extends tps file this reason extends [] in
-    let implements = List.map (merge tps file) implements in
+    let (super, static_proto) = merge_class_extends tps infer_tps file this reason extends [] in
+    let implements = List.map (merge tps infer_tps file) implements in
     let tps = SMap.add "this" this tps in
     let static =
       let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
-      let props = SMap.map (merge_class_prop tps file) static_props in
+      let props = SMap.map (merge_class_prop tps infer_tps file) static_props in
       let props = add_name_field reason props in
       let props = NameUtils.namemap_of_smap props in
       Obj_type.mk_with_proto file.cx static_reason static_proto ~props ~obj_kind:Type.Inexact
     in
     let own_props =
-      SMap.map (merge_class_prop tps file) own_props
+      SMap.map (merge_class_prop tps infer_tps file) own_props
       |> NameUtils.namemap_of_smap
       |> Context.generate_property_map file.cx
     in
     let proto_props =
-      SMap.map (merge_class_prop tps file) proto_props
+      SMap.map (merge_class_prop tps infer_tps file) proto_props
       |> add_default_constructor reason extends
       |> NameUtils.namemap_of_smap
       |> Context.generate_property_map file.cx
@@ -1431,13 +1508,13 @@ and merge_class tps file reason id def =
     ConsGen.resolve_id file.cx rec_type t;
     t
   in
-  merge_tparams_targs tps file reason t tparams
+  merge_tparams_targs tps infer_tps file reason t tparams
 
-and merge_fun_statics tps file reason statics =
+and merge_fun_statics tps infer_tps file reason statics =
   let props =
     SMap.map
       (fun (id_loc, t) ->
-        let t = merge tps file t in
+        let t = merge tps infer_tps file t in
         Type.Field (Some id_loc, t, Polarity.Neutral))
       statics
     |> NameUtils.namemap_of_smap
@@ -1451,7 +1528,7 @@ and merge_fun_statics tps file reason statics =
     ~props
     ?call:None
 
-and merge_predicate tps file (loc, p) =
+and merge_predicate tps infer_tps file (loc, p) =
   let singleton key pos =
     let key = (Reason.OrdinaryName key, []) in
     (Key_map.singleton key pos, Key_map.singleton key (Type.NotP pos))
@@ -1472,7 +1549,7 @@ and merge_predicate tps file (loc, p) =
       (neg, pos)
     | ExistsP key -> singleton key Type.ExistsP
     | InstanceofP (key, t) ->
-      let t = merge tps file t in
+      let t = merge tps infer_tps file t in
       singleton key Type.(LeftP (InstanceofTest, t))
     | ArrP key -> singleton key Type.ArrP
     | NullP key -> singleton key Type.NullP
@@ -1514,10 +1591,10 @@ and merge_predicate tps file (loc, p) =
       let t = Type.VoidT.at loc trust in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelExprP (key, prop, t) ->
-      let t = merge tps file t in
+      let t = merge tps infer_tps file t in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | LatentP (t, keys) ->
-      let t = merge tps file t in
+      let t = merge tps infer_tps file t in
       Nel.fold_left
         (fun (pos1, neg1) (key, i) ->
           let (pos2, neg2) = singleton key (Type.LatentP (t, i + 1)) in
@@ -1536,6 +1613,7 @@ and merge_predicate tps file (loc, p) =
 and merge_fun
     ?(is_method = false)
     tps
+    infer_tps
     file
     reason
     (FunSig { tparams; params; rest_param; this_param; return; predicate })
@@ -1546,7 +1624,7 @@ and merge_fun
       List.map
         (fun param ->
           let (Type_sig.FunParam { name; t }) = param in
-          let t = merge tps file t in
+          let t = merge tps infer_tps file t in
           (name, t))
         params
     in
@@ -1554,7 +1632,7 @@ and merge_fun
       match rest_param with
       | None -> None
       | Some (Type_sig.FunRestParam { name; loc; t }) ->
-        let t = merge tps file t in
+        let t = merge tps infer_tps file t in
         Some (name, loc, t)
     in
     let this_t =
@@ -1564,10 +1642,10 @@ and merge_fun
           Type.implicit_mixed_this reason
         else
           Type.bound_function_dummy_this (Reason.aloc_of_reason reason)
-      | Some t -> merge tps file t
+      | Some t -> merge tps infer_tps file t
     in
-    let return_t = merge tps file return in
-    let predicate = Base.Option.map predicate ~f:(merge_predicate tps file) in
+    let return_t = merge tps infer_tps file return in
+    let predicate = Base.Option.map predicate ~f:(merge_predicate tps infer_tps file) in
     let this_status =
       if is_method then
         Type.This_Method { unbound = false }
@@ -1586,11 +1664,11 @@ and merge_fun
     in
     DefT (reason, trust, FunT (statics, funtype))
   in
-  merge_tparams_targs tps file reason t tparams
+  merge_tparams_targs tps infer_tps file reason t tparams
 
 let merge_type_alias file reason name tparams body =
   let t (tps, _) =
-    let t = merge tps file body in
+    let t = merge tps SMap.empty file body in
     let t =
       let open Reason in
       let open TypeUtil in
@@ -1599,14 +1677,14 @@ let merge_type_alias file reason name tparams body =
     in
     Type.(DefT (reason, trust, TypeT (TypeAliasKind, t)))
   in
-  merge_tparams_targs SMap.empty file reason t tparams
+  merge_tparams_targs SMap.empty SMap.empty file reason t tparams
 
 let merge_opaque_type file reason id name tparams bound body =
   let t (tps, targs) =
     let open Type in
     let opaque_reason = Reason.(replace_desc_reason (ROpaqueType name) reason) in
-    let bound = Option.map ~f:(merge tps file) bound in
-    let body = Option.map ~f:(merge tps file) body in
+    let bound = Option.map ~f:(merge tps SMap.empty file) bound in
+    let body = Option.map ~f:(merge tps SMap.empty file) body in
     let opaquetype =
       {
         underlying_t = body;
@@ -1618,9 +1696,10 @@ let merge_opaque_type file reason id name tparams bound body =
     in
     DefT (reason, trust, TypeT (OpaqueKind, OpaqueT (opaque_reason, opaquetype)))
   in
-  merge_tparams_targs SMap.empty file reason t tparams
+  merge_tparams_targs SMap.empty SMap.empty file reason t tparams
 
 let merge_declare_class file reason id def =
+  let infer_tps = SMap.empty in
   let (DeclareClassSig
         {
           tparams;
@@ -1652,16 +1731,16 @@ let merge_declare_class file reason id def =
       in
       Flow_js_utils.generic_of_tparam file.cx ~f:(fun x -> x) this_tp
     in
-    let (super, static_proto) = merge_class_extends tps file this reason extends mixins in
-    let implements = List.map (merge tps file) implements in
+    let (super, static_proto) = merge_class_extends tps infer_tps file this reason extends mixins in
+    let implements = List.map (merge tps infer_tps file) implements in
     let tps = SMap.add "this" this tps in
     let static =
       let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
-      let props = SMap.map (merge_interface_prop tps file) static_props in
+      let props = SMap.map (merge_interface_prop tps infer_tps file) static_props in
       let props = add_name_field reason props in
       let props = NameUtils.namemap_of_smap props in
       let call =
-        match List.rev_map (merge tps file) static_calls with
+        match List.rev_map (merge tps infer_tps file) static_calls with
         | [] -> None
         | [t] -> Some t
         | t0 :: t1 :: ts ->
@@ -1672,18 +1751,18 @@ let merge_declare_class file reason id def =
       Obj_type.mk_with_proto file.cx static_reason static_proto ~props ?call ~obj_kind:Type.Inexact
     in
     let own_props =
-      SMap.map (merge_interface_prop tps file) own_props
+      SMap.map (merge_interface_prop tps infer_tps file) own_props
       |> NameUtils.namemap_of_smap
       |> Context.generate_property_map file.cx
     in
     let proto_props =
-      SMap.map (merge_interface_prop tps file) proto_props
+      SMap.map (merge_interface_prop tps infer_tps file) proto_props
       |> add_default_constructor reason extends
       |> NameUtils.namemap_of_smap
       |> Context.generate_property_map file.cx
     in
     let inst_call_t =
-      match List.rev_map (merge tps file) calls with
+      match List.rev_map (merge tps infer_tps file) calls with
       | [] -> None
       | [t] -> Some (Context.make_call_prop file.cx t)
       | t0 :: t1 :: ts ->
@@ -1710,15 +1789,15 @@ let merge_declare_class file reason id def =
     ConsGen.resolve_id file.cx rec_type t;
     t
   in
-  merge_tparams_targs SMap.empty file reason t tparams
+  merge_tparams_targs SMap.empty SMap.empty file reason t tparams
 
 let merge_declare_fun file defs =
   let ts =
     Nel.map
       (fun (_, fn_loc, def) ->
         let reason = Reason.(mk_reason RFunctionType fn_loc) in
-        let statics = merge_fun_statics SMap.empty file reason SMap.empty in
-        merge_fun SMap.empty file reason def statics)
+        let statics = merge_fun_statics SMap.empty SMap.empty file reason SMap.empty in
+        merge_fun SMap.empty SMap.empty file reason def statics)
       defs
   in
   match ts with
@@ -1735,22 +1814,22 @@ let merge_def file reason = function
   | Interface { id_loc; name = _; tparams; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
     let t (tps, targs) =
-      let t = merge_interface ~inline:false tps file reason id def targs in
+      let t = merge_interface ~inline:false tps SMap.empty file reason id def targs in
       TypeUtil.class_type t
     in
-    merge_tparams_targs SMap.empty file reason t tparams
+    merge_tparams_targs SMap.empty SMap.empty file reason t tparams
   | ClassBinding { id_loc; name = _; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
-    merge_class SMap.empty file reason id def
+    merge_class SMap.empty SMap.empty file reason id def
   | DeclareClassBinding { id_loc; name = _; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
     merge_declare_class file reason id def
   | FunBinding { id_loc = _; name = _; async = _; generator = _; fn_loc = _; def; statics } ->
-    let statics = merge_fun_statics SMap.empty file reason statics in
-    merge_fun SMap.empty file reason def statics
+    let statics = merge_fun_statics SMap.empty SMap.empty file reason statics in
+    merge_fun SMap.empty SMap.empty file reason def statics
   | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
     merge_declare_fun file ((id_loc, fn_loc, def), tail)
-  | Variable { id_loc = _; name = _; def } -> merge SMap.empty file def
+  | Variable { id_loc = _; name = _; def } -> merge SMap.empty SMap.empty file def
   | DisabledEnumBinding _ -> Type.AnyT.error reason
   | EnumBinding { id_loc; rep; members; has_unknown_members; name = _ } ->
     merge_enum file reason id_loc rep members has_unknown_members
@@ -1761,7 +1840,7 @@ let merge_export file = function
     let (lazy (loc, _name, t)) = Local_defs.get file.local_defs index in
     (Some loc, t)
   | Pack.ExportDefault { default_loc; def } ->
-    let t = merge SMap.empty file def in
+    let t = merge SMap.empty SMap.empty file def in
     (Some default_loc, t)
   | Pack.ExportDefaultBinding { default_loc; index } ->
     let (lazy (_loc, _name, t)) = Local_defs.get file.local_defs index in
@@ -1782,3 +1861,5 @@ let merge_resource_module_t cx f loc =
     | _ -> failwith "How did we find a resource file without an extension?!"
   in
   mk_commonjs_module_t cx reason (Context.is_strict cx) exports_t
+
+let merge tps = merge tps SMap.empty

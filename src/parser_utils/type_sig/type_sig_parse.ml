@@ -147,6 +147,13 @@ and 'loc scope =
       mutable names: 'loc binding_node SMap.t;
       parent: 'loc scope;
     }
+  | ConditionalTypeExtends of 'loc conditional_type_extends
+
+and 'loc conditional_type_extends = {
+  infer_type_names: 'loc SMap.t;
+  mutable infer_tparams_rev: ('loc loc_node, 'loc parsed) tparam list;
+  parent: 'loc scope;
+}
 
 (* When resolving names in the next phase, it will become possible to visit a
  * given binding multiple times, or even circularly. The node indirection here,
@@ -469,7 +476,8 @@ module Scope = struct
 
   let parent_opt = function
     | DeclareModule { parent; _ }
-    | Lexical { parent; _ } ->
+    | Lexical { parent; _ }
+    | ConditionalTypeExtends { parent; _ } ->
       Some parent
     | Global _
     | Module _ ->
@@ -480,26 +488,30 @@ module Scope = struct
     | DeclareModule scope -> scope.names <- f scope.names
     | Module scope -> scope.names <- f scope.names
     | Lexical scope -> scope.names <- f scope.names
+    | ConditionalTypeExtends _ -> ()
 
   let modify_exports f = function
     | Module scope -> f scope.exports
     | DeclareModule scope -> f scope.exports
     | Global _
-    | Lexical _ ->
+    | Lexical _
+    | ConditionalTypeExtends _ ->
       ()
 
   let builtins_exn = function
     | Global { names; modules } -> (names, modules)
     | DeclareModule _
     | Module _
-    | Lexical _ ->
+    | Lexical _
+    | ConditionalTypeExtends _ ->
       raise Not_found
 
   let exports_exn = function
     | Module { exports; _ } -> exports
     | Global _
     | DeclareModule _
-    | Lexical _ ->
+    | Lexical _
+    | ConditionalTypeExtends _ ->
       raise Not_found
 
   let block_scoped = function
@@ -545,6 +557,7 @@ module Scope = struct
     | Global { names; _ }
     | Module { names; _ } ->
       Base.Option.map ~f:(fun binding -> (binding, scope)) (SMap.find_opt name names)
+    | ConditionalTypeExtends { parent; _ } -> lookup parent name
     | DeclareModule { parent; names; _ }
     | Lexical { parent; names } ->
       (match SMap.find_opt name names with
@@ -557,11 +570,24 @@ module Scope = struct
     | DeclareModule _
     | Module _ ->
       scope
+    | ConditionalTypeExtends { parent; _ } -> find_host parent b
     | Lexical { parent; _ } ->
       if block_scoped b then
         scope
       else
         find_host parent b
+
+  let rec scope_of_infer_name scope name loc =
+    match scope with
+    | Global _
+    | DeclareModule _
+    | Module _ ->
+      None
+    | Lexical { parent; _ } -> scope_of_infer_name parent name loc
+    | ConditionalTypeExtends ({ infer_type_names; _ } as scope) ->
+      (match SMap.find_opt name infer_type_names with
+      | Some l when l = loc -> Some scope
+      | _ -> None)
 
   let bind_local scope tbls name def k =
     let host = find_host scope def in
@@ -815,7 +841,8 @@ module Scope = struct
         failwith "only call finalize_declare_module_exports_exn once per DeclareModule")
     | Global _
     | Module _
-    | Lexical _ ->
+    | Lexical _
+    | ConditionalTypeExtends _ ->
       failwith "expected DeclareModule to still be the scope"
 end
 
@@ -1213,8 +1240,11 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Annot (SingletonBoolean (loc, value))
     | T.Nullable { T.Nullable.argument; _ } -> Annot (Maybe (loc, annot opts scope tbls xs argument))
     | T.Array { T.Array.argument; _ } -> Annot (Array (loc, annot opts scope tbls xs argument))
-    | T.Conditional _ -> Annot (Any loc) (* TODO: properly support conditional type *)
-    | T.Infer _ -> Annot (Any loc) (* TODO: properly support conditional type *)
+    | T.Conditional t when opts.conditional_type -> conditional_type opts scope tbls xs (loc, t)
+    | T.Infer t when opts.conditional_type -> infer_type opts scope tbls xs (loc, t)
+    | T.Conditional _
+    | T.Infer _ ->
+      Annot (Any loc)
     | T.Function f ->
       let def = function_type opts scope tbls xs f in
       Annot (FunAnnot (loc, def))
@@ -2257,8 +2287,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
     nominal_type opts scope tbls xs loc name targs
 
-and tparams =
-  let module T = T.TypeParam in
+and tparam opts scope tbls xs tp =
   let bound opts scope tbls xs = function
     | Ast.Type.Available (_, t) -> Some (annot opts scope tbls xs t)
     | Ast.Type.Missing _ -> None
@@ -2267,23 +2296,24 @@ and tparams =
     | Some t -> Some (annot opts scope tbls xs t)
     | None -> None
   in
-  let tparam opts scope tbls xs tp =
-    let ( _,
-          {
-            T.name = (name_loc, { Ast.Identifier.name; comments = _ });
-            bound = b;
-            bound_kind = _;
-            variance = v;
-            default = d;
-          }
-        ) =
-      tp
-    in
-    let name_loc = push_loc tbls name_loc in
-    let bound = bound opts scope tbls xs b in
-    let default = default opts scope tbls xs d in
-    TParam { name_loc; name; polarity = polarity v; bound; default }
+  let module T = T.TypeParam in
+  let ( _,
+        {
+          T.name = (name_loc, { Ast.Identifier.name; comments = _ });
+          bound = b;
+          bound_kind = _;
+          variance = v;
+          default = d;
+        }
+      ) =
+    tp
   in
+  let name_loc = push_loc tbls name_loc in
+  let bound = bound opts scope tbls xs b in
+  let default = default opts scope tbls xs d in
+  TParam { name_loc; name; polarity = polarity v; bound; default }
+
+and tparams =
   let rec loop opts scope tbls tparams_loc xs acc = function
     | [] ->
       ( xs,
@@ -2303,6 +2333,83 @@ and tparams =
     | Some (tparams_loc, { Ast.Type.TypeParams.params = tps; comments = _ }) ->
       let tparams_loc = push_loc tbls tparams_loc in
       loop opts scope tbls tparams_loc xs [] tps
+
+and conditional_type
+    opts
+    scope
+    tbls
+    xs
+    (loc, { T.Conditional.check_type; extends_type; true_type; false_type; comments = _ }) =
+  let check_type = annot opts scope tbls xs check_type in
+  let distributive_tparam =
+    match check_type with
+    | Annot (Bound { ref_loc = name_loc; name }) ->
+      (* If check type is a bound type, then this is a distributive conditional type. *)
+      Some
+        (TParam
+           { name_loc; name; polarity = Polarity.Neutral; bound = Some check_type; default = None }
+        )
+    | _ -> None
+  in
+  let hoisted_infer_types = Infer_type_hoister.hoist_infer_types extends_type in
+  let (infer_type_names, true_type_xs) =
+    Base.List.fold
+      hoisted_infer_types
+      ~init:(SMap.empty, xs)
+      ~f:(fun
+           (infer_type_names, true_type_xs)
+           ( _,
+             {
+               T.Infer.tparam = (loc, { T.TypeParam.name = (_, { Ast.Identifier.name; _ }); _ });
+               comments = _;
+             }
+           )
+         -> (SMap.add name loc infer_type_names, SSet.add name true_type_xs)
+    )
+  in
+  let conditional_type_extends = { infer_type_names; infer_tparams_rev = []; parent = scope } in
+  let (extends_type_loc, extends_type) =
+    annot_with_loc opts (ConditionalTypeExtends conditional_type_extends) tbls xs extends_type
+  in
+  let infer_tparams =
+    match List.rev conditional_type_extends.infer_tparams_rev with
+    | [] -> Mono
+    | tp :: tps -> Poly (extends_type_loc, tp, tps)
+  in
+  let true_type = annot opts scope tbls true_type_xs true_type in
+  let false_type = annot opts scope tbls xs false_type in
+  Annot
+    (Conditional
+       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
+    )
+
+and infer_type
+    opts
+    scope
+    tbls
+    xs
+    ( loc,
+      {
+        T.Infer.tparam = (tp_loc, { T.TypeParam.name = (_, { Ast.Identifier.name; _ }); _ }) as tp;
+        comments = _;
+      }
+    ) =
+  match Scope.scope_of_infer_name scope name tp_loc with
+  | None -> Annot (Any loc)
+  | Some infer_scope ->
+    let (TParam { name_loc; _ }) =
+      (* There can be duplicate infer type names. We will skip later ones,
+         since the first one wins when there are bound conflicts. *)
+      match
+        Base.List.find infer_scope.infer_tparams_rev ~f:(fun (TParam { name = n; _ }) -> n = name)
+      with
+      | Some tp -> tp
+      | None ->
+        let tp = tparam opts scope tbls xs tp in
+        infer_scope.infer_tparams_rev <- tp :: infer_scope.infer_tparams_rev;
+        tp
+    in
+    Annot (Bound { ref_loc = name_loc; name })
 
 and optional_indexed_access
     opts scope tbls xs (loc, { T.OptionalIndexedAccess.indexed_access; optional }) =
