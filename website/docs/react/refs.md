@@ -3,21 +3,18 @@ title: Ref Functions
 slug: /react/refs
 ---
 
-React allows you to grab the instance of an element or component with [`ref`
-functions][].
+React allows you to grab the instance of an element or component with [refs](https://react.dev/learn/manipulating-the-dom-with-refs).
 
 ##  Refs in Functional Components {#toc-refs-in-functional-components}
 
-Inside a functional component, refs are accessed with the
-`useRef` hook.
-
-[`ref` functions]: https://facebook.github.io/react/docs/refs-and-the-dom.html
+Inside a functional component, refs are accessed with the `useRef` hook:
 
 ```js flow-check
+import {useRef} from 'react';
 import * as React from 'react';
 
 function MyComponent() {
-  const buttonRef = React.useRef<null | HTMLButtonElement>(null);
+  const buttonRef = useRef<null | HTMLButtonElement>(null);
   (buttonRef: {current: null | HTMLButtonElement}); // useRef wraps the ref value in an object
   return <button ref={buttonRef}>Toggle</button>;
 }

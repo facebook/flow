@@ -141,9 +141,7 @@ with function components.
 ## `React.ChildrenArray<T>` {#toc-react-childrenarray}
 
 A React children array can be a single value or an array nested to any level.
-It is designed to be used with the [`React.Children` API][].
-
-[`React.Children` API]: https://reactjs.org/docs/react-api.html#reactchildren
+It is designed to be used with the [`React.Children` API](https://react.dev/reference/react/Children).
 
 For example if you want to get a normal JavaScript array from a
 `React.ChildrenArray<T>` see the following example:

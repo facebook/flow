@@ -3,17 +3,16 @@ title: Event Handling
 slug: /react/events
 ---
 
-[React docs for "Handling Events"][] show how an event handler can be attached to
+The [React docs for handling events](https://react.dev/learn/responding-to-events) show how an event handler can be attached to
 a React element. To type these event handlers you may use the `SyntheticEvent<T>`
 types like this:
 
-[React docs for "Handling Events"]: https://reactjs.org/docs/handling-events.html
-
 ```js flow-check
+import {useState} from 'react';
 import * as React from 'react';
 
 function MyComponent(): React.Node {
-  const [state, setState] = React.useState({count: 0});
+  const [state, setState] = useState({count: 0});
 
   const handleClick = (event: SyntheticEvent<HTMLButtonElement>) => {
     // To access your button instance use `event.currentTarget`.
@@ -46,7 +45,7 @@ If you don't want to add the type of your element instance you can also use
 > `event.currentTarget`. The reason you want to use `event.currentTarget` is
 > that `event.target` may be the wrong element due to [event propagation][].
 
-[event propagation]: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Examples#Example_5:_Event_Propagation
+[event propagation]: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Examples#example_5_event_propagation
 
 > **Note:** React uses its own event system so it is important to use the
 > `SyntheticEvent` types instead of the DOM types such as `Event`,

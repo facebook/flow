@@ -3,29 +3,14 @@ title: Components
 slug: /react/components
 ---
 
-Adding Flow types to your React components is incredibly powerful. After typing
+Adding Flow types to your [React components](https://react.dev/learn/your-first-component) is incredibly powerful. After typing
 your component, Flow will statically ensure that you are using the component in
 the way it was designed to be used.
 
-Early in React's history the library provided [`PropTypes`][] which performed
-basic runtime checks. Flow is much more powerful as it can tell you when you are
-misusing a component without running your code.
-
-[`PropTypes`]: https://facebook.github.io/react/docs/typechecking-with-proptypes.html
-
-There are some Babel plugins which will generate `PropTypes` from Flow types
-such as [`babel-plugin-react-flow-props-to-prop-types`][] if you want both
-static and runtime checks.
-
-[`babel-plugin-react-flow-props-to-prop-types`]: https://github.com/thejameskyle/babel-plugin-react-flow-props-to-prop-types
-
 ## Functional Components {#toc-functional-components}
 
-Adding Flow types to a functional component is the same as [adding types to a
-standard function]. Just create an object type for the props and Flow will
-ensure that the props passed to the component match up with what is expected.
-
-[adding types to a standard function]: ../../types/functions/
+Adding Flow types to a functional component is the same as [adding types to a standard function](../../types/functions/).
+Just create an object type for the props and Flow will ensure that the props passed to the component match up with what is expected.
 
 ```js flow-check
 import * as React from 'react';
@@ -54,11 +39,9 @@ function MyComponent(props: Props) {
 ### Adding Default Props to Functional Components {#toc-adding-default-props-to-functional-components}
 
 A nice pattern to add default props to functional components is to use
-[destructuring with default values][]. By destructuring the props in the
-function parameter, you can assign a value to any props that are not passed
+[destructuring with default values](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment/#default_value).
+By destructuring the props in the function parameter, you can assign a value to any props that are not passed
 to the component (or passed with the value `undefined`).
-
-[destructuring with default values]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#default_value
 
 ```js flow-check
 import * as React from 'react';
@@ -79,7 +62,7 @@ function MyComponent({foo = 42, bar}: Props) {
 
 ## Class Components {#toc-class-components}
 
-To Flowify a class component, the type of the props can be passed as the first
+To Flowify a [class component](https://react.dev/reference/react/Component#defining-a-class-component), the type of the props can be passed as the first
 argument to the `React.Component` type. This will have the same effect as adding types
 to the `props` parameter of a function component.
 
@@ -108,12 +91,10 @@ the `Props` type we defined.
 > **Note:** If you don't need to use the `Props` type again you could also
 > define it inline: `extends React.Component<{ foo: number, bar?: string }>`.
 
-`React.Component<Props, State>` is a [generic type][] that takes two type
-arguments. Props and state. The second type argument, `State`, is optional. By
-default it is undefined so you can see in the example above we did not include
+`React.Component<Props, State>` is a [generic type](../../types/generics) that takes two type
+arguments: props and state. The second type argument, `State`, is optional. By
+default it is `undefined` so you can see in the example above we did not include
 `State`. We will learn more about state in the next section...
-
-[generic type]: ../../types/generics/
 
 ### Adding State {#toc-adding-state}
 
@@ -151,10 +132,8 @@ class MyComponent extends React.Component<Props, State> {
 <MyComponent />;
 ```
 
-In the example above we are using a [React `setState()` updater function][] but
-you could also pass a partial state object to `setState()`.
-
-[React `setState()` updater function]: https://facebook.github.io/react/docs/state-and-lifecycle.html#state-updates-may-be-asynchronous
+In the example above we are using a [React `setState()` updater function](https://react.dev/reference/react/Component#setstate)
+but you could also pass a partial state object to `setState()`.
 
 > **Note:** If you don't need to use the `State` type again you could also
 > define it inline: `extends React.Component<{}, { count: number }>`.
@@ -176,7 +155,7 @@ type Props = {
 };
 
 class MyComponent extends React.Component<Props> {
-  static defaultProps: { foo: number } = {
+  static defaultProps: {foo: number} = {
     foo: 42, // ...but we have a default prop for foo.
   };
 }
@@ -188,11 +167,7 @@ class MyComponent extends React.Component<Props> {
 > **Note:** You don't need to make `foo` nullable in your `Props` type. Flow
 > will make sure that `foo` is optional if you have a default prop for `foo`.
 
-Flow will infer the type of your default props from `static defaultProps` so you
-don't have to add any type annotations to use default props.
-
-If you would like to add a type annotation to `defaultProps` you can define the
-type as
+If you add a type annotation to `defaultProps` you can define the type as
 ```js flow-check
 type DefaultProps = {
   foo: number,
