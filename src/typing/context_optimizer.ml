@@ -83,12 +83,10 @@ class context_optimizer ~no_lowers =
         if IMap.mem id reduced_graph then
           id
         else
-          let t = Flow_js_utils.merge_tvar ~no_lowers cx r id in
-          let node = Root { rank = 0; constraints = FullyResolved (unknown_use, lazy t) } in
+          let t = lazy (self#type_ cx pole (Flow_js_utils.merge_tvar ~no_lowers cx r id)) in
+          let node = Root { rank = 0; constraints = FullyResolved (unknown_use, t) } in
           reduced_graph <- IMap.add id node reduced_graph;
-          let t = self#type_ cx pole t in
-          let node = Root { rank = 0; constraints = FullyResolved (unknown_use, lazy t) } in
-          reduced_graph <- IMap.add id node reduced_graph;
+          ignore (Lazy.force t);
           id
       ) else (
         ignore (self#tvar cx pole r root_id);
