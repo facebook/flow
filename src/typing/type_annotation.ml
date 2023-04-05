@@ -8,6 +8,7 @@
 module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
 module Generic_ID = Generic
+open Loc_collections
 open Utils_js
 open Reason
 open Type
@@ -257,7 +258,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   (**********************************)
 
   (* converter *)
-  let rec convert cx tparams_map =
+  let rec convert cx tparams_map infer_tparams_map =
     let open Ast.Type in
     function
     | (loc, (Any _ as t_ast)) ->
@@ -286,21 +287,21 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSUndefined; loc });
       ((loc, AnyT.at (AnyError None) loc), t_ast)
     | (loc, Nullable { Nullable.argument = t; comments }) ->
-      let (((_, t), _) as t_ast) = convert cx tparams_map t in
+      let (((_, t), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
       let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in
       ((loc, MaybeT (reason, t)), Nullable { Nullable.argument = t_ast; comments })
     | (loc, Union { Union.types = (t0, t1, ts); comments }) ->
-      let (((_, t0), _) as t0_ast) = convert cx tparams_map t0 in
-      let (((_, t1), _) as t1_ast) = convert cx tparams_map t1 in
-      let (ts, ts_ast) = convert_list cx tparams_map ts in
+      let (((_, t0), _) as t0_ast) = convert cx tparams_map infer_tparams_map t0 in
+      let (((_, t1), _) as t1_ast) = convert cx tparams_map infer_tparams_map t1 in
+      let (ts, ts_ast) = convert_list cx tparams_map infer_tparams_map ts in
       let rep = UnionRep.make t0 t1 ts in
       ( (loc, UnionT (mk_annot_reason RUnionType loc, rep)),
         Union { Union.types = (t0_ast, t1_ast, ts_ast); comments }
       )
     | (loc, Intersection { Intersection.types = (t0, t1, ts); comments }) ->
-      let (((_, t0), _) as t0_ast) = convert cx tparams_map t0 in
-      let (((_, t1), _) as t1_ast) = convert cx tparams_map t1 in
-      let (ts, ts_ast) = convert_list cx tparams_map ts in
+      let (((_, t0), _) as t0_ast) = convert cx tparams_map infer_tparams_map t0 in
+      let (((_, t1), _) as t1_ast) = convert cx tparams_map infer_tparams_map t1 in
+      let (ts, ts_ast) = convert_list cx tparams_map infer_tparams_map ts in
       let rep = InterRep.make t0 t1 ts in
       ( (loc, IntersectionT (mk_annot_reason RIntersectionType loc, rep)),
         Intersection { Intersection.types = (t0_ast, t1_ast, ts_ast); comments }
@@ -336,7 +337,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           elements
           ~init:([], [], [], 0, 0, None)
           ~f:(fun (ts, els, els_ast, num_req, num_opt, req_after_opt) element ->
-            let (t, el, el_ast, optional) = convert_tuple_element cx tparams_map element in
+            let (t, el, el_ast, optional) =
+              convert_tuple_element cx tparams_map infer_tparams_map element
+            in
             let (num_req, num_opt, req_after_opt) =
               if optional then
                 (num_req, num_opt + 1, req_after_opt)
@@ -390,17 +393,21 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         ))
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
-      let (((_, elemt), _) as t_ast) = convert cx tparams_map t in
+      let (((_, elemt), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
       ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))),
         Array { Array.argument = t_ast; comments }
       )
     | (loc, Conditional { Conditional.check_type; extends_type; true_type; false_type; comments })
       as t_ast ->
       if Context.conditional_type cx then
-        let (((_, check_t), _) as check_type) = convert cx tparams_map check_type in
-        let (((_, extends_t), _) as extends_type) = convert cx tparams_map extends_type in
+        let (((_, check_t), _) as check_type) =
+          convert cx tparams_map infer_tparams_map check_type
+        in
+        let (((_, extends_t), _) as extends_type) =
+          convert cx tparams_map infer_tparams_map extends_type
+        in
         let hoisted_infer_types = Infer_type_hoister.hoist_infer_types extends_type in
-        let infer_tparams_map =
+        let additional_true_type_tparams_map =
           hoisted_infer_types
           |> Base.List.map
                ~f:(fun
@@ -415,9 +422,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           |> Subst_name.Map.of_list
         in
         let (((_, true_t), _) as true_type) =
-          convert cx (Subst_name.Map.union infer_tparams_map tparams_map) true_type
+          convert
+            cx
+            (Subst_name.Map.union additional_true_type_tparams_map tparams_map)
+            infer_tparams_map
+            true_type
         in
-        let (((_, false_t), _) as false_type) = convert cx tparams_map false_type in
+        let (((_, false_t), _) as false_type) =
+          convert cx tparams_map infer_tparams_map false_type
+        in
         let tparams =
           Base.List.map
             hoisted_infer_types
@@ -479,7 +492,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           let t = AnyT.error (mk_reason (RCustom "invalid infer type") loc) in
           ((loc, t), Infer { Infer.tparam; comments })
         | _ ->
-          let (tparam, _, t) = mk_type_param cx ~from_infer_type:true tparams_map tparam in
+          let (tparam, _, t) =
+            mk_type_param cx ~from_infer_type:true tparams_map infer_tparams_map tparam
+          in
           ((loc, t), Infer { Infer.tparam; comments })
       else
         error_type
@@ -503,8 +518,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ((loc, mk_singleton_boolean cx loc value), t_ast)
     | (loc, IndexedAccess { IndexedAccess._object; index; comments }) ->
       let reason = mk_reason (RIndexedAccess { optional = false }) loc in
-      let (((_, object_type), _) as _object) = convert cx tparams_map _object in
-      let (((_, index_type), _) as index) = convert cx tparams_map index in
+      let (((_, object_type), _) as _object) = convert cx tparams_map infer_tparams_map _object in
+      let (((_, index_type), _) as index) = convert cx tparams_map infer_tparams_map index in
       let t =
         let use_op =
           Op
@@ -520,7 +535,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       ((loc, t), IndexedAccess { IndexedAccess._object; index; comments })
     | (loc, OptionalIndexedAccess ia) ->
-      let (_, ast) = optional_indexed_access cx loc ~tparams_map ia in
+      let (_, ast) = optional_indexed_access cx loc ~tparams_map ~infer_tparams_map ia in
       ast
     (* TODO *)
     | ( loc,
@@ -542,7 +557,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let t_unapplied =
         ConsGen.get_prop cx use_op id_reason ~op_reason:qid_reason (OrdinaryName name) m
       in
-      let (t, targs) = mk_nominal_type cx reason tparams_map (t_unapplied, targs) in
+      let (t, targs) =
+        mk_nominal_type cx reason tparams_map infer_tparams_map (t_unapplied, targs)
+      in
       ( (loc, t),
         Generic
           {
@@ -575,7 +592,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         match targs with
         | None -> ([], None)
         | Some (loc, { TypeArgs.arguments = targs; comments }) ->
-          let (elemts, targs) = convert_list cx tparams_map targs in
+          let (elemts, targs) = convert_list cx tparams_map infer_tparams_map targs in
           (elemts, Some (loc, { TypeArgs.arguments = targs; comments }))
       in
       let reconstruct_ast t ?id_t targs =
@@ -595,7 +612,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let local_generic_type () =
         let reason = mk_reason (RType (OrdinaryName name)) loc in
         let c = type_identifier cx name name_loc in
-        let (t, targs) = mk_nominal_type cx reason tparams_map (c, targs) in
+        let (t, targs) = mk_nominal_type cx reason tparams_map infer_tparams_map (c, targs) in
         reconstruct_ast t ~id_t:c targs
       in
       begin
@@ -1319,13 +1336,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           }
       ) ->
       let (tparams, tparams_map, tparams_ast) =
-        mk_type_param_declarations cx ~tparams_map tparams
+        mk_type_param_declarations cx ~tparams_map ~infer_tparams_map tparams
       in
       let (rev_params, rev_param_asts) =
         List.fold_left
           (fun (params_acc, asts_acc) (param_loc, param) ->
             let { Function.Param.name; annot; optional } = param in
-            let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
+            let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
             let t =
               if optional then
                 TypeUtil.optional t
@@ -1343,7 +1360,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         match this_ with
         | None -> (bound_function_dummy_this params_loc, None)
         | Some (this_loc, { Function.ThisParam.annot = (loc, annot); comments }) ->
-          let (((_, this_t), _) as annot) = convert cx tparams_map annot in
+          let (((_, this_t), _) as annot) = convert cx tparams_map infer_tparams_map annot in
           (this_t, Some (this_loc, { Function.ThisParam.annot = (loc, annot); comments }))
       in
       let reason = mk_annot_reason RFunctionType loc in
@@ -1351,7 +1368,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         match rest with
         | Some (rest_loc, { Function.RestParam.argument = (param_loc, param); comments }) ->
           let { Function.Param.name; annot; optional } = param in
-          let (((_, rest), _) as annot_ast) = convert cx tparams_map annot in
+          let (((_, rest), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
           ( Some (Base.Option.map ~f:ident_name name, loc_of_t rest, rest),
             Some
               ( rest_loc,
@@ -1371,7 +1388,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           )
         | None -> (None, None)
       in
-      let (((_, return_t), _) as return_ast) = convert cx tparams_map return in
+      let (((_, return_t), _) as return_ast) = convert cx tparams_map infer_tparams_map return in
       let statics_t =
         let reason = update_desc_reason (fun d -> RStatics d) reason in
         Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
@@ -1474,17 +1491,21 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | ( (keyof_loc, T.Keyof { T.Keyof.argument; comments = keyof_comments }),
             (MakeOptional | KeepOptionality)
           ) ->
-          let (((_, source_type), _) as source_ast) = convert cx tparams_map argument in
+          let (((_, source_type), _) as source_ast) =
+            convert cx tparams_map infer_tparams_map argument
+          in
           let source_ast =
             ( (keyof_loc, source_type),
               T.Keyof { T.Keyof.argument = source_ast; comments = keyof_comments }
             )
           in
           let (tparam_ast, ({ name; _ } as tparam), tparam_t) =
-            mk_type_param cx ~from_infer_type:false tparams_map key_tparam
+            mk_type_param cx ~from_infer_type:false tparams_map infer_tparams_map key_tparam
           in
           let tparams_map = Subst_name.Map.add name tparam_t tparams_map in
-          let ((prop_loc, prop_type), prop_type_ast) = convert cx tparams_map prop_type in
+          let ((prop_loc, prop_type), prop_type_ast) =
+            convert cx tparams_map infer_tparams_map prop_type
+          in
           let type_t =
             DefT (reason_of_t prop_type, bogus_trust (), TypeT (MappedTypeKind, prop_type))
           in
@@ -1566,7 +1587,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           Error_message.(EInvalidMappedType { loc; kind = ExtraProperties });
         Tast_utils.error_mapper#type_ ot
       | None ->
-        let (t, properties) = convert_object cx tparams_map loc ~exact:exact_type properties in
+        let (t, properties) =
+          convert_object cx tparams_map infer_tparams_map loc ~exact:exact_type properties
+        in
         if (not exact) && (not inexact) && not has_indexer then (
           Flow_js_utils.add_output cx Error_message.(EAmbiguousObjectType loc);
           if not exact_by_default then
@@ -1583,7 +1606,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (iface_sig, extend_asts) =
         let id = ALoc.id_none in
         let (extends, extend_asts) =
-          extends |> Base.List.map ~f:(mk_interface_super cx tparams_map) |> List.split
+          extends
+          |> Base.List.map ~f:(mk_interface_super cx tparams_map infer_tparams_map)
+          |> List.split
         in
         let super =
           let callable =
@@ -1603,6 +1628,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         add_interface_properties
           cx
           tparams_map
+          infer_tparams_map
           properties
           ~this:(implicit_mixed_this reason)
           iface_sig
@@ -1631,16 +1657,17 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
 
   and convert_list =
-    let rec loop (ts, tasts) cx tparams_map = function
+    let rec loop (ts, tasts) cx tparams_map infer_tparams_map = function
       | [] -> (List.rev ts, List.rev tasts)
       | ast :: asts ->
-        let (((_, t), _) as tast) = convert cx tparams_map ast in
-        loop (t :: ts, tast :: tasts) cx tparams_map asts
+        let (((_, t), _) as tast) = convert cx tparams_map infer_tparams_map ast in
+        loop (t :: ts, tast :: tasts) cx tparams_map infer_tparams_map asts
     in
-    (fun cx tparams_map asts -> loop ([], []) cx tparams_map asts)
+    fun cx tparams_map infer_tparams_map asts ->
+      loop ([], []) cx tparams_map infer_tparams_map asts
 
   and convert_opt cx tparams_map ast_opt =
-    let tast_opt = Base.Option.map ~f:(convert cx tparams_map) ast_opt in
+    let tast_opt = Base.Option.map ~f:(convert cx tparams_map ALocMap.empty) ast_opt in
     let t_opt = Base.Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
     (t_opt, tast_opt)
 
@@ -1804,7 +1831,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         t
     in
     let open Ast.Type in
-    let named_property cx tparams_map loc acc prop =
+    let named_property cx tparams_map infer_tparams_map loc acc prop =
       match prop with
       | { Object.Property.key; value = Object.Property.Init value; optional; variance; _method; _ }
         -> begin
@@ -1812,7 +1839,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | Ast.Expression.Object.Property.Literal
             (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
         | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
-          let (((_, t), _) as value_ast) = convert cx tparams_map value in
+          let (((_, t), _) as value_ast) = convert cx tparams_map infer_tparams_map value in
           let prop_ast t =
             {
               prop with
@@ -1872,7 +1899,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
        _;
       } ->
         Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
-        let (function_type, getter_ast) = mk_function_type_annotation cx tparams_map getter in
+        let (function_type, getter_ast) =
+          mk_function_type_annotation cx tparams_map infer_tparams_map getter
+        in
         let return_t = Type.extract_getter_type function_type in
         ( Acc.add_prop (Properties.add_getter (OrdinaryName name) (Some id_loc) return_t) acc,
           {
@@ -1892,7 +1921,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
        _;
       } ->
         Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
-        let (function_type, setter_ast) = mk_function_type_annotation cx tparams_map setter in
+        let (function_type, setter_ast) =
+          mk_function_type_annotation cx tparams_map infer_tparams_map setter
+        in
         let param_t = Type.extract_setter_type function_type in
         ( Acc.add_prop (Properties.add_setter (OrdinaryName name) (Some id_loc) param_t) acc,
           {
@@ -1907,16 +1938,16 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
         (acc, prop_ast)
     in
-    let make_call cx tparams_map loc call =
+    let make_call cx tparams_map infer_tparams_map loc call =
       let { Object.CallProperty.value = (fn_loc, fn); static; comments } = call in
       (* note: this uses [loc] instead of [fn_loc]. not sure if this is intentional. *)
-      let (t, (_, fn)) = mk_function_type_annotation cx tparams_map (loc, fn) in
+      let (t, (_, fn)) = mk_function_type_annotation cx tparams_map infer_tparams_map (loc, fn) in
       (t, { Object.CallProperty.value = (fn_loc, fn); static; comments })
     in
-    let make_dict cx tparams_map indexer =
+    let make_dict cx tparams_map infer_tparams_map indexer =
       let { Object.Indexer.id; key; value; static; variance; comments } = indexer in
-      let (((_, key), _) as key_ast) = convert cx tparams_map key in
-      let (((_, value), _) as value_ast) = convert cx tparams_map value in
+      let (((_, key), _) as key_ast) = convert cx tparams_map infer_tparams_map key in
+      let (((_, value), _) as value_ast) = convert cx tparams_map infer_tparams_map value in
       ( {
           Type.dict_name = Base.Option.map ~f:ident_name id;
           key;
@@ -1926,11 +1957,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         { Object.Indexer.id; key = key_ast; value = value_ast; static; variance; comments }
       )
     in
-    let property cx tparams_map acc =
+    let property cx tparams_map infer_tparams_map acc =
       Object.(
         function
         | CallProperty (loc, call) ->
-          let (t, call) = make_call cx tparams_map loc call in
+          let (t, call) = make_call cx tparams_map infer_tparams_map loc call in
           let acc =
             match Acc.add_call t acc with
             | Ok acc -> acc
@@ -1940,7 +1971,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           in
           (acc, CallProperty (loc, call))
         | Indexer (loc, i) ->
-          let (d, i) = make_dict cx tparams_map i in
+          let (d, i) = make_dict cx tparams_map infer_tparams_map i in
           let acc =
             match Acc.add_dict d acc with
             | Ok acc -> acc
@@ -1950,7 +1981,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           in
           (acc, Indexer (loc, i))
         | Property (loc, p) ->
-          let (acc, p) = named_property cx tparams_map loc acc p in
+          let (acc, p) = named_property cx tparams_map infer_tparams_map loc acc p in
           (acc, Property (loc, p))
         | InternalSlot (loc, slot) as prop ->
           let {
@@ -1965,7 +1996,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             slot
           in
           if name = "call" then
-            let (((_, t), _) as value_ast) = convert cx tparams_map value in
+            let (((_, t), _) as value_ast) = convert cx tparams_map infer_tparams_map value in
             let t =
               if optional then
                 TypeUtil.optional t
@@ -1989,7 +2020,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             (acc, Tast_utils.error_mapper#object_type_property prop)
           )
         | SpreadProperty (loc, { Object.SpreadProperty.argument; comments }) ->
-          let (((_, t), _) as argument_ast) = convert cx tparams_map argument in
+          let (((_, t), _) as argument_ast) = convert cx tparams_map infer_tparams_map argument in
           ( Acc.add_spread t acc,
             SpreadProperty (loc, { SpreadProperty.argument = argument_ast; comments })
           )
@@ -1997,11 +2028,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           failwith "Unreachable until we support mapped types with additional properties"
       )
     in
-    fun cx tparams_map loc ~exact properties ->
+    fun cx tparams_map infer_tparams_map loc ~exact properties ->
       let (acc, rev_prop_asts) =
         List.fold_left
           (fun (acc, rev_prop_asts) p ->
-            let (acc, prop_ast) = property cx tparams_map acc p in
+            let (acc, prop_ast) = property cx tparams_map infer_tparams_map acc p in
             (acc, prop_ast :: rev_prop_asts))
           (Acc.empty, [])
           properties
@@ -2079,16 +2110,16 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (t, List.rev rev_prop_asts)
 
-  and convert_tuple_element cx tparams_map (loc, el) =
+  and convert_tuple_element cx tparams_map infer_tparams_map (loc, el) =
     match el with
     | Ast.Type.Tuple.UnlabeledElement annot ->
-      let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
+      let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
       let optional = false in
       (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast, optional)
     | Ast.Type.Tuple.LabeledElement
         { Ast.Type.Tuple.LabeledElement.name; annot; variance; optional } ->
-      let (((_, annot_t), _) as annot_ast) = convert cx tparams_map annot in
+      let (((_, annot_t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       let t =
         if optional then
           TypeUtil.optional annot_t
@@ -2119,48 +2150,57 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   and mk_func_sig =
     let open Ast.Type.Function in
-    let add_param cx tparams_map x param =
+    let add_param cx tparams_map infer_tparams_map x param =
       let (loc, { Param.name; annot; optional }) = param in
-      let (((_, t), _) as annot) = convert cx tparams_map annot in
+      let (((_, t), _) as annot) = convert cx tparams_map infer_tparams_map annot in
       let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
       let param = (t, (loc, { Param.name; annot; optional })) in
       Func_type_params.add_param param x
     in
-    let add_rest cx tparams_map x rest_param =
+    let add_rest cx tparams_map infer_tparams_map x rest_param =
       let (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }); comments }) =
         rest_param
       in
-      let (((_, t), _) as annot) = convert cx tparams_map annot in
+      let (((_, t), _) as annot) = convert cx tparams_map infer_tparams_map annot in
       let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
       let rest =
         (t, (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }); comments }))
       in
       Func_type_params.add_rest rest x
     in
-    let add_this cx tparams_map x this_param =
+    let add_this cx tparams_map infer_tparams_map x this_param =
       let (this_loc, { ThisParam.annot = (loc, annot); comments }) = this_param in
-      let (((_, t), _) as annot') = convert cx tparams_map annot in
+      let (((_, t), _) as annot') = convert cx tparams_map infer_tparams_map annot in
       let this = (t, (this_loc, { Ast.Type.Function.ThisParam.annot = (loc, annot'); comments })) in
       Func_type_params.add_this this x
     in
-    let convert_params cx tparams_map (loc, { Params.params; rest; this_; comments }) =
+    let convert_params
+        cx tparams_map infer_tparams_map (loc, { Params.params; rest; this_; comments }) =
       let fparams =
         Func_type_params.empty (fun params rest this_ ->
             Some (loc, { Params.params; rest; this_; comments })
         )
       in
-      let fparams = List.fold_left (add_param cx tparams_map) fparams params in
-      let fparams = Base.Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
-      let fparams = Base.Option.fold ~f:(add_this cx tparams_map) ~init:fparams this_ in
+      let fparams = List.fold_left (add_param cx tparams_map infer_tparams_map) fparams params in
+      let fparams =
+        Base.Option.fold ~f:(add_rest cx tparams_map infer_tparams_map) ~init:fparams rest
+      in
+      let fparams =
+        Base.Option.fold ~f:(add_this cx tparams_map infer_tparams_map) ~init:fparams this_
+      in
       let params_ast = Func_type_params.eval cx fparams in
       (fparams, Base.Option.value_exn params_ast)
     in
-    fun cx tparams_map loc func ->
+    fun cx tparams_map infer_tparams_map loc func ->
       let (tparams, tparams_map, tparams_ast) =
-        mk_type_param_declarations cx ~tparams_map func.tparams
+        mk_type_param_declarations cx ~tparams_map ~infer_tparams_map func.tparams
       in
-      let (fparams, params_ast) = convert_params cx tparams_map func.Ast.Type.Function.params in
-      let (((_, return_t), _) as return_ast) = convert cx tparams_map func.return in
+      let (fparams, params_ast) =
+        convert_params cx tparams_map infer_tparams_map func.Ast.Type.Function.params
+      in
+      let (((_, return_t), _) as return_ast) =
+        convert cx tparams_map infer_tparams_map func.return
+      in
       let reason = mk_annot_reason RFunctionType loc in
       ( {
           Func_type_sig.Types.reason;
@@ -2180,15 +2220,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         }
       )
 
-  and mk_type cx tparams_map reason = function
+  and mk_type cx tparams_map infer_tparams_map reason = function
     | None ->
       let t = Tvar.mk cx reason in
       (t, None)
     | Some annot ->
-      let (((_, t), _) as annot_ast) = convert cx tparams_map annot in
+      let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       (t, Some annot_ast)
 
-  and mk_type_annotation cx tparams_map reason = function
+  and mk_type_annotation cx tparams_map infer_tparams_map reason = function
     | T.Missing loc ->
       let t =
         if Context.typing_mode cx <> Context.CheckingMode then
@@ -2198,10 +2238,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (Inferred t, T.Missing (loc, t))
     | T.Available annot ->
-      let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
+      let (t, ast_annot) = mk_type_available_annotation cx tparams_map infer_tparams_map annot in
       (Annotated t, T.Available ast_annot)
 
-  and mk_return_type_annotation cx tparams_map reason ~void_return ~async annot =
+  and mk_return_type_annotation cx tparams_map infer_tparams_map reason ~void_return ~async annot =
     match annot with
     | T.Missing loc when void_return ->
       let void_t = VoidT.why reason |> with_trust literal_trust in
@@ -2215,9 +2255,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       (Inferred t, T.Missing (loc, t))
     (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
        and no explicit returns *)
-    | _ -> mk_type_annotation cx tparams_map reason annot
+    | _ -> mk_type_annotation cx tparams_map infer_tparams_map reason annot
 
-  and mk_type_available_annotation cx tparams_map (loc, annot) =
+  and mk_type_available_annotation cx tparams_map infer_tparams_map (loc, annot) =
     let node_cache = Context.node_cache cx in
     let (((_, t), _) as annot_ast) =
       match (Node_cache.get_annotation node_cache loc, annot) with
@@ -2235,18 +2275,18 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
         (* If the type we're converting is in the tparams map, we prefer that over
            the node cache *)
-        convert cx tparams_map annot
+        convert cx tparams_map infer_tparams_map annot
       | (Some (_, node), _) ->
         Debug_js.Verbose.print_if_verbose_lazy
           cx
           (lazy [spf "Annotation cache hit at %s" (ALoc.debug_to_string loc)]);
         node
-      | (None, _) -> convert cx tparams_map annot
+      | (None, _) -> convert cx tparams_map infer_tparams_map annot
     in
     (t, (loc, annot_ast))
 
-  and mk_function_type_annotation cx tparams_map (loc, f) =
-    match convert cx tparams_map (loc, Ast.Type.Function f) with
+  and mk_function_type_annotation cx tparams_map infer_tparams_map (loc, f) =
+    match convert cx tparams_map infer_tparams_map (loc, Ast.Type.Function f) with
     | ((_, function_type), Ast.Type.Function f_ast) -> (function_type, (loc, f_ast))
     | _ -> assert false
 
@@ -2268,19 +2308,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   (* Given the type of expression C and type arguments T1...Tn, return the type of
      values described by C<T1,...,Tn>, or C when there are no type arguments. *)
-  and mk_nominal_type cx reason tparams_map (c, targs) =
+  and mk_nominal_type cx reason tparams_map infer_tparams_map (c, targs) =
     let annot_loc = aloc_of_reason reason in
     match targs with
     | None ->
       let reason = annot_reason ~annot_loc reason in
       (ConsGen.mk_instance cx reason c, None)
     | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-      let (targs, targs_ast) = convert_list cx tparams_map targs in
+      let (targs, targs_ast) = convert_list cx tparams_map infer_tparams_map targs in
       ( typeapp_annot annot_loc c targs,
         Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
       )
 
-  and mk_type_param cx tparams_map ~from_infer_type (loc, type_param) =
+  and mk_type_param cx tparams_map infer_tparams_map ~from_infer_type (loc, type_param) =
     let node_cache = Context.node_cache cx in
     match Node_cache.get_tparam node_cache loc with
     | Some x -> x
@@ -2321,7 +2361,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             let t = DefT (reason, infer_trust cx, MixedT Mixed_everything) in
             (t, Ast.Type.Missing (loc, t))
           | Ast.Type.Available (bound_loc, u) ->
-            let (bound, bound_ast) = mk_type cx tparams_map reason (Some u) in
+            let (bound, bound_ast) = mk_type cx tparams_map infer_tparams_map reason (Some u) in
             let bound_ast =
               match bound_ast with
               | Some ast -> Ast.Type.Available (bound_loc, ast)
@@ -2333,7 +2373,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           match default with
           | None -> (None, None)
           | Some default ->
-            let (t, default_ast) = mk_type cx tparams_map reason (Some default) in
+            let (t, default_ast) = mk_type cx tparams_map infer_tparams_map reason (Some default) in
             ConsGen.subtype_check cx t bound;
             (Some t, default_ast)
         in
@@ -2360,10 +2400,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   (* take a list of AST type param declarations,
      do semantic checking and create types for them. *)
-  and mk_type_param_declarations cx ?(tparams_map = Subst_name.Map.empty) tparams =
+  and mk_type_param_declarations
+      cx ?(tparams_map = Subst_name.Map.empty) ?(infer_tparams_map = ALocMap.empty) tparams =
     let add_type_param (tparams, tparams_map, bounds_map, rev_asts) (loc, type_param) =
       let (ast, ({ name; bound; _ } as tparam), t) =
-        mk_type_param cx tparams_map ~from_infer_type:false (loc, type_param)
+        mk_type_param cx tparams_map infer_tparams_map ~from_infer_type:false (loc, type_param)
       in
 
       let tparams = tparam :: tparams in
@@ -2397,19 +2438,20 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     else
       Env.var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
 
-  and mk_interface_super cx tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
+  and mk_interface_super
+      cx tparams_map infer_tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
     let lookup_mode = Env.LookupMode.ForType in
     let (c, id) = convert_qualification ~lookup_mode cx "extends" id in
     let (typeapp, targs) =
       match targs with
       | None -> ((loc, c, None), None)
       | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-        let (ts, targs_ast) = convert_list cx tparams_map targs in
+        let (ts, targs_ast) = convert_list cx tparams_map infer_tparams_map targs in
         ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
     in
     (typeapp, (loc, { Ast.Type.Generic.id; targs; comments }))
 
-  and add_interface_properties cx ~this tparams_map properties s =
+  and add_interface_properties cx ~this tparams_map infer_tparams_map properties s =
     let open Class_type_sig in
     let open Class_type_sig.Types in
     let (x, rev_prop_asts) =
@@ -2417,7 +2459,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         Ast.Type.Object.(
           fun (x, rev_prop_asts) -> function
             | CallProperty (loc, { CallProperty.value; static; comments }) ->
-              let (t, value) = mk_function_type_annotation cx tparams_map value in
+              let (t, value) = mk_function_type_annotation cx tparams_map infer_tparams_map value in
               ( append_call ~static t x,
                 CallProperty (loc, { CallProperty.value; static; comments }) :: rev_prop_asts
               )
@@ -2427,8 +2469,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
             | Indexer (loc, indexer) ->
               let { Indexer.key; value; static; variance; _ } = indexer in
-              let (((_, k), _) as key) = convert cx tparams_map key in
-              let (((_, v), _) as value) = convert cx tparams_map value in
+              let (((_, k), _) as key) = convert cx tparams_map infer_tparams_map key in
+              let (((_, v), _) as value) = convert cx tparams_map infer_tparams_map value in
               let polarity = polarity cx variance in
               ( add_indexer ~static polarity ~key:k ~value:v x,
                 Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
@@ -2462,7 +2504,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
                       Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
                     ) ->
-                    let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
+                    let (fsig, func_ast) = mk_func_sig cx tparams_map infer_tparams_map loc func in
                     let this_write_loc = None in
                     let ft = Func_type_sig.methodtype cx this_write_loc this fsig in
                     let append_method =
@@ -2488,7 +2530,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
                       Ast.Type.Object.Property.Init value
                     ) ->
-                    let (((_, t), _) as value_ast) = convert cx tparams_map value in
+                    let (((_, t), _) as value_ast) =
+                      convert cx tparams_map infer_tparams_map value
+                    in
                     let t =
                       if optional then
                         TypeUtil.optional t
@@ -2518,7 +2562,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                       Ast.Type.Object.Property.Get (get_loc, func)
                     ) ->
                     Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
-                    let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
+                    let (fsig, func_ast) = mk_func_sig cx tparams_map infer_tparams_map loc func in
                     let prop_t =
                       TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
                     in
@@ -2539,7 +2583,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                       Ast.Type.Object.Property.Set (set_loc, func)
                     ) ->
                     Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
-                    let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
+                    let (fsig, func_ast) = mk_func_sig cx tparams_map infer_tparams_map loc func in
                     let prop_t =
                       match fsig with
                       | { Func_type_sig.Types.tparams = None; fparams; _ } ->
@@ -2575,7 +2619,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 slot
               in
               if name = "call" then
-                let (((_, t), _) as value) = convert cx tparams_map value in
+                let (((_, t), _) as value) = convert cx tparams_map infer_tparams_map value in
                 let t =
                   if optional then
                     TypeUtil.optional t
@@ -2601,16 +2645,17 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     (x, List.rev rev_prop_asts)
 
   and optional_indexed_access
-      cx loc ~tparams_map { T.OptionalIndexedAccess.indexed_access; optional } =
+      cx loc ~tparams_map ~infer_tparams_map { T.OptionalIndexedAccess.indexed_access; optional } =
     let reason = mk_reason (RIndexedAccess { optional }) loc in
     let { T.IndexedAccess._object; index; comments } = indexed_access in
-    let (((_, index_type), _) as index) = convert cx tparams_map index in
+    let (((_, index_type), _) as index) = convert cx tparams_map infer_tparams_map index in
     let index_reason = reason_of_t index_type in
     let (object_t, object_ast) =
       match _object with
-      | (loc, T.OptionalIndexedAccess ia) -> optional_indexed_access cx loc ~tparams_map ia
+      | (loc, T.OptionalIndexedAccess ia) ->
+        optional_indexed_access cx loc ~tparams_map ~infer_tparams_map ia
       | _ ->
-        let (((_, object_t), _) as object_ast) = convert cx tparams_map _object in
+        let (((_, object_t), _) as object_ast) = convert cx tparams_map infer_tparams_map _object in
         (object_t, object_ast)
     in
     let lhs_reason = reason_of_t object_t in
@@ -2652,11 +2697,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       )
     )
 
-  let mk_super cx tparams_map loc c targs =
+  let mk_super cx tparams_map infer_tparams_map loc c targs =
     match targs with
     | None -> ((loc, c, None), None)
     | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-      let (ts, targs_ast) = convert_list cx tparams_map targs in
+      let (ts, targs_ast) = convert_list cx tparams_map infer_tparams_map targs in
       ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
   let mk_interface_sig cx intf_loc reason decl =
@@ -2679,7 +2724,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let (iface_sig, extends_ast) =
       let id = Context.make_aloc_id cx id_loc in
       let (extends, extends_ast) =
-        extends |> Base.List.map ~f:(mk_interface_super cx tparams_map) |> List.split
+        extends |> Base.List.map ~f:(mk_interface_super cx tparams_map ALocMap.empty) |> List.split
       in
       let super =
         let callable =
@@ -2701,6 +2746,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       add_interface_properties
         cx
         tparams_map
+        ALocMap.empty
         properties
         ~this:(implicit_mixed_this reason)
         iface_sig
@@ -2730,7 +2776,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         convert_qualification ~lookup_mode cx "mixins" id
       in
       let props_bag = ConsGen.mixin cx r i in
-      let (t, targs) = mk_super cx tparams_map loc props_bag targs in
+      let (t, targs) = mk_super cx tparams_map ALocMap.empty loc props_bag targs in
       (t, (loc, { Ast.Type.Generic.id; targs; comments }))
     in
     let is_object_builtin_libdef (loc, { Ast.Identifier.name; comments = _ }) =
@@ -2766,7 +2812,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
             let lookup_mode = Env.LookupMode.ForValue in
             let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
-            let (t, targs) = mk_super cx tparams_map_with_this loc i targs in
+            let (t, targs) = mk_super cx tparams_map_with_this ALocMap.empty loc i targs in
             (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
           | None -> (None, None)
         in
@@ -2788,7 +2834,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                        match targs with
                        | None -> ((loc, c, None), None)
                        | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                         let (ts, targs_ast) = convert_list cx tparams_map_with_this targs in
+                         let (ts, targs_ast) =
+                           convert_list cx tparams_map_with_this ALocMap.empty targs
+                         in
                          ( (loc, c, Some ts),
                            Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                          )
@@ -2819,6 +2867,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         add_interface_properties
           cx
           tparams_map_with_this
+          ALocMap.empty
           properties
           ~this:(implicit_mixed_this (reason_of_t this_t))
           iface_sig
@@ -2846,4 +2895,32 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           comments;
         }
       )
+
+  (* Propagation of infer_tparams_map is an implementation detail of this module, so we shadow them.
+     External callers should never need to pass such map,
+     since infer types on their own are meaningless. *)
+
+  let convert cx tparams_map = convert cx tparams_map ALocMap.empty
+
+  let convert_list cx tparams_map = convert_list cx tparams_map ALocMap.empty
+
+  let mk_super cx tparams_map = mk_super cx tparams_map ALocMap.empty
+
+  let mk_type_annotation cx tparams_map = mk_type_annotation cx tparams_map ALocMap.empty
+
+  let mk_type_available_annotation cx tparams_map =
+    mk_type_available_annotation cx tparams_map ALocMap.empty
+
+  let mk_return_type_annotation cx tparams_map =
+    mk_return_type_annotation cx tparams_map ALocMap.empty
+
+  let mk_function_type_annotation cx tparams_map =
+    mk_function_type_annotation cx tparams_map ALocMap.empty
+
+  let mk_nominal_type cx reason tparams_map = mk_nominal_type cx reason tparams_map ALocMap.empty
+
+  let mk_type_param cx tparams_map = mk_type_param cx tparams_map ALocMap.empty
+
+  let mk_type_param_declarations cx ?tparams_map =
+    mk_type_param_declarations cx ?tparams_map ~infer_tparams_map:ALocMap.empty
 end
