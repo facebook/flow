@@ -28,7 +28,7 @@ let single_threaded_call_with_worker_id job merge neutral next =
          there is no hope for ever getting out of this state *)
       failwith "stuck!"
     | Hh_bucket.Job l ->
-      let res = job neutral l in
+      let res = job l in
       acc := merge res !acc;
       x := next ()
     | Hh_bucket.Done -> ()
@@ -36,12 +36,8 @@ let single_threaded_call_with_worker_id job merge neutral next =
   !acc
 
 let multi_threaded_call
-    (type a b c)
-    workers
-    (job : c -> a -> b)
-    (merge : b -> c -> c)
-    (neutral : c)
-    (next : a Hh_bucket.next) =
+    (type a b c) workers (job : a -> b) (merge : b -> c -> c) (neutral : c) (next : a Hh_bucket.next)
+    =
   let acc = ref neutral in
   let merge_with_acc =
     (* Why do we need a lock? Well, we don't really know what is inside the merge function, and if
@@ -75,7 +71,7 @@ let multi_threaded_call
     | None -> Lwt.return idle_start_wall_time
     | Some bucket ->
       Measure.sample "worker_idle" (Unix.gettimeofday () -. idle_start_wall_time);
-      let%lwt result = WorkerController.call worker (fun xl -> job neutral xl) bucket in
+      let%lwt result = WorkerController.call worker (fun xl -> job xl) bucket in
       let%lwt () = merge_with_acc result in
       (* Wait means "ask again after a worker has finished and has merged its result". So now that
          * we've merged our response, let's wake any other workers which are waiting for work *)
@@ -137,6 +133,16 @@ let call workers ~job ~merge ~neutral ~next =
         is_busy := false;
         Lwt.return_unit]
   )
+
+let fold workers ~job ~merge ~neutral ~next =
+  let job = List.fold_left job neutral in
+  call workers ~job ~merge ~neutral ~next
+
+let iter =
+  let merge () () = () in
+  fun workers ~job ~next ->
+    let job = List.iter job in
+    call workers ~job ~neutral:() ~merge ~next
 
 type worker = WorkerController.worker
 

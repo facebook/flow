@@ -216,7 +216,7 @@ let index ~workers ~reader parsed :
   let%lwt (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove, _count) =
     MultiWorkerLwt.call
       workers
-      ~job:(fun _neutral -> job ~reader)
+      ~job:(job ~reader)
       ~neutral:([], [], [], [], 0)
       ~merge:
         (fun (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove, count)

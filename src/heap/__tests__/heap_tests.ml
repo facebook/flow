@@ -73,7 +73,7 @@ let skip_list_test workers _ctxt =
 
   let file_set = alloc prepare_write_sklist in
 
-  let create_files () par_id =
+  let create_files par_id =
     let filenames = Array.init files_per_worker (mk_filename par_id) in
     let prepare_create_file key =
       let+ filename = prepare_write_string key
@@ -86,7 +86,7 @@ let skip_list_test workers _ctxt =
     alloc (prepare_iter prepare_create_file filenames)
   in
 
-  let add_files () par_id =
+  let add_files par_id =
     (* create nodes and add to set *)
     let files =
       Array.init files_per_worker (fun i -> Option.get (Files.get (mk_filename par_id i)))
@@ -100,23 +100,23 @@ let skip_list_test workers _ctxt =
     alloc (prepare_iter prepare_add_file files)
   in
 
-  let remove_files () par_id =
+  let remove_files par_id =
     for i = 0 to files_per_worker - 1 do
       let file = Option.get (Files.get (mk_filename par_id i)) in
       assert (file_set_remove file_set file)
     done
   in
 
-  let setup_add_delete () par_id = if par_id mod 2 == 0 then add_files () par_id in
+  let setup_add_delete par_id = if par_id mod 2 == 0 then add_files par_id in
 
-  let add_delete m () par_id =
+  let add_delete m par_id =
     if par_id mod 2 == m then
-      remove_files () par_id
+      remove_files par_id
     else
-      add_files () par_id
+      add_files par_id
   in
 
-  let teardown_add_delete () par_id = if par_id mod 2 == 0 then remove_files () par_id in
+  let teardown_add_delete par_id = if par_id mod 2 == 0 then remove_files par_id in
 
   let run_par =
     let merge () () = () in

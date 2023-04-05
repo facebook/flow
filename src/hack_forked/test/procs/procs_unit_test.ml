@@ -7,16 +7,14 @@
 
 open Procs_test_utils
 
-let sum acc elements = List.fold_left (fun acc elem -> acc + elem) acc elements
-
 let multi_worker_list workers () =
   let work = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13] in
   let expected = List.length work * (List.length work + 1) / 2 in
   let result =
     Lwt_main.run
-      (MultiWorkerLwt.call
+      (MultiWorkerLwt.fold
          (Some workers)
-         ~job:sum
+         ~job:( + )
          ~merge:( + )
          ~neutral:0
          ~next:(Bucket.make ~num_workers:20 work)
@@ -39,7 +37,7 @@ let multi_worker_bucket workers () =
   in
   let expected = buckets * (buckets + 1) / 2 in
   let result =
-    Lwt_main.run (MultiWorkerLwt.call (Some workers) ~job:( + ) ~merge:( + ) ~neutral:0 ~next)
+    Lwt_main.run (MultiWorkerLwt.call (Some workers) ~job:Fun.id ~merge:( + ) ~neutral:0 ~next)
   in
   Printf.printf "Got %d\n" result;
   result = expected
@@ -49,7 +47,7 @@ let multi_worker_of_n_buckets workers () =
   let split ~bucket = bucket + 1 in
   let expected = buckets * (buckets + 1) / 2 in
   Bucket.(
-    let do_work _ bucket =
+    let do_work bucket =
       assert (bucket.work = bucket.bucket + 1);
       bucket.work
     in

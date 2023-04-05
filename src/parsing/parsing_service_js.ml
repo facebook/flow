@@ -485,7 +485,7 @@ let parse
     workers
     next : results Lwt.t =
   let t = Unix.gettimeofday () in
-  let reducer =
+  let job =
     reducer
       ~worker_mutator
       ~reader
@@ -496,9 +496,7 @@ let parse
       ~noflow
       exported_module
   in
-  let%lwt results =
-    MultiWorkerLwt.call workers ~job:(List.fold_left reducer) ~neutral:empty_result ~merge ~next
-  in
+  let%lwt results = MultiWorkerLwt.fold workers ~job ~neutral:empty_result ~merge ~next in
   if profile then
     let t2 = Unix.gettimeofday () in
     let num_parsed = FilenameSet.cardinal results.parsed in
@@ -609,17 +607,16 @@ let ensure_parsed ~reader options workers files =
     MonitorRPC.status_update
       ~event:ServerStatus.(Parsing_progress { total = Some total; finished = start })
   in
+  let job acc fn =
+    if Parsing_heaps.Mutator_reader.has_ast ~reader fn then
+      acc
+    else
+      FilenameSet.add fn acc
+  in
   let%lwt files_missing_asts =
-    MultiWorkerLwt.call
+    MultiWorkerLwt.fold
       workers
-      ~job:
-        (List.fold_left (fun acc fn ->
-             if Parsing_heaps.Mutator_reader.has_ast ~reader fn then
-               acc
-             else
-               FilenameSet.add fn acc
-         )
-        )
+      ~job
       ~merge:FilenameSet.union
       ~neutral:FilenameSet.empty
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))

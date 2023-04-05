@@ -775,15 +775,15 @@ let commit_modules ~workers ~options dirty_modules =
         unchanged
       | _ -> Modulename.Set.add mname unchanged)
   in
-  let f ((unchanged, errmap) as acc) mname =
+  let job ((unchanged, errmap) as acc) mname =
     match mname with
     | Modulename.String name -> commit_haste acc mname name
     | Modulename.Filename key -> (commit_file unchanged mname key, errmap)
   in
   let%lwt (unchanged, duplicate_providers) =
-    MultiWorkerLwt.call
+    MultiWorkerLwt.fold
       workers
-      ~job:(List.fold_left f)
+      ~job
       ~neutral:(Modulename.Set.empty, SMap.empty)
       ~merge:(fun (a1, a2) (b1, b2) -> (Modulename.Set.union a1 b1, SMap.union a2 b2))
       ~next:(MultiWorkerLwt.next workers (Modulename.Set.elements dirty_modules))

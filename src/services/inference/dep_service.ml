@@ -86,11 +86,7 @@ open Utils_js
 *)
 let calc_unchanged_dependents =
   let module Heap = SharedMem.NewAPI in
-  let job acc ms =
-    (* The MultiWorker API is weird. All jobs get the `neutral` value as their
-     * accumulator argument. We can exploit this to return a set from workers
-     * while the server accumulates lists of sets. *)
-    assert (acc = []);
+  let job ms =
     let open Parsing_heaps in
     let acc = ref FilenameSet.empty in
     let iter_f file =
@@ -150,15 +146,14 @@ let file_dependencies ~reader file =
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
 let calc_partial_dependency_graph ~reader workers files ~parsed =
+  let job dependency_info file =
+    let dependencies = file_dependencies ~reader file in
+    FilenameMap.add file dependencies dependency_info
+  in
   let%lwt dependency_graph =
-    MultiWorkerLwt.call
+    MultiWorkerLwt.fold
       workers
-      ~job:
-        (List.fold_left (fun dependency_info file ->
-             let dependencies = file_dependencies ~reader file in
-             FilenameMap.add file dependencies dependency_info
-         )
-        )
+      ~job
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))

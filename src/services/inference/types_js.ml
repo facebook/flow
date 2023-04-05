@@ -130,20 +130,11 @@ let commit_modules ~options ~profiling ~workers ~duplicate_providers dirty_modul
 let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
   let mutator = Parsing_heaps.Resolved_requires_mutator.create transaction parsed_set in
+  let job =
+    Module_js.add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers
+  in
   with_memory_timer_lwt ~options "ResolveRequires" profiling (fun () ->
-      MultiWorkerLwt.call
-        workers
-        ~job:(fun () ->
-          List.iter
-            (Module_js.add_parsed_resolved_requires
-               ~mutator
-               ~reader
-               ~options
-               ~node_modules_containers
-            ))
-        ~neutral:()
-        ~merge:(fun () () -> ())
-        ~next:(MultiWorkerLwt.next workers parsed)
+      MultiWorkerLwt.iter workers ~job ~next:(MultiWorkerLwt.next workers parsed)
   )
 
 let error_set_of_internal_error file (loc, internal_error) =
@@ -2009,17 +2000,17 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
           (FilenameSet.union a1 b1, Modulename.Set.union a2 b2, Base.List.rev_append a3 b3)
         in
         let%lwt (parsed, dirty_modules_parsed, invalid_parsed_hashes) =
-          MultiWorkerLwt.call
+          MultiWorkerLwt.fold
             workers
-            ~job:(List.fold_left restore_parsed)
+            ~job:restore_parsed
             ~merge
             ~neutral
             ~next:(MultiWorkerLwt.next workers parsed_heaps)
         in
         let%lwt (unparsed, dirty_modules_unparsed, invalid_unparsed_hashes) =
-          MultiWorkerLwt.call
+          MultiWorkerLwt.fold
             workers
-            ~job:(List.fold_left restore_unparsed)
+            ~job:restore_unparsed
             ~merge
             ~neutral
             ~next:(MultiWorkerLwt.next workers unparsed_heaps)
@@ -2041,9 +2032,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
         in
         Parsing_heaps.Saved_state_mutator.record_not_found master_mutator deleted_heaps;
         let%lwt dirty_modules_deleted =
-          MultiWorkerLwt.call
+          MultiWorkerLwt.fold
             workers
-            ~job:(List.fold_left delete_unused)
+            ~job:delete_unused
             ~merge:Modulename.Set.union
             ~neutral:Modulename.Set.empty
             ~next:(MultiWorkerLwt.next workers (FilenameSet.elements deleted_heaps))

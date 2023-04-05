@@ -587,17 +587,11 @@ end = struct
   (* Denormalize the data for all the unparsed files *)
   let denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps =
     let next = MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers unparsed_heaps in
-    MultiWorkerLwt.call
-      workers
-      ~job:
-        (List.fold_left (fun acc (relative_fn, unparsed_file_data) ->
-             let fn = denormalize_file_key_nocache ~root relative_fn in
-             (fn, unparsed_file_data) :: acc
-         )
-        )
-      ~neutral:[]
-      ~merge:List.rev_append
-      ~next
+    let job acc (relative_fn, unparsed_file_data) =
+      let fn = denormalize_file_key_nocache ~root relative_fn in
+      (fn, unparsed_file_data) :: acc
+    in
+    MultiWorkerLwt.fold workers ~job ~neutral:[] ~merge:List.rev_append ~next
 
   let denormalize_package_heaps ~denormalizer package_heaps =
     Base.List.map

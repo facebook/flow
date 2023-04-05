@@ -331,7 +331,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
 
   let reporter = C.reporter
 
-  let pre_check_job ~reader ~options acc roots =
+  let pre_check_job ~reader ~options roots =
     let state = C.prepass_init () in
     let options = C.mod_prepass_options options in
     let master_cx = Context_heaps.find_master () in
@@ -346,7 +346,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
           in
           FilenameMap.add file (Ok result) acc
         | Error e -> FilenameMap.add file (Error e) acc)
-      acc
+      FilenameMap.empty
       roots
 
   let merge_and_check env workers options profiling roots ~iteration =
@@ -563,8 +563,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
             let%lwt result =
               MultiWorkerLwt.call
                 workers
-                ~job:(fun _c file_key ->
-                  untyped_runner_job ~mk_ccx ~visit ~abstract_reader file_key)
+                ~job:(untyped_runner_job ~mk_ccx ~visit ~abstract_reader)
                 ~neutral:[]
                 ~merge:List.rev_append
                 ~next
@@ -629,7 +628,7 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
         let%lwt result =
           MultiWorkerLwt.call
             workers
-            ~job:(fun _c file_key -> untyped_runner_job ~visit ~mk_ccx ~abstract_reader file_key)
+            ~job:(untyped_runner_job ~visit ~mk_ccx ~abstract_reader)
             ~neutral:[]
             ~merge:List.rev_append
             ~next

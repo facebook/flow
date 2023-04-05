@@ -527,9 +527,7 @@ let merge_job ~mutator ~reader ~options ~job =
     let (diff, result) = job ~mutator ~options ~reader component in
     (leader, diff, result) :: acc
   in
-  fun acc ->
-    assert (acc = []);
-    List.fold_left f []
+  List.fold_left f []
 
 let merge_runner
     ~job ~mutator ~reader ~options ~workers ~sig_dependency_graph ~components ~recheck_set =

@@ -27,10 +27,10 @@ let rec job_helper ~check ~options ~start_time acc = function
     in
     job_helper ~check ~options ~start_time ((file, result) :: acc) rest
 
-let mk_job ~mk_check ~options () acc files =
+let mk_job ~mk_check ~options () files =
   let start_time = Unix.gettimeofday () in
   let check = mk_check () in
-  job_helper ~check ~options ~start_time acc files
+  job_helper ~check ~options ~start_time [] files
 
 (** A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
   when a bucket times out *)
