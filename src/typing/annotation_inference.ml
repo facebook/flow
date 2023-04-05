@@ -384,13 +384,15 @@ module rec ConsGen : S = struct
    *)
   let rec ensure_annot_resolved cx reason id =
     let module A = Type.AConstraint in
-    match Context.find_avar cx id with
-    | A.Annot_resolved -> get_fully_resolved_type cx id
-    | A.Annot_unresolved _ ->
+    match Context.find_avar_opt cx id with
+    | None
+    | Some A.Annot_resolved ->
+      get_fully_resolved_type cx id
+    | Some (A.Annot_unresolved _) ->
       let t = error_recursive cx reason in
       resolve_id cx reason id t;
       t
-    | A.Annot_op { id = dep_id; _ } ->
+    | Some (A.Annot_op { id = dep_id; _ }) ->
       let dep_constraint = Context.find_avar cx dep_id in
       A.update_deps_of_constraint dep_constraint ~f:(fun deps ->
           ISet.filter (fun id2 -> id <> id2) deps
@@ -453,8 +455,9 @@ module rec ConsGen : S = struct
       error_recursive cx reason
     else
       let module A = Type.AConstraint in
-      match Context.find_avar cx id with
-      | A.Annot_resolved ->
+      match Context.find_avar_opt cx id with
+      | None
+      | Some A.Annot_resolved ->
         (* [id] may refer to a lazily resolved constraint (e.g. created through
          * [mk_lazy_tvar]). To protect against trying to force recursive lazy
          * structures, we introduce a lazy indirection around the resulting
@@ -475,8 +478,8 @@ module rec ConsGen : S = struct
             )
         in
         mk_sig_tvar cx (AConstraint.reason_of_op op) resolved
-      | A.Annot_unresolved _
-      | A.Annot_op _ ->
+      | Some (A.Annot_unresolved _)
+      | Some (A.Annot_op _) ->
         let fresh_id = Avar.constrained cx op id in
         OpenT (reason, fresh_id)
 

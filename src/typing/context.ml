@@ -1041,17 +1041,9 @@ let speculation_id cx =
 
 let add_avar cx id node = cx.ccx.annot_graph <- IMap.add id node cx.ccx.annot_graph
 
-let find_avar_exn cx id = IMap.find id cx.ccx.annot_graph
+let find_avar cx id = IMap.find id cx.ccx.annot_graph
 
-let find_avar cx id =
-  match IMap.find_opt id cx.ccx.annot_graph with
-  | Some t -> t
-  | None ->
-    (* When an id is missing in the annot graph, then it _must_ be resolved and
-     * part of the type graph. *)
-    let t = Type.AConstraint.Annot_resolved in
-    add_avar cx id t;
-    t
+let find_avar_opt cx id = IMap.find_opt id cx.ccx.annot_graph
 
 let iter_annot_dependent_set cx f set =
   ISet.iter
