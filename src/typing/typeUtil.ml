@@ -558,6 +558,8 @@ let rec mod_loc_of_virtual_use_op f =
     | GetProperty reason -> GetProperty (mod_reason reason)
     | IndexedTypeAccess { _object; index } ->
       IndexedTypeAccess { _object = mod_reason _object; index = mod_reason index }
+    | InferBoundCompatibilityCheck { bound; infer } ->
+      InferBoundCompatibilityCheck { bound = mod_reason bound; infer = mod_reason infer }
     | ConditionalTypeEval { check_type_reason; extends_type_reason } ->
       ConditionalTypeEval
         {

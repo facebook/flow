@@ -529,6 +529,12 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
             | Op (GetProperty prop) -> `Root (prop, None, [text "Cannot get "; desc prop])
             | Op (IndexedTypeAccess { _object; index }) ->
               `Root (index, None, [text "Cannot access "; desc index; text " on "; desc _object])
+            | Op (InferBoundCompatibilityCheck { bound; infer }) ->
+              `Root
+                ( bound,
+                  None,
+                  [text "Cannot use "; desc bound; text " as the bound of infer type "; desc infer]
+                )
             | Op (ConditionalTypeEval { check_type_reason; extends_type_reason }) ->
               `Root
                 ( check_type_reason,

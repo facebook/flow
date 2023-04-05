@@ -56,6 +56,9 @@ module type S = sig
          method private extends_in_infer_type :
            (L.t, L.t) Flow_ast.Type.t -> (L.t, L.t) Flow_ast.Type.t
 
+         method private binding_infer_type_identifier :
+           (L.t, L.t) Flow_ast.Identifier.t -> (L.t, L.t) Flow_ast.Identifier.t
+
          method private lambda :
            is_arrow:bool ->
            fun_loc:L.t ->

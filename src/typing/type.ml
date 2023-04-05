@@ -343,6 +343,10 @@ module rec TypeTerm : sig
         op: 'loc virtual_reason;
         body: 'loc virtual_reason;
       }
+    | InferBoundCompatibilityCheck of {
+        bound: 'loc virtual_reason;
+        infer: 'loc virtual_reason;
+      }
     | Internal of internal_use_op
     | JSXCreateElement of {
         op: 'loc virtual_reason;
@@ -3522,6 +3526,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | GeneratorYield { value = op }
   | GetProperty op
   | IndexedTypeAccess { index = op; _ }
+  | InferBoundCompatibilityCheck { bound = op; _ }
   | ConditionalTypeEval { check_type_reason = op; _ }
   | JSXCreateElement { op; _ }
   | ReactCreateElementCall { op; _ }
@@ -3664,6 +3669,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | GeneratorYield _ -> "GeneratorYield"
   | GetProperty _ -> "GetProperty"
   | IndexedTypeAccess _ -> "IndexedTypeAccess"
+  | InferBoundCompatibilityCheck _ -> "InferBoundCompatibilityCheck"
   | ConditionalTypeEval _ -> "ConditionalTypeEval"
   | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
   | JSXCreateElement _ -> "JSXCreateElement"

@@ -403,23 +403,55 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         let (((_, check_t), _) as check_type) =
           convert cx tparams_map infer_tparams_map check_type
         in
-        let (((_, extends_t), _) as extends_type) =
-          convert cx tparams_map infer_tparams_map extends_type
-        in
         let hoisted_infer_types = Infer_type_hoister.hoist_infer_types extends_type in
-        let additional_true_type_tparams_map =
-          hoisted_infer_types
-          |> Base.List.map
-               ~f:(fun
-                    ( (_, t),
-                      {
-                        Infer.tparam = (_, { TypeParam.name = (_, { Ast.Identifier.name; _ }); _ });
-                        comments = _;
-                      }
-                    )
-                  -> (Subst_name.Name name, t)
-             )
-          |> Subst_name.Map.of_list
+        let (tparams_rev, additional_true_type_tparams_map, extends_infer_tparams_map, _) =
+          Base.List.fold
+            hoisted_infer_types
+            ~init:([], Subst_name.Map.empty, ALocMap.empty, Subst_name.Map.empty)
+            ~f:(fun
+                 (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
+                 (_, { Infer.tparam; _ })
+               ->
+              let (tparam_tast, tparam, t) =
+                mk_type_param cx ~from_infer_type:true tparams_map ALocMap.empty tparam
+              in
+              let subst_name = tparam.name in
+              let ( tparams_rev,
+                    additional_true_type_tparams_map,
+                    infer_tparams_map,
+                    infer_bounds_map
+                  ) =
+                match Subst_name.Map.find_opt subst_name infer_bounds_map with
+                | Some existing_bound ->
+                  Flow.unify
+                    cx
+                    ~use_op:
+                      (Op
+                         (InferBoundCompatibilityCheck
+                            { bound = reason_of_t tparam.bound; infer = reason_of_t t }
+                         )
+                      )
+                    tparam.bound
+                    existing_bound;
+                  let t = Subst_name.Map.find subst_name additional_true_type_tparams_map in
+                  ( tparams_rev,
+                    additional_true_type_tparams_map,
+                    ALocMap.add (fst tparam_tast) (tparam_tast, t) infer_tparams_map,
+                    infer_bounds_map
+                  )
+                | None ->
+                  ( tparam :: tparams_rev,
+                    Subst_name.Map.add subst_name t additional_true_type_tparams_map,
+                    ALocMap.add (fst tparam_tast) (tparam_tast, t) infer_tparams_map,
+                    Subst_name.Map.add subst_name tparam.bound infer_bounds_map
+                  )
+              in
+              (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
+          )
+        in
+        let tparams = List.rev tparams_rev in
+        let (((_, extends_t), _) as extends_type) =
+          convert cx tparams_map extends_infer_tparams_map extends_type
         in
         let (((_, true_t), _) as true_type) =
           convert
@@ -430,32 +462,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         in
         let (((_, false_t), _) as false_type) =
           convert cx tparams_map infer_tparams_map false_type
-        in
-        let tparams =
-          Base.List.map
-            hoisted_infer_types
-            ~f:(fun
-                 ( _,
-                   {
-                     Infer.tparam =
-                       (_, { TypeParam.name = (name_loc, { Ast.Identifier.name; _ }); bound; _ });
-                     comments = _;
-                   }
-                 )
-               ->
-              {
-                reason = mk_annot_reason (RType (OrdinaryName name)) name_loc;
-                name = Subst_name.Name name;
-                bound =
-                  (match bound with
-                  | Ast.Type.Missing (_, t)
-                  | Ast.Type.Available (_, ((_, t), _)) ->
-                    t);
-                polarity = Polarity.Neutral;
-                default = None;
-                is_this = false;
-              }
-          )
         in
         let t =
           let reason = mk_reason RConditionalType loc in
@@ -482,7 +488,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           t_ast
     | (loc, Infer { Infer.tparam; comments }) as t_ast ->
       if Context.conditional_type cx then
-        let (_, { TypeParam.name = (name_loc, _); _ }) = tparam in
+        let (tparam_loc, { TypeParam.name = (name_loc, _); _ }) = tparam in
         let { Loc_env.var_info; _ } = Context.environment cx in
         match
           Env_api.EnvMap.find_opt (Env_api.OrdinaryNameLoc, name_loc) var_info.Env_api.env_entries
@@ -492,9 +498,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           let t = AnyT.error (mk_reason (RCustom "invalid infer type") loc) in
           ((loc, t), Infer { Infer.tparam; comments })
         | _ ->
-          let (tparam, _, t) =
-            mk_type_param cx ~from_infer_type:true tparams_map infer_tparams_map tparam
-          in
+          let (tparam, t) = ALocMap.find tparam_loc infer_tparams_map in
           ((loc, t), Infer { Infer.tparam; comments })
       else
         error_type

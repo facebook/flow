@@ -564,12 +564,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             bindings
             (fun () ->
               Base.List.iter tps ~f:(fun (_, { name; _ }) ->
-                  ignore @@ this#binding_type_identifier name
+                  ignore @@ this#binding_infer_type_identifier name
               );
               in_tparam_scope ())
             ()
         ) else
           in_tparam_scope ()
+
+      method private binding_infer_type_identifier name = this#binding_type_identifier name
 
       method! conditional_type t =
         let open Ast.Type.Conditional in

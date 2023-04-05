@@ -2058,6 +2058,20 @@ module Make
           { env_state with in_conditional_type_extends = saved_in_conditional_type_extends };
         t'
 
+      method! binding_infer_type_identifier ident =
+        let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
+        (* Infer types can have duplicate names.
+           e.g. type X = [string,string] extends [infer T, infer T] ? T : empty;
+           Therefore, we will always add an assigning write. *)
+        let write_entries =
+          EnvMap.add_ordinary
+            loc
+            (Env_api.AssigningWrite (mk_reason (RType (OrdinaryName name)) loc))
+            env_state.write_entries
+        in
+        env_state <- { env_state with write_entries };
+        ident
+
       method! type_ t =
         match t with
         | ( loc,

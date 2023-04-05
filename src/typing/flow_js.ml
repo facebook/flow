@@ -7951,6 +7951,7 @@ struct
               | FunReturnStatement _
               | GetProperty _
               | IndexedTypeAccess _
+              | InferBoundCompatibilityCheck _
               | ConditionalTypeEval _
               | SetProperty _
               | UpdateProperty _
