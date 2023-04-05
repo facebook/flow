@@ -2944,7 +2944,7 @@ module AConstraint = struct
       which is similar to how we handle the above constraints, when that type
       variable is exported.
   *)
-  type constraints =
+  type t =
     | Annot_unresolved of {
         reason: Reason.t;
         mutable dependents: ISet.t;
@@ -3099,16 +3099,6 @@ module AConstraint = struct
     | Annot_unresolved _ -> failwith "to_annot_op_exn on unresolved"
     | Annot_resolved -> failwith "to_annot_op_exn on resolved"
     | Annot_op { op; _ } -> op
-
-  include Union_find.Make (struct
-    type t = constraints
-  end)
-
-  let new_root constraints = Root { rank = 0; constraints }
-
-  let fully_resolved_root = { rank = 0; constraints = Annot_resolved }
-
-  let fully_resolved_node = Root fully_resolved_root
 
   let deps_of_constraint = function
     | Annot_unresolved { dependents; _ } -> dependents

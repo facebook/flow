@@ -385,19 +385,15 @@ module rec ConsGen : S = struct
   let rec ensure_annot_resolved cx reason id =
     let module A = Type.AConstraint in
     match Context.find_avar cx id with
-    | (_, { A.constraints = A.Annot_resolved; _ }) -> get_fully_resolved_type cx id
-    | (_, { A.constraints = A.Annot_unresolved _; _ }) ->
+    | A.Annot_resolved -> get_fully_resolved_type cx id
+    | A.Annot_unresolved _ ->
       let t = error_recursive cx reason in
       resolve_id cx reason id t;
       t
-    | (root_id, { A.constraints = A.Annot_op { id = dep_id; _ }; _ }) ->
-      let (_, { A.constraints = dep_constraint; _ }) = Context.find_avar cx dep_id in
+    | A.Annot_op { id = dep_id; _ } ->
+      let dep_constraint = Context.find_avar cx dep_id in
       A.update_deps_of_constraint dep_constraint ~f:(fun deps ->
-          ISet.filter
-            (fun id2 ->
-              let (root_id2, _) = Context.find_avar cx id2 in
-              root_id <> root_id2)
-            deps
+          ISet.filter (fun id2 -> id <> id2) deps
       );
       let t = error_recursive cx reason in
       resolve_id cx reason id t;
@@ -440,10 +436,10 @@ module rec ConsGen : S = struct
       | Type.OpenT (_, id2) -> ensure_annot_resolved cx reason id2
       | _ -> t
     in
-    let (root_id1, root1) = Context.find_avar cx id in
-    Context.add_avar cx root_id1 A.fully_resolved_node;
-    Context.add_tvar cx root_id1 (C.fully_resolved_node t);
-    let dependents1 = deps_of_constraint root1.A.constraints in
+    let constraints1 = Context.find_avar cx id in
+    Context.add_avar cx id A.Annot_resolved;
+    Context.add_tvar cx id (C.fully_resolved_node t);
+    let dependents1 = deps_of_constraint constraints1 in
     resolve_dependent_set cx reason dependents1 t
 
   and resolve_dependent_set cx reason dependents t =
@@ -457,8 +453,7 @@ module rec ConsGen : S = struct
       error_recursive cx reason
     else
       let module A = Type.AConstraint in
-      let (_, { A.constraints; _ }) = Context.find_avar cx id in
-      match constraints with
+      match Context.find_avar cx id with
       | A.Annot_resolved ->
         (* [id] may refer to a lazily resolved constraint (e.g. created through
          * [mk_lazy_tvar]). To protect against trying to force recursive lazy

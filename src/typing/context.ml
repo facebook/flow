@@ -157,7 +157,7 @@ type component_t = {
   mutable env_value_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
   mutable env_type_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
-  mutable annot_graph: Type.AConstraint.node IMap.t;
+  mutable annot_graph: Type.AConstraint.t IMap.t;
   (* Used to power an autofix that takes the lower bounds of types where we emit missing-local-annot
    * and turn them into annotations. This has to exist outside of the tvar graph because we will
    * eventually not use unresolved tvars to represent unannotated parameters. We use an ALocFuzzyMap
@@ -1041,32 +1041,22 @@ let speculation_id cx =
 
 let add_avar cx id node = cx.ccx.annot_graph <- IMap.add id node cx.ccx.annot_graph
 
-let find_avar_exn cx id =
-  let (annot_graph', root_id, constraints) = Type.AConstraint.find_root cx.ccx.annot_graph id in
-  cx.ccx.annot_graph <- annot_graph';
-  (root_id, constraints)
+let find_avar_exn cx id = IMap.find id cx.ccx.annot_graph
 
 let find_avar cx id =
-  try find_avar_exn cx id with
-  | Union_find.Tvar_not_found root_id ->
+  match IMap.find_opt id cx.ccx.annot_graph with
+  | Some t -> t
+  | None ->
     (* When an id is missing in the annot graph, then it _must_ be resolved and
      * part of the type graph. *)
-    add_avar cx root_id Type.AConstraint.fully_resolved_node;
-    (root_id, Type.AConstraint.fully_resolved_root)
+    let t = Type.AConstraint.Annot_resolved in
+    add_avar cx id t;
+    t
 
 let iter_annot_dependent_set cx f set =
-  let (_ : ISet.t) =
-    ISet.fold
-      (fun i seen ->
-        let (root_id, root) = find_avar cx i in
-        if ISet.mem root_id seen then
-          seen
-        else
-          let constraints = root.Type.AConstraint.constraints in
-          let op = Type.AConstraint.to_annot_op_exn constraints in
-          let () = f root_id op in
-          ISet.add root_id seen)
-      set
-      ISet.empty
-  in
-  ()
+  ISet.iter
+    (fun i ->
+      let constraints = find_avar cx i in
+      let op = Type.AConstraint.to_annot_op_exn constraints in
+      f i op)
+    set

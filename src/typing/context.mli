@@ -505,11 +505,11 @@ val speculation_state : t -> Speculation_state.t
 
 val speculation_id : t -> (int * int) option
 
-val add_avar : t -> int -> Type.AConstraint.node -> unit
+val add_avar : t -> int -> Type.AConstraint.t -> unit
 
-val find_avar : t -> int -> Type.ident * Type.AConstraint.root
+val find_avar : t -> int -> Type.AConstraint.t
 
-val find_avar_exn : t -> int -> Type.ident * Type.AConstraint.root
+val find_avar_exn : t -> int -> Type.AConstraint.t
 
 val iter_annot_dependent_set : t -> (int -> Type.AConstraint.op -> unit) -> ISet.t -> unit
 

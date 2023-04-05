@@ -9,7 +9,7 @@
 
 open Type.AConstraint
 
-let init_avar_with_id cx id constraint_ = Context.add_avar cx id (new_root constraint_)
+let init_avar_with_id cx id constraint_ = Context.add_avar cx id constraint_
 
 let init_avar cx constraint_ =
   let id = Reason.mk_id () in
@@ -23,6 +23,6 @@ let unresolved_with_id cx id reason =
 
 let constrained cx op id =
   let id' = init_avar cx (Annot_op { op; id; dependents = ISet.empty }) in
-  let (_, dep_root) = Context.find_avar cx id in
-  update_deps_of_constraint ~f:(ISet.add id') dep_root.constraints;
+  let dep_constraints = Context.find_avar cx id in
+  update_deps_of_constraint ~f:(ISet.add id') dep_constraints;
   id'
