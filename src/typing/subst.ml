@@ -50,12 +50,13 @@ let visitor =
 
     method! destructor cx { bound; free } t =
       match t with
-      | ConditionalType { tparams; extends_t; true_t; false_t } ->
+      | ConditionalType { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t }
+        ->
         let orig_bound = bound in
         let pole = Polarity.Neutral in
         let { bound; free } = self#type_ cx pole { bound; free } false_t in
         let { bound; free } =
-          Base.List.fold tparams ~init:{ bound; free } ~f:(fun { bound; free } tp ->
+          Base.List.fold infer_tparams ~init:{ bound; free } ~f:(fun { bound; free } tp ->
               self#type_param cx pole { free; bound = Subst_name.Set.add tp.name bound } tp
           )
         in
@@ -322,10 +323,20 @@ let substituter =
     method! destructor cx map_cx t =
       let (map, _, _) = map_cx in
       match t with
-      | ConditionalType { tparams; extends_t; true_t; false_t } ->
+      | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
+        let (distributive_tparam_name, map) =
+          match distributive_tparam_name with
+          | None -> (distributive_tparam_name, map)
+          | Some name ->
+            let (name, map) = avoid_capture map name in
+            (Some name, map)
+        in
         let false_t' = self#type_ cx (map, false, None) false_t in
         let (tparams_rev, map, changed) =
-          Base.List.fold tparams ~init:([], map, false) ~f:(fun (xs, map, changed) typeparam ->
+          Base.List.fold
+            infer_tparams
+            ~init:([], map, false)
+            ~f:(fun (xs, map, changed) typeparam ->
               let bound = self#type_ cx (map, false, None) typeparam.Type.bound in
               let (name, map) = avoid_capture map typeparam.name in
               ({ typeparam with bound; name } :: xs, map, changed || bound != typeparam.bound)
@@ -336,7 +347,8 @@ let substituter =
         if changed || extends_t != extends_t' || true_t != true_t' || false_t != false_t' then
           ConditionalType
             {
-              tparams = List.rev tparams_rev;
+              distributive_tparam_name;
+              infer_tparams = List.rev tparams_rev;
               extends_t = extends_t';
               true_t = true_t';
               false_t = false_t';

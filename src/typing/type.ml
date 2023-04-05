@@ -477,7 +477,8 @@ module rec TypeTerm : sig
     | ConditionalT of {
         use_op: use_op;
         reason: reason;
-        tparams: typeparam list;
+        distributive_tparam_name: Subst_name.t option;
+        infer_tparams: typeparam list;
         extends_t: t;
         true_t: t;
         false_t: t;
@@ -1392,7 +1393,8 @@ module rec TypeTerm : sig
         args: t list;
       }
     | ConditionalType of {
-        tparams: typeparam list;
+        distributive_tparam_name: Subst_name.t option;
+        infer_tparams: typeparam list;
         extends_t: t;
         true_t: t;
         false_t: t;

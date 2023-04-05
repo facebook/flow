@@ -57,44 +57,67 @@ References:
                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- distributive.js:8:4
+Error ---------------------------------------------------------------------------------------------- distributive.js:9:4
 
-Cannot cast `arrUnion` to `ToArray` because string [1] is incompatible with number [2] in array element. Arrays are
-invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-cast]
+Cannot cast `unionArr` to `ToArray` because: [incompatible-cast]
+ - Either string [1] is incompatible with number [2] in array element.
+ - Or number [3] is incompatible with string [4] in array element.
 
-   distributive.js:8:4
-   8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
+   distributive.js:9:4
+   9|   (unionArr: ToArray<string | number>); // error
          ^^^^^^^^
 
 References:
-   distributive.js:8:22
-   8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
-                           ^^^^^^ [1]
-   distributive.js:5:33
-   5|   declare const arrUnion: Array<number> | Array<string>;
-                                      ^^^^^^ [2]
+   distributive.js:4:33
+   4|   declare const unionArr: Array<string | number>;
+                                      ^^^^^^ [1]
+   distributive.js:9:31
+   9|   (unionArr: ToArray<string | number>); // error
+                                    ^^^^^^ [2]
+   distributive.js:4:42
+   4|   declare const unionArr: Array<string | number>;
+                                               ^^^^^^ [3]
+   distributive.js:9:22
+   9|   (unionArr: ToArray<string | number>); // error
+                           ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- distributive.js:8:4
+Error --------------------------------------------------------------------------------------------- distributive.js:20:4
 
-Cannot cast `arrUnion` to `ToArray` because number [1] is incompatible with string [2] in array element. Arrays are
-invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-cast]
+Cannot cast `new B()` to `A_or_C` because: [incompatible-cast]
+ - Either `B` [1] is incompatible with `C` [2].
+ - Or `B` [1] is incompatible with `A` [3].
 
-   distributive.js:8:4
-   8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
-         ^^^^^^^^
+   distributive.js:20:4
+   20|   (new B(): A_or_C); // error: B ~> A|C
+          ^^^^^^^ [1]
 
 References:
-   distributive.js:8:31
-   8|   (arrUnion: ToArray<string | number>); // error: TODO should be ok
-                                    ^^^^^^ [1]
-   distributive.js:5:49
-   5|   declare const arrUnion: Array<number> | Array<string>;
-                                                      ^^^^^^ [2]
+   distributive.js:18:29
+   18|   type A_or_C = Exclude<A|B|C, B>;
+                                   ^ [2]
+   distributive.js:18:25
+   18|   type A_or_C = Exclude<A|B|C, B>;
+                               ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- distributive.js:22:4
+
+Cannot cast `new D()` to `A_or_C` because: [incompatible-cast]
+ - Either `D` [1] is incompatible with `C` [2].
+ - Or `D` [1] is incompatible with `A` [3].
+
+   distributive.js:22:4
+   22|   (new D(): A_or_C); // error: D ~> A|C
+          ^^^^^^^ [1]
+
+References:
+   distributive.js:18:29
+   18|   type A_or_C = Exclude<A|B|C, B>;
+                                   ^ [2]
+   distributive.js:18:25
+   18|   type A_or_C = Exclude<A|B|C, B>;
+                               ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ duplicate_infer.js:1:89
@@ -656,4 +679,4 @@ References:
 
 
 
-Found 44 errors
+Found 45 errors

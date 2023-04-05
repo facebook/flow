@@ -250,13 +250,13 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | RestType (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ValuesType -> acc
   | CallType { from_maptype = _; args = ts } -> collect_of_types ?log_unresolved cx acc ts
-  | ConditionalType { tparams; extends_t; true_t; false_t } ->
+  | ConditionalType { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t } ->
     let acc =
       collect_of_types
         ?log_unresolved
         cx
         acc
-        (Base.List.map tparams ~f:(fun tparam -> tparam.Type.bound))
+        (Base.List.map infer_tparams ~f:(fun tparam -> tparam.Type.bound))
     in
     collect_of_types ?log_unresolved cx acc [extends_t; true_t; false_t]
   | TypeMap tmap -> collect_of_type_map ?log_unresolved cx acc tmap

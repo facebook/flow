@@ -1613,6 +1613,25 @@ end = struct
       return (Ty.Obj obj_t)
 
     and type_destructor_unevaluated ~env t d =
+      let env =
+        match d with
+        | T.ConditionalType { distributive_tparam_name = Some name; _ } ->
+          let reason_tparam = TypeUtil.reason_of_t t in
+          {
+            env with
+            Env.tparams_rev =
+              {
+                T.reason = reason_tparam;
+                name;
+                bound = T.MixedT.make reason_tparam (T.bogus_trust ());
+                polarity = Polarity.Neutral;
+                default = None;
+                is_this = false;
+              }
+              :: env.Env.tparams_rev;
+          }
+        | _ -> env
+      in
       let%bind ty = type__ ~env t in
       match d with
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
@@ -1640,10 +1659,13 @@ end = struct
       | T.CallType { from_maptype = _; args = ts } ->
         let%map tys = mapM (type__ ~env) ts in
         Ty.Utility (Ty.Call (ty, tys))
-      | T.ConditionalType { tparams; extends_t; true_t; false_t } ->
+      | T.ConditionalType
+          { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t } ->
         let check_type = ty in
-        let%bind extends_type = type__ ~env:{ env with Env.infer_tparams = tparams } extends_t in
-        let%bind true_type = type__ ~env:(List.fold_left Env.add_typeparam env tparams) true_t in
+        let%bind extends_type = type__ ~env:{ env with Env.infer_tparams } extends_t in
+        let%bind true_type =
+          type__ ~env:(List.fold_left Env.add_typeparam env infer_tparams) true_t
+        in
         let%map false_type = type__ ~env false_t in
         Ty.Conditional { check_type; extends_type; true_type; false_type }
       | T.TypeMap (T.ObjectMap t') ->

@@ -400,6 +400,40 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, Conditional { Conditional.check_type; extends_type; true_type; false_type; comments })
       as t_ast ->
       if Context.conditional_type cx then
+        let (distributive_tparam_name, tparams_map) =
+          match check_type with
+          | ( _,
+              Generic
+                {
+                  Generic.id =
+                    Generic.Identifier.Unqualified (name_loc, { Ast.Identifier.name; comments = _ });
+                  targs = None;
+                  comments = _;
+                }
+            ) ->
+            let subst_name = Subst_name.Name name in
+            (match Subst_name.Map.find_opt subst_name tparams_map with
+            | Some bound ->
+              let distributive_tparam =
+                {
+                  reason = mk_annot_reason (RType (OrdinaryName name)) name_loc;
+                  name = subst_name;
+                  bound;
+                  polarity = Polarity.Neutral;
+                  default = None;
+                  is_this = false;
+                }
+              in
+              let tparams_map =
+                Subst_name.Map.add
+                  subst_name
+                  (Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx distributive_tparam)
+                  tparams_map
+              in
+              (Some subst_name, tparams_map)
+            | None -> (None, tparams_map))
+          | _ -> (None, tparams_map)
+        in
         let (((_, check_t), _) as check_type) =
           convert cx tparams_map infer_tparams_map check_type
         in
@@ -452,7 +486,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
           )
         in
-        let tparams = List.rev tparams_rev in
+        let infer_tparams = List.rev tparams_rev in
         let (((_, extends_t), _) as extends_type) =
           convert cx tparams_map extends_infer_tparams_map extends_type
         in
@@ -477,7 +511,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                  }
               )
           in
-          let destructor = ConditionalType { tparams; extends_t; true_t; false_t } in
+          let destructor =
+            ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
+          in
           EvalT (check_t, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
         in
         ( (loc, t),

@@ -749,14 +749,27 @@ and dump_use_t_ (depth, tvars) cx t =
     | DebugPrintT _ -> p t
     | DebugSleepT _ -> p t
     | ElemT (_use_op, _reason, obj, _access) -> p ~extra:(spf "obj: %s" (kid obj)) t
-    | ConditionalT { tparams; extends_t; true_t; false_t; tout = (_, tout_id); _ } ->
+    | ConditionalT
+        {
+          distributive_tparam_name;
+          infer_tparams;
+          extends_t;
+          true_t;
+          false_t;
+          tout = (_, tout_id);
+          _;
+        } ->
       p
         ~extra:
           (spf
-             "[%s] extends %s ? %s : %s => %s"
+             "%s[%s] extends %s ? %s : %s => %s"
+             (Base.Option.value_map distributive_tparam_name ~default:"" ~f:(fun name ->
+                  spf "distributive over %s: " (Subst_name.string_of_subst_name name)
+              )
+             )
              (String.concat
                 "; "
-                (Base.List.map tparams ~f:(fun tp -> Subst_name.string_of_subst_name tp.name))
+                (Base.List.map infer_tparams ~f:(fun tp -> Subst_name.string_of_subst_name tp.name))
              )
              (kid extends_t)
              (kid true_t)

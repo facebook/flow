@@ -4177,14 +4177,82 @@ struct
         (**************)
         (* conditional type *)
         (**************)
-        | (check_t, ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout }) ->
+        | ( check_t,
+            ConditionalT
+              {
+                use_op;
+                reason;
+                distributive_tparam_name = Some name;
+                infer_tparams;
+                extends_t;
+                true_t;
+                false_t;
+                tout;
+              }
+          ) ->
+          let reason_tparam = reason_of_t check_t in
+          let reason_tapp = update_desc_new_reason (fun desc -> RPolyType desc) reason in
+          let subst t =
+            mk_typeapp_of_poly
+              cx
+              trace
+              ~use_op
+              ~reason_op:reason
+              ~reason_tapp
+              (Poly.generate_id ())
+              (aloc_of_reason reason_tparam)
+              (Nel.one
+                 {
+                   reason = reason_tparam;
+                   name;
+                   bound = MixedT.make reason_tparam (bogus_trust ());
+                   polarity = Polarity.Neutral;
+                   default = None;
+                   is_this = false;
+                 }
+              )
+              t
+              [check_t]
+          in
+          rec_flow
+            cx
+            trace
+            ( check_t,
+              ConditionalT
+                {
+                  use_op;
+                  reason;
+                  distributive_tparam_name = None;
+                  infer_tparams =
+                    Base.List.map infer_tparams ~f:(fun tparam ->
+                        { tparam with bound = subst tparam.bound }
+                    );
+                  extends_t = subst extends_t;
+                  true_t = subst true_t;
+                  false_t = subst false_t;
+                  tout;
+                }
+            )
+        | ( check_t,
+            ConditionalT
+              {
+                use_op;
+                reason;
+                distributive_tparam_name = None;
+                infer_tparams;
+                extends_t;
+                true_t;
+                false_t;
+                tout;
+              }
+          ) ->
           if
             Subst_name.Set.is_empty (Subst.free_var_finder cx check_t)
             && Subst_name.Set.is_empty
                  (Subst.free_var_finder
                     cx
                     ~bound:
-                      (tparams
+                      (infer_tparams
                       |> Base.List.map ~f:(fun tparam -> tparam.name)
                       |> Subst_name.Set.of_list
                       )
@@ -4197,7 +4265,7 @@ struct
                 trace
                 ~use_op
                 ~reason
-                ~tparams
+                ~tparams:infer_tparams
                 ~check_t
                 ~extends_t
                 ~true_t
@@ -6903,8 +6971,19 @@ struct
                 call_action = Funcalltype call;
                 return_hint = Type.hint_unavailable;
               }
-          | ConditionalType { tparams; extends_t; true_t; false_t } ->
-            ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout }
+          | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
+            ->
+            ConditionalT
+              {
+                use_op;
+                reason;
+                distributive_tparam_name;
+                infer_tparams;
+                extends_t;
+                true_t;
+                false_t;
+                tout;
+              }
           | TypeMap tmap -> MapTypeT (use_op, reason, tmap, OpenT tout)
           | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
           | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))

@@ -252,8 +252,20 @@ and mod_reason_of_use_t f = function
   | EnumExhaustiveCheckT { reason; check; incomplete_out; discriminant_after_check } ->
     EnumExhaustiveCheckT { reason = f reason; check; incomplete_out; discriminant_after_check }
   | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
-  | ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout } ->
-    ConditionalT { use_op; reason = f reason; tparams; extends_t; true_t; false_t; tout }
+  | ConditionalT
+      { use_op; reason; distributive_tparam_name; infer_tparams; extends_t; true_t; false_t; tout }
+    ->
+    ConditionalT
+      {
+        use_op;
+        reason = f reason;
+        distributive_tparam_name;
+        infer_tparams;
+        extends_t;
+        true_t;
+        false_t;
+        tout;
+      }
   | ExportNamedT (reason, tmap, export_kind, t_out) ->
     ExportNamedT (f reason, tmap, export_kind, t_out)
   | ExportTypeT (reason, name, t, t_out) -> ExportTypeT (f reason, name, t, t_out)
@@ -378,9 +390,21 @@ let rec util_use_op_of_use_t :
   match u with
   | UseT (op, t) -> util op (fun op -> UseT (op, t))
   | BindT (op, r, f) -> util op (fun op -> BindT (op, r, f))
-  | ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout } ->
+  | ConditionalT
+      { use_op; reason; distributive_tparam_name; infer_tparams; extends_t; true_t; false_t; tout }
+    ->
     util use_op (fun use_op ->
-        ConditionalT { use_op; reason; tparams; extends_t; true_t; false_t; tout }
+        ConditionalT
+          {
+            use_op;
+            reason;
+            distributive_tparam_name;
+            infer_tparams;
+            extends_t;
+            true_t;
+            false_t;
+            tout;
+          }
     )
   | CallT { use_op; reason; call_action; return_hint } ->
     util use_op (fun use_op -> CallT { use_op; reason; call_action; return_hint })
