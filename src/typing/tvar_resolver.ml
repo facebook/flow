@@ -25,12 +25,12 @@ let has_placeholders =
 
       method! tvar cx pole seen _r id =
         let module C = Type.Constraint in
-        let (root_id, root) = Context.find_root cx id in
+        let (root_id, constraints) = Context.find_constraints cx id in
         if ISet.mem root_id seen then
           seen
         else
           let seen = ISet.add root_id seen in
-          match root.C.constraints with
+          match constraints with
           | C.FullyResolved _ -> seen
           | C.Resolved (_, t) -> this#type_ cx pole seen t
           | C.Unresolved bounds ->
@@ -48,12 +48,12 @@ let has_unresolved_tvars_visitor =
 
     method! tvar cx pole seen _r id =
       let module C = Type.Constraint in
-      let (root_id, root) = Context.find_root cx id in
+      let (root_id, constraints) = Context.find_constraints cx id in
       if ISet.mem root_id seen then
         seen
       else
         let seen = ISet.add root_id seen in
-        match root.C.constraints with
+        match constraints with
         | C.FullyResolved _ -> seen
         | C.Resolved (_, t) -> this#type_ cx pole seen t
         | C.Unresolved _ -> raise EncounteredUnresolvedTvar
@@ -78,7 +78,7 @@ class resolver ~no_lowers =
 
     method! tvar cx pole seen r id =
       let module C = Type.Constraint in
-      let (root_id, root) = Context.find_root cx id in
+      let (root_id, _, root) = Context.find_root cx id in
       match root.C.constraints with
       | C.FullyResolved _ -> seen
       | _ when ISet.mem root_id seen -> seen
@@ -89,13 +89,13 @@ class resolver ~no_lowers =
           | None -> Some (no_lowers r)
         in
         Base.Option.value_map t ~default:seen ~f:(fun t ->
-            let new_root =
+            let constraints =
               if Context.typing_mode cx <> Context.CheckingMode then
-                C.Root { root with C.constraints = C.Resolved (unknown_use, t) }
+                C.Resolved (unknown_use, t)
               else
-                C.Root { root with C.constraints = C.FullyResolved (unknown_use, lazy t) }
+                C.FullyResolved (unknown_use, lazy t)
             in
-            Context.add_tvar cx root_id new_root;
+            root.C.constraints <- constraints;
             let seen = ISet.add root_id seen in
             this#type_ cx pole seen t
         )

@@ -68,14 +68,13 @@ let copier =
                  t
                 )
           in
-          let constraints = FullyResolved (unknown_use, t) in
-          let node = Root { rank = 0; constraints } in
+          let node = create_root (FullyResolved (unknown_use, t)) in
           Context.set_graph dst_cx (IMap.add id node dst_graph);
           dst_cx
-        ) else (
-          Context.set_graph dst_cx (IMap.add id (Goto root_id) dst_graph);
+        ) else
+          let node = create_goto root_id in
+          Context.set_graph dst_cx (IMap.add id node dst_graph);
           self#tvar src_cx pole dst_cx r root_id
-        )
 
     method! props src_cx pole dst_cx id =
       let dst_property_maps = Context.property_maps dst_cx in

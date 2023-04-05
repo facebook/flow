@@ -27,8 +27,8 @@ struct
       - constraints, which carry type information that narrows down the possible
       solutions of the tvar (see below). *)
   type root = {
-    rank: int;
-    constraints: Constraints.t;
+    mutable rank: int;
+    mutable constraints: Constraints.t;
   }
 
   (** Type variables are unknowns, and we are ultimately interested in constraints
@@ -43,9 +43,35 @@ struct
       of the tree.
       - A Root node holds the actual non-trivial state of a tvar, represented by a
       root structure (see below). *)
-  type node =
-    | Goto of ident
+  type node_ =
+    | Goto of { mutable parent: ident }
     | Root of root
+
+  type node = node_ ref
+
+  type graph = node IMap.t
+
+  let create_root constraints = ref (Root { rank = 0; constraints })
+
+  let create_goto parent = ref (Goto { parent })
+
+  (* Find the root of a type variable, potentially traversing a chain of type
+     variables, while short-circuiting all the type variables in the chain to the
+     root during traversal to speed up future traversals. *)
+  let rec find_root graph id =
+    match IMap.find_opt id graph with
+    | None -> raise (Tvar_not_found id)
+    | Some node ->
+      (match !node with
+      | Root root -> (id, node, root)
+      | Goto goto ->
+        let ((root_id, _, _) as root) = find_root graph goto.parent in
+        goto.parent <- root_id;
+        root)
+
+  let find_root_id graph id =
+    let (root_id, _, _) = find_root graph id in
+    root_id
 
   (* Find the constraints of a type variable in the graph.
 
@@ -54,28 +80,11 @@ struct
      constraints are stored with the type variable. Otherwise, the type variable
      is a goto node, and it points to another type variable: a linked list of such
      type variables must be traversed until a root is reached. *)
-  let rec find_graph graph id =
-    let (graph', _, constraints) = find_constraints graph id in
-    (graph', constraints)
+  let find_constraints graph id =
+    let (root_id, _, root) = find_root graph id in
+    (root_id, root.constraints)
 
-  and find_constraints graph id =
-    let (graph', root_id, root) = find_root graph id in
-    (graph', root_id, root.constraints)
-
-  (* Find the root of a type variable, potentially traversing a chain of type
-     variables, while short-circuiting all the type variables in the chain to the
-     root during traversal to speed up future traversals. *)
-  and find_root graph id =
-    match IMap.find_opt id graph with
-    | Some (Goto next_id) ->
-      let (graph', root_id, root) = find_root graph next_id in
-      let graph'' =
-        if root_id != next_id then
-          IMap.add id (Goto root_id) graph'
-        else
-          graph'
-      in
-      (graph'', root_id, root)
-    | Some (Root root) -> (graph, id, root)
-    | None -> raise (Tvar_not_found id)
+  let find_graph graph id =
+    let (_, constraints) = find_constraints graph id in
+    constraints
 end

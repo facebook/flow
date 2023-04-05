@@ -8302,7 +8302,7 @@ struct
     connections necessary when two non-unifiers flow to each other. If one or
     both of the roots are resolved, they effectively act like the corresponding
     concrete types. *)
-  and goto cx trace ~use_op (id1, root1) (id2, root2) =
+  and goto cx trace ~use_op (id1, node1, root1) (id2, _, root2) =
     match (root1.constraints, root2.constraints) with
     | (Unresolved bounds1, Unresolved bounds2) ->
       let cond1 = not_linked (id1, bounds1) (id2, bounds2) in
@@ -8323,34 +8323,35 @@ struct
           (id2, bounds2)
           (id1, bounds1)
       );
-      Context.add_tvar cx id1 (Goto id2)
+      node1 := Goto { parent = id2 }
     | (Unresolved bounds1, (Resolved (_, t2) | FullyResolved (_, (lazy t2)))) ->
       let t2_use = UseT (use_op, t2) in
       edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
       edges_and_flows_from_t cx trace ~new_use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
-      Context.add_tvar cx id1 (Goto id2)
+      node1 := Goto { parent = id2 }
     | ((Resolved (_, t1) | FullyResolved (_, (lazy t1))), Unresolved bounds2) ->
       let t1_use = UseT (unify_flip use_op, t1) in
       edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
       edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t1 (id2, bounds2);
-      Context.add_tvar cx id2 (Root { root2 with constraints = root1.constraints });
-      Context.add_tvar cx id1 (Goto id2)
+      root2.constraints <- root1.constraints;
+      node1 := Goto { parent = id2 }
     | (Resolved (_, t1), (Resolved (_, t2) | FullyResolved (_, (lazy t2))))
     | (FullyResolved (_, (lazy t1)), FullyResolved (_, (lazy t2))) ->
       (* replace node first, in case rec_unify recurses back to these tvars *)
-      Context.add_tvar cx id1 (Goto id2);
+      node1 := Goto { parent = id2 };
       rec_unify cx trace ~use_op t1 t2
     | (FullyResolved (_, (lazy t1)), Resolved (_, t2)) ->
       (* prefer fully resolved roots to resolved roots *)
-      Context.add_tvar cx id2 (Root { root2 with constraints = root1.constraints });
+      root2.constraints <- root1.constraints;
       (* replace node first, in case rec_unify recurses back to these tvars *)
-      Context.add_tvar cx id1 (Goto id2);
+      node1 := Goto { parent = id2 };
       rec_unify cx trace ~use_op t1 t2
 
   (** Unify two type variables. This involves finding their roots, and making one
     point to the other. Ranks are used to keep chains short. *)
   and merge_ids cx trace ~use_op id1 id2 =
-    let ((id1, root1), (id2, root2)) = (Context.find_root cx id1, Context.find_root cx id2) in
+    let ((id1, _, root1) as root_node1) = Context.find_root cx id1 in
+    let ((id2, _, root2) as root_node2) = Context.find_root cx id2 in
     match (root1.Constraint.constraints, root2.Constraint.constraints) with
     | (FullyResolved (_, (lazy t1)), FullyResolved (_, (lazy t2))) ->
       rec_unify cx trace ~use_op t1 t2
@@ -8358,18 +8359,18 @@ struct
       if id1 = id2 then
         ()
       else if root1.rank < root2.rank then
-        goto cx trace ~use_op (id1, root1) (id2, root2)
+        goto cx trace ~use_op root_node1 root_node2
       else if root2.rank < root1.rank then
-        goto cx trace ~use_op:(unify_flip use_op) (id2, root2) (id1, root1)
+        goto cx trace ~use_op:(unify_flip use_op) root_node2 root_node1
       else (
-        Context.add_tvar cx id2 (Root { root2 with rank = root1.rank + 1 });
-        goto cx trace ~use_op (id1, root1) (id2, root2)
+        root2.rank <- root1.rank + 1;
+        goto cx trace ~use_op root_node1 root_node2
       )
 
   (** Resolve a type variable to a type. This involves finding its root, and
     resolving to that type. *)
   and resolve_id cx trace ~use_op ?(fully_resolved = false) id t =
-    let (id, root) = Context.find_root cx id in
+    let (id, _, root) = Context.find_root cx id in
     match root.constraints with
     | Unresolved bounds ->
       let constraints =
@@ -8378,7 +8379,7 @@ struct
         else
           Resolved (use_op, t)
       in
-      Context.add_tvar cx id (Root { root with constraints });
+      root.constraints <- constraints;
       edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
       edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t (id, bounds)
     | Resolved (_, t_)

@@ -180,7 +180,7 @@ val find_require : t -> ALoc.t -> Type.tvar
 
 val find_tvar : t -> Type.ident -> Type.Constraint.node
 
-val graph : t -> Type.Constraint.node IMap.t
+val graph : t -> Type.Constraint.graph
 
 val trust_graph : t -> Trust_constraint.node IMap.t
 
@@ -332,7 +332,7 @@ val set_type_graph : t -> Graph_explorer.graph -> unit
 
 val set_all_unresolved : t -> ISet.t IMap.t -> unit
 
-val set_graph : t -> Type.Constraint.node IMap.t -> unit
+val set_graph : t -> Type.Constraint.graph -> unit
 
 val run_in_implicit_instantiation_mode : t -> (unit -> 'a) -> 'a
 
@@ -453,7 +453,9 @@ val find_constraints : t -> Type.ident -> Type.ident * Type.Constraint.constrain
 
 val find_graph : t -> Type.ident -> Type.Constraint.constraints
 
-val find_root : t -> Type.ident -> Type.ident * Type.Constraint.root
+val find_root : t -> Type.ident -> Type.ident * Type.Constraint.node * Type.Constraint.root
+
+val find_root_id : t -> Type.ident -> Type.ident
 
 val find_resolved : t -> Type.t -> Type.t option
 

@@ -952,20 +952,13 @@ let merge_into ccx sig_cx_other =
       trust_graph = IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
     }
 
-let find_graph cx id =
-  let (graph', constraints) = Type.Constraint.find_graph cx.ccx.sig_cx.graph id in
-  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
-  constraints
+let find_graph cx id = Type.Constraint.find_graph cx.ccx.sig_cx.graph id
 
-let find_constraints cx id =
-  let (graph', root_id, constraints) = Type.Constraint.find_constraints cx.ccx.sig_cx.graph id in
-  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
-  (root_id, constraints)
+let find_constraints cx id = Type.Constraint.find_constraints cx.ccx.sig_cx.graph id
 
-let find_root cx id =
-  let (graph', root_id, constraints) = Type.Constraint.find_root cx.ccx.sig_cx.graph id in
-  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
-  (root_id, constraints)
+let find_root cx id = Type.Constraint.find_root cx.ccx.sig_cx.graph id
+
+let find_root_id cx id = Type.Constraint.find_root_id cx.ccx.sig_cx.graph id
 
 let find_resolved =
   let rec loop cx seen t_in =

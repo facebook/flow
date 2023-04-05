@@ -1016,8 +1016,8 @@ and dump_tvar_ (depth, tvars) cx id =
     let stack = ISet.add id tvars in
     Constraint.(
       try
-        match Context.find_tvar cx id with
-        | Goto g -> spf "%d, Goto %d" id g
+        match !(Context.find_tvar cx id) with
+        | Goto goto -> spf "%d, Goto %d" id goto.parent
         | Root { constraints = Resolved (_, t); _ } ->
           spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
         | Root { constraints = FullyResolved (_, (lazy t)); _ } ->

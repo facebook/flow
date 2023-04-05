@@ -36,13 +36,13 @@ let mk_no_wrap_where cx reason f =
 let mk_fully_resolved cx use_op reason t =
   let id = Reason.mk_id () in
   let constraints = Type.Constraint.FullyResolved (use_op, lazy t) in
-  let node = Type.Constraint.Root { Type.Constraint.rank = 0; constraints } in
+  let node = Type.Constraint.create_root constraints in
   Context.set_graph cx (IMap.add id node (Context.graph cx));
   Type.OpenT (reason, id)
 
 let mk_resolved cx use_op reason t =
   let id = Reason.mk_id () in
   let constraints = Type.Constraint.Resolved (use_op, t) in
-  let node = Type.Constraint.Root { Type.Constraint.rank = 0; constraints } in
+  let node = Type.Constraint.create_root constraints in
   Context.set_graph cx (IMap.add id node (Context.graph cx));
   Type.OpenT (reason, id)

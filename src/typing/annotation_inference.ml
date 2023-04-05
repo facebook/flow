@@ -60,8 +60,8 @@ let primitive_promoting_op = function
 let function_like_op op = object_like_op op
 
 let get_fully_resolved_type cx id =
-  let (_, node) = Context.find_root cx id in
-  match node.Constraint.constraints with
+  let (_, constraints) = Context.find_constraints cx id in
+  match constraints with
   | Constraint.FullyResolved (_, (lazy t)) -> t
   | Constraint.Resolved _
   | Constraint.Unresolved _ ->
@@ -412,8 +412,8 @@ module rec ConsGen : S = struct
           ensure_annot_resolved cx reason id
         )
     in
-    let constraints = Constraint.FullyResolved (unknown_use, t) in
-    Context.add_tvar cx id (Constraint.Root { Constraint.rank = 0; constraints });
+    let node = Constraint.create_root (Constraint.FullyResolved (unknown_use, t)) in
+    Context.add_tvar cx id node;
     tvar
 
   and mk_sig_tvar cx reason (resolved : Type.t Lazy.t) =

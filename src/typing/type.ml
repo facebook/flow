@@ -2826,9 +2826,7 @@ module Constraint = struct
       uppertvars = IMap.empty;
     }
 
-  let new_unresolved_root () =
-    let constraints = Unresolved (new_bounds ()) in
-    Root { rank = 0; constraints }
+  let new_unresolved_root () = create_root (Unresolved (new_bounds ()))
 
   (* For any constraints, return a list of def types that form either the lower
      bounds of the solution, or a singleton containing the solution itself. *)
@@ -2844,7 +2842,7 @@ module Constraint = struct
     | FullyResolved (use_op, (lazy t)) ->
       [TypeTerm.UseT (use_op, t)]
 
-  let fully_resolved_node t = Root { rank = 0; constraints = FullyResolved (unknown_use, lazy t) }
+  let fully_resolved_node t = create_root (FullyResolved (unknown_use, lazy t))
 end
 
 (**************************)

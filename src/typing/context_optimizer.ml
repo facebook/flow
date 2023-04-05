@@ -63,7 +63,7 @@ class context_optimizer ~no_lowers =
   object (self)
     inherit [Polarity.t] Type_mapper.t as super
 
-    val mutable reduced_graph : Type.Constraint.node IMap.t = IMap.empty
+    val mutable reduced_graph : Type.Constraint.graph = IMap.empty
 
     val mutable reduced_trust_graph = IMap.empty
 
@@ -84,13 +84,13 @@ class context_optimizer ~no_lowers =
           id
         else
           let t = lazy (self#type_ cx pole (Flow_js_utils.merge_tvar ~no_lowers cx r id)) in
-          let node = Root { rank = 0; constraints = FullyResolved (unknown_use, t) } in
+          let node = create_root (FullyResolved (unknown_use, t)) in
           reduced_graph <- IMap.add id node reduced_graph;
           ignore (Lazy.force t);
           id
       ) else (
         ignore (self#tvar cx pole r root_id);
-        let node = Goto root_id in
+        let node = create_goto root_id in
         reduced_graph <- IMap.add id node reduced_graph;
         id
       )
