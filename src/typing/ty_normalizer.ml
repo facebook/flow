@@ -695,17 +695,10 @@ end = struct
           else
             let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
             type_variable ~env ~cont:type__ root_id
-      | GenericT { bound; reason; name; id; _ } ->
+      | GenericT { bound; reason; name; _ } ->
         let loc = Reason.def_aloc_of_reason reason in
         let default _ =
-          let pred { T.name = tp_name; reason = tp_reason; _ } =
-            let tp_id =
-              Generic.make_bound_id
-                (tp_reason |> Reason.def_aloc_of_reason |> Context.make_aloc_id env.Env.genv.Env.cx)
-                tp_name
-            in
-            name = tp_name && id = tp_id
-          in
+          let pred { T.name = tp_name; _ } = name = tp_name in
           match List.find_opt pred env.Env.infer_tparams with
           | Some { T.name; reason; bound; _ } ->
             let symbol =

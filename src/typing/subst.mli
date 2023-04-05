@@ -7,6 +7,8 @@
 
 val free_var_finder : Context.t -> ?bound:Subst_name.Set.t -> Type.t -> Subst_name.Set.t
 
+val new_name : Subst_name.t -> Subst_name.Set.t -> Subst_name.t
+
 val subst :
   Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t Subst_name.Map.t -> Type.t -> Type.t
 

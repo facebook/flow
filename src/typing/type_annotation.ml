@@ -412,10 +412,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                  (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
                  (_, { Infer.tparam; _ })
                ->
+              let subst_name =
+                let (_, { TypeParam.name = (_, { Ast.Identifier.name; _ }); _ }) = tparam in
+                Subst_name.Name name
+              in
               let (tparam_tast, tparam, t) =
                 mk_type_param cx ~from_infer_type:true tparams_map ALocMap.empty tparam
               in
-              let subst_name = tparam.name in
               let ( tparams_rev,
                     additional_true_type_tparams_map,
                     infer_tparams_map,
@@ -2381,9 +2384,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             ConsGen.subtype_check cx t bound;
             (Some t, default_ast)
         in
-        let tparam =
-          { reason; name = Subst_name.Name name; bound; polarity; default; is_this = false }
+        let subst_name =
+          if from_infer_type && Subst_name.Map.mem (Subst_name.Name name) tparams_map then
+            Subst.new_name
+              (Subst_name.Name name)
+              (tparams_map |> Subst_name.Map.keys |> Subst_name.Set.of_list)
+          else
+            Subst_name.Name name
         in
+        let tparam = { reason; name = subst_name; bound; polarity; default; is_this = false } in
         let t = Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx tparam in
         let name_ast =
           let (loc, id_name) = id in

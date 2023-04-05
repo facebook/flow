@@ -319,6 +319,32 @@ let substituter =
       else
         { t' with reachable_targs }
 
+    method! destructor cx map_cx t =
+      let (map, _, _) = map_cx in
+      match t with
+      | ConditionalType { tparams; extends_t; true_t; false_t } ->
+        let false_t' = self#type_ cx (map, false, None) false_t in
+        let (tparams_rev, map, changed) =
+          Base.List.fold tparams ~init:([], map, false) ~f:(fun (xs, map, changed) typeparam ->
+              let bound = self#type_ cx (map, false, None) typeparam.Type.bound in
+              let (name, map) = avoid_capture map typeparam.name in
+              ({ typeparam with bound; name } :: xs, map, changed || bound != typeparam.bound)
+          )
+        in
+        let extends_t' = self#type_ cx (map, false, None) extends_t in
+        let true_t' = self#type_ cx (map, false, None) true_t in
+        if changed || extends_t != extends_t' || true_t != true_t' || false_t != false_t' then
+          ConditionalType
+            {
+              tparams = List.rev tparams_rev;
+              extends_t = extends_t';
+              true_t = true_t';
+              false_t = false_t';
+            }
+        else
+          t
+      | _ -> super#destructor cx map_cx t
+
     (* The EvalT case is the only case that calls this function. We've explicitly overrided it
      * in all cases, so this should never be called *)
     method eval_id _cx _map_cx _id = assert false
