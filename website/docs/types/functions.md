@@ -340,6 +340,18 @@ In general, functions can have properties assigned to them if they are function 
 simple variable declarations of the form `const f = () => ...`. The properties must be assigned in
 the format `f.prop = <expr>;`, in the same statement list as the function definition (i.e. not conditionally).
 
+## Overloaded functions
+You can use intersection types to define [overloaded function types](../intersections/#toc-intersection-of-function-types):
+
+```js flow-check
+declare const fn:
+  & ((x: 'string') => string)
+  & ((x: 'number') => number)
+
+const s: string = fn('string');
+const n: number = fn('number');
+```
+
 ## Any function
 
 If you want to specify you want to allow any function, and do not care what it is, you can use this pattern:

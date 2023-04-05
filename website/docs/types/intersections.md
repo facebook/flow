@@ -4,26 +4,32 @@ slug: /types/intersections
 ---
 
 Sometimes it is useful to create a type which is ***all of*** a set of other
-types. For example, you might want to write a function which accepts an object
-which is the combination of other object types. For this, Flow supports
-**intersection types**.
+types. For example, you might want to write a function which accepts a value that
+implements two different [interfaces](../interfaces):
 
 ```js flow-check
-// @flow
-type A = {a: number, ...};
-type B = {b: boolean, ...};
-type C = {c: string, ...};
+interface Serializable {
+  serialize(): string;
+}
 
-function method(value: A & B & C) {
+interface HasLength {
+  length: number;
+}
+
+function func(value: Serializable & HasLength) {
   // ...
 }
 
-// $ExpectError
-method({ a: 1 }); // Error!
-// $ExpectError
-method({ a: 1, b: true }); // Error!
-method({ a: 1, b: true, c: 'three' }); // Works!
+func({
+  length: 3,
+  serialize() {
+    return '3';
+  },
+}); // Works
+
+func({length: 3}); // Error! Doesn't implement both interfaces
 ```
+
 
 ## Intersection type syntax {#toc-intersection-type-syntax}
 
@@ -62,15 +68,14 @@ inside of our function we only have to treat it as ***any one of those
 types***.
 
 ```js flow-check
-// @flow
 type A = {a: number, ...};
 type B = {b: boolean, ...};
 type C = {c: string, ...};
 
-function method(value: A & B & C) {
-  var a: A = value;
-  var b: B = value;
-  var c: C = value;
+function func(value: A & B & C) {
+  const a: A = value;
+  const b: B = value;
+  const c: C = value;
 }
 ```
 
@@ -81,7 +86,7 @@ because it satisfies all of them.
 
 A common use of intersection types is to express functions that return
 different results based on the input we pass in. Suppose for example
-that we want to write the type of a function that
+that we want to write the type of a function that:
 * returns a string, when we pass in the value `"string"`,
 * returns a number, when we pass in the value `"number"`, and
 * returns any possible type (`mixed`), when we pass in any other string.
@@ -91,7 +96,7 @@ The type of this function will be
 type Fn =
   & ((x: "string") => string)
   & ((x: "number") => number)
-  & ((x: string) => null);
+  & ((x: string) => mixed);
 ```
 Each line in the above definition is called an *overload*, and we say that functions
 of type `Fn` are *overloaded*.
@@ -102,11 +107,15 @@ the precedence of the "arrow" constructor over the intersection.
 ### Calling an overloaded function
 
 Using the above definition we can declare a function `fn` that has the following behavior:
-```js
-declare var fn: Fn;
-var n: string = fn("string"); // okay
-var n: number = fn("number"); // okay
-var n: boolean = fn("boolean"); // error: null is incompatible with number
+```js flow-check
+declare const fn:
+  & ((x: "string") => string)
+  & ((x: "number") => number)
+  & ((x: string) => mixed);
+
+const s: string = fn("string"); // Works
+const n: number = fn("number"); // Works
+const b: boolean = fn("boolean"); // Error!
 ```
 Flow achieves this behavior by matching the type of the argument to the *first*
 overload with a compatible parameter type. Notice for example that the argument
@@ -121,7 +130,7 @@ An equivalent way to declare the same function `fn` would be by using consecutiv
 ```js flow-check
 declare function fn(x: "string"): string;
 declare function fn(x: "number"): number;
-declare function fn(x: string): null;
+declare function fn(x: string): mixed;
 ```
 
 A limitation in Flow is that it can't *check* the body of a function against
@@ -136,25 +145,24 @@ function fn(x: mixed) {
 ```
 Flow silently accepts it (and uses `Fn` as the inferred type), but does not check
 the implementation against this signature. This makes this kind of declaration
-a better suited candidate for library definitions, where implementations are omitted.
+a better suited candidate for [library definitions](../../libdefs/), where implementations are omitted.
 
 
 ## Intersections of object types {#toc-intersections-of-object-types}
 
-When you create an intersection of inexact object types, you merge all of their
-properties together.
+When you create an intersection of [inexact object types](../objects/#exact-and-inexact-object-types),
+you are saying that your object satisfies each member of the intersection.
 
 For example, when you create an intersection of two inexact objects with different sets
 of properties, it will result in an object with all of the properties.
 
 ```js flow-check
-// @flow
 type One = {foo: number, ...};
 type Two = {bar: boolean, ...};
 
 type Both = One & Two;
 
-var value: Both = {
+const value: Both = {
   foo: 1,
   bar: true
 };
@@ -165,26 +173,42 @@ strategy as with overloaded functions: it will return the type of the first prop
 that matches this name.
 
 For example, if you merge two inexact objects with a property named `prop`, first with a
-type of number and second with a type of boolean, accessing `prop` will return
+type of `number` and second with a type of `boolean`, accessing `prop` will return
 `number`.
 
 ```js flow-check
 type One = {prop: number, ...};
 type Two = {prop: boolean, ...};
 
-declare var both: One & Two;
+declare const both: One & Two;
 
-var prop1: number = both.prop; // okay
-var prop2: boolean = both.prop; // Error: number is incompatible with boolean
+const prop1: number = both.prop; // Works
+const prop2: boolean = both.prop; // Error!
 ```
 
+To combine exact object types, you should use [object type spread](../objects/#object-type-spread) instead:
+
+```js flow-check
+type One = {foo: number};
+type Two = {bar: boolean};
+
+type Both = {
+  ...One,
+  ...Two,
+};
+
+const value: Both = {
+  foo: 1,
+  bar: true
+};
+```
 
 **Note:** When it comes to objects, the order-specific way in which intersection
-types are implemented in Flow, may often seem counterintuitive from a set theoretic
+types are implemented in Flow, may often seem counter-intuitive from a set theoretic
 point of view. In sets, the operands of intersection can change order arbitrarily
 (commutative property). For this reason, it is a better practice to define this
-kind of operation over object types using the *spread* operator, e.g. `{ ...One, ...Two }`,
-where the ordering semantics are better specified.
+kind of operation over object types using object type spread where the ordering
+semantics are better specified.
 
 
 ## Impossible intersection types {#toc-impossible-intersection-types}
@@ -196,19 +220,28 @@ types, even ones that conflict with one another.
 For example, you can create an intersection of a number and a string.
 
 ```js flow-check
-// @flow
 type NumberAndString = number & string;
 
-function method(value: NumberAndString) {
-  // ...
-}
+function func(value: NumberAndString) { /* ... */ }
 
-// $ExpectError
-method(3.14); // Error!
-// $ExpectError
-method('hi'); // Error!
+func(3.14); // Error!
+func('hi'); // Error!
 ```
 
 But you can't possibly create a value which is both a *number and a string*,
 but you can create a type for it. There's no practical use for creating types
 like this, but it's a side effect of how intersection types work.
+
+An accidental way to create an impossible type is to create an intersection of
+[exact object types](../objects/#exact-and-inexact-object-types). For example:
+
+```js flow-check
+function func(obj: {a: number} & {b: string}) { /* ... */ }
+
+func({a: 1}); // Error!
+func({b: 'hi'}); // Error!
+func({a: 1, b: 'hi'}); // Error!
+```
+
+It's not possible for an object to have exactly the property `a` and no other
+properties, and simultaneously exactly the property `b` and no other properties.
