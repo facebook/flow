@@ -1045,6 +1045,8 @@ let find_avar cx id = IMap.find id cx.ccx.annot_graph
 
 let find_avar_opt cx id = IMap.find_opt id cx.ccx.annot_graph
 
+let remove_avar cx id = cx.ccx.annot_graph <- IMap.remove id cx.ccx.annot_graph
+
 let iter_annot_dependent_set cx f set =
   ISet.iter
     (fun i ->

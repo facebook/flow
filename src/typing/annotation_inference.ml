@@ -385,9 +385,7 @@ module rec ConsGen : S = struct
   let rec ensure_annot_resolved cx reason id =
     let module A = Type.AConstraint in
     match Context.find_avar_opt cx id with
-    | None
-    | Some A.Annot_resolved ->
-      get_fully_resolved_type cx id
+    | None -> get_fully_resolved_type cx id
     | Some (A.Annot_unresolved _) ->
       let t = error_recursive cx reason in
       resolve_id cx reason id t;
@@ -431,18 +429,21 @@ module rec ConsGen : S = struct
    *  - If [t] is an OpenT (_, id2), then we unify [id1] and [id2]. (See merge_ids.)
    *)
   and resolve_id cx reason id t =
-    let module A = Type.AConstraint in
-    let module C = Type.Constraint in
-    let t =
-      match t with
-      | Type.OpenT (_, id2) -> ensure_annot_resolved cx reason id2
-      | _ -> t
-    in
-    let constraints1 = Context.find_avar cx id in
-    Context.add_avar cx id A.Annot_resolved;
-    Context.add_tvar cx id (C.fully_resolved_node t);
-    let dependents1 = deps_of_constraint constraints1 in
-    resolve_dependent_set cx reason dependents1 t
+    match Context.find_avar_opt cx id with
+    | None ->
+      (* The avar is already resolved. This happens when the avar is recursively
+       * reachable and becomes resolved to any. *)
+      ()
+    | Some constraints1 ->
+      let t =
+        match t with
+        | Type.OpenT (_, id2) -> ensure_annot_resolved cx reason id2
+        | _ -> t
+      in
+      Context.remove_avar cx id;
+      Context.add_tvar cx id (Type.Constraint.fully_resolved_node t);
+      let dependents1 = deps_of_constraint constraints1 in
+      resolve_dependent_set cx reason dependents1 t
 
   and resolve_dependent_set cx reason dependents t =
     Context.iter_annot_dependent_set
@@ -456,8 +457,7 @@ module rec ConsGen : S = struct
     else
       let module A = Type.AConstraint in
       match Context.find_avar_opt cx id with
-      | None
-      | Some A.Annot_resolved ->
+      | None ->
         (* [id] may refer to a lazily resolved constraint (e.g. created through
          * [mk_lazy_tvar]). To protect against trying to force recursive lazy
          * structures, we introduce a lazy indirection around the resulting
@@ -472,7 +472,7 @@ module rec ConsGen : S = struct
          * attempt to force the constraint for `x.p`. *)
         let resolved =
           lazy
-            ((* Annot_resolved ids definitelly appear in the type graph *)
+            ((* resolved ids definitelly appear in the type graph *)
              let t = get_fully_resolved_type cx id in
              elab_t cx ~seen:(ISet.add id seen) t op
             )

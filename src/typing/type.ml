@@ -2915,10 +2915,8 @@ module AConstraint = struct
         result of applying the opereation [op] on the type that another annotation
         variable [id] will resolve to.
 
-      - [Annot_resolved] is the state of a fully-resolved annotation variable.
-
       An annotation variable starts off in the Annot_unresolved or Annot_op state
-      and is resolved to the Annot_resolved state in one step.
+      and is resolved in one step by removing it.
 
       As inference proceeds other types can depend on the current annotation variable
       through an Annot_op constraint. This fact is recorded in the [dependents] set
@@ -2954,7 +2952,6 @@ module AConstraint = struct
         id: int;
         mutable dependents: ISet.t;
       }
-    | Annot_resolved
 
   let string_of_operation = function
     | Annot_SpecializeT _ -> "Annot_SpecializeT"
@@ -3097,18 +3094,15 @@ module AConstraint = struct
 
   let to_annot_op_exn = function
     | Annot_unresolved _ -> failwith "to_annot_op_exn on unresolved"
-    | Annot_resolved -> failwith "to_annot_op_exn on resolved"
     | Annot_op { op; _ } -> op
 
   let deps_of_constraint = function
     | Annot_unresolved { dependents; _ } -> dependents
     | Annot_op { dependents; _ } -> dependents
-    | Annot_resolved -> ISet.empty
 
   let update_deps_of_constraint ~f = function
     | Annot_unresolved d -> d.dependents <- f d.dependents
     | Annot_op d -> d.dependents <- f d.dependents
-    | Annot_resolved -> ()
 end
 
 module TypeContext = struct

@@ -511,6 +511,8 @@ val find_avar : t -> int -> Type.AConstraint.t
 
 val find_avar_opt : t -> int -> Type.AConstraint.t option
 
+val remove_avar : t -> int -> unit
+
 val iter_annot_dependent_set : t -> (int -> Type.AConstraint.op -> unit) -> ISet.t -> unit
 
 type cache_snapshot
