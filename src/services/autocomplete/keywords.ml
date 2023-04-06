@@ -14,6 +14,7 @@ type context_node =
   | Member
   | ObjectKey
   | Type
+  | SwitchCase
 
 (* TODO: include `of`, `in`, and `instanceof`. We don't currently autocomplete at positions where those are valid. *)
 (* true, false, and null are not included here, because we already suggest those when we have type info *)
@@ -90,6 +91,8 @@ class mapper target =
 
     method! type_ t = this#with_context Type (fun () -> super#type_ t)
 
+    method! switch_case case = this#with_context SwitchCase (fun () -> super#switch_case case)
+
     method! identifier (loc, id) =
       if this#is_target loc then raise (Found context);
       super#identifier (loc, id)
@@ -117,7 +120,9 @@ let keywords_of_context loc context =
     match context with
     | Expression :: ExpressionStatement :: _ ->
       Base.List.append expression_keywords statement_keywords
-    | Expression :: Member :: _ -> []
+    | Expression :: Member :: _
+    | Expression :: SwitchCase :: _ ->
+      []
     | Expression :: _ -> expression_keywords
     | Statement :: _ -> statement_keywords
     | _ -> []

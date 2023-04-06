@@ -11902,3 +11902,7 @@ super_member.js:9:11
 Flags: --pretty
 {"result":[{"name":"foo","type":"() => void"}]}
 
+switch.js:6:8
+Flags: --pretty
+{"result":[{"name":"x","type":"\"foo\" | \"bar\" | \"baz\""}]}
+
