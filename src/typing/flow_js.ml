@@ -2801,22 +2801,29 @@ struct
             cx
             trace
             (return_t, get_builtin_type cx reason_op (OrdinaryName "React$Node"))
-        | (DefT (r, _, FunT _), (ReactInToProps (_, props) | ReactPropsToOut (_, props))) ->
-          ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
+        | ( DefT (r, _, FunT _),
+            (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
+          ) ->
+          ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props);
+          rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
         | ( DefT (r, _, ObjT { call_t = Some id; _ }),
-            (ReactInToProps (_, props) | ReactPropsToOut (_, props))
+            (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
           ) -> begin
           match Context.find_call cx id with
           | ( DefT (_, _, FunT (_, { rest_param = None; predicate = None; _ }))
             | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
             (* Keep the object's reason for better error reporting *)
             rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)
-          | _ -> ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
+          | _ ->
+            ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props);
+            rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
         end
         | (AnyT _, ReactPropsToOut (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (l, props)
         | (AnyT _, ReactInToProps (_, props)) -> rec_flow_t ~use_op:unknown_use cx trace (props, l)
-        | (DefT (r, _, _), (ReactPropsToOut (_, props) | ReactInToProps (_, props))) ->
-          ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props)
+        | (DefT (r, _, _), (ReactPropsToOut (reason_op, props) | ReactInToProps (reason_op, props)))
+          ->
+          ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props);
+          rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
         (***********************************************)
         (* function types deconstruct into their parts *)
         (***********************************************)
@@ -4886,25 +4893,30 @@ struct
           in
           rec_flow_t cx trace ~use_op:unknown_use (t, prop_t);
           apply_method_action cx trace t use_op call_reason l action
-        | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, _, _, elem, _)) ->
+        | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, _, _, elem, tvar_out)) ->
           let reason = reason_of_t elem in
           add_output
             cx
             ~trace
             (Error_message.EEnumInvalidMemberAccess
                { member_name = None; suggestion = None; reason; enum_reason }
-            )
-        | (DefT (enum_reason, _, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, _))
-        | (DefT (enum_reason, _, EnumObjectT _), SetElemT (_, op_reason, _, _, _, _)) ->
+            );
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.error reason, OpenT tvar_out)
+        | (DefT (enum_reason, _, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, tout))
+        | (DefT (enum_reason, _, EnumObjectT _), SetElemT (_, op_reason, _, _, _, tout)) ->
           add_output
             cx
             ~trace
-            (Error_message.EEnumModification { loc = aloc_of_reason op_reason; enum_reason })
-        | (DefT (enum_reason, _, EnumObjectT _), GetValuesT (op_reason, _)) ->
+            (Error_message.EEnumModification { loc = aloc_of_reason op_reason; enum_reason });
+          Base.Option.iter tout ~f:(fun tout ->
+              rec_flow_t cx trace ~use_op:unknown_use (AnyT.error op_reason, tout)
+          )
+        | (DefT (enum_reason, _, EnumObjectT _), GetValuesT (op_reason, tout)) ->
           add_output
             cx
             ~trace
-            (Error_message.EEnumInvalidObjectUtilType { reason = op_reason; enum_reason })
+            (Error_message.EEnumInvalidObjectUtilType { reason = op_reason; enum_reason });
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.error op_reason, tout)
         | (DefT (enum_reason, _, EnumObjectT _), GetDictValuesT (reason, result)) ->
           add_output cx ~trace (Error_message.EEnumInvalidObjectFunction { reason; enum_reason });
           rec_flow cx trace (AnyT.error reason, result)

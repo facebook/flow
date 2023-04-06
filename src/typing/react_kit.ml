@@ -201,7 +201,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | DefT (reason, trust, ReactAbstractComponentT _) ->
       rec_flow_t ~use_op:unknown_use cx trace (MixedT.why reason trust, tout)
     (* ...otherwise, error. *)
-    | _ -> err_incompatible cx trace ~use_op (reason_of_t component) u
+    | _ ->
+      err_incompatible cx trace ~use_op (reason_of_t component) u;
+      rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout)
 
   (* Creates the type that we expect for a React config by diffing out default
    * props with ObjKitT(Rest). The config does not include types for `key`
@@ -357,7 +359,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.why source reason)
       (* ...otherwise, error. *)
-      | _ -> err_incompatible (reason_of_t component)
+      | _ ->
+        let reason = reason_of_t component in
+        err_incompatible reason;
+        rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.error reason)
     in
     let props_to_tout = props_to_tout cx trace l ~use_op ~reason_op u in
     let coerce_children_args (children, children_spread) =
@@ -674,7 +679,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.why source reason, tout)
       (* ...otherwise, error. *)
-      | _ -> err_incompatible (reason_of_t component)
+      | _ ->
+        let reason = reason_of_t component in
+        err_incompatible reason;
+        rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, tout)
     in
     (* In order to create a useful type from the `propTypes` property of a React
        class specification, Flow needs the ReactPropType CustomFunT type. This
