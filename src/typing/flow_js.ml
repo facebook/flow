@@ -9540,9 +9540,15 @@ struct
                   resolve_id cx trace ~use_op ~fully_resolved id t'
               ))
           | Unresolved _ ->
-            mk_cached_tvar_where reason t_open id (fun tvar ->
-                flow_opt cx ?trace (t_open, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)))
-            )
+            if is_instantiable_reason r && Context.in_implicit_instantiation cx then
+              t_open
+            else
+              mk_cached_tvar_where reason t_open id (fun tvar ->
+                  flow_opt
+                    cx
+                    ?trace
+                    (t_open, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)))
+              )
         end
       | EvalT (root, defer_use_t, id) as t ->
         (* Modifying the reason of `EvalT`, as we do for other types, is not
