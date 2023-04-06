@@ -261,21 +261,23 @@ and instantiate_component cx component instantiation_hint =
 
 and type_of_hint_decomposition cx op reason t =
   let fun_t ~params ~rest_param ~return_t =
-    DefT
-      ( reason,
-        bogus_trust (),
-        FunT
-          ( Obj_type.mk_with_proto cx reason ~obj_kind:Exact (ObjProtoT reason),
-            {
-              this_t = (Unsoundness.unresolved_any reason, This_Function);
-              params;
-              rest_param;
-              return_t;
-              predicate = None;
-              def_reason = reason;
-            }
-          )
-      )
+    let statics_reason =
+      Reason.func_reason ~async:false ~generator:false (Reason.aloc_of_reason reason)
+    in
+    let statics =
+      Obj_type.mk_with_proto cx statics_reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
+    in
+    let func =
+      {
+        this_t = (Unsoundness.unresolved_any reason, This_Function);
+        params;
+        rest_param;
+        return_t;
+        predicate = None;
+        def_reason = reason;
+      }
+    in
+    DefT (reason, bogus_trust (), FunT (statics, func))
   in
 
   let map_intersection t ~f =

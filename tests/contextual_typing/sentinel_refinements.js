@@ -55,3 +55,11 @@ function numeric_sentinel() {
   type T = { n: 1 | 2, fn: (x: number) => void };
   const t: T = { n: 1, fn: (x) => {} }; // ok, sentinel `1` should match part of above union
 }
+
+function function_statics() {
+  const f: {
+    (mixed): void,
+    type?: void,
+    ...
+  } = x => {}; // okay `x` inferred as `mixed`
+}
