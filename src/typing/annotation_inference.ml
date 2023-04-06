@@ -72,8 +72,6 @@ let get_builtin_typeapp cx reason x targs =
   TypeUtil.typeapp reason t targs
 
 module type S = sig
-  val unresolved_tvar : Context.t -> Reason.t -> int
-
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t
 
   val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
@@ -93,8 +91,6 @@ module type S = sig
     Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
-
-  val resolve_id : Context.t -> Reason.t -> Type.ident -> Type.t -> unit
 
   val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
 
@@ -242,10 +238,6 @@ module rec ConsGen : S = struct
     let unify _cx _trace ~use_op:_ (_t1, _t2) = ()
 
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
-
-    let unresolved_id = Avar.unresolved
-
-    let resolve_id cx _trace ~use_op:_ (reason, id) t = ConsGen.resolve_id cx reason id t
   end
 
   module InstantiationKit = Flow_js_utils.Instantiation_kit (Instantiation_helper)
@@ -253,8 +245,6 @@ module rec ConsGen : S = struct
   let instantiate_poly cx = InstantiationKit.instantiate_poly cx dummy_trace
 
   let mk_typeapp_of_poly cx = InstantiationKit.mk_typeapp_of_poly cx dummy_trace
-
-  let fix_this_class cx = InstantiationKit.fix_this_class cx dummy_trace
 
   (***********)
   (* Imports *)
@@ -285,8 +275,6 @@ module rec ConsGen : S = struct
     let assert_import_is_value _cx _trace _reason _name _export_t = ()
 
     let error_type _ _ = AnyT.error
-
-    let fix_this_class = InstantiationKit.fix_this_class
 
     let mk_typeof_annotation = ConsGen.mk_typeof_annotation
   end
@@ -372,8 +360,6 @@ module rec ConsGen : S = struct
   end
 
   module GetPropTKit = Flow_js_utils.GetPropT_kit (Get_prop_helper)
-
-  let unresolved_tvar cx reason = Avar.unresolved cx reason
 
   (** [ensure_annot_resolved cx reason id] ensures that the annotation constraint
    *  associated with [id] has been resolved. If the respective constraint is already
@@ -557,7 +543,7 @@ module rec ConsGen : S = struct
         );
       AnyT.error reason
     | (ThisClassT (r, i, is_this, this_name), Annot_UseT_TypeT reason) ->
-      let c = fix_this_class cx reason (r, i, is_this, this_name) in
+      let c = Flow_js_utils.fix_this_class cx reason (r, i, is_this, this_name) in
       elab_t cx c op
     | (DefT (_, _, ClassT it), Annot_UseT_TypeT reason) ->
       (* a class value annotation becomes the instance type *)
@@ -826,7 +812,7 @@ module rec ConsGen : S = struct
       elab_t cx t op
     | (ThisClassT (r, i, is_this, this_name), _) ->
       let reason = Type.AConstraint.reason_of_op op in
-      let t = fix_this_class cx reason (r, i, is_this, this_name) in
+      let t = Flow_js_utils.fix_this_class cx reason (r, i, is_this, this_name) in
       elab_t cx t op
     (*****************************)
     (* React Abstract Components *)

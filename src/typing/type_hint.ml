@@ -142,11 +142,7 @@ let rec instantiate_callee cx fn instantiation_hint =
         |> Subst_name.Map.of_list
       in
       let t =
-        Flow_js.FlowJs.fix_this_class
-          cx
-          Trace.dummy_trace
-          r
-          (r, Flow_js.subst cx subst_map i, this, this_name)
+        Flow_js_utils.fix_this_class cx r (r, Flow_js.subst cx subst_map i, this, this_name)
       in
       handle_poly (get_t cx t)
     | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) as t ->

@@ -239,10 +239,6 @@ struct
     let unify cx trace ~use_op (t1, t2) = FlowJs.rec_unify cx trace ~use_op ~unify_any:true t1 t2
 
     let reposition = FlowJs.reposition
-
-    let unresolved_id = Tvar.mk_no_wrap
-
-    let resolve_id cx trace ~use_op id t = FlowJs.rec_unify cx trace ~use_op (OpenT id) t
   end
 
   module InstantiationKit = Instantiation_kit (InstantiationHelper)
@@ -288,8 +284,6 @@ struct
 
     let error_type cx trace reason tout =
       FlowJs.rec_flow_t cx ~use_op:unknown_use trace (AnyT.error reason, tout)
-
-    let fix_this_class = FlowJs.fix_this_class
 
     let mk_typeof_annotation = FlowJs.mk_typeof_annotation
   end
@@ -2765,7 +2759,7 @@ struct
         (* when a this-abstracted class flows to upper bounds, fix the class *)
         | (ThisClassT (r, i, this, this_name), _) ->
           let reason = reason_of_use_t u in
-          rec_flow cx trace (fix_this_class cx trace reason (r, i, this, this_name), u)
+          rec_flow cx trace (fix_this_class cx reason (r, i, this, this_name), u)
         (*****************************)
         (* React Abstract Components *)
         (*****************************)

@@ -843,6 +843,40 @@ let check_untyped_import cx import_kind lreason ureason =
     add_output cx message
   | _ -> ()
 
+(* Fix a this-abstracted instance type by tying a "knot": assume that the
+   fixpoint is some `this`, substitute it as This in the instance type, and
+   finally unify it with the instance type. Return the class type wrapping the
+   instance type. *)
+let fix_this_class cx reason (r, i, is_this, this_name) =
+  let i' =
+    match Flow_cache.Fix.find cx is_this i with
+    | Some i' -> i'
+    | None ->
+      let reason_i = reason_of_t i in
+      let rec i' =
+        lazy
+          (let this = Tvar.mk_fully_resolved_lazy cx unknown_use reason_i i' in
+           let this_generic =
+             if is_this then
+               GenericT
+                 {
+                   id = Context.make_generic_id cx this_name (def_aloc_of_reason r);
+                   reason;
+                   name = this_name;
+                   bound = this;
+                 }
+             else
+               this
+           in
+           let i' = subst cx (Subst_name.Map.singleton this_name this_generic) i in
+           Flow_cache.Fix.add cx is_this i i';
+           i'
+          )
+      in
+      Lazy.force i'
+  in
+  DefT (r, bogus_trust (), ClassT i')
+
 module type Instantiation_helper_sig = sig
   val cache_instantiate :
     Context.t ->
@@ -869,10 +903,6 @@ module type Instantiation_helper_sig = sig
   val unify : Context.t -> Type.trace -> use_op:use_op -> Type.t * Type.t -> unit
 
   val mk_targ : Context.t -> Type.typeparam -> Reason.t -> Reason.t -> Type.t
-
-  val unresolved_id : Context.t -> Reason.t -> int
-
-  val resolve_id : Context.t -> Type.trace -> use_op:use_op -> Type.tvar -> Type.t -> unit
 end
 
 module Instantiation_kit (H : Instantiation_helper_sig) = struct
@@ -1007,38 +1037,6 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       ~unify_bounds
       (tparams_loc, xs, t)
       (Nel.to_list ts)
-
-  (* Fix a this-abstracted instance type by tying a "knot": assume that the
-     fixpoint is some `this`, substitute it as This in the instance type, and
-     finally unify it with the instance type. Return the class type wrapping the
-     instance type. *)
-  let fix_this_class cx trace reason (r, i, is_this, this_name) =
-    let i' =
-      match Flow_cache.Fix.find cx is_this i with
-      | Some i' -> i'
-      | None ->
-        let reason_i = reason_of_t i in
-        let id = unresolved_id cx reason_i in
-        let tvar = (reason_i, id) in
-        let this = OpenT tvar in
-        let this_generic =
-          if is_this then
-            GenericT
-              {
-                id = Context.make_generic_id cx this_name (def_aloc_of_reason r);
-                reason;
-                name = this_name;
-                bound = this;
-              }
-          else
-            this
-        in
-        let i' = subst cx (Subst_name.Map.singleton this_name this_generic) i in
-        Flow_cache.Fix.add cx is_this i i';
-        resolve_id cx trace ~use_op:unknown_use tvar i';
-        i'
-    in
-    DefT (r, bogus_trust (), ClassT i')
 end
 
 (***********)
@@ -1121,13 +1119,6 @@ module type Import_export_helper_sig = sig
 
   val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
 
-  val fix_this_class :
-    Context.t ->
-    Type.trace ->
-    Reason.reason ->
-    Reason.reason * Type.t * bool * Subst_name.t ->
-    Type.t
-
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 
   val error_type : Context.t -> Type.trace -> Reason.t -> r
@@ -1167,7 +1158,7 @@ end
    type` to `import` followed by `type`.
 *)
 module ImportTypeT_kit (F : Import_export_helper_sig) = struct
-  let canonicalize_imported_type cx trace reason t =
+  let canonicalize_imported_type cx reason t =
     match t with
     | DefT (_, trust, ClassT inst) -> Some (DefT (reason, trust, TypeT (ImportClassKind, inst)))
     | DefT
@@ -1183,8 +1174,7 @@ module ImportTypeT_kit (F : Import_export_helper_sig) = struct
       Some (poly_type (Type.Poly.generate_id ()) tparams_loc typeparams (class_type tapp))
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
-    | ThisClassT (r, i, this, this_name) ->
-      Some (F.fix_this_class cx trace reason (r, i, this, this_name))
+    | ThisClassT (r, i, this, this_name) -> Some (fix_this_class cx reason (r, i, this, this_name))
     | DefT (enum_reason, trust, EnumObjectT enum) ->
       let enum_type = mk_enum_type ~trust enum_reason enum in
       Some (DefT (reason, trust, TypeT (ImportEnumKind, enum_type)))
@@ -1197,7 +1187,7 @@ module ImportTypeT_kit (F : Import_export_helper_sig) = struct
     | ((ExactT (_, DefT (_, _, ObjT _)) | DefT (_, _, ObjT _)), "default") ->
       F.return cx trace ~use_op:unknown_use exported_type
     | (exported_type, _) ->
-      (match canonicalize_imported_type cx trace reason exported_type with
+      (match canonicalize_imported_type cx reason exported_type with
       | Some imported_t -> F.return cx trace ~use_op:unknown_use imported_t
       | None ->
         add_output cx ~trace (Error_message.EImportValueAsType (reason, export_name));
@@ -1584,7 +1574,7 @@ module ExportTypeT_kit (F : Import_export_helper_sig) = struct
     let is_type_export =
       match l with
       | DefT (_, _, ObjT _) when export_name = OrdinaryName "default" -> true
-      | l -> ImportTypeTKit.canonicalize_imported_type cx trace reason l <> None
+      | l -> ImportTypeTKit.canonicalize_imported_type cx reason l <> None
     in
     if is_type_export then
       (* TODO we may want to add location information here *)

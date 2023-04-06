@@ -1431,15 +1431,14 @@ and merge_class_mixin =
 
 and merge_class tps infer_tps file reason id def =
   let (ClassSig { tparams; extends; implements; static_props; own_props; proto_props }) = def in
-  let t (tps, targs) =
-    let this_reason = Reason.(replace_desc_reason RThisType reason) in
-    let rec_type = ConsGen.unresolved_tvar file.cx this_reason in
+  let this_reason = Reason.(replace_desc_reason RThisType reason) in
+  let this_class_t tps targs rec_type =
     let this =
       let this_tp =
         {
           Type.name = Subst_name.Name "this";
           reason = this_reason;
-          bound = Type.OpenT (this_reason, rec_type);
+          bound = rec_type;
           polarity = Polarity.Positive;
           default = None;
           is_this = true;
@@ -1483,9 +1482,16 @@ and merge_class tps infer_tps file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    let t = TypeUtil.this_class_type inst false (Subst_name.Name "this") in
-    ConsGen.resolve_id file.cx reason rec_type t;
-    t
+    TypeUtil.this_class_type inst false (Subst_name.Name "this")
+  in
+  let t (tps, targs) =
+    let rec t =
+      lazy
+        (let rec_type = Tvar.mk_fully_resolved_lazy file.cx Type.unknown_use this_reason t in
+         this_class_t tps targs rec_type
+        )
+    in
+    Lazy.force t
   in
   merge_tparams_targs tps infer_tps file reason t tparams
 
@@ -1694,15 +1700,14 @@ let merge_declare_class file reason id def =
         ) =
     def
   in
-  let t (tps, targs) =
-    let this_reason = Reason.(replace_desc_reason RThisType reason) in
-    let rec_type = ConsGen.unresolved_tvar file.cx this_reason in
+  let this_reason = Reason.(replace_desc_reason RThisType reason) in
+  let this_class_t tps targs rec_type =
     let this =
       let this_tp =
         {
           Type.name = Subst_name.Name "this";
           reason = this_reason;
-          bound = Type.OpenT (this_reason, rec_type);
+          bound = rec_type;
           polarity = Polarity.Positive;
           default = None;
           is_this = true;
@@ -1764,9 +1769,16 @@ let merge_declare_class file reason id def =
       }
     in
     let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    let t = TypeUtil.this_class_type inst false (Subst_name.Name "this") in
-    ConsGen.resolve_id file.cx reason rec_type t;
-    t
+    TypeUtil.this_class_type inst false (Subst_name.Name "this")
+  in
+  let t (tps, targs) =
+    let rec t =
+      lazy
+        (let rec_type = Tvar.mk_fully_resolved_lazy file.cx Type.unknown_use this_reason t in
+         this_class_t tps targs rec_type
+        )
+    in
+    Lazy.force t
   in
   merge_tparams_targs SMap.empty SMap.empty file reason t tparams
 

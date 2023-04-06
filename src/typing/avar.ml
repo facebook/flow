@@ -16,8 +16,6 @@ let init_avar cx constraint_ =
   init_avar_with_id cx id constraint_;
   id
 
-let unresolved cx reason = init_avar cx (Annot_unresolved { reason; dependents = ISet.empty })
-
 let unresolved_with_id cx id reason =
   init_avar_with_id cx id (Annot_unresolved { reason; dependents = ISet.empty })
 

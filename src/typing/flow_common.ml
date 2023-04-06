@@ -147,13 +147,6 @@ module type BUILTINS = sig
 end
 
 module type SUBTYPING = sig
-  val fix_this_class :
-    Context.t ->
-    Type.trace ->
-    Reason.reason ->
-    Reason.reason * Type.t * bool * Subst_name.t ->
-    Type.t
-
   val reposition_reason :
     Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> Type.t -> Type.t
 
