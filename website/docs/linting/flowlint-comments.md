@@ -3,9 +3,8 @@ title: Flowlint Comments
 slug: /linting/flowlint-comments
 ---
 
-Configuring lint settings with `flowlint` comments allows you to specify different
-settings within a file and different settings to different regions of different
-files. These comments come in three forms:
+You can use `flowlint` comments to specify more granular lint settings within a file.
+These comments come in three froms:
 * [flowlint](#toc-flowlint)
 * [flowlint-line](#toc-flowlint-line)
 * [flowlint-next-line](#toc-flowlint-next-line)
@@ -20,7 +19,7 @@ and applying settings over part of a line.
 
 **settings over a block of code:**
 A pair of `flowlint` comments can be used to apply a certain setting over a block of code.
-For example, to disabling the untyped-type-import lint over a block of type imports would look like this:
+For example, to disable the untyped-type-import lint over a block of type imports would look like this:
 ```js
 import type {
   // flowlint untyped-type-import:off
@@ -44,7 +43,7 @@ could use this, for example, to suppress all sketchy-null-check lints in a parti
 The settings applied by `flowlint` start and end right at the comment itself. This
 means that you can do things like
 ```js
-function (a: ?boolean, b: ?boolean) {
+function foo(a: ?boolean, b: ?boolean) {
   if (/* flowlint sketchy-null-bool:off */a/* flowlint sketchy-null-bool:warn */ && b) {
     ...
   } else {
@@ -59,7 +58,7 @@ A `flowlint-line` comment works similarly to a `flowlint` comment, except it onl
 applies its settings to the current line instead of applying them for the rest of the file.
 The primary use for `flowlint-line` comments is to suppress a lint on a particular line:
 ```js
-function (x: ?boolean) {
+function foo(x: ?boolean) {
   if (x) { // flowlint-line sketchy-null-bool:off
     ...
   } else {
@@ -72,7 +71,7 @@ function (x: ?boolean) {
 ### flowlint-next-line {#toc-flowlint-next-line}
 `flowlint-next-line` works the same as `flowlint-line`, except it applies its settings to the next line instead of the current line:
 ```js
-function (x: ?boolean) {
+function foo(x: ?boolean) {
   // flowlint-next-line sketchy-null-bool:off
   if (x) {
     ...

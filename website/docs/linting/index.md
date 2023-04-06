@@ -8,12 +8,10 @@ Flow contains a linting framework that can tell you about more than just type er
 
 ### Configuring Lints in the `.flowconfig` {#toc-configuring-lints-in-the-flowconfig}
 
-Lint settings can be specified in the `.flowconfig` [lints] section as a list of `rule=severity` pairs. These settings apply globally to the entire project.
+Lint settings can be specified in the `[lints]` section of the `.flowconfig` as a list of `rule=severity` pairs. These settings apply globally to the entire project.
 
-**Example:**
 ```
 [lints]
-# all=off by default
 all=warn
 untyped-type-import=error
 sketchy-null-bool=off
@@ -23,7 +21,6 @@ sketchy-null-bool=off
 
 Lint settings can be specified using the `--lints` flag of a Flow server command as a comma-delimited list of `rule=severity` pairs. These settings apply globally to the entire project.
 
-**Example:**
 ```
 flow start --lints "all=warn, untyped-type-import=error, sketchy-null-bool=off"
 ```
@@ -34,7 +31,6 @@ Lint settings can be specified inside a file using `flowlint` comments. These
 settings apply to a region of a file, or a single line, or part of a line. For
 more details see [Flowlint Comments](./flowlint-comments).
 
-**Example:**
 ```js flow-check
 // flowlint sketchy-null:error
 const x: ?number = 0;
@@ -56,14 +52,16 @@ if (x) {} // No Error
 Lint settings in `flowlint` comments have the highest priority, followed by lint rules in the `--lints` flag, followed by the `.flowconfig`.
 This order allows you to use `flowlint` comments for fine-grained linting control, the `--lints` flag for trying out new lint settings, and the `.flowconfig` for stable project-wide settings.
 
-Within the -lints flag and the flowconfig, rules lower down override rules higher up, allowing you to write things like
+Within the `--lints` flag and the `.flowconfig`, rules lower down override rules higher up, allowing you to write things like
 ```
 [lints]
+# warn on all sketchy-null checks
 sketchy-null=warn
+# ... except for booleans
 sketchy-null-bool=off
 ```
 
-The lint settings parser is fairly intelligent and will stop you if you write a redundant rule, a rule that gets completely overwritten, or an unused suppression. This should prevent most accidental misconfigurations of lint rules.
+The lint settings parser is fairly intelligent and will stop you if you write a redundant rule, a rule that gets completely overwritten, or an unused flowlint suppression. This should prevent most accidental misconfigurations of lint rules.
 
 ### Severity Levels and Meanings {#toc-severity-levels-and-meanings}
 
@@ -74,10 +72,9 @@ The lint is ignored. Setting a lint to `off` is similar to suppressing a type er
 Warnings are a new severity level introduced by the linting framework. They are treated differently than errors in a couple of ways:
 * Warnings don't affect the exit code of Flow. If Flow finds warnings but no errors, it still returns 0.
 * Warnings aren't shown on the CLI by default, to avoid spew. CLI warnings can be
-    enabled by passing the --include-warnings flag to the Flow server or the
-    Flow client, or by setting "include_warnings=true" in the `.flowconfig`.
+    enabled by passing the `--include-warnings` flag to the Flow server or the
+    Flow client, or by setting `include_warnings=true` in the `.flowconfig`.
     This is good for smaller projects that want to see all project warnings at once.
-* Warnings have special [IDE Integration](./ide-integration).
 
 **error:**
 Lints with severity `error` are treated exactly the same as any other Flow error.

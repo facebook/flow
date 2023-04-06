@@ -120,7 +120,6 @@ module.exports = {
       items: [
         'linting/index',
         'linting/flowlint-comments',
-        'linting/ide-integration',
         'linting/rule-reference',
       ],
     },
