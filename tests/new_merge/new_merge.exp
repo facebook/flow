@@ -65,7 +65,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:27:2
 
-Cannot cast `y5` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y5` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    main.js:27:2
    27| (y5: empty); // error function type ~> empty

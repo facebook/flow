@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:6:4
 
-Cannot get `a.other` because property `other` is missing in statics of function type [1]. [prop-missing]
+Cannot get `a.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
    b.js:6:4
    6| (a.other: number);
@@ -48,7 +48,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:14:9
 
-Cannot get `poly_a.other` because property `other` is missing in statics of function type [1]. [prop-missing]
+Cannot get `poly_a.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
    b.js:14:9
    14| (poly_a.other: number);
@@ -62,7 +62,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- conditional-import.js:4:4
 
-Cannot get `f.a` because property `a` is missing in statics of function type [1]. [prop-missing]
+Cannot get `f.a` because property `a` is missing in statics of function [1]. [prop-missing]
 
    conditional-import.js:4:4
    4| (f.a: number); // ERROR
@@ -76,7 +76,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- conditional-import.js:5:4
 
-Cannot get `f.b` because property `b` is missing in statics of function type [1]. [prop-missing]
+Cannot get `f.b` because property `b` is missing in statics of function [1]. [prop-missing]
 
    conditional-import.js:5:4
    5| (f.b: number); // ERROR
@@ -90,7 +90,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- conditional-import.js:8:4
 
-Cannot get `g.a` because property `a` is missing in statics of function type [1]. [prop-missing]
+Cannot get `g.a` because property `a` is missing in statics of function [1]. [prop-missing]
 
    conditional-import.js:8:4
     8| (g.a: number); // ERROR

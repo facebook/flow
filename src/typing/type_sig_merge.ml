@@ -55,13 +55,7 @@ let def_reason = function
   | ClassBinding { id_loc; name; _ }
   | DeclareClassBinding { id_loc; name; _ } ->
     Type.DescFormat.instance_reason (Reason.OrdinaryName name) id_loc
-  | FunBinding { fn_loc; _ } ->
-    (* RFunctionType should be Reason.func_reason instead, but this matches the
-     * behavior of types-first where function bindings are converted to declared
-     * functions, which are given a RFunctionType reason.
-     *
-     * TODO Fix once T71257430 is closed. *)
-    Reason.(mk_reason RFunctionType fn_loc)
+  | FunBinding { fn_loc; async; generator; _ } -> Reason.func_reason ~async ~generator fn_loc
   | DeclareFun { id_loc; _ } -> Reason.(mk_reason RFunctionType id_loc)
   | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | DisabledEnumBinding { id_loc; name; _ }
@@ -1089,13 +1083,8 @@ and merge_value tps infer_tps file = function
     let reason = Type.DescFormat.instance_reason (Reason.OrdinaryName name) loc in
     let id = Context.make_aloc_id file.cx loc in
     merge_class tps infer_tps file reason id def
-  | FunExpr { loc; async = _; generator = _; def; statics } ->
-    (* RFunctionType should be Reason.func_reason instead, but this matches the
-     * behavior of types-first where function bindings are converted to declared
-     * functions, which are given a RFunctionType reason.
-     *
-     * TODO Fix once T71257430 is closed. *)
-    let reason = Reason.(mk_reason RFunctionType loc) in
+  | FunExpr { loc; async; generator; def; statics } ->
+    let reason = Reason.func_reason ~async ~generator loc in
     let statics = merge_fun_statics tps infer_tps file reason statics in
     merge_fun tps infer_tps file reason def statics
   | StringVal loc ->
@@ -1217,13 +1206,8 @@ and merge_obj_value_prop tps infer_tps file = function
     let t = merge tps infer_tps file t in
     Type.Field (Some id_loc, t, polarity)
   | ObjValueAccess x -> merge_accessor tps infer_tps file x
-  | ObjValueMethod { id_loc; fn_loc; async = _; generator = _; def } ->
-    (* RFunctionType should be Reason.func_reason instead, but this matches the
-     * behavior of types-first where function bindings are converted to declared
-     * functions, which are given a RFunctionType reason.
-     *
-     * TODO Fix once T71257430 is closed. *)
-    let reason = Reason.(mk_reason RFunctionType fn_loc) in
+  | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
+    let reason = Reason.func_reason ~async ~generator fn_loc in
     let statics = merge_fun_statics tps infer_tps file reason SMap.empty in
     let t = merge_fun tps infer_tps file reason def statics in
     Type.Method (Some id_loc, t)
@@ -1233,13 +1217,8 @@ and merge_class_prop tps infer_tps file = function
     let t = merge tps infer_tps file t in
     Type.Field (Some id_loc, t, polarity)
   | ObjValueAccess x -> merge_accessor tps infer_tps file x
-  | ObjValueMethod { id_loc; fn_loc; async = _; generator = _; def } ->
-    (* RFunctionType should be Reason.func_reason instead, but this matches the
-     * behavior of types-first where function bindings are converted to declared
-     * functions, which are given a RFunctionType reason.
-     *
-     * TODO Fix once T71257430 is closed. *)
-    let reason = Reason.(mk_reason RFunctionType fn_loc) in
+  | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
+    let reason = Reason.func_reason ~async ~generator fn_loc in
     let statics = Type.dummy_static reason in
     let t = merge_fun ~is_method:true tps infer_tps file reason def statics in
     Type.Method (Some id_loc, t)

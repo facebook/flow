@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- arrow_dep.js:2:2
 
-Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    arrow_dep.js:2:2
    2| (f: empty); // err
@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ arrow_with_statics_dep.js:2:2
 
-Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    arrow_with_statics_dep.js:2:2
    2| (f: empty); // err
@@ -102,7 +102,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ arrow_with_statics_dep.js:4:3
 
-Cannot get `f.missing` because property `missing` is missing in statics of function type [1]. [prop-missing]
+Cannot get `f.missing` because property `missing` is missing in statics of function [1]. [prop-missing]
 
    arrow_with_statics_dep.js:4:3
    4| f.missing; // err
@@ -167,7 +167,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_decl_dep.js:2:2
 
-Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    function_decl_dep.js:2:2
    2| (f: empty); // err
@@ -218,7 +218,7 @@ References:
 
 Error ---------------------------------------------------------------------------- function_decl_with_statics_dep.js:2:2
 
-Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    function_decl_with_statics_dep.js:2:2
    2| (f: empty); // err
@@ -252,7 +252,7 @@ References:
 
 Error ---------------------------------------------------------------------------- function_decl_with_statics_dep.js:4:3
 
-Cannot get `f.missing` because property `missing` is missing in statics of function type [1]. [prop-missing]
+Cannot get `f.missing` because property `missing` is missing in statics of function [1]. [prop-missing]
 
    function_decl_with_statics_dep.js:4:3
    4| f.missing; // err
@@ -283,7 +283,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_expr_dep.js:2:2
 
-Cannot cast `f` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
    function_expr_dep.js:2:2
    2| (f: empty); // err

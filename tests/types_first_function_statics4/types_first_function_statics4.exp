@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:7:6
 
-Cannot get `foo.other` because property `other` is missing in statics of function type [1]. [prop-missing]
+Cannot get `foo.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
    b.js:7:6
    7| (foo.other: number);
@@ -48,7 +48,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:12:6
 
-Cannot get `bar.other` because property `other` is missing in statics of function type [1]. [prop-missing]
+Cannot get `bar.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
    b.js:12:6
    12| (bar.other: number);
@@ -115,7 +115,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:31:11
 
-Cannot get `poly_foo.other` because property `other` is missing in statics of function type [1]. [prop-missing]
+Cannot get `poly_foo.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
    b.js:31:11
    31| (poly_foo.other: number);
@@ -146,7 +146,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:37:11
 
-Cannot get `poly_bar.other` because property `other` is missing in statics of function type [1]. [prop-missing]
+Cannot get `poly_bar.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
    b.js:37:11
    37| (poly_bar.other: number);

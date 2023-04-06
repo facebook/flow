@@ -440,8 +440,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:108:8
 
-Cannot assign object literal to `ob` because function type [1] cannot be unbound from the context [1] where it was
-defined in the `this` parameter of property `f`. [method-unbinding]
+Cannot assign object literal to `ob` because function [1] cannot be unbound from the context [1] where it was defined in
+the `this` parameter of property `f`. [method-unbinding]
 
    test.js:108:8
    108|     f: X.method,

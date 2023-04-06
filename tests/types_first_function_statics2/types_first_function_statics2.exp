@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:6:4
 
-Cannot get `a.other` because property `other` is missing in statics of function type [1]. [prop-missing]
+Cannot get `a.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
    b.js:6:4
    6| (a.other: string);
@@ -48,7 +48,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:14:9
 
-Cannot get `poly_a.other` because property `other` is missing in statics of function type [1]. [prop-missing]
+Cannot get `poly_a.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
    b.js:14:9
    14| (poly_a.other: string);
