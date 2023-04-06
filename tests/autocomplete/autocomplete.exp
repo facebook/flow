@@ -11904,5 +11904,12 @@ Flags: --pretty
 
 switch.js:6:8
 Flags: --pretty
-{"result":[{"name":"x","type":"\"foo\" | \"bar\" | \"baz\""}]}
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"x","type":"\"foo\" | \"bar\" | \"baz\""}
+  ]
+}
 

@@ -2664,6 +2664,19 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
               ~cond:NonConditionalContext
               argument
       )
+
+    method! switch loc switch =
+      let open Ast.Statement.Switch in
+      let { discriminant; cases; _ } = switch in
+      let res = super#switch loc switch in
+      (* Overwrite the (probably empty) hints on the case expressions recorded by super#switch *)
+      Base.List.iter cases ~f:(fun case ->
+          match case with
+          | (_, { Case.test = Some (test_loc, _); _ }) ->
+            this#record_hint test_loc [Hint_t (ValueHint discriminant, ExpectedTypeHint)]
+          | _ -> ()
+      );
+      res
   end
 
 let find_defs ~autocomplete_hooks env_entries env_values providers ast =
