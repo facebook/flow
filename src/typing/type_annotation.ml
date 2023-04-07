@@ -2271,7 +2271,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       (t, Some annot_ast)
 
-  and mk_type_annotation cx tparams_map infer_tparams_map reason = function
+  and mk_type_annotation cx tparams_map reason = function
     | T.Missing loc ->
       let t =
         if Context.typing_mode cx <> Context.CheckingMode then
@@ -2281,10 +2281,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (Inferred t, T.Missing (loc, t))
     | T.Available annot ->
-      let (t, ast_annot) = mk_type_available_annotation cx tparams_map infer_tparams_map annot in
+      let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
       (Annotated t, T.Available ast_annot)
 
-  and mk_return_type_annotation cx tparams_map infer_tparams_map reason ~void_return ~async annot =
+  and mk_return_type_annotation cx tparams_map reason ~void_return ~async annot =
     match annot with
     | T.Missing loc when void_return ->
       let void_t = VoidT.why reason |> with_trust literal_trust in
@@ -2298,9 +2298,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       (Inferred t, T.Missing (loc, t))
     (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
        and no explicit returns *)
-    | _ -> mk_type_annotation cx tparams_map infer_tparams_map reason annot
+    | _ -> mk_type_annotation cx tparams_map reason annot
 
-  and mk_type_available_annotation cx tparams_map infer_tparams_map (loc, annot) =
+  and mk_type_available_annotation cx tparams_map (loc, annot) =
     let node_cache = Context.node_cache cx in
     let (((_, t), _) as annot_ast) =
       match (Node_cache.get_annotation node_cache loc, annot) with
@@ -2318,13 +2318,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
         (* If the type we're converting is in the tparams map, we prefer that over
            the node cache *)
-        convert cx tparams_map infer_tparams_map annot
+        convert cx tparams_map ALocMap.empty annot
       | (Some (_, node), _) ->
         Debug_js.Verbose.print_if_verbose_lazy
           cx
           (lazy [spf "Annotation cache hit at %s" (ALoc.debug_to_string loc)]);
         node
-      | (None, _) -> convert cx tparams_map infer_tparams_map annot
+      | (None, _) -> convert cx tparams_map ALocMap.empty annot
     in
     (t, (loc, annot_ast))
 
@@ -2955,13 +2955,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   let mk_super cx tparams_map = mk_super cx tparams_map ALocMap.empty
 
-  let mk_type_annotation cx tparams_map = mk_type_annotation cx tparams_map ALocMap.empty
+  let mk_type_annotation cx tparams_map = mk_type_annotation cx tparams_map
 
-  let mk_type_available_annotation cx tparams_map =
-    mk_type_available_annotation cx tparams_map ALocMap.empty
+  let mk_type_available_annotation cx tparams_map = mk_type_available_annotation cx tparams_map
 
-  let mk_return_type_annotation cx tparams_map =
-    mk_return_type_annotation cx tparams_map ALocMap.empty
+  let mk_return_type_annotation cx tparams_map = mk_return_type_annotation cx tparams_map
 
   let mk_function_type_annotation cx tparams_map =
     mk_function_type_annotation cx tparams_map ALocMap.empty
