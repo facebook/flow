@@ -7,8 +7,8 @@
 
 module Get_def_result : sig
   type t =
-    | Def of Loc.t
-    | Partial of Loc.t * string
+    | Def of Loc.t list
+    | Partial of Loc.t list * string
     | Bad_loc
     | Def_error of string
 end

@@ -2271,7 +2271,6 @@ Flags: --lsp
   "labelDetails":{"detail":": (() => string) | number"},
   "kind":13,
   "detail":"(() => string) | number",
-  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -2302,7 +2301,6 @@ Flags: --lsp
   "labelDetails":{"detail":": (() => string) & number"},
   "kind":6,
   "detail":"(() => string) & number",
-  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{

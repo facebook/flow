@@ -1,14 +1,22 @@
 // @flow
 
-type Foo = {
-  kind: 'asdf',
-} | {
-  kind: 'jkl;',
-}
+type O =
+  | { foo: "a" }
+  | { foo: "b" }
+  | { foo: "c" }
 
-function foo(x: Foo): void {
-  if (x.kind === 'jkl;') {}
-//      ^
-  if (x.kind) {}
-//      ^
+declare const o: O;
+
+o.foo;
+// ^
+
+if (o.foo === "a") {
+  o.foo;
+//   ^
+} else if (o.foo === "b") {
+  o.foo;
+//   ^
+} else if (o.foo === "c") {
+  o.foo;
+//   ^
 }

@@ -9,8 +9,8 @@ let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 module Get_def_result = struct
   type t =
-    | Def of Loc.t  (** the final location of the definition *)
-    | Partial of Loc.t * string
+    | Def of Loc.t list  (** the final location of the definition *)
+    | Partial of Loc.t list * string
         (** if an intermediate get-def failed, return partial progress and the error message *)
     | Bad_loc  (** the input loc didn't point at anything you can call get-def on *)
     | Def_error of string  (** an unexpected, internal error *)
@@ -28,21 +28,27 @@ let extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance type_ na
       ~file_sig
       Type.TypeScheme.{ tparams_rev = []; type_ }
   in
-  match NameUtils.Map.find_opt (Reason.OrdinaryName name) members with
-  | Some Ty_members.{ def_loc = Some def_loc; _ } -> Ok (loc_of_aloc ~reader def_loc)
-  | _ -> Error (Printf.sprintf "failed to find member %s in members map" name)
+  let def_locs =
+    Base.Option.bind
+      (NameUtils.Map.find_opt (Reason.OrdinaryName name) members)
+      ~f:(fun Ty_members.{ def_locs; _ } -> Nel.of_list def_locs
+    )
+  in
+  match def_locs with
+  | Some def_locs -> Ok (Nel.map (loc_of_aloc ~reader) def_locs)
+  | None -> Error (Printf.sprintf "failed to find member %s in members map" name)
 
 let extract_require_member_def ~reader ~cx this name =
   match Members.extract cx this |> Members.to_command_result with
   | Ok result_map ->
     (match SMap.find_opt name result_map with
-    | Some (None, t) -> Ok (TypeUtil.loc_of_t t |> loc_of_aloc ~reader)
-    | Some (Some x, _) -> Ok (loc_of_aloc ~reader x)
+    | Some (None, t) -> Ok (Nel.one (TypeUtil.loc_of_t t |> loc_of_aloc ~reader))
+    | Some (Some x, _) -> Ok (Nel.one (loc_of_aloc ~reader x))
     | None -> Error (Printf.sprintf "failed to find member %s in members map" name))
   | Error msg -> Error msg
 
 let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~file_sig :
-    (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t, string) result = function
+    (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t, string) result = function
   | Get_def_request.Identifier { name = _; loc = (aloc, type_) } ->
     let loc = loc_of_aloc ~reader aloc in
     let scope_info =
@@ -53,7 +59,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
     (match Loc_collections.LocSet.elements matching_uses with
     | [use] ->
       let def = Scope_api.With_Loc.def_of_use scope_info use in
-      let def_loc = def.Scope_api.With_Loc.Def.locs |> Nel.hd in
+      let def_loc = def.Scope_api.With_Loc.Def.locs in
       Ok def_loc
     | [] ->
       process_request
@@ -95,7 +101,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
         | _ ->
           (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
           (match Reason.annot_aloc_of_reason r with
-          | Some aloc -> Ok (loc_of_aloc ~reader aloc)
+          | Some aloc -> Ok (Nel.one (loc_of_aloc ~reader aloc))
           | None -> loop t))
       | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) -> loop t
       | t ->
@@ -105,7 +111,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
           | Some aloc -> aloc
           | None -> Reason.def_aloc_of_reason r
         in
-        Ok (loc_of_aloc ~reader aloc)
+        Ok (Nel.one (loc_of_aloc ~reader aloc))
     in
     loop v
   | Get_def_request.Require (source_loc, name) ->
@@ -133,7 +139,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
       | None -> Error (Printf.sprintf "Failed to find imported file %s" name)
       | Some addr ->
         let file = Parsing_heaps.read_file_key addr in
-        Ok Loc.{ none with source = Some file }
+        Ok (Nel.one Loc.{ none with source = Some file })
     in
     (match module_t with
     | Type.ModuleT (_, { Type.cjs_export; _ }, _) ->
@@ -147,7 +153,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
       if loc = Loc.none then
         get_imported_file ()
       else
-        Ok loc
+        Ok (Nel.one loc)
     | Type.AnyT _ -> get_imported_file ()
     | _ ->
       Error
@@ -215,7 +221,7 @@ let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
           Depth.limit
           trace_str
       in
-      Partial (req_loc, log_message)
+      Partial ([req_loc], log_message)
     else
       let open Get_def_process_location in
       match
@@ -226,26 +232,41 @@ let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
           ~module_ref_prefix_LEGACY_INTEROP
           req_loc
       with
-      | OwnDef aloc -> Def (loc_of_aloc ~reader aloc)
-      | Request request ->
-        (match
-           process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~file_sig request
-         with
-        | Ok res_loc ->
-          (* two scenarios where we stop trying to recur:
-             - when req_loc = res_loc, meaning we've reached a fixed point so
-               continuing would make us infinite loop
-             - when res_loc is not in the file the request originated from, meaning
-               the typed_ast we have is the wrong one to recur with *)
-          if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
-            Def res_loc
-          else (
-            match loop ~depth:(Depth.add req_loc depth) res_loc with
-            | Bad_loc -> Def res_loc
-            | Def_error msg -> Partial (res_loc, msg)
-            | (Def _ | Partial _) as res -> res
-          )
-        | Error msg -> Def_error msg)
+      | OwnDef aloc -> Def [loc_of_aloc ~reader aloc]
+      | Request request -> begin
+        match
+          process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~file_sig request
+        with
+        | Ok res_locs ->
+          res_locs
+          |> Nel.map (fun res_loc ->
+                 (* two scenarios where we stop trying to recur:
+                    - when req_loc = res_loc, meaning we've reached a fixed point so
+                      continuing would make us infinite loop
+                    - when res_loc is not in the file the request originated from, meaning
+                      the typed_ast we have is the wrong one to recur with *)
+                 if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
+                   Def [res_loc]
+                 else
+                   match loop ~depth:(Depth.add req_loc depth) res_loc with
+                   | Bad_loc -> Def [res_loc]
+                   | Def_error msg -> Partial ([res_loc], msg)
+                   | (Def _ | Partial _) as res -> res
+             )
+          |> Nel.reduce (fun res1 res2 ->
+                 match (res1, res2) with
+                 | (Def locs1, Def locs2) -> Def (Base.List.unordered_append locs1 locs2)
+                 | (Partial (locs1, msg1), Partial (locs2, msg2)) ->
+                   Partial (Base.List.unordered_append locs1 locs2, msg1 ^ msg2)
+                 | (Def locs1, Partial (locs2, msg))
+                 | (Partial (locs1, msg), Def locs2) ->
+                   Partial (Base.List.unordered_append locs1 locs2, msg)
+                 | ((Bad_loc | Def_error _), other)
+                 | (other, (Bad_loc | Def_error _)) ->
+                   other
+             )
+        | Error msg -> Def_error msg
+      end
       | LocNotFound -> Bad_loc
   in
   loop ~depth:Depth.empty requested_loc

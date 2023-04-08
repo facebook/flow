@@ -430,7 +430,7 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
             :: json_props
             )
         )
-      | Bad_loc -> (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
+      | Bad_loc -> (Ok [], Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
       | Def_error msg ->
         ( Error msg,
           Some
@@ -521,10 +521,10 @@ let infer_type
       in
       let documentation =
         match getdef_loc_result with
-        | Error _ -> None
-        | Ok getdef_loc ->
+        | Ok [getdef_loc] ->
           Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
           |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+        | _ -> None
       in
       let json_props =
         ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
@@ -800,7 +800,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
   | Error (Failed msg) -> (Error msg, None)
   | Error (Skipped reason) ->
     let json_props = ("result", Hh_json.JSON_String "SKIPPED") :: json_props_of_skipped reason in
-    (Ok Loc.none, Some (Hh_json.JSON_Object json_props))
+    (Ok [], Some (Hh_json.JSON_Object json_props))
   | Ok (file_key, content) ->
     let (check_result, did_hit_cache) =
       match
@@ -1791,14 +1791,13 @@ let handle_persistent_get_def
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok loc when loc = Loc.none ->
-    let response = ResponseMessage (id, DefinitionResult []) in
-    Lwt.return (LspProt.LspFromServer (Some response), metadata)
-  | Ok loc ->
+  | Ok locs ->
     let { TextDocumentPositionParams.textDocument; position = _ } = params in
     let default_uri = textDocument.TextDocumentIdentifier.uri in
-    let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
-    let response = ResponseMessage (id, DefinitionResult [location]) in
+    let locations =
+      Base.List.map locs ~f:(Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri)
+    in
+    let response = ResponseMessage (id, DefinitionResult locations) in
     Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
 

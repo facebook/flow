@@ -295,17 +295,17 @@ let jsdoc_of_def_loc ~reader ~typed_ast def_loc =
   |> Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader
 
 let jsdoc_of_member ~reader ~typed_ast info =
-  Base.Option.bind info.Ty_members.def_loc ~f:(jsdoc_of_def_loc ~reader ~typed_ast)
+  match info.Ty_members.def_locs with
+  | [def_loc] -> jsdoc_of_def_loc ~reader ~typed_ast def_loc
+  | _ -> None
 
 let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   let open GetDef_js.Get_def_result in
   match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc with
-  | Def getdef_loc
-  | Partial (getdef_loc, _) ->
+  | Def [getdef_loc]
+  | Partial ([getdef_loc], _) ->
     Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
-  | Bad_loc
-  | Def_error _ ->
-    None
+  | _ -> None
 
 let documentation_and_tags_of_jsdoc jsdoc =
   let docs = Find_documentation.documentation_of_jsdoc jsdoc in
@@ -1766,10 +1766,11 @@ let unused_super_methods
   in
   let items =
     mems
-    |> Base.List.filter_map ~f:(fun (name, documentation, tags, { Ty_members.ty; def_loc; _ }) ->
+    |> Base.List.filter_map ~f:(fun (name, documentation, tags, { Ty_members.ty; def_locs; _ }) ->
            let open Base.Option in
            (* Find the AST node for member we want to override *)
-           def_loc >>| loc_of_aloc ~reader >>= Find_method.find reader >>| fun method_ ->
+           def_locs |> Base.List.hd >>| loc_of_aloc ~reader >>= Find_method.find reader
+           >>| fun method_ ->
            autocomplete_create_result_method
              ~method_
              ~options

@@ -118,13 +118,23 @@ module_ref.js:3:4
 Flags:
 Parent.js:4:18,4:28
 
-refinements.js:10:9
+refinements.js:10:4
 Flags:
-refinements.js:6:3,6:6
+refinements.js:6:7,6:9
+refinements.js:5:7,5:9
+refinements.js:4:7,4:9
 
-refinements.js:12:9
+refinements.js:14:6
 Flags:
-refinements.js:6:3,6:6
+refinements.js:4:7,4:9
+
+refinements.js:17:6
+Flags:
+refinements.js:5:7,5:9
+
+refinements.js:20:6
+Flags:
+refinements.js:6:7,6:9
 
 declare.js:4:3
 Flags:

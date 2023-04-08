@@ -259,12 +259,10 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
     let jsdoc =
       let open GetDef_js.Get_def_result in
       match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast callee_loc with
-      | Def getdef_loc
-      | Partial (getdef_loc, _) ->
+      | Def [getdef_loc]
+      | Partial ([getdef_loc], _) ->
         Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
-      | Bad_loc
-      | Def_error _ ->
-        None
+      | _ -> None
     in
     (match ty with
     | Ok (Ty.Type ty) ->

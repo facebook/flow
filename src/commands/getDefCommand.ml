@@ -77,21 +77,32 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
   in
   let request = ServerProt.Request.GET_DEF { input; line; char; wait_for_recheck } in
   match connect_and_make_request flowconfig_name option_values root request with
-  | ServerProt.Response.GET_DEF (Ok loc) ->
+  | ServerProt.Response.GET_DEF (Ok locs) ->
     (* format output *)
     if json || pretty then
       (* TODO: this format is deprecated but can't be backwards-compatible.
          should be replaced with just `Reason.json_of_loc loc`. *)
       Hh_json.(
-        let json = JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
+        let json =
+          match locs with
+          | [loc] -> JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc)
+          | locs ->
+            JSON_Array
+              (Base.List.map locs ~f:(fun loc ->
+                   JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc)
+               )
+              )
+        in
         print_json_endline ~pretty json
       )
     else
       let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
       if from = Some "vim" || from = Some "emacs" then
-        print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
+        Base.List.iter locs ~f:(fun loc ->
+            print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
+        )
       else
-        print_endline (range_string_of_loc ~strip_root loc)
+        Base.List.iter locs ~f:(fun loc -> print_endline (range_string_of_loc ~strip_root loc))
   | ServerProt.Response.GET_DEF (Error exn_msg) ->
     if json || pretty then
       let open Hh_json in

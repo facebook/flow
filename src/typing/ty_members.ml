@@ -7,7 +7,9 @@
 
 type 'a member_info = {
   ty: 'a;
-  def_loc: ALoc.t option;
+  def_locs: ALoc.t list;
+      (** The location where the member is defined. There may be multiple in cases
+          involving unions (e.g., `{ foo: string } | { foo: number }`). *)
   inherited: bool;
       (** [inherited] indicates whether the member was inherited either from a super
           class, higher in the prototype chain, or from an interface. *)
@@ -78,7 +80,13 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
              | NamedProp { name; prop; inherited; source; def_loc } ->
                ( NameUtils.Map.singleton
                    name
-                   { ty = ty_of_named_prop prop; inherited; source; from_nullable = false; def_loc },
+                   {
+                     ty = ty_of_named_prop prop;
+                     inherited;
+                     source;
+                     from_nullable = false;
+                     def_locs = Base.Option.to_list def_loc;
+                   },
                  []
                )
              | SpreadProp ty -> members_of_ty ty
@@ -95,21 +103,27 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     |> List.fold_right
          (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
               match (ty_opt, tys_opt) with
-              | ( Some { ty; inherited = id; source = src; from_nullable = fn; def_loc = dl },
+              | ( Some { ty; inherited = id; source = src; from_nullable = fn; def_locs = dl },
                   Some
-                    { ty = tys; inherited = ids; source = srcs; from_nullable = fns; def_loc = dls }
+                    {
+                      ty = tys;
+                      inherited = ids;
+                      source = srcs;
+                      from_nullable = fns;
+                      def_locs = dls;
+                    }
                 ) ->
                 (* We say that a member formed by unioning other members should be treated:
-                 * - as from a prototype only if all its constituent members are.
+                 * - as inherited if any of its constituent members are.
                  * - as from a nullable object if any of its constituent members are.
-                 * we say its def_loc is that of an arbitrary constituent member. *)
+                 * - as defined at the definition locations of any of its constituent members. *)
                 Some
                   {
                     ty = Nel.cons ty tys;
                     inherited = id || ids;
                     source = merge_sources src srcs;
                     from_nullable = fn || fns;
-                    def_loc = Base.Option.first_some dl dls;
+                    def_locs = Base.List.unordered_append dl dls;
                   }
               | (None, _)
               | (_, None) ->
@@ -124,21 +138,27 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     |> List.fold_right
          (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
               match (ty_opt, tys_opt) with
-              | ( Some { ty; inherited = id; source = src; from_nullable = fn; def_loc = dl },
+              | ( Some { ty; inherited = id; source = src; from_nullable = fn; def_locs = dl },
                   Some
-                    { ty = tys; inherited = ids; source = srcs; from_nullable = fns; def_loc = dls }
+                    {
+                      ty = tys;
+                      inherited = ids;
+                      source = srcs;
+                      from_nullable = fns;
+                      def_locs = dls;
+                    }
                 ) ->
                 (* We say that a member formed by intersecting other members should be treated:
-                 * - as from a prototype only if all its constituent members are.
+                 * - as inherited if any of its constituent members are.
                  * - as from a nullable object only if all its constituent members are.
-                 * we say its def_loc is that of an arbitrary constituent member. *)
+                 * - as defined at the definition locations of any of its constituent members. *)
                 Some
                   {
                     ty = Nel.cons ty tys;
                     inherited = id || ids;
                     source = merge_sources src srcs;
                     from_nullable = fn && fns;
-                    def_loc = Base.Option.first_some dl dls;
+                    def_locs = Base.List.unordered_append dl dls;
                   }
               | (Some info, None) -> Some (map_member_info Nel.one info)
               | (None, Some info) -> Some info
@@ -191,7 +211,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                  inherited = true;
                  source = PrimitiveProto "Object";
                  from_nullable = false;
-                 def_loc = None;
+                 def_locs = [];
                }
             )
             universe
@@ -204,7 +224,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                  inherited = true;
                  source = PrimitiveProto "Object";
                  from_nullable = true;
-                 def_loc = None;
+                 def_locs = [];
                }
             )
             universe

@@ -254,7 +254,7 @@ module Response = struct
 
   type dump_types_response = ((Loc.t * string) list, string) result
 
-  type get_def_response = (Loc.t, string) result
+  type get_def_response = (Loc.t list, string) result
 
   type get_imports_response = Loc.t Nel.t Modulename.Map.t SMap.t * SSet.t
 

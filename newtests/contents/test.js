@@ -16,15 +16,7 @@ module.exports = (suite(({addFiles, flowCmd}) => [
       ['get-def', '--strip-root', '--json', 'ignore/foo.js', '3', '2'],
     )
       .stdout(
-        `
-          {
-            "path": "",
-            "line": 0,
-            "endline": 0,
-            "start": 1,
-            "end": 0
-          }
-        `,
+        `[]`,
       )
       .because('Should not work because directory is ignored'),
     flowCmd(
@@ -69,15 +61,7 @@ module.exports = (suite(({addFiles, flowCmd}) => [
       ['get-def', '--strip-root', '--json', 'no_flow/foo.js', '3', '2'],
     )
       .stdout(
-        `
-          {
-            "path": "",
-            "line": 0,
-            "endline": 0,
-            "start": 1,
-            "end": 0
-          }
-        `,
+        `[]`,
       )
       .because('Should not work because no_flow/foo.js is missing @flow'),
     flowCmd(

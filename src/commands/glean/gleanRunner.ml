@@ -212,21 +212,24 @@ let type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast =
   ignore ((new type_reference_searcher add_reference)#program typed_ast);
   !results |> Base.List.map ~f:(TypeDeclarationReference.to_json ~root ~write_root)
 
-let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t option =
+let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t list =
   let open Ty_members in
   match extract ~cx ~typed_ast ~file_sig scheme with
-  | Error _ -> None
+  | Error _ -> []
   | Ok { members; _ } ->
-    Base.Option.bind
-      (NameUtils.Map.find_opt (Reason.OrdinaryName name) members)
-      ~f:(fun { def_loc; _ } -> def_loc
-    )
+    Base.Option.value
+      ~default:[]
+      (Base.Option.map
+         (NameUtils.Map.find_opt (Reason.OrdinaryName name) members)
+         ~f:(fun { def_locs; _ } -> def_locs
+       )
+      )
 
 let member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig =
   let results = ref [] in
   let add_member ~type_ ~aloc ~name ~tparams_rev =
     let scheme = TypeScheme.{ tparams_rev; type_ } in
-    Base.Option.iter (extract_member_def ~cx ~typed_ast ~file_sig scheme name) ~f:(fun def_aloc ->
+    Base.List.iter (extract_member_def ~cx ~typed_ast ~file_sig scheme name) ~f:(fun def_aloc ->
         let memberDeclaration =
           let loc = Parsing_heaps.Reader.loc_of_aloc ~reader def_aloc in
           MemberDeclaration.{ name; loc }
