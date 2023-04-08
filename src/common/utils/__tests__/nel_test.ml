@@ -77,6 +77,7 @@ let tests =
          );
          ("length" >:: fun ctxt -> assert_equal ~ctxt (Nel.length lst) 3);
          ("fold_left" >:: fun ctxt -> assert_equal ~ctxt (Nel.fold_left ( * ) 1 lst) 48);
+         ("reduce" >:: fun ctxt -> assert_equal ~ctxt (Nel.reduce ( + ) lst) 12);
          ("hd" >:: fun ctxt -> assert_equal ~ctxt (Nel.hd lst) 6);
          ( "nth" >:: fun ctxt ->
            assert_equal ~ctxt (Nel.nth lst 0) 6;

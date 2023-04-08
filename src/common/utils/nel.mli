@@ -49,6 +49,8 @@ val length : 'a t -> int
 
 val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 
+val reduce : ('a -> 'a -> 'a) -> 'a t -> 'a
+
 val hd : 'a t -> 'a
 
 val tl : 'a t -> 'a list

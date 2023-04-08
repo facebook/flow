@@ -84,6 +84,8 @@ let length (_, xs) = 1 + Base.List.length xs
 
 let fold_left f acc (x, xs) = Base.List.fold_left ~f ~init:acc (x :: xs)
 
+let reduce f (x, xs) = Base.List.fold_left ~f ~init:x xs
+
 let hd (x, _) = x
 
 let tl (_, xs) = xs
