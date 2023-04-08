@@ -23,6 +23,7 @@ module.exports = (suite(
           'paramDocumentation.js',
           'tupleRestParam.js',
           'member_callee.js',
+          'constructor.js',
         ),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
@@ -491,6 +492,52 @@ module.exports = (suite(
                         documentation: {
                           kind: 'markdown',
                           value: 'z - a bigint',
+                        },
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/constructor.js',
+          },
+          position: {line: 12, character: 3},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string, y: number): void',
+                    documentation: {
+                      kind: 'markdown',
+                      value: 'constructor docs',
+                    },
+                    parameters: [
+                      {
+                        label: 'x: string',
+                        documentation: {
+                          kind: 'markdown',
+                          value: 'x - is an x',
+                        },
+                      },
+                      {
+                        label: 'y: number',
+                        documentation: {
+                          kind: 'markdown',
+                          value: 'y - does a y',
                         },
                       },
                     ],

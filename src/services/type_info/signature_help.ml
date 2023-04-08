@@ -93,7 +93,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
   let func_documentation = Base.Option.bind jsdoc ~f:Find_documentation.documentation_of_jsdoc in
   { ServerProt.Response.param_tys; return_ty; func_documentation }
 
-(* given a Loc.t within a function call, returns the type of the function being called *)
+(* given a Loc.t within a function call or `new` expression, returns the type of the function/constructor being called *)
 module Callee_finder = struct
   type t = {
     tparams_rev: Type.typeparam list;
@@ -121,11 +121,41 @@ module Callee_finder = struct
       else
         find_argument ~reader cursor rest (i + 1)
 
-  class finder ~(reader : State_reader.t) (cursor : Loc.t) =
+  class finder ~(reader : State_reader.t) ~(cx : Context.t) (cursor : Loc.t) =
     object (this)
       inherit Typed_ast_utils.type_parameter_mapper as super
 
       method covers_target loc = Reason.in_range cursor (loc_of_aloc ~reader loc)
+
+      method find
+          : 'a.
+            (unit -> 'a) ->
+            (unit -> Type.t) ->
+            (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.ArgList.t ->
+            ALoc.t ->
+            'a =
+        fun recurse get_callee_type arguments callee_loc ->
+          let (args_loc, { Flow_ast.Expression.ArgList.arguments; _ }) = arguments in
+          let inside_loc =
+            (* exclude the parens *)
+            let args_loc = loc_of_aloc ~reader args_loc in
+            let start = args_loc.Loc.start in
+            let start = { start with Loc.column = start.Loc.column + 1 } in
+            ALoc.of_loc { args_loc with Loc.start }
+          in
+          if this#covers_target inside_loc then
+            (* recurse to see if we find a nested call that's narrower. it will raise if so,
+               so after this line we know we found the right call. *)
+            let _ = recurse () in
+
+            let active_parameter = find_argument ~reader cursor arguments 0 in
+            let loc = loc_of_aloc ~reader callee_loc in
+            let type_ = get_callee_type () in
+            this#annot_with_tparams (fun ~tparams_rev ->
+                raise (Found (Some { tparams_rev; type_; active_parameter; loc }))
+            )
+          else
+            recurse ()
 
       (* only recurse if this loc covers the target. *)
       method short_circuit : 'a. ALoc.t -> 'a -> ('a -> 'a) -> 'a =
@@ -157,26 +187,29 @@ module Callee_finder = struct
             loc
           | _ -> callee_loc
         in
-        let (args_loc, { Flow_ast.Expression.ArgList.arguments; comments = _ }) = arguments in
-        let inside_loc =
-          (* exclude the parens *)
-          let args_loc = loc_of_aloc ~reader args_loc in
-          let start = args_loc.Loc.start in
-          let start = { start with Loc.column = start.Loc.column + 1 } in
-          ALoc.of_loc { args_loc with Loc.start }
-        in
-        if this#covers_target inside_loc then
-          (* recurse to see if we find a nested call that's narrower. it will raise if so,
-             so after this line we know we found the right call. *)
-          let _ = super#call annot expr in
+        this#find (fun () -> super#call annot expr) (fun () -> t) arguments callee_loc
 
-          let active_parameter = find_argument ~reader cursor arguments 0 in
-          let loc = loc_of_aloc ~reader callee_loc in
-          this#annot_with_tparams (fun ~tparams_rev ->
-              raise (Found (Some { tparams_rev; type_ = t; active_parameter; loc }))
-          )
-        else
-          super#call annot expr
+      method! new_ expr =
+        let { Flow_ast.Expression.New.callee = ((callee_loc, class_t), _); arguments; _ } = expr in
+        match arguments with
+        | Some arguments ->
+          let get_callee_type () =
+            let open Reason in
+            let reason = mk_reason (RCustom "signature help get constructor") callee_loc in
+            Tvar.mk_where cx reason (fun t_out ->
+                let open Type in
+                let instance =
+                  Tvar.mk_where cx reason (fun instance ->
+                      Flow_js.flow_t cx (class_t, DefT (reason, bogus_trust (), ClassT instance))
+                  )
+                in
+                let propref = Named (reason, OrdinaryName "constructor") in
+                let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction, t_out) in
+                Flow_js.flow cx (instance, use_t)
+            )
+          in
+          this#find (fun () -> super#new_ expr) get_callee_type arguments callee_loc
+        | None -> super#new_ expr
 
       method! class_body body =
         let _ = super#class_body body in
@@ -193,8 +226,8 @@ module Callee_finder = struct
         | _ -> body
     end
 
-  let find_opt ~reader ~typed_ast loc =
-    let finder = new finder ~reader loc in
+  let find_opt ~reader ~cx ~typed_ast loc =
+    let finder = new finder ~reader ~cx loc in
     try
       let _ = finder#program typed_ast in
       None
@@ -215,7 +248,7 @@ let rec collect_functions ~jsdoc ~exact_by_default acc = function
   | _ -> acc
 
 let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
-  match Callee_finder.find_opt ~reader ~typed_ast loc with
+  match Callee_finder.find_opt ~reader ~cx ~typed_ast loc with
   | Some (scheme, active_parameter, callee_loc) ->
     let ty =
       Ty_normalizer.from_scheme
