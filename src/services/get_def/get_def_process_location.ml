@@ -326,6 +326,27 @@ class ['M, 'T] searcher
       | (_, Init { shorthand = true; value; _ }) -> ignore (this#expression value)
       | _ -> ());
       super#object_property prop
+
+    method! new_ expr =
+      let { Flow_ast.Expression.New.callee = (_, callee); _ } = expr in
+      begin
+        match callee with
+        | Flow_ast.Expression.Identifier (annot, _) when annot_covers_target annot ->
+          this#request
+            Get_def_request.(
+              Member
+                {
+                  prop_name = "constructor";
+                  object_source = ObjectType annot;
+                  (* In `new Foo()`, the type of Foo is ThisClassT(InstanceT).
+                     We use force_instance to force the normalizer to inspect
+                     the InstanceT instead of the static properties of the class *)
+                  force_instance = true;
+                }
+            )
+        | _ -> ()
+      end;
+      super#new_ expr
   end
 
 let process_location

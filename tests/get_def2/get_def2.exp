@@ -146,3 +146,11 @@ static.js:7:6
 Flags:
 static.js:4:10,4:12
 
+constructor.js:7:6
+Flags:
+constructor.js:4:3,4:13
+
+constructor.js:14:6
+Flags:
+constructor.js:10:7,10:9
+

@@ -572,6 +572,7 @@ literals.js:32:7 = {
   "end":9
 }
 new-array.js:3:15 = {
+  "documentation":"Returns a new JavaScript array with its length property set to that number.\n(Note: this implies an array of arrayLength empty slots, not slots with actual undefined\nvalues. See [sparse arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Indexed_collections#sparse_arrays)).",
   "types":{"unevaluated":{"type":"class Array<T>"},"evaluated":{"type":"class Array<T>"}},
   "reasons":[],
   "loc":{
