@@ -18,7 +18,21 @@ end
 
 open Get_def_result
 
-let extract_member_def ~reader cx this name =
+let extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance type_ name =
+  let ( let* ) = Result.bind in
+  let* Ty_members.{ members; _ } =
+    Ty_members.extract
+      ~force_instance
+      ~cx
+      ~typed_ast
+      ~file_sig
+      Type.TypeScheme.{ tparams_rev = []; type_ }
+  in
+  match NameUtils.Map.find_opt (Reason.OrdinaryName name) members with
+  | Some Ty_members.{ def_loc = Some def_loc; _ } -> Ok (loc_of_aloc ~reader def_loc)
+  | _ -> Error (Printf.sprintf "failed to find member %s in members map" name)
+
+let extract_require_member_def ~reader ~cx this name =
   match Members.extract cx this |> Members.to_command_result with
   | Ok result_map ->
     (match SMap.find_opt name result_map with
@@ -27,7 +41,7 @@ let extract_member_def ~reader cx this name =
     | None -> Error (Printf.sprintf "failed to find member %s in members map" name))
   | Error msg -> Error msg
 
-let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast :
+let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~file_sig :
     (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t, string) result = function
   | Get_def_request.Identifier { name = _; loc = (aloc, type_) } ->
     let loc = loc_of_aloc ~reader aloc in
@@ -49,15 +63,17 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast :
         ~is_legit_require
         ~ast
         ~typed_ast
+        ~file_sig
         (Get_def_request.Type (aloc, type_))
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
-  | Get_def_request.(Member { prop_name = name; object_source }) ->
-    let obj_t =
-      match object_source with
-      | Get_def_request.ObjectType (_loc, t) -> t
-      | Get_def_request.ObjectRequireLoc loc -> Type.OpenT (Context.find_require cx loc)
-    in
-    extract_member_def ~reader cx obj_t name
+  | Get_def_request.(Member { prop_name = name; object_source; force_instance }) -> begin
+    match object_source with
+    | Get_def_request.ObjectType (_loc, t) ->
+      extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance t name
+    | Get_def_request.ObjectRequireLoc loc ->
+      let t = Type.OpenT (Context.find_require cx loc) in
+      extract_require_member_def ~reader ~cx t name
+  end
   | Get_def_request.(Type (_, v) | Typeof (_, v)) as request ->
     (* here lies the difference between "Go to Definition" and "Go to Type Definition":
        the former should stop on annot_loc (where the value was annotated), while the
@@ -155,7 +171,15 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast :
       ~is_legit_require
       ~ast
       ~typed_ast
-      Get_def_request.(Member { prop_name = name; object_source = ObjectType (loc, props_object) })
+      ~file_sig
+      Get_def_request.(
+        Member
+          {
+            prop_name = name;
+            object_source = ObjectType (loc, props_object);
+            force_instance = false;
+          }
+      )
 
 module Depth = struct
   let limit = 9999
@@ -204,7 +228,9 @@ let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
       with
       | OwnDef aloc -> Def (loc_of_aloc ~reader aloc)
       | Request request ->
-        (match process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast request with
+        (match
+           process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~file_sig request
+         with
         | Ok res_loc ->
           (* two scenarios where we stop trying to recur:
              - when req_loc = res_loc, meaning we've reached a fixed point so

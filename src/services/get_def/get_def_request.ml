@@ -14,6 +14,7 @@ type ('M, 'T) object_source =
 type ('M, 'T) member_info = {
   prop_name: string;
   object_source: ('M, 'T) object_source;
+  force_instance: bool;
 }
 
 type ('M, 'T) t =

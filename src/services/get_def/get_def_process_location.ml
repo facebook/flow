@@ -160,7 +160,12 @@ class ['M, 'T] searcher
       let (_, { Flow_ast.Identifier.name = local_name; _ }) = local in
       let result =
         Get_def_request.(
-          Member { prop_name = local_name; object_source = ObjectRequireLoc source_loc }
+          Member
+            {
+              prop_name = local_name;
+              object_source = ObjectRequireLoc source_loc;
+              force_instance = false;
+            }
         )
       in
       if covers_target specifier_loc then this#request result
@@ -173,8 +178,11 @@ class ['M, 'T] searcher
         | PropertyIdentifier (annot, { Flow_ast.Identifier.name; _ }) when annot_covers_target annot
           ->
           let (obj_annot, _) = _object in
+          let force_instance = Flow_ast_utils.is_super_member_access expr in
           let result =
-            Get_def_request.(Member { prop_name = name; object_source = ObjectType obj_annot })
+            Get_def_request.(
+              Member { prop_name = name; object_source = ObjectType obj_annot; force_instance }
+            )
           in
           this#request result
         | _ -> ()
@@ -229,13 +237,23 @@ class ['M, 'T] searcher
                   when covers_target loc ->
                   this#request
                     Get_def_request.(
-                      Member { prop_name = name; object_source = ObjectType pat_annot }
+                      Member
+                        {
+                          prop_name = name;
+                          object_source = ObjectType pat_annot;
+                          force_instance = false;
+                        }
                     )
                 | Property.Identifier (id_annot, { Flow_ast.Identifier.name; _ })
                   when annot_covers_target id_annot ->
                   this#request
                     Get_def_request.(
-                      Member { prop_name = name; object_source = ObjectType pat_annot }
+                      Member
+                        {
+                          prop_name = name;
+                          object_source = ObjectType pat_annot;
+                          force_instance = false;
+                        }
                     )
                 | _ -> ()
               end
