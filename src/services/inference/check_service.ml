@@ -12,8 +12,7 @@ type 'a require = module_ref * Loc.t Nel.t * 'a Parsing_heaps.resolved_module'
 type 'a check_file =
   File_key.t ->
   'a require list ->
-  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
-  Loc.t Flow_ast.Comment.t list ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
@@ -468,7 +467,9 @@ let mk_check_file
     Nel.iter connect locs
   in
 
-  fun file_key requires ast comments file_sig docblock aloc_table ->
+  fun file_key requires ast file_sig docblock aloc_table ->
+    let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
+    let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx master_cx in
     let metadata = Context.docblock_overrides docblock base_metadata in
     let cx = Context.make ccx metadata file_key aloc_table Context.Checking in
@@ -476,7 +477,7 @@ let mk_check_file
     let lint_severities = get_lint_severities metadata options in
     Type_inference_js.add_require_tvars cx file_sig;
     List.iter (connect_require cx) requires;
-    let typed_ast = Type_inference_js.infer_ast cx file_key comments ast ~lint_severities in
-    Merge_js.post_merge_checks cx ast typed_ast metadata;
+    let typed_ast = Type_inference_js.infer_ast cx file_key comments aloc_ast ~lint_severities in
+    Merge_js.post_merge_checks cx aloc_ast typed_ast metadata;
     Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
     (cx, typed_ast)

@@ -12,8 +12,7 @@ type 'a require = module_ref * Loc.t Nel.t * 'a Parsing_heaps.resolved_module'
 type 'a check_file =
   File_key.t ->
   'a require list ->
-  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
-  Loc.t Flow_ast.Comment.t list ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->

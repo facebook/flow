@@ -384,17 +384,6 @@ let merge_component ~mutator ~options ~reader component =
     (diff, Some (suppressions, duration))
 
 let mk_check_file options ~reader ~master_cx () =
-  let get_ast_unsafe file parse =
-    let ast = Parsing_heaps.read_ast_unsafe file parse in
-    let (_, { Flow_ast.Program.all_comments; _ }) = ast in
-    (all_comments, Ast_loc_utils.loc_to_aloc_mapper#program ast)
-  in
-  let get_tolerable_file_sig_unsafe file parse =
-    Parsing_heaps.read_tolerable_file_sig_unsafe file parse
-  in
-  let get_type_sig_unsafe = Parsing_heaps.read_type_sig_unsafe in
-  let get_aloc_table_unsafe = Parsing_heaps.read_aloc_table_unsafe in
-  let get_docblock_unsafe = Parsing_heaps.read_docblock_unsafe in
   let check_file =
     let reader = Check_service.mk_heap_reader (Abstract_state_reader.Mutator_state_reader reader) in
     let cache = Check_cache.create ~capacity:10000000 in
@@ -406,11 +395,11 @@ let mk_check_file options ~reader ~master_cx () =
     match Parsing_heaps.Mutator_reader.get_typed_parse ~reader addr with
     | None -> None
     | Some parse ->
-      let (comments, ast) = get_ast_unsafe file parse in
-      let type_sig = get_type_sig_unsafe file parse in
-      let (file_sig, tolerable_errors) = get_tolerable_file_sig_unsafe file parse in
-      let docblock = get_docblock_unsafe file parse in
-      let aloc_table = lazy (get_aloc_table_unsafe file parse) in
+      let ast = Parsing_heaps.read_ast_unsafe file parse in
+      let type_sig = Parsing_heaps.read_type_sig_unsafe file parse in
+      let (file_sig, tolerable_errors) = Parsing_heaps.read_tolerable_file_sig_unsafe file parse in
+      let docblock = Parsing_heaps.read_docblock_unsafe file parse in
+      let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file parse) in
       let requires =
         let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
         let resolved_modules =
@@ -422,7 +411,7 @@ let mk_check_file options ~reader ~master_cx () =
         in
         SMap.fold f require_loc_map []
       in
-      let (cx, typed_ast) = check_file file requires ast comments file_sig docblock aloc_table in
+      let (cx, typed_ast) = check_file file requires ast file_sig docblock aloc_table in
       let coverage = Coverage.file_coverage ~cx typed_ast in
       let errors = Context.errors cx in
       let errors =
@@ -465,8 +454,6 @@ let check_contents_cache = Check_cache.create ~capacity:10000
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
 let check_contents_context ~reader options master_cx file ast docblock file_sig =
-  let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
-  let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   (* Loading an aloc_table is unusual for check contents! During check, we use
    * this aloc table for two purposes: (1) to compare concrete and keyed alocs
    * which might be equivalent and (2) to create ALoc.id values which always
@@ -503,7 +490,7 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
     let reader = Check_service.mk_heap_reader reader in
     Check_service.mk_check_file reader ~options ~master_cx ~cache:check_contents_cache ()
   in
-  check_file file required ast comments file_sig docblock aloc_table
+  check_file file required ast file_sig docblock aloc_table
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
