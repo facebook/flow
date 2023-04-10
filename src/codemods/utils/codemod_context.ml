@@ -65,10 +65,7 @@ module Typed = struct
 end
 
 module Untyped = struct
-  type t = {
-    file: File_key.t;
-    file_sig: File_sig.With_Loc.t;
-  }
+  type t = { file: File_key.t }
 
   let file ccx = ccx.file
 end
@@ -76,7 +73,6 @@ end
 module UntypedFlowInit = struct
   type t = {
     file: File_key.t;
-    file_sig: File_sig.With_Loc.t;
     reader: State_reader.t;
   }
 

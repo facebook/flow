@@ -499,9 +499,8 @@ let untyped_runner_job ~mk_ccx ~visit ~abstract_reader file_list =
   List.fold_left
     Parsing_heaps.Reader_dispatcher.(
       fun acc file ->
-        let file_sig = get_file_sig_unsafe ~reader:abstract_reader file in
         let ast = get_ast_unsafe ~reader:abstract_reader file in
-        let result = visit ast (mk_ccx file file_sig) in
+        let result = visit ast (mk_ccx file) in
         (file, Ok (Some result)) :: acc
     )
     []
@@ -557,7 +556,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
             in
             log_input_files roots;
             let next = Parsing_service_js.next_of_filename_set workers roots in
-            let mk_ccx file file_sig = { Codemod_context.Untyped.file; file_sig } in
+            let mk_ccx file = { Codemod_context.Untyped.file } in
             let visit = C.visit ~options in
             let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
             let%lwt result =
@@ -621,7 +620,7 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
 
         let reader = State_reader.create () in
         C.init ~reader;
-        let mk_ccx file file_sig = { Codemod_context.UntypedFlowInit.file; reader; file_sig } in
+        let mk_ccx file = { Codemod_context.UntypedFlowInit.file; reader } in
         let visit = C.visit ~options in
         let abstract_reader = Abstract_state_reader.State_reader reader in
         log_input_files filename_set;
