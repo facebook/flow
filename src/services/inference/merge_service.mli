@@ -16,7 +16,7 @@ type merge_result = Error_suppressions.t * duration
 type check_type_result =
   Context.t
   * Type_sig_collections.Locs.index Packed_type_sig.Module.t
-  * File_sig.With_Loc.t
+  * File_sig.t
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 type check_error_result =
@@ -54,7 +54,7 @@ val check_contents_context :
   File_key.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Docblock.t ->
-  File_sig.With_Loc.t ->
+  File_sig.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 val merge_runner :

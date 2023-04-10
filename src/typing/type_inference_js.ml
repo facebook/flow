@@ -30,8 +30,8 @@ let add_require_tvars =
     let tvar = Flow_js.get_builtin_tvar cx m_name reason in
     Context.add_require cx loc (reason, tvar)
   in
-  fun cx (file_sig : File_sig.With_Loc.t) ->
-    File_sig.With_Loc.(
+  fun cx (file_sig : File_sig.t) ->
+    File_sig.(
       SMap.iter
         (fun mref locs ->
           let desc = Reason.RCustom mref in

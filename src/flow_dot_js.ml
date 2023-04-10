@@ -47,9 +47,7 @@ let parse_content file content =
     in
     Error converted
   else
-    let (fsig, _tolerable_errors) =
-      File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts
-    in
+    let (fsig, _tolerable_errors) = File_sig.program ~ast ~opts:File_sig.default_opts in
     Ok (ast, fsig)
 
 let array_of_list f lst = Array.of_list (List.map f lst)
@@ -202,7 +200,7 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
         Flow_js.resolve_id cx require_id module_t
     )
   in
-  SMap.iter connect_requires File_sig.With_Loc.(require_loc_map file_sig.module_sig);
+  SMap.iter connect_requires File_sig.(require_loc_map file_sig.module_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in

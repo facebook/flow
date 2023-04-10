@@ -20,4 +20,4 @@ val error_of_parse_exception : source_file:File_key.t -> Exception.t -> ALoc.t F
 val set_of_parse_exception : source_file:File_key.t -> Exception.t -> Flow_error.ErrorSet.t
 
 val set_of_file_sig_tolerable_errors :
-  source_file:File_key.t -> File_sig.With_Loc.tolerable_error list -> Flow_error.ErrorSet.t
+  source_file:File_key.t -> File_sig.tolerable_error list -> Flow_error.ErrorSet.t

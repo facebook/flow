@@ -17,7 +17,7 @@ val find_signatures :
   options:Options.t ->
   reader:State_reader.t ->
   cx:Context.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Loc.t ->

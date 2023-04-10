@@ -24,6 +24,6 @@ type import = {
 
 type t = import list
 
-val of_file_sig : File_sig.With_Loc.t -> t
+val of_file_sig : File_sig.t -> t
 
 val add_globals : SSet.t -> t -> t

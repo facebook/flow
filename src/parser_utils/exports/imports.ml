@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open File_sig.With_Loc
+open File_sig
 
 type kind =
   | Default
@@ -29,10 +29,10 @@ type t = import list
 let add_globals (globals : SSet.t) (imports : t) =
   SSet.fold (fun export acc -> { export; kind = Unknown; source = Global } :: acc) globals imports
 
-let of_file_sig (file_sig : File_sig.With_Loc.t) =
+let of_file_sig (file_sig : File_sig.t) =
   let requires = file_sig.module_sig.requires in
   List.fold_left
-    (fun acc (require : File_sig.With_Loc.require) ->
+    (fun acc (require : File_sig.require) ->
       match require with
       | Import require ->
         let source = snd require.source in

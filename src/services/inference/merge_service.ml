@@ -17,7 +17,7 @@ type merge_result = Error_suppressions.t * duration
 type check_type_result =
   Context.t
   * Type_sig_collections.Locs.index Packed_type_sig.Module.t
-  * File_sig.With_Loc.t
+  * File_sig.t
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 type check_error_result =
@@ -412,7 +412,7 @@ let mk_check_file options ~reader ~master_cx () =
       let docblock = get_docblock_unsafe file parse in
       let aloc_table = lazy (get_aloc_table_unsafe file parse) in
       let requires =
-        let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
+        let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
         let resolved_modules =
           Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
         in
@@ -491,7 +491,7 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
   in
   let reader = Abstract_state_reader.State_reader reader in
   let required =
-    let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
+    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
     let node_modules_containers = !Files.node_modules_containers in
     let f mref locs acc =
       let m = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in

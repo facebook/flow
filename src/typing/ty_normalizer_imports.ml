@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open File_sig.With_Loc
+open File_sig
 
 (* Collect the names and locations of types that are available as we scan
  * the imports. Later we'll match them with some remote defining loc. *)

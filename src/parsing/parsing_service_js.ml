@@ -13,18 +13,18 @@ open Parsing_options
 type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      file_sig: File_sig.With_Loc.t;
+      file_sig: File_sig.t;
       locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
-      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      tolerable_errors: File_sig.tolerable_error list;
       exports: Exports.t;
       imports: Imports.t;
       cas_digest: Cas_digest.t option;
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      file_sig: File_sig.With_Loc.t;
-      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      file_sig: File_sig.t;
+      tolerable_errors: File_sig.tolerable_error list;
       parse_errors: parse_error Nel.t;
     }
   | Parse_exn of Exception.t
@@ -179,14 +179,14 @@ let do_parse ~parsing_options ~info content file =
         in
         let file_sig_opts =
           {
-            File_sig.With_Loc.module_ref_prefix;
+            File_sig.module_ref_prefix;
             module_ref_prefix_LEGACY_INTEROP;
             enable_enums;
             enable_relay_integration;
             relay_integration_module_prefix;
           }
         in
-        let (file_sig, tolerable_errors) = File_sig.With_Loc.program ~ast ~opts:file_sig_opts in
+        let (file_sig, tolerable_errors) = File_sig.program ~ast ~opts:file_sig_opts in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
         let (_, (_, _, globals)) = Ssa_builder.program_with_scope ~enable_enums ast in
         if not (Base.List.is_empty parse_errors) then
@@ -215,7 +215,7 @@ let do_parse ~parsing_options ~info content file =
                 match err with
                 | Type_sig.SigError err ->
                   let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
-                  File_sig.With_Loc.SignatureVerificationError err :: acc
+                  File_sig.SignatureVerificationError err :: acc
                 | Type_sig.CheckError -> acc)
               tolerable_errors
               sig_errors

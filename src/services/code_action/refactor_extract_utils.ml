@@ -850,7 +850,7 @@ module TypeSynthesizer = struct
   type synthesizer_context = {
     cx: Context.t;
     file: File_key.t;
-    file_sig: File_sig.With_Loc.t;
+    file_sig: File_sig.t;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     type_at_loc_map: Type.TypeScheme.t LocMap.t;
   }

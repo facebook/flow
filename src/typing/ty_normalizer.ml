@@ -10,7 +10,7 @@ open Reason
 open Loc_collections
 module Env = Ty_normalizer_env
 module T = Type
-module File_sig = File_sig.With_Loc
+module File_sig = File_sig
 
 (* The type normalizer converts infered types (of type `Type.t`) under a context
    cx to the simplified form of type `Ty.t`. It is called by various modules,

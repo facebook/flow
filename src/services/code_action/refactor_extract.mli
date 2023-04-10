@@ -15,7 +15,7 @@ val provide_available_refactors :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   cx:Context.t ->
   file:File_key.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   reader:Parsing_heaps.Reader.reader ->
   support_experimental_snippet_text_edit:bool ->

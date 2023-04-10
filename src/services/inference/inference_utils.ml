@@ -46,7 +46,7 @@ let set_of_parse_exception ~source_file =
   error_of_parse_exception ~source_file %> Flow_error.ErrorSet.singleton
 
 let error_of_file_sig_tolerable_error ~source_file err =
-  let open File_sig.With_Loc in
+  let open File_sig in
   let flow_err =
     match err with
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)

@@ -1535,8 +1535,8 @@ let autocomplete_member
       AcResult { result; errors_to_log })
 
 let rec binds_react = function
-  | File_sig.With_Loc.BindIdent (_, name) -> name = "React"
-  | File_sig.With_Loc.BindNamed bindings ->
+  | File_sig.BindIdent (_, name) -> name = "React"
+  | File_sig.BindNamed bindings ->
     Base.List.exists ~f:(fun (_remote, local) -> binds_react local) bindings
 
 (** Determines whether to autoimport React when autocompleting a JSX element.
@@ -1554,7 +1554,7 @@ let should_autoimport_react ~options ~imports ~file_sig =
     match Options.react_runtime options with
     | Options.ReactRuntimeAutomatic -> false
     | Options.ReactRuntimeClassic ->
-      let open File_sig.With_Loc in
+      let open File_sig in
       let requires_react =
         Base.List.exists
           ~f:(function

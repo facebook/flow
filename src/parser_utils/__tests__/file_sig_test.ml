@@ -6,7 +6,7 @@
  *)
 
 open OUnit2
-open File_sig.With_Loc
+open File_sig
 
 let visit ?parse_options ?(opts = default_opts) source =
   (* allow parse errors. we still need file sigs on invalid ASTs in Type_contents. *)

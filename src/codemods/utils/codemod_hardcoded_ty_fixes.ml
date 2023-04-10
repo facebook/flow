@@ -82,11 +82,7 @@ end
  *)
 module GraphQL : sig
   val extract_graphql_fragment :
-    Context.t ->
-    File_sig.With_Loc.t ->
-    (ALoc.t, ALoc.t * Type.t) Ast.Program.t ->
-    ALoc.t ->
-    Ty.t option
+    Context.t -> File_sig.t -> (ALoc.t, ALoc.t * Type.t) Ast.Program.t -> ALoc.t -> Ty.t option
 end = struct
   let reader = State_reader.create ()
 

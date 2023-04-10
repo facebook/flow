@@ -143,7 +143,7 @@ end = struct
     in
 
     let (ast, _) = Parser_flow.program_file ~fail:false ~parse_options content (Some file) in
-    let (fsig, _) = File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts in
+    let (fsig, _) = File_sig.program ~ast ~opts:File_sig.default_opts in
     (ast, fsig)
 
   (* No verbose mode during libdef init. *)
@@ -207,7 +207,7 @@ end = struct
           Flow_js.resolve_id cx require_id module_t
       )
     in
-    SMap.iter connect_requires File_sig.With_Loc.(require_loc_map file_sig.module_sig);
+    SMap.iter connect_requires File_sig.(require_loc_map file_sig.module_sig);
     let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let lint_severities =
       Merge_js.get_lint_severities metadata StrictModeSettings.empty LintSettings.empty_severities

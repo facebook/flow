@@ -63,7 +63,7 @@ let parse_content file content =
   let (ast, _parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
-  let (file_sig, _) = File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts in
+  let (file_sig, _) = File_sig.program ~ast ~opts:File_sig.default_opts in
   (ast, file_sig)
 
 let before_and_after_stmts file_name =

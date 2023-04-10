@@ -20,7 +20,7 @@ val autocomplete_get_results :
   options:Options.t ->
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   imports:bool ->

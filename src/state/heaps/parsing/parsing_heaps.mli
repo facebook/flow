@@ -63,10 +63,9 @@ val read_aloc_table_unsafe : File_key.t -> [ `typed ] parse_addr -> ALoc.table
 
 val read_type_sig_unsafe : File_key.t -> [ `typed ] parse_addr -> type_sig
 
-val read_tolerable_file_sig_unsafe :
-  File_key.t -> [ `typed ] parse_addr -> File_sig.With_Loc.tolerable_t
+val read_tolerable_file_sig_unsafe : File_key.t -> [ `typed ] parse_addr -> File_sig.tolerable_t
 
-val read_file_sig_unsafe : File_key.t -> [ `typed ] parse_addr -> File_sig.With_Loc.t
+val read_file_sig_unsafe : File_key.t -> [ `typed ] parse_addr -> File_sig.t
 
 val read_requires : [ `typed ] parse_addr -> string array
 
@@ -119,9 +118,9 @@ module type READER = sig
 
   val get_imports : reader:reader -> File_key.t -> Imports.t option
 
-  val get_tolerable_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t option
+  val get_tolerable_file_sig : reader:reader -> File_key.t -> File_sig.tolerable_t option
 
-  val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
+  val get_file_sig : reader:reader -> File_key.t -> File_sig.t option
 
   val get_type_sig : reader:reader -> File_key.t -> type_sig option
 
@@ -160,9 +159,9 @@ module type READER = sig
 
   val get_imports_unsafe : reader:reader -> File_key.t -> Imports.t
 
-  val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
+  val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.tolerable_t
 
-  val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
+  val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.t
 
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
@@ -221,7 +220,7 @@ type worker_mutator = {
     string option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
-    File_sig.With_Loc.tolerable_t ->
+    File_sig.tolerable_t ->
     locs_tbl ->
     type_sig ->
     Cas_digest.t option ->

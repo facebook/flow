@@ -862,7 +862,7 @@ let get_imports ~options ~reader module_names =
             parse
         in
         let fsig = Parsing_heaps.read_file_sig_unsafe file parse in
-        let requires = File_sig.With_Loc.(require_loc_map fsig.module_sig) in
+        let requires = File_sig.(require_loc_map fsig.module_sig) in
         let mlocs =
           SMap.fold
             (fun mref locs acc ->

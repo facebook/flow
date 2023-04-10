@@ -9,7 +9,7 @@ module Typed = struct
   type t = {
     file: File_key.t;
     type_sig: Type_sig_collections.Locs.index Packed_type_sig.Module.t;
-    file_sig: File_sig.With_Loc.t;
+    file_sig: File_sig.t;
     metadata: Context.metadata;
     options: Options.t;
     cx: Context.t;

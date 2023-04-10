@@ -14,7 +14,7 @@ type 'a check_file =
   'a require list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   Loc.t Flow_ast.Comment.t list ->
-  File_sig.With_Loc.t ->
+  File_sig.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t

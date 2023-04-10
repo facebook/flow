@@ -8,7 +8,7 @@
 module LocSet = Loc_collections.LocSet
 
 let set_of_fixable_signature_verification_locations tolerable_errors =
-  let open File_sig.With_Loc in
+  let open File_sig in
   let open Signature_error in
   let add_fixable_sig_ver_error acc = function
     | SignatureVerificationError

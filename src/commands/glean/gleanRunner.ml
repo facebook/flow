@@ -150,7 +150,7 @@ let export_of_export_name = function
   | name -> Export.Named name
 
 let type_import_declarations ~root ~write_root ~resolved_modules ~file_sig =
-  let open File_sig.With_Loc in
+  let open File_sig in
   let open Base.List.Let_syntax in
   (match%bind file_sig.module_sig.requires with
   | Import { source = (_, module_ref); types; typesof; typesof_ns; _ } ->
@@ -242,7 +242,7 @@ let member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file
   !results |> Base.List.map ~f:(MemberDeclarationReference.to_json ~root ~write_root)
 
 let import_declarations ~root ~write_root ~resolved_modules ~file_sig =
-  let open File_sig.With_Loc in
+  let open File_sig in
   let open Base.List.Let_syntax in
   (match%bind file_sig.module_sig.requires with
   | Require { source = (_, module_ref); bindings; _ } ->

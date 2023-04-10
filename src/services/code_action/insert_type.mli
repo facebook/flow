@@ -53,7 +53,7 @@ val error_to_string : errors -> string
 val synth_type :
   ?size_limit:int ->
   cx:Context.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
@@ -74,7 +74,7 @@ val add_imports :
 
 val insert_type :
   cx:Context.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
   strict:bool ->
@@ -86,7 +86,7 @@ val insert_type :
 
 val insert_type_t :
   cx:Context.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
   strict:bool ->

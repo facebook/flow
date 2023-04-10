@@ -12,18 +12,18 @@ open Docblock_parser
 type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      file_sig: File_sig.With_Loc.t;
+      file_sig: File_sig.t;
       locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
-      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      tolerable_errors: File_sig.tolerable_error list;
       exports: Exports.t;
       imports: Imports.t;
       cas_digest: Cas_digest.t option;
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      file_sig: File_sig.With_Loc.t;
-      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      file_sig: File_sig.t;
+      tolerable_errors: File_sig.tolerable_error list;
       parse_errors: parse_error Nel.t;
     }
   | Parse_exn of Exception.t

@@ -7,7 +7,7 @@
 
 val type_at_pos :
   cx:Context.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
   max_depth:int ->
@@ -20,7 +20,7 @@ val type_at_pos :
 val dump_types :
   evaluate_type_destructors:Ty_normalizer_env.evaluate_type_destructors_mode ->
   Context.t ->
-  File_sig.With_Loc.t ->
+  File_sig.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   (Loc.t * string) list
 

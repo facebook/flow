@@ -40,8 +40,8 @@ val code_actions_at_loc :
   env:ServerEnv.env ->
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->
-  file_sig:File_sig.With_Loc.t ->
-  tolerable_errors:File_sig.With_Loc.tolerable_error list ->
+  file_sig:File_sig.t ->
+  tolerable_errors:File_sig.tolerable_error list ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   scope_info:Scope_api.With_Loc.info ->

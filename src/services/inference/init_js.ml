@@ -25,8 +25,8 @@ let is_fail { Parsing.failed; _ } = fst failed <> []
 type lib_result =
   | Lib_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      file_sig: File_sig.With_Loc.t;
-      tolerable_errors: File_sig.With_Loc.tolerable_error list;
+      file_sig: File_sig.t;
+      tolerable_errors: File_sig.tolerable_error list;
     }
   | Lib_fail of Parsing.parse_failure
   | Lib_skip

@@ -26,6 +26,6 @@ val extract :
   ?force_instance:bool ->
   cx:Context.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   Type.TypeScheme.t ->
   (ty_members, string) result

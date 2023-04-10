@@ -11,7 +11,7 @@ val scan_for_suppressions :
   Loc.t Flow_ast.Comment.t list ->
   ExactCover.lint_severity_cover * Error_suppressions.t * ALoc.t Error_message.t' list
 
-val add_require_tvars : Context.t -> File_sig.With_Loc.t -> unit
+val add_require_tvars : Context.t -> File_sig.t -> unit
 
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast :
@@ -26,7 +26,7 @@ val infer_ast :
 val infer_lib_file :
   exclude_syms:NameUtils.Set.t ->
   lint_severities:Severity.severity LintSettings.t ->
-  file_sig:File_sig.With_Loc.t ->
+  file_sig:File_sig.t ->
   Context.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Reason.name list * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
