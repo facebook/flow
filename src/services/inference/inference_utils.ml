@@ -46,13 +46,14 @@ let set_of_parse_exception ~source_file =
   error_of_parse_exception ~source_file %> Flow_error.ErrorSet.singleton
 
 let error_of_file_sig_tolerable_error ~source_file err =
-  let open File_sig.With_ALoc in
+  let open File_sig.With_Loc in
   let flow_err =
     match err with
-    | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType loc
-    | BadExportPosition loc -> Error_message.EBadExportPosition loc
-    | BadExportContext (name, loc) -> Error_message.EBadExportContext (name, loc)
-    | SignatureVerificationError sve -> Error_message.ESignatureVerification sve
+    | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
+    | BadExportPosition loc -> Error_message.EBadExportPosition (ALoc.of_loc loc)
+    | BadExportContext (name, loc) -> Error_message.EBadExportContext (name, ALoc.of_loc loc)
+    | SignatureVerificationError sve ->
+      Error_message.ESignatureVerification (Signature_error.map ALoc.of_loc sve)
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 

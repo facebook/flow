@@ -101,8 +101,6 @@ let load_lib_files ~ccx ~options ~reader files =
            let lib_file = File_key.LibFile file in
            match%lwt parse_lib_file ~reader options file with
            | Lib_ok { ast; file_sig; tolerable_errors } ->
-             let file_sig = File_sig.abstractify_locs file_sig in
-             let tolerable_errors = File_sig.abstractify_tolerable_errors tolerable_errors in
              let (cx, exclude_syms) =
                infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig
              in

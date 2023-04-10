@@ -29,7 +29,7 @@ let type_at_pos
         type_at_pos_type
           ~cx
           ~file
-          ~file_sig:(File_sig.abstractify_locs file_sig)
+          ~file_sig
           ~omit_targ_defaults
           ~verbose_normalizer
           ~max_depth
@@ -73,8 +73,7 @@ let dump_types ~evaluate_type_destructors cx file_sig typed_ast =
   (* Print type using Flow type syntax *)
   let exact_by_default = Context.exact_by_default cx in
   let printer = Ty_printer.string_of_elt_single_line ~exact_by_default in
-  let abs_file_sig = File_sig.abstractify_locs file_sig in
-  Query_types.dump_types ~printer ~evaluate_type_destructors cx abs_file_sig typed_ast
+  Query_types.dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast
 
 let coverage ~cx ~typed_ast ~force ~trust file content =
   let should_check =

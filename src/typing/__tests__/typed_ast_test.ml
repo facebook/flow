@@ -100,7 +100,7 @@ let before_and_after_stmts file_name =
       cx
       ast
       ~exclude_syms:(NameUtils.Set.singleton (Reason.OrdinaryName "Object"))
-      ~file_sig:(File_sig.abstractify_locs file_sig)
+      ~file_sig
       ~lint_severities:LintSettings.empty_severities
   in
   (stmts, t_stmts)

@@ -7,14 +7,14 @@
 
 type module_ref = string
 
-type 'a require = module_ref * ALoc.t Nel.t * 'a Parsing_heaps.resolved_module'
+type 'a require = module_ref * Loc.t Nel.t * 'a Parsing_heaps.resolved_module'
 
 type 'a check_file =
   File_key.t ->
   'a require list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   Loc.t Flow_ast.Comment.t list ->
-  File_sig.With_ALoc.t ->
+  File_sig.With_Loc.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t

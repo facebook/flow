@@ -84,7 +84,7 @@ let load_lib_files ~ccx ~metadata files =
                  cx
                  ast
                  ~exclude_syms
-                 ~file_sig:(File_sig.abstractify_locs file_sig)
+                 ~file_sig
                  ~lint_severities:LintSettings.empty_severities
              in
              (* symbols loaded from this file are suppressed if found in later ones *)
@@ -195,13 +195,14 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   let connect_requires mref =
     let module_name = Reason.internal_module_name mref in
     Nel.iter (fun loc ->
+        let loc = ALoc.of_loc loc in
         let reason = Reason.(mk_reason (RCustom mref) loc) in
         let module_t = Flow_js_utils.lookup_builtin_strict cx module_name reason in
         let (_, require_id) = Context.find_require cx loc in
         Flow_js.resolve_id cx require_id module_t
     )
   in
-  SMap.iter connect_requires File_sig.With_ALoc.(require_loc_map file_sig.module_sig);
+  SMap.iter connect_requires File_sig.With_Loc.(require_loc_map file_sig.module_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
@@ -222,7 +223,6 @@ let check_content ~filename ~content ~js_config_object =
   let (errors, warnings) =
     match parse_content filename content with
     | Ok (ast, file_sig) ->
-      let file_sig = File_sig.abstractify_locs file_sig in
       let (_, docblock) =
         Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
       in
@@ -308,7 +308,6 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
   match parse_content filename content with
   | Error _ -> failwith "parse error"
   | Ok (ast, file_sig) ->
-    let file_sig = File_sig.abstractify_locs file_sig in
     let (_, docblock) =
       Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
     in
@@ -361,7 +360,6 @@ let dump_types js_file js_content js_config_object =
   match parse_content filename content with
   | Error _ -> failwith "parse error"
   | Ok (ast, file_sig) ->
-    let file_sig = File_sig.abstractify_locs file_sig in
     let (_, docblock) =
       Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
     in

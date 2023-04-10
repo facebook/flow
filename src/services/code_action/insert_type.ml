@@ -470,7 +470,6 @@ let insert_type_scheme
     ast
     target
     loc_to_type_scheme =
-  let file_sig = File_sig.abstractify_locs file_sig in
   let file =
     match target.Loc.source with
     | Some source -> source

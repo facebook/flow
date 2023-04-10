@@ -92,7 +92,6 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
   let errors = Context.errors cx in
   let errors =
     tolerable_errors
-    |> File_sig.abstractify_tolerable_errors
     |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
     |> Flow_error.ErrorSet.union errors
   in

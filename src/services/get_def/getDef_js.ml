@@ -201,12 +201,10 @@ module Depth = struct
 end
 
 let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
-  let require_aloc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
+  let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
   let is_legit_require (source_aloc, _) =
-    SMap.exists
-      (fun _ alocs ->
-        Nel.exists (fun aloc -> loc_of_aloc ~reader aloc = loc_of_aloc ~reader source_aloc) alocs)
-      require_aloc_map
+    let source_loc = loc_of_aloc ~reader source_aloc in
+    SMap.exists (fun _ locs -> Nel.exists (fun loc -> loc = source_loc) locs) require_loc_map
   in
   let module_ref_prefix = Context.haste_module_ref_prefix cx in
   let module_ref_prefix_LEGACY_INTEROP = Context.haste_module_ref_prefix_LEGACY_INTEROP cx in

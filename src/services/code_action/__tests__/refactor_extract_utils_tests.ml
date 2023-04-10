@@ -66,7 +66,7 @@ let dummy_filename = File_key.SourceFile ""
 
 let file_sig_of_ast ast =
   let (file_sig, _) = File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts in
-  File_sig.abstractify_locs file_sig
+  file_sig
 
 let dummy_context () =
   let root = Path.dummy_path in

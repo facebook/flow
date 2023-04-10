@@ -17,7 +17,7 @@ type merge_result = Error_suppressions.t * duration
 type check_type_result =
   Context.t
   * Type_sig_collections.Locs.index Packed_type_sig.Module.t
-  * File_sig.With_ALoc.t
+  * File_sig.With_Loc.t
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 type check_error_result =
@@ -390,7 +390,7 @@ let mk_check_file options ~reader ~master_cx () =
     (all_comments, Ast_loc_utils.loc_to_aloc_mapper#program ast)
   in
   let get_tolerable_file_sig_unsafe file parse =
-    Parsing_heaps.read_tolerable_file_sig_unsafe file parse |> File_sig.abstractify
+    Parsing_heaps.read_tolerable_file_sig_unsafe file parse
   in
   let get_type_sig_unsafe = Parsing_heaps.read_type_sig_unsafe in
   let get_aloc_table_unsafe = Parsing_heaps.read_aloc_table_unsafe in
@@ -412,7 +412,7 @@ let mk_check_file options ~reader ~master_cx () =
       let docblock = get_docblock_unsafe file parse in
       let aloc_table = lazy (get_aloc_table_unsafe file parse) in
       let requires =
-        let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
+        let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
         let resolved_modules =
           Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
         in
@@ -467,7 +467,6 @@ let check_contents_cache = Check_cache.create ~capacity:10000
 let check_contents_context ~reader options master_cx file ast docblock file_sig =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let file_sig = File_sig.abstractify_locs file_sig in
   (* Loading an aloc_table is unusual for check contents! During check, we use
    * this aloc table for two purposes: (1) to compare concrete and keyed alocs
    * which might be equivalent and (2) to create ALoc.id values which always
@@ -492,7 +491,7 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
   in
   let reader = Abstract_state_reader.State_reader reader in
   let required =
-    let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
+    let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
     let node_modules_containers = !Files.node_modules_containers in
     let f mref locs acc =
       let m = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in

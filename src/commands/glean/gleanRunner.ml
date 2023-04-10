@@ -149,8 +149,8 @@ let export_of_export_name = function
   | "default" -> Export.Default
   | name -> Export.Named name
 
-let type_import_declarations ~root ~write_root ~reader ~resolved_modules ~file_sig =
-  let open File_sig.With_ALoc in
+let type_import_declarations ~root ~write_root ~resolved_modules ~file_sig =
+  let open File_sig.With_Loc in
   let open Base.List.Let_syntax in
   (match%bind file_sig.module_sig.requires with
   | Import { source = (_, module_ref); types; typesof; typesof_ns; _ } ->
@@ -161,8 +161,7 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_modules ~file_s
       let import = TypeImportDeclaration.Type ModuleTypeExport.{ module_; typeExport } in
       let%bind (name, locs) = SMap.elements local in
       let%bind { local_loc; _ } = Nel.to_list locs in
-      let loc = Parsing_heaps.Reader.loc_of_aloc ~reader local_loc in
-      let typeDeclaration = TypeDeclaration.{ name; loc } in
+      let typeDeclaration = TypeDeclaration.{ name; loc = local_loc } in
       return TypeImportDeclaration.{ import; typeDeclaration }
     in
     let typesof_info =
@@ -171,14 +170,12 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_modules ~file_s
       let import = TypeImportDeclaration.Typeof ModuleExport.{ module_; export } in
       let%bind (name, locs) = SMap.elements local in
       let%bind { local_loc; _ } = Nel.to_list locs in
-      let loc = Parsing_heaps.Reader.loc_of_aloc ~reader local_loc in
-      let typeDeclaration = TypeDeclaration.{ name; loc } in
+      let typeDeclaration = TypeDeclaration.{ name; loc = local_loc } in
       return TypeImportDeclaration.{ import; typeDeclaration }
     in
     let typesof_ns_info =
-      let%bind (aloc, name) = Base.Option.to_list typesof_ns in
+      let%bind (loc, name) = Base.Option.to_list typesof_ns in
       let import = TypeImportDeclaration.ModuleTypeof module_ in
-      let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       let typeDeclaration = TypeDeclaration.{ loc; name } in
       return TypeImportDeclaration.{ import; typeDeclaration }
     in
@@ -244,19 +241,18 @@ let member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file
   ignore ((new member_searcher add_member)#program typed_ast);
   !results |> Base.List.map ~f:(MemberDeclarationReference.to_json ~root ~write_root)
 
-let import_declarations ~root ~write_root ~reader ~resolved_modules ~file_sig =
-  let open File_sig.With_ALoc in
+let import_declarations ~root ~write_root ~resolved_modules ~file_sig =
+  let open File_sig.With_Loc in
   let open Base.List.Let_syntax in
   (match%bind file_sig.module_sig.requires with
   | Require { source = (_, module_ref); bindings; _ } ->
     let module_ = module_of_module_ref ~resolved_modules ~root ~write_root module_ref in
     (match bindings with
     | None -> []
-    | Some (BindIdent (aloc, name)) ->
+    | Some (BindIdent (loc, name)) ->
       let import =
         ImportDeclaration.ModuleExport ModuleExport.{ module_; export = Export.CommonJS }
       in
-      let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       let declaration = Declaration.{ loc; name } in
       return ImportDeclaration.{ import; declaration }
     | Some (BindNamed named_bindings) ->
@@ -264,12 +260,11 @@ let import_declarations ~root ~write_root ~reader ~resolved_modules ~file_sig =
       | (_, BindNamed _) ->
         (* currently we only track the top-level members of commonJS imports/exports *)
         []
-      | ((_, export_name), BindIdent (aloc, name)) ->
+      | ((_, export_name), BindIdent (loc, name)) ->
         let import =
           let export = Export.CommonJSMember export_name in
           ImportDeclaration.ModuleExport ModuleExport.{ module_; export }
         in
-        let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
         let declaration = Declaration.{ loc; name } in
         return ImportDeclaration.{ import; declaration }))
   | ImportDynamic _
@@ -284,14 +279,12 @@ let import_declarations ~root ~write_root ~reader ~resolved_modules ~file_sig =
       let import = ImportDeclaration.ModuleExport ModuleExport.{ module_; export } in
       let%bind (name, locs) = SMap.elements local in
       let%bind { local_loc; _ } = Nel.to_list locs in
-      let loc = Parsing_heaps.Reader.loc_of_aloc ~reader local_loc in
-      let declaration = Declaration.{ loc; name } in
+      let declaration = Declaration.{ loc = local_loc; name } in
       return ImportDeclaration.{ import; declaration }
     in
     let namespace_import_declarations =
       let import = ImportDeclaration.ModuleNamespace module_ in
-      let%bind (aloc, name) = Base.Option.to_list ns in
-      let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+      let%bind (loc, name) = Base.Option.to_list ns in
       let declaration = Declaration.{ loc; name } in
       return ImportDeclaration.{ import; declaration }
     in
@@ -739,7 +732,7 @@ let make ~output_dir ~write_root =
         declaration_infos ~scope_info ~root ~write_root ~file ~file_sig ~cx ~reader ~typed_ast ~ast
       in
       let type_import_declaration =
-        type_import_declarations ~root ~write_root ~reader ~resolved_modules ~file_sig
+        type_import_declarations ~root ~write_root ~resolved_modules ~file_sig
       in
       let loc_source = fst ast |> Loc.source in
       let source_of_export =
@@ -758,9 +751,7 @@ let make ~output_dir ~write_root =
       let local_declaration_reference =
         local_declaration_references ~root ~write_root ~scope_info
       in
-      let import_declaration =
-        import_declarations ~root ~write_root ~reader ~resolved_modules ~file_sig
-      in
+      let import_declaration = import_declarations ~root ~write_root ~resolved_modules ~file_sig in
       let member_declaration_reference =
         member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig
       in

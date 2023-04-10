@@ -236,7 +236,7 @@ module ImportsHelper : sig
          method to_import_bindings : (string * Autofix_imports.bindings) list
        end
 
-  val imports_react : File_sig.With_ALoc.t -> bool
+  val imports_react : File_sig.With_Loc.t -> bool
 end = struct
   (* A structure holding information about the import of a Remote symbol.
    *
@@ -763,7 +763,7 @@ end = struct
   exception Found_react_import
 
   let imports_react =
-    File_sig.With_ALoc.(
+    File_sig.With_Loc.(
       let from_binding binding =
         match binding with
         | BindIdent (_, "React") -> raise Found_react_import

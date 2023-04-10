@@ -126,7 +126,7 @@ let refactor_extract_code_actions
           ~ast
           ~cx
           ~file
-          ~file_sig:(File_sig.abstractify_locs file_sig)
+          ~file_sig
           ~typed_ast
           ~reader
           ~support_experimental_snippet_text_edit

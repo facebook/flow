@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module File_sig = File_sig.With_ALoc
+module File_sig = File_sig.With_Loc
 
 type evaluate_type_destructors_mode =
   | EvaluateNone

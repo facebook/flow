@@ -165,7 +165,7 @@ end = struct
                  cx
                  ast
                  ~exclude_syms
-                 ~file_sig:(File_sig.abstractify_locs file_sig)
+                 ~file_sig
                  ~lint_severities:LintSettings.empty_severities
              in
              (* symbols loaded from this file are suppressed if found in later ones *)
@@ -195,19 +195,19 @@ end = struct
   let get_typed_ast cx content =
     let metadata = { metadata with Context.verbose = None } in
     let (ast, file_sig) = parse_content dummy_filename content in
-    let file_sig = File_sig.abstractify_locs file_sig in
     (* connect requires *)
     Type_inference_js.add_require_tvars cx file_sig;
     let connect_requires mref =
       let module_name = Reason.internal_module_name mref in
       Nel.iter (fun loc ->
+          let loc = ALoc.of_loc loc in
           let reason = Reason.(mk_reason (RCustom mref) loc) in
           let module_t = Flow_js_utils.lookup_builtin_strict cx module_name reason in
           let (_, require_id) = Context.find_require cx loc in
           Flow_js.resolve_id cx require_id module_t
       )
     in
-    SMap.iter connect_requires File_sig.With_ALoc.(require_loc_map file_sig.module_sig);
+    SMap.iter connect_requires File_sig.With_Loc.(require_loc_map file_sig.module_sig);
     let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let lint_severities =
       Merge_js.get_lint_severities metadata StrictModeSettings.empty LintSettings.empty_severities

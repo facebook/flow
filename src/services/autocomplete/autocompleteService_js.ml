@@ -1535,8 +1535,8 @@ let autocomplete_member
       AcResult { result; errors_to_log })
 
 let rec binds_react = function
-  | File_sig.With_ALoc.BindIdent (_, name) -> name = "React"
-  | File_sig.With_ALoc.BindNamed bindings ->
+  | File_sig.With_Loc.BindIdent (_, name) -> name = "React"
+  | File_sig.With_Loc.BindNamed bindings ->
     Base.List.exists ~f:(fun (_remote, local) -> binds_react local) bindings
 
 (** Determines whether to autoimport React when autocompleting a JSX element.
@@ -1554,7 +1554,7 @@ let should_autoimport_react ~options ~imports ~file_sig =
     match Options.react_runtime options with
     | Options.ReactRuntimeAutomatic -> false
     | Options.ReactRuntimeClassic ->
-      let open File_sig.With_ALoc in
+      let open File_sig.With_Loc in
       let requires_react =
         Base.List.exists
           ~f:(function
@@ -2082,7 +2082,6 @@ let autocomplete_get_results
     ~show_ranking_info
     trigger_character
     cursor =
-  let file_sig = File_sig.abstractify_locs file_sig in
   let open Autocomplete_js in
   match process_location ~trigger_character ~cursor ~typed_ast with
   | None ->

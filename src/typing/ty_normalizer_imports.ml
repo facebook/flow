@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open File_sig.With_ALoc
+open File_sig.With_Loc
 
 (* Collect the names and locations of types that are available as we scan
  * the imports. Later we'll match them with some remote defining loc. *)
@@ -17,7 +17,7 @@ let from_imported_locs_map ~import_mode map (acc : acc_t) =
       SMap.fold
         (fun local imported_locs_nel acc ->
           Nel.fold_left
-            (fun acc { local_loc; _ } -> (local_loc, local, import_mode) :: acc)
+            (fun acc { local_loc; _ } -> (ALoc.of_loc local_loc, local, import_mode) :: acc)
             acc
             imported_locs_nel)
         remote_map
@@ -27,7 +27,7 @@ let from_imported_locs_map ~import_mode map (acc : acc_t) =
 
 let rec from_binding ~import_mode binding (acc : acc_t) =
   match binding with
-  | BindIdent (loc, name) -> (loc, name, import_mode) :: acc
+  | BindIdent (loc, name) -> (ALoc.of_loc loc, name, import_mode) :: acc
   | BindNamed map ->
     List.fold_left (fun acc (_, binding) -> from_binding ~import_mode binding acc) acc map
 

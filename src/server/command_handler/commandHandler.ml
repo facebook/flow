@@ -416,7 +416,6 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
           ) =
         check_result
       in
-      let file_sig = File_sig.abstractify_locs file_sig in
       GetDef_js.get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc |> fun result ->
       let open GetDef_js.Get_def_result in
       let json_props = fold_json_of_parse_errors parse_errors [] in
@@ -2034,7 +2033,6 @@ let handle_persistent_signaturehelp_lsp
         )
     | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
       let func_details =
-        let file_sig = File_sig.abstractify_locs file_sig in
         let cursor_loc = Loc.cursor (Some path) line col in
         Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast cursor_loc
       in

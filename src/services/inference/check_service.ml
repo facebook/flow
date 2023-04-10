@@ -7,14 +7,14 @@
 
 type module_ref = string
 
-type 'a require = module_ref * ALoc.t Nel.t * 'a Parsing_heaps.resolved_module'
+type 'a require = module_ref * Loc.t Nel.t * 'a Parsing_heaps.resolved_module'
 
 type 'a check_file =
   File_key.t ->
   'a require list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   Loc.t Flow_ast.Comment.t list ->
-  File_sig.With_ALoc.t ->
+  File_sig.With_Loc.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
@@ -460,6 +460,7 @@ let mk_check_file
   let connect_require cx (mref, locs, m) =
     let module_t = dep_module_t cx mref m in
     let connect loc =
+      let loc = ALoc.of_loc loc in
       let module_t = module_t loc in
       let (_, require_id) = Context.find_require cx loc in
       resolve_require_id cx require_id module_t

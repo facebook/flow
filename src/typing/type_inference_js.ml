@@ -15,6 +15,7 @@ module NameDefOrdering = Name_def_ordering.Make (Context) (Flow_js_utils)
 
 let add_require_tvars =
   let add cx desc loc =
+    let loc = ALoc.of_loc loc in
     let reason = Reason.mk_reason desc loc in
     let id = Tvar.mk_no_wrap cx reason in
     Context.add_require cx loc (reason, id)
@@ -24,12 +25,13 @@ let add_require_tvars =
         module`s (for now). This won't fly forever so at some point we'll need to
         move `declare module` storage into the modulemap just like normal modules
         and merge them as such. *)
+    let loc = ALoc.of_loc loc in
     let reason = Reason.mk_reason desc loc in
     let tvar = Flow_js.get_builtin_tvar cx m_name reason in
     Context.add_require cx loc (reason, tvar)
   in
-  fun cx (file_sig : File_sig.With_ALoc.t) ->
-    File_sig.With_ALoc.(
+  fun cx (file_sig : File_sig.With_Loc.t) ->
+    File_sig.With_Loc.(
       SMap.iter
         (fun mref locs ->
           let desc = Reason.RCustom mref in
