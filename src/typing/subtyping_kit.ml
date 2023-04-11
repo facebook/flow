@@ -1478,8 +1478,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (****************************************)
     (* You can cast an object to a function *)
     (****************************************)
-    | (DefT (reason, _, (ObjT _ | InstanceT _)), (DefT (reason_op, _, FunT _) | AnyT (reason_op, _)))
-      ->
+    | (DefT (reason, _, (ObjT _ | InstanceT _)), DefT (reason_op, _, FunT _)) ->
       let prop_name = Some (OrdinaryName "$call") in
       let use_op =
         Frame (PropertyCompatibility { prop = prop_name; lower = reason; upper = reason_op }, use_op)
