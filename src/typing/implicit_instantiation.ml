@@ -165,7 +165,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | UpperNonT of Type.use_t
     | UpperT of Type.t
 
-  let rec t_of_use_t cx tvar u =
+  let rec t_of_use_t cx seen tvar u =
     let use_t_result_of_t_option = function
       | Some t -> UpperT t
       | None -> UpperEmpty
@@ -173,7 +173,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     let merge_lower_or_upper_bounds r t =
       match merge_lower_bounds cx t with
       | Some t -> UpperT t
-      | None -> merge_upper_bounds cx r t
+      | None -> merge_upper_bounds cx seen r t
     in
     let bind_use_t_result ~f = function
       | UpperEmpty -> UpperEmpty
@@ -181,7 +181,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | UpperT t -> f t
     in
     match u with
-    | UseT (_, (OpenT (r, _) as t)) -> merge_upper_bounds cx r t
+    | UseT (_, (OpenT (r, _) as t)) -> merge_upper_bounds cx seen r t
     | UseT (_, TypeDestructorTriggerT (_, r, _, destructor, tout)) ->
       (match destructor with
       | PropertyType _
@@ -238,9 +238,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ArrRestT (_, _, i, tout) ->
       (match get_t cx tout with
       | DefT (r, _, ArrT (ArrayAT (_, None) | ROArrayAT _)) ->
-        identity_reverse_upper_bound cx tvar r tout
+        identity_reverse_upper_bound cx seen tvar r tout
       | DefT (r, _, ArrT (ArrayAT (_, Some _) | TupleAT _)) when i = 0 ->
-        identity_reverse_upper_bound cx tvar r tout
+        identity_reverse_upper_bound cx seen tvar r tout
       | _ -> UpperEmpty)
     (* Call related upper bounds are ignored because there is not enough info to reverse. *)
     | BindT _
@@ -350,8 +350,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | SealGenericT _ ->
       UpperNonT u
     | MakeExactT (_, Lower (_, t)) -> UpperT t
-    | MakeExactT (_, Upper use_t) -> t_of_use_t cx tvar use_t
-    | ReposLowerT (_, _, use_t) -> t_of_use_t cx tvar use_t
+    | MakeExactT (_, Upper use_t) -> t_of_use_t cx seen tvar use_t
+    | ReposLowerT (_, _, use_t) -> t_of_use_t cx seen tvar use_t
     | ReposUseT (_, _, _use_op, t) ->
       Flow.flow_t cx (t, tvar);
       UpperT t
@@ -368,14 +368,14 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         UpperNonT u)
     | ResolveSpreadT _ -> UpperNonT u
     | ResolveUnionT { reason = _; unresolved = _; resolved = _; upper = u; id = _ } ->
-      t_of_use_t cx tvar u
+      t_of_use_t cx seen tvar u
     | ObjKitT (_, r, _, tool, tout) ->
       (match tool with
       | Object.(ReadOnly | Partial | Required | ObjectRep | ObjectWiden _ | Object.ReactConfig _) ->
-        identity_reverse_upper_bound cx tvar r tout
+        identity_reverse_upper_bound cx seen tvar r tout
       | Object.ObjectMap _ -> UpperNonT u (* TODO: reverse mapped types *)
       | Object.Spread (_, { Object.Spread.todo_rev; acc; _ }) ->
-        let solution = merge_upper_bounds cx r tout in
+        let solution = merge_upper_bounds cx seen r tout in
         (match solution with
         | UpperEmpty -> UpperEmpty
         | UpperNonT u -> UpperNonT u
@@ -386,7 +386,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             Flow.flow_t cx (reversed, tvar);
             UpperT reversed))
       | Object.Rest (_, Object.Rest.One t_rest) ->
-        merge_upper_bounds cx r tout
+        merge_upper_bounds cx seen r tout
         |> bind_use_t_result ~f:(fun t ->
                match reverse_obj_kit_rest cx r t_rest t |> merge_lower_bounds cx with
                | None -> UpperEmpty
@@ -396,8 +396,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
            )
       | Object.Rest (_, Object.Rest.Done _) -> UpperNonT u)
 
-  and identity_reverse_upper_bound cx tvar r tout =
-    let solution = merge_upper_bounds cx r tout in
+  and identity_reverse_upper_bound cx seen tvar r tout =
+    let solution = merge_upper_bounds cx seen r tout in
     (match solution with
     | UpperT t -> Flow.flow_t cx (t, tvar)
     | _ -> ());
@@ -511,7 +511,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     Flow.flow_t cx (solution, tvar);
     UpperT solution
 
-  and merge_upper_bounds cx upper_r tvar =
+  and merge_upper_bounds cx seen upper_r tvar =
     let filter_placeholder t =
       if Tvar_resolver.has_placeholders cx t then
         UpperEmpty
@@ -520,33 +520,36 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     in
     match tvar with
     | OpenT (_, id) ->
-      let constraints = Context.find_graph cx id in
-      (match constraints with
-      | Constraint.FullyResolved (_, (lazy t))
-      | Constraint.Resolved (_, t) ->
-        filter_placeholder t
-      | Constraint.Unresolved bounds ->
-        let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
-        uppers
-        |> List.fold_left
-             (fun acc (t, _) ->
-               match (acc, t_of_use_t cx tvar t) with
-               | (UpperNonT u, _) -> UpperNonT u
-               | (_, UpperNonT u) -> UpperNonT u
-               | (UpperEmpty, UpperT t) -> filter_placeholder t
-               | (UpperT _, UpperT t) when Tvar_resolver.has_placeholders cx t -> acc
-               | (UpperT t', UpperT t) ->
-                 (match (t', t) with
-                 | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
-                   UpperT (IntersectionT (upper_r, InterRep.append (InterRep.members rep2) rep1))
-                 | (_, IntersectionT (_, rep)) ->
-                   UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
-                 | (IntersectionT (_, rep), _) ->
-                   UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
-                 | (t', t) -> UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
-               | (UpperT _, UpperEmpty) -> acc
-               | (UpperEmpty, UpperEmpty) -> acc)
-             UpperEmpty)
+      if ISet.mem id seen then
+        UpperEmpty
+      else
+        let constraints = Context.find_graph cx id in
+        (match constraints with
+        | Constraint.FullyResolved (_, (lazy t))
+        | Constraint.Resolved (_, t) ->
+          filter_placeholder t
+        | Constraint.Unresolved bounds ->
+          let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
+          uppers
+          |> List.fold_left
+               (fun acc (t, _) ->
+                 match (acc, t_of_use_t cx (ISet.add id seen) tvar t) with
+                 | (UpperNonT u, _) -> UpperNonT u
+                 | (_, UpperNonT u) -> UpperNonT u
+                 | (UpperEmpty, UpperT t) -> filter_placeholder t
+                 | (UpperT _, UpperT t) when Tvar_resolver.has_placeholders cx t -> acc
+                 | (UpperT t', UpperT t) ->
+                   (match (t', t) with
+                   | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
+                     UpperT (IntersectionT (upper_r, InterRep.append (InterRep.members rep2) rep1))
+                   | (_, IntersectionT (_, rep)) ->
+                     UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
+                   | (IntersectionT (_, rep), _) ->
+                     UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
+                   | (t', t) -> UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
+                 | (UpperT _, UpperEmpty) -> acc
+                 | (UpperEmpty, UpperEmpty) -> acc)
+               UpperEmpty)
     | t -> UpperT t
 
   and merge_lower_bounds cx t =
@@ -589,7 +592,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       ?(on_upper_empty = on_missing_bounds ~use_op ~default_bound)
       tparam_binder_reason
       instantiation_reason =
-    let upper_t = merge_upper_bounds cx tparam_binder_reason tvar in
+    let upper_t = merge_upper_bounds cx ISet.empty tparam_binder_reason tvar in
     match upper_t with
     | UpperEmpty -> on_upper_empty cx tparam ~tparam_binder_reason ~instantiation_reason
     | UpperNonT u ->
