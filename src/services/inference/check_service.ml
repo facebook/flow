@@ -7,11 +7,11 @@
 
 type module_ref = string
 
-type 'a require = module_ref * Loc.t Nel.t * 'a Parsing_heaps.resolved_module'
+type 'a resolve_require = module_ref -> 'a Parsing_heaps.resolved_module'
 
 type 'a check_file =
   File_key.t ->
-  'a require list ->
+  'a resolve_require ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->
@@ -456,7 +456,8 @@ let mk_check_file
     Lazy.force file_rec
   in
 
-  let connect_require cx (mref, locs, m) =
+  let connect_require cx resolve_require mref locs =
+    let m = resolve_require mref in
     let module_t = dep_module_t cx mref m in
     let connect loc =
       let loc = ALoc.of_loc loc in
@@ -467,7 +468,12 @@ let mk_check_file
     Nel.iter connect locs
   in
 
-  fun file_key requires ast file_sig docblock aloc_table ->
+  let connect_requires cx resolve_require file_sig =
+    let open File_sig in
+    SMap.iter (connect_require cx resolve_require) (require_loc_map file_sig.module_sig)
+  in
+
+  fun file_key resolve_require ast file_sig docblock aloc_table ->
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx master_cx in
@@ -476,7 +482,7 @@ let mk_check_file
     ConsGen.set_dst_cx cx;
     let lint_severities = get_lint_severities metadata options in
     Type_inference_js.add_require_tvars cx file_sig;
-    List.iter (connect_require cx) requires;
+    connect_requires cx resolve_require file_sig;
     let typed_ast = Type_inference_js.infer_ast cx file_key comments aloc_ast ~lint_severities in
     Merge_js.post_merge_checks cx aloc_ast typed_ast metadata;
     Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));

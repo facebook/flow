@@ -400,18 +400,11 @@ let mk_check_file options ~reader ~master_cx () =
       let (file_sig, tolerable_errors) = Parsing_heaps.read_tolerable_file_sig_unsafe file parse in
       let docblock = Parsing_heaps.read_docblock_unsafe file parse in
       let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file parse) in
-      let requires =
-        let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-        let resolved_modules =
-          Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
-        in
-        let f mref locs acc =
-          let m = SMap.find mref resolved_modules in
-          (mref, locs, m) :: acc
-        in
-        SMap.fold f require_loc_map []
+      let resolved_modules =
+        Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
       in
-      let (cx, typed_ast) = check_file file requires ast file_sig docblock aloc_table in
+      let resolve_require mref = SMap.find mref resolved_modules in
+      let (cx, typed_ast) = check_file file resolve_require ast file_sig docblock aloc_table in
       let coverage = Coverage.file_coverage ~cx typed_ast in
       let errors = Context.errors cx in
       let errors =
@@ -477,20 +470,15 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
       | None -> ALoc.empty_table file)
   in
   let reader = Abstract_state_reader.State_reader reader in
-  let required =
-    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+  let resolve_require =
     let node_modules_containers = !Files.node_modules_containers in
-    let f mref locs acc =
-      let m = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in
-      (mref, locs, m) :: acc
-    in
-    SMap.fold f require_loc_map []
+    Module_js.imported_module ~options ~reader ~node_modules_containers file
   in
   let check_file =
     let reader = Check_service.mk_heap_reader reader in
     Check_service.mk_check_file reader ~options ~master_cx ~cache:check_contents_cache ()
   in
-  check_file file required ast file_sig docblock aloc_table
+  check_file file resolve_require ast file_sig docblock aloc_table
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
