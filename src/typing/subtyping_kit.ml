@@ -1709,9 +1709,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let t = Context.find_call cx id in
       rec_flow cx trace (l, UseT (use_op, t));
       rec_flow_t cx trace ~use_op (l, DefT (reason, trust, ObjT { o with call_t = None }))
-    | (DefT (_, _, FunT _), DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ }))) ->
+    | ( DefT (_, _, FunT _),
+        DefT
+          (reason, trust, InstanceT (static, super, implements, ({ inst_call_t = Some id; _ } as i)))
+      ) ->
       let t = Context.find_call cx id in
-      rec_flow cx trace (l, UseT (use_op, t))
+      rec_flow cx trace (l, UseT (use_op, t));
+      rec_flow_t
+        cx
+        trace
+        ~use_op
+        ( l,
+          DefT (reason, trust, InstanceT (static, super, implements, { i with inst_call_t = None }))
+        )
     (* FunT ~> ObjT *)
     (*
      * Previously, call properties were stored in the props map, and were

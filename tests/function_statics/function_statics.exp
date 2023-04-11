@@ -332,6 +332,40 @@ References:
              ^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------- used_as_callable_object.js:35:2
+
+Cannot cast `add` to `C` because function [1] is incompatible with `C` [2]. [incompatible-cast]
+
+   used_as_callable_object.js:35:2
+   35| (add: C); // error object incompatible with class instance
+        ^^^
+
+References:
+   used_as_callable_object.js:1:1
+    1| function add(x: number, y: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   used_as_callable_object.js:35:7
+   35| (add: C); // error object incompatible with class instance
+             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------- used_as_callable_object.js:36:2
+
+Cannot cast `add` to `I` because property `bar` is missing in function [1] but exists in `I` [2]. [prop-missing]
+
+   used_as_callable_object.js:36:2
+   36| (add: I); // error prop 'bar' missing
+        ^^^
+
+References:
+   used_as_callable_object.js:1:1
+    1| function add(x: number, y: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   used_as_callable_object.js:36:7
+   36| (add: I); // error prop 'bar' missing
+             ^ [2]
+
+
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:39:2
 
 Cannot cast `addWithBar` to `ExactCallableObj` because inexact function [1] is incompatible with exact
@@ -350,5 +384,22 @@ References:
                     ^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------- used_as_callable_object.js:40:2
 
-Found 22 errors
+Cannot cast `addWithBar` to `C` because function [1] is incompatible with `C` [2]. [incompatible-cast]
+
+   used_as_callable_object.js:40:2
+   40| (addWithBar: C); // error object incompatible with class instance
+        ^^^^^^^^^^
+
+References:
+   used_as_callable_object.js:5:1
+    5| function addWithBar(x: number, y: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   used_as_callable_object.js:40:14
+   40| (addWithBar: C); // error object incompatible with class instance
+                    ^ [2]
+
+
+
+Found 25 errors
