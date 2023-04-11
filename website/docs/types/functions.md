@@ -324,7 +324,8 @@ Callable objects can be typed, for example:
 ```js flow-check
 type CallableObj = {
   (number, number): number,
-  bar: string
+  bar: string,
+  ...
 };
 
 function add(x: number, y: number) {
@@ -339,6 +340,8 @@ add.bar = "hello world";
 In general, functions can have properties assigned to them if they are function declarations, or
 simple variable declarations of the form `const f = () => ...`. The properties must be assigned in
 the format `f.prop = <expr>;`, in the same statement list as the function definition (i.e. not conditionally).
+
+Note that the object representing the static properties assigned to the function is inexact.
 
 ## Overloaded functions
 You can use intersection types to define [overloaded function types](../intersections/#toc-intersection-of-function-types):
