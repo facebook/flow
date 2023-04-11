@@ -63,6 +63,21 @@ References:
                                            ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- arrow.js:33:43
+
+Cannot assign function to `f` because property `a` is missing in function [1] but exists in object type [2].
+[prop-missing]
+
+   arrow.js:33:43
+   33|   const f: {(): number, a: string, ...} = () => 1; // ERROR on assignment
+                                                 ^^^^^^^ [1]
+
+References:
+   arrow.js:33:12
+   33|   const f: {(): number, a: string, ...} = () => 1; // ERROR on assignment
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- arrow.js:35:9
 
 Cannot assign `1` to `f.a` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -73,7 +88,7 @@ Cannot assign `1` to `f.a` because number [1] is incompatible with string [2]. [
 
 References:
    arrow.js:33:28
-   33|   const f: {(): number, a: string} = () => 1;
+   33|   const f: {(): number, a: string, ...} = () => 1; // ERROR on assignment
                                   ^^^^^^ [2]
 
 
@@ -87,8 +102,8 @@ Cannot get `f.xxx` because property `xxx` is missing in object type [1]. [prop-m
 
 References:
    arrow.js:33:12
-   33|   const f: {(): number, a: string} = () => 1;
-                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   33|   const f: {(): number, a: string, ...} = () => 1; // ERROR on assignment
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- function_declaration.js:11:2
@@ -238,6 +253,21 @@ References:
                                            ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- function_expression.js:41:43
+
+Cannot assign function to `f` because property `a` is missing in function [1] but exists in object type [2].
+[prop-missing]
+
+   function_expression.js:41:43
+   41|   const f: {(): number, a: string, ...} = function () { return 1}; // ERROR on assignment
+                                                 ^^^^^^^^^^^ [1]
+
+References:
+   function_expression.js:41:12
+   41|   const f: {(): number, a: string, ...} = function () { return 1}; // ERROR on assignment
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------- function_expression.js:43:9
 
 Cannot assign `1` to `f.a` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -248,7 +278,7 @@ Cannot assign `1` to `f.a` because number [1] is incompatible with string [2]. [
 
 References:
    function_expression.js:41:28
-   41|   const f: {(): number, a: string} = function () { return 1};
+   41|   const f: {(): number, a: string, ...} = function () { return 1}; // ERROR on assignment
                                   ^^^^^^ [2]
 
 
@@ -262,9 +292,63 @@ Cannot get `f.xxx` because property `xxx` is missing in object type [1]. [prop-m
 
 References:
    function_expression.js:41:12
-   41|   const f: {(): number, a: string} = function () { return 1};
-                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   41|   const f: {(): number, a: string, ...} = function () { return 1}; // ERROR on assignment
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- used_as_callable_object.js:33:2
+
+Cannot cast `add` to `InexactCallableObj` because property `bar` is missing in function [1] but exists in
+`InexactCallableObj` [2]. [prop-missing]
+
+   used_as_callable_object.js:33:2
+   33| (add: InexactCallableObj); // error prop 'bar' missing
+        ^^^
+
+References:
+   used_as_callable_object.js:1:1
+    1| function add(x: number, y: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   used_as_callable_object.js:33:7
+   33| (add: InexactCallableObj); // error prop 'bar' missing
+             ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- used_as_callable_object.js:34:2
+
+Cannot cast `add` to `ExactCallableObj` because inexact function [1] is incompatible with exact `ExactCallableObj` [2].
+[incompatible-exact]
+
+   used_as_callable_object.js:34:2
+   34| (add: ExactCallableObj); // error inexact obj
+        ^^^
+
+References:
+   used_as_callable_object.js:1:1
+    1| function add(x: number, y: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   used_as_callable_object.js:34:7
+   34| (add: ExactCallableObj); // error inexact obj
+             ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- used_as_callable_object.js:39:2
+
+Cannot cast `addWithBar` to `ExactCallableObj` because inexact function [1] is incompatible with exact
+`ExactCallableObj` [2]. [incompatible-exact]
+
+   used_as_callable_object.js:39:2
+   39| (addWithBar: ExactCallableObj); // error inexact obj
+        ^^^^^^^^^^
+
+References:
+   used_as_callable_object.js:5:1
+    5| function addWithBar(x: number, y: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   used_as_callable_object.js:39:14
+   39| (addWithBar: ExactCallableObj); // error inexact obj
+                    ^^^^^^^^^^^^^^^^ [2]
 
 
 
-Found 17 errors
+Found 22 errors

@@ -30,7 +30,7 @@ declare function debounce<Args>(
 
 // Annotated
 {
-  const f: {(): number, a: string} = () => 1;
+  const f: {(): number, a: string, ...} = () => 1; // ERROR on assignment
   f.a = "hi"; // OK
   f.a = 1; // ERROR
   f.xxx; // ERROR

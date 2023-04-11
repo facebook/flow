@@ -1705,10 +1705,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (***********************************************)
     (* You can use a function as a callable object *)
     (***********************************************)
-    | ( DefT (_, _, FunT _),
-        DefT
-          (_, _, (ObjT { call_t = Some id; _ } | InstanceT (_, _, _, { inst_call_t = Some id; _ })))
-      ) ->
+    | (DefT (_, _, FunT _), DefT (reason, trust, ObjT ({ call_t = Some id; _ } as o))) ->
+      let t = Context.find_call cx id in
+      rec_flow cx trace (l, UseT (use_op, t));
+      rec_flow_t cx trace ~use_op (l, DefT (reason, trust, ObjT { o with call_t = None }))
+    | (DefT (_, _, FunT _), DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ }))) ->
       let t = Context.find_call cx id in
       rec_flow cx trace (l, UseT (use_op, t))
     (* FunT ~> ObjT *)

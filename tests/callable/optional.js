@@ -1,6 +1,7 @@
 type F = {
   (x: string): number;
   p?: string;
+  ...
 }
 
 function f(x: string) {
