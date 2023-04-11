@@ -120,7 +120,9 @@ module Make
         in
         if obj_key_autocomplete acc then
           let get_autocomplete_t () =
-            Tvar.mk_where cx reason (fun tvar -> Flow_js.flow_t cx (obj_t, tvar))
+            Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tvar ->
+                Flow_js.flow_t cx (obj_t, tvar)
+            )
           in
           let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
           lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:get_autocomplete_t
@@ -1712,7 +1714,7 @@ module Make
     | Ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
 
   and get_imported_t cx get_reason module_name module_t import_kind remote_export_name local_name =
-    Tvar.mk_where cx get_reason (fun t ->
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx get_reason (fun t ->
         let import_type =
           if remote_export_name = "default" then
             ImportDefaultT
@@ -1748,7 +1750,7 @@ module Make
     | ImportDeclaration.ImportTypeof ->
       let bind_reason = repos_reason local_loc import_reason in
       let module_ns_t = Import_export.import_ns cx import_reason (source_loc, module_name) in
-      Tvar.mk_where cx bind_reason (fun t ->
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx bind_reason (fun t ->
           Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
       )
     | ImportDeclaration.ImportValue ->
@@ -1784,7 +1786,7 @@ module Make
       | Ast.Statement.ExportType ->
         let reason = mk_reason (RType local_name) loc in
         let t =
-          Tvar.mk_where cx reason (fun tout ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
               Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout))
           )
         in
@@ -1799,7 +1801,7 @@ module Make
       in
       let t =
         let reason = mk_reason (RIdentifier local_name) loc in
-        Tvar.mk_no_wrap_where cx reason (fun tout ->
+        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
             let use_t = GetPropT (unknown_use, reason, None, Named (reason, local_name), tout) in
             Flow.flow cx (source_ns_t, use_t)
         )
@@ -2106,7 +2108,7 @@ module Make
        and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
     let mk_computed key value =
-      Tvar.mk_no_wrap_where cx reason (fun tout_tvar ->
+      Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout_tvar ->
           Flow.flow
             cx
             ( key,
@@ -2189,7 +2191,9 @@ module Make
             let reason = mk_reason RPrototype (fst v) in
             let (((_, vt), _) as v) = expression cx v in
             let t =
-              Tvar.mk_where cx reason (fun t -> Flow.flow cx (vt, ObjTestProtoT (reason, t)))
+              Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
+                  Flow.flow cx (vt, ObjTestProtoT (reason, t))
+              )
             in
             ( ObjectExpressionAcc.add_proto t acc,
               Property
@@ -2501,7 +2505,7 @@ module Make
         let reason = mk_reason RArrayLit loc in
         let (elem_spread_list, elements) = array_elements cx loc elems in
         ( ( loc,
-            Tvar.mk_where cx reason (fun tout ->
+            Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
                 let reason_op = reason in
                 let element_reason =
                   replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
@@ -3297,7 +3301,7 @@ module Make
         let (argts, arguments_ast) = arg_list cx arguments in
         let prop_t = Tvar.mk cx reason_prop in
         let lhs_t =
-          Tvar.mk_no_wrap_where cx reason (fun t ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let methodcalltype = mk_methodcalltype ~meth_generic_this targts argts t in
               let use_op =
                 Op
@@ -3353,7 +3357,7 @@ module Make
         let super_reason = reason_of_t super_t in
         let prop_t = Tvar.mk cx (reason_of_t super_t) in
         let lhs_t =
-          Tvar.mk_no_wrap_where cx reason (fun t ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let methodcalltype = mk_methodcalltype targts argts t in
               let propref = Named (super_reason, OrdinaryName "constructor") in
               let use_op =
@@ -3628,13 +3632,15 @@ module Make
               voided_out;
             }
         );
+      let mem_t = OpenT mem_tvar in
       let lhs_t =
         Tvar.mk_where cx reason (fun t ->
-            Flow.flow_t cx (OpenT mem_tvar, t);
+            Flow.flow_t cx (mem_t, t);
             Flow.flow_t cx (voided_out, t)
         )
       in
-      (OpenT mem_tvar, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts)
+      Tvar_resolver.resolve cx mem_t;
+      (mem_t, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts)
     in
     let handle_continue_chain conf (chain_t, voided_t, object_ast) =
       let {
@@ -3816,7 +3822,7 @@ module Make
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
         let get_opt_use tind _ _ = OptGetElemT (use_op, reason, false (* annot *), tind) in
         let get_mem_t tind reason obj_t =
-          Tvar.mk_no_wrap_where cx reason (fun t ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let use = apply_opt_use (get_opt_use tind reason obj_t) t in
               Flow.flow cx (obj_t, use)
           )
@@ -3868,7 +3874,7 @@ module Make
             None
         in
         let get_mem_t () _ obj_t =
-          Tvar.mk_no_wrap_where cx expr_reason (fun t ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
               Flow.flow cx (obj_t, use)
           )
@@ -3913,7 +3919,7 @@ module Make
             None
         in
         let get_mem_t () _ obj_t =
-          Tvar.mk_no_wrap_where cx expr_reason (fun t ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
               Flow.flow cx (obj_t, use)
           )
@@ -4006,7 +4012,7 @@ module Make
                 None
             in
             let handle_refined_callee argts obj_t f =
-              Tvar.mk_no_wrap_where cx reason_call (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
                   let app =
                     mk_boundfunctioncalltype
                       ~call_kind:RegularCallKind
@@ -4051,7 +4057,7 @@ module Make
               )
             in
             let get_mem_t argts reason obj_t =
-              Tvar.mk_no_wrap_where cx reason_call (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
                   let use = apply_opt_use (get_opt_use argts reason obj_t) t in
                   Flow.flow cx (obj_t, use)
               )
@@ -4116,7 +4122,7 @@ module Make
                 elem_t
             in
             let get_mem_t arg_and_elem_ts reason obj_t =
-              Tvar.mk_no_wrap_where cx reason_call (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
                   let use = apply_opt_use (get_opt_use arg_and_elem_ts reason obj_t) t in
                   Flow.flow cx (obj_t, use);
                   Flow.flow_t cx (obj_t, prop_t)
@@ -4201,7 +4207,7 @@ module Make
         let get_opt_use argts reason _ = func_call_opt_use cx loc reason ~use_op targts argts in
         let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
         let get_result argts reason f =
-          Tvar.mk_no_wrap_where cx reason (fun t ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let use = apply_opt_use (get_opt_use argts reason f) t in
               Flow.flow cx (f, use)
           )
@@ -4244,7 +4250,7 @@ module Make
      then those values are returned by constructions.
   *)
   and new_call cx loc reason ~use_op class_ targs args =
-    Tvar.mk_where cx reason (fun tout ->
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
         Flow.flow
           cx
           ( class_,
@@ -4259,7 +4265,9 @@ module Make
 
   and func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts =
     let opt_use = func_call_opt_use cx loc reason ~use_op ~call_strict_arity targts argts in
-    Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (func_t, apply_opt_use opt_use t))
+    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+        Flow.flow cx (func_t, apply_opt_use opt_use t)
+    )
 
   and method_call_opt_use
       cx
@@ -4314,7 +4322,7 @@ module Make
          meanwhile, here we must hijack the property selection normally
          performed by the flow algorithm itself. *)
       ( f,
-        Tvar.mk_no_wrap_where cx reason (fun t ->
+        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
             let app =
               mk_boundfunctioncalltype
                 ~call_kind:RegularCallKind
@@ -4341,7 +4349,7 @@ module Make
       let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
       let prop_t = Tvar.mk cx reason_prop in
       ( prop_t,
-        Tvar.mk_no_wrap_where cx reason (fun t ->
+        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
             let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
             let methodcalltype =
               mk_methodcalltype targts argts t ~meth_strict_arity:call_strict_arity
@@ -4406,7 +4414,7 @@ module Make
        * indirection so that we don't modify the underlying reason of our type. *)
       | _ ->
         let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-        Tvar.mk_where cx reason (Flow.unify cx t)
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (Flow.unify cx t)
     in
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let (_, lazy_hint) = Env.get_hint cx loc in
@@ -4481,13 +4489,16 @@ module Make
       let tout =
         match cond with
         | Some _ -> BoolT.at loc |> with_trust bogus_trust
-        | None -> Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (arg, NotT (reason, t)))
+        | None ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+              Flow.flow cx (arg, NotT (reason, t))
+          )
       in
       (tout, { operator = Not; argument; comments })
     | { operator = Plus; argument; comments } ->
       let (((_, argt), _) as argument) = expression cx argument in
       let reason = mk_reason (desc_of_t argt) loc in
-      ( Tvar.mk_where cx reason (fun result_t ->
+      ( Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
             Flow.flow cx (argt, UnaryArithT { reason; result_t; kind = UnaryArithKind.Plus })
         ),
         { operator = Plus; argument; comments }
@@ -4507,7 +4518,7 @@ module Make
             DefT (reason, trust, NumT (Literal (sense, (value, raw))))
           | arg ->
             let reason = mk_reason (desc_of_t arg) loc in
-            Tvar.mk_where cx reason (fun result_t ->
+            Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
                 Flow.flow cx (arg, UnaryArithT { reason; result_t; kind = UnaryArithKind.Minus })
             )
         end,
@@ -4516,7 +4527,7 @@ module Make
     | { operator = BitNot; argument; comments } ->
       let (((_, argt), _) as argument) = expression cx argument in
       let reason = mk_reason (desc_of_t argt) loc in
-      ( Tvar.mk_where cx reason (fun result_t ->
+      ( Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
             Flow.flow cx (argt, UnaryArithT { reason; result_t; kind = UnaryArithKind.BitNot })
         ),
         { operator = BitNot; argument; comments }
@@ -4567,7 +4578,7 @@ module Make
     let { argument; _ } = expr in
     let (((_, arg_t), _) as arg_ast) = expression cx argument in
     let result_t =
-      Tvar.mk_where cx reason (fun result_t ->
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
           Flow.flow cx (arg_t, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
       )
     in
@@ -4725,7 +4736,7 @@ module Make
           ("arithmetic operation", desc_of_reason (reason_of_t t1), desc_of_reason (reason_of_t t2))
       in
       let reason = mk_reason desc loc in
-      ( Tvar.mk_where cx reason (fun t ->
+      ( Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
             let use_op =
               Op
                 (Arith
@@ -4781,7 +4792,9 @@ module Make
         | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
       in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
-      ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))),
+      ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+            Flow.flow cx (t1, OrT (reason, t2, t))
+        ),
         { operator = Or; left; right; comments }
       )
     | And ->
@@ -4796,7 +4809,9 @@ module Make
         | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
       in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
-      ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))),
+      ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+            Flow.flow cx (t1, AndT (reason, t2, t))
+        ),
         { operator = And; left; right; comments }
       )
     | NullishCoalesce ->
@@ -4811,7 +4826,7 @@ module Make
         | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
       in
       let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
-      ( Tvar.mk_no_wrap_where cx reason (fun t ->
+      ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
             Flow.flow cx (t1, NullishCoalesceT (reason, t2, t))
         ),
         { operator = NullishCoalesce; left; right; comments }
@@ -5049,7 +5064,7 @@ module Make
     (t, lhs, typed_rhs)
 
   and arith_assign cx ~reason ~lhs_reason ~rhs_reason lhs_t rhs_t kind =
-    Tvar.mk_where cx reason (fun result_t ->
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
         let use_op = Op (Arith { op = reason; left = lhs_reason; right = rhs_reason }) in
         Flow.flow cx (lhs_t, ArithT { use_op; reason; flip = false; rhs_t; result_t; kind })
     )
@@ -5151,7 +5166,7 @@ module Make
             | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
           in
           let result_t =
-            Tvar.mk_no_wrap_where cx reason (fun t ->
+            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
                 Flow.flow cx (lhs_t, NullishCoalesceT (reason, rhs_t, t))
             )
           in
@@ -5169,7 +5184,9 @@ module Make
             | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
           in
           let result_t =
-            Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (lhs_t, AndT (reason, rhs_t, t)))
+            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+                Flow.flow cx (lhs_t, AndT (reason, rhs_t, t))
+            )
           in
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
@@ -5186,7 +5203,9 @@ module Make
             | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
           in
           let result_t =
-            Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (lhs_t, OrT (reason, rhs_t, t)))
+            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+                Flow.flow cx (lhs_t, OrT (reason, rhs_t, t))
+            )
           in
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
@@ -5612,7 +5631,7 @@ module Make
       | _ when is_react -> acc
       | _ ->
         let arr =
-          Tvar.mk_where cx reason (fun tout ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
               let reason_op = reason in
               let element_reason =
                 replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
@@ -5919,7 +5938,7 @@ module Make
 
   and get_prop ~cond cx reason ~use_op tobj (prop_reason, name) =
     let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in
-    Tvar.mk_no_wrap_where cx reason (fun t ->
+    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
         let get_prop_u = apply_opt_use opt_use t in
         Flow.flow cx (tobj, get_prop_u)
     )
@@ -5940,7 +5959,7 @@ module Make
         )
     in
     let get_keys ~arr_reason obj_t =
-      Tvar.mk_where cx arr_reason (fun tvar ->
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx arr_reason (fun tvar ->
           let keys_reason =
             update_desc_reason
               (fun desc -> RCustom (spf "element of %s" (string_of_desc desc)))
@@ -5950,7 +5969,7 @@ module Make
       )
     in
     let get_values ~arr_reason obj_t =
-      Tvar.mk_where cx arr_reason (fun tvar ->
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx arr_reason (fun tvar ->
           Flow.flow cx (obj_t, GetDictValuesT (reason, UseT (use_op, tvar)))
       )
     in
@@ -5959,7 +5978,9 @@ module Make
       let (((_, e_t), _) as e_ast) = expression cx e in
       let proto =
         let reason = mk_reason RPrototype (fst e) in
-        Tvar.mk_where cx reason (fun t -> Flow.flow cx (e_t, ObjTestProtoT (reason, t)))
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
+            Flow.flow cx (e_t, ObjTestProtoT (reason, t))
+        )
       in
       ( Obj_type.mk_with_proto cx reason ~obj_kind:Exact proto,
         None,
@@ -5982,7 +6003,9 @@ module Make
       let (((_, e_t), _) as e_ast) = expression cx e in
       let proto =
         let reason = mk_reason RPrototype (fst e) in
-        Tvar.mk_where cx reason (fun t -> Flow.flow cx (e_t, ObjTestProtoT (reason, t)))
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
+            Flow.flow cx (e_t, ObjTestProtoT (reason, t))
+        )
       in
       let (pmap, properties) = prop_map_of_object cx properties in
       let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
@@ -6006,7 +6029,7 @@ module Make
                   reason
               in
               let t =
-                Tvar.mk_where cx reason (fun tvar ->
+                Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tvar ->
                     let loc = aloc_of_reason reason in
                     let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [tvar] in
                     Flow.flow cx (spec, UseT (use_op, propdesc))

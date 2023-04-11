@@ -122,3 +122,13 @@ let resolve ?(no_lowers = default_no_lowers) cx t =
 let resolved_t ?(no_lowers = default_no_lowers) cx t =
   resolve ~no_lowers cx t;
   t
+
+let mk_tvar_and_fully_resolve_where cx reason f =
+  let tvar = Tvar.mk_where cx reason f in
+  resolve cx tvar;
+  tvar
+
+let mk_tvar_and_fully_resolve_no_wrap_where cx reason f =
+  let tvar = Tvar.mk_no_wrap_where cx reason f in
+  resolve cx tvar;
+  tvar
