@@ -113,5 +113,41 @@ Error --------------------------------------------------------------------------
            ^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:65:5
 
-Found 13 errors
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   65|     x.foo(); // error
+           ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:66:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   66|     x.bar(); // error
+           ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:80:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   80|     x?.foo(); // error
+           ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:81:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   81|     x?.bar(); // error
+           ^^^^^^^^^
+
+
+
+Found 17 errors
