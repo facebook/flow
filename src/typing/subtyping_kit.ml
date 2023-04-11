@@ -1482,12 +1482,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ->
       let prop_name = Some (OrdinaryName "$call") in
       let use_op =
-        match u with
-        | DefT (_, _, FunT _)
-        | AnyT _ ->
-          Frame
-            (PropertyCompatibility { prop = prop_name; lower = reason; upper = reason_op }, use_op)
-        | _ -> use_op
+        Frame (PropertyCompatibility { prop = prop_name; lower = reason; upper = reason_op }, use_op)
       in
       let fun_t =
         match l with
