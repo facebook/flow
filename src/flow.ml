@@ -32,7 +32,6 @@ end = struct
       FixCommand.command;
       ForceRecheckCommand.command;
       GetDefCommand.command;
-      GetImportsCommand.command;
       GleanCommand.command;
       InitCommand.command;
       LspCommand.command;

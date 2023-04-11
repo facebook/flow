@@ -52,30 +52,6 @@ get-def without --wait-for-recheck runs immediately:
 {"path":"dependency.js","line":3,"endline":3,"start":16,"end":18}
 
 
-get-imports without --wait-for-recheck runs immediately:
-{
-  "focused.js":{
-    "not_flow":false,
-    "requirements":[
-      {
-        "import":"dependency.js",
-        "loc":{
-          "source":"focused.js",
-          "type":"SourceFile",
-          "start":{"line":3,"column":17,"offset":26},
-          "end":{"line":3,"column":33,"offset":43}
-        },
-        "path":"focused.js",
-        "line":3,
-        "endline":3,
-        "start":17,
-        "end":33
-      }
-    ]
-  }
-}
-
-
 type-at-pos without --wait-for-recheck runs immediately:
 {
   "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},

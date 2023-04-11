@@ -29,13 +29,6 @@ get-def with --wait-for-recheck true times out:
 }
 
 
-get-imports with --wait-for-recheck true times out:
-{
-  "flowVersion":"<VERSION>",
-  "exit":{"code":3,"reason":"Out_of_time","msg":"Timeout exceeded, exiting"}
-}
-
-
 type-at-pos with --wait-for-recheck true times out:
 {
   "flowVersion":"<VERSION>",

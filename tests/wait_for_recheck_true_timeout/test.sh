@@ -35,10 +35,6 @@ printf "\\n\\nget-def times out:\\n"
 assert_exit 3 "$FLOW" get-def \
   --timeout 1 --strip-root --pretty focused.js 5 18
 
-printf "\\n\\nget-imports times out:\\n"
-assert_exit 3 "$FLOW" get-imports \
-  --timeout 1 --strip-root --pretty focused.js
-
 printf "\\n\\ntype-at-pos times out:\\n"
 assert_exit 3 "$FLOW" type-at-pos \
   --timeout 1 --strip-root --pretty focused.js 5 18

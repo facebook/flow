@@ -70,10 +70,6 @@ module Request = struct
         char: int;
         wait_for_recheck: bool option;
       }
-    | GET_IMPORTS of {
-        module_names: string list;
-        wait_for_recheck: bool option;
-      }
     | GRAPH_DEP_GRAPH of {
         root: string;
         strip_root: bool;
@@ -150,8 +146,6 @@ module Request = struct
       Printf.sprintf "force-recheck %s (%s)" (String.concat " " files) parts
     | GET_DEF { input; line; char; wait_for_recheck = _ } ->
       Printf.sprintf "get-def %s:%d:%d" (File_input.filename_of_file_input input) line char
-    | GET_IMPORTS { module_names; wait_for_recheck = _ } ->
-      Printf.sprintf "get-imports %s" (String.concat " " module_names)
     | INFER_TYPE
         {
           input;
@@ -256,8 +250,6 @@ module Response = struct
 
   type get_def_response = (Loc.t list, string) result
 
-  type get_imports_response = Loc.t Nel.t Modulename.Map.t SMap.t * SSet.t
-
   type infer_type_response_ok =
     | Infer_type_response of {
         loc: Loc.t;
@@ -302,7 +294,6 @@ module Response = struct
     | FIND_MODULE of find_module_response
     | FORCE_RECHECK
     | GET_DEF of get_def_response
-    | GET_IMPORTS of get_imports_response
     | INFER_TYPE of infer_type_response
     | INSERT_TYPE of insert_type_response
     | RAGE of rage_response
@@ -325,7 +316,6 @@ module Response = struct
     | FIND_MODULE _ -> "find_module response"
     | FORCE_RECHECK -> "force_recheck response"
     | GET_DEF _ -> "get_def response"
-    | GET_IMPORTS _ -> "get_imports response"
     | INFER_TYPE _ -> "infer_type response"
     | INSERT_TYPE _ -> "insert_type response"
     | RAGE _ -> "rage response"

@@ -832,63 +832,6 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
       in
       (result, Some json))
 
-let module_name_of_string ~options module_name_str =
-  let file_options = Options.file_options options in
-  let path = Path.to_string (Path.make module_name_str) in
-  if Files.is_flow_file ~options:file_options path then
-    Modulename.Filename (File_key.SourceFile path)
-  else
-    Modulename.String module_name_str
-
-let get_imports ~options ~reader module_names =
-  let add_to_results (map, non_flow) module_name_str =
-    let module_name = module_name_of_string ~options module_name_str in
-    let dependency = Parsing_heaps.get_dependency_unsafe module_name in
-    match Parsing_heaps.Reader.get_provider ~reader dependency with
-    | Some addr ->
-      (* We do not process all modules which are stored in our module
-       * database. In case we do not process a module its requirements
-       * are not kept track of. To avoid confusing results we notify the
-       * client that these modules have not been processed.
-       *)
-      (match Parsing_heaps.Reader.get_typed_parse ~reader addr with
-      | Some parse ->
-        let file = Parsing_heaps.read_file_key addr in
-        let resolved_modules =
-          Parsing_heaps.Reader.get_resolved_modules_unsafe
-            ~reader
-            Parsing_heaps.read_dependency
-            file
-            parse
-        in
-        let fsig = Parsing_heaps.read_file_sig_unsafe file parse in
-        let requires = File_sig.(require_loc_map fsig.module_sig) in
-        let mlocs =
-          SMap.fold
-            (fun mref locs acc ->
-              let mname =
-                match SMap.find mref resolved_modules with
-                | Ok m -> m
-                | Error mapped_name ->
-                  let name = Option.value mapped_name ~default:mref in
-                  Modulename.String name
-              in
-              Modulename.Map.add mname locs acc)
-            requires
-            Modulename.Map.empty
-        in
-        (SMap.add module_name_str mlocs map, non_flow)
-      | None -> (map, SSet.add module_name_str non_flow))
-    | None ->
-      (* We simply ignore non existent modules *)
-      (map, non_flow)
-  in
-  (* Our result is a tuple. The first element is a map from module names to
-   * modules imported by them and their locations of import. The second
-   * element is a set of modules which are not marked for processing by
-   * flow. *)
-  List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
-
 let save_state ~saved_state_filename ~genv ~env ~profiling =
   let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (Ok ())
@@ -1053,10 +996,6 @@ let handle_get_def ~reader ~options ~input ~line ~char ~profiling ~env =
     )
   in
   Lwt.return (ServerProt.Response.GET_DEF result, json_data)
-
-let handle_get_imports ~options ~reader ~module_names ~profiling:_ ~env:_ =
-  let response = get_imports ~options ~reader module_names in
-  Lwt.return (ServerProt.Response.GET_IMPORTS response, None)
 
 let handle_graph_dep_graph ~root ~strip_root ~outfile ~types_only ~profiling:_ ~env =
   let%lwt response = output_dependencies ~env root strip_root types_only outfile in
@@ -1367,8 +1306,6 @@ let get_ephemeral_handler genv command =
     Handle_immediately (handle_force_recheck ~files ~focus ~missed_changes ~changed_mergebase)
   | ServerProt.Request.GET_DEF { input; line; char; wait_for_recheck } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_get_def ~reader ~options ~input ~line ~char)
-  | ServerProt.Request.GET_IMPORTS { module_names; wait_for_recheck } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_get_imports ~options ~reader ~module_names)
   | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; types_only } ->
     (* The user preference is to make this wait for up-to-date data *)
     Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~types_only ~outfile)

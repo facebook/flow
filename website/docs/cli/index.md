@@ -40,7 +40,6 @@ Valid values for COMMAND:
   find-refs        Gets the reference locations of a variable or property
   force-recheck    Forces the server to recheck a given list of files
   get-def          Gets the definition location of a variable or property
-  get-imports      Get names of all modules imported by one or more given modules
   graph            Outputs dependency graphs of flow repositories
   init             Initializes a directory to be used as a flow root directory
   ls               Lists files visible to Flow
