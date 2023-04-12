@@ -182,7 +182,7 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
 let unchecked_dependencies ~options ~reader file file_sig =
   let node_modules_containers = !Files.node_modules_containers in
   let resolved_requires =
-    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+    let require_loc_map = File_sig.require_loc_map file_sig in
     let reader = Abstract_state_reader.State_reader reader in
     SMap.fold
       (fun r _locs acc ->

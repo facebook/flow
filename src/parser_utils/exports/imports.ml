@@ -30,7 +30,6 @@ let add_globals (globals : SSet.t) (imports : t) =
   SSet.fold (fun export acc -> { export; kind = Unknown; source = Global } :: acc) globals imports
 
 let of_file_sig (file_sig : File_sig.t) =
-  let requires = file_sig.module_sig.requires in
   List.fold_left
     (fun acc (require : File_sig.require) ->
       match require with
@@ -64,4 +63,4 @@ let of_file_sig (file_sig : File_sig.t) =
       (* TODO: Require, ImportDynamic, etc. *)
       | _ -> acc)
     []
-    requires
+    file_sig.requires

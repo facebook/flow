@@ -52,8 +52,7 @@ let from_require require (acc : acc_t) =
     acc
 
 let extract_imported_idents file_sig =
-  let { module_sig = { requires; _ }; _ } = file_sig in
-  List.fold_left (fun acc require -> from_require require acc) [] requires
+  List.fold_left (fun acc require -> from_require require acc) [] file_sig.requires
 
 let extract_schemes cx typed_ast (imported_locs : acc_t) =
   List.fold_left

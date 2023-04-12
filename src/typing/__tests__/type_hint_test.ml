@@ -207,7 +207,7 @@ end = struct
           Flow_js.resolve_id cx require_id module_t
       )
     in
-    SMap.iter connect_requires File_sig.(require_loc_map file_sig.module_sig);
+    SMap.iter connect_requires (File_sig.require_loc_map file_sig);
     let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let lint_severities =
       Merge_js.get_lint_severities metadata StrictModeSettings.empty LintSettings.empty_severities

@@ -152,7 +152,7 @@ let export_of_export_name = function
 let type_import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   let open File_sig in
   let open Base.List.Let_syntax in
-  (match%bind file_sig.module_sig.requires with
+  (match%bind file_sig.requires with
   | Import { source = (_, module_ref); types; typesof; typesof_ns; _ } ->
     let module_ = module_of_module_ref ~resolved_modules ~root ~write_root module_ref in
     let types_info =
@@ -244,7 +244,7 @@ let member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file
 let import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   let open File_sig in
   let open Base.List.Let_syntax in
-  (match%bind file_sig.module_sig.requires with
+  (match%bind file_sig.requires with
   | Require { source = (_, module_ref); bindings; _ } ->
     let module_ = module_of_module_ref ~resolved_modules ~root ~write_root module_ref in
     (match bindings with

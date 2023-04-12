@@ -785,8 +785,7 @@ end = struct
       in
       let from_requires requires = List.iter from_require requires in
       fun file_sig ->
-        let requires = file_sig.module_sig.requires in
-        match from_requires requires with
+        match from_requires file_sig.requires with
         | exception Found_react_import -> true
         | _ -> false
     )

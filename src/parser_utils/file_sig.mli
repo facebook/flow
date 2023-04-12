@@ -5,18 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* In Flow, every file creates a single module, but may also include declared
- * modules. This data structure describes all such modules.
- *
- * If a declared module with the same name appears twice, the last one will be
- * represented here.
- *
- * This representation is a bit broad, because implementation files generally
- * should not contain declare modules and declaration files (libdefs) are all
- * coalesced into a single module (builtins). *)
+(* We can extract the observable interface of a module by extracting information
+ * about what it requires and what it exports. *)
 type t = {
-  module_sig: module_sig;
-  declare_modules: (Loc.t * module_sig) SMap.t;
+  requires: require list;
+  module_kind: module_kind;
 }
 
 and options = {
@@ -25,13 +18,6 @@ and options = {
   enable_enums: bool;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
-}
-
-(* We can extract the observable interface of a module by extracting information
- * about what it requires and what it exports. *)
-and module_sig = {
-  requires: require list;
-  module_kind: module_kind;
 }
 
 (* We track information about dependencies for each unique module reference in a
@@ -138,7 +124,7 @@ val program : ast:(Loc.t, Loc.t) Flow_ast.Program.t -> opts:options -> tolerable
 (* Use for debugging; not for exposing info to the end user *)
 val to_string : t -> string
 
-val require_loc_map : module_sig -> Loc.t Nel.t SMap.t
+val require_loc_map : t -> Loc.t Nel.t SMap.t
 
 (* Only the keys returned by `require_loc_map` *)
-val require_set : module_sig -> SSet.t
+val require_set : t -> SSet.t

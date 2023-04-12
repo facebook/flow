@@ -2491,8 +2491,7 @@ let debug_string_of_t cx t =
       { Flow_ast.Program.statements = []; interpreter = None; comments = None; all_comments = [] }
     )
   in
-  let module_sig = { File_sig.requires = []; module_kind = File_sig.ES } in
-  let file_sig = { File_sig.module_sig; declare_modules = SMap.empty } in
+  let file_sig = { File_sig.requires = []; module_kind = File_sig.ES } in
   let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~file_sig ~typed_ast in
   match from_type ~options:Ty_normalizer_env.default_options ~genv t with
   | Error (e, _) -> Utils_js.spf "<Error %s>" (error_kind_to_string e)

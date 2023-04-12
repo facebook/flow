@@ -469,8 +469,7 @@ let mk_check_file
   in
 
   let connect_requires cx resolve_require file_sig =
-    let open File_sig in
-    SMap.iter (connect_require cx resolve_require) (require_loc_map file_sig.module_sig)
+    SMap.iter (connect_require cx resolve_require) (File_sig.require_loc_map file_sig)
   in
 
   fun file_key resolve_require ast file_sig docblock aloc_table ->

@@ -13,8 +13,8 @@ module Scope_builder = Scope_builder.With_Loc
 module Loc = Loc_sig.LocS
 
 type t = {
-  module_sig: module_sig;
-  declare_modules: (Loc.t * module_sig) SMap.t;
+  requires: require list;
+  module_kind: module_kind;
 }
 
 and options = {
@@ -23,11 +23,6 @@ and options = {
   enable_enums: bool;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
-}
-
-and module_sig = {
-  requires: require list;
-  module_kind: module_kind;
 }
 
 and require =
@@ -77,9 +72,7 @@ type tolerable_error =
 
 type tolerable_t = t * tolerable_error list
 
-let empty_module_sig = { requires = []; module_kind = CommonJS { mod_exp_loc = None } }
-
-let empty = { module_sig = empty_module_sig; declare_modules = SMap.empty }
+let empty = { requires = []; module_kind = CommonJS { mod_exp_loc = None } }
 
 let default_opts =
   {
@@ -112,40 +105,37 @@ module PP = struct
 end
 
 let to_string t =
-  let string_of_module_sig module_sig =
-    let string_of_require_list require_list =
-      let string_of_require_bindings = function
-        | BindIdent (_, name) -> Printf.sprintf "BindIdent: %s" name
-        | BindNamed named ->
-          Printf.sprintf
-            "BindNamed: %s"
-            (String.concat ", " @@ Base.List.map ~f:(fun ((_, name), _) -> name) named)
-      in
-      let string_of_require = function
-        | Require { source = (_, name); bindings; _ } ->
-          Printf.sprintf
-            "Require (%s, %s)"
-            name
-            (PP.string_of_option string_of_require_bindings bindings)
-        | ImportDynamic _ -> "ImportDynamic"
-        | Import0 _ -> "Import0"
-        | Import _ -> "Import"
-        | ExportFrom _ -> "ExportFrom"
-      in
-      PP.items_to_list_string 2 (Base.List.map ~f:string_of_require require_list)
+  let string_of_require_list require_list =
+    let string_of_require_bindings = function
+      | BindIdent (_, name) -> Printf.sprintf "BindIdent: %s" name
+      | BindNamed named ->
+        Printf.sprintf
+          "BindNamed: %s"
+          (String.concat ", " @@ Base.List.map ~f:(fun ((_, name), _) -> name) named)
     in
-    let string_of_module_kind = function
-      | CommonJS _ -> "CommonJS"
-      | ES -> "ES"
+    let string_of_require = function
+      | Require { source = (_, name); bindings; _ } ->
+        Printf.sprintf
+          "Require (%s, %s)"
+          name
+          (PP.string_of_option string_of_require_bindings bindings)
+      | ImportDynamic _ -> "ImportDynamic"
+      | Import0 _ -> "Import0"
+      | Import _ -> "Import"
+      | ExportFrom _ -> "ExportFrom"
     in
-    PP.items_to_record_string
-      1
-      [
-        ("requires", string_of_require_list module_sig.requires);
-        ("module_kind", string_of_module_kind module_sig.module_kind);
-      ]
+    PP.items_to_list_string 2 (Base.List.map ~f:string_of_require require_list)
   in
-  PP.items_to_record_string 0 [("module_sig", string_of_module_sig t.module_sig)]
+  let string_of_module_kind = function
+    | CommonJS _ -> "CommonJS"
+    | ES -> "ES"
+  in
+  PP.items_to_record_string
+    1
+    [
+      ("requires", string_of_require_list t.requires);
+      ("module_kind", string_of_module_kind t.module_kind);
+    ]
 
 let combine_nel _ a b = Some (Nel.concat (a, [b]))
 
@@ -165,9 +155,6 @@ let require_loc_map msig =
 let require_set msig =
   let map = require_loc_map msig in
   SMap.fold (fun key _ acc -> SSet.add key acc) map SSet.empty
-
-let add_declare_module name m loc fsig =
-  { fsig with declare_modules = SMap.add name (loc, m) fsig.declare_modules }
 
 let add_require require msig errs =
   let requires = require :: msig.requires in
@@ -209,11 +196,9 @@ class requires_exports_calculator ~ast ~opts =
     val scope_info : Scope_api.info =
       Scope_builder.program ~with_types:true ~enable_enums:opts.enable_enums ast
 
-    val mutable curr_declare_module : module_sig option = None
-
-    (* This ensures that we do not add a `require` with no bindings to `module_sig.requires` (when
-     * processing a `call`) when we have already added that `require` with bindings (when processing
-     * a `variable_declarator`). *)
+    (* This ensures that we do not add a `require` with no bindings to `requires` (when processing a
+     * `call`) when we have already added that `require` with bindings (when processing a
+     * `variable_declarator`). *)
     val mutable visited_requires_with_bindings : Loc.LSet.t = Loc.LSet.empty
 
     method private visited_requires_with_bindings loc bindings =
@@ -223,19 +208,13 @@ class requires_exports_calculator ~ast ~opts =
       if bindings <> None then
         visited_requires_with_bindings <- Loc.LSet.add loc visited_requires_with_bindings
 
-    method private update_module_sig f =
+    method private update_file_sig f =
       this#update_acc (fun (fsig, errs) ->
-          match curr_declare_module with
-          | Some msig ->
-            let (msig, errs) = f msig errs in
-            curr_declare_module <- Some msig;
-            (fsig, errs)
-          | None ->
-            let (module_sig, errs) = f fsig.module_sig errs in
-            ({ fsig with module_sig }, errs)
+          let (fsig, errs) = f fsig errs in
+          (fsig, errs)
       )
 
-    method private add_require require = this#update_module_sig (add_require require)
+    method private add_require require = this#update_file_sig (add_require require)
 
     method private add_exports loc kind source =
       let open Ast.Statement in
@@ -245,11 +224,11 @@ class requires_exports_calculator ~ast ~opts =
         | (ExportType, None) -> (fun msig errs -> (msig, errs))
         | (ExportType, Some source) -> add_require (ExportFrom { source })
       in
-      this#update_module_sig add
+      this#update_file_sig add
 
-    method private set_cjs_exports mod_exp_loc = this#update_module_sig (set_cjs_exports mod_exp_loc)
+    method private set_cjs_exports mod_exp_loc = this#update_file_sig (set_cjs_exports mod_exp_loc)
 
-    method private add_cjs_export mod_exp_loc = this#update_module_sig (set_cjs_exports mod_exp_loc)
+    method private add_cjs_export mod_exp_loc = this#update_file_sig (set_cjs_exports mod_exp_loc)
 
     method private add_tolerable_error (err : tolerable_error) =
       this#update_acc (fun (fsig, errs) -> (fsig, err :: errs))
@@ -623,8 +602,6 @@ class requires_exports_calculator ~ast ~opts =
           )
         )
         when not (Scope_api.is_local_use scope_info module_loc) ->
-        (* expressions not allowed in declare module body *)
-        assert (curr_declare_module = None);
         this#add_cjs_export mod_exp_loc;
         ignore (this#expression right);
         if not is_toplevel then this#add_tolerable_error (BadExportPosition mod_exp_loc)
@@ -645,8 +622,6 @@ class requires_exports_calculator ~ast ~opts =
       | _ -> ignore (super#assignment loc expr)
 
     method private handle_cjs_default_export module_loc mod_exp_loc =
-      (* expressions not allowed in declare module body *)
-      assert (curr_declare_module = None);
       if not (Scope_api.is_local_use scope_info module_loc) then this#set_cjs_exports mod_exp_loc
 
     method! variable_declarator
@@ -753,22 +728,8 @@ class requires_exports_calculator ~ast ~opts =
         | _ -> ())
       | _ -> ()
 
-    method! declare_module loc (m : (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) =
-      let name =
-        let open Ast.Statement.DeclareModule in
-        match m.id with
-        | Identifier (_, { Ast.Identifier.name; comments = _ }) -> name
-        | Literal (_, { Ast.StringLiteral.value; _ }) -> value
-      in
-      curr_declare_module <- Some empty_module_sig;
-      let ret = super#declare_module loc m in
-      begin
-        match curr_declare_module with
-        | None -> failwith "lost curr_declare_module"
-        | Some m -> this#update_acc (fun (fsig, errs) -> (add_declare_module name m loc fsig, errs))
-      end;
-      curr_declare_module <- None;
-      ret
+    (* skip declare module *)
+    method! declare_module _loc (m : (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) = m
 
     method! toplevel_statement_list (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
       let open Ast in
@@ -817,6 +778,6 @@ let filter_irrelevant_errors ~module_kind tolerable_errors =
 
 let program ~ast ~opts =
   let walk = new requires_exports_calculator ~ast ~opts in
-  let (exports, tolerable_errors) = walk#eval walk#program ast in
-  let module_kind = exports.module_sig.module_kind in
-  (exports, filter_irrelevant_errors ~module_kind tolerable_errors)
+  let (fsig, tolerable_errors) = walk#eval walk#program ast in
+  let module_kind = fsig.module_kind in
+  (fsig, filter_irrelevant_errors ~module_kind tolerable_errors)

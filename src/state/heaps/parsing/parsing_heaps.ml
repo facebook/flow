@@ -1146,11 +1146,7 @@ let add_parsed
     locs
     type_sig
     cas_digest : MSet.t =
-  let requires =
-    let open File_sig in
-    let ({ module_sig; _ }, _) = file_sig in
-    require_set module_sig |> SSet.elements |> Array.of_list
-  in
+  let requires = File_sig.require_set (fst file_sig) |> SSet.elements |> Array.of_list in
   WorkerCancel.with_no_cancellations @@ fun () ->
   Heap.alloc
     (prepare_add_checked_file

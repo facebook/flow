@@ -200,7 +200,7 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
         Flow_js.resolve_id cx require_id module_t
     )
   in
-  SMap.iter connect_requires File_sig.(require_loc_map file_sig.module_sig);
+  SMap.iter connect_requires (File_sig.require_loc_map file_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in

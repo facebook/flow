@@ -25,7 +25,7 @@ let add_require_tvars =
       (fun mref locs ->
         let desc = Reason.RCustom mref in
         Nel.iter (add cx desc) locs)
-      File_sig.(require_loc_map file_sig.module_sig)
+      (File_sig.require_loc_map file_sig)
 
 (* Scan the list of comments to place suppressions on the appropriate locations.
     Because each comment can only contain a single code, in order to support
