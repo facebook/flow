@@ -221,33 +221,3 @@ declare var dwoB: dWOB;
   (([woA]: Array<{-p:A}>): Array<{-p:A}>); // ok
 
 }
-
-// $Shape
-{
-  // A ~> A
-  (rwA: $Shape<RWA>); // ok
-
-  // +A ~> A
-  (roA: $Shape<RWA>); // ok
-
-  // -A ~> A
-  (woA: $Shape<RWA>); // error
-
-  // B ~> A
-  (rwB: $Shape<RWA>); // ok
-
-  // +B ~> A
-  (roB: $Shape<RWA>); // ok
-
-  // -B ~> A
-  (woB: $Shape<RWA>); // error
-
-  // A ~> B
-  (rwA: $Shape<RWB>); // error
-
-  // +A ~> B
-  (roA: $Shape<RWB>); // error
-
-  // -A ~> B
-  (woA: $Shape<RWB>); // error
-}

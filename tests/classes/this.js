@@ -11,7 +11,7 @@ class Foo {
 
 declare class Bar<T> {
     state : T,
-    setState($Shape<T>): void;
+    setState(Partial<T>): void;
 }
 
 class Baz extends Bar<any> {

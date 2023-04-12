@@ -1,5 +1,3 @@
-//@flow
-
 function a<X: number>(x: X) {
   // AdderT
   (x + x: X); // nope
@@ -35,11 +33,6 @@ function c<S: string, X: {[string]: mixed}, Y: Array<number>>(
   // AssertBinaryIn[L|R]HST
   s in x;
   42 in y;
-}
-
-// ShapeT
-function d<X: {a: number}>(x: X): $Shape<{a: number}> {
-  return x;
 }
 
 // MatchingPropT

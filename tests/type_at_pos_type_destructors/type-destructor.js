@@ -157,10 +157,6 @@ type PropObjPoly<P> = { prop: P };
 type CallExtractPropTypePoly<P> = $Call<ExtractPropType, PropObjPoly<P>>;
 //   ^
 
-// $Shape<T> TODO this is not an EvalT
-type PropsShape = $Shape<Props>;
-//   ^
-
 // $Exports<T>
 type ExportsM = $Exports<"lib_m">;
 //   ^

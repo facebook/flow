@@ -919,100 +919,100 @@ References:
                     ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ misc.js:5:4
+Error ------------------------------------------------------------------------------------------------------ misc.js:3:4
 
 Cannot cast `x + x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
 
-   misc.js:5:4
-   5|   (x + x: X); // nope
+   misc.js:3:4
+   3|   (x + x: X); // nope
          ^^^^^ [1]
 
 References:
-   misc.js:5:11
-   5|   (x + x: X); // nope
+   misc.js:3:11
+   3|   (x + x: X); // nope
                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ misc.js:8:5
+Error ------------------------------------------------------------------------------------------------------ misc.js:6:5
 
 Cannot cast `-x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
 
-   misc.js:8:5
-   8|   (-x: X); // nope
+   misc.js:6:5
+   6|   (-x: X); // nope
           ^
 
 References:
-   misc.js:3:26
-   3| function a<X: number>(x: X) {
+   misc.js:1:26
+   1| function a<X: number>(x: X) {
                                ^ [1]
-   misc.js:8:8
-   8|   (-x: X); // nope
+   misc.js:6:8
+   6|   (-x: X); // nope
              ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:11:4
+Error ------------------------------------------------------------------------------------------------------ misc.js:9:4
 
 Cannot cast `x * x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
 
-   misc.js:11:4
-   11|   (x * x: X);
-          ^^^^^ [1]
+   misc.js:9:4
+   9|   (x * x: X);
+         ^^^^^ [1]
 
 References:
-   misc.js:11:11
-   11|   (x * x: X);
-                 ^ [2]
+   misc.js:9:11
+   9|   (x * x: X);
+                ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:21:4
+Error ----------------------------------------------------------------------------------------------------- misc.js:19:4
 
 Cannot compare number [1] to string [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
-   misc.js:21:4
-   21|   (x == y: boolean); // nope
+   misc.js:19:4
+   19|   (x == y: boolean); // nope
           ^
 
 References:
-   misc.js:17:37
-   17| function b<X: number, Y: string>(x: X, y: Y) {
+   misc.js:15:37
+   15| function b<X: number, Y: string>(x: X, y: Y) {
                                            ^ [1]
-   misc.js:17:43
-   17| function b<X: number, Y: string>(x: X, y: Y) {
+   misc.js:15:43
+   15| function b<X: number, Y: string>(x: X, y: Y) {
                                                  ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- misc.js:24:4
+Error ----------------------------------------------------------------------------------------------------- misc.js:22:4
 
 Cannot compare number [1] to string [2]. [invalid-compare]
 
-   misc.js:24:4
-   24|   (x < y: boolean); // nope
+   misc.js:22:4
+   22|   (x < y: boolean); // nope
           ^
 
 References:
-   misc.js:17:37
-   17| function b<X: number, Y: string>(x: X, y: Y) {
+   misc.js:15:37
+   15| function b<X: number, Y: string>(x: X, y: Y) {
                                            ^ [1]
-   misc.js:17:43
-   17| function b<X: number, Y: string>(x: X, y: Y) {
+   misc.js:15:43
+   15| function b<X: number, Y: string>(x: X, y: Y) {
                                                  ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:141:3
+Error ---------------------------------------------------------------------------------------------------- misc.js:134:3
 
 Cannot return `otherData` because object type [1] is incompatible with `{ ...T }` [2]. [incompatible-return]
 
-   misc.js:141:3
-   141|   otherData;
+   misc.js:134:3
+   134|   otherData;
           ^^^^^^^^^
 
 References:
-   misc.js:140:54
-   140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+   misc.js:133:54
+   133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
                                                              ^^^^^ [1]
-   misc.js:140:72
-   140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+   misc.js:133:72
+   133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
                                                                                ^ [2]
 
 

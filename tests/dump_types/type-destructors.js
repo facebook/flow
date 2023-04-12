@@ -1,6 +1,6 @@
 // @flow
 
-type T<X> = $Shape<{ f: X }>;
+type T<X> = Partial<{ f: X }>;
 
 type Props = { name: string, age: number };
 type DefaultProps = { age: number };

@@ -520,48 +520,43 @@ type-destructor.js:157:6,157:28
 
 type-destructor.js:161:6
 Flags:
-type PropsShape = $Shape<Props>
-type-destructor.js:161:6,161:15
-
-type-destructor.js:165:6
-Flags:
 type ExportsM = {|+x: number|}
-type-destructor.js:165:6,165:13
+type-destructor.js:161:6,161:13
 
-type-destructor.js:169:18
+type-destructor.js:165:18
 Flags:
 <T: {...}, K: T>() => T[K]
-type-destructor.js:169:18,169:28
+type-destructor.js:165:18,165:28
 
-type-destructor.js:171:18
+type-destructor.js:167:18
 Flags:
 <K: any, T: {...}>() => T[K]
-type-destructor.js:171:18,171:28
+type-destructor.js:167:18,167:28
 
-type-destructor.js:175:6
+type-destructor.js:171:6
 Flags:
 type RecursiveTypeDestructor = {|f: {|g: RecursiveTypeDestructor["f"]|}|}
 = {|f: {|g: {|g: any|}|}|}
-type-destructor.js:175:6,175:28
+type-destructor.js:171:6,171:28
 
-type-destructor.js:182:6
+type-destructor.js:178:6
 Flags:
 type RecursiveTypeDestructorPoly<X> = {|
   f: ({|h: RecursiveTypeDestructorPoly<X>["f"]|} | X)
 |}
 = {|f: ({|h: ({|h: ({|h: any|} | X)|} | X)|} | X)|}
-type-destructor.js:182:6,182:32
+type-destructor.js:178:6,178:32
 
-type-destructor.js:188:6
+type-destructor.js:184:6
 Flags:
 type $Pick<O: {...}, K: $Keys<O>> = $NonMaybeType<O>[K]
 = empty
-type-destructor.js:188:6,188:10
+type-destructor.js:184:6,184:10
 
-type-destructor.js:193:14
+type-destructor.js:189:14
 Flags:
 ReadOnlyObj
-type-destructor.js:193:14,193:14
+type-destructor.js:189:14,189:14
 
 type-destructor.js:20:6
 Flags:
@@ -785,48 +780,43 @@ type-destructor.js:157:6,157:28
 
 type-destructor.js:161:6
 Flags:
-type PropsShape = $Shape<Props>
-type-destructor.js:161:6,161:15
-
-type-destructor.js:165:6
-Flags:
 type ExportsM = {|+x: number|}
-type-destructor.js:165:6,165:13
+type-destructor.js:161:6,161:13
 
-type-destructor.js:169:18
+type-destructor.js:165:18
 Flags:
 <T: {...}, K: T>() => T[K]
-type-destructor.js:169:18,169:28
+type-destructor.js:165:18,165:28
 
-type-destructor.js:171:18
+type-destructor.js:167:18
 Flags:
 <K: any, T: {...}>() => T[K]
-type-destructor.js:171:18,171:28
+type-destructor.js:167:18,167:28
 
-type-destructor.js:175:6
+type-destructor.js:171:6
 Flags:
 type RecursiveTypeDestructor = {|f: {|g: RecursiveTypeDestructor["f"]|}|}
 = {|f: {|g: {|g: any|}|}|}
-type-destructor.js:175:6,175:28
+type-destructor.js:171:6,171:28
 
-type-destructor.js:182:6
+type-destructor.js:178:6
 Flags:
 type RecursiveTypeDestructorPoly<X> = {|
   f: ({|h: RecursiveTypeDestructorPoly<X>["f"]|} | X)
 |}
 = {|f: ({|h: ({|h: ({|h: any|} | X)|} | X)|} | X)|}
-type-destructor.js:182:6,182:32
+type-destructor.js:178:6,178:32
 
-type-destructor.js:188:6
+type-destructor.js:184:6
 Flags:
 type $Pick<O: {...}, K: $Keys<O>> = $NonMaybeType<O>[K]
 = empty
-type-destructor.js:188:6,188:10
+type-destructor.js:184:6,184:10
 
-type-destructor.js:193:14
+type-destructor.js:189:14
 Flags:
 ReadOnlyObj
-type-destructor.js:193:14,193:14
+type-destructor.js:189:14,189:14
 
 mapped-type.js:7:6
 Flags:
