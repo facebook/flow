@@ -20,33 +20,12 @@ let add_require_tvars =
     let id = Tvar.mk_no_wrap cx reason in
     Context.add_require cx loc (reason, id)
   in
-  let add_decl cx m_name desc loc =
-    (* TODO: Imports within `declare module`s can only reference other `declare
-        module`s (for now). This won't fly forever so at some point we'll need to
-        move `declare module` storage into the modulemap just like normal modules
-        and merge them as such. *)
-    let loc = ALoc.of_loc loc in
-    let reason = Reason.mk_reason desc loc in
-    let tvar = Flow_js.get_builtin_tvar cx m_name reason in
-    Context.add_require cx loc (reason, tvar)
-  in
-  fun cx (file_sig : File_sig.t) ->
-    File_sig.(
-      SMap.iter
-        (fun mref locs ->
-          let desc = Reason.RCustom mref in
-          Nel.iter (add cx desc) locs)
-        (require_loc_map file_sig.module_sig);
-      SMap.iter
-        (fun _ (_, module_sig) ->
-          SMap.iter
-            (fun mref locs ->
-              let m_name = Reason.internal_module_name mref in
-              let desc = Reason.RCustom mref in
-              Nel.iter (add_decl cx m_name desc) locs)
-            (require_loc_map module_sig))
-        file_sig.declare_modules
-    )
+  fun cx file_sig ->
+    SMap.iter
+      (fun mref locs ->
+        let desc = Reason.RCustom mref in
+        Nel.iter (add cx desc) locs)
+      File_sig.(require_loc_map file_sig.module_sig)
 
 (* Scan the list of comments to place suppressions on the appropriate locations.
     Because each comment can only contain a single code, in order to support

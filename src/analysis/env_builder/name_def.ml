@@ -614,6 +614,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     val mutable return_hint_stack : ast_hints list = []
 
+    val mutable in_declare_module : bool = false
+
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
     method record_hint loc hint =
@@ -1856,7 +1858,10 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       in
       let r = mk_reason (RModule (OrdinaryName name)) loc in
       this#add_ordinary_binding name_loc r (DeclaredModule (loc, m));
-      super#declare_module loc m
+      in_declare_module <- true;
+      let ret = super#declare_module loc m in
+      in_declare_module <- false;
+      ret
 
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
@@ -1895,6 +1900,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                      source;
                      source_loc;
                      import = Named { kind; remote; remote_loc = rem_id_loc; local = name };
+                     declare_module = in_declare_module;
                    }
                 ))
             specifiers
@@ -1911,7 +1917,15 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           this#add_ordinary_binding
             id_loc
             import_reason
-            (Import { import_kind; source; source_loc; import = Namespace })
+            (Import
+               {
+                 import_kind;
+                 source;
+                 source_loc;
+                 import = Namespace;
+                 declare_module = in_declare_module;
+               }
+            )
         | None -> ()
       end;
       Base.Option.iter
@@ -1920,7 +1934,15 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           this#add_ordinary_binding
             id_loc
             import_reason
-            (Import { import_kind; source; source_loc; import = Default name }))
+            (Import
+               {
+                 import_kind;
+                 source;
+                 source_loc;
+                 import = Default name;
+                 declare_module = in_declare_module;
+               }
+            ))
         default;
       super#import_declaration loc decl
 

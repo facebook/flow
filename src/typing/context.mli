@@ -287,6 +287,8 @@ val push_declare_module : t -> Module_info.t -> unit
 
 val pop_declare_module : t -> unit
 
+val in_declare_module : t -> bool
+
 val module_info : t -> Module_info.t
 
 (* mutators *)

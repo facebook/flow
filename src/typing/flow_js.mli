@@ -140,6 +140,8 @@ val get_builtin_tvar : Context.t -> ?trace:Type.trace -> name -> reason -> Type.
 
 val get_builtin_type : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
 
+val get_builtin_module : Context.t -> ?trace:Type.trace -> ALoc.t -> string -> Type.tvar
+
 val set_builtin : Context.t -> ?trace:Type.trace -> name -> Type.t -> unit
 
 val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t

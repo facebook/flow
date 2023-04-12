@@ -51,7 +51,11 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
 (* given a module name, return associated tvar in module map (failing if not
    found); e.g., used to find tvars associated with requires *after* all
    requires already have entries in the module map *)
-let require_t_of_ref_unsafe cx (loc, _) = Context.find_require cx loc
+let require_t_of_ref_unsafe cx ?(declare_module = false) (loc, mref) =
+  if declare_module || Context.in_declare_module cx then
+    Flow.get_builtin_module cx loc mref
+  else
+    Context.find_require cx loc
 
 let require cx ((_, module_ref) as source) require_loc ~legacy_interop =
   let module_t = require_t_of_ref_unsafe cx source in
@@ -61,10 +65,10 @@ let require cx ((_, module_ref) as source) require_loc ~legacy_interop =
       Flow.flow cx (OpenT module_t, CJSRequireT { reason; t_out; is_strict; legacy_interop })
   )
 
-let import cx source = require_t_of_ref_unsafe cx source
+let import cx ?declare_module source = require_t_of_ref_unsafe cx ?declare_module source
 
-let import_ns ?strict ?(allow_untyped = false) cx reason source =
-  let module_t = require_t_of_ref_unsafe cx source in
+let import_ns ?strict ?(allow_untyped = false) cx ?declare_module reason source =
+  let module_t = require_t_of_ref_unsafe cx ?declare_module source in
   let is_strict = Base.Option.value strict ~default:(Context.is_strict cx) in
   Tvar.mk_where cx reason (fun t ->
       Flow.flow cx (OpenT module_t, ImportModuleNsT { reason; t; is_strict; allow_untyped })

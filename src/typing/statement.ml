@@ -1728,6 +1728,7 @@ module Make
 
   and import_named_specifier_type
       cx
+      ?declare_module
       import_reason
       import_kind
       ~source_loc
@@ -1735,7 +1736,7 @@ module Make
       ~remote_name_loc
       ~remote_name
       ~local_name =
-    let module_t = OpenT (Import_export.import cx (source_loc, module_name)) in
+    let module_t = OpenT (Import_export.import cx ?declare_module (source_loc, module_name)) in
     if Type_inference_hooks_js.dispatch_member_hook cx remote_name remote_name_loc module_t then
       Unsoundness.why InferenceHooks import_reason
     else
@@ -1743,23 +1744,25 @@ module Make
       get_imported_t cx import_reason module_name module_t import_kind remote_name local_name
 
   and import_namespace_specifier_type
-      cx import_reason import_kind ~source_loc ~module_name ~local_loc =
+      cx ?declare_module import_reason import_kind ~source_loc ~module_name ~local_loc =
     let open Ast.Statement in
     match import_kind with
     | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
     | ImportDeclaration.ImportTypeof ->
       let bind_reason = repos_reason local_loc import_reason in
-      let module_ns_t = Import_export.import_ns cx import_reason (source_loc, module_name) in
+      let module_ns_t =
+        Import_export.import_ns cx ?declare_module import_reason (source_loc, module_name)
+      in
       Tvar_resolver.mk_tvar_and_fully_resolve_where cx bind_reason (fun t ->
           Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
       )
     | ImportDeclaration.ImportValue ->
       let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
-      Import_export.import_ns cx reason (source_loc, module_name)
+      Import_export.import_ns cx ?declare_module reason (source_loc, module_name)
 
   and import_default_specifier_type
-      cx import_reason import_kind ~source_loc ~module_name ~local_loc ~local_name =
-    let module_t = OpenT (Import_export.import cx (source_loc, module_name)) in
+      cx ?declare_module import_reason import_kind ~source_loc ~module_name ~local_loc ~local_name =
+    let module_t = OpenT (Import_export.import cx ?declare_module (source_loc, module_name)) in
     if Type_inference_hooks_js.dispatch_member_hook cx "default" local_loc module_t then
       Unsoundness.why InferenceHooks import_reason
     else

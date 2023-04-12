@@ -9411,6 +9411,11 @@ struct
     get_builtin_tvar_result cx ?trace x reason
     |> Flow_js_utils.apply_env_errors cx (aloc_of_reason reason)
 
+  and get_builtin_module cx ?trace loc mref =
+    let m_name = Reason.internal_module_name mref in
+    let reason = Reason.(mk_reason (RCustom mref) loc) in
+    (reason, get_builtin_tvar cx ?trace m_name reason)
+
   (* Looks up a builtin and errors if it is not found. Does not add an entry that requires a
    * write later. *)
   and lookup_builtin_strict_tvar_result cx x reason =

@@ -224,6 +224,7 @@ type def =
       import: import;
       source: string;
       source_loc: ALoc.t;
+      declare_module: bool;
     }
   | GeneratorNext of generator_annot option
   | DeclaredModule of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t
@@ -339,7 +340,7 @@ module Print = struct
     | Interface _ -> "interface"
     | DeclaredModule _ -> "module"
     | GeneratorNext _ -> "next"
-    | Import { import_kind; source; import; source_loc = _ } ->
+    | Import { import_kind; source; import; source_loc = _; declare_module = _ } ->
       spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
     | NonBindingParam -> "nonbinding_param"
     | MissingThisAnnot -> "this (missing)"

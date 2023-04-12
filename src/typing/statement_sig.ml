@@ -168,6 +168,7 @@ module type S = sig
 
   val import_named_specifier_type :
     Context.t ->
+    ?declare_module:bool ->
     Reason.t ->
     Ast.Statement.ImportDeclaration.import_kind ->
     source_loc:ALoc.t ->
@@ -179,6 +180,7 @@ module type S = sig
 
   val import_namespace_specifier_type :
     Context.t ->
+    ?declare_module:bool ->
     Reason.t ->
     Ast.Statement.ImportDeclaration.import_kind ->
     source_loc:ALoc.t ->
@@ -188,6 +190,7 @@ module type S = sig
 
   val import_default_specifier_type :
     Context.t ->
+    ?declare_module:bool ->
     Reason.t ->
     Ast.Statement.ImportDeclaration.import_kind ->
     source_loc:ALoc.t ->
