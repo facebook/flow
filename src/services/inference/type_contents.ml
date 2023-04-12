@@ -32,18 +32,20 @@ let do_parse_wrapper ~options filename contents =
     Parsing_service_js.do_parse ~parsing_options ~info:docblock contents filename
   in
   match parse_result with
-  | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; _ } ->
+  | Parsing_service_js.Parse_ok { ast; requires; file_sig; tolerable_errors; _ } ->
     Parsed
       (Parse_artifacts
-         { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors = [] }
+         { docblock; docblock_errors; ast; requires; file_sig; tolerable_errors; parse_errors = [] }
       )
-  | Parsing_service_js.Parse_recovered { ast; file_sig; tolerable_errors; parse_errors; _ } ->
+  | Parsing_service_js.Parse_recovered
+      { ast; requires; file_sig; tolerable_errors; parse_errors; _ } ->
     Parsed
       (Parse_artifacts
          {
            docblock;
            docblock_errors;
            ast;
+           requires;
            file_sig;
            tolerable_errors;
            parse_errors = Nel.to_list parse_errors;
@@ -177,21 +179,10 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
     in
     (errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
-(** Resolves dependencies of [file_sig] specifically for checking contents, rather than
-    for persisting in the heap. Notably, does not error if a required module is not found. *)
-let unchecked_dependencies ~options ~reader file file_sig =
-  let node_modules_containers = !Files.node_modules_containers in
-  let resolved_requires =
-    let require_loc_map = File_sig.require_loc_map file_sig in
-    let reader = Abstract_state_reader.State_reader reader in
-    SMap.fold
-      (fun r _locs acc ->
-        match Module_js.imported_module ~options ~reader ~node_modules_containers file r with
-        | Ok m -> m :: acc
-        | Error _ -> acc)
-      require_loc_map
-      []
-  in
+(** Resolves dependencies specifically for checking contents, rather than for
+    persisting in the heap. Notably, does not error if a required module is not
+    found. *)
+let unchecked_dependencies ~options ~reader file requires =
   let unchecked_dependency m =
     let ( let* ) = Option.bind in
     let* file = Parsing_heaps.Reader.get_provider ~reader m in
@@ -200,21 +191,26 @@ let unchecked_dependencies ~options ~reader file file_sig =
     | None -> Some (Parsing_heaps.read_file_key file)
     | Some _ -> None
   in
-  List.fold_left
-    (fun acc m ->
-      match unchecked_dependency m with
-      | Some f -> FilenameSet.add f acc
-      | None -> acc)
+  let reader = Abstract_state_reader.State_reader reader in
+  let node_modules_containers = !Files.node_modules_containers in
+  Array.fold_left
+    (fun acc r ->
+      match Module_js.imported_module ~options ~reader ~node_modules_containers file r with
+      | Error _ -> acc
+      | Ok m ->
+        (match unchecked_dependency m with
+        | None -> acc
+        | Some f -> FilenameSet.add f acc))
     FilenameSet.empty
-    resolved_requires
+    requires
 
 (** Ensures that dependencies are checked; schedules them to be checked and cancels the
     Lwt thread to abort the command if not.
 
     This is necessary because [merge_contents] needs all of the dep type sigs to be
     available, but since it doesn't use workers it can't go parse everything itself. *)
-let ensure_checked_dependencies ~options ~reader file file_sig =
-  let unchecked_deps = unchecked_dependencies ~options ~reader file file_sig in
+let ensure_checked_dependencies ~options ~reader file requires =
+  let unchecked_deps = unchecked_dependencies ~options ~reader file requires in
   if FilenameSet.is_empty unchecked_deps then
     ()
   else
@@ -240,9 +236,9 @@ let ensure_checked_dependencies ~options ~reader file file_sig =
     raise Lwt.Canceled
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~profiling ~reader master_cx filename info ast file_sig =
+let merge_contents ~options ~profiling ~reader master_cx filename info ast requires file_sig =
   with_timer ~options "MergeContents" profiling (fun () ->
-      let () = ensure_checked_dependencies ~options ~reader filename file_sig in
+      let () = ensure_checked_dependencies ~options ~reader filename requires in
       Merge_service.check_contents_context ~reader options master_cx filename ast info file_sig
   )
 
@@ -279,12 +275,12 @@ let set_obj_to_obj_hook ~reader () =
 
 let type_parse_artifacts ~options ~profiling master_cx filename intermediate_result =
   match intermediate_result with
-  | (Some (Parse_artifacts { docblock; ast; file_sig; _ } as parse_artifacts), _errs) ->
+  | (Some (Parse_artifacts { docblock; ast; requires; file_sig; _ } as parse_artifacts), _errs) ->
     (* We assume that callers have already inspected the parse errors, so we discard them here. *)
     let reader = State_reader.create () in
     let obj_to_obj_map_ref = set_obj_to_obj_hook ~reader () in
     let (cx, typed_ast) =
-      merge_contents ~options ~profiling ~reader master_cx filename docblock ast file_sig
+      merge_contents ~options ~profiling ~reader master_cx filename docblock ast requires file_sig
     in
     Type_inference_hooks_js.reset_hooks ();
     Ok (parse_artifacts, Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = !obj_to_obj_map_ref })

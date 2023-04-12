@@ -13,6 +13,7 @@ open Parsing_options
 type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      requires: string array;
       file_sig: File_sig.t;
       locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
@@ -23,6 +24,7 @@ type result =
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      requires: string array;
       file_sig: File_sig.t;
       tolerable_errors: File_sig.tolerable_error list;
       parse_errors: parse_error Nel.t;
@@ -187,11 +189,18 @@ let do_parse ~parsing_options ~info content file =
           }
         in
         let (file_sig, tolerable_errors) = File_sig.program ~ast ~opts:file_sig_opts in
+        let requires = File_sig.require_set file_sig |> SSet.elements |> Array.of_list in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
         let (_, (_, _, globals)) = Ssa_builder.program_with_scope ~enable_enums ast in
         if not (Base.List.is_empty parse_errors) then
           Parse_recovered
-            { ast; file_sig; tolerable_errors; parse_errors = Nel.of_list_exn parse_errors }
+            {
+              ast;
+              requires;
+              file_sig;
+              tolerable_errors;
+              parse_errors = Nel.of_list_exn parse_errors;
+            }
         else
           let sig_opts =
             Type_sig_options.of_parsing_options
@@ -227,7 +236,18 @@ let do_parse ~parsing_options ~info content file =
             else
               None
           in
-          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; exports; imports; cas_digest }
+          Parse_ok
+            {
+              ast;
+              requires;
+              file_sig;
+              locs;
+              type_sig;
+              tolerable_errors;
+              exports;
+              imports;
+              cas_digest;
+            }
   with
   | e ->
     let e = Exception.wrap e in
@@ -341,7 +361,17 @@ let reducer
           begin
             match do_parse ~parsing_options ~info content file_key with
             | Parse_ok
-                { ast; file_sig; exports; imports; locs; type_sig; cas_digest; tolerable_errors } ->
+                {
+                  ast;
+                  requires;
+                  file_sig;
+                  exports;
+                  imports;
+                  locs;
+                  type_sig;
+                  cas_digest;
+                  tolerable_errors;
+                } ->
               (* if parsing_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
               let file_sig = (file_sig, tolerable_errors) in
@@ -356,6 +386,7 @@ let reducer
                   module_name
                   info
                   ast
+                  requires
                   file_sig
                   locs
                   type_sig

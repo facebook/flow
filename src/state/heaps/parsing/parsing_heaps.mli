@@ -220,6 +220,7 @@ type worker_mutator = {
     string option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
+    string array ->
     File_sig.tolerable_t ->
     locs_tbl ->
     type_sig ->

@@ -1142,11 +1142,11 @@ let add_parsed
     module_name
     docblock
     ast
+    requires
     file_sig
     locs
     type_sig
     cas_digest : MSet.t =
-  let requires = File_sig.require_set (fst file_sig) |> SSet.elements |> Array.of_list in
   WorkerCancel.with_no_cancellations @@ fun () ->
   Heap.alloc
     (prepare_add_checked_file
@@ -1547,6 +1547,7 @@ type worker_mutator = {
     string option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
+    string array ->
     File_sig.tolerable_t ->
     locs_tbl ->
     type_sig ->

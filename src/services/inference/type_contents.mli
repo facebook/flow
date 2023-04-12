@@ -14,9 +14,6 @@ val parse_contents :
   File_key.t ->
   Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t
 
-val ensure_checked_dependencies :
-  options:Options.t -> reader:State_reader.t -> File_key.t -> File_sig.t -> unit
-
 val type_parse_artifacts :
   options:Options.t ->
   profiling:Profiling_js.running ->

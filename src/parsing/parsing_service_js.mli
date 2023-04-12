@@ -12,6 +12,7 @@ open Docblock_parser
 type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      requires: string array;
       file_sig: File_sig.t;
       locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
@@ -22,6 +23,7 @@ type result =
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      requires: string array;
       file_sig: File_sig.t;
       tolerable_errors: File_sig.tolerable_error list;
       parse_errors: parse_error Nel.t;

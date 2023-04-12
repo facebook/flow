@@ -10,6 +10,7 @@ type parse_artifacts =
       docblock: Docblock.t;
       docblock_errors: Docblock_parser.docblock_error list;
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      requires: string array;
       file_sig: File_sig.t;
       tolerable_errors: File_sig.tolerable_error list;
       parse_errors: (Loc.t * Parse_error.t) list;
