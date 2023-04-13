@@ -762,6 +762,16 @@ let function_type_this_param_comment_bounds (loc, param) =
   ignore (collector#function_this_param_type (loc, param));
   collect_without_trailing_line_comment collector
 
+let component_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#component_param (loc, param));
+  collect_without_trailing_line_comment collector
+
+let component_rest_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#component_rest_param (loc, param));
+  collect_without_trailing_line_comment collector
+
 let array_element_comment_bounds loc element =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#array_element element);

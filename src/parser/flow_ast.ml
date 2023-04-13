@@ -926,12 +926,40 @@ and Statement : sig
   end
 
   module ComponentDeclaration : sig
+    module RestParam : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        argument: ('M, 'T) Pattern.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    module Param : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        (* Name should only be an Identifier or StringLiteral. However, we allow parsing
+           it as an option to have better error messages. *)
+        name: ('M, 'T) param_name option;
+        local: ('M, 'T) Pattern.t;
+        default: ('M, 'T) Expression.t option;
+        shorthand: bool;
+      }
+
+      and ('M, 'T) param_name =
+        | Identifier of ('M, 'T) Identifier.t
+        | StringLiteral of ('M * 'M StringLiteral.t)
+      [@@deriving show]
+    end
+
     module Params : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
       and ('M, 'T) t' = {
-        params: ('M, 'T) Function.Param.t list;
-        rest: ('M, 'T) Function.RestParam.t option;
+        params: ('M, 'T) Param.t list;
+        rest: ('M, 'T) RestParam.t option;
         comments: ('M, 'M Comment.t list) Syntax.t option;
       }
       [@@deriving show]

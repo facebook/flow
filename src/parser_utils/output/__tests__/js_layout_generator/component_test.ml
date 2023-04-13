@@ -62,4 +62,69 @@ let tests =
       assert_output ~ctxt "/*leading*/component Comp(){}//trailing\n" layout;
       assert_output ~ctxt ~pretty:true "/*leading*/ component Comp() {} //trailing\n" layout
     );
+    ( "component_with_simple_params" >:: fun ctxt ->
+      let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
+      let params =
+        S.component_params
+          [
+            S.component_id_param "p1";
+            S.component_string_param "p-2" (Ast_builder.Patterns.identifier "p2");
+          ]
+      in
+      let ast = S.component_declaration ~params "Comp" body in
+      let layout = Js_layout_generator.statement ~opts ast in
+      assert_output ~ctxt "component Comp(p1,\"p-2\" as p2){}" layout;
+      assert_output ~ctxt ~pretty:true "component Comp(p1, \"p-2\" as p2) {}" layout
+    );
+    ( "component_params_with_defaults" >:: fun ctxt ->
+      let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
+      let params =
+        S.component_params
+          [
+            S.component_id_param ~default:(E.Literals.string "default_p1") "p1";
+            S.component_string_param
+              ~default:(E.Literals.string "default_p2")
+              "p-2"
+              (Ast_builder.Patterns.identifier "p2");
+          ]
+      in
+      let ast = S.component_declaration ~params "Comp" body in
+      let layout = Js_layout_generator.statement ~opts ast in
+      assert_output ~ctxt "component Comp(p1=\"default_p1\",\"p-2\" as p2=\"default_p2\"){}" layout;
+      assert_output
+        ~ctxt
+        ~pretty:true
+        "component Comp(p1 = \"default_p1\", \"p-2\" as p2 = \"default_p2\") {}"
+        layout
+    );
+    ( "component_params_id_with_local" >:: fun ctxt ->
+      let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
+      let params =
+        S.component_params
+          [S.component_id_param ~local:(Ast_builder.Patterns.identifier "local_p1") "p1"]
+      in
+      let ast = S.component_declaration ~params "Comp" body in
+      let layout = Js_layout_generator.statement ~opts ast in
+      assert_output ~ctxt "component Comp(p1 as local_p1){}" layout;
+      assert_output ~ctxt ~pretty:true "component Comp(p1 as local_p1) {}" layout
+    );
+    ( "component_params_id_with_rest" >:: fun ctxt ->
+      let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
+      let params =
+        S.component_params
+          ~rest:
+            ( Loc.none,
+              {
+                Flow_ast.Statement.ComponentDeclaration.RestParam.argument =
+                  Ast_builder.Patterns.identifier "rest";
+                comments = None;
+              }
+            )
+          [S.component_id_param "p1"]
+      in
+      let ast = S.component_declaration ~params "Comp" body in
+      let layout = Js_layout_generator.statement ~opts ast in
+      assert_output ~ctxt "component Comp(p1,...rest){}" layout;
+      assert_output ~ctxt ~pretty:true "component Comp(p1, ...rest) {}" layout
+    );
   ]

@@ -61,6 +61,20 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.ComponentDeclaration.Params.t ->
       ('N, 'U) Ast.Statement.ComponentDeclaration.Params.t
 
+    method component_param :
+      ('M, 'T) Ast.Statement.ComponentDeclaration.Param.t ->
+      ('N, 'U) Ast.Statement.ComponentDeclaration.Param.t
+
+    method component_param_name :
+      ('M, 'T) Ast.Statement.ComponentDeclaration.Param.param_name ->
+      ('N, 'U) Ast.Statement.ComponentDeclaration.Param.param_name
+
+    method component_param_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
+
+    method component_rest_param :
+      ('M, 'T) Ast.Statement.ComponentDeclaration.RestParam.t ->
+      ('N, 'U) Ast.Statement.ComponentDeclaration.RestParam.t
+
     method component_body :
       'M * ('M, 'T) Ast.Statement.Block.t -> 'N * ('N, 'U) Ast.Statement.Block.t
 

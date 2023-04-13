@@ -2070,8 +2070,70 @@ and component_base ~opts ~prefix ~params ~body ~return ~tparams ~loc ~comments =
        ]
 
 and component_params
-    ~ctxt ~opts (loc, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments }) =
-  function_params ~ctxt ~opts (loc, { Ast.Function.Params.params; rest; comments; this_ = None })
+    ?(ctxt = normal_context)
+    ~opts
+    (_, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments }) =
+  let params =
+    Base.List.map
+      ~f:(fun ((loc, _) as param) ->
+        ( loc,
+          Comment_attachment.component_param_comment_bounds param,
+          component_param ~ctxt ~opts param
+        ))
+      params
+  in
+  (* Add rest param *)
+  let params =
+    match rest with
+    | Some ((loc, { Ast.Statement.ComponentDeclaration.RestParam.argument; comments }) as rest) ->
+      let rest_layout =
+        source_location_with_comments
+          ?comments
+          (loc, fuse [Atom "..."; pattern ~ctxt ~opts argument])
+      in
+      let rest_param =
+        (loc, Comment_attachment.component_rest_param_comment_bounds rest, rest_layout)
+      in
+      params @ [rest_param]
+    | None -> params
+  in
+  let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
+  (* Add trailing comma *)
+  let params_layout =
+    if
+      params <> []
+      && rest = None
+      && Trailing_commas.enabled_for_function_params opts.trailing_commas
+    then
+      params_layout @ [if_break (Atom ",") Empty]
+    else
+      params_layout
+  in
+  let params_layout = list_add_internal_comments params params_layout comments in
+  wrap_and_indent (Atom "(", Atom ")") params_layout
+
+and component_param
+    ~ctxt ~opts (loc, { Ast.Statement.ComponentDeclaration.Param.name; local; default; shorthand })
+    =
+  let node = component_param_name ~opts name in
+  let node =
+    match shorthand with
+    | true -> node
+    | false ->
+      let local_node = pattern ~ctxt ~opts local in
+      fuse [node; space; Atom "as"; space; local_node]
+  in
+  let node =
+    match default with
+    | Some expr -> fuse_with_default ~opts node expr
+    | None -> node
+  in
+  source_location_with_comments (loc, node)
+
+and component_param_name ~opts = function
+  | Some (Ast.Statement.ComponentDeclaration.Param.Identifier name) -> identifier name
+  | Some (Ast.Statement.ComponentDeclaration.Param.StringLiteral name) -> string_literal ~opts name
+  | None -> failwith "Internal Error: Expected value to exist for component declaration param name"
 
 and component_return ~opts return =
   match return with

@@ -588,13 +588,45 @@ class ['loc] mapper =
     method component_params (params : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Params.t) =
       let open Ast.Statement.ComponentDeclaration in
       let (loc, { Params.params = params_list; rest; comments }) = params in
-      let params_list' = map_list this#function_param params_list in
-      let rest' = map_opt this#function_rest_param rest in
+      let params_list' = map_list this#component_param params_list in
+      let rest' = map_opt this#component_rest_param rest in
       let comments' = this#syntax_opt comments in
       if params_list == params_list' && rest == rest' && comments == comments' then
         params
       else
         (loc, { Params.params = params_list'; rest = rest'; comments = comments' })
+
+    method component_param (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.t) =
+      let open Ast.Statement.ComponentDeclaration.Param in
+      let (loc, { name; local; default; shorthand }) = param in
+      let name' = map_opt this#component_param_name name in
+      let local' = this#component_param_pattern local in
+      let default' = map_opt this#expression default in
+      if name == name' && local == local' && default == default' then
+        param
+      else
+        (loc, { name = name'; local = local'; default = default'; shorthand })
+
+    method component_param_name
+        (param_name : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.param_name) =
+      let open Ast.Statement.ComponentDeclaration.Param in
+      match param_name with
+      | Identifier ident -> Identifier (this#identifier ident)
+      | StringLiteral (str_loc, str) -> StringLiteral (str_loc, this#string_literal str_loc str)
+
+    method component_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
+      this#binding_pattern ~kind:Ast.Variable.Let expr
+
+    method component_rest_param (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.RestParam.t)
+        =
+      let open Ast.Statement.ComponentDeclaration.RestParam in
+      let (loc, { argument; comments }) = expr in
+      let argument' = this#component_param_pattern argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        expr
+      else
+        (loc, { argument = argument'; comments = comments' })
 
     method component_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) =
       let (loc, block) = body in

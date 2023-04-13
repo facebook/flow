@@ -1091,17 +1091,37 @@ with type t = Impl.t = struct
       | ( _,
           {
             params;
-            rest = Some (rest_loc, { Function.RestParam.argument; comments });
+            rest = Some (rest_loc, { Statement.ComponentDeclaration.RestParam.argument; comments });
             comments = _;
           }
         ) ->
         let rest = node ?comments "RestElement" rest_loc [("argument", pattern argument)] in
-        let rev_params = List.rev_map function_param params in
+        let rev_params = List.rev_map component_param params in
         let params = List.rev (rest :: rev_params) in
         array params
       | (_, { params; rest = None; comments = _ }) ->
-        let params = List.map function_param params in
+        let params = List.map component_param params in
         array params
+    and component_param param =
+      let open Statement.ComponentDeclaration.Param in
+      let (loc, { name; local; default; shorthand }) = param in
+      let name' =
+        match name with
+        | Some (Identifier id) -> identifier id
+        | Some (StringLiteral id) -> string_literal id
+        | None ->
+          failwith "Internal Error: Expected value to exist for component declaration param name"
+      in
+      let local' =
+        match default with
+        | Some default ->
+          node "AssignmentPattern" loc [("left", pattern local); ("right", expression default)]
+        | None -> pattern local
+      in
+      node
+        "ComponentParameter"
+        loc
+        [("name", name'); ("local", local'); ("shorthand", bool shorthand)]
     and enum_body body =
       let open Statement.EnumDeclaration in
       match body with
