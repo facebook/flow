@@ -7221,8 +7221,8 @@ module Make
         let loc = aloc_of_reason reason in
         let ret_loc =
           match return with
-          | Ast.Type.Available (loc, _)
-          | Ast.Type.Missing loc ->
+          | Ast.Function.ReturnAnnot.Available (loc, _)
+          | Ast.Function.ReturnAnnot.Missing loc ->
             loc
         in
         let kind =

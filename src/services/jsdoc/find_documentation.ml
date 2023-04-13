@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Flow_ast_utils
+
 let loc_of_object_key =
   let open Flow_ast.Expression.Object.Property in
   function
@@ -26,13 +28,6 @@ let comments_of_object_key =
   | Computed (_, Flow_ast.ComputedKey.{ comments; _ }) ->
     comments
   | PrivateName _ -> None
-
-let loc_of_annotation_or_hint =
-  let open Flow_ast.Type in
-  function
-  | Missing loc
-  | Available (_, (loc, _)) ->
-    loc
 
 (* used to forward the comments on an export statement to the declaration
    contained in the export statement. That's why we don't bother with all
@@ -112,7 +107,7 @@ class documentation_searcher find =
       let value_loc =
         match value with
         | Init (value_loc, _)
-        | Get (_, Flow_ast.Type.Function.{ return = (value_loc, _); _ })
+        | Get (_, Flow_ast.Type.Function.{ return = TypeAnnotation (value_loc, _); _ })
         | Set (value_loc, _) ->
           value_loc
       in
@@ -153,7 +148,7 @@ class documentation_searcher find =
         | (prop_loc, Method { key; value = (_, Flow_ast.Function.{ comments; _ }) }) ->
           ([prop_loc], [comments_of_object_key key; comments])
         | (_, Get { key; value = (_, Flow_ast.Function.{ return; _ }); comments }) ->
-          ([loc_of_object_key key; loc_of_annotation_or_hint return], [comments])
+          ([loc_of_object_key key; loc_of_return_annot return], [comments])
         | (_, Set _) -> ([], [])
       in
       Base.List.iter locs ~f:(fun loc ->

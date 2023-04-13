@@ -864,7 +864,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let id = diff_if_changed_nonopt_fn identifier id1 id2 in
       let tparams = diff_if_changed_opt type_params tparams1 tparams2 in
       let params = diff_if_changed_ret_opt function_params params1 params2 in
-      let returns = diff_if_changed type_annotation_hint return1 return2 |> Base.Option.return in
+      let returns = diff_if_changed function_return_annot return1 return2 |> Base.Option.return in
       let params =
         match (is_arrow, params1, params2, params, returns) with
         (* reprint the parameter if it's the single parameter of a lambda, or when return annotation
@@ -919,6 +919,21 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) def1 def2
     in
     join_diff_list [param_diff; default_diff]
+  and function_return_annot
+      (return1 : (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t)
+      (return2 : (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t) : node change list =
+    let module RA = Ast.Function.ReturnAnnot in
+    let annot_change typ =
+      let open Ast.Type in
+      match return2 with
+      | RA.Available (_, (_, Function _)) -> FunctionTypeAnnotation typ
+      | _ -> TypeAnnotation typ
+    in
+    match (return1, return2) with
+    | (RA.Missing _, RA.Missing _) -> []
+    | (RA.Available (loc1, typ), RA.Missing _) -> [delete loc1 (TypeAnnotation (loc1, typ))]
+    | (RA.Missing loc1, RA.Available annot) -> [(loc1, insert ~sep:None [annot_change annot])]
+    | (RA.Available annot1, RA.Available annot2) -> type_annotation annot1 annot2
   and function_body_any
       (body1 : (Loc.t, Loc.t) Ast.Function.body) (body2 : (Loc.t, Loc.t) Ast.Function.body) :
       node change list option =
@@ -2689,6 +2704,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [annot_diff; comments_diff]
+  and function_type_return_annotation
+      (ret_annot_1 : (Loc.t, Loc.t) Ast.Type.Function.return_annotation)
+      (ret_annot_2 : (Loc.t, Loc.t) Ast.Type.Function.return_annotation) =
+    let module F = Ast.Type.Function in
+    match (ret_annot_1, ret_annot_2) with
+    | (F.TypeAnnotation t1, F.TypeAnnotation t2) -> type_ t1 t2
   and function_type
       (loc : Loc.t)
       (ft1 : (Loc.t, Loc.t) Ast.Type.Function.t)
@@ -2718,7 +2739,9 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let this_diff = diff_if_changed_opt function_this_constraint_type this1 this2 in
     let params_diff = diff_and_recurse_no_trivial function_param_type params1 params2 in
     let rest_diff = diff_if_changed_opt function_rest_param_type rest1 rest2 in
-    let return_diff = diff_if_changed type_ return1 return2 |> Base.Option.return in
+    let return_diff =
+      diff_if_changed function_type_return_annotation return1 return2 |> Base.Option.return
+    in
     let func_comments_diff = syntax_opt loc func_comments1 func_comments2 in
     let params_comments_diff = syntax_opt params_loc params_comments1 params_comments2 in
     join_diff_list

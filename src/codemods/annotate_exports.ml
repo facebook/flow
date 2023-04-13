@@ -234,14 +234,18 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         this#opt_annotate ~f ~error ~expr:(Some expr) loc type_entry expr
       | None -> expr
 
-    method! type_annotation_hint (return : (Loc.t, Loc.t) Ast.Type.annotation_or_hint) =
-      let open Ast.Type in
+    method! function_return_annotation return =
+      let open Flow_ast.Function.ReturnAnnot in
       match return with
       | Available _ -> return
-      | Missing loc ->
-        (match LMap.find_opt loc sig_verification_loc_tys with
+      | Missing loc -> begin
+        match LMap.find_opt loc sig_verification_loc_tys with
         | None -> return
-        | Some ty -> this#add_annot_to_missing loc ty return)
+        | Some ty ->
+          let f loc _annot ty = this#annotate_node loc ty (fun a -> Available a) in
+          let error _ = Available (Loc.none, flowfixme_ast) in
+          this#opt_annotate ~f ~error ~expr:None loc ty return
+      end
 
     method private add_annot_to_missing loc ty (return : (Loc.t, Loc.t) Ast.Type.annotation_or_hint)
         =
@@ -355,7 +359,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
              comments = _;
            }
          );
-       return = Ast.Type.Missing rloc;
+       return = Flow_ast.Function.ReturnAnnot.Missing rloc;
        _;
       }
         when ploc = rloc ->

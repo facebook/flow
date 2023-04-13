@@ -1431,7 +1431,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           )
         | None -> (None, None)
       in
-      let (((_, return_t), _) as return_ast) = convert cx tparams_map infer_tparams_map return in
+      let (return_t, return_ast) =
+        match return with
+        | T.Function.TypeAnnotation t_ast ->
+          let (((_, t'), _) as t_ast') = convert cx tparams_map infer_tparams_map t_ast in
+          (t', T.Function.TypeAnnotation t_ast')
+      in
       let statics_t =
         let reason = update_desc_reason (fun d -> RStatics d) reason in
         Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
@@ -2241,8 +2246,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (fparams, params_ast) =
         convert_params cx tparams_map infer_tparams_map func.Ast.Type.Function.params
       in
-      let (((_, return_t), _) as return_ast) =
-        convert cx tparams_map infer_tparams_map func.return
+      let (return_t, return_ast) =
+        match func.return with
+        | T.Function.TypeAnnotation t_ast ->
+          let (((_, t'), _) as t_ast') = convert cx tparams_map infer_tparams_map t_ast in
+          (t', T.Function.TypeAnnotation t_ast')
       in
       let reason = mk_annot_reason RFunctionType loc in
       ( {
@@ -2284,9 +2292,22 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
       (Annotated t, T.Available ast_annot)
 
+  and mk_return_annot cx tparams_map reason = function
+    | Ast.Function.ReturnAnnot.Missing loc ->
+      let t =
+        if Context.typing_mode cx <> Context.CheckingMode then
+          Context.mk_placeholder cx reason
+        else
+          Tvar.mk cx reason
+      in
+      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t))
+    | Ast.Function.ReturnAnnot.Available annot ->
+      let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
+      (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot)
+
   and mk_return_type_annotation cx tparams_map reason ~void_return ~async annot =
     match annot with
-    | T.Missing loc when void_return ->
+    | Ast.Function.ReturnAnnot.Missing loc when void_return ->
       let void_t = VoidT.why reason |> with_trust literal_trust in
       let t =
         if async then
@@ -2295,10 +2316,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         else
           void_t
       in
-      (Inferred t, T.Missing (loc, t))
+      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t))
     (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
        and no explicit returns *)
-    | _ -> mk_type_annotation cx tparams_map reason annot
+    | _ -> mk_return_annot cx tparams_map reason annot
 
   and mk_type_available_annotation cx tparams_map (loc, annot) =
     let node_cache = Context.node_cache cx in

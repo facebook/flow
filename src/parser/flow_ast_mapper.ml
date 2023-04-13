@@ -1163,6 +1163,12 @@ class ['loc] mapper =
       else
         (loc, { annot = annot'; comments = comments' })
 
+    method function_type_return_annotation
+        (return : ('loc, 'loc) Ast.Type.Function.return_annotation) =
+      let open Ast.Type.Function in
+      match return with
+      | TypeAnnotation t -> id this#type_ t return (fun rt -> TypeAnnotation rt)
+
     method function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
       let open Ast.Type.Function in
       let {
@@ -1177,7 +1183,7 @@ class ['loc] mapper =
       let this_' = map_opt this#function_this_param_type this_ in
       let ps' = map_list this#function_param_type ps in
       let rpo' = map_opt this#function_rest_param_type rpo in
-      let return' = this#type_ return in
+      let return' = this#function_type_return_annotation return in
       let func_comments' = this#syntax_opt func_comments in
       let params_comments' = this#syntax_opt params_comments in
       if
@@ -1702,12 +1708,7 @@ class ['loc] mapper =
     method type_annotation_hint (return : ('M, 'T) Ast.Type.annotation_or_hint) =
       let open Ast.Type in
       match return with
-      | Available annot ->
-        let annot' = this#type_annotation annot in
-        if annot' == annot then
-          return
-        else
-          Available annot'
+      | Available annot -> id this#type_annotation annot return (fun a -> Available a)
       | Missing _loc -> return
 
     method function_declaration loc (stmt : ('loc, 'loc) Ast.Function.t) = this#function_ loc stmt
@@ -1741,7 +1742,7 @@ class ['loc] mapper =
       let ident' = map_opt this#function_identifier ident in
       let tparams' = map_opt this#type_params tparams in
       let params' = this#function_params params in
-      let return' = this#type_annotation_hint return in
+      let return' = this#function_return_annotation return in
       let body' = this#function_body_any body in
       let predicate' = map_opt this#predicate predicate in
       let comments' = this#syntax_opt comments in
@@ -1801,6 +1802,12 @@ class ['loc] mapper =
         param
       else
         (loc, { argument = argument'; default = default' })
+
+    method function_return_annotation (return : ('loc, 'loc) Ast.Function.ReturnAnnot.t) =
+      let open Ast.Function.ReturnAnnot in
+      match return with
+      | Missing _loc -> return
+      | Available t -> id this#type_annotation t return (fun rt -> Available rt)
 
     method function_body_any (body : ('loc, 'loc) Ast.Function.body) =
       match body with

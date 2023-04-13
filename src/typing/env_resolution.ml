@@ -305,7 +305,7 @@ let resolve_annotated_function
     | (FunctionPredicateSynthesizable (_, pred_expr), _) ->
       let { Statement.Func_stmt_sig.Types.return_t; _ } = func_sig in
       let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
-      let (return_annot, _) = Anno.mk_type_annotation cx tparams_map reason return in
+      let (return_annot, _) = Anno.mk_return_annot cx tparams_map reason return in
       let return_annot = TypeUtil.type_t_of_annotated_or_inferred return_annot in
       let use_op = Op (FunReturnStatement { value = mk_expression_reason pred_expr }) in
       Flow_js.flow cx (return_annot, UseT (use_op, return_t))
@@ -529,7 +529,7 @@ let resolve_binding_partial cx reason loc b =
       | (FunctionPredicateSynthesizable (_, pred_expr), _) ->
         let { Statement.Func_stmt_sig.Types.return_t; _ } = func_sig in
         let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
-        let (return_annot, _) = Anno.mk_type_annotation cx tparams_map reason return in
+        let (return_annot, _) = Anno.mk_return_annot cx tparams_map reason return in
         let return_annot = TypeUtil.type_t_of_annotated_or_inferred return_annot in
         let use_op = Op (FunReturnStatement { value = mk_expression_reason pred_expr }) in
         Flow_js.flow cx (return_annot, UseT (use_op, return_t))

@@ -35,10 +35,12 @@ module type TYPE = sig
 
   val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
 
+  val function_return_annotation_opt : env -> (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t
+
   val predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.Predicate.t option
 
-  val annotation_and_predicate_opt :
-    env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint * (Loc.t, Loc.t) Ast.Type.Predicate.t option
+  val function_return_annotation_and_predicate_opt :
+    env -> (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t * (Loc.t, Loc.t) Ast.Type.Predicate.t option
 end
 
 module Type (Parse : Parser_common.PARSER) : TYPE = struct
@@ -849,7 +851,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       ~start_loc
       (fun env ->
         Expect.token env T_ARROW;
-        let return = _type env in
+        let return = Type.Function.TypeAnnotation (_type env) in
         Type.(Function { Function.params; return; tparams; comments = None }))
       env
 
@@ -860,7 +862,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         (fun env ->
           let params = function_param_list env in
           Expect.token env T_COLON;
-          let return = _type env in
+          let return = Type.Function.TypeAnnotation (_type env) in
           { Type.Function.params; return; tparams; comments = None })
         env
     in
@@ -1662,6 +1664,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     let (loc, generic) = raw_generic_with_identifier env id in
     (loc, Type.Generic generic)
 
+  and function_return_annotation_opt env =
+    match Peek.token env with
+    | T_COLON -> Function.ReturnAnnot.Available (annotation env)
+    | _ -> Function.ReturnAnnot.Missing (Peek.loc_skip_lookahead env)
+
   and annotation_opt env =
     match Peek.token env with
     | T_COLON -> Type.Available (annotation env)
@@ -1787,8 +1794,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         predicate_checks_contents env ~leading)
       env
 
-  let annotation_and_predicate_opt env =
-    let open Ast.Type in
+  let function_return_annotation_and_predicate_opt env =
+    let open Ast.Function.ReturnAnnot in
     match (Peek.token env, Peek.ith_token ~i:1 env) with
     | (T_COLON, T_CHECKS) ->
       let loc = Peek.loc_skip_lookahead env in
@@ -1796,9 +1803,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       (Missing loc, Some predicate)
     | (T_COLON, _) ->
       let annotation =
-        let annotation = annotation_opt env in
+        let annotation = Available (annotation env) in
         if Peek.token env = T_CHECKS then
-          type_annotation_hint_remove_trailing env annotation
+          return_annotation_remove_trailing env annotation
         else
           annotation
       in
@@ -1831,9 +1838,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   let annotation_opt = wrap annotation_opt
 
+  let function_return_annotation_opt = wrap function_return_annotation_opt
+
   let predicate_opt = wrap predicate_opt
 
-  let annotation_and_predicate_opt = wrap annotation_and_predicate_opt
+  let function_return_annotation_and_predicate_opt =
+    wrap function_return_annotation_and_predicate_opt
 
   let generic = wrap generic
 end

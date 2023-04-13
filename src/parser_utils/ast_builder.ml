@@ -197,7 +197,7 @@ module Functions = struct
       ~id
       ?params:params_
       ?tparams
-      ?(return = Ast.Type.Missing Loc.none)
+      ?(return = Ast.Function.ReturnAnnot.Missing Loc.none)
       ?(generator = false)
       ?(async = false)
       ?body:body_
@@ -272,6 +272,10 @@ module Functions = struct
       ?body:body_
       { Ast.Type.Function.tparams; params; return; _ } =
     let params = params_of_type params in
+    let return =
+      match return with
+      | Ast.Type.Function.TypeAnnotation t -> Ast.Function.ReturnAnnot.Available (Loc.none, t)
+    in
     Base.Option.map params ~f:(fun params ->
         let body =
           match body_ with
@@ -285,7 +289,7 @@ module Functions = struct
           async;
           generator;
           predicate = None;
-          return = Ast.Type.Available (Loc.none, return);
+          return;
           tparams;
           sig_loc = Loc.none;
           comments = None;

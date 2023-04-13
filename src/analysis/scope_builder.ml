@@ -120,6 +120,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           Missing L.none
         | Missing _ -> return
 
+      method! function_return_annotation return =
+        let open Ast.Function.ReturnAnnot in
+        match return with
+        | Available annot ->
+          acc <- annot :: acc;
+          Missing L.none
+        | Missing _ -> return
+
       method! function_param param =
         let open Ast.Function.Param in
         let (loc, { argument; default }) = param in
@@ -625,9 +633,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~has_this_annot:(Base.Option.is_some this_)
             id;
           let generator_return_loc =
+            let open Ast.Function.ReturnAnnot in
             match (generator, return) with
             | (false, _) -> None
-            | (true, (Ast.Type.Available (loc, _) | Ast.Type.Missing loc)) -> Some loc
+            | (true, (Available (loc, _) | Missing loc)) -> Some loc
           in
           this#scoped_type_params
             ~hoist_op:this#hoist_annotations
@@ -635,7 +644,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~in_tparam_scope:(fun () ->
               this#lambda ~is_arrow:false ~fun_loc:loc ~generator_return_loc params predicate body;
               if with_types then
-                this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint return)
+                this#hoist_annotations (fun () -> ignore @@ this#function_return_annotation return)
           )
         );
 
@@ -672,9 +681,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             | None -> Bindings.empty
           in
           let generator_return_loc =
+            let open Ast.Function.ReturnAnnot in
             match (generator, return) with
             | (false, _) -> None
-            | (true, (Ast.Type.Available (loc, _) | Ast.Type.Missing loc)) -> Some loc
+            | (true, (Available (loc, _) | Missing loc)) -> Some loc
           in
           this#with_bindings
             loc
@@ -691,7 +701,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               (* This function is not hoisted, so we just traverse the signature *)
               this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
                   this#lambda ~is_arrow ~fun_loc:loc ~generator_return_loc params predicate body;
-                  if with_types then ignore @@ this#type_annotation_hint return
+                  if with_types then ignore @@ this#function_return_annotation return
               ))
             ()
         );
@@ -735,7 +745,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           ignore @@ Base.Option.map ~f:this#function_this_param_type this_;
           ignore @@ Base.List.map ~f:this#function_param_type ps;
           ignore @@ Base.Option.map ~f:this#function_rest_param_type rpo;
-          ignore @@ this#type_ return
+          ignore @@ this#function_type_return_annotation return
         in
         this#scoped_type_params tparams ~in_tparam_scope;
         ft

@@ -128,3 +128,7 @@ end
 val string_of_assignment_operator : Flow_ast.Expression.Assignment.operator -> string
 
 val string_of_binary_operator : Flow_ast.Expression.Binary.operator -> string
+
+val loc_of_annotation_or_hint : ('loc, 'loc) Flow_ast.Type.annotation_or_hint -> 'loc
+
+val loc_of_return_annot : ('loc, 'loc) Flow_ast.Function.ReturnAnnot.t -> 'loc

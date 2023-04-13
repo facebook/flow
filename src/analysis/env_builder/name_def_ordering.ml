@@ -357,7 +357,7 @@ struct
         method function_def ~fully_annotated (expr : ('loc, 'loc) Ast.Function.t) =
           let { Ast.Function.params; body; predicate; return; tparams; _ } = expr in
           let open Flow_ast_mapper in
-          let _ = this#type_annotation_hint return in
+          let _ = this#function_return_annotation return in
           let _ =
             if fully_annotated then
               (body, this#function_params_annotated params, predicate)
@@ -495,7 +495,7 @@ struct
           ) else (
             (* Even if we skip the body of the function,
                we still need to collect dependencies on the signature of a function. *)
-            ignore @@ this#type_annotation_hint return;
+            ignore @@ this#function_return_annotation return;
             let (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ }) =
               params
             in

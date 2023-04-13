@@ -247,6 +247,14 @@ class mapper ~strict ~synth_type target =
 
     method! type_annotation_hint = this#update_type_annotation_hint ?type_loc:None ~check_loc:true
 
+    method! function_return_annotation return =
+      let open Flow_ast.Function.ReturnAnnot in
+      match return with
+      | Missing loc when this#target_contained_by loc -> Available (synth_type loc)
+      | Available (location, type_ast) when this#target_contained_by location ->
+        raise @@ expected @@ TypeAnnotationAtPoint { location; type_ast }
+      | _ -> return
+
     method! function_param_pattern node =
       let open Flow_ast.Pattern in
       let open Flow_ast.Pattern.Identifier in

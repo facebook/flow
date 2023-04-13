@@ -192,7 +192,7 @@ class ['loc] trailing_comments_remover ~after_pos =
     method! function_type _loc func =
       let open Ast.Type.Function in
       let { return; comments; _ } = func in
-      let return' = this#type_ return in
+      let return' = this#function_type_return_annotation return in
       let comments' = this#syntax_opt comments in
       if return == return' && comments == comments' then
         func
@@ -451,6 +451,10 @@ let type_remove_trailing env ty =
 let type_annotation_hint_remove_trailing env annot =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing annot (fun remover annot -> remover#type_annotation_hint annot)
+
+let return_annotation_remove_trailing env annot =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing annot (fun remover annot -> remover#function_return_annotation annot)
 
 let function_params_remove_trailing env params =
   let { remove_trailing; _ } = trailing_and_remover env in

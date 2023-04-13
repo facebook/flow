@@ -148,12 +148,12 @@ let create_extracted_function
   in
   let return_type =
     if async_function then
-      Flow_ast.Type.Available
+      Flow_ast.Function.ReturnAnnot.Available
         (Types.unqualified_generic ~targs:(Types.type_args [return_type]) "Promise"
         |> Types.annotation
         )
     else
-      Flow_ast.Type.Available (Types.annotation return_type)
+      Flow_ast.Function.ReturnAnnot.Available (Types.annotation return_type)
   in
   let body = Functions.body body_statements in
   Functions.make ~id ~params ?tparams ~return:return_type ~async:async_function ~body ()

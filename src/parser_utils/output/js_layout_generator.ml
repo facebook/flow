@@ -1753,7 +1753,7 @@ and arrow_function
   in
   let params_and_stuff =
     match (is_single_simple_param, return, predicate, tparams) with
-    | (true, Ast.Type.Missing _, None, None) ->
+    | (true, Ast.Function.ReturnAnnot.Missing _, None, None) ->
       let (_, { Ast.Function.Params.params; _ }) = params in
       layout_node_with_comments_opt
         params_loc
@@ -1791,7 +1791,7 @@ and arrow_function
             space e.g. `():* =>{}`. *)
          begin
            match return with
-           | Ast.Type.Available (_, (_, Ast.Type.Exists _)) -> space
+           | Ast.Function.ReturnAnnot.Available (_, (_, Ast.Type.Exists _)) -> space
            | _ -> pretty_space
          end;
          Atom "=>";
@@ -1982,14 +1982,16 @@ and function_return ~opts ~arrow return predicate =
     | _ -> false
   in
   match (return, predicate) with
-  | (Ast.Type.Missing _, None) -> Empty
-  | (Ast.Type.Missing _, Some pred) -> fuse [Atom ":"; pretty_space; type_predicate ~opts pred]
-  | (Ast.Type.Available ret, Some pred) ->
+  | (Ast.Function.ReturnAnnot.Missing _, None) -> Empty
+  | (Ast.Function.ReturnAnnot.Missing _, Some pred) ->
+    fuse [Atom ":"; pretty_space; type_predicate ~opts pred]
+  | (Ast.Function.ReturnAnnot.Available ret, Some pred) ->
     fuse
       [
         type_annotation ~opts ~parens:(needs_parens ret) ret; pretty_space; type_predicate ~opts pred;
       ]
-  | (Ast.Type.Available ret, None) -> type_annotation ~opts ~parens:(needs_parens ret) ret
+  | (Ast.Function.ReturnAnnot.Available ret, None) ->
+    type_annotation ~opts ~parens:(needs_parens ret) ret
 
 and block ~opts (loc, { Ast.Statement.Block.body; comments }) =
   let statements = statement_list ~opts ~pretty_semicolon:true body in
@@ -3539,6 +3541,9 @@ and type_function_params ~opts (loc, { Ast.Type.Function.Params.this_; params; r
   layout_node_with_comments_opt loc comments
   @@ fuse [wrap_and_indent (Atom "(", Atom ")") params_layout]
 
+and type_function_return ~opts = function
+  | Ast.Type.Function.TypeAnnotation t -> type_ ~opts t
+
 and type_function
     ~opts ~sep loc { Ast.Type.Function.params; return; tparams; comments = func_comments } =
   layout_node_with_comments_opt loc func_comments
@@ -3548,7 +3553,7 @@ and type_function
          type_function_params ~opts params;
          sep;
          pretty_space;
-         type_ ~opts return;
+         type_function_return ~opts return;
        ]
 
 and type_object_property ~opts =

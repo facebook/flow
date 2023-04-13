@@ -346,10 +346,10 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 else
                   function_params_remove_trailing env params
               in
-              let (return, predicate) = Type.annotation_and_predicate_opt env in
+              let (return, predicate) = Type.function_return_annotation_and_predicate_opt env in
               let (return, predicate) =
                 match predicate with
-                | None -> (type_annotation_hint_remove_trailing env return, predicate)
+                | None -> (return_annotation_remove_trailing env return, predicate)
                 | Some _ -> (return, predicate_remove_trailing env predicate)
               in
               (generator, tparams, id, params, return, predicate, leading))

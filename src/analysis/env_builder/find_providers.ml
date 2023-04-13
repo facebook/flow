@@ -630,7 +630,7 @@ end = struct
           ~kind:Var
           (fun _ _ ->
             let _params' = this#function_params params in
-            let _return' = this#type_annotation_hint return in
+            let _return' = this#function_return_annotation return in
             let _body' = this#function_body_any body in
             let _predicate' = map_opt this#predicate predicate in
             let _tparams' = map_opt this#type_params tparams in
@@ -880,7 +880,7 @@ end = struct
         in
         let init_state =
           match return with
-          | Ast.Type.Available _ ->
+          | Ast.Function.ReturnAnnot.Available _ ->
             Annotation { predicate = Option.is_some predicate; contextual = false }
           | _ -> Value 0
         in
@@ -898,7 +898,7 @@ end = struct
           ~kind:Var
           (fun _ _ ->
             let _params' = this#function_params params in
-            let _return' = this#type_annotation_hint return in
+            let _return' = this#function_return_annotation return in
             let _body' = this#function_body_any body in
             let _predicate' = map_opt this#predicate predicate in
             let _tparams' = map_opt this#type_params tparams in
@@ -925,7 +925,7 @@ end = struct
         in
         let init_state =
           match return with
-          | Ast.Type.Available _ ->
+          | Ast.Function.ReturnAnnot.Available _ ->
             Annotation { predicate = Option.is_some predicate; contextual = false }
           | _ -> Value 0
         in
@@ -939,7 +939,7 @@ end = struct
             ident
         in
         let _params' = this#function_params params in
-        let _return' = this#type_annotation_hint return in
+        let _return' = this#function_return_annotation return in
         let _body' = this#function_body_any body in
         let _predicate' = map_opt this#predicate predicate in
         let _tparams' = map_opt this#type_params tparams in

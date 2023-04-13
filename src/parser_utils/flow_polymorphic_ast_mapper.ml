@@ -873,6 +873,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       (loc', { annot = annot'; comments = comments' })
 
+    method function_type_return_annotation
+        (ret_annot : ('M, 'T) Ast.Type.Function.return_annotation)
+        : ('N, 'U) Ast.Type.Function.return_annotation =
+      let open Ast.Type.Function in
+      match ret_annot with
+      | TypeAnnotation t -> TypeAnnotation (this#type_ t)
+
     method function_type (ft : ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
       let open Ast.Type.Function in
       let {
@@ -888,7 +895,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let this_' = Option.map ~f:this#function_this_param_type this_ in
           let ps' = List.map ~f:this#function_param_type ps in
           let rpo' = Option.map ~f:this#function_rest_param_type rpo in
-          let return' = this#type_ return in
+          let return' = this#function_type_return_annotation return in
           let func_comments' = this#syntax_opt func_comments in
           let params_comments' = this#syntax_with_internal_opt params_comments in
           {
@@ -1369,6 +1376,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#function_ expr
     [@@alert deprecated "Use either function_expression or class_method"]
 
+    method function_return_annotation (return : ('M, 'T) Ast.Function.ReturnAnnot.t)
+        : ('N, 'U) Ast.Function.ReturnAnnot.t =
+      let open Ast.Function.ReturnAnnot in
+      match return with
+      | Missing loc -> Missing (this#on_type_annot loc)
+      | Available annot -> Available (this#type_annotation annot)
+
     (* Internal helper for function declarations, function expressions and arrow functions *)
     method function_ (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
       let open Ast.Function in
@@ -1389,7 +1403,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let ident' = Option.map ~f:this#function_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#function_params params in
-          let return' = this#type_annotation_hint return in
+          let return' = this#function_return_annotation return in
           let body' = this#function_body_any body in
           let predicate' = Option.map ~f:this#predicate predicate in
           let sig_loc' = this#on_loc_annot sig_loc in

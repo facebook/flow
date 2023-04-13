@@ -308,6 +308,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method function_rest_param :
       ('M, 'T) Flow_ast.Function.RestParam.t -> ('N, 'U) Ast.Function.RestParam.t
 
+    method function_return_annotation :
+      ('M, 'T) Ast.Function.ReturnAnnot.t -> ('N, 'U) Ast.Function.ReturnAnnot.t
+
     method function_this_param :
       ('M, 'T) Flow_ast.Function.ThisParam.t -> ('N, 'U) Flow_ast.Function.ThisParam.t
 
@@ -316,6 +319,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method function_this_param_type :
       ('M, 'T) Ast.Type.Function.ThisParam.t -> ('N, 'U) Ast.Type.Function.ThisParam.t
+
+    method function_type_return_annotation :
+      ('M, 'T) Ast.Type.Function.return_annotation -> ('N, 'U) Ast.Type.Function.return_annotation
 
     method function_type : ('M, 'T) Ast.Type.Function.t -> ('N, 'U) Ast.Type.Function.t
 

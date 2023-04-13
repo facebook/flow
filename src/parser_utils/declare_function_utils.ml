@@ -114,8 +114,10 @@ let declare_function_to_function_declaration
             }
           )
       in
-      let return : (l, l) Flow_ast.Type.annotation_or_hint =
-        Flow_ast.Type.Available (loc, return)
+      let return =
+        match return with
+        | Flow_ast.Type.Function.TypeAnnotation return ->
+          Flow_ast.Function.ReturnAnnot.Available (loc, return)
       in
       Some
         ( Flow_ast.Statement.FunctionDeclaration
@@ -147,7 +149,7 @@ let declare_function_to_function_declaration
                   tparams;
                   params =
                     (params_loc, { Flow_ast.Function.Params.params; rest; this_; comments = _ });
-                  return = Flow_ast.Type.Available (_, return);
+                  return = Flow_ast.Function.ReturnAnnot.Available (_, return);
                   body =
                     Flow_ast.Function.BodyBlock
                       ( pred_loc,
@@ -228,7 +230,7 @@ let declare_function_to_function_declaration
                             comments = params_comments;
                           }
                         );
-                      return;
+                      return = Flow_ast.Type.Function.TypeAnnotation return;
                       tparams;
                       comments = func_comments;
                     }

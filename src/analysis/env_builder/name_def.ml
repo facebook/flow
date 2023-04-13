@@ -313,7 +313,7 @@ let predicate_synthesizable predicate body =
 let func_is_synthesizable_from_annotation
     ({ Ast.Function.predicate; return; generator; body; params; _ } as f) =
   match return with
-  | Ast.Type.Available _ ->
+  | Ast.Function.ReturnAnnot.Available _ ->
     if
       Base.Option.is_some predicate
       && Base.List.is_empty (predicate_function_invalid_param_reasons params)
@@ -321,7 +321,7 @@ let func_is_synthesizable_from_annotation
       predicate_synthesizable predicate body
     else
       FunctionSynthesizable
-  | Ast.Type.Missing loc ->
+  | Ast.Function.ReturnAnnot.Missing loc ->
     if
       Base.Option.is_some predicate
       && Base.List.is_empty (predicate_function_invalid_param_reasons params)
@@ -464,9 +464,9 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
       let { Ast.Function.params; body; return; _ } = fn in
       if function_params_all_annotated ~allow_unannotated_this params body then (
         match (return, body) with
-        | (Ast.Type.Available _, _) -> true
-        | (Ast.Type.Missing _, Ast.Function.BodyExpression e) -> synthesizable e
-        | (Ast.Type.Missing _, Ast.Function.BodyBlock (loc, block)) ->
+        | (Ast.Function.ReturnAnnot.Available _, _) -> true
+        | (Ast.Function.ReturnAnnot.Missing _, Ast.Function.BodyExpression e) -> synthesizable e
+        | (Ast.Function.ReturnAnnot.Missing _, Ast.Function.BodyBlock (loc, block)) ->
           let collector = new returned_expression_collector in
           ignore @@ collector#block loc block;
           collector#acc |> Base.List.for_all ~f:synthesizable
@@ -1315,20 +1315,20 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                  ~hints:(decompose_hints (Decomp_FuncRest (List.length params_list)) func_hints)
               )
             rest;
-          ignore @@ this#type_annotation_hint return;
+          ignore @@ this#function_return_annotation return;
 
           let return_loc =
             match return with
-            | Ast.Type.Available (loc, _)
-            | Ast.Type.Missing loc ->
+            | Ast.Function.ReturnAnnot.Available (loc, _)
+            | Ast.Function.ReturnAnnot.Missing loc ->
               loc
           in
           let return_hint =
             let base_hint =
               match return with
-              | Ast.Type.Available annot ->
+              | Ast.Function.ReturnAnnot.Available annot ->
                 [Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
-              | Ast.Type.Missing _ -> decompose_hints Decomp_FuncReturn func_hints
+              | Ast.Function.ReturnAnnot.Missing _ -> decompose_hints Decomp_FuncReturn func_hints
             in
             match scope_kind with
             | Async -> base_hint |> decompose_hints Decomp_Promise
@@ -1352,8 +1352,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             if generator then
               let (loc, gen) =
                 match return with
-                | Ast.Type.Missing loc -> (loc, None)
-                | Ast.Type.Available ((loc, _) as return_annot) ->
+                | Ast.Function.ReturnAnnot.Missing loc -> (loc, None)
+                | Ast.Function.ReturnAnnot.Available ((loc, _) as return_annot) ->
                   (loc, Some { tparams_map = tparams; return_annot; async })
               in
 

@@ -432,11 +432,6 @@ with type t = Impl.t = struct
           | Function.BodyBlock b -> (block b, false)
           | Function.BodyExpression expr -> (expression expr, true)
         in
-        let return =
-          match return with
-          | Ast.Type.Missing _ -> None
-          | Ast.Type.Available t -> Some t
-        in
         let comments =
           Flow_ast_utils.merge_comments
             ~outer:func_comments
@@ -454,7 +449,7 @@ with type t = Impl.t = struct
             ("generator", bool false);
             ("predicate", option predicate predicate_);
             ("expression", bool expression);
-            ("returnType", option type_annotation return);
+            ("returnType", function_return_type return);
             ("typeParameters", option type_parameter_declaration tparams);
           ]
       | (loc, Sequence { Sequence.expressions; comments }) ->
@@ -669,11 +664,6 @@ with type t = Impl.t = struct
         | Function.BodyBlock b -> b
         | Function.BodyExpression _ -> failwith "Unexpected FunctionDeclaration with BodyExpression"
       in
-      let return =
-        match return with
-        | Ast.Type.Missing _ -> None
-        | Ast.Type.Available t -> Some t
-      in
       let comments =
         Flow_ast_utils.merge_comments
           ~outer:func_comments
@@ -694,7 +684,7 @@ with type t = Impl.t = struct
           ("generator", bool generator);
           ("predicate", option predicate predicate_);
           ("expression", bool false);
-          ("returnType", option type_annotation return);
+          ("returnType", function_return_type return);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
     and function_expression
@@ -717,11 +707,6 @@ with type t = Impl.t = struct
         | Function.BodyBlock b -> b
         | Function.BodyExpression _ -> failwith "Unexpected FunctionExpression with BodyExpression"
       in
-      let return =
-        match return with
-        | Ast.Type.Missing _ -> None
-        | Ast.Type.Available t -> Some t
-      in
       let comments =
         Flow_ast_utils.merge_comments
           ~outer:func_comments
@@ -739,7 +724,7 @@ with type t = Impl.t = struct
           ("generator", bool generator);
           ("predicate", option predicate predicate_);
           ("expression", bool false);
-          ("returnType", option type_annotation return);
+          ("returnType", function_return_type return);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
     and identifier (loc, { Identifier.name; comments }) =
@@ -1298,6 +1283,9 @@ with type t = Impl.t = struct
         node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
       | Element (_loc, { Element.argument; default = None }) -> pattern argument
       | RestElement (loc, el) -> rest_element loc el
+    and function_return_type = function
+      | Ast.Function.ReturnAnnot.Missing _ -> null
+      | Ast.Function.ReturnAnnot.Available t -> type_annotation t
     and object_property =
       let open Expression.Object in
       function
@@ -1517,6 +1505,8 @@ with type t = Impl.t = struct
     and unknown_type loc comments = node ?comments "UnknownTypeAnnotation" loc []
     and never_type loc comments = node ?comments "NeverTypeAnnotation" loc []
     and undefined_type loc comments = node ?comments "UndefinedTypeAnnotation" loc []
+    and return_annotation = function
+      | Ast.Type.Function.TypeAnnotation t -> _type t
     and function_type
         ( loc,
           {
@@ -1539,7 +1529,7 @@ with type t = Impl.t = struct
         [
           ("params", array_of_list function_type_param params);
           ("this", option function_type_this_constraint this_);
-          ("returnType", _type return);
+          ("returnType", return_annotation return);
           ("rest", option function_type_rest rest);
           ("typeParameters", option type_parameter_declaration tparams);
         ]

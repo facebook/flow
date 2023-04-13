@@ -1180,9 +1180,9 @@ module Statement
               type_token = T_CHECKS
             in
             if has_predicate then
-              type_remove_trailing env return
+              Ast.Type.Function.TypeAnnotation (type_remove_trailing env return)
             else
-              return
+              Ast.Type.Function.TypeAnnotation return
           in
           Ast.Type.(Function { Function.params; return; tparams; comments = None }))
         env

@@ -193,7 +193,9 @@ module Object
                   | (true, _) -> error_at env (key_loc, Parse_error.GetterArity)
                   | (false, _) -> error_at env (key_loc, Parse_error.SetterArity)
                 end;
-                let return = type_annotation_hint_remove_trailing env (Type.annotation_opt env) in
+                let return =
+                  return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
+                in
                 (tparams, params, return))
               env
           in
@@ -280,7 +282,9 @@ module Object
                     else
                       function_params_remove_trailing env params
                   in
-                  let return = type_annotation_hint_remove_trailing env (Type.annotation_opt env) in
+                  let return =
+                    return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
+                  in
                   (tparams, params, return))
                 env
             in
@@ -852,7 +856,7 @@ module Object
                       )
                     in
                     let return =
-                      type_annotation_hint_remove_trailing env (Type.annotation_opt env)
+                      return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
                     in
                     (tparams, params, return))
                   env

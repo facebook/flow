@@ -100,14 +100,15 @@ let is_fst = function
               }
             );
           return =
-            ( _,
-              T.Generic
-                {
-                  T.Generic.id = GId.Unqualified (_, { Id.name = return_name; _ });
-                  targs = None;
-                  _;
-                }
-            );
+            Flow_ast.Type.Function.TypeAnnotation
+              ( _,
+                T.Generic
+                  {
+                    T.Generic.id = GId.Unqualified (_, { Id.name = return_name; _ });
+                    targs = None;
+                    _;
+                  }
+              );
           _;
         }
     ) ->

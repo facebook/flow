@@ -577,6 +577,12 @@ class delete_annot_mapper =
       match super#type_annotation_hint return with
       | Type.Available (loc, _) -> Type.Missing loc
       | Type.Missing _ -> return
+
+    method! function_return_annotation return =
+      let open Ast.Function.ReturnAnnot in
+      match super#function_return_annotation return with
+      | Missing _loc -> return
+      | Available (loc, _) -> Missing loc
   end
 
 class insert_annot_mapper =
@@ -597,6 +603,12 @@ class insert_annot_mapper =
       match super#type_annotation_hint return with
       | Type.Available _ -> return
       | Type.Missing _loc -> Type.Available (_loc, (_loc, Type.Number None))
+
+    method! function_return_annotation return =
+      let open Ast.Function.ReturnAnnot in
+      match super#function_return_annotation return with
+      | Available _ -> return
+      | Missing _loc -> Available (_loc, (_loc, Type.Number None))
   end
 
 class insert_function_annot_mapper =
@@ -622,7 +634,33 @@ class insert_function_annot_mapper =
                         comments = None;
                       }
                     );
-                  return = (loc, Type.Number None);
+                  return = Ast.Type.Function.TypeAnnotation (loc, Type.Number None);
+                  comments = None;
+                }
+            )
+          )
+
+    method! function_return_annotation return =
+      let open Ast.Function.ReturnAnnot in
+      match super#function_return_annotation return with
+      | Available _ -> return
+      | Missing loc ->
+        Available
+          ( loc,
+            ( loc,
+              Type.Function
+                {
+                  Type.Function.tparams = None;
+                  params =
+                    ( loc,
+                      {
+                        Type.Function.Params.this_ = None;
+                        params = [];
+                        rest = None;
+                        comments = None;
+                      }
+                    );
+                  return = Ast.Type.Function.TypeAnnotation (loc, Type.Number None);
                   comments = None;
                 }
             )
@@ -652,7 +690,33 @@ class insert_import_and_annot_mapper =
                         comments = None;
                       }
                     );
-                  return = (loc, Type.Number None);
+                  return = Ast.Type.Function.TypeAnnotation (loc, Type.Number None);
+                  comments = None;
+                }
+            )
+          )
+
+    method! function_return_annotation return =
+      let open Ast.Function.ReturnAnnot in
+      match super#function_return_annotation return with
+      | Available _ -> return
+      | Missing loc ->
+        Available
+          ( loc,
+            ( loc,
+              Type.Function
+                {
+                  Type.Function.tparams = None;
+                  params =
+                    ( loc,
+                      {
+                        Type.Function.Params.this_ = None;
+                        params = [];
+                        rest = None;
+                        comments = None;
+                      }
+                    );
+                  return = Ast.Type.Function.TypeAnnotation (loc, Type.Number None);
                   comments = None;
                 }
             )
@@ -722,8 +786,8 @@ class func_return_annot_mapper =
       let open Ast.Function in
       let return' =
         match f.return with
-        | Type.Available _ -> f.return
-        | Type.Missing _ -> Type.Available (Loc.none, (Loc.none, Type.Number None))
+        | ReturnAnnot.Available _ -> f.return
+        | ReturnAnnot.Missing _ -> ReturnAnnot.Available (Loc.none, (Loc.none, Type.Number None))
       in
       { f with return = return' }
   end

@@ -1342,6 +1342,9 @@ and annot_with_loc opts scope tbls xs (loc, t) =
   in
   (loc, annot)
 
+and return_annot opts scope tbls xs = function
+  | T.Function.TypeAnnotation r -> annot opts scope tbls xs r
+
 and function_type opts scope tbls xs f =
   let module F = T.Function in
   let {
@@ -1356,7 +1359,7 @@ and function_type opts scope tbls xs f =
   let this_param = function_type_this_param opts scope tbls xs this_ in
   let params = function_type_params opts scope tbls xs ps in
   let rest_param = function_type_rest_param opts scope tbls xs rp in
-  let return = annot opts scope tbls xs r in
+  let return = return_annot opts scope tbls xs r in
   FunSig { tparams; params; rest_param; this_param; return; predicate = None }
 
 and function_type_params =
@@ -1413,7 +1416,7 @@ and function_type_this_param opts scope tbls xs =
 and getter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
   let { F.return = r; _ } = f in
-  Get (id_loc, annot opts scope tbls xs r)
+  Get (id_loc, return_annot opts scope tbls xs r)
 
 and setter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
@@ -2449,6 +2452,16 @@ let annot_or_hint ~sort ~err_loc opts scope tbls xs = function
     in
     Err (err_loc, SigError (Signature_error.ExpectedAnnotation (err_loc, sort)))
 
+let function_return_annot ~sort ~err_loc opts scope tbls xs = function
+  | Ast.Function.ReturnAnnot.Available (_, t) -> annot opts scope tbls xs t
+  | Ast.Function.ReturnAnnot.Missing loc ->
+    let err_loc =
+      match err_loc with
+      | Some err_loc -> err_loc
+      | None -> push_loc tbls loc
+    in
+    Err (err_loc, SigError (Signature_error.ExpectedAnnotation (err_loc, sort)))
+
 let class_implements =
   let module C = Ast.Class in
   let rec loop opts scope tbls xs acc = function
@@ -2469,7 +2482,7 @@ let getter_def opts scope tbls xs id_loc f =
   let module F = Ast.Function in
   let { F.return = r; _ } = f in
   let t =
-    annot_or_hint
+    function_return_annot
       ~err_loc:None (* use location of Missing annotation *)
       ~sort:Expected_annotation_sort.FunctionReturn
       opts
@@ -2996,14 +3009,14 @@ and function_def_helper =
   let return opts scope tbls xs ~async ~generator ~constructor body =
     if constructor then
       function
-    | Ast.Type.Available (loc, _)
-    | Ast.Type.Missing loc ->
+    | Ast.Function.ReturnAnnot.Available (loc, _)
+    | Ast.Function.ReturnAnnot.Missing loc ->
       let loc = push_loc tbls loc in
       Annot (Void loc)
     else
       function
-    | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
-    | Ast.Type.Missing loc ->
+    | Ast.Function.ReturnAnnot.Available (_, t) -> annot opts scope tbls xs t
+    | Ast.Function.ReturnAnnot.Missing loc ->
       let loc = push_loc tbls loc in
       if generator || not (Signature_utils.Procedure_decider.is body) then
         Err
@@ -3961,7 +3974,7 @@ let declare_function_decl opts scope tbls decl =
              let this_param = function_type_this_param opts scope tbls xs this_ in
              let params = function_type_params opts scope tbls xs ps in
              let rest_param = function_type_rest_param opts scope tbls xs rp in
-             let return = annot opts scope tbls xs r in
+             let return = return_annot opts scope tbls xs r in
              let predicate =
                let module P = T.Predicate in
                match p with

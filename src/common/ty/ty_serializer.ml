@@ -226,7 +226,12 @@ let type_ options =
     let%bind return = type_ f.fun_return in
     let%bind params = fun_params f.fun_params f.fun_rest_param in
     let%map tparams = opt type_params f.fun_type_params in
-    { T.Function.params; return; tparams; comments = None }
+    {
+      T.Function.params;
+      return = Ast.Type.Function.TypeAnnotation return;
+      tparams;
+      comments = None;
+    }
   and fun_params params rest_param =
     let%bind params = mapM fun_param params in
     let%map rest = opt fun_rest_param rest_param in

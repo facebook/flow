@@ -211,10 +211,11 @@ and Type : sig
     type ('M, 'T) t = {
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
-      return: ('M, 'T) Type.t;
+      return: ('M, 'T) return_annotation;
       comments: ('M, unit) Syntax.t option;
     }
-    [@@deriving show]
+
+    and ('M, 'T) return_annotation = TypeAnnotation of ('M, 'T) Type.t [@@deriving show]
   end
 
   module Generic : sig
@@ -2007,6 +2008,13 @@ and Function : sig
     [@@deriving show]
   end
 
+  module ReturnAnnot : sig
+    type ('M, 'T) t =
+      | Missing of 'T
+      | Available of ('M, 'T) Type.annotation
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = {
     id: ('M, 'T) Identifier.t option;
     params: ('M, 'T) Params.t;
@@ -2014,7 +2022,7 @@ and Function : sig
     async: bool;
     generator: bool;
     predicate: ('M, 'T) Type.Predicate.t option;
-    return: ('M, 'T) Type.annotation_or_hint;
+    return: ('M, 'T) ReturnAnnot.t;
     tparams: ('M, 'T) Type.TypeParams.t option;
     comments: ('M, unit) Syntax.t option;
     (* Location of the signature portion of a function, e.g.

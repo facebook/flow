@@ -351,3 +351,17 @@ module ExpressionSort = struct
     | Update -> "update expression"
     | Yield -> "yield expression"
 end
+
+let loc_of_annotation_or_hint =
+  let open Flow_ast.Type in
+  function
+  | Missing loc
+  | Available (_, (loc, _)) ->
+    loc
+
+let loc_of_return_annot =
+  let open Flow_ast.Function.ReturnAnnot in
+  function
+  | Missing loc
+  | Available (_, (loc, _)) ->
+    loc

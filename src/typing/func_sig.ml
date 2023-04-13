@@ -543,7 +543,7 @@ struct
 end
 
 let return_loc = function
-  | { Ast.Function.return = Ast.Type.Available (_, (loc, _)); _ }
+  | { Ast.Function.return = Ast.Function.ReturnAnnot.Available (_, (loc, _)); _ }
   | { Ast.Function.body = Ast.Function.BodyExpression (loc, _); _ } ->
     loc
   | { Ast.Function.body = Ast.Function.BodyBlock (loc, _); _ } ->
