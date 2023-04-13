@@ -1044,14 +1044,8 @@ module rec ConsGen : S = struct
         Annot_LookupT (reason_op, use_op, (Named (reason_prop, x) as propref))
       ) ->
       let error_message =
-        Error_message.EStrictLookupFailed
-          {
-            reason_prop;
-            reason_obj = reason_op;
-            name = Some x;
-            use_op = Some use_op;
-            suggestion = None;
-          }
+        Error_message.EPropNotFound
+          { reason_prop; reason_obj = reason_op; prop_name = Some x; use_op; suggestion = None }
       in
       Flow_js_utils.add_output cx error_message;
       let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in

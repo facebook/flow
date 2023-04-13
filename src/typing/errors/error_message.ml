@@ -125,13 +125,6 @@ and 'loc t' =
       name: Reason.name option;
       potential_generator: string option;
     }
-  | EStrictLookupFailed of {
-      reason_prop: 'loc virtual_reason;
-      reason_obj: 'loc virtual_reason;
-      name: name option;
-      suggestion: string option;
-      use_op: 'loc virtual_use_op option;
-    }
   | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * name * 'loc virtual_use_op
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
@@ -802,15 +795,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
   | EBuiltinLookupFailed { reason; name; potential_generator } ->
     EBuiltinLookupFailed { reason = map_reason reason; name; potential_generator }
-  | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
-    EStrictLookupFailed
-      {
-        reason_prop = map_reason reason_prop;
-        reason_obj = map_reason reason_obj;
-        name;
-        suggestion;
-        use_op = Base.Option.map ~f:map_use_op use_op;
-      }
   | EPrivateLookupFailed ((r1, r2), x, op) ->
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
   | EAdditionMixed (r, op) -> EAdditionMixed (map_reason r, map_use_op op)
@@ -1258,10 +1242,6 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EPropNotWritable { reason_prop; prop_name; use_op })
   | EPropPolarityMismatch (rs, p, ps, op) ->
     util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
-  | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op = Some op } ->
-    util op (fun op ->
-        EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op = Some op }
-    )
   | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
   | EAdditionMixed (r, op) -> util op (fun op -> EAdditionMixed (r, op))
   | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
@@ -1353,7 +1333,6 @@ let util_use_op_of_msg nope util = function
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
   | EBuiltinLookupFailed _
-  | EStrictLookupFailed { use_op = None; _ }
   | EComparison (_, _)
   | ENonStrictEqualityComparison _
   | ESpeculationAmbiguous _
@@ -1684,7 +1663,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETupleArityMismatch _
   | EAdditionMixed _
   | EPrivateLookupFailed _
-  | EStrictLookupFailed _
   | EPropPolarityMismatch _
   | EPropNotReadable _
   | EPropNotWritable _
@@ -2313,15 +2291,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | Some x -> [text "Cannot resolve name "; code (display_string_of_name x); text "."]
     in
     Normal { features }
-  | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
-    PropMissing
-      {
-        loc = loc_of_reason reason_prop;
-        prop = Base.Option.map ~f:display_string_of_name name;
-        suggestion;
-        reason_obj;
-        use_op = Base.Option.value ~default:unknown_use use_op;
-      }
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing
       {
@@ -4925,7 +4894,6 @@ let error_code_of_message err : error_code option =
   | EROArrayWrite _ -> Some CannotWrite
   | ESignatureVerification _ -> Some SignatureVerificationFailure
   | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
-  | EStrictLookupFailed _ -> Some Error_codes.PropMissing
   | EThisInExportedFunction _ -> Some ThisInExportedFunction
   | EExportRenamedDefault _ -> Some ExportRenamedDefault
   | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg

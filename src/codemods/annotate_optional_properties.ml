@@ -44,13 +44,9 @@ let data_of_prop_missing_error error =
   let op = util_use_op_of_msg unknown_use (fun op _ -> op) msg in
   match (root_of_use_op op, msg) with
   | (SetProperty { value; _ }, EIncompatibleProp { reason_obj; prop = Some name; _ })
-  | (SetProperty { value; _ }, EStrictLookupFailed { reason_obj; name = Some name; _ })
   | (SetProperty { value; _ }, EPropNotFound { reason_obj; prop_name = Some name; _ })
   | (GetProperty value, EIncompatibleProp { reason_obj; prop = Some name; _ })
-  | (GetProperty value, EStrictLookupFailed { reason_obj; name = Some name; _ })
-  | (GetProperty value, EPropNotFound { reason_obj; prop_name = Some name; _ })
-  (* Destructuring *)
-  | (UnknownUse, EStrictLookupFailed { reason_obj; reason_prop = value; name = Some name; _ }) ->
+  | (GetProperty value, EPropNotFound { reason_obj; prop_name = Some name; _ }) ->
     let obj_loc = def_loc_of_reason reason_obj in
     let init_locs = [def_loc_of_reason value] in
     let prop_accesses = prop_accesses op in

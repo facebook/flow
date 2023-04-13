@@ -1317,20 +1317,6 @@ let dump_error_message =
         (match potential_generator with
         | Some generator -> spf "Some(%s)" generator
         | None -> "None")
-    | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
-      spf
-        "EStrictLookupFailed { reason_prop = %s; reason_obj = %s; name = %S; suggestion = %S; use_op = %s }"
-        (dump_reason cx reason_prop)
-        (dump_reason cx reason_obj)
-        (match name with
-        | Some x -> spf "Some(%S)" (display_string_of_name x)
-        | None -> "None")
-        (match suggestion with
-        | Some x -> spf "Some(%S)" x
-        | None -> "None")
-        (match use_op with
-        | Some use_op -> spf "Some(%s)" (string_of_use_op use_op)
-        | None -> "None")
     | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
       spf
         "EPrivateLookupFailed ((%s, %s), %s, %s)"

@@ -3141,14 +3141,8 @@ struct
             | _ ->
               let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
               let error_message =
-                Error_message.EStrictLookupFailed
-                  {
-                    reason_prop;
-                    reason_obj = reason;
-                    name = prop_name;
-                    use_op = Some use_op;
-                    suggestion = None;
-                  }
+                Error_message.EPropNotFound
+                  { reason_prop; reason_obj = reason; prop_name; use_op; suggestion = None }
               in
               add_output cx ~trace error_message;
               AnyT.error reason_op
@@ -5266,14 +5260,14 @@ struct
               }
           ) ->
           let error_message =
-            let use_op = Some (use_op_of_lookup_action action) in
+            let use_op = use_op_of_lookup_action action in
             let suggestion =
               Base.Option.bind ids ~f:(fun ids ->
                   prop_typo_suggestion cx (Properties.Set.elements ids) (display_string_of_name x)
               )
             in
-            Error_message.EStrictLookupFailed
-              { reason_prop; reason_obj = strict_reason; name = Some x; use_op; suggestion }
+            Error_message.EPropNotFound
+              { reason_prop; reason_obj = strict_reason; prop_name = Some x; use_op; suggestion }
           in
           add_output cx ~trace error_message;
           let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in
@@ -5312,9 +5306,15 @@ struct
           | _ ->
             let reason_prop = reason_of_t elem_t in
             let error_message =
-              let use_op = Some (use_op_of_lookup_action action) in
-              Error_message.EStrictLookupFailed
-                { reason_prop; reason_obj = strict_reason; name = None; use_op; suggestion = None }
+              let use_op = use_op_of_lookup_action action in
+              Error_message.EPropNotFound
+                {
+                  reason_prop;
+                  reason_obj = strict_reason;
+                  prop_name = None;
+                  use_op;
+                  suggestion = None;
+                }
             in
             add_output cx ~trace error_message)
         (* LookupT is a non-strict lookup *)
@@ -6629,14 +6629,8 @@ struct
                  reason_struct
              in
              let error_message =
-               Error_message.EStrictLookupFailed
-                 {
-                   reason_prop;
-                   reason_obj = lreason;
-                   name = prop_name;
-                   use_op = Some use_op;
-                   suggestion = None;
-                 }
+               Error_message.EPropNotFound
+                 { reason_prop; reason_obj = lreason; prop_name; use_op; suggestion = None }
              in
              add_output cx ~trace error_message
        )
