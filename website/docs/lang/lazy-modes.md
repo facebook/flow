@@ -1,5 +1,5 @@
 ---
-title: Lazy Modes
+title: Lazy Mode
 slug: /lang/lazy-modes
 ---
 
@@ -30,8 +30,6 @@ typecheck the unchecked files.
 
 ## Choosing Focused Files {#toc-choosing-focused-files}
 
-Focused files are all of the files that have changed in one of the following ways.
-
 Flow will focus files when they change on disk, using Flow's built-in file watcher
 ("dfind") or Watchman.
 
@@ -54,10 +52,10 @@ of the unchanged files for errors that can't exist.
 
 To enable lazy mode, set `lazy_mode=true` in the `.flowconfig`.
 
-To start a Flow server in lazy mode manually, run
+To start Flow in lazy mode manually, run
 
 ```bash
-flow server --lazy-mode true
+flow start --lazy-mode true
 ```
 
 ## Forcing Flow to Treat a File as Focused {#toc-forcing-flow-to-treat-a-file-as-focused}
@@ -65,5 +63,5 @@ flow server --lazy-mode true
 You can force Flow to treat one or more files as focused from the CLI.
 
 ```bash
-flow force-recheck --focus ./path/to/A.js /path/to/B.js
+flow force-recheck --focus path/to/A.js path/to/B.js
 ```
