@@ -52,6 +52,18 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method catch_clause_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
+    method component_declaration :
+      ('M, 'T) Ast.Statement.ComponentDeclaration.t -> ('N, 'U) Ast.Statement.ComponentDeclaration.t
+
+    method component_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+
+    method component_params :
+      ('M, 'T) Ast.Statement.ComponentDeclaration.Params.t ->
+      ('N, 'U) Ast.Statement.ComponentDeclaration.Params.t
+
+    method component_body :
+      'M * ('M, 'T) Ast.Statement.Block.t -> 'N * ('N, 'U) Ast.Statement.Block.t
+
     method class_ : ('M, 'T) Ast.Class.t -> ('N, 'U) Ast.Class.t
 
     method class_body : ('M, 'T) Flow_ast.Class.Body.t -> ('N, 'U) Ast.Class.Body.t

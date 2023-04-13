@@ -908,6 +908,34 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module ComponentDeclaration : sig
+    module Params : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        params: ('M, 'T) Function.Param.t list;
+        rest: ('M, 'T) Function.RestParam.t option;
+        comments: ('M, 'M Comment.t list) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    type ('M, 'T) t = {
+      id: ('M, 'T) Identifier.t;
+      tparams: ('M, 'T) Type.TypeParams.t option;
+      params: ('M, 'T) Params.t;
+      return: ('M, 'T) Type.annotation_or_hint;
+      body: 'M * ('M, 'T) Statement.Block.t;
+      comments: ('M, unit) Syntax.t option;
+      (* Location of the signature portion of a component, e.g.
+       * component Foo(): void {}
+       * ^^^^^^^^^^^^^^^^^^^^
+       *)
+      sig_loc: 'M;
+    }
+    [@@deriving show]
+  end
+
   module Interface : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
@@ -1100,6 +1128,7 @@ and Statement : sig
     | Block of ('M, 'T) Block.t
     | Break of 'M Break.t
     | ClassDeclaration of ('M, 'T) Class.t
+    | ComponentDeclaration of ('M, 'T) ComponentDeclaration.t
     | Continue of 'M Continue.t
     | Debugger of 'M Debugger.t
     | DeclareClass of ('M, 'T) DeclareClass.t

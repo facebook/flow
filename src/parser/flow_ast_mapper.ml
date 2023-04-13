@@ -105,6 +105,10 @@ class ['loc] mapper =
       | (loc, Break break) -> id_loc this#break loc break stmt (fun break -> (loc, Break break))
       | (loc, ClassDeclaration cls) ->
         id_loc this#class_declaration loc cls stmt (fun cls -> (loc, ClassDeclaration cls))
+      | (loc, ComponentDeclaration component) ->
+        id_loc this#component_declaration loc component stmt (fun component ->
+            (loc, ComponentDeclaration component)
+        )
       | (loc, Continue cont) -> id_loc this#continue loc cont stmt (fun cont -> (loc, Continue cont))
       | (loc, Debugger dbg) -> id_loc this#debugger loc dbg stmt (fun dbg -> (loc, Debugger dbg))
       | (loc, DeclareClass stuff) ->
@@ -547,6 +551,54 @@ class ['loc] mapper =
           decorators = decorators';
           comments = comments';
         }
+
+    method component_declaration _loc (component : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t)
+        =
+      let open Ast.Statement.ComponentDeclaration in
+      let { id = ident; tparams; params; body; return; comments; sig_loc } = component in
+      let ident' = this#component_identifier ident in
+      let tparams' = map_opt this#type_params tparams in
+      let params' = this#component_params params in
+      let body' = this#component_body body in
+      let return' = this#type_annotation_hint return in
+      let comments' = this#syntax_opt comments in
+      if
+        ident == ident'
+        && tparams == tparams'
+        && params == params'
+        && body == body'
+        && return == return'
+        && comments == comments'
+      then
+        component
+      else
+        {
+          id = ident';
+          tparams = tparams';
+          params = params';
+          body = body';
+          return = return';
+          comments = comments';
+          sig_loc;
+        }
+
+    method component_identifier (ident : ('loc, 'loc) Ast.Identifier.t) =
+      this#pattern_identifier ~kind:Ast.Variable.Var ident
+
+    method component_params (params : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Params.t) =
+      let open Ast.Statement.ComponentDeclaration in
+      let (loc, { Params.params = params_list; rest; comments }) = params in
+      let params_list' = map_list this#function_param params_list in
+      let rest' = map_opt this#function_rest_param rest in
+      let comments' = this#syntax_opt comments in
+      if params_list == params_list' && rest == rest' && comments == comments' then
+        params
+      else
+        (loc, { Params.params = params_list'; rest = rest'; comments = comments' })
+
+    method component_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) =
+      let (loc, block) = body in
+      id_loc this#block loc block body (fun block -> (loc, block))
 
     method conditional _loc (expr : ('loc, 'loc) Ast.Expression.Conditional.t) =
       let open Ast.Expression.Conditional in

@@ -44,6 +44,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Block block -> Block (this#block block)
         | Break break -> Break (this#break break)
         | ClassDeclaration cls -> ClassDeclaration (this#class_declaration cls)
+        | ComponentDeclaration component ->
+          ComponentDeclaration (this#component_declaration component)
         | Continue cont -> Continue (this#continue cont)
         | Debugger dbg -> Debugger (this#debugger dbg)
         | DeclareClass stuff -> DeclareClass (this#declare_class stuff)
@@ -256,6 +258,49 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       in
       let comments' = this#syntax_opt comments in
       { param = param'; body = body'; comments = comments' }
+
+    method component_declaration (component : ('M, 'T) Ast.Statement.ComponentDeclaration.t) =
+      let open Ast.Statement.ComponentDeclaration in
+      let { id = ident; params; body; return; tparams; comments; sig_loc } = component in
+      let ident' = this#component_identifier ident in
+      this#type_params_opt tparams (fun tparams' ->
+          let params' = this#component_params params in
+          let return' = this#type_annotation_hint return in
+          let body' = this#component_body body in
+          let comments' = this#syntax_opt comments in
+          let sig_loc' = this#on_loc_annot sig_loc in
+          {
+            id = ident';
+            params = params';
+            return = return';
+            body = body';
+            tparams = tparams';
+            comments = comments';
+            sig_loc = sig_loc';
+          }
+      )
+
+    method component_identifier (ident : ('M, 'T) Ast.Identifier.t) =
+      this#pattern_identifier ~kind:Ast.Variable.Var ident
+
+    method component_params (params : ('M, 'T) Ast.Statement.ComponentDeclaration.Params.t) =
+      let (annot, { Ast.Statement.ComponentDeclaration.Params.params = params_list; rest; comments })
+          =
+        params
+      in
+      let params_list' = List.map ~f:this#function_param params_list in
+      let rest' = Option.map ~f:this#function_rest_param rest in
+      let comments' = this#syntax_with_internal_opt comments in
+      ( this#on_loc_annot annot,
+        {
+          Ast.Statement.ComponentDeclaration.Params.params = params_list';
+          rest = rest';
+          comments = comments';
+        }
+      )
+
+    method component_body (body : 'M * ('M, 'T) Ast.Statement.Block.t) =
+      (this#on_loc_annot * this#block) body
 
     method class_declaration cls = this#class_ cls
 

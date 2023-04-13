@@ -665,6 +665,11 @@ module Scope = struct
           binding_opt
     )
 
+  let bind_component scope tbls id_loc name =
+    (* TODO(jmbrown): add typechecking for component syntax *)
+    let def = lazy (Annot (Any id_loc)) in
+    bind_local scope tbls name (LetConstBinding { id_loc; name; def })
+
   let bind_var scope tbls kind id_loc name def =
     bind_local scope tbls name (value_binding kind id_loc name def)
 
@@ -3907,6 +3912,21 @@ let function_decl opts scope tbls decl =
   let def = lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty decl)) in
   Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def
 
+let component_decl scope tbls decl =
+  let {
+    Ast.Statement.ComponentDeclaration.id = (id_loc, { Ast.Identifier.name; comments = _ });
+    params = _;
+    tparams = _;
+    return = _;
+    body = _;
+    comments = _;
+    sig_loc = _;
+  } =
+    decl
+  in
+  let id_loc = push_loc tbls id_loc in
+  Scope.bind_component scope tbls id_loc name
+
 let declare_variable_decl opts scope tbls decl =
   let { Ast.Statement.DeclareVariable.id; annot = (_, t); kind; comments = _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
@@ -4327,6 +4347,7 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl ignore2
   | S.DeclareInterface decl -> interface_decl opts scope tbls decl ignore2
   | S.FunctionDeclaration decl -> function_decl opts scope tbls decl ignore2
+  | S.ComponentDeclaration decl -> component_decl scope tbls decl ignore2
   | S.DeclareFunction decl -> declare_function_decl opts scope tbls decl ignore2
   | S.ImportDeclaration decl ->
     (match scope with

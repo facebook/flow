@@ -559,6 +559,25 @@ module Statements = struct
     let symbol_body ?(loc = Loc.none) ?(has_unknown_members = false) ?comments members =
       (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments })
   end
+
+  let component_params ?(loc = Loc.none) ?rest ?comments params =
+    (loc, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments })
+
+  let component_declaration ?(loc = Loc.none) ?tparams ?params ?return ?comments id body =
+    let params' = Base.Option.value ~default:(component_params []) params in
+    let return' = Base.Option.value ~default:(Ast.Type.Missing Loc.none) return in
+    ( loc,
+      ComponentDeclaration
+        {
+          Ast.Statement.ComponentDeclaration.id = Identifiers.identifier id;
+          body;
+          tparams;
+          params = params';
+          return = return';
+          comments;
+          sig_loc = Loc.none;
+        }
+    )
 end
 
 module Expressions = struct

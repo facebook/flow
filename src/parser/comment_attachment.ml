@@ -140,6 +140,23 @@ class ['loc] trailing_comments_remover ~after_pos =
             (loc, { id = id_; targs = targs' })
         )
 
+    method! component_declaration _loc component =
+      let open Ast.Statement.ComponentDeclaration in
+      let { body; comments; _ } = component in
+      let body' = this#component_body body in
+      let comments' = this#syntax_opt comments in
+      if body == body' && comments == comments' then
+        component
+      else
+        { component with body = body'; comments = comments' }
+
+    method! component_params (loc, params) =
+      let open Ast.Statement.ComponentDeclaration.Params in
+      let { comments; _ } = params in
+      id this#syntax_opt comments (loc, params) (fun comments' ->
+          (loc, { params with comments = comments' })
+      )
+
     method! computed_key key =
       let open Ast.ComputedKey in
       let (loc, { expression; comments }) = key in
@@ -484,6 +501,8 @@ let statement_add_comments
       Break { s with Break.comments = merge_comments comments }
     | ClassDeclaration ({ Class.comments; _ } as s) ->
       ClassDeclaration { s with Class.comments = merge_comments comments }
+    | ComponentDeclaration ({ ComponentDeclaration.comments; _ } as s) ->
+      ComponentDeclaration { s with ComponentDeclaration.comments = merge_comments comments }
     | Continue ({ Continue.comments; _ } as s) ->
       Continue { s with Continue.comments = merge_comments comments }
     | Debugger { Debugger.comments } -> Debugger { Debugger.comments = merge_comments comments }

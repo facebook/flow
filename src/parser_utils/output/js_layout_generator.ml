@@ -832,6 +832,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                statement_after_test ~opts ~pretty_semicolon body;
              ]
       | S.FunctionDeclaration func -> function_ ~opts loc func
+      | S.ComponentDeclaration component -> component_declaration ~opts loc component
       | S.VariableDeclaration decl ->
         let semicolon =
           if pretty_semicolon then
@@ -2026,6 +2027,51 @@ and decorators_list ~opts decorators =
     group [join pretty_line decorators; if_pretty hardline space]
   else
     Empty
+
+and component_declaration ~opts loc component =
+  let {
+    Ast.Statement.ComponentDeclaration.id;
+    params;
+    body;
+    return;
+    tparams;
+    comments;
+    sig_loc = _;
+  } =
+    component
+  in
+  let prefix = fuse [Atom "component"; space; identifier id] in
+  component_base ~opts ~prefix ~params ~body ~return ~tparams ~loc ~comments
+
+and component_base ~opts ~prefix ~params ~body ~return ~tparams ~loc ~comments =
+  let (params_loc, { Ast.Statement.ComponentDeclaration.Params.comments = params_comments; _ }) =
+    params
+  in
+  layout_node_with_comments_opt loc comments
+  @@ fuse
+       [
+         prefix;
+         option (type_parameter ~opts) tparams;
+         group
+           [
+             layout_node_with_comments_opt
+               params_loc
+               params_comments
+               (component_params ~ctxt:normal_context ~opts params);
+             component_return ~opts return;
+           ];
+         pretty_space;
+         block ~opts body;
+       ]
+
+and component_params
+    ~ctxt ~opts (loc, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments }) =
+  function_params ~ctxt ~opts (loc, { Ast.Function.Params.params; rest; comments; this_ = None })
+
+and component_return ~opts return =
+  match return with
+  | Ast.Type.Missing _ -> Empty
+  | Ast.Type.Available ret -> type_annotation ~opts ~parens:false ret
 
 and class_method
     ~opts

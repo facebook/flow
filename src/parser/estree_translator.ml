@@ -243,6 +243,7 @@ with type t = Impl.t = struct
       | (loc, InterfaceDeclaration i) -> interface_declaration (loc, i)
       | (loc, VariableDeclaration var) -> variable_declaration (loc, var)
       | (loc, FunctionDeclaration fn) -> function_declaration (loc, fn)
+      | (loc, ComponentDeclaration c) -> component_declaration (loc, c)
       | (loc, DeclareVariable d) -> declare_variable (loc, d)
       | (loc, DeclareFunction d) -> declare_function (loc, d)
       | (loc, DeclareClass d) -> declare_class (loc, d)
@@ -1065,6 +1066,57 @@ with type t = Impl.t = struct
           []
       in
       node ?comments "PropertyDefinition" loc props
+    and component_declaration (loc, component) =
+      let open Statement.ComponentDeclaration in
+      let {
+        id;
+        tparams;
+        params = (_, { Params.comments = params_comments; _ }) as params;
+        body;
+        return;
+        comments = component_comments;
+        sig_loc = _;
+      } =
+        component
+      in
+      let return =
+        match return with
+        | Ast.Type.Missing _ -> None
+        | Ast.Type.Available t -> Some t
+      in
+      let comments =
+        Flow_ast_utils.merge_comments
+          ~outer:component_comments
+          ~inner:(format_internal_comments params_comments)
+      in
+      node
+        ?comments
+        "ComponentDeclaration"
+        loc
+        [
+          ("body", block body);
+          ("id", identifier id);
+          ("params", component_params params);
+          ("returnType", option type_annotation return);
+          ("typeParameters", option type_parameter_declaration tparams);
+        ]
+    and component_params =
+      let open Statement.ComponentDeclaration.Params in
+      function
+      | ( _,
+          {
+            params;
+            rest = Some (rest_loc, { Function.RestParam.argument; comments });
+            comments = _;
+          }
+        ) ->
+        let rest = node ?comments "RestElement" rest_loc [("argument", pattern argument)] in
+        let rev_params = List.rev_map function_param params in
+        let params = List.rev (rest :: rev_params) in
+        array params
+      | (_, { params; rest = None; comments = _ }) ->
+        let params = List.map function_param params in
+        array params
     and enum_body body =
       let open Statement.EnumDeclaration in
       match body with

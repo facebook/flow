@@ -1203,6 +1203,9 @@ module Make
     | (loc, FunctionDeclaration func) ->
       let (_, _, node) = function_ loc func in
       node
+    | (_loc, ComponentDeclaration _component) as stmt ->
+      (* TODO(jmbrown): add typechecking for component syntax *)
+      Tast_utils.unimplemented_mapper#statement stmt
     | (loc, EnumDeclaration enum) ->
       let enum_ast = enum_declaration cx loc enum in
       (loc, EnumDeclaration enum_ast)

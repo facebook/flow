@@ -112,7 +112,8 @@ let check_for_duplicate_exports =
           | Statement.InterfaceDeclaration { Statement.Interface.id; _ }
           | Statement.ClassDeclaration { Class.id = Some id; _ }
           | Statement.FunctionDeclaration { Function.id = Some id; _ }
-          | Statement.EnumDeclaration { Statement.EnumDeclaration.id; _ } )
+          | Statement.EnumDeclaration { Statement.EnumDeclaration.id; _ }
+          | Statement.ComponentDeclaration { Statement.ComponentDeclaration.id; _ } )
         ) ->
         record_export
           env
@@ -156,9 +157,9 @@ let check_for_duplicate_exports =
           | DeclareEnum _ | DeclareExportDeclaration _ | DeclareFunction _ | DeclareInterface _
           | DeclareModule _ | DeclareModuleExports _ | DeclareTypeAlias _ | DeclareOpaqueType _
           | DeclareVariable _ | DoWhile _ | Empty _ | EnumDeclaration _ | Expression _ | For _
-          | ForIn _ | ForOf _ | FunctionDeclaration _ | If _ | ImportDeclaration _
-          | InterfaceDeclaration _ | Labeled _ | Return _ | Switch _ | Throw _ | Try _ | TypeAlias _
-          | OpaqueType _ | VariableDeclaration _ | While _ | With _ ))
+          | ForIn _ | ForOf _ | FunctionDeclaration _ | ComponentDeclaration _ | If _
+          | ImportDeclaration _ | InterfaceDeclaration _ | Labeled _ | Return _ | Switch _ | Throw _
+          | Try _ | TypeAlias _ | OpaqueType _ | VariableDeclaration _ | While _ | With _ ))
       ) ->
       seen
   in

@@ -29,6 +29,7 @@ let tests =
          "jsx" >::: Jsx_test.tests;
          "trailing_commas" >::: Trailing_commas_test.tests;
          "imports" >::: Import_test.tests;
+         "components" >::: Component_test.tests;
          ( "unary_plus_binary" >:: fun ctxt ->
            let x = E.identifier "x" in
            let y = E.identifier "y" in
