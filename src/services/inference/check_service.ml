@@ -483,6 +483,6 @@ let mk_check_file
     Type_inference_js.add_require_tvars cx file_sig;
     connect_requires cx resolve_require file_sig;
     let typed_ast = Type_inference_js.infer_ast cx file_key comments aloc_ast ~lint_severities in
-    Merge_js.post_merge_checks cx aloc_ast typed_ast metadata;
+    Merge_js.post_merge_checks cx aloc_ast metadata;
     Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
     (cx, typed_ast)

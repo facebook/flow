@@ -5,8 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val detect_errors :
-  Context.t ->
-  Context.metadata ->
-  (Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t * 'a) Base.List.t ->
-  unit
+val detect_errors : Context.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> Context.metadata -> unit

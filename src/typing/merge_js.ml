@@ -383,15 +383,14 @@ let get_lint_severities metadata strict_mode lint_severities =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx ast tast metadata =
-  let results = [(cx, ast, tast)] in
+let post_merge_checks cx ast metadata =
   check_constrained_writes cx;
   detect_sketchy_null_checks cx;
   detect_non_voidable_properties cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_es6_import_export_errors cx metadata results;
+  detect_es6_import_export_errors cx ast metadata;
   detect_matching_props_violations cx;
   detect_literal_subtypes cx;
   detect_unused_promises cx
