@@ -1125,6 +1125,8 @@ let make_utility_type ~edit_locs name =
 let utility_types =
   [
     "Class";
+    "Partial";
+    "Required";
     "$Call";
     "$CharSet";
     "$Diff";

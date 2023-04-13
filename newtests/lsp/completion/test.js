@@ -8479,6 +8479,76 @@ b.te
                     ],
                   },
                 },
+                {
+                  label: 'Partial',
+                  kind: 3,
+                  detail: 'Partial',
+                  sortText: '00000000000000000041',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Partial',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 41,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'Partial',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Required',
+                  kind: 3,
+                  detail: 'Required',
+                  sortText: '00000000000000000042',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Required',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 42,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'Required',
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -9950,6 +10020,76 @@ b.te
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Class',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Partial',
+                  kind: 3,
+                  detail: 'Partial',
+                  sortText: '00000000000000000034',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'Partial',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 34,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'Partial',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Required',
+                  kind: 3,
+                  detail: 'Required',
+                  sortText: '00000000000000000035',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'Required',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 35,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'Required',
                       },
                     ],
                   },
