@@ -73,6 +73,8 @@ queries_in_file autocomplete "function-added-properties.js" --pretty
 queries_in_file autocomplete "comments.js" --pretty
 queries_in_file autocomplete "literal.js" --pretty
 queries_in_file autocomplete "import_source.js" --pretty
+queries_in_file autocomplete "import_specifiers_1.js" --pretty
+queries_in_file autocomplete "import_specifiers_2.js" --pretty
 queries_in_file autocomplete "object-spread-1.js" --pretty
 queries_in_file autocomplete "object-spread-2.js" --pretty
 queries_in_file autocomplete "object_keys_spread.js" --pretty

@@ -2202,6 +2202,29 @@ import_source.js:3:17
 Flags: --pretty
 {"result":[]}
 
+import_specifiers_1.js:3:9
+Flags: --pretty
+{
+  "result":[
+    {"name":"Typesafety","type":"interface Typesafety"},
+    {"name":"Typhoon","type":"declare var Typhoon: string"},
+    {"name":"Typhoons","type":"declare var Typhoons: string"},
+    {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
+    {"name":"Tyrannosaurus","type":"class Tyrannosaurus"}
+  ]
+}
+
+import_specifiers_2.js:3:17
+Flags: --pretty
+{
+  "result":[
+    {"name":"Typesafety","type":"interface Typesafety"},
+    {"name":"Typhoons","type":"declare var Typhoons: string"},
+    {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
+    {"name":"Tyrannosaurus","type":"class Tyrannosaurus"}
+  ]
+}
+
 object-spread-1.js:9:3
 Flags: --pretty
 {"result":[{"name":"bar","type":"B"},{"name":"foo","type":"A"}]}
