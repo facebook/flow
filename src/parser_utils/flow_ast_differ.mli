@@ -55,6 +55,8 @@ type node =
   | Type of (Loc.t, Loc.t) Flow_ast.Type.t
   | TypeParam of (Loc.t, Loc.t) Flow_ast.Type.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
+  | TypeGuard of (Loc.t, Loc.t) Flow_ast.Type.TypeGuard.t
+  | TypeGuardAnnotation of (Loc.t, Loc.t) Flow_ast.Type.type_guard_annotation
   | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property

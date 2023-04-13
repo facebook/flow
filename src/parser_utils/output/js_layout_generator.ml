@@ -1992,6 +1992,9 @@ and function_return ~opts ~arrow return predicate =
       ]
   | (Ast.Function.ReturnAnnot.Available ret, None) ->
     type_annotation ~opts ~parens:(needs_parens ret) ret
+  | (Ast.Function.ReturnAnnot.TypeGuard ((_, (_, { Ast.Type.TypeGuard.guard = t; _ })) as guard), _)
+    ->
+    type_guard_annotation ~opts ~parens:(needs_parens t) guard
 
 and block ~opts (loc, { Ast.Statement.Block.body; comments }) =
   let statements = statement_list ~opts ~pretty_semicolon:true body in
@@ -3440,6 +3443,21 @@ and type_predicate ~opts (loc, { Ast.Type.Predicate.kind; comments }) =
         ]
     )
 
+and type_guard ~opts ?(parens = false) guard =
+  let open Ast.Type.TypeGuard in
+  let (_, { guard = (x, t); comments = _ }) = guard in
+  let x = identifier x in
+  let t =
+    if parens then
+      wrap_in_parens (type_ ~opts t)
+    else
+      type_ ~opts t
+  in
+  fuse [x; space; Atom "is"; space; t]
+
+and type_guard_annotation ?(parens = false) ~opts (loc, guard) =
+  source_location_with_comments (loc, fuse [Atom ":"; pretty_space; type_guard ~opts ~parens guard])
+
 and type_union_or_intersection ~opts ~sep loc ts comments =
   (* Do not break at the start if the last leading comment is on an earlier line,
      as a line break will already have been inserted. *)
@@ -3543,6 +3561,7 @@ and type_function_params ~opts (loc, { Ast.Type.Function.Params.this_; params; r
 
 and type_function_return ~opts = function
   | Ast.Type.Function.TypeAnnotation t -> type_ ~opts t
+  | Ast.Type.Function.TypeGuard guard -> type_guard ~opts guard
 
 and type_function
     ~opts ~sep loc { Ast.Type.Function.params; return; tparams; comments = func_comments } =

@@ -7222,6 +7222,7 @@ module Make
         let ret_loc =
           match return with
           | Ast.Function.ReturnAnnot.Available (loc, _)
+          | Ast.Function.ReturnAnnot.TypeGuard (loc, _)
           | Ast.Function.ReturnAnnot.Missing loc ->
             loc
         in

@@ -579,10 +579,12 @@ class delete_annot_mapper =
       | Type.Missing _ -> return
 
     method! function_return_annotation return =
-      let open Ast.Function.ReturnAnnot in
+      let open Ast.Function in
       match super#function_return_annotation return with
-      | Missing _loc -> return
-      | Available (loc, _) -> Missing loc
+      | ReturnAnnot.Missing _loc
+      | ReturnAnnot.TypeGuard (_loc, _) ->
+        return
+      | ReturnAnnot.Available (loc, _) -> ReturnAnnot.Missing loc
   end
 
 class insert_annot_mapper =
@@ -605,10 +607,12 @@ class insert_annot_mapper =
       | Type.Missing _loc -> Type.Available (_loc, (_loc, Type.Number None))
 
     method! function_return_annotation return =
-      let open Ast.Function.ReturnAnnot in
+      let open Ast.Function in
       match super#function_return_annotation return with
-      | Available _ -> return
-      | Missing _loc -> Available (_loc, (_loc, Type.Number None))
+      | ReturnAnnot.Available _
+      | ReturnAnnot.TypeGuard _ ->
+        return
+      | ReturnAnnot.Missing _loc -> ReturnAnnot.Available (_loc, (_loc, Type.Number None))
   end
 
 class insert_function_annot_mapper =
@@ -641,11 +645,13 @@ class insert_function_annot_mapper =
           )
 
     method! function_return_annotation return =
-      let open Ast.Function.ReturnAnnot in
+      let open Ast.Function in
       match super#function_return_annotation return with
-      | Available _ -> return
-      | Missing loc ->
-        Available
+      | ReturnAnnot.Available _
+      | ReturnAnnot.TypeGuard _ ->
+        return
+      | ReturnAnnot.Missing loc ->
+        ReturnAnnot.Available
           ( loc,
             ( loc,
               Type.Function
@@ -697,11 +703,13 @@ class insert_import_and_annot_mapper =
           )
 
     method! function_return_annotation return =
-      let open Ast.Function.ReturnAnnot in
+      let open Ast.Function in
       match super#function_return_annotation return with
-      | Available _ -> return
-      | Missing loc ->
-        Available
+      | ReturnAnnot.Available _
+      | ReturnAnnot.TypeGuard _ ->
+        return
+      | ReturnAnnot.Missing loc ->
+        ReturnAnnot.Available
           ( loc,
             ( loc,
               Type.Function
@@ -786,7 +794,9 @@ class func_return_annot_mapper =
       let open Ast.Function in
       let return' =
         match f.return with
-        | ReturnAnnot.Available _ -> f.return
+        | ReturnAnnot.Available _
+        | ReturnAnnot.TypeGuard _ ->
+          f.return
         | ReturnAnnot.Missing _ -> ReturnAnnot.Available (Loc.none, (Loc.none, Type.Number None))
       in
       { f with return = return' }

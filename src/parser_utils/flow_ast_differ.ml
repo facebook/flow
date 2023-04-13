@@ -214,6 +214,8 @@ type node =
   | Type of (Loc.t, Loc.t) Flow_ast.Type.t
   | TypeParam of (Loc.t, Loc.t) Ast.Type.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
+  | TypeGuard of (Loc.t, Loc.t) Flow_ast.Type.TypeGuard.t
+  | TypeGuardAnnotation of (Loc.t, Loc.t) Flow_ast.Type.type_guard_annotation
   | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
@@ -250,6 +252,9 @@ let expand_loc_with_comments loc node =
     | TypeAnnotation annot
     | FunctionTypeAnnotation annot ->
       bounds annot (fun collect annot -> collect#type_annotation annot)
+    | TypeGuard guard -> bounds guard (fun collect guard -> collect#type_guard guard)
+    | TypeGuardAnnotation guard ->
+      bounds guard (fun collect guard -> collect#type_guard_annotation guard)
     | ClassProperty prop -> bounds prop (fun collect (loc, prop) -> collect#class_property loc prop)
     | ObjectProperty (Ast.Expression.Object.Property prop) ->
       bounds prop (fun collect prop -> collect#object_property prop)
@@ -932,8 +937,16 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     match (return1, return2) with
     | (RA.Missing _, RA.Missing _) -> []
     | (RA.Available (loc1, typ), RA.Missing _) -> [delete loc1 (TypeAnnotation (loc1, typ))]
+    | (RA.TypeGuard (loc1, grd), RA.Missing _) -> [delete loc1 (TypeGuardAnnotation (loc1, grd))]
     | (RA.Missing loc1, RA.Available annot) -> [(loc1, insert ~sep:None [annot_change annot])]
+    | (RA.Missing loc1, RA.TypeGuard guard) ->
+      [(loc1, insert ~sep:None [TypeGuardAnnotation guard])]
     | (RA.Available annot1, RA.Available annot2) -> type_annotation annot1 annot2
+    | (RA.TypeGuard grd1, RA.TypeGuard grd2) -> type_guard_annotation grd1 grd2
+    | (RA.Available (loc1, type1), RA.TypeGuard (loc2, guard2)) ->
+      [replace loc1 (TypeAnnotation (loc1, type1)) (TypeGuardAnnotation (loc2, guard2))]
+    | (RA.TypeGuard (loc1, guard1), RA.Available (loc2, type2)) ->
+      [replace loc1 (TypeGuardAnnotation (loc1, guard1)) (TypeAnnotation (loc2, type2))]
   and function_body_any
       (body1 : (Loc.t, Loc.t) Ast.Function.body) (body2 : (Loc.t, Loc.t) Ast.Function.body) :
       node change list option =
@@ -2710,6 +2723,11 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let module F = Ast.Type.Function in
     match (ret_annot_1, ret_annot_2) with
     | (F.TypeAnnotation t1, F.TypeAnnotation t2) -> type_ t1 t2
+    | (F.TypeGuard grd1, F.TypeGuard grd2) -> type_guard grd1 grd2
+    | (F.TypeGuard (loc1, grd1), F.TypeAnnotation (loc2, t2)) ->
+      [replace loc1 (TypeGuard (loc1, grd1)) (Type (loc2, t2))]
+    | (F.TypeAnnotation (loc1, t1), F.TypeGuard (loc2, grd2)) ->
+      [replace loc1 (Type (loc1, t1)) (TypeGuard (loc2, grd2))]
   and function_type
       (loc : Loc.t)
       (ft1 : (Loc.t, Loc.t) Ast.Type.Function.t)
@@ -3173,6 +3191,20 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     | (_, (_, Function _)) ->
       [replace loc1 (TypeAnnotation (loc1, typ1)) (FunctionTypeAnnotation (loc2, typ2))]
     | (_, _) -> type_ typ1 typ2
+  and type_guard_annotation
+      ((_, grd1) : (Loc.t, Loc.t) Ast.Type.type_guard_annotation)
+      ((_, grd2) : (Loc.t, Loc.t) Ast.Type.type_guard_annotation) : node change list =
+    type_guard grd1 grd2
+  and type_guard
+      ((loc1, grd1) : (Loc.t, Loc.t) Ast.Type.TypeGuard.t)
+      ((_, grd2) : (Loc.t, Loc.t) Ast.Type.TypeGuard.t) : node change list =
+    let open Ast.Type.TypeGuard in
+    let { guard = (x1, t1); comments = comments1 } = grd1 in
+    let { guard = (x2, t2); comments = comments2 } = grd2 in
+    let id = diff_if_changed identifier x1 x2 in
+    let t = type_ t1 t2 in
+    let comments = syntax_opt loc1 comments1 comments2 |> Base.Option.value ~default:[] in
+    Base.List.concat [id; t; comments]
   and type_cast
       (loc : Loc.t)
       (type_cast1 : (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)

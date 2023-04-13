@@ -879,6 +879,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Type.Function in
       match ret_annot with
       | TypeAnnotation t -> TypeAnnotation (this#type_ t)
+      | TypeGuard g -> TypeGuard (this#type_guard g)
 
     method function_type (ft : ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
       let open Ast.Type.Function in
@@ -1363,6 +1364,21 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | Available annot -> Available (this#type_annotation annot)
       | Missing loc -> Missing (this#on_type_annot loc)
 
+    method type_guard (guard : ('M, 'T) Ast.Type.TypeGuard.t) : ('N, 'U) Ast.Type.TypeGuard.t =
+      let open Ast.Type.TypeGuard in
+      let (annot, { guard = (x, t); comments }) = guard in
+      let annot' = this#on_loc_annot annot in
+      let x' = this#identifier x in
+      let t' = this#type_ t in
+      let comments' = this#syntax_with_internal_opt comments in
+      (annot', { guard = (x', t'); comments = comments' })
+
+    method type_guard_annotation ((annot, type_guard) : ('M, 'T) Ast.Type.type_guard_annotation)
+        : ('N, 'U) Ast.Type.type_guard_annotation =
+      let annot' = this#on_loc_annot annot in
+      let type_guard' = this#type_guard type_guard in
+      (annot', type_guard')
+
     method function_declaration (stmt : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
       this#function_ stmt
 
@@ -1382,6 +1398,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       match return with
       | Missing loc -> Missing (this#on_type_annot loc)
       | Available annot -> Available (this#type_annotation annot)
+      | TypeGuard guard -> TypeGuard (this#type_guard_annotation guard)
 
     (* Internal helper for function declarations, function expressions and arrow functions *)
     method function_ (expr : ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =

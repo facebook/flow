@@ -108,6 +108,7 @@ class documentation_searcher find =
         match value with
         | Init (value_loc, _)
         | Get (_, Flow_ast.Type.Function.{ return = TypeAnnotation (value_loc, _); _ })
+        | Get (_, Flow_ast.Type.Function.{ return = TypeGuard (value_loc, _); _ })
         | Set (value_loc, _) ->
           value_loc
       in

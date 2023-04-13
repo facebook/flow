@@ -706,6 +706,11 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method type_annotation_hint :
       ('M, 'T) Ast.Type.annotation_or_hint -> ('N, 'U) Ast.Type.annotation_or_hint
 
+    method type_guard : ('M, 'T) Ast.Type.TypeGuard.t -> ('N, 'U) Ast.Type.TypeGuard.t
+
+    method type_guard_annotation :
+      ('M, 'T) Ast.Type.type_guard_annotation -> ('N, 'U) Ast.Type.type_guard_annotation
+
     method type_cast : ('M, 'T) Ast.Expression.TypeCast.t -> ('N, 'U) Ast.Expression.TypeCast.t
 
     method ts_type_cast :

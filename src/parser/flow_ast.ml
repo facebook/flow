@@ -215,7 +215,10 @@ and Type : sig
       comments: ('M, unit) Syntax.t option;
     }
 
-    and ('M, 'T) return_annotation = TypeAnnotation of ('M, 'T) Type.t [@@deriving show]
+    and ('M, 'T) return_annotation =
+      | TypeAnnotation of ('M, 'T) Type.t
+      | TypeGuard of ('M, 'T) Type.TypeGuard.t
+    [@@deriving show]
   end
 
   module Generic : sig
@@ -534,6 +537,9 @@ and Type : sig
    * Type.annotation with a location from column 6-14 *)
   and ('M, 'T) annotation = 'M * ('M, 'T) t
 
+  (* Same convention about the colon holds for type guards. *)
+  and ('M, 'T) type_guard_annotation = 'M * ('M, 'T) Type.TypeGuard.t
+
   and ('M, 'T) annotation_or_hint =
     | Missing of 'T
     | Available of ('M, 'T) Type.annotation
@@ -588,6 +594,16 @@ and Type : sig
     and ('M, 'T) kind =
       | Declared of ('M, 'T) Expression.t
       | Inferred
+    [@@deriving show]
+  end
+
+  module TypeGuard : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      guard: ('M, 'M) Identifier.t * ('M, 'T) Type.t;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
+    }
     [@@deriving show]
   end
 end =
@@ -2012,6 +2028,7 @@ and Function : sig
     type ('M, 'T) t =
       | Missing of 'T
       | Available of ('M, 'T) Type.annotation
+      | TypeGuard of ('M, 'T) Type.type_guard_annotation
     [@@deriving show]
   end
 

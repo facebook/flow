@@ -15,6 +15,7 @@ module E = Ast_builder.Expressions
 module F = Ast_builder.Functions
 module J = Ast_builder.JSXs
 module L = Layout_builder
+module T = Ast_builder.Types
 
 let tests =
   "js_layout_generator"
@@ -2153,6 +2154,19 @@ let tests =
              ~ctxt
              ~pretty:true
              ("type a = \n  | a\n  | b\n  | " ^ String.make 80 'c' ^ ";")
+         );
+         ( "function_type_with_type_guard" >:: fun ctxt ->
+           let layout =
+             let params =
+               T.Functions.params [T.Functions.param (Some (I.identifier "x")) (T.mixed ())]
+             in
+             let return = T.return_type_guard_annotation (I.identifier "x") (T.number ()) in
+             Js_layout_generator.type_
+               ~opts
+               (Loc.none, Ast.Type.Function (T.Functions.make params return))
+           in
+           assert_output ~ctxt "(x:mixed)=>x is number" layout;
+           assert_output ~ctxt ~pretty:true "(x: mixed) => x is number" layout
          );
          ( "interface_declaration_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "interface a{}";

@@ -118,6 +118,8 @@ let declare_function_to_function_declaration
         match return with
         | Flow_ast.Type.Function.TypeAnnotation return ->
           Flow_ast.Function.ReturnAnnot.Available (loc, return)
+        | Flow_ast.Type.Function.TypeGuard _ ->
+          failwith "Internal error: Cannot have both predicates and type guards"
       in
       Some
         ( Flow_ast.Statement.FunctionDeclaration

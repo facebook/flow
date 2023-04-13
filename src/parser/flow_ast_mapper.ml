@@ -1168,6 +1168,7 @@ class ['loc] mapper =
       let open Ast.Type.Function in
       match return with
       | TypeAnnotation t -> id this#type_ t return (fun rt -> TypeAnnotation rt)
+      | TypeGuard g -> id this#type_guard g return (fun tg -> TypeGuard tg)
 
     method function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
       let open Ast.Type.Function in
@@ -1808,6 +1809,7 @@ class ['loc] mapper =
       match return with
       | Missing _loc -> return
       | Available t -> id this#type_annotation t return (fun rt -> Available rt)
+      | TypeGuard g -> id this#type_guard_annotation g return (fun tg -> TypeGuard tg)
 
     method function_body_any (body : ('loc, 'loc) Ast.Function.body) =
       match body with
@@ -2642,6 +2644,26 @@ class ['loc] mapper =
         (loc, { kind = kind'; comments = comments' })
 
     method predicate_expression (expr : ('loc, 'loc) Ast.Expression.t) = this#expression expr
+
+    method type_guard_annotation
+        (type_guard_annotation : ('loc, 'loc) Ast.Type.type_guard_annotation) =
+      let (loc, type_guard) = type_guard_annotation in
+      let type_guard' = this#type_guard type_guard in
+      if type_guard' = type_guard then
+        type_guard_annotation
+      else
+        (loc, type_guard')
+
+    method type_guard (guard : ('loc, 'loc) Ast.Type.TypeGuard.t) =
+      let open Ast.Type.TypeGuard in
+      let (loc, { guard = (x, t); comments }) = guard in
+      let x' = this#identifier x in
+      let t' = this#type_ t in
+      let comments' = this#syntax_opt comments in
+      if x' == x && t' == t && comments' == comments then
+        guard
+      else
+        (loc, { guard = (x', t'); comments = comments' })
 
     method function_rest_param (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in

@@ -1285,6 +1285,7 @@ with type t = Impl.t = struct
       | RestElement (loc, el) -> rest_element loc el
     and function_return_type = function
       | Ast.Function.ReturnAnnot.Missing _ -> null
+      | Ast.Function.ReturnAnnot.TypeGuard (loc, g) -> type_guard_annotation (loc, g)
       | Ast.Function.ReturnAnnot.Available t -> type_annotation t
     and object_property =
       let open Expression.Object in
@@ -1507,6 +1508,13 @@ with type t = Impl.t = struct
     and undefined_type loc comments = node ?comments "UndefinedTypeAnnotation" loc []
     and return_annotation = function
       | Ast.Type.Function.TypeAnnotation t -> _type t
+      | Ast.Type.Function.TypeGuard g -> type_guard g
+    and type_guard (loc, { Ast.Type.TypeGuard.guard = (x, t); comments }) =
+      node
+        ?comments:(format_internal_comments comments)
+        "TypePredicate"
+        loc
+        [("parameterName", identifier x); ("typeAnnotation", _type t)]
     and function_type
         ( loc,
           {
@@ -1857,6 +1865,7 @@ with type t = Impl.t = struct
         ]
     and exists_type loc comments = node ?comments "ExistsTypeAnnotation" loc []
     and type_annotation (loc, ty) = node "TypeAnnotation" loc [("typeAnnotation", _type ty)]
+    and type_guard_annotation (loc, (_, guard)) = type_guard (loc, guard)
     and type_parameter_declaration (loc, { Type.TypeParams.params; comments }) =
       node
         ?comments:(format_internal_comments comments)

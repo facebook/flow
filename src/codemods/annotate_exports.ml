@@ -237,7 +237,9 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
     method! function_return_annotation return =
       let open Flow_ast.Function.ReturnAnnot in
       match return with
-      | Available _ -> return
+      | Available _
+      | TypeGuard _ ->
+        return
       | Missing loc -> begin
         match LMap.find_opt loc sig_verification_loc_tys with
         | None -> return

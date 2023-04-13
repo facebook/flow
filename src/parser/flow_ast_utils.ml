@@ -363,5 +363,6 @@ let loc_of_return_annot =
   let open Flow_ast.Function.ReturnAnnot in
   function
   | Missing loc
-  | Available (_, (loc, _)) ->
+  | Available (_, (loc, _))
+  | TypeGuard (loc, _) ->
     loc

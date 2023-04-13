@@ -13,6 +13,9 @@ end
 
 module Types = struct
   module Functions = struct
+    let param ?(loc = Loc.none) ?(optional = false) name annot =
+      (loc, { Ast.Type.Function.Param.name; annot; optional })
+
     let params ?(loc = Loc.none) ?rest ?this ?comments params =
       (loc, { Ast.Type.Function.Params.params; rest; this_ = this; comments })
 
@@ -60,6 +63,8 @@ module Types = struct
 
   let mixed ?(loc = Loc.none) ?comments () = (loc, Ast.Type.Mixed comments)
 
+  let number ?(loc = Loc.none) ?comments () = (loc, Ast.Type.Number comments)
+
   let empty ?(loc = Loc.none) ?comments () = (loc, Ast.Type.Empty comments)
 
   let void ?(loc = Loc.none) ?comments () = (loc, Ast.Type.Void comments)
@@ -85,6 +90,11 @@ module Types = struct
         default;
       }
     )
+
+  let return_type_annotation t = Ast.Type.Function.TypeAnnotation t
+
+  let return_type_guard_annotation ?(loc = Loc.none) ?comments x t =
+    Ast.Type.Function.TypeGuard (loc, { Ast.Type.TypeGuard.guard = (x, t); comments })
 
   let type_params ?comments ?(loc = Loc.none) params =
     (loc, { Ast.Type.TypeParams.params; comments })
@@ -275,6 +285,7 @@ module Functions = struct
     let return =
       match return with
       | Ast.Type.Function.TypeAnnotation t -> Ast.Function.ReturnAnnot.Available (Loc.none, t)
+      | Ast.Type.Function.TypeGuard g -> Ast.Function.ReturnAnnot.TypeGuard (Loc.none, g)
     in
     Base.Option.map params ~f:(fun params ->
         let body =

@@ -96,6 +96,15 @@ val type_param : opts:opts -> (Loc.t, Loc.t) Flow_ast.Type.TypeParam.t -> Layout
 val type_annotation :
   ?parens:bool -> opts:opts -> (Loc.t, Loc.t) Flow_ast.Type.annotation -> Layout.layout_node
 
+val type_guard :
+  opts:opts -> ?parens:bool -> (Loc.t, Loc.t) Flow_ast.Type.TypeGuard.t -> Layout.layout_node
+
+val type_guard_annotation :
+  ?parens:bool ->
+  opts:opts ->
+  (Loc.t, Loc.t) Flow_ast.Type.type_guard_annotation ->
+  Layout.layout_node
+
 val identifier : (Loc.t, Loc.t) Flow_ast.Identifier.t -> Layout.layout_node
 
 val pattern :

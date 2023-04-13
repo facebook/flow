@@ -1432,10 +1432,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | None -> (None, None)
       in
       let (return_t, return_ast) =
-        match return with
-        | T.Function.TypeAnnotation t_ast ->
-          let (((_, t'), _) as t_ast') = convert cx tparams_map infer_tparams_map t_ast in
-          (t', T.Function.TypeAnnotation t_ast')
+        convert_return_annotation cx tparams_map infer_tparams_map return
       in
       let statics_t =
         let reason = update_desc_reason (fun d -> RStatics d) reason in
@@ -2196,6 +2193,17 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let optional = false in
       (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast, optional)
 
+  and convert_return_annotation cx tparams_map infer_tparams_map return =
+    match return with
+    | T.Function.TypeAnnotation t_ast ->
+      let (((_, t'), _) as t_ast') = convert cx tparams_map infer_tparams_map t_ast in
+      (t', T.Function.TypeAnnotation t_ast')
+    | T.Function.TypeGuard ((loc, _) as t_ast) ->
+      (* TODO(pvekris) support type guards in type_annotation *)
+      let t_ast' = Tast_utils.unimplemented_mapper#type_guard t_ast in
+      let t = with_trust_inference cx (BoolT.at loc) in
+      (t, T.Function.TypeGuard t_ast')
+
   and mk_func_sig =
     let open Ast.Type.Function in
     let add_param cx tparams_map infer_tparams_map x param =
@@ -2247,10 +2255,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         convert_params cx tparams_map infer_tparams_map func.Ast.Type.Function.params
       in
       let (return_t, return_ast) =
-        match func.return with
-        | T.Function.TypeAnnotation t_ast ->
-          let (((_, t'), _) as t_ast') = convert cx tparams_map infer_tparams_map t_ast in
-          (t', T.Function.TypeAnnotation t_ast')
+        convert_return_annotation cx tparams_map infer_tparams_map func.return
       in
       let reason = mk_annot_reason RFunctionType loc in
       ( {
@@ -2304,6 +2309,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | Ast.Function.ReturnAnnot.Available annot ->
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
       (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot)
+    | Ast.Function.ReturnAnnot.TypeGuard annot ->
+      (* TODO(pvekris) support type guards in type_annotation *)
+      let ((_, (loc, _)) as t_ast') = Tast_utils.error_mapper#type_guard_annotation annot in
+      (Annotated (with_trust_inference cx (BoolT.at loc)), Ast.Function.ReturnAnnot.TypeGuard t_ast')
 
   and mk_return_type_annotation cx tparams_map reason ~void_return ~async annot =
     match annot with

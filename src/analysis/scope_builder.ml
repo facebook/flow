@@ -110,12 +110,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
   class function_annot_collector_and_remover =
     object (this)
-      inherit [(L.t, L.t) Ast.Type.annotation list, L.t] visitor ~init:[]
+      inherit [(L.t, L.t) Ast.Type.t list, L.t] visitor ~init:[]
 
       method! type_annotation_hint return =
         let open Ast.Type in
         match return with
-        | Available annot ->
+        | Available (_, annot) ->
           acc <- annot :: acc;
           Missing L.none
         | Missing _ -> return
@@ -123,7 +123,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! function_return_annotation return =
         let open Ast.Function.ReturnAnnot in
         match return with
-        | Available annot ->
+        | Available (_, annot)
+        | TypeGuard (_, (_, { Ast.Type.TypeGuard.guard = (_, annot); _ })) ->
           acc <- annot :: acc;
           Missing L.none
         | Missing _ -> return
@@ -140,7 +141,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let params_list' = Flow_ast_mapper.map_list this#function_param params_list in
         let rest' = Flow_ast_mapper.map_opt this#function_rest_param rest in
         let this_' =
-          Base.Option.bind this_ ~f:(fun (_, { ThisParam.annot; comments = _ }) ->
+          Base.Option.bind this_ ~f:(fun (_, { ThisParam.annot = (_, annot); comments = _ }) ->
               acc <- annot :: acc;
               None
           )
@@ -455,9 +456,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let params =
           let visitor = new function_annot_collector_and_remover in
           let params = visitor#function_params params in
-          visitor#acc
-          |> Base.List.rev
-          |> Base.List.iter ~f:(fun annot -> ignore @@ this#type_annotation annot);
+          visitor#acc |> Base.List.rev |> Base.List.iter ~f:(fun annot -> ignore @@ this#type_ annot);
           params
         in
         (* We need to visit function param default expressions
@@ -636,7 +635,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             let open Ast.Function.ReturnAnnot in
             match (generator, return) with
             | (false, _) -> None
-            | (true, (Available (loc, _) | Missing loc)) -> Some loc
+            | (true, (Available (loc, _) | Missing loc | TypeGuard (loc, _))) -> Some loc
           in
           this#scoped_type_params
             ~hoist_op:this#hoist_annotations
@@ -684,7 +683,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             let open Ast.Function.ReturnAnnot in
             match (generator, return) with
             | (false, _) -> None
-            | (true, (Available (loc, _) | Missing loc)) -> Some loc
+            | (true, (Available (loc, _) | Missing loc | TypeGuard (loc, _))) -> Some loc
           in
           this#with_bindings
             loc

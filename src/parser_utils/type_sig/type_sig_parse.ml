@@ -1344,6 +1344,10 @@ and annot_with_loc opts scope tbls xs (loc, t) =
 
 and return_annot opts scope tbls xs = function
   | T.Function.TypeAnnotation r -> annot opts scope tbls xs r
+  | T.Function.TypeGuard (loc, _) ->
+    (* TODO(pvekris) support type guards in type_sig_parse *)
+    let loc = push_loc tbls loc in
+    Annot (Boolean loc)
 
 and function_type opts scope tbls xs f =
   let module F = T.Function in
@@ -2454,6 +2458,10 @@ let annot_or_hint ~sort ~err_loc opts scope tbls xs = function
 
 let function_return_annot ~sort ~err_loc opts scope tbls xs = function
   | Ast.Function.ReturnAnnot.Available (_, t) -> annot opts scope tbls xs t
+  | Ast.Function.ReturnAnnot.TypeGuard (loc, _) ->
+    (* TODO(pvekris) support type guards in type_sig_parse *)
+    let loc = push_loc tbls loc in
+    Annot (Boolean loc)
   | Ast.Function.ReturnAnnot.Missing loc ->
     let err_loc =
       match err_loc with
@@ -3010,7 +3018,8 @@ and function_def_helper =
     if constructor then
       function
     | Ast.Function.ReturnAnnot.Available (loc, _)
-    | Ast.Function.ReturnAnnot.Missing loc ->
+    | Ast.Function.ReturnAnnot.Missing loc
+    | Ast.Function.ReturnAnnot.TypeGuard (loc, _) ->
       let loc = push_loc tbls loc in
       Annot (Void loc)
     else
@@ -3028,6 +3037,10 @@ and function_def_helper =
         AsyncVoidReturn loc
       else
         Annot (Void loc)
+    | Ast.Function.ReturnAnnot.TypeGuard (loc, _) ->
+      (* TODO(pvekris) support type guards in type_sig_parse *)
+      let loc = push_loc tbls loc in
+      Annot (Boolean loc)
   in
   let predicate opts scope tbls ps body =
     let module P = Ast.Type.Predicate in
