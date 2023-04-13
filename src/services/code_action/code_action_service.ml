@@ -139,7 +139,7 @@ let insert_jsdoc_code_actions ~options ~ast uri loc =
   match Insert_jsdoc.insert_stub_for_target ~use_snippets:false loc ast with
   | Some (ast', _) ->
     ast'
-    |> Flow_ast_differ.program Flow_ast_differ.Standard ast
+    |> Flow_ast_differ.program ast
     |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
     |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     |> Base.List.map ~f:(fun edit ->
@@ -165,7 +165,7 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
     match Refactor_arrow_functions.add_or_remove_braces ~ast ~scope_info loc with
     | Some (ast', title) ->
       ast'
-      |> Flow_ast_differ.program Flow_ast_differ.Standard ast
+      |> Flow_ast_differ.program ast
       |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
       |> fun edits ->
@@ -397,7 +397,7 @@ let autofix_in_upstream_file
     else
       (ast, uri)
   in
-  let mk_diff ast new_ast = Flow_ast_differ.(program Standard ast new_ast) in
+  let mk_diff ast new_ast = Flow_ast_differ.program ast new_ast in
   let open Lsp in
   match transform ast loc with
   | new_ast ->

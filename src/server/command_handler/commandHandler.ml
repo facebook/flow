@@ -2146,7 +2146,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
               refs
           in
           let new_ast = RenameMapper.rename ~targets:ref_map ~new_name:newName ast in
-          let diff = Flow_ast_differ.program Flow_ast_differ.Standard ast new_ast in
+          let diff = Flow_ast_differ.program ast new_ast in
           let opts =
             Js_layout_generator.
               {

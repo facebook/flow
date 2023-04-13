@@ -20,13 +20,6 @@ type 'a change = Loc.t * 'a change' [@@deriving show]
 
 type 'a changes = 'a change list [@@deriving show]
 
-(* Algorithm to use to compute diff. Trivial algorithm just compares lists pairwise and generates
-   replacements to convert one to the other. Standard is more computationally intensive but will
-   generate the minimal edit script to convert one list to the other. *)
-type diff_algorithm =
-  | Trivial
-  | Standard
-
 type expression_node_parent =
   | StatementParentOfExpression of (Loc.t, Loc.t) Flow_ast.Statement.t
   | ExpressionParentOfExpression of (Loc.t, Loc.t) Flow_ast.Expression.t
@@ -75,16 +68,12 @@ val expand_statement_comment_bounds : (Loc.t, Loc.t) Flow_ast.Statement.t -> Loc
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it
  * does not work well for e.g. parsing two programs and determining their differences. *)
-val program :
-  diff_algorithm ->
-  (Loc.t, Loc.t) Flow_ast.Program.t ->
-  (Loc.t, Loc.t) Flow_ast.Program.t ->
-  node changes
+val program : (Loc.t, Loc.t) Flow_ast.Program.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> node changes
 
 (* Diffs two lists and produces an edit script. This is exposed only for testing purposes *)
 type 'a diff_result = int * 'a change'
 
-val list_diff : diff_algorithm -> 'a list -> 'a list -> 'a diff_result list option
+val list_diff : 'a list -> 'a list -> 'a diff_result list option
 
 type partition_result =
   | Partitioned of {

@@ -548,7 +548,7 @@ let insert_type_t
     target
     loc_to_scheme
 
-let mk_diff ast new_ast = Flow_ast_differ.(program Standard ast new_ast)
+let mk_diff ast new_ast = Flow_ast_differ.program ast new_ast
 
 let mk_patch ~opts ast new_ast file_content =
   Replacement_printer.mk_patch_ast_differ ~opts (mk_diff ast new_ast) file_content

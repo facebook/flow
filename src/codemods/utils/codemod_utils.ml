@@ -26,7 +26,7 @@ type 'a job_config = {
 
 (* Mappers produce new ASTs, which are saved to the heap. *)
 let save_ast_diff ~opts file_key ast ast' =
-  let diff = Flow_ast_differ.program Flow_ast_differ.Standard ast ast' in
+  let diff = Flow_ast_differ.program ast ast' in
   if List.length diff = 0 then
     ()
   else

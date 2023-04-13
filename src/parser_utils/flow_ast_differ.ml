@@ -24,10 +24,6 @@ type 'a change = Loc.t * 'a change' [@@deriving show]
 
 type 'a changes = 'a change list [@@deriving show]
 
-type diff_algorithm =
-  | Trivial
-  | Standard
-
 (* Position in the list is necessary to figure out what Loc.t to assign to insertions. *)
 type 'a diff_result = int (* position *) * 'a change'
 
@@ -48,33 +44,8 @@ let change_compare (pos1, chg1) (pos2, chg2) =
       1
     | _ -> 0
 
-(* diffs based on identity *)
-(* return None if no good diff was found (max edit distance exceeded, etc.) *)
-let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
-  (* inspect the lists pairwise and record any items which are different as replacements. Give up if
-   * the lists have different lengths.*)
-  let rec helper acc i lst1 lst2 =
-    match (lst1, lst2) with
-    | ([], []) -> Some (List.rev acc)
-    | (hd1 :: tl1, hd2 :: tl2) ->
-      let acc =
-        if hd1 != hd2 then
-          (i, Replace (hd1, hd2)) :: acc
-        else
-          acc
-      in
-      (helper [@tailcall]) acc (i + 1) tl1 tl2
-    | (_, [])
-    | ([], _) ->
-      None
-  in
-  if old_list == new_list then
-    Some []
-  else
-    helper [] 0 old_list new_list
-
 (* diffs based on http://www.xmailserver.org/diff2.pdf on page 6 *)
-let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
+let list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
   (* Lots of acccesses in this algorithm so arrays are faster *)
   let (old_arr, new_arr) = (Array.of_list old_list, Array.of_list new_list) in
   let (n, m) = (Array.length old_arr, Array.length new_arr) in
@@ -205,10 +176,6 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
     >>| List.rev (* trace is built backwards for efficiency *)
     >>| build_script_from_trace
   )
-
-let list_diff = function
-  | Trivial -> trivial_list_diff
-  | Standard -> standard_list_diff
 
 type expression_node_parent =
   | StatementParentOfExpression of (Loc.t, Loc.t) Flow_ast.Statement.t
@@ -439,10 +406,8 @@ let partition_imports (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
  *   would not know what Loc.t to give to the insertion.
  *)
 (* Entry point *)
-let program
-    (algo : diff_algorithm)
-    (program1 : (Loc.t, Loc.t) Ast.Program.t)
-    (program2 : (Loc.t, Loc.t) Ast.Program.t) : node change list =
+let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t) Ast.Program.t) :
+    node change list =
   (* Assuming a diff has already been generated, recurse into it.
      This function is passed the old_list and index_offset parameters
      in order to correctly insert new statements WITHOUT assuming that
@@ -501,7 +466,7 @@ let program
       (trivial : a -> (Loc.t * b) option)
       (old_list : a list)
       (new_list : a list) : b change list option =
-    Base.Option.(list_diff algo old_list new_list >>= recurse_into_diff f trivial old_list 0)
+    Base.Option.(list_diff old_list new_list >>= recurse_into_diff f trivial old_list 0)
   in
   (* Same as diff_and_recurse but takes in a function `f` that doesn't return an option *)
   let diff_and_recurse_nonopt (type a b) (f : a -> a -> b change list) =
@@ -584,9 +549,9 @@ let program
         let (Partitioned { directives; imports; body }) = partition_imports stmts2 in
         (directives @ imports, body)
       in
-      let imports_diff = list_diff algo imports1 imports2 in
-      let body_diff = list_diff algo body1 body2 in
-      let whole_program_diff = list_diff algo stmts1 stmts2 in
+      let imports_diff = list_diff imports1 imports2 in
+      let body_diff = list_diff body1 body2 in
+      let whole_program_diff = list_diff stmts1 stmts2 in
       let split_len =
         all [imports_diff; body_diff]
         >>| Base.List.map ~f:List.length

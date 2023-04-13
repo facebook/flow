@@ -819,10 +819,10 @@ class double_sequence_mapper =
       { Ast.Expression.Sequence.expressions = expressions @ expressions; comments }
   end
 
-let edits_of_source algo source mapper =
+let edits_of_source source mapper =
   let (ast, _) = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
-  let edits = program algo ast new_ast |> Ast_diff_printer.edits_of_changes in
+  let edits = program ast new_ast |> Ast_diff_printer.edits_of_changes in
   (* Extract columns from the locs *)
   Base.List.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) edits
 
@@ -853,61 +853,14 @@ let apply_edits source edits =
   List.fold_left apply_edit source (List.rev edits)
 
 let assert_edits_equal ctxt ~edits ~source ~expected ~mapper =
-  let edits_trivial = edits_of_source Trivial source mapper in
-  let edits_standard = edits_of_source Standard source mapper in
-  assert_equal ~ctxt ~printer:debug_string_of_edits ~msg:"Trivial edits" edits edits_trivial;
-  assert_equal ~ctxt ~printer:debug_string_of_edits ~msg:"Standard edits" edits edits_standard;
-  assert_equal
-    ~ctxt
-    ~printer:(fun s -> s)
-    ~msg:"Trivial applied"
-    expected
-    (apply_edits source edits_trivial);
-  assert_equal
-    ~ctxt
-    ~printer:(fun s -> s)
-    ~msg:"Standard applied"
-    expected
-    (apply_edits source edits_standard)
+  let edits' = edits_of_source source mapper in
+  assert_equal ~ctxt ~printer:debug_string_of_edits ~msg:"Edits" edits edits';
+  assert_equal ~ctxt ~printer:(fun s -> s) ~msg:"Edits applied" expected (apply_edits source edits')
 
-let assert_edits_differ
-    ctxt ~edits_trivial ~edits_standard ~source ~trivial_expected ~standard_expected ~mapper =
-  let edits_trivial' = edits_of_source Trivial source mapper in
-  let edits_standard' = edits_of_source Standard source mapper in
-  assert_equal
-    ~ctxt
-    ~printer:debug_string_of_edits
-    ~msg:"Trivial edits"
-    edits_trivial
-    edits_trivial';
-  assert_equal
-    ~ctxt
-    ~printer:debug_string_of_edits
-    ~msg:"Standard edits"
-    edits_standard
-    edits_standard';
-  assert_equal
-    ~ctxt
-    ~printer:(fun s -> s)
-    ~msg:"Trivial applied"
-    trivial_expected
-    (apply_edits source edits_trivial');
-  assert_equal
-    ~ctxt
-    ~printer:(fun s -> s)
-    ~msg:"Standard applied"
-    standard_expected
-    (apply_edits source edits_standard')
-
-let assert_edits_equal_standard_only ctxt ~edits ~source ~expected ~mapper =
-  let edits_standard = edits_of_source Standard source mapper in
-  assert_equal ~ctxt ~printer:debug_string_of_edits ~msg:"Standard edits" edits edits_standard;
-  assert_equal
-    ~ctxt
-    ~printer:(fun s -> s)
-    ~msg:"Standard applied"
-    expected
-    (apply_edits source edits_standard)
+let assert_edits_differ ctxt ~edits ~source ~expected ~mapper =
+  let edits' = edits_of_source source mapper in
+  assert_equal ~ctxt ~printer:debug_string_of_edits ~msg:"Edits" edits edits';
+  assert_equal ~ctxt ~printer:(fun s -> s) ~msg:"Edits applied" expected (apply_edits source edits')
 
 let tests =
   "ast_differ"
@@ -1716,64 +1669,49 @@ let tests =
            let source = "var x = 5; var y = 6;" in
            assert_edits_differ
              ctxt
-             ~edits_trivial:[((0, 21), "var x = 5;\nvar y = 6;\nvar y = 6;")]
-             ~edits_standard:[((21, 21), "var y = 6;")]
+             ~edits:[((21, 21), "var y = 6;")]
              ~source
-             ~trivial_expected:"var x = 5;\nvar y = 6;\nvar y = 6;"
-             ~standard_expected:"var x = 5; var y = 6;var y = 6;"
+             ~expected:"var x = 5; var y = 6;var y = 6;"
              ~mapper:(new insert_end_mapper)
          );
          ( "algo_diff_delete" >:: fun ctxt ->
            let source = "var x = 5; var y = 6; var z = 7;" in
            assert_edits_differ
              ctxt
-             ~edits_trivial:[((0, 32), "var y = 6;\nvar z = 7;")]
-             ~edits_standard:[((0, 10), "")]
+             ~edits:[((0, 10), "")]
              ~source
-             ~trivial_expected:"var y = 6;\nvar z = 7;"
-             ~standard_expected:" var y = 6; var z = 7;"
+             ~expected:" var y = 6; var z = 7;"
              ~mapper:(new delete_mapper)
          );
          ( "algo_diff_begin_insert" >:: fun ctxt ->
            let source = "var x = 5; var y = 6;" in
            assert_edits_differ
              ctxt
-             ~edits_trivial:[((0, 21), "var y = 6;\nvar x = 5;\nvar y = 6;")]
-             ~edits_standard:[((0, 0), "var y = 6;")]
+             ~edits:[((0, 0), "var y = 6;")]
              ~source
-             ~trivial_expected:"var y = 6;\nvar x = 5;\nvar y = 6;"
-             ~standard_expected:"var y = 6;var x = 5; var y = 6;"
+             ~expected:"var y = 6;var x = 5; var y = 6;"
              ~mapper:(new insert_begin_mapper)
          );
          ( "algo_diff_middle_insert" >:: fun ctxt ->
            let source = "var x = 5; var y = 6;" in
            assert_edits_differ
              ctxt
-             ~edits_trivial:[((0, 21), "var x = 5;\nvar x = 5;\nvar y = 6;\nvar y = 6;")]
-             ~edits_standard:[((10, 10), "var x = 5;"); ((21, 21), "var y = 6;")]
+             ~edits:[((10, 10), "var x = 5;"); ((21, 21), "var y = 6;")]
              ~source
-             ~trivial_expected:"var x = 5;\nvar x = 5;\nvar y = 6;\nvar y = 6;"
-             ~standard_expected:"var x = 5;var x = 5; var y = 6;var y = 6;"
+             ~expected:"var x = 5;var x = 5; var y = 6;var y = 6;"
              ~mapper:(new insert_dup_mapper)
          );
          ( "algo_diff_empty" >:: fun ctxt ->
            let source = "" in
            let (ast_empty, _) = Parser_flow.program source in
            let (ast_var, _) = Parser_flow.program "var x = 6;" in
-           let edits_trivial =
-             program Trivial ast_empty ast_var
+           let edits =
+             program ast_empty ast_var
              |> Ast_diff_printer.edits_of_changes
              |> Base.List.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text))
            in
-           let edits_standard =
-             program Standard ast_empty ast_var
-             |> Ast_diff_printer.edits_of_changes
-             |> Base.List.map ~f:(fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text))
-           in
-           assert_equal ~ctxt edits_trivial [((0, 0), "var x = 6;")];
-           assert_equal ~ctxt edits_standard [((0, 0), "var x = 6;")];
-           assert_equal ~ctxt (apply_edits source edits_trivial) "var x = 6;";
-           assert_equal ~ctxt (apply_edits source edits_standard) "var x = 6;"
+           assert_equal ~ctxt edits [((0, 0), "var x = 6;")];
+           assert_equal ~ctxt (apply_edits source edits) "var x = 6;"
          );
          ( "unnamed_class_expression" >:: fun ctxt ->
            let source = "(class { method() { rename; } })" in
@@ -1961,7 +1899,7 @@ let tests =
            let old_list = [a] in
            let new_list = [b] in
            let edits = [(0, Replace (a, b))] in
-           let script = list_diff Standard old_list new_list in
+           let script = list_diff old_list new_list in
            assert_equal ~ctxt (Some edits) script
          );
          ( "list_diff_simple2" >:: fun ctxt ->
@@ -1970,7 +1908,7 @@ let tests =
            let old_list = [a; a] in
            let new_list = [b; b] in
            let edits = [(0, Replace (a, b)); (1, Replace (a, b))] in
-           let script = list_diff Standard old_list new_list in
+           let script = list_diff old_list new_list in
            assert_equal ~ctxt (Some edits) script
          );
          ( "list_diff_simple3" >:: fun ctxt ->
@@ -1985,7 +1923,7 @@ let tests =
                (1, mk_insert ~sep:None ~leading_sep:true [b; b]);
              ]
            in
-           let script = list_diff Standard old_list new_list in
+           let script = list_diff old_list new_list in
            assert_equal ~ctxt (Some edits) script
          );
          ( "list_diff_simple4" >:: fun ctxt ->
@@ -1994,7 +1932,7 @@ let tests =
            let old_list = [a; a; a; a] in
            let new_list = [b; b] in
            let edits = [(0, Replace (a, b)); (1, Replace (a, b)); (2, Delete a); (3, Delete a)] in
-           let script = list_diff Standard old_list new_list in
+           let script = list_diff old_list new_list in
            assert_equal ~ctxt (Some edits) script
          );
          ( "list_diff_paper" >:: fun ctxt ->
@@ -2012,7 +1950,7 @@ let tests =
                (6, mk_insert ~sep:None [c]);
              ]
            in
-           let script = list_diff Standard old_list new_list in
+           let script = list_diff old_list new_list in
            assert_equal ~ctxt (Some edits) script
          );
          ( "list_diff_flip" >:: fun ctxt ->
@@ -2023,7 +1961,7 @@ let tests =
            let edits =
              [(0, Delete x); (1, Delete x); (2, Delete x); (5, mk_insert ~sep:None [x; x; x])]
            in
-           let script = list_diff Standard old_list new_list in
+           let script = list_diff old_list new_list in
            assert_equal ~ctxt (Some edits) script
          );
          ( "list_diff_sentence" >:: fun ctxt ->
@@ -2079,7 +2017,7 @@ let tests =
                (18, mk_insert ~sep:None [c]);
              ]
            in
-           let script = list_diff Standard old_list new_list in
+           let script = list_diff old_list new_list in
            assert_equal ~ctxt ~printer:debug_string_of_script (Some edits) script
          );
          ( "list_diff_simple5" >:: fun ctxt ->
@@ -2088,7 +2026,7 @@ let tests =
            let old_list = [a; b] in
            let new_list = [b] in
            let edits = [(0, Delete a)] in
-           let script = list_diff Standard old_list new_list in
+           let script = list_diff old_list new_list in
            assert_equal ~ctxt (Some edits) script
          );
          ( "pattern_identifier" >:: fun ctxt ->
@@ -2246,7 +2184,7 @@ let tests =
          );
          ( "insert_import_split" >:: fun ctxt ->
            let source = "5 - (2 + 2)" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((0, 0), "import { baz } from \"baz\";"); ((5, 10), "(2 - 2)")]
              ~source
@@ -2255,7 +2193,7 @@ let tests =
          );
          ( "insert_import_existing_split" >:: fun ctxt ->
            let source = "foo; 5 - (2 + 2)" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((0, 0), "import { baz } from \"baz\";"); ((10, 15), "(2 - 2)")]
              ~source
@@ -2264,7 +2202,7 @@ let tests =
          );
          ( "insert_import_second_split" >:: fun ctxt ->
            let source = "import bing from 'bing'; 5 - (2 + 2)" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((24, 24), "import { baz } from \"baz\";"); ((30, 35), "(2 - 2)")]
              ~source
@@ -2273,7 +2211,7 @@ let tests =
          );
          ( "existing_cjs_import_split" >:: fun ctxt ->
            let source = "const x = require('bing'); 5 - (2 + 2)" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((26, 26), "import { baz } from \"baz\";"); ((32, 37), "(2 - 2)")]
              ~source
@@ -2282,7 +2220,7 @@ let tests =
          );
          ( "insert_cjs_import_split" >:: fun ctxt ->
            let source = "import 'bing'; 5 - (2 + 2)" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((14, 14), "require(\"baz\");"); ((20, 25), "(2 - 2)")]
              ~source
@@ -2291,7 +2229,7 @@ let tests =
          );
          ( "pathological_import_split" >:: fun ctxt ->
            let source = "import 'baz'; import 'bing'; 5 - (2 + 2);" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((0, 0), "5 - (2 + 2);")]
              ~source
@@ -2300,7 +2238,7 @@ let tests =
          );
          ( "remove_import_split" >:: fun ctxt ->
            let source = "import 'baz';5 - (2 + 2);" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((0, 13), "")]
              ~source
@@ -2309,7 +2247,7 @@ let tests =
          );
          ( "add_body_split" >:: fun ctxt ->
            let source = "import 'baz';" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((13, 13), "foo(\"baz\");")]
              ~source
@@ -2318,7 +2256,7 @@ let tests =
          );
          ( "add_to_body_split" >:: fun ctxt ->
            let source = "import 'baz'; bar(qux);" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((23, 23), "foo(\"baz\");")]
              ~source
@@ -2327,7 +2265,7 @@ let tests =
          );
          ( "remove_body_split" >:: fun ctxt ->
            let source = "import 'baz';5 - (2 + 2);" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:[((13, 25), "")]
              ~source
@@ -3015,7 +2953,7 @@ let tests =
          );
          ( "new_imports_after_directive_dont_reprint_the_file" >:: fun ctxt ->
            let source = "'use strict';const x = bla => { return 0; };" in
-           assert_edits_equal_standard_only
+           assert_edits_equal
              ctxt
              ~edits:
                [
