@@ -1330,7 +1330,14 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       f ()
 
   let run_conditional cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t ~false_t =
-    if Context.in_implicit_instantiation cx then
+    if
+      Context.in_implicit_instantiation cx
+      && (Tvar_resolver.has_unresolved_tvars cx check_t
+         || Tvar_resolver.has_unresolved_tvars cx extends_t
+         || Tvar_resolver.has_unresolved_tvars cx true_t
+         || Tvar_resolver.has_unresolved_tvars cx false_t
+         )
+    then
       (* When we are in nested instantiation, we can't meaningfully decide which branch to take,
          so we will give up and produce placeholder instead. *)
       Context.mk_placeholder cx reason
