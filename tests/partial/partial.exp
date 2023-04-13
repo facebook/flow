@@ -6,6 +6,14 @@ Use `Partial` instead of `$Partial` - the latter is deprecated. [deprecated-util
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------- deprecated-alias.js:8:17
+
+Use `Partial` instead of `$Partial` - the latter is deprecated. [deprecated-utility]
+
+   8| export type T = $Partial<{x: string}>; // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:9:30
 
 Cannot assign object literal to `b7` because null [1] is incompatible with string [2] in property `x`.
@@ -207,7 +215,7 @@ Cannot get `x.w` because property `w` is not readable. [cannot-read]
 
 
 
-Found 16 errors
+Found 17 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

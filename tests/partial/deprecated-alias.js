@@ -4,3 +4,5 @@ function shadowed() {
   type $Partial = number; // OK
   const x: $Partial = 1; // OK
 }
+
+export type T = $Partial<{x: string}>; // ERROR
