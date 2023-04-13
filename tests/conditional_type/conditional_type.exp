@@ -205,6 +205,23 @@ References:
            ^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- empty_propagation.js:3:2
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   empty_propagation.js:3:2
+   3| (x: empty); // error: number ~> empty;
+       ^
+
+References:
+   empty_propagation.js:2:16
+   2| declare var x: F<empty | number>;
+                     ^^^^^^^^^^^^^^^^^ [1]
+   empty_propagation.js:3:5
+   3| (x: empty); // error: number ~> empty;
+          ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ extraction.js:4:4
 
 Cannot cast `0` to `Extract` because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -769,4 +786,4 @@ References:
 
 
 
-Found 51 errors
+Found 52 errors

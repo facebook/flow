@@ -4172,6 +4172,8 @@ struct
         (**************)
         (* conditional type *)
         (**************)
+        | (DefT (_, _, EmptyT), ConditionalT { use_op; tout; _ }) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
         | ( check_t,
             ConditionalT
               {
@@ -5678,6 +5680,7 @@ struct
     | UseT (_, TypeDestructorTriggerT _)
     | ChoiceKitUseT _
     | CondT _
+    | ConditionalT _
     | DestructuringT _
     | EnumExhaustiveCheckT _
     | MakeExactT _
