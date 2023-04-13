@@ -628,9 +628,9 @@ let default_mapper =
     of_show_status_params = (fun _mapper t -> t);
     of_show_status_result = (fun _mapper t -> t);
     of_symbol_information =
-      (fun mapper { SymbolInformation.name; kind; location; containerName } ->
+      (fun mapper { SymbolInformation.name; kind; location; selectionRange; containerName } ->
         let location = mapper.of_location mapper location in
-        { SymbolInformation.name; kind; location; containerName });
+        { SymbolInformation.name; kind; location; selectionRange; containerName });
     of_text_document_identifier =
       (fun mapper { TextDocumentIdentifier.uri } ->
         { TextDocumentIdentifier.uri = mapper.of_document_uri mapper uri });

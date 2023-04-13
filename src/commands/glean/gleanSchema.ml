@@ -154,17 +154,22 @@ module DeclarationInfo = struct
     declaration: Declaration.t;
     type_: Type.t;
     documentation: Documentation.t option;
+    span: Range.t option;
   }
 
-  let to_json ~root ~write_root { declaration; type_; documentation } =
+  let to_json ~root ~write_root { declaration; type_; documentation; span } =
     key
     @@ JSON_Object
          (("declaration", Declaration.to_json ~root ~write_root declaration)
-         :: ("type", Type.to_json type_)
-         ::
-         (match documentation with
+          :: ("type", Type.to_json type_)
+          ::
+          (match documentation with
+          | None -> []
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         @
+         match span with
          | None -> []
-         | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         | Some loc -> [("span", Range.to_json ~root ~write_root loc)]
          )
 end
 
@@ -213,17 +218,22 @@ module MemberDeclarationInfo = struct
     memberDeclaration: MemberDeclaration.t;
     type_: Type.t;
     documentation: Documentation.t option;
+    span: Range.t option;
   }
 
-  let to_json ~root ~write_root { memberDeclaration; type_; documentation } =
+  let to_json ~root ~write_root { memberDeclaration; type_; documentation; span } =
     key
     @@ JSON_Object
          (("memberDeclaration", MemberDeclaration.to_json ~root ~write_root memberDeclaration)
-         :: ("type", Type.to_json type_)
-         ::
-         (match documentation with
+          :: ("type", Type.to_json type_)
+          ::
+          (match documentation with
+          | None -> []
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         @
+         match span with
          | None -> []
-         | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         | Some loc -> [("span", Range.to_json ~root ~write_root loc)]
          )
 end
 
@@ -363,17 +373,22 @@ module TypeDeclarationInfo = struct
     typeDeclaration: TypeDeclaration.t;
     type_: Type.t;
     documentation: Documentation.t option;
+    span: Range.t option;
   }
 
-  let to_json ~root ~write_root { typeDeclaration; type_; documentation } =
+  let to_json ~root ~write_root { typeDeclaration; type_; documentation; span } =
     key
     @@ JSON_Object
          (("typeDeclaration", TypeDeclaration.to_json ~root ~write_root typeDeclaration)
-         :: ("type", Type.to_json type_)
-         ::
-         (match documentation with
+          :: ("type", Type.to_json type_)
+          ::
+          (match documentation with
+          | None -> []
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         @
+         match span with
          | None -> []
-         | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         | Some loc -> [("span", Range.to_json ~root ~write_root loc)]
          )
 end
 

@@ -179,6 +179,7 @@ module SymbolInformation : sig
     name: string;
     kind: symbolKind;
     location: Location.t;
+    selectionRange: range;
     containerName: string option;
   }
 end

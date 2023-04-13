@@ -7,6 +7,46 @@
 
 module TypeScheme = Type.TypeScheme
 
+module DocumentationFullspanMap = struct
+  type doc_span = {
+    documentation: Loc.t option;
+    span: Loc.t option;
+  }
+
+  (* A map from symbol location to the documentation loc
+     and span of the entity defined by the symbol *)
+
+  type t = doc_span Loc_sig.LocS.LMap.t
+
+  let combine ds ds' =
+    let or_ a b =
+      match a with
+      | None -> b
+      | _ -> a
+    in
+    { documentation = or_ ds.documentation ds'.documentation; span = or_ ds.span ds'.span }
+
+  (* Map is created by merging two data structures, [Find_documentation]
+     provides the doc map, and [DocumentSymbolProvider] the full spans. *)
+  let create ast source : t =
+    let open Loc_sig.LocS in
+    let open Lsp in
+    let comment_map = Find_documentation.def_loc_to_comment_loc_map ast in
+    let comment_loc_map = LMap.map (fun d -> { documentation = Some d; span = None }) comment_map in
+    let uri = Lsp.DocumentUri.DocumentUri "" in
+    let symbol_spans = DocumentSymbolProvider.provide_symbol_information ~uri ast in
+
+    let comment_loc_map_ref = ref comment_loc_map in
+    let add_to_map SymbolInformation.{ selectionRange; location = Location.{ range; _ }; _ } =
+      let documentation = None in
+      let loc = Flow_lsp_conversions.lsp_range_to_flow_loc selectionRange ~source in
+      let span = Some (Flow_lsp_conversions.lsp_range_to_flow_loc range ~source) in
+      comment_loc_map_ref := LMap.add ~combine loc { documentation; span } !comment_loc_map_ref
+    in
+    List.iter add_to_map symbol_spans;
+    !comment_loc_map_ref
+end
+
 class member_searcher add_member =
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper as super
@@ -612,12 +652,18 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
   let genv = Ty_normalizer_env.mk_genv ~cx ~file ~typed_ast ~file_sig in
   let options = Ty_normalizer_env.default_options in
   let exact_by_default = Context.exact_by_default cx in
-  let documentations = Find_documentation.def_loc_to_comment_loc_map ast in
+  let docs_and_spans = DocumentationFullspanMap.create ast file in
+
   Base.List.fold
     (Ty_normalizer.from_schemes ~options ~genv !infos)
     ~init:([], [], [])
     ~f:(fun (var_infos, member_infos, type_infos) ((kind, name, loc), elt_result) ->
-      let documentation = Loc_sig.LocS.LMap.find_opt loc documentations in
+      let (documentation, span) =
+        match Loc_sig.LocS.LMap.find_opt loc docs_and_spans with
+        | None -> (None, None)
+        | Some DocumentationFullspanMap.{ documentation; span = None } -> (documentation, Some loc)
+        | Some DocumentationFullspanMap.{ documentation; span } -> (documentation, span)
+      in
       match elt_result with
       | Error _ -> (var_infos, member_infos, type_infos)
       | Ok elt ->
@@ -626,21 +672,21 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
         | `Declaration ->
           let declaration = Declaration.{ name; loc } in
           let var_info =
-            DeclarationInfo.{ declaration; type_; documentation }
+            DeclarationInfo.{ declaration; type_; documentation; span }
             |> DeclarationInfo.to_json ~root ~write_root
           in
           (var_info :: var_infos, member_infos, type_infos)
         | `MemberDeclaration ->
           let memberDeclaration = MemberDeclaration.{ name; loc } in
           let member_info =
-            MemberDeclarationInfo.{ memberDeclaration; type_; documentation }
+            MemberDeclarationInfo.{ memberDeclaration; type_; documentation; span }
             |> MemberDeclarationInfo.to_json ~root ~write_root
           in
           (var_infos, member_info :: member_infos, type_infos)
         | `TypeDeclaration ->
           let typeDeclaration = TypeDeclaration.{ name; loc } in
           let type_info =
-            TypeDeclarationInfo.{ typeDeclaration; type_; documentation }
+            TypeDeclarationInfo.{ typeDeclaration; type_; documentation; span }
             |> TypeDeclarationInfo.to_json ~root ~write_root
           in
           (var_infos, member_infos, type_info :: type_infos))

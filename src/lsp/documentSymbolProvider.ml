@@ -380,13 +380,13 @@ let provide_symbol_information =
         kind;
         deprecated = _;
         range;
-        selectionRange = _;
+        selectionRange;
         children;
       } =
         next
       in
       let location = { Lsp.Location.uri; range } in
-      let info = { Lsp.SymbolInformation.name; kind; location; containerName } in
+      let info = { Lsp.SymbolInformation.name; kind; location; selectionRange; containerName } in
       let acc = info :: acc in
       let acc =
         match children with

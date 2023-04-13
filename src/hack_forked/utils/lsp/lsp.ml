@@ -246,6 +246,7 @@ module SymbolInformation = struct
     name: string;
     kind: symbolKind;
     location: Location.t;  (** the span of the symbol including its contents *)
+    selectionRange: range;
     containerName: string option;  (** the symbol containing this symbol *)
   }
 end

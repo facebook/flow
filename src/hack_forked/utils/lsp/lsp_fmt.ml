@@ -977,7 +977,7 @@ module DocumentSymbolFmt = struct
     { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
 
   let rec to_json t =
-    let { name; detail; kind; deprecated; range; selectionRange; children } = t in
+    let { name; detail; kind; deprecated; range; selectionRange; children; _ } = t in
     Jprint.object_opt
       [
         ("name", Some (string_ name));
