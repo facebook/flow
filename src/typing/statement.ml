@@ -3086,13 +3086,18 @@ module Make
 
      Returns a tuple:
        * type of expression if no optional chains short-circuited,
-       * optional type of all possible short-circuitings,
+       * a list of void types of all possible short-circuitings,
        * typed AST of expression, where the type is the combination of
          short-circuiting and non short-circuiting (i.e. representing the actual
          range of possible types of the expression)
   *)
   and optional_chain ~cond cx ((loc, e) as ex) =
     let open Ast.Expression in
+    let normalize_voided_out t =
+      let ts = Speculation_flow.possible_concrete_types cx (reason_of_t t) t in
+      Base.List.iter ts ~f:(Tvar_resolver.resolve cx);
+      ts
+    in
     let factor_out_optional (_, e) =
       let (opt_state, filtered_out_loc, e') =
         match e with
@@ -3553,7 +3558,7 @@ module Make
      The optional_chain function therefore returns a 5-tuple:
        * T1: the type of the expression modulo optional chaining--i.e., the
          type in the case where any optional chain tests succeed,
-       * T2: optionally, a type representing the union of all optional chain
+       * T2: a list of types representing the union of all optional chain
          *failures*, if they may exist
        * exp: the typed AST expression, where the type of the node is the
          "actual" type of the expression, including both chain failures and
@@ -3569,13 +3574,10 @@ module Make
     presence of chaining.
   *)
     let join_optional_branches voided filtered =
-      match voided with
-      | None -> filtered
-      | Some void ->
-        Tvar.mk_where cx (reason_of_t filtered) (fun t ->
-            Flow.flow_t cx (filtered, t);
-            Flow.flow_t cx (void, t)
-        )
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx (reason_of_t filtered) (fun t ->
+          Flow.flow_t cx (filtered, t);
+          Base.List.iter voided ~f:(fun void -> Flow.flow_t cx (void, t))
+      )
     in
     let noop _ = None in
     let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) ~this_reason =
@@ -3621,7 +3623,7 @@ module Make
       in
       let voided_out =
         Tvar.mk_where cx reason (fun t ->
-            Base.Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t
+            Base.List.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t
         )
       in
       let this_t = Tvar.mk cx this_reason in
@@ -3639,14 +3641,15 @@ module Make
             }
         );
       let mem_t = OpenT mem_tvar in
+      let voided_out = normalize_voided_out voided_out in
       let lhs_t =
-        Tvar.mk_where cx reason (fun t ->
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
             Flow.flow_t cx (mem_t, t);
-            Flow.flow_t cx (voided_out, t)
+            Base.List.iter voided_out ~f:(fun out -> Flow.flow_t cx (out, t))
         )
       in
       Tvar_resolver.resolve cx mem_t;
-      (mem_t, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts)
+      (mem_t, voided_out, lhs_t, chain_t, object_ast, subexpression_asts)
     in
     let handle_continue_chain conf (chain_t, voided_t, object_ast) =
       let {
@@ -3712,7 +3715,7 @@ module Make
               refinement_action
           | (None, None) -> get_result subexpression_types reason obj_t
         in
-        (lhs_t, None, lhs_t, obj_t, object_ast, subexpression_asts)
+        (lhs_t, [], lhs_t, obj_t, object_ast, subexpression_asts)
       | NewChain ->
         let lhs_reason = mk_expression_reason object_ in
         let ((filtered_t, voided_t, object_ast) as object_data) =
@@ -3744,7 +3747,7 @@ module Make
     | Some (((_, lhs_t), _) as res) ->
       (* Nothing to do with respect to optional chaining, because we're in a
          case where chaining isn't allowed. *)
-      (lhs_t, None, res)
+      (lhs_t, [], res)
     | None ->
       let (e', method_receiver_and_state) =
         (* If we're looking at a call, look "one level deeper" to see if the
@@ -4171,15 +4174,17 @@ module Make
               argument_asts
             )
         in
-        let voided_out = join_optional_branches lookup_voided_out call_voided_out in
+        let voided_out =
+          join_optional_branches lookup_voided_out call_voided_out |> normalize_voided_out
+        in
         let lhs_t =
-          Tvar.mk_where cx (reason_of_t member_lhs_t) (fun t ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_where cx (reason_of_t member_lhs_t) (fun t ->
               Flow.flow_t cx (member_lhs_t, t);
-              Flow.flow_t cx (voided_out, t)
+              Base.List.iter voided_out ~f:(fun out -> Flow.flow_t cx (out, t))
           )
         in
         ( filtered_out,
-          Some voided_out,
+          voided_out,
           ( (loc, lhs_t),
             call_ast
               {
@@ -4239,7 +4244,7 @@ module Make
         (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
       | _ ->
         let (((_, t), _) as res) = expression ?cond cx ex in
-        (t, None, res))
+        (t, [], res))
 
   and arg_list cx (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
     let (argts, arg_asts) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in

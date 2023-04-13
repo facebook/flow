@@ -228,7 +228,7 @@ module type S = sig
     cond:Type.cond_context Base.Option.t ->
     Context.t ->
     (ALoc.t, ALoc.t) Ast.Expression.t ->
-    Type.t * Type.t Base.Option.t * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
+    Type.t * Type.t list * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
 
   val literal : Context.t -> ALoc.t -> ALoc.t Ast.Literal.t -> Type.t
 
