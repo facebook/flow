@@ -1,3 +1,27 @@
+### 0.204.0
+
+Likely to cause new Flow errors:
+* Some heap refinements might be invalidated more aggressively, when method calls appear in conditionals. This brings us closer to what happens in the case of the regular function call. ([Example](https://flow.org/try/#1N4Igxg9gdgZglgcxALmAXwDTggEwKYogA6U+YANgIYBOeABAG411wAueAtsncCztwH4Azq2pwoCOmgDcJMlVqNmHSgAduvABaUh3ABQAPbpSgBPAJR0AvAD46AIwgRyeE1NlQScGHT1tOAHRwONZWdFAAruTkdAA+sXQAhCqqAdpCfuwcQTjmluh0eORC9MAkdHSQUCIsWQCSACLcImIS1rWBwdJ0APQ9dAAqmnBCLKNQEKx0bnjU1BDUdKy4lKYYDhFTAO5w0Q70E1skaCQkVTXp7SlpOh7evv7ZwaHhUTHxSemZnbn5aIXFUrlSrQGqPRrNUTiSRhR45bp9QbDUZbHTTKCFOYLabkWiUHCmY4kEBYBizIRwaCEBgABgCACYafSAgBGEBoIA))
+* Always error on the deprecated existential type `*`, it's just an alias for `any`
+
+New Features:
+* Experimental support for Mapped Types like `{[k in keyof T]: ?T[k]}`! ([Example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdVz8ADhgAEAFUMBeQ8EMwIEZIfoy4UBIbUAdUvqMBVc5cMAbQBrQ2dDYIx+CBgTAF17AH5jELi3TwAKKxs7Q0UaGjd7YwBKAG5DAHpKwww0NAg0TOzbe3zCtXsfcqqaiGCAQjYQADc6pmhqcgZcOpA1IA)). Look out for a blog post, documentation and support in other tools in the near future. You can try mapped types in your project by setting the `experimental.mapped_type=true` flag in the `options` section of your flowconfig.
+
+Notable bug fixes:
+* Fix autocomplete for super members (e.g., `super.|`)
+* Fix hover type of JSX attribute names
+* Fix showing documentation in signature help for member expressions (e.g., `o.m(|)`)
+* Fix `unused-promise` lint false positives for logical and conditional expressions
+* Fix spurious error in overloaded generic calls when a contextual type is available ([Example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdRFg6mAAQwSeONCMQIACgCUyAwAU0EcnHoYAPPRlwoCAHwA3AA6ULr6GAYAblhoBrz2vJY02FAhUKGQUN4GnAYAvPEGAPwGAMwG9lYwlrYAdGBYuGAAFlaR+f4GwGo2NoFsIFEYaEzQ1FEADHUATJNldZMgakA))
+* Properly remove the `:` with inferred predicates in `flow-remove-types`
+
+Parser:
+* Error on classes with `static prototype` fields
+* Fix missing parse error for class constructors that are async, generators or accessors. The former two were previously type errors rather than syntax errors.
+
+Library Definitions:
+* Add NodeJS stream promises (thanks @moroine)
+
 ### 0.203.1
 
 Misc:
