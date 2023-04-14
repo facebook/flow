@@ -1232,27 +1232,21 @@ let resolve
   (* Resolve each member of a union. *)
   | UnionT (union_reason, rep) ->
     let union_loc = aloc_of_reason union_reason in
-    let (t, resolve_tool) =
-      let (t0, ts0) = UnionRep.members_nel rep in
-      let members_filtered =
-        Base.List.filter
-          ~f:(function
-            | DefT (_, _, EmptyT) -> false
-            | _ -> true)
-          (t0 :: Nel.to_list ts0)
-      in
-      match members_filtered with
-      | [] -> (t0, Resolve (List0 (ts0, (union_loc, Or))))
-      | t :: [] -> (t, Resolve Next)
-      | t :: t' :: ts -> (t, Resolve (List0 ((t', ts), (union_loc, Or))))
-    in
+    let members_filtered = Type_mapper.union_flatten cx (UnionRep.members rep) in
     let tool =
       match tool with
       | Spread (options, state) ->
         Spread (options, { state with Spread.union_reason = Some union_reason })
       | _ -> tool
     in
-    recurse cx use_op reason resolve_tool tool t
+    begin
+      match members_filtered with
+      | [] -> return cx use_op (EmptyT.make union_reason (bogus_trust ()))
+      | t :: [] -> recurse cx use_op reason (Resolve Next) tool t
+      | t :: t' :: ts ->
+        let resolve_tool = Resolve (List0 ((t', ts), (union_loc, Or))) in
+        recurse cx use_op reason resolve_tool tool t
+    end
   (* Resolve each member of an intersection. *)
   | IntersectionT (intersection_reason, rep) ->
     let intersection_loc = aloc_of_reason intersection_reason in

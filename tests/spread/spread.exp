@@ -96,6 +96,91 @@ References:
                      ^^^^^^^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------- nested_unions.js:7:2
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
+it may contain `a` with a type that conflicts with `a`'s definition in object type [3]. Try making object type [2]
+exact. [cannot-spread-inexact]
+
+   nested_unions.js:7:2
+   7| ({...OBJ, ...works1}); // error: cannot-spread-inexact
+       ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   nested_unions.js:3:21
+   3| declare var works1: {...} | void;
+                          ^^^^^ [2]
+   nested_unions.js:1:18
+   1| declare var OBJ: {a: string};
+                       ^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- nested_unions.js:8:2
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
+it may contain `a` with a type that conflicts with `a`'s definition in object type [3]. Try making object type [2]
+exact. [cannot-spread-inexact]
+
+   nested_unions.js:8:2
+   8| ({...OBJ, ...works2}); // error: cannot-spread-inexact
+       ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   nested_unions.js:4:21
+   4| declare var works2: {...} | void | void;
+                          ^^^^^ [2]
+   nested_unions.js:1:18
+   1| declare var OBJ: {a: string};
+                       ^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- nested_unions.js:9:2
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
+it may contain `a` with a type that conflicts with `a`'s definition in object type [3]. Try making object type [2]
+exact. [cannot-spread-inexact]
+
+   nested_unions.js:9:2
+   9| ({...OBJ, ...works3}); // error: cannot-spread-inexact
+       ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   nested_unions.js:5:21
+   5| declare var works3: {...} | (void | void);
+                          ^^^^^ [2]
+   nested_unions.js:1:18
+   1| declare var OBJ: {a: string};
+                       ^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- nested_unions.js:17:16
+
+Cannot assign object literal to `o1` because object literal [1] is incompatible with `BC` [2]. [incompatible-type]
+
+   nested_unions.js:17:16
+   17| const o1: BC = { ...x1 }; // errors
+                      ^^^^^^^^^ [1]
+
+References:
+   nested_unions.js:17:11
+   17| const o1: BC = { ...x1 }; // errors
+                 ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- nested_unions.js:18:16
+
+Cannot assign object literal to `o2` because object literal [1] is incompatible with `BC` [2]. [incompatible-type]
+
+   nested_unions.js:18:16
+   18| const o2: BC = { ...x2 }; // errors
+                      ^^^^^^^^^ [1]
+
+References:
+   nested_unions.js:18:11
+   18| const o2: BC = { ...x2 }; // errors
+                 ^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- null.js:4:10
 
 Cannot get `empty.x` because property `x` is missing in object literal [1]. [prop-missing]
@@ -287,4 +372,4 @@ References:
 
 
 
-Found 16 errors
+Found 21 errors
