@@ -54,3 +54,38 @@ function ternary(b: boolean) {
     b ? foo().catch(() => {}) : 3; // ok
     (b ? foo() : foo()).catch(() => {}); // ok
 }
+
+declare class Foo {
+    foo(): Promise<void>;
+    bar(): ?Promise<void>;
+}
+
+{
+    declare const x: Foo;
+    x.foo(); // error
+    x.bar(); // error
+
+    x.foo().then(() => {}, () => {}); // ok
+    x.bar()?.then(() => {}, () => {}); // ok
+
+    x.foo().catch(() => {}); // ok
+    x.bar()?.catch(() => {}); // ok
+
+    x.foo().finally(() => {}); // ok
+    x.bar()?.finally(() => {}); // ok
+}
+
+{
+    declare const x: ?Foo;
+    x?.foo(); // error
+    x?.bar(); // error
+
+    x?.foo().then(() => {}, () => {}); // ok
+    x?.bar()?.then(() => {}, () => {}); // ok
+
+    x?.foo().catch(() => {}); // ok
+    x?.bar()?.catch(() => {}); // ok
+
+    x?.foo().finally(() => {}); // ok
+    x?.bar()?.finally(() => {}); // ok
+}

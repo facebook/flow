@@ -307,6 +307,29 @@ module Make
           arguments = (_, { ArgList.arguments = _ :: _; _ });
           _;
         }
+    | OptionalCall
+        {
+          OptionalCall.call =
+            {
+              Call.callee =
+                ( _,
+                  OptionalMember
+                    {
+                      OptionalMember.member =
+                        {
+                          Member.property =
+                            Member.PropertyIdentifier
+                              (_, { Flow_ast.Identifier.name = "catch" | "finally"; _ });
+                          _;
+                        };
+                      _;
+                    }
+                );
+              arguments = (_, { ArgList.arguments = _ :: _; _ });
+              _;
+            };
+          _;
+        }
     (* Call to `then` with two arguments *)
     | Call
         {
@@ -320,6 +343,28 @@ module Make
                 }
             );
           arguments = (_, { ArgList.arguments = _ :: _ :: _; _ });
+          _;
+        }
+    | OptionalCall
+        {
+          OptionalCall.call =
+            {
+              Call.callee =
+                ( _,
+                  OptionalMember
+                    {
+                      OptionalMember.member =
+                        {
+                          Member.property =
+                            Member.PropertyIdentifier (_, { Flow_ast.Identifier.name = "then"; _ });
+                          _;
+                        };
+                      _;
+                    }
+                );
+              arguments = (_, { ArgList.arguments = _ :: _ :: _; _ });
+              _;
+            };
           _;
         } ->
       []
