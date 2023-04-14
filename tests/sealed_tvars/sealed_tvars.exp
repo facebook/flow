@@ -303,8 +303,8 @@ exact. [cannot-spread-inexact]
 
 References:
    regression_tests.js:77:44
-   77|   declare function inexactSpread<T>(x: T): {bar: 3, ...T};
-                                                  ^^^^^^^^^^^^^^ [1]
+   77|   declare function inexactSpread<T>(x: T): {bar: 3, ...T, ...};
+                                                  ^^^^^^^^^^^^^^^^^^^ [1]
    regression_tests.js:75:28
    75|   let inexact = ({foo: 3}: {foo: number, ...});
                                   ^^^^^^^^^^^^^^^^^^ [2]

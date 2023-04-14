@@ -1,6 +1,6 @@
 /* @flow */
 
-function foo(param: { name: string; }): number {
+function foo(param: { name: string; ... }): number {
     return param.id;
 }
 

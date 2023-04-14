@@ -1,5 +1,5 @@
 //@flow
-declare function keyMirror<T: {}>(obj: T): $ObjMapi<T, <K>(K) => K>;
+declare function keyMirror<T: {...}>(obj: T): $ObjMapi<T, <K>(K) => K>;
 
 export const a = keyMirror({['a' + 'b']: null, b: null});
 

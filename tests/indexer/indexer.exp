@@ -75,7 +75,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `y` to object type because object type [1] is incompatible with function prototype [2]. [incompatible-cast]
 
    call.js:2:2
-   2| (y: {(number): string});
+   2| (y: {(number): string, ...});
        ^
 
 References:
@@ -83,8 +83,8 @@ References:
    1| declare var y: {[string]: boolean};
                      ^^^^^^^^^^^^^^^^^^^ [1]
    call.js:2:5
-   2| (y: {(number): string});
-          ^^^^^^^^^^^^^^^^^^ [2]
+   2| (y: {(number): string, ...});
+          ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ call.js:2:2
@@ -93,7 +93,7 @@ Cannot cast `y` to object type because a call signature declaring the expected p
 object type [1] but exists in object type [2]. [prop-missing]
 
    call.js:2:2
-   2| (y: {(number): string});
+   2| (y: {(number): string, ...});
        ^
 
 References:
@@ -101,8 +101,8 @@ References:
    1| declare var y: {[string]: boolean};
                      ^^^^^^^^^^^^^^^^^^^ [1]
    call.js:2:5
-   2| (y: {(number): string});
-          ^^^^^^^^^^^^^^^^^^ [2]
+   2| (y: {(number): string, ...});
+          ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- multiple.js:5:7

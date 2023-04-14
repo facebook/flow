@@ -74,7 +74,7 @@ class ClassMethodThisAnnotations {
 {
   let inexact = ({foo: 3}: {foo: number, ...});
 
-  declare function inexactSpread<T>(x: T): {bar: 3, ...T};
+  declare function inexactSpread<T>(x: T): {bar: 3, ...T, ...};
   const inexact_spread_err = inexactSpread(inexact);
 }
 

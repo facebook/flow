@@ -6,6 +6,7 @@ const SUIExpressWiFiThemeComponents = require('./SUIExpressWiFiThemeComponents')
 export type ComponentUniforms = {
   SUIActionMenu?: SUIActionMenuUniform,
   SUIButton?: SUIButtonUniform,
+  ...
 };
 
 // NOTE: This should error but does not because temporary object spreads use

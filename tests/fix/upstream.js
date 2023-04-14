@@ -6,4 +6,5 @@ export class Foo {
 
 export type T = {
   x: string,
+  ...
 }

@@ -1,5 +1,5 @@
 // No indexer should be fine
-function foo0(): {} {
+function foo0(): {...} {
   return { foo: "bar" }
 }
 

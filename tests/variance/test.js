@@ -3,12 +3,12 @@ class B extends A {};
 
 // named properties
 
-type RWA = {|p: A|}
-type ROA = {|+p: A|}
-type WOA = {|-p: A|}
-type RWB = {|p: B|}
-type ROB = {|+p: B|}
-type WOB = {|-p: B|}
+type RWA = {p: A}
+type ROA = {+p: A}
+type WOA = {-p: A}
+type RWB = {p: B}
+type ROB = {+p: B}
+type WOB = {-p: B}
 
 declare var rwA: RWA;
 declare var roA: ROA;
@@ -202,22 +202,22 @@ declare var dwoB: dWOB;
   // Note: these tests don't reuse the type aliases from the prelude because
   // doing so results in "naive" unification instead of rec_unify.
 
-  (([rwA]: Array<{p:A}>): Array<{p:A}>); // ok
+  (([rwA]: Array<{p:A,...}>): Array<{p:A,...}>); // ok
 
-  (([roA]: Array<{+p:A}>): Array<{p:A}>); // error
+  (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
 
-  (([woA]: Array<{-p:A}>): Array<{p:A}>); // error
+  (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
 
-  (([rwA]: Array<{p:A}>): Array<{+p:A}>); // error
+  (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
 
-  (([roA]: Array<{+p:A}>): Array<{+p:A}>); // ok
+  (([roA]: Array<{+p:A,...}>): Array<{+p:A,...}>); // ok
 
-  (([woA]: Array<{-p:A}>): Array<{+p:A}>); // error
+  (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
 
-  (([rwA]: Array<{p:A}>): Array<{-p:A}>); // error
+  (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
 
-  (([roA]: Array<{+p:A}>): Array<{-p:A}>); // error
+  (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
 
-  (([woA]: Array<{-p:A}>): Array<{-p:A}>); // ok
+  (([woA]: Array<{-p:A,...}>): Array<{-p:A,...}>); // ok
 
 }

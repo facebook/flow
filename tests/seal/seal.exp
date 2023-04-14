@@ -8,8 +8,8 @@ Cannot get `param.id` because property `id` is missing in object type [1]. [prop
 
 References:
    obj_annot.js:3:21
-   3| function foo(param: { name: string; }): number {
-                          ^^^^^^^^^^^^^^^^^ [1]
+   3| function foo(param: { name: string; ... }): number {
+                          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

@@ -1,4 +1,2 @@
 [options]
-module.system=haste
 all=true
-exact_by_default=false

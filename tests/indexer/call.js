@@ -1,2 +1,2 @@
 declare var y: {[string]: boolean};
-(y: {(number): string});
+(y: {(number): string, ...});

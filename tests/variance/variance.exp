@@ -79,12 +79,12 @@ Cannot cast `rwB` to `RWA` because `A` [1] is incompatible with `B` [2] in prope
           ^^^
 
 References:
-   test.js:6:17
-    6| type RWA = {|p: A|}
-                       ^ [1]
-   test.js:9:17
-    9| type RWB = {|p: B|}
-                       ^ [2]
+   test.js:6:16
+    6| type RWA = {p: A}
+                      ^ [1]
+   test.js:9:16
+    9| type RWB = {p: B}
+                      ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:4
@@ -167,12 +167,12 @@ Cannot cast `woB` to `RWA` because `A` [1] is incompatible with `B` [2] in prope
           ^^^
 
 References:
-   test.js:6:17
-    6| type RWA = {|p: A|}
-                       ^ [1]
-   test.js:11:18
-   11| type WOB = {|-p: B|}
-                        ^ [2]
+   test.js:6:16
+    6| type RWA = {p: A}
+                      ^ [1]
+   test.js:11:17
+   11| type WOB = {-p: B}
+                       ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:70:4
@@ -327,12 +327,12 @@ Cannot cast `rwB` to `WOA` because `A` [1] is incompatible with `B` [2] in prope
            ^^^
 
 References:
-   test.js:8:18
-     8| type WOA = {|-p: A|}
-                         ^ [1]
-   test.js:9:17
-     9| type RWB = {|p: B|}
-                        ^ [2]
+   test.js:8:17
+     8| type WOA = {-p: A}
+                        ^ [1]
+   test.js:9:16
+     9| type RWB = {p: B}
+                       ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:132:4
@@ -397,12 +397,12 @@ Cannot cast `woB` to `WOA` because `A` [1] is incompatible with `B` [2] in prope
            ^^^
 
 References:
-   test.js:8:18
-     8| type WOA = {|-p: A|}
-                         ^ [1]
-   test.js:11:18
-    11| type WOB = {|-p: B|}
-                         ^ [2]
+   test.js:8:17
+     8| type WOA = {-p: A}
+                        ^ [1]
+   test.js:11:17
+    11| type WOB = {-p: B}
+                        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:140:4
@@ -431,9 +431,9 @@ Cannot cast object literal to `RWB` because `A` [1] is incompatible with `B` [2]
                ^^^^^ [1]
 
 References:
-   test.js:9:17
-     9| type RWB = {|p: B|}
-                        ^ [2]
+   test.js:9:16
+     9| type RWB = {p: B}
+                       ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:147:8
@@ -459,12 +459,12 @@ Cannot cast `rwA` to `RWB` because `A` [1] is incompatible with `B` [2] in prope
            ^^^
 
 References:
-   test.js:6:17
-     6| type RWA = {|p: A|}
-                        ^ [1]
-   test.js:9:17
-     9| type RWB = {|p: B|}
-                        ^ [2]
+   test.js:6:16
+     6| type RWA = {p: A}
+                       ^ [1]
+   test.js:9:16
+     9| type RWB = {p: B}
+                       ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:151:4
@@ -511,12 +511,12 @@ Cannot cast `roA` to `RWB` because `A` [1] is incompatible with `B` [2] in prope
            ^^^
 
 References:
-   test.js:7:18
-     7| type ROA = {|+p: A|}
-                         ^ [1]
-   test.js:9:17
-     9| type RWB = {|p: B|}
-                        ^ [2]
+   test.js:7:17
+     7| type ROA = {+p: A}
+                        ^ [1]
+   test.js:9:16
+     9| type RWB = {p: B}
+                       ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:155:4
@@ -599,9 +599,9 @@ Cannot cast object literal to `ROB` because `A` [1] is incompatible with `B` [2]
                ^^^^^ [1]
 
 References:
-   test.js:10:18
-    10| type ROB = {|+p: B|}
-                         ^ [2]
+   test.js:10:17
+    10| type ROB = {+p: B}
+                        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:166:8
@@ -627,12 +627,12 @@ Cannot cast `rwA` to `ROB` because `A` [1] is incompatible with `B` [2] in prope
            ^^^
 
 References:
-   test.js:6:17
-     6| type RWA = {|p: A|}
-                        ^ [1]
-   test.js:10:18
-    10| type ROB = {|+p: B|}
-                         ^ [2]
+   test.js:6:16
+     6| type RWA = {p: A}
+                       ^ [1]
+   test.js:10:17
+    10| type ROB = {+p: B}
+                        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:170:4
@@ -661,12 +661,12 @@ Cannot cast `roA` to `ROB` because `A` [1] is incompatible with `B` [2] in prope
            ^^^
 
 References:
-   test.js:7:18
-     7| type ROA = {|+p: A|}
-                         ^ [1]
-   test.js:10:18
-    10| type ROB = {|+p: B|}
-                         ^ [2]
+   test.js:7:17
+     7| type ROA = {+p: A}
+                        ^ [1]
+   test.js:10:17
+    10| type ROB = {+p: B}
+                        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:174:4
@@ -764,13 +764,13 @@ Cannot cast array literal to array type because property `p` is read-only in obj
 type [2] in array element. [incompatible-variance]
 
    test.js:207:18
-   207|   (([roA]: Array<{+p:A}>): Array<{p:A}>); // error
-                         ^^^^^^ [1]
+   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
+                         ^^^^^^^^^^ [1]
 
 References:
-   test.js:207:34
-   207|   (([roA]: Array<{+p:A}>): Array<{p:A}>); // error
-                                         ^^^^^ [2]
+   test.js:207:38
+   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
+                                             ^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:209:18
@@ -779,13 +779,13 @@ Cannot cast array literal to array type because property `p` is write-only in ob
 type [2] in array element. [incompatible-variance]
 
    test.js:209:18
-   209|   (([woA]: Array<{-p:A}>): Array<{p:A}>); // error
-                         ^^^^^^ [1]
+   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+                         ^^^^^^^^^^ [1]
 
 References:
-   test.js:209:34
-   209|   (([woA]: Array<{-p:A}>): Array<{p:A}>); // error
-                                         ^^^^^ [2]
+   test.js:209:38
+   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+                                             ^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:211:18
@@ -794,13 +794,13 @@ Cannot cast array literal to array type because property `p` is writable in obje
 type [2] in array element. [incompatible-variance]
 
    test.js:211:18
-   211|   (([rwA]: Array<{p:A}>): Array<{+p:A}>); // error
-                         ^^^^^ [1]
+   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+                         ^^^^^^^^^ [1]
 
 References:
-   test.js:211:33
-   211|   (([rwA]: Array<{p:A}>): Array<{+p:A}>); // error
-                                        ^^^^^^ [2]
+   test.js:211:37
+   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+                                            ^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:215:18
@@ -809,13 +809,13 @@ Cannot cast array literal to array type because property `p` is write-only in ob
 type [2] in array element. [incompatible-variance]
 
    test.js:215:18
-   215|   (([woA]: Array<{-p:A}>): Array<{+p:A}>); // error
-                         ^^^^^^ [1]
+   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+                         ^^^^^^^^^^ [1]
 
 References:
-   test.js:215:34
-   215|   (([woA]: Array<{-p:A}>): Array<{+p:A}>); // error
-                                         ^^^^^^ [2]
+   test.js:215:38
+   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+                                             ^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:217:18
@@ -824,13 +824,13 @@ Cannot cast array literal to array type because property `p` is readable in obje
 type [2] in array element. [incompatible-variance]
 
    test.js:217:18
-   217|   (([rwA]: Array<{p:A}>): Array<{-p:A}>); // error
-                         ^^^^^ [1]
+   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+                         ^^^^^^^^^ [1]
 
 References:
-   test.js:217:33
-   217|   (([rwA]: Array<{p:A}>): Array<{-p:A}>); // error
-                                        ^^^^^^ [2]
+   test.js:217:37
+   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+                                            ^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:219:18
@@ -839,13 +839,13 @@ Cannot cast array literal to array type because property `p` is read-only in obj
 type [2] in array element. [incompatible-variance]
 
    test.js:219:18
-   219|   (([roA]: Array<{+p:A}>): Array<{-p:A}>); // error
-                         ^^^^^^ [1]
+   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
+                         ^^^^^^^^^^ [1]
 
 References:
-   test.js:219:34
-   219|   (([roA]: Array<{+p:A}>): Array<{-p:A}>); // error
-                                         ^^^^^^ [2]
+   test.js:219:38
+   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
+                                             ^^^^^^^^^^ [2]
 
 
 

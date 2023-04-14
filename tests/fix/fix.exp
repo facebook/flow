@@ -25,6 +25,7 @@ export class Foo {
 
 export type T = {
   x: string,
+  ...
 }
 
 >>> Launching report...
