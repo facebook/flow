@@ -5371,7 +5371,10 @@ struct
           ()
         (* ExtendsT searches for a nominal superclass. The search terminates with
            either failure at the root or a structural subtype check. **)
-        | (AnyT _, ExtendsUseT _) -> ()
+        | (AnyT (_, src), ExtendsUseT (use_op, reason_op, ts, t1, t2)) ->
+          Base.List.iter ts ~f:(fun t -> rec_flow_t cx trace ~use_op (AnyT.why src reason_op, t));
+          rec_flow_t cx trace ~use_op (AnyT.why src reason_op, t1);
+          rec_flow_t cx trace ~use_op (AnyT.why src reason_op, t2)
         | (DefT (lreason, _, ObjT { proto_t; _ }), ExtendsUseT _) ->
           let l = reposition cx ~trace (aloc_of_reason lreason) proto_t in
           rec_flow cx trace (l, u)
@@ -6152,6 +6155,7 @@ struct
     | DestructuringT _
     | ElemT _
     | EnumExhaustiveCheckT _
+    | ExtendsUseT _
     | ConditionalT _
     | ExportNamedT _
     | ExportTypeT _
@@ -6271,7 +6275,6 @@ struct
     | EnumCastT _
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
-    | ExtendsUseT _
     | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
       ->
       true
