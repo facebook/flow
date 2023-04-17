@@ -1343,18 +1343,21 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       Context.mk_placeholder cx reason
     else
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          match
-            Pierce.solve_conditional_type_targs
-              cx
-              trace
-              ~use_op
-              ~reason
-              ~tparams
-              ~check_t
-              ~extends_t
-              ~true_t
-          with
-          | None -> false_t
-          | Some subst_map -> Subst.subst cx ~use_op:unknown_use subst_map true_t
+          let t =
+            match
+              Pierce.solve_conditional_type_targs
+                cx
+                trace
+                ~use_op
+                ~reason
+                ~tparams
+                ~check_t
+                ~extends_t
+                ~true_t
+            with
+            | None -> false_t
+            | Some subst_map -> Subst.subst cx ~use_op:unknown_use subst_map true_t
+          in
+          reposition cx ~trace (aloc_of_reason reason) t
       )
 end
