@@ -263,3 +263,15 @@ let with_loc_opt ?start_loc fn env =
 let with_loc_extra ?start_loc fn env =
   let (loc, (x, extra)) = with_loc ?start_loc fn env in
   ((loc, x), extra)
+
+let is_start_of_type_guard env =
+  let open Token in
+  (* Parse the identifier part as normal code, since this can be any name that
+   * a parameter can be. *)
+  Eat.push_lex_mode env Lex_mode.NORMAL;
+  let token_1 = Peek.token env in
+  Eat.pop_lex_mode env;
+  let token_2 = Peek.ith_token ~i:1 env in
+  match (token_1, token_2) with
+  | ((T_IDENTIFIER _ | T_THIS), T_IS) -> true
+  | _ -> false

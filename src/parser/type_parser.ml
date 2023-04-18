@@ -41,6 +41,8 @@ module type TYPE = sig
 
   val function_return_annotation_and_predicate_opt :
     env -> (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t * (Loc.t, Loc.t) Ast.Type.Predicate.t option
+
+  val type_guard : env -> (Loc.t, Loc.t) Ast.Type.TypeGuard.t
 end
 
 module Type (Parse : Parser_common.PARSER) : TYPE = struct
@@ -105,6 +107,15 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Expect.token env T_COLON;
         _type env)
       env
+
+  and function_return_annotation env =
+    if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
+    let start_loc = Peek.loc env in
+    Expect.token env T_COLON;
+    if is_start_of_type_guard env then
+      Function.ReturnAnnot.TypeGuard (type_guard_annotation env ~start_loc)
+    else
+      Function.ReturnAnnot.Available (with_loc ~start_loc _type env)
 
   and conditional env =
     let start_loc = Peek.loc env in
@@ -851,9 +862,35 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       ~start_loc
       (fun env ->
         Expect.token env T_ARROW;
-        let return = Type.Function.TypeAnnotation (_type env) in
+        let return = function_return_type env in
         Type.(Function { Function.params; return; tparams; comments = None }))
       env
+
+  and function_return_type env =
+    if is_start_of_type_guard env then
+      Type.Function.TypeGuard (type_guard env)
+    else
+      Type.Function.TypeAnnotation (_type env)
+
+  and type_guard env =
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        (* Parse the identifier part as normal code, since this can be any name that
+         * a parameter can be. *)
+        Eat.push_lex_mode env Lex_mode.NORMAL;
+        let param = identifier_name env in
+        Eat.pop_lex_mode env;
+        let internal = Peek.comments env in
+        Expect.token env T_IS;
+        let internal = internal @ Peek.comments env in
+        let t = _type env in
+        let guard = (param, t) in
+        let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~internal () in
+        { Ast.Type.TypeGuard.guard; comments })
+      env
+
+  and type_guard_annotation env ~start_loc = with_loc ~start_loc type_guard env
 
   and _object =
     let methodish env start_loc tparams =
@@ -862,7 +899,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         (fun env ->
           let params = function_param_list env in
           Expect.token env T_COLON;
-          let return = Type.Function.TypeAnnotation (_type env) in
+          let return = function_return_type env in
           { Type.Function.params; return; tparams; comments = None })
         env
     in
@@ -1666,7 +1703,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and function_return_annotation_opt env =
     match Peek.token env with
-    | T_COLON -> Function.ReturnAnnot.Available (annotation env)
+    | T_COLON -> function_return_annotation env
     | _ -> Function.ReturnAnnot.Missing (Peek.loc_skip_lookahead env)
 
   and annotation_opt env =
@@ -1805,15 +1842,18 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       let predicate = no_annot_predicate env ~start_loc in
       (Missing missing_loc, Some predicate)
     | _ ->
-      let annotation =
-        let annotation = Available (with_loc ~start_loc _type env) in
-        if Peek.token env = T_CHECKS then
-          return_annotation_remove_trailing env annotation
-        else
-          annotation
-      in
-      let predicate = predicate_opt env in
-      (annotation, predicate)
+      if is_start_of_type_guard env then
+        (TypeGuard (type_guard_annotation env ~start_loc), None)
+      else
+        let annotation =
+          let annotation = Available (with_loc ~start_loc _type env) in
+          if Peek.token env = T_CHECKS then
+            return_annotation_remove_trailing env annotation
+          else
+            annotation
+        in
+        let predicate = predicate_opt env in
+        (annotation, predicate)
 
   let function_return_annotation_and_predicate_opt env =
     let open Ast.Function.ReturnAnnot in

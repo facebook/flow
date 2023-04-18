@@ -2199,10 +2199,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (((_, t'), _) as t_ast') = convert cx tparams_map infer_tparams_map t_ast in
       (t', T.Function.TypeAnnotation t_ast')
     | T.Function.TypeGuard ((loc, _) as t_ast) ->
-      (* TODO(pvekris) support type guards in type_annotation *)
-      let t_ast' = Tast_utils.unimplemented_mapper#type_guard t_ast in
-      let t = with_trust_inference cx (BoolT.at loc) in
-      (t, T.Function.TypeGuard t_ast')
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
+      let t_ast' = Tast_utils.error_mapper#type_guard t_ast in
+      (AnyT.at (AnyError None) loc, T.Function.TypeGuard t_ast')
 
   and mk_func_sig =
     let open Ast.Type.Function in
@@ -2310,9 +2311,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
       (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot)
     | Ast.Function.ReturnAnnot.TypeGuard annot ->
-      (* TODO(pvekris) support type guards in type_annotation *)
       let ((_, (loc, _)) as t_ast') = Tast_utils.error_mapper#type_guard_annotation annot in
-      (Annotated (with_trust_inference cx (BoolT.at loc)), Ast.Function.ReturnAnnot.TypeGuard t_ast')
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
+      (Annotated (AnyT.at (AnyError None) loc), Ast.Function.ReturnAnnot.TypeGuard t_ast')
 
   and mk_return_type_annotation cx tparams_map reason ~void_return ~async annot =
     match annot with

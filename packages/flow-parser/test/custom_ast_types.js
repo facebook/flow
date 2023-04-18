@@ -45,6 +45,11 @@ function custom_ast_types(fork) {
     .field('trueType', def('FlowType'))
     .field('falseType', def('FlowType'));
 
+  def('FunctionTypeAnnotation').field(
+    'returnType',
+    or(def('FlowType'), def('TypePredicate')),
+  );
+
   def('InferTypeAnnotation')
     .bases('FlowType')
     .build('typeParameter')
@@ -74,6 +79,12 @@ function custom_ast_types(fork) {
       ),
     ])
     .field('types', undefined);
+
+  def('TypePredicate')
+    .bases('TypeAnnotation')
+    .build('parameterName', 'typeAnnotation')
+    .field('parameterName', def('Identifier'))
+    .field('typeAnnotation', def('FlowType'));
 
   def('TypeofTypeAnnotation')
     .bases('FlowType')

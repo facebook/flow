@@ -1,0 +1,50 @@
+Error -------------------------------------------------------------------------------- unsupported_error_message.js:1:22
+
+User defined type guards are not yet supported. [unsupported-syntax]
+
+   1| type T = (x: any) => x is number; // error unsupported
+                           ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------- unsupported_error_message.js:2:22
+
+User defined type guards are not yet supported. [unsupported-syntax]
+
+   2| class C { m(x: any): x is number { return true; } }; // error unsupported
+                           ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------- unsupported_error_message.js:3:30
+
+User defined type guards are not yet supported. [unsupported-syntax]
+
+   3| declare class D { m(x: any): x is number }; // error unsupported
+                                   ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------- unsupported_error_message.js:4:29
+
+User defined type guards are not yet supported. [unsupported-syntax]
+
+   4| declare function f(x: any): x is number; // error unsupported
+                                  ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------- unsupported_error_message.js:5:21
+
+User defined type guards are not yet supported. [unsupported-syntax]
+
+   5| function g(x: any): x is number { return true }; // error unsupported
+                          ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------- unsupported_error_message.js:6:31
+
+User defined type guards are not yet supported. [unsupported-syntax]
+
+   6| function h<T>(cb: (x: any) => x is T): T { throw "unsupported" }; // error unsupported
+                                    ^^^^^^
+
+
+
+Found 6 errors

@@ -1864,6 +1864,7 @@ let type_token env lexbuf =
     | "number" -> Token (env, T_NUMBER_TYPE)
     | "readonly" -> Token (env, T_READONLY)
     | "infer" -> Token (env, T_INFER)
+    | "is" -> Token (env, T_IS)
     | "static" -> Token (env, T_STATIC)
     | "string" -> Token (env, T_STRING_TYPE)
     | "symbol" -> Token (env, T_SYMBOL_TYPE)

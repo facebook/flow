@@ -1171,19 +1171,19 @@ module Statement
           let tparams = type_params_remove_trailing env (Type.type_params env) in
           let params = Type.function_param_list env in
           Expect.token env T_COLON;
+          Eat.push_lex_mode env Lex_mode.TYPE;
           let return =
-            let return = Type._type env in
-            let has_predicate =
-              Eat.push_lex_mode env Lex_mode.TYPE;
-              let type_token = Peek.token env in
-              Eat.pop_lex_mode env;
-              type_token = T_CHECKS
-            in
-            if has_predicate then
-              Ast.Type.Function.TypeAnnotation (type_remove_trailing env return)
+            if is_start_of_type_guard env then
+              Ast.Type.Function.TypeGuard (Type.type_guard env)
             else
-              Ast.Type.Function.TypeAnnotation return
+              let return = Type._type env in
+              let has_predicate = Peek.token env = T_CHECKS in
+              if has_predicate then
+                Ast.Type.Function.TypeAnnotation (type_remove_trailing env return)
+              else
+                Ast.Type.Function.TypeAnnotation return
           in
+          Eat.pop_lex_mode env;
           Ast.Type.(Function { Function.params; return; tparams; comments = None }))
         env
     in

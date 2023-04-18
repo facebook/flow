@@ -206,6 +206,17 @@ function inferredPredicateWithoutType(arg: mixed): %checks {
   return !!arg;
 }
 
+// Type guards
+function typeGuardFunction(x: mixed): x is boolean {
+  return typeof x === "boolean";
+}
+
+const typeGuardArrow = (x: mixed): x is boolean => (typeof x === "boolean");
+
+function typeGuardInComments(x /*: mixed */) /*: x is boolean */ {
+  return typeof x === "boolean";
+}
+
 // Test function with default type parameter
 function f<T, S = T>() {}
 

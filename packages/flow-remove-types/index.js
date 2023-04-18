@@ -162,6 +162,7 @@ var removeFlowVisitor = {
   InterfaceDeclaration: removeNode,
   TypeAlias: removeNode,
   TypeAnnotation: removeNodeIfNotCommentType,
+  TypePredicate: removeNodeIfNotCommentType,
   TypeParameterDeclaration: removeNode,
   TypeParameterInstantiation: removeNode,
   InferredPredicate: removeNode,
