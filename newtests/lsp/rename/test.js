@@ -22,7 +22,12 @@ module.exports = (suite(
     lspRequestAndWaitUntilResponse,
     addFiles,
   }) => {
-    function snapshot(fixture, line, col, expectedFile) {
+    function snapshot(
+      fixture: string,
+      line: number,
+      col: number,
+      expectedFile: string,
+    ) {
       return lspRequestAndWaitUntilResponse('textDocument/rename', {
         textDocument: {
           uri: `<PLACEHOLDER_PROJECT_URL>/__fixtures__/${fixture}`,

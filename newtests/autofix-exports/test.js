@@ -3,7 +3,7 @@
  * @format
  */
 
-import type Suite from 'flow-dev-tools/src/test/Suite.js';
+import type {Suite} from 'flow-dev-tools/src/test/Suite.js';
 const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
 module.exports = (suite(
