@@ -50,10 +50,14 @@ let visitor =
 
     method! destructor cx { bound; free } t =
       match t with
-      | ConditionalType { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t }
-        ->
+      | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
         let orig_bound = bound in
         let pole = Polarity.Neutral in
+        let bound =
+          match distributive_tparam_name with
+          | None -> bound
+          | Some n -> Subst_name.Set.add n bound
+        in
         let { bound; free } = self#type_ cx pole { bound; free } false_t in
         let { bound; free } =
           Base.List.fold infer_tparams ~init:{ bound; free } ~f:(fun { bound; free } tp ->
