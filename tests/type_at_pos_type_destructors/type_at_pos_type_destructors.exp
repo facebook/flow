@@ -64,6 +64,11 @@ type T8<T> = T extends {bar: <T>(T) => void, foo: infer T, ...}
 = mixed
 conditional-types.js:29:6,29:7
 
+conditional-types.js:34:5
+Flags:
+string | number
+conditional-types.js:34:5,34:5
+
 exact.js:4:6
 Flags:
 type B = $Exact<A>

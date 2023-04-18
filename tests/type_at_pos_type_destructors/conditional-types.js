@@ -28,3 +28,8 @@ type T7<T> = T extends infer T ? string : number;
 // Test that we can distinguish between all the confusing Ts.
 type T8<T> = T extends {foo: infer T, bar: <T>(T) => void} ? string : number;
 //   ^
+
+// Distribute-over-union still works for unions coming from implicit instantiation.
+declare function Distributive<T>(x: T, y: T): T extends string ? string : number;
+let x = Distributive(3, 'str');
+//  ^
