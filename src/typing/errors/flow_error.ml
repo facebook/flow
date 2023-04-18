@@ -280,6 +280,12 @@ let post_process_errors original_errors =
       else
         ((lower, upper), use_op)
   in
+  let rec remove_unify_flip = function
+    | Op _ as use_op -> use_op
+    (* Start flipping if we are on the reverse side of unification. *)
+    | Frame (UnifyFlip, use_op) -> remove_unify_flip use_op
+    | Frame (frame, use_op) -> Frame (frame, remove_unify_flip use_op)
+  in
   let retain_error error =
     let open Error_message in
     let is_not_duplicate new_msg =
@@ -337,6 +343,12 @@ let post_process_errors original_errors =
            (EEnumIncompatible
               { reason_lower = reason_lower'; reason_upper; use_op; representation_type }
            )
+    | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
+      (* PropNotFound error will always display the missing vs existing prop in the same order. *)
+      let use_op' = remove_unify_flip use_op in
+      use_op = use_op'
+      || is_not_duplicate
+           (EPropNotFound { prop_name; reason_obj; reason_prop; use_op = use_op'; suggestion })
     | _ -> true
   in
   ErrorSet.filter retain_error original_errors
