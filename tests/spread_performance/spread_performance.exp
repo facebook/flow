@@ -88,24 +88,23 @@ References:
                                ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:16:20
+Error --------------------------------------------------------------------------------------------- type_spread.js:16:16
 
-Computing object type [1] may lead to an exponentially large number of cases to reason about because inferred union from
-object type [1] | object type [2] and `A` [3] are both unions. Please use at most one union type per spread to simplify
-reasoning about the spread result. You may be able to get rid of a union by specifying a more general type that captures
-all of the branches of the union. [exponential-spread]
+Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Try spreading object type [2] first or remove
+the indexer. [cannot-spread-indexer]
 
-   type_spread.js:16:20
-   16| declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
-                          ^ [3]
-
-References:
    type_spread.js:16:16
    16| declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    type_spread.js:12:14
    12| var x: {a?: ?{[string]: number}} = {};
                     ^^^^^^^^^^^^^^^^^^ [2]
+   type_spread.js:12:16
+   12| var x: {a?: ?{[string]: number}} = {};
+                      ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- type_spread.js:20:2

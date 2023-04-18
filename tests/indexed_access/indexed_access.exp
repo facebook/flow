@@ -82,12 +82,9 @@ Cannot access string literal `bar` on indexed access because property `bar` is m
                            ^^^^^
 
 References:
-   optional.js:2:9
-               v-
-    2|   foo?: {|
-    3|     bar: number,
-    4|   |},
-         -^ [1]
+   optional.js:10:10
+   10| type X = Obj['foo']['bar']; // Error - access `bar` on undefined
+                ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:15:2

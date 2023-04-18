@@ -6832,6 +6832,11 @@ struct
       let void = VoidT.make reason |> with_trust bogus_trust in
       destruct_union ?f reason [t; null; void] upper
     in
+    let destruct_optional ?f r t upper =
+      let reason = replace_desc_new_reason RVoid r in
+      let void = VoidT.make reason |> with_trust bogus_trust in
+      destruct_union ?f reason [t; void] upper
+    in
     match t with
     | GenericT { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name }
       when ALoc.source (aloc_of_reason r) = ALoc.source (def_aloc_of_reason r) ->
@@ -6874,6 +6879,14 @@ struct
     | MaybeT (r, t) -> destruct_maybe r t (UseT (unknown_use, OpenT tout))
     | GenericT { reason; bound = MaybeT (_, t); id; name } ->
       destruct_maybe
+        ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+        reason
+        t
+        (UseT (use_op, OpenT tout))
+    | OptionalT { reason = r; type_ = t; use_desc = _ } ->
+      destruct_optional r t (UseT (unknown_use, OpenT tout))
+    | GenericT { reason; bound = OptionalT { reason = _; type_ = t; use_desc = _ }; id; name } ->
+      destruct_optional
         ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
         reason
         t
