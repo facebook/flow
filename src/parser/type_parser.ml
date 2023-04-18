@@ -1784,26 +1784,29 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_CHECKS -> Some (predicate env)
     | _ -> None
 
-  let no_annot_predicate env =
+  let no_annot_predicate env ~start_loc =
     let env = with_no_anon_function_type false env in
     with_loc
+      ~start_loc
       (fun env ->
-        Expect.token env T_COLON;
         let leading = Peek.comments env in
         Expect.token env T_CHECKS;
         predicate_checks_contents env ~leading)
       env
 
-  let function_return_annotation_and_predicate_opt env =
+  let function_return_annotation_and_predicate env =
     let open Ast.Function.ReturnAnnot in
-    match (Peek.token env, Peek.ith_token ~i:1 env) with
-    | (T_COLON, T_CHECKS) ->
-      let loc = Peek.loc_skip_lookahead env in
-      let predicate = no_annot_predicate env in
-      (Missing loc, Some predicate)
-    | (T_COLON, _) ->
+    if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
+    let missing_loc = Peek.loc_skip_lookahead env in
+    let start_loc = Peek.loc env in
+    Expect.token env T_COLON;
+    match Peek.token env with
+    | T_CHECKS ->
+      let predicate = no_annot_predicate env ~start_loc in
+      (Missing missing_loc, Some predicate)
+    | _ ->
       let annotation =
-        let annotation = Available (annotation env) in
+        let annotation = Available (with_loc ~start_loc _type env) in
         if Peek.token env = T_CHECKS then
           return_annotation_remove_trailing env annotation
         else
@@ -1811,6 +1814,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       in
       let predicate = predicate_opt env in
       (annotation, predicate)
+
+  let function_return_annotation_and_predicate_opt env =
+    let open Ast.Function.ReturnAnnot in
+    match Peek.token env with
+    | T_COLON -> function_return_annotation_and_predicate env
     | _ -> (Missing (Peek.loc_skip_lookahead env), None)
 
   let wrap f env =
