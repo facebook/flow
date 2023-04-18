@@ -273,5 +273,7 @@ let is_start_of_type_guard env =
   Eat.pop_lex_mode env;
   let token_2 = Peek.ith_token ~i:1 env in
   match (token_1, token_2) with
-  | ((T_IDENTIFIER _ | T_THIS), T_IS) -> true
+  | (T_IDENTIFIER { raw = "asserts"; _ }, (T_IDENTIFIER _ | T_THIS))
+  | ((T_IDENTIFIER _ | T_THIS), T_IS) ->
+    true
   | _ -> false

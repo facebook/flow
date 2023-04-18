@@ -601,7 +601,8 @@ and Type : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
-      guard: ('M, 'M) Identifier.t * ('M, 'T) Type.t;
+      asserts: bool;
+      guard: ('M, 'M) Identifier.t * ('M, 'T) Type.t option;
       comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]

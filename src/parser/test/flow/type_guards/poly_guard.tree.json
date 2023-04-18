@@ -104,7 +104,8 @@
                     }
                   ]
                 }
-              }
+              },
+              "asserts":false
             },
             "rest":null,
             "typeParameters":null

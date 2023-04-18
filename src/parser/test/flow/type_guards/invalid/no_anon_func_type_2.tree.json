@@ -92,7 +92,8 @@
                 "range":[25,29],
                 "value":true,
                 "raw":"true"
-              }
+              },
+              "asserts":false
             },
             "typeParameters":null
           }

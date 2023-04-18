@@ -84,7 +84,8 @@
                         "optional":false
                       },
                       "typeParameters":null
-                    }
+                    },
+                    "asserts":false
                   },
                   "rest":null,
                   "typeParameters":null

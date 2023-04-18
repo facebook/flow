@@ -124,10 +124,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let open Ast.Function.ReturnAnnot in
         match return with
         | Available (_, annot)
-        | TypeGuard (_, (_, { Ast.Type.TypeGuard.guard = (_, annot); _ })) ->
+        | TypeGuard (_, (_, { Ast.Type.TypeGuard.guard = (_, Some annot); _ })) ->
           acc <- annot :: acc;
           Missing L.none
-        | Missing _ -> return
+        | TypeGuard (_, (_, { Ast.Type.TypeGuard.guard = (_, None); _ }))
+        | Missing _ ->
+          return
 
       method! function_param param =
         let open Ast.Function.Param in

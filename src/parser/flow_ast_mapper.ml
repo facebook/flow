@@ -2688,14 +2688,14 @@ class ['loc] mapper =
 
     method type_guard (guard : ('loc, 'loc) Ast.Type.TypeGuard.t) =
       let open Ast.Type.TypeGuard in
-      let (loc, { guard = (x, t); comments }) = guard in
+      let (loc, { asserts; guard = (x, t); comments }) = guard in
       let x' = this#identifier x in
-      let t' = this#type_ t in
+      let t' = map_opt this#type_ t in
       let comments' = this#syntax_opt comments in
       if x' == x && t' == t && comments' == comments then
         guard
       else
-        (loc, { guard = (x', t'); comments = comments' })
+        (loc, { asserts; guard = (x', t'); comments = comments' })
 
     method function_rest_param (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in

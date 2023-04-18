@@ -56,8 +56,9 @@ let layout_of_node ~opts = function
   | Type typ -> Js_layout_generator.type_ ~opts typ
   | TypeParam t_param -> Js_layout_generator.type_param ~opts t_param
   | TypeAnnotation annot -> Js_layout_generator.type_annotation ~opts ~parens:false annot
-  | TypeGuard guard -> Js_layout_generator.type_guard ~opts guard
-  | TypeGuardAnnotation guard -> Js_layout_generator.type_guard_annotation ~opts guard
+  | TypeGuard guard -> Js_layout_generator.type_guard ~opts ~needs_parens:true guard
+  | TypeGuardAnnotation guard ->
+    Js_layout_generator.type_guard_annotation ~opts ~needs_parens:true guard
   | FunctionTypeAnnotation annot -> Js_layout_generator.type_annotation ~opts ~parens:true annot
   | ClassProperty prop -> Js_layout_generator.class_property ~opts prop
   | ObjectProperty prop -> Js_layout_generator.object_property ~opts prop

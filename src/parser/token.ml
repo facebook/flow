@@ -175,6 +175,7 @@ type t =
   | T_READONLY
   | T_INFER
   | T_IS
+  | T_ASSERTS
 
 (* `bool` and `boolean` are equivalent annotations, but we need to track
    which one was used for when it might be an identifier, as in
@@ -332,6 +333,7 @@ let token_to_string = function
   | T_READONLY -> "T_READONLY"
   | T_INFER -> "T_INFER"
   | T_IS -> "T_IS"
+  | T_ASSERTS -> "T_ASSERTS"
   (* Extra tokens *)
   | T_INTERPRETER _ -> "T_INTERPRETER"
   | T_ERROR _ -> "T_ERROR"
@@ -478,6 +480,7 @@ let value_of_token = function
   | T_READONLY -> "readonly"
   | T_INFER -> "infer"
   | T_IS -> "is"
+  | T_ASSERTS -> "asserts"
   (* Extra tokens *)
   | T_INTERPRETER (_, str) -> str
   | T_ERROR raw -> raw

@@ -178,6 +178,14 @@ function typeGuardInComments(x /*: mixed */) /*: x is boolean */ {
   return typeof x === "boolean";
 }
 
+function typeAssertsFunction1(x) {
+  if (typeof x !== "boolean") throw new Error;
+}
+
+function typeAssertsFunction2(x) {
+  if (!x) throw new Error;
+}
+
 // Test function with default type parameter
 function f() {}
 

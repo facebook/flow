@@ -3197,14 +3197,16 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     type_guard grd1 grd2
   and type_guard
       ((loc1, grd1) : (Loc.t, Loc.t) Ast.Type.TypeGuard.t)
-      ((_, grd2) : (Loc.t, Loc.t) Ast.Type.TypeGuard.t) : node change list =
+      ((loc2, grd2) : (Loc.t, Loc.t) Ast.Type.TypeGuard.t) : node change list =
     let open Ast.Type.TypeGuard in
-    let { guard = (x1, t1); comments = comments1 } = grd1 in
-    let { guard = (x2, t2); comments = comments2 } = grd2 in
-    let id = diff_if_changed identifier x1 x2 in
-    let t = type_ t1 t2 in
-    let comments = syntax_opt loc1 comments1 comments2 |> Base.Option.value ~default:[] in
-    Base.List.concat [id; t; comments]
+    let { asserts = asserts1; guard = (x1, t1); comments = comments1 } = grd1 in
+    let { asserts = asserts2; guard = (x2, t2); comments = comments2 } = grd2 in
+    if asserts1 != asserts2 || t1 != t2 then
+      [replace loc1 (TypeGuard (loc1, grd1)) (TypeGuard (loc2, grd2))]
+    else
+      let id = diff_if_changed identifier x1 x2 in
+      let comments = syntax_opt loc1 comments1 comments2 |> Base.Option.value ~default:[] in
+      Base.List.concat [id; comments]
   and type_cast
       (loc : Loc.t)
       (type_cast1 : (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)

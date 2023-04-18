@@ -46,5 +46,21 @@ User defined type guards are not yet supported. [unsupported-syntax]
                                     ^^^^^^
 
 
+Error -------------------------------------------------------------------------------- unsupported_error_message.js:7:21
 
-Found 6 errors
+User defined type guards are not yet supported. [unsupported-syntax]
+
+   7| function k(x: any): asserts x { throw "unsupported" }; // error unsupported
+                          ^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------- unsupported_error_message.js:8:21
+
+User defined type guards are not yet supported. [unsupported-syntax]
+
+   8| function l(x: any): asserts x is number { throw "unsupported" }; // error unsupported
+                          ^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 8 errors

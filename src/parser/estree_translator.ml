@@ -1529,12 +1529,16 @@ with type t = Impl.t = struct
     and return_annotation = function
       | Ast.Type.Function.TypeAnnotation t -> _type t
       | Ast.Type.Function.TypeGuard g -> type_guard g
-    and type_guard (loc, { Ast.Type.TypeGuard.guard = (x, t); comments }) =
+    and type_guard (loc, { Ast.Type.TypeGuard.asserts; guard = (x, t); comments }) =
       node
         ?comments:(format_internal_comments comments)
         "TypePredicate"
         loc
-        [("parameterName", identifier x); ("typeAnnotation", _type t)]
+        [
+          ("parameterName", identifier x);
+          ("typeAnnotation", option _type t);
+          ("asserts", bool asserts);
+        ]
     and function_type
         ( loc,
           {

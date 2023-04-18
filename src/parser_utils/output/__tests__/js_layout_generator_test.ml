@@ -2968,6 +2968,17 @@ let tests =
              ~ctxt
              ~pretty:true
              "(x: any): x is ((x: true) => x is (x: true) => x is true) => true";
-           assert_statement_string ~ctxt ~pretty:true "declare function f(x: any): x is true;"
+           assert_statement_string ~ctxt ~pretty:true "declare function f(x: any): x is true;";
+           assert_expression_string ~ctxt ~pretty:true "(x: any): asserts x => true";
+           assert_expression_string ~ctxt ~pretty:true "(x: any): asserts x is true => true";
+           assert_expression_string
+             ~ctxt
+             ~pretty:true
+             "(x: any): asserts x is ((x: true) => true) => true";
+           assert_statement_string ~ctxt ~pretty:true "declare function f(x: any): asserts;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare function f(x: any): asserts x is true;"
          );
        ]

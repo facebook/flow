@@ -58,7 +58,8 @@
                 "type":"NumberTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":40}},
                 "range":[34,40]
-              }
+              },
+              "asserts":false
             },
             "rest":null,
             "typeParameters":null
@@ -145,7 +146,8 @@
                 },
                 "rest":null,
                 "typeParameters":null
-              }
+              },
+              "asserts":false
             },
             "rest":null,
             "typeParameters":null
@@ -232,7 +234,8 @@
                 },
                 "rest":null,
                 "typeParameters":null
-              }
+              },
+              "asserts":false
             },
             "rest":null,
             "typeParameters":null
@@ -326,7 +329,8 @@
                 },
                 "rest":null,
                 "typeParameters":null
-              }
+              },
+              "asserts":false
             },
             "rest":null,
             "typeParameters":null
@@ -422,11 +426,13 @@
                     "type":"NumberTypeAnnotation",
                     "loc":{"source":null,"start":{"line":5,"column":49},"end":{"line":5,"column":55}},
                     "range":[254,260]
-                  }
+                  },
+                  "asserts":false
                 },
                 "rest":null,
                 "typeParameters":null
-              }
+              },
+              "asserts":false
             },
             "rest":null,
             "typeParameters":null

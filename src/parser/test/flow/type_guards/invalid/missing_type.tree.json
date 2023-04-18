@@ -64,7 +64,8 @@
             "type":"AnyTypeAnnotation",
             "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":26}},
             "range":[25,26]
-          }
+          },
+          "asserts":false
         },
         "rest":null,
         "typeParameters":null

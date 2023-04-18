@@ -776,6 +776,7 @@ let token_is_type_identifier env t =
     | T_READONLY
     | T_INFER
     | T_IS
+    | T_ASSERTS
     | T_VOID ->
       false
     (* syntax *)

@@ -95,7 +95,8 @@
                   "type":"NumberTypeAnnotation",
                   "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":27}},
                   "range":[31,37]
-                }
+                },
+                "asserts":false
               },
               "typeParameters":null
             },
@@ -170,7 +171,8 @@
                     "optional":false
                   },
                   "typeParameters":null
-                }
+                },
+                "asserts":false
               },
               "typeParameters":null
             },
@@ -260,7 +262,8 @@
                   "type":"NumberTypeAnnotation",
                   "loc":{"source":null,"start":{"line":7,"column":21},"end":{"line":7,"column":27}},
                   "range":[132,138]
-                }
+                },
+                "asserts":false
               },
               "rest":null,
               "typeParameters":null
@@ -315,7 +318,8 @@
                     "optional":false
                   },
                   "typeParameters":null
-                }
+                },
+                "asserts":false
               },
               "rest":null,
               "typeParameters":null

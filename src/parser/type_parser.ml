@@ -598,6 +598,21 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       Eat.token env;
       let trailing = Eat.trailing_comments env in
       Some (Type.Undefined (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+    | T_ASSERTS ->
+      let leading = Peek.comments env in
+      let (loc, _) = with_loc Eat.token env in
+      let trailing = Eat.trailing_comments env in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      Some
+        (Ast.Type.Generic
+           {
+             Ast.Type.Generic.id =
+               Ast.Type.Generic.Identifier.Unqualified
+                 (Flow_ast_utils.ident_of_source (loc, "asserts"));
+             targs = None;
+             comments;
+           }
+        )
     | _ -> None
 
   and tuple =
@@ -876,18 +891,24 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     with_loc
       (fun env ->
         let leading = Peek.comments env in
+        let asserts = Eat.maybe env T_ASSERTS in
         (* Parse the identifier part as normal code, since this can be any name that
          * a parameter can be. *)
         Eat.push_lex_mode env Lex_mode.NORMAL;
         let param = identifier_name env in
         Eat.pop_lex_mode env;
-        let internal = Peek.comments env in
-        Expect.token env T_IS;
-        let internal = internal @ Peek.comments env in
-        let t = _type env in
+        let (t, internal) =
+          match Peek.token env with
+          | T_IS ->
+            let internal = Peek.comments env in
+            Expect.token env T_IS;
+            let internal = internal @ Peek.comments env in
+            (Some (_type env), internal)
+          | _ -> (None, [])
+        in
         let guard = (param, t) in
         let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~internal () in
-        { Ast.Type.TypeGuard.guard; comments })
+        { Ast.Type.TypeGuard.asserts; guard; comments })
       env
 
   and type_guard_annotation env ~start_loc = with_loc ~start_loc type_guard env
