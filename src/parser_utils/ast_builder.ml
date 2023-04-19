@@ -725,25 +725,27 @@ module Expressions = struct
 
   let object_ ?comments ?(loc = Loc.none) properties = (loc, Object { Object.properties; comments })
 
-  (* _object.property *)
-  let member ?comments ~property _object =
-    {
-      Member._object;
-      property = Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (Loc.none, property));
-      comments;
-    }
+  module Members = struct
+    (* _object.property *)
+    let identifier ?comments ~property _object =
+      { Member._object; property = Member.PropertyIdentifier property; comments }
 
-  (* _object[property] *)
-  let member_computed ?comments ~property _object =
-    { Member._object; property = Member.PropertyExpression property; comments }
+    let identifier_by_name ?comments ~name _object =
+      identifier ?comments ~property:(Identifiers.identifier name) _object
 
-  let member_expression ?(loc = Loc.none) expr = (loc, Ast.Expression.Member expr)
+    (* _object.#property *)
+    let private_name ?comments ~property _object =
+      { Member._object; property = Member.PropertyPrivateName property; comments }
 
-  let member_expression_ident_by_name obj (name : string) =
-    member_expression (member obj ~property:name)
+    (* _object[property] *)
+    let expression ?comments ~property _object =
+      { Member._object; property = Member.PropertyExpression property; comments }
 
-  let member_expression_computed_string obj (str : string) =
-    member_expression (member_computed obj ~property:(literal (Literals.string str)))
+    let expression_by_string ?comments ~str _object =
+      expression ?comments ~property:(literal (Literals.string str)) _object
+  end
+
+  let member ?(loc = Loc.none) expr = (loc, Ast.Expression.Member expr)
 
   let optional_member_expression ?(loc = Loc.none) ~optional expr =
     (loc, OptionalMember { OptionalMember.member = expr; optional; filtered_out = loc })

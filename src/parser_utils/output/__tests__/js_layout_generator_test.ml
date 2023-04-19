@@ -300,14 +300,17 @@ let tests =
            assert_expression ~ctxt "(x++)()" update;
 
            (* `x.y()` *)
-           let member = E.call (E.member_expression (E.member x ~property:"y")) in
+           let member = E.call (E.member (E.Members.identifier_by_name x ~name:"y")) in
            assert_expression ~ctxt "x.y()" member;
 
            (* `x.y.z()` *)
            let two_members =
              E.call
-               (E.member_expression
-                  (E.member (E.member_expression (E.member x ~property:"y")) ~property:"z")
+               (E.member
+                  (E.Members.identifier_by_name
+                     (E.member (E.Members.identifier_by_name x ~name:"y"))
+                     ~name:"z"
+                  )
                )
            in
            assert_expression ~ctxt "x.y.z()" two_members;
@@ -329,7 +332,9 @@ let tests =
            assert_expression ~ctxt "function(){}()" func;
 
            (* `(function() {}.foo)()` *)
-           let func = E.call (E.member_expression (E.member (E.function_ ()) ~property:"foo")) in
+           let func =
+             E.call (E.member (E.Members.identifier_by_name (E.function_ ()) ~name:"foo"))
+           in
            assert_expression ~ctxt "function(){}.foo()" func;
 
            (* `(() => {})()` *)
@@ -360,52 +365,57 @@ let tests =
            let x = E.identifier "x" in
            (* `(x++).y` *)
            let update =
-             E.member_expression (E.member (E.increment ~prefix:false x) ~property:"y")
+             E.member (E.Members.identifier_by_name (E.increment ~prefix:false x) ~name:"y")
            in
            assert_expression ~ctxt "(x++).y" update;
 
            (* `x.y.z` *)
            let member =
-             E.member_expression
-               (E.member (E.member_expression (E.member x ~property:"y")) ~property:"z")
+             E.member
+               (E.Members.identifier_by_name
+                  (E.member (E.Members.identifier_by_name x ~name:"y"))
+                  ~name:"z"
+               )
            in
            assert_expression ~ctxt "x.y.z" member;
 
            (* x().y *)
-           let call = E.member_expression (E.member (E.call x) ~property:"y") in
+           let call = E.member (E.Members.identifier_by_name (E.call x) ~name:"y") in
            assert_expression ~ctxt "x().y" call;
 
            (* x()[y] *)
-           let computed =
-             E.member_expression (E.member_computed (E.call x) ~property:(E.identifier "y"))
-           in
+           let computed = E.member (E.Members.expression (E.call x) ~property:(E.identifier "y")) in
            assert_expression ~ctxt "x()[y]" computed;
 
            (* `(function() {}).x` *)
-           let func = E.member_expression (E.member (E.function_ ()) ~property:"x") in
+           let func = E.member (E.Members.identifier_by_name (E.function_ ()) ~name:"x") in
            assert_expression ~ctxt "function(){}.x" func;
 
            (* `(() => {}).x` *)
-           let func = E.member_expression (E.member (E.arrow_function ()) ~property:"x") in
+           let func = E.member (E.Members.identifier_by_name (E.arrow_function ()) ~name:"x") in
            assert_expression ~ctxt "(()=>{}).x" func;
 
            (* `(x, y).z` *)
            let seq =
-             E.member_expression (E.member (E.sequence [x; E.identifier "y"]) ~property:"z")
+             E.member (E.Members.identifier_by_name (E.sequence [x; E.identifier "y"]) ~name:"z")
            in
            assert_expression ~ctxt "(x,y).z" seq;
 
            let num =
-             E.member_expression (E.member (E.literal (Literals.number 1.0 "1")) ~property:"z")
+             E.member (E.Members.identifier_by_name (E.literal (Literals.number 1.0 "1")) ~name:"z")
            in
            assert_expression ~ctxt "1..z" num;
            let num =
-             E.member_expression (E.member (E.literal (Literals.number 1.1 "1.1")) ~property:"z")
+             E.member
+               (E.Members.identifier_by_name (E.literal (Literals.number 1.1 "1.1")) ~name:"z")
            in
            assert_expression ~ctxt "1.1.z" num;
            let num =
-             E.member_expression
-               (E.member (E.literal (Literals.number 0.0000001 "0.0000001")) ~property:"z")
+             E.member
+               (E.Members.identifier_by_name
+                  (E.literal (Literals.number 0.0000001 "0.0000001"))
+                  ~name:"z"
+               )
            in
            assert_expression ~ctxt "1e-7.z" num
          );
@@ -542,19 +552,23 @@ let tests =
 
            (* `new x.y()` *)
            let member =
-             E.new_ (E.member_expression (E.member x ~property:"y")) ~args:(E.arg_list [])
+             E.new_ (E.member (E.Members.identifier_by_name x ~name:"y")) ~args:(E.arg_list [])
            in
            assert_expression ~ctxt "new x.y()" member;
 
            (* `new (x.y())()` *)
            let member_call =
-             E.new_ (E.call (E.member_expression (E.member x ~property:"y"))) ~args:(E.arg_list [])
+             E.new_
+               (E.call (E.member (E.Members.identifier_by_name x ~name:"y")))
+               ~args:(E.arg_list [])
            in
            assert_expression ~ctxt "new(x.y())()" member_call;
 
            (* `new (x().y)()` *)
            let call_member =
-             E.new_ (E.member_expression (E.member (E.call x) ~property:"y")) ~args:(E.arg_list [])
+             E.new_
+               (E.member (E.Members.identifier_by_name (E.call x) ~name:"y"))
+               ~args:(E.arg_list [])
            in
            assert_expression ~ctxt "new(x().y)()" call_member;
 
@@ -612,22 +626,24 @@ let tests =
            assert_statement ~ctxt "(function(){})();" func_call;
 
            let func_member =
-             S.expression (E.member_expression (E.member (E.function_ ()) ~property:"foo"))
+             S.expression (E.member (E.Members.identifier_by_name (E.function_ ()) ~name:"foo"))
            in
            assert_statement ~ctxt "(function(){}).foo;" func_member;
 
            let class_member =
-             S.expression (E.member_expression (E.member (E.class_ []) ~property:"foo"))
+             S.expression (E.member (E.Members.identifier_by_name (E.class_ []) ~name:"foo"))
            in
            assert_statement ~ctxt "(class{}).foo;" class_member;
 
            let func_member_call =
-             S.expression (E.call (E.member_expression (E.member (E.function_ ()) ~property:"foo")))
+             S.expression
+               (E.call (E.member (E.Members.identifier_by_name (E.function_ ()) ~name:"foo")))
            in
            assert_statement ~ctxt "(function(){}).foo();" func_member_call;
 
            let func_call_member =
-             S.expression (E.member_expression (E.member (E.call (E.function_ ())) ~property:"foo"))
+             S.expression
+               (E.member (E.Members.identifier_by_name (E.call (E.function_ ())) ~name:"foo"))
            in
            assert_statement ~ctxt "(function(){})().foo;" func_call_member;
 

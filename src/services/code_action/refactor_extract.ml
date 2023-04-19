@@ -171,8 +171,8 @@ let create_extracted_function_call
     let caller =
       if is_method then
         Expressions.this ()
-        |> Expressions.member ~property:new_function_name
-        |> Expressions.member_expression
+        |> Expressions.Members.identifier_by_name ~name:new_function_name
+        |> Expressions.member
       else
         Expressions.identifier new_function_name
     in
@@ -554,8 +554,8 @@ let create_extract_to_class_field_refactors
       let open Ast_builder in
       let expression_replacement =
         Expressions.this ()
-        |> Expressions.member ~property:new_property_name
-        |> Expressions.member_expression
+        |> Expressions.Members.identifier_by_name ~name:new_property_name
+        |> Expressions.member
       in
       let field_definition = Ast_builder.Classes.property ~id:new_property_name expression in
       RefactorProgramMappers.extract_to_class_field
