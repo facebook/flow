@@ -3564,5 +3564,161 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics'],
       ),
     ]),
+    test('provide quickfix for class member access', [
+      addFile(
+        'fix-class-member-access.js.ignored',
+        'fix-class-member-access.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-class-member-access.js',
+        },
+        range: {
+          start: {
+            line: 8,
+            character: 7,
+          },
+          end: {
+            line: 8,
+            character: 7,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Prefix with `this.`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-class-member-access.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 8,
+                            character: 4,
+                          },
+                          end: {
+                            line: 8,
+                            character: 9,
+                          },
+                        },
+                        newText: 'this.field',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'prefix_with_this',
+                    'Prefix with `this.`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-class-member-access.js',
+        },
+        range: {
+          start: {
+            line: 10,
+            character: 7,
+          },
+          end: {
+            line: 10,
+            character: 7,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Prefix with `this.`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-class-member-access.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 10,
+                            character: 4,
+                          },
+                          end: {
+                            line: 10,
+                            character: 10,
+                          },
+                        },
+                        newText: '(this.method)',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'prefix_with_this',
+                    'Prefix with `this.`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-class-member-access.js',
+        },
+        range: {
+          start: {
+            line: 12,
+            character: 7,
+          },
+          end: {
+            line: 12,
+            character: 7,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
   ],
 ): Suite);

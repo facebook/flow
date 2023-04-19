@@ -726,6 +726,20 @@ let ast_transforms_of_error ?loc = function
       ]
     else
       []
+  | Error_message.EBuiltinLookupFailed { name; reason; _ } ->
+    let error_loc = Reason.loc_of_reason reason in
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Prefix with `this.`";
+          diagnostic_title = "prefix_with_this";
+          transform =
+            Autofix_class_member_access.fix ~member_name:(Reason.display_string_of_name name);
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
@@ -772,57 +786,56 @@ let code_actions_of_errors
   let (actions, has_missing_import) =
     Flow_error.ErrorSet.fold
       (fun error (actions, has_missing_import) ->
-        match
+        let error_message =
           Flow_error.msg_of_error error
           |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
-        with
-        | Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None }
-          when Options.autoimports options ->
-          let error_loc = Reason.loc_of_reason reason in
-          let actions =
-            if include_quick_fixes && Loc.intersects error_loc loc then
-              let { ServerEnv.exports; _ } = env in
-              suggest_imports
-                ~options
-                ~reader
-                ~ast
-                ~diagnostics
-                ~exports (* TODO consider filtering out internal names *)
-                ~name:(Reason.display_string_of_name name)
-                uri
-                loc
-              @ actions
-            else
-              actions
-          in
-          (actions, true)
-        | error_message ->
-          let actions =
-            if include_quick_fixes then
-              let quick_fixes =
-                ast_transforms_of_error ~loc error_message
-                |> Base.List.filter_map
-                     ~f:(fun { title; diagnostic_title; transform; target_loc } ->
-                       autofix_in_upstream_file
-                         ~reader
-                         ~cx
-                         ~file_sig
-                         ~diagnostics
-                         ~ast
-                         ~typed_ast
-                         ~options
-                         ~title
-                         ~diagnostic_title
-                         ~transform
-                         uri
-                         target_loc
-                   )
-              in
-              quick_fixes @ actions
-            else
-              actions
-          in
-          (actions, has_missing_import))
+        in
+        let (suggest_imports_actions, has_missing_import) =
+          match error_message with
+          | Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None }
+            when Options.autoimports options ->
+            let error_loc = Reason.loc_of_reason reason in
+            let actions =
+              if include_quick_fixes && Loc.intersects error_loc loc then
+                let { ServerEnv.exports; _ } = env in
+                suggest_imports
+                  ~options
+                  ~reader
+                  ~ast
+                  ~diagnostics
+                  ~exports (* TODO consider filtering out internal names *)
+                  ~name:(Reason.display_string_of_name name)
+                  uri
+                  loc
+              else
+                []
+            in
+            (actions, true)
+          | _ -> ([], has_missing_import)
+        in
+        let quick_fix_actions =
+          if include_quick_fixes then
+            ast_transforms_of_error ~loc error_message
+            |> Base.List.filter_map ~f:(fun { title; diagnostic_title; transform; target_loc } ->
+                   autofix_in_upstream_file
+                     ~reader
+                     ~cx
+                     ~file_sig
+                     ~diagnostics
+                     ~ast
+                     ~typed_ast
+                     ~options
+                     ~title
+                     ~diagnostic_title
+                     ~transform
+                     uri
+                     target_loc
+               )
+          else
+            []
+        in
+        let actions = suggest_imports_actions @ quick_fix_actions @ actions in
+        (actions, has_missing_import))
       errors
       ([], false)
   in
