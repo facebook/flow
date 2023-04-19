@@ -170,7 +170,7 @@ let create_extracted_function_call
   let call =
     let caller =
       if is_method then
-        (Loc.none, Flow_ast.Expression.(This { This.comments = None }))
+        Expressions.this ()
         |> Expressions.member ~property:new_function_name
         |> Expressions.member_expression
       else
@@ -553,7 +553,7 @@ let create_extract_to_class_field_refactors
     let new_ast =
       let open Ast_builder in
       let expression_replacement =
-        (Loc.none, Flow_ast.Expression.(This { This.comments = None }))
+        Expressions.this ()
         |> Expressions.member ~property:new_property_name
         |> Expressions.member_expression
       in

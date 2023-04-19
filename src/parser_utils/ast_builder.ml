@@ -777,6 +777,10 @@ module Expressions = struct
   let yield ?(loc = Loc.none) ?comments ~delegate expr =
     (loc, Yield { Yield.argument = expr; comments; delegate; result_out = loc })
 
+  let this ?(loc = Loc.none) ?comments () = (loc, This { This.comments })
+
+  let super ?(loc = Loc.none) ?comments () = (loc, Super { Super.comments })
+
   module Literals = struct
     let string ?loc value = literal ?loc (Literals.string value)
 
