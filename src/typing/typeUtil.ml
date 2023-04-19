@@ -590,7 +590,6 @@ let rec mod_loc_of_virtual_use_op f =
           check_type_reason = mod_reason check_type_reason;
           extends_type_reason = mod_reason extends_type_reason;
         }
-    | Internal o -> Internal o
     | JSXCreateElement { op; component } ->
       JSXCreateElement { op = mod_reason op; component = mod_reason component }
     | ReactCreateElementCall { op; component; children } ->

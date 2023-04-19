@@ -8009,7 +8009,6 @@ struct
   and pick_use_op cx op1 op2 =
     let ignore_root = function
       | UnknownUse -> true
-      | Internal _ -> true
       (* If we are speculating then a Speculation use_op should be considered
        * "opaque". If we are not speculating then Speculation use_ops that escaped
        * (through benign tvars) should be ignored.
@@ -8068,7 +8067,6 @@ struct
               | ClassImplementsCheck _
               | ClassOwnProtoCheck _
               | GeneratorYield _
-              | Internal _
               | ReactCreateElementCall _
               | ReactGetIntrinsic _
               | MatchingProp _

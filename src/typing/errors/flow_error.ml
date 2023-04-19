@@ -450,9 +450,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
         let rec loop (loc : Loc.t) frames (use_op : Loc.t virtual_use_op) =
           let action =
             match use_op with
-            | Op UnknownUse
-            | Op (Internal _) ->
-              `UnknownRoot false
+            | Op UnknownUse -> `UnknownRoot false
             | Op (Type.Speculation _) when speculation -> `UnknownRoot true
             | Op (Type.Speculation use) -> `Next use
             | Op (ObjectSpread { op }) -> `Root (op, None, [text "Cannot spread "; desc op])

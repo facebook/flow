@@ -313,7 +313,7 @@ let detect_literal_subtypes =
             let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
             DefT (reason, bogus_trust (), StrT (Literal (Some sense, Reason.OrdinaryName str)))
         in
-        Flow_js.flow cx (l, UseT (Op (Internal Refinement), u_def)))
+        Flow_js.flow cx (l, UseT (unknown_use, u_def)))
       checks
 
 let check_constrained_writes cx =

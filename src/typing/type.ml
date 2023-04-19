@@ -261,12 +261,6 @@ module rec TypeTerm : sig
     (* util for deciding subclassing relations *)
     | ExtendsT of reason * t * t
 
-  and internal_use_op =
-    | CopyEnv
-    | MergeEnv
-    | Refinement
-    | WidenEnv
-
   and 'loc virtual_root_use_op =
     | ObjectSpread of { op: 'loc virtual_reason }
     | ObjectRest of { op: 'loc virtual_reason }
@@ -347,7 +341,6 @@ module rec TypeTerm : sig
         bound: 'loc virtual_reason;
         infer: 'loc virtual_reason;
       }
-    | Internal of internal_use_op
     | JSXCreateElement of {
         op: 'loc virtual_reason;
         component: 'loc virtual_reason;
@@ -3522,7 +3515,6 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
     aloc_of_reason op
   | ReactGetIntrinsic _
   | Speculation _
-  | Internal _
   | UnknownUse
   | ClassOwnProtoCheck _ ->
     ALoc.none
@@ -3625,12 +3617,6 @@ let string_of_ctor = function
   | OptionalT _ -> "OptionalT"
   | MaybeT _ -> "MaybeT"
 
-let string_of_internal_use_op = function
-  | CopyEnv -> "CopyEnv"
-  | MergeEnv -> "MergeEnv"
-  | Refinement -> "Refinement"
-  | WidenEnv -> "WidenEnv"
-
 let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | InitField _ -> "InitField"
   | ObjectSpread _ -> "ObjectSpread"
@@ -3655,7 +3641,6 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | IndexedTypeAccess _ -> "IndexedTypeAccess"
   | InferBoundCompatibilityCheck _ -> "InferBoundCompatibilityCheck"
   | ConditionalTypeEval _ -> "ConditionalTypeEval"
-  | Internal op -> spf "Internal(%s)" (string_of_internal_use_op op)
   | JSXCreateElement _ -> "JSXCreateElement"
   | ReactCreateElementCall _ -> "ReactCreateElementCall"
   | ReactGetIntrinsic _ -> "ReactGetIntrinsic"
