@@ -406,7 +406,7 @@ let optimize_builtins cx =
     Flow_js.flow_t cx (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)), t);
     Flow_js.add_output
       cx
-      (Error_message.EBuiltinLookupFailed { reason; name = Some name; potential_generator = None })
+      (Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None })
   in
   Builtins.optimize_entries builtins ~on_missing ~optimize:(reducer#type_ cx Polarity.Neutral);
   Context.set_graph cx reducer#get_reduced_graph;

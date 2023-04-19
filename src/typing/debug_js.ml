@@ -1311,9 +1311,7 @@ let dump_error_message =
       spf
         "EBuiltinLookupFailed { reason = %s; name = %S; potential_generator = %s }"
         (dump_reason cx reason)
-        (match name with
-        | Some x -> spf "Some(%S)" (Reason.display_string_of_name x)
-        | None -> "None")
+        (Reason.display_string_of_name name)
         (match potential_generator with
         | Some generator -> spf "Some(%s)" generator
         | None -> "None")

@@ -122,7 +122,7 @@ and 'loc t' =
     }
   | EBuiltinLookupFailed of {
       reason: 'loc virtual_reason;
-      name: Reason.name option;
+      name: Reason.name;
       potential_generator: string option;
     }
   | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * name * 'loc virtual_use_op
@@ -2274,8 +2274,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EBuiltinLookupFailed { reason; name; potential_generator } ->
     let features =
-      match name with
-      | Some x when is_internal_module_name x ->
+      if is_internal_module_name name then
         let potential_generator_features =
           match potential_generator with
           | Some generator ->
@@ -2286,12 +2285,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             ]
           | None -> []
         in
-        [text "Cannot resolve module "; code (uninternal_name x); text "."]
+        [text "Cannot resolve module "; code (uninternal_name name); text "."]
         @ potential_generator_features
-      | None -> [text "Cannot resolve name "; desc reason; text "."]
-      | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
-      | Some x -> [text "Cannot resolve name "; code (display_string_of_name x); text "."]
+      else if is_internal_name name then
+        [text "Cannot resolve name "; desc reason; text "."]
+      else
+        [text "Cannot resolve name "; code (display_string_of_name name); text "."]
     in
+
     Normal { features }
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing
@@ -4769,9 +4770,10 @@ let error_code_of_message err : error_code option =
     | EEnumReassigned -> Some ReassignEnum
   end
   | EBuiltinLookupFailed { name; _ } -> begin
-    match name with
-    | Some x when is_internal_module_name x -> Some CannotResolveModule
-    | _ -> Some CannotResolveName
+    if is_internal_module_name name then
+      Some CannotResolveModule
+    else
+      Some CannotResolveName
   end
   | ECallTypeArity _ -> Some NonpolymorphicTypeArg
   | ECannotDelete _ -> Some CannotDelete

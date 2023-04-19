@@ -703,8 +703,7 @@ let emit_cacheable_env_error cx loc err =
     | Env_api.ReferencedBeforeDeclaration { name; def_loc } ->
       EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName name, def_loc)
     | Env_api.BuiltinLookupFailed { reason_desc; potential_generator; name } ->
-      EBuiltinLookupFailed
-        { reason = mk_reason reason_desc loc; potential_generator; name = Some name }
+      EBuiltinLookupFailed { reason = mk_reason reason_desc loc; potential_generator; name }
   in
   add_output cx err
 

@@ -751,8 +751,7 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only
           Flow_error.msg_of_error error
           |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
         with
-        | Error_message.EBuiltinLookupFailed
-            { reason; name = Some name; potential_generator = None }
+        | Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None }
           when Options.autoimports options ->
           let error_loc = Reason.loc_of_reason reason in
           let actions =
@@ -991,8 +990,7 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
           Flow_error.msg_of_error error
           |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
         with
-        | Error_message.EBuiltinLookupFailed
-            { reason; name = Some name; potential_generator = None }
+        | Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None }
           when Options.autoimports options ->
           let name = Reason.display_string_of_name name in
           let error_loc = Reason.loc_of_reason reason in
