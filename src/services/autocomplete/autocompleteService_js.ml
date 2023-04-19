@@ -1337,6 +1337,17 @@ let print_expression ~options ~token expression =
   |> Pretty_printer.print ~source_maps:None ~skip_endline:true
   |> Source.contents
 
+let print_name_as_indexer ~options ~token name =
+  let expression =
+    match Base.String.chop_prefix ~prefix:"@@" name with
+    | None -> Ast_builder.Expressions.literal (Ast_builder.Literals.string name)
+    | Some symbol ->
+      Ast_builder.Expressions.member_expression_ident_by_name
+        (Ast_builder.Expressions.identifier "Symbol")
+        symbol
+  in
+  print_expression ~options ~token expression
+
 let autocomplete_member
     ~env
     ~reader
@@ -1385,19 +1396,7 @@ let autocomplete_member
              let opt_chain_ty =
                Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (false, Ty.Void, ty, []))
              in
-             let name_as_indexer =
-               lazy
-                 (let expression =
-                    match Base.String.chop_prefix ~prefix:"@@" name with
-                    | None -> Ast_builder.Expressions.literal (Ast_builder.Literals.string name)
-                    | Some symbol ->
-                      Ast_builder.Expressions.member_expression_ident_by_name
-                        (Ast_builder.Expressions.identifier "Symbol")
-                        symbol
-                  in
-                  print_expression ~options ~token expression
-                 )
-             in
+             let name_as_indexer = lazy (print_name_as_indexer ~options ~token name) in
              let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
              let edit_loc_of_member_loc member_loc =
                if Loc.(member_loc.start.line = member_loc._end.line) then
@@ -1915,17 +1914,7 @@ let autocomplete_object_key
                  (name, edit_locs)
                  ty
              else
-               let insert_text =
-                 let expression =
-                   match Base.String.chop_prefix ~prefix:"@@" name with
-                   | None -> Ast_builder.Expressions.literal (Ast_builder.Literals.string name)
-                   | Some symbol ->
-                     Ast_builder.Expressions.member_expression_ident_by_name
-                       (Ast_builder.Expressions.identifier "Symbol")
-                       symbol
-                 in
-                 print_expression ~options ~token expression
-               in
+               let insert_text = print_name_as_indexer ~options ~token name in
                autocomplete_create_result
                  ~insert_text
                  ~rank
