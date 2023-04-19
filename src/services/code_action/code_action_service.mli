@@ -25,12 +25,23 @@ val text_edits_of_import :
   Export_index.source ->
   text_edits option
 
+type ast_transform =
+  cx:Context.t ->
+  file_sig:File_sig.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t option
+
 type ast_transform_of_error = {
   title: string;
   diagnostic_title: string;
-  transform: (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Program.t;
+  transform: ast_transform;
   target_loc: Loc.t;
 }
+
+val untyped_ast_transform :
+  ((Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Program.t) -> ast_transform
 
 val ast_transforms_of_error : ?loc:Loc.t -> Loc.t Error_message.t' -> ast_transform_of_error list
 

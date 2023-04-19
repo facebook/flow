@@ -382,8 +382,37 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
     in
     Base.List.rev rev_actions
 
+type ast_transform =
+  cx:Context.t ->
+  file_sig:File_sig.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t option
+
+type ast_transform_of_error = {
+  title: string;
+  diagnostic_title: string;
+  transform: ast_transform;
+  target_loc: Loc.t;
+}
+
+let untyped_ast_transform transform ~cx:_ ~file_sig:_ ~ast ~typed_ast:_ loc =
+  Some (transform ast loc)
+
 let autofix_in_upstream_file
-    ~reader ~diagnostics ~ast ~options ~title ~transform ~diagnostic_title uri loc =
+    ~reader
+    ~cx
+    ~file_sig
+    ~diagnostics
+    ~ast
+    ~typed_ast
+    ~options
+    ~title
+    ~transform
+    ~diagnostic_title
+    uri
+    loc =
   let (ast, uri) =
     let src = Loc.source loc in
     let ast_src = fst ast |> Loc.source in
@@ -397,42 +426,32 @@ let autofix_in_upstream_file
     else
       (ast, uri)
   in
-  let mk_diff ast new_ast = Flow_ast_differ.program ast new_ast in
+  let open Base.Option in
+  transform ~cx ~file_sig ~ast ~typed_ast loc
+  >>| Flow_ast_differ.program ast
+  >>| Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+  >>| Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+  >>| fun edits ->
   let open Lsp in
-  match transform ast loc with
-  | new_ast ->
-    let diff = mk_diff ast new_ast in
-    let opts = layout_options options in
-    let edits =
-      Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-      |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
-    in
-    CodeAction.Action
-      {
-        CodeAction.title;
-        kind = CodeActionKind.quickfix;
-        (* Handing back the diagnostics we were given is a placeholder for
-              eventually generating the diagnostics for the errors we are fixing *)
-        diagnostics;
-        action =
-          CodeAction.BothEditThenCommand
-            ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-              {
-                Command.title = "";
-                command = Command.Command "log";
-                arguments =
-                  ["textDocument/codeAction"; diagnostic_title; title]
-                  |> List.map (fun str -> Hh_json.JSON_String str);
-              }
-            );
-      }
-
-type ast_transform_of_error = {
-  title: string;
-  diagnostic_title: string;
-  transform: (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Program.t;
-  target_loc: Loc.t;
-}
+  CodeAction.Action
+    {
+      CodeAction.title;
+      kind = CodeActionKind.quickfix;
+      (* Handing back the diagnostics we were given is a placeholder for
+         eventually generating the diagnostics for the errors we are fixing *)
+      diagnostics;
+      action =
+        CodeAction.BothEditThenCommand
+          ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+            {
+              Command.title = "";
+              command = Command.Command "log";
+              arguments =
+                ["textDocument/codeAction"; diagnostic_title; title]
+                |> List.map (fun str -> Hh_json.JSON_String str);
+            }
+          );
+    }
 
 let loc_opt_intersects ~loc ~error_loc =
   match loc with
@@ -447,11 +466,13 @@ let ast_transforms_of_error ?loc = function
           title = "Replace `bool` with `boolean`";
           diagnostic_title = "replace_bool";
           transform =
-            Autofix_replace_type.replace_type ~f:(function
-                | Flow_ast.Type.Boolean { raw = _; comments } ->
-                  Flow_ast.Type.Boolean { raw = `Boolean; comments }
-                | unexpected -> unexpected
-                );
+            untyped_ast_transform
+              (Autofix_replace_type.replace_type ~f:(function
+                  | Flow_ast.Type.Boolean { raw = _; comments } ->
+                    Flow_ast.Type.Boolean { raw = `Boolean; comments }
+                  | unexpected -> unexpected
+                  )
+                  );
           target_loc = error_loc;
         };
       ]
@@ -466,7 +487,8 @@ let ast_transforms_of_error ?loc = function
         {
           title;
           diagnostic_title = "replace_enum_prop_typo_at_target";
-          transform = Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name;
+          transform =
+            untyped_ast_transform (Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name);
           target_loc = error_loc;
         };
       ]
@@ -483,7 +505,7 @@ let ast_transforms_of_error ?loc = function
         {
           title;
           diagnostic_title;
-          transform = Autofix_interface.replace_object_at_target;
+          transform = untyped_ast_transform Autofix_interface.replace_object_at_target;
           target_loc = obj_loc;
         };
       ]
@@ -500,7 +522,7 @@ let ast_transforms_of_error ?loc = function
         {
           title;
           diagnostic_title;
-          transform = Autofix_method.replace_method_at_target;
+          transform = untyped_ast_transform Autofix_method.replace_method_at_target;
           target_loc = method_loc;
         };
       ]
@@ -512,7 +534,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Insert `await`";
           diagnostic_title = "insert_await";
-          transform = Autofix_unused_promise.insert_await;
+          transform = untyped_ast_transform Autofix_unused_promise.insert_await;
           target_loc = error_loc;
         }
       in
@@ -520,7 +542,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Insert `void`";
           diagnostic_title = "insert_void";
-          transform = Autofix_unused_promise.insert_void;
+          transform = untyped_ast_transform Autofix_unused_promise.insert_void;
           target_loc = error_loc;
         }
       in
@@ -536,7 +558,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `mixed`";
           diagnostic_title = "convert_unknown_type";
-          transform = Autofix_ts_syntax.convert_unknown_type;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_unknown_type;
           target_loc = error_loc;
         };
       ]
@@ -548,7 +570,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `empty`";
           diagnostic_title = "convert_never_type";
-          transform = Autofix_ts_syntax.convert_never_type;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_never_type;
           target_loc = error_loc;
         };
       ]
@@ -560,7 +582,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `void`";
           diagnostic_title = "convert_undefined_type";
-          transform = Autofix_ts_syntax.convert_undefined_type;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_undefined_type;
           target_loc = error_loc;
         };
       ]
@@ -572,7 +594,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `$Keys<T>`";
           diagnostic_title = "convert_keyof_type";
-          transform = Autofix_ts_syntax.convert_keyof_type;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_keyof_type;
           target_loc = error_loc;
         };
       ]
@@ -584,7 +606,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `: T`";
           diagnostic_title = "convert_type_param_extends";
-          transform = Autofix_ts_syntax.convert_type_param_extends;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_type_param_extends;
           target_loc = error_loc;
         };
       ]
@@ -596,7 +618,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `+`";
           diagnostic_title = "convert_readonly_variance";
-          transform = Autofix_ts_syntax.convert_readonly_variance;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_variance;
           target_loc = error_loc;
         };
       ]
@@ -608,7 +630,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `-`";
           diagnostic_title = "convert_in_variance";
-          transform = Autofix_ts_syntax.convert_in_variance;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_in_variance;
           target_loc = error_loc;
         };
       ]
@@ -620,7 +642,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `+`";
           diagnostic_title = "convert_out_variance";
-          transform = Autofix_ts_syntax.convert_out_variance;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_out_variance;
           target_loc = error_loc;
         };
       ]
@@ -632,7 +654,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Remove";
           diagnostic_title = "remove_in_out_variance";
-          transform = Autofix_ts_syntax.remove_in_out_variance;
+          transform = untyped_ast_transform Autofix_ts_syntax.remove_in_out_variance;
           target_loc = error_loc;
         };
       ]
@@ -644,7 +666,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to type cast `(<expr>: <type>)`";
           diagnostic_title = "convert_as_expression";
-          transform = Autofix_ts_syntax.convert_as_expression;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_as_expression;
           target_loc = error_loc;
         };
       ]
@@ -656,7 +678,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to type cast `(<expr>: <type>)`";
           diagnostic_title = "convert_satisfies_expression";
-          transform = Autofix_ts_syntax.convert_satisfies_expression;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_satisfies_expression;
           target_loc = error_loc;
         };
       ]
@@ -669,7 +691,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `$ReadOnlyArray`";
           diagnostic_title = "convert_readonly_array_type";
-          transform = Autofix_ts_syntax.convert_readonly_array_type;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_array_type;
           target_loc = error_loc;
         };
       ]
@@ -682,7 +704,7 @@ let ast_transforms_of_error ?loc = function
         {
           title = "Convert to `$ReadOnly`";
           diagnostic_title = "convert_readonly_tuple_type";
-          transform = Autofix_ts_syntax.convert_readonly_tuple_type;
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_tuple_type;
           target_loc = error_loc;
         };
       ]
@@ -698,7 +720,7 @@ let ast_transforms_of_error ?loc = function
         {
           title;
           diagnostic_title;
-          transform = Autofix_utility_type.convert_utility_type kind;
+          transform = untyped_ast_transform (Autofix_utility_type.convert_utility_type kind);
           target_loc = error_loc;
         };
       ]
@@ -715,7 +737,9 @@ let ast_transforms_of_error ?loc = function
           {
             title;
             diagnostic_title;
-            transform = Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name:suggestion;
+            transform =
+              untyped_ast_transform
+                (Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name:suggestion);
             target_loc = error_loc;
           };
         ]
@@ -735,14 +759,15 @@ let ast_transforms_of_error ?loc = function
           {
             title;
             diagnostic_title;
-            transform = Autofix_optional_chaining.add_optional_chaining;
+            transform = untyped_ast_transform Autofix_optional_chaining.add_optional_chaining;
             target_loc = error_loc;
           };
         ]
       | _ -> [])
     | _ -> [])
 
-let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only uri loc =
+let code_actions_of_errors
+    ~options ~reader ~cx ~file_sig ~env ~ast ~typed_ast ~diagnostics ~errors ~only uri loc =
   let include_quick_fixes = include_quick_fixes only in
   let (actions, has_missing_import) =
     Flow_error.ErrorSet.fold
@@ -776,11 +801,15 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only
             if include_quick_fixes then
               let quick_fixes =
                 ast_transforms_of_error ~loc error_message
-                |> Base.List.map ~f:(fun { title; diagnostic_title; transform; target_loc } ->
+                |> Base.List.filter_map
+                     ~f:(fun { title; diagnostic_title; transform; target_loc } ->
                        autofix_in_upstream_file
                          ~reader
+                         ~cx
+                         ~file_sig
                          ~diagnostics
                          ~ast
+                         ~typed_ast
                          ~options
                          ~title
                          ~diagnostic_title
@@ -947,8 +976,11 @@ let code_actions_at_loc
     code_actions_of_errors
       ~options
       ~reader
+      ~cx
+      ~file_sig
       ~env
       ~ast
+      ~typed_ast
       ~diagnostics
       ~errors:(Context.errors cx)
       ~only

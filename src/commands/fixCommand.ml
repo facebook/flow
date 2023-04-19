@@ -96,7 +96,7 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
   let visit =
     Codemod_utils.make_visitor
       (Codemod_utils.Mapper
-         (fun Codemod_context.Typed.{ file; _ } ->
+         (fun Codemod_context.Typed.{ file; file_sig; cx; typed_ast; _ } ->
            object
              inherit [unit] Codemod_ast_mapper.mapper "Apply code action transformations" ~init:()
 
@@ -109,7 +109,9 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
                        (* TODO(T138883537): There should be a way to configure which fix to apply *)
                        Base.List.hd_exn (Code_action_service.ast_transforms_of_error error_message)
                      in
-                     transform acc_ast target_loc
+                     Base.Option.value
+                       ~default:acc_ast
+                       (transform ~cx ~file_sig ~ast:acc_ast ~typed_ast target_loc)
                  )
            end)
       )
