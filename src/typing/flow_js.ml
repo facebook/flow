@@ -7217,7 +7217,10 @@ struct
       match unresolved with
       | [] -> rec_flow cx trace (union_of_ts reason resolved, upper)
       | next :: rest ->
-        rec_flow cx trace (next, ResolveUnionT { reason; resolved; unresolved = rest; upper; id })
+        (* We intentionally do not rec_flow here. Unions can be very large, and resolving each
+         * member under the same trace can cause a recursion limit error. To avoid that, we resolve
+         * each member under their own trace *)
+        flow cx (next, ResolveUnionT { reason; resolved; unresolved = rest; upper; id })
     in
     match l with
     | DefT (_, _, EmptyT) -> continue resolved
