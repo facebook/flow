@@ -536,6 +536,21 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       true
     | _ -> false
 
+  and generic_of_primitive env name =
+    let leading = Peek.comments env in
+    let (loc, _) = with_loc Eat.token env in
+    let trailing = Eat.trailing_comments env in
+    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    Some
+      (Ast.Type.Generic
+         {
+           Ast.Type.Generic.id =
+             Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, name));
+           targs = None;
+           comments;
+         }
+      )
+
   and primitive env =
     let leading = Peek.comments env in
     let token = Peek.token env in
@@ -598,21 +613,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       Eat.token env;
       let trailing = Eat.trailing_comments env in
       Some (Type.Undefined (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
-    | T_ASSERTS ->
-      let leading = Peek.comments env in
-      let (loc, _) = with_loc Eat.token env in
-      let trailing = Eat.trailing_comments env in
-      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-      Some
-        (Ast.Type.Generic
-           {
-             Ast.Type.Generic.id =
-               Ast.Type.Generic.Identifier.Unqualified
-                 (Flow_ast_utils.ident_of_source (loc, "asserts"));
-             targs = None;
-             comments;
-           }
-        )
+    | T_ASSERTS -> generic_of_primitive env "asserts"
+    | T_IS -> generic_of_primitive env "is"
     | _ -> None
 
   and tuple =
