@@ -70,6 +70,7 @@ module.exports = {
         'lang/refinements',
         'lang/lazy-modes',
         'lang/types-first',
+        'lang/annotation-requirement',
         'lang/constrained-writes',
       ],
     },
