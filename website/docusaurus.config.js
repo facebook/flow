@@ -14,7 +14,7 @@ module.exports = {
   title: 'Flow',
   tagline: 'A Static Type Checker for JavaScript',
   url: 'https://flow.org',
-  baseUrl: '/',
+  baseUrl: process.env.DOCUSAURUS_BASE_URL || '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.png',
