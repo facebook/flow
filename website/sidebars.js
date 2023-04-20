@@ -36,7 +36,6 @@ module.exports = {
         'types/empty',
         'types/any',
         'types/maybe',
-        'types/variables',
         'types/functions',
         'types/objects',
         'types/arrays',
@@ -62,6 +61,7 @@ module.exports = {
       items: [
         'lang/index',
         'lang/types-and-expressions',
+        'lang/variables',
         'lang/subtypes',
         'lang/variance',
         'lang/nominal-structural',
@@ -71,7 +71,6 @@ module.exports = {
         'lang/lazy-modes',
         'lang/types-first',
         'lang/annotation-requirement',
-        'lang/constrained-writes',
       ],
     },
     {

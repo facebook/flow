@@ -33,7 +33,7 @@ if (typeof maybeString === "string") {
 }
 ```
 Flow can still determine that `len` is a `number`, but in order to do so it looks
-ahead to multiple initializer statements. See section on [constrained writes](../constrained-writes)
+ahead to multiple initializer statements. See section on [variable declarations](../variables)
 for details on how various initializer patterns determine the type of a variable,
 and when an annotation on a variable declaration is necessary.
 
@@ -346,7 +346,7 @@ Flow allows another way to determine the types of empty arrays when they are imm
 const arr3 = [];
 ```
 The way it does this is reminiscent of the typing of
-[variables without initializers](../../lang/constrained-writes/#toc-variables-declared-without-initializers):
+[variables without initializers](../../lang/variables/#toc-variables-declared-without-initializers):
 Flow tries to choose the "first" *assignment* or *assignments*
 to the variable to define its type. In the case of empty arrays, an assignment is either
 * an indexed write statement `a[i] = e;`, or
