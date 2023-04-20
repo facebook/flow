@@ -89,7 +89,7 @@ export default function Home(): React.MixedElement {
                   className={clsx(styles.imgFluid, 'rounded')}
                   width={890}
                   height={564}
-                  src="/img/featurette-faster.gif"
+                  src={useBaseUrl('img/featurette-faster.gif')}
                 />
               </div>
             </div>
@@ -104,7 +104,7 @@ export default function Home(): React.MixedElement {
                   className={clsx(styles.imgFluid, 'rounded')}
                   width={890}
                   height={564}
-                  src="/img/featurette-smarter.gif"
+                  src={useBaseUrl('img/featurette-smarter.gif')}
                 />
               </div>
               <div className="col col--7">
@@ -160,7 +160,7 @@ export default function Home(): React.MixedElement {
                   className={clsx(styles.imgFluid, 'rounded')}
                   width={890}
                   height={564}
-                  src="/img/featurette-confidently.gif"
+                  src={useBaseUrl('img/featurette-confidently.gif')}
                 />
               </div>
             </div>
@@ -175,7 +175,7 @@ export default function Home(): React.MixedElement {
                   className={clsx(styles.imgFluid, 'rounded')}
                   width={890}
                   height={564}
-                  src="/img/featurette-bigger.gif"
+                  src={useBaseUrl('img/featurette-bigger.gif')}
                 />
               </div>
               <div className="col col--7">
