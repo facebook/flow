@@ -38,3 +38,10 @@ function generic_conditional_type_subtyping<T, S>(
   x = y; // expected error
   x = z; // unfortunate error, but this is sound.
 }
+
+function definitely_assignable_choose_true_branch<T>(x: T): Array<T> extends $ReadOnlyArray<infer X> ? X : number {
+  return x; // ok
+}
+
+(definitely_assignable_choose_true_branch(''): string); // ok
+(definitely_assignable_choose_true_branch(''): number); // error: string ~> number

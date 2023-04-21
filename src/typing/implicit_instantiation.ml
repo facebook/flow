@@ -1341,16 +1341,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       (* When we are in nested instantiation, we can't meaningfully decide which branch to take,
          so we will give up and produce placeholder instead. *)
       Context.mk_placeholder cx reason
-    else if
-      Subst_name.Set.is_empty (Subst.free_var_finder cx check_t)
-      && Subst_name.Set.is_empty
-           (Subst.free_var_finder
-              cx
-              ~bound:
-                (tparams |> Base.List.map ~f:(fun tparam -> tparam.name) |> Subst_name.Set.of_list)
-              extends_t
-           )
-    then
+    else
       Context.run_in_implicit_instantiation_mode cx (fun () ->
           let t =
             match
@@ -1364,18 +1355,32 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                 ~extends_t
                 ~true_t
             with
-            | None -> false_t
+            (* If the subtyping can succeed even when the GenericTs are still abstract, then it must
+               succeed under every possible instantiation, so we can take the true branch. *)
             | Some subst_map -> Subst.subst cx ~use_op:unknown_use subst_map true_t
+            | None
+              when Subst_name.Set.is_empty (Subst.free_var_finder cx check_t)
+                   && Subst_name.Set.is_empty
+                        (Subst.free_var_finder
+                           cx
+                           ~bound:
+                             (tparams
+                             |> Base.List.map ~f:(fun tparam -> tparam.name)
+                             |> Subst_name.Set.of_list
+                             )
+                           extends_t
+                        ) ->
+              false_t
+            | None ->
+              (* A conditional type with GenericTs in check type and extends type is tricky.
+                 We often cannot decide which branch we should take. To maintain soundness
+                 in the most general case, we make the type abstract. *)
+              let name = Subst_name.Synthetic ("conditional type", []) in
+              let id = Context.make_generic_id cx name (aloc_of_reason reason) in
+              let reason = update_desc_reason invalidate_rtype_alias reason in
+              let bound = MixedT.make reason (bogus_trust ()) in
+              GenericT { reason; name; id; bound }
           in
           reposition cx ~trace (aloc_of_reason reason) t
       )
-    else
-      (* A conditional type with GenericTs in check type and extends type is tricky.
-         We often cannot decide which branch we should take. To maintain soundness
-         in the most general case, we make the type abstract. *)
-      let name = Subst_name.Synthetic ("conditional type", []) in
-      let id = Context.make_generic_id cx name (aloc_of_reason reason) in
-      let reason = update_desc_reason invalidate_rtype_alias reason in
-      let bound = MixedT.make reason (bogus_trust ()) in
-      GenericT { reason; name; id; bound }
 end
