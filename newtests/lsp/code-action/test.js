@@ -3564,6 +3564,71 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics'],
       ),
     ]),
+    test('provide quickfix for `$Shape`', [
+      addFile('fix-shape-type.js.ignored', 'fix-shape-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-shape-type.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 9,
+          },
+          end: {
+            line: 1,
+            character: 15,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `Partial<T>`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-shape-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 1,
+                            character: 9,
+                          },
+                          end: {
+                            line: 1,
+                            character: 15,
+                          },
+                        },
+                        newText: 'Partial',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_$Shape_type',
+                    'Convert to `Partial<T>`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
     test('provide quickfix for class member access', [
       addFile(
         'fix-class-member-access.js.ignored',

@@ -24,13 +24,17 @@ module InvalidCharSetSet = Flow_set.Make (struct
 end)
 
 module DeprecatedUtility = struct
-  type t = Partial
+  type t =
+    | Partial
+    | Shape
 
   let deprecated_of_kind = function
     | Partial -> "$Partial"
+    | Shape -> "$Shape"
 
   let replacement_of_kind = function
     | Partial -> "Partial"
+    | Shape -> "Partial"
 end
 
 type t = ALoc.t t'

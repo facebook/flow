@@ -1987,13 +1987,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (NonMaybeType (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "$Shape" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (Shape (loc, t))
-    | _ -> Err (loc, CheckError)
-  end
+  | "$Shape" -> Annot (Any loc)
   | "$Diff" -> begin
     match targs with
     | Some (_, { arguments = [t1; t2]; _ }) ->

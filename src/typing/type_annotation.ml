@@ -845,14 +845,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (EvalT (t, TypeDestructorT (use_op reason, reason, RequiredType), mk_eval_id cx loc))
                 targs
           )
-        (* $Shape<T> matches the shape of T *)
+        (* `$Shape` is deprecated in favor of `Partial` *)
         | "$Shape" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let t = List.hd ts in
-              let reason = mk_reason (RShapeOf (desc_of_t t)) (loc_of_t t) in
-              reconstruct_ast (ShapeT (reason, t)) targs
-          )
+          error_type
+            cx
+            loc
+            Error_message.(EDeprecatedUtilityWithReplacement { loc; kind = DeprecatedUtility.Shape })
+            t_ast
         (* $Diff<T, S> *)
         | "$Diff" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
