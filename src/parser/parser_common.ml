@@ -134,6 +134,8 @@ let identifier_name_raw env =
     | T_TRUE -> "true"
     | T_FALSE -> "false"
     (* Flow-specific stuff *)
+    | T_ASSERTS -> "asserts"
+    | T_IS -> "is"
     | T_DECLARE -> "declare"
     | T_TYPE -> "type"
     | T_OPAQUE -> "opaque"
@@ -274,6 +276,6 @@ let is_start_of_type_guard env =
   let token_2 = Peek.ith_token ~i:1 env in
   match (token_1, token_2) with
   | (T_IDENTIFIER { raw = "asserts"; _ }, (T_IDENTIFIER _ | T_THIS))
-  | ((T_IDENTIFIER _ | T_THIS), T_IS) ->
+  | ((T_IDENTIFIER _ | T_THIS), (T_IS | T_IDENTIFIER { raw = "is"; _ })) ->
     true
   | _ -> false
