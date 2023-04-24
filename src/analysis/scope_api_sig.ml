@@ -78,6 +78,8 @@ module type S = sig
 
   val uses_of_def : info -> ?exclude_def:bool -> Def.t -> uses
 
+  val scopes_of_uses_of_def : info -> Def.t -> ISet.t
+
   val uses_of_use : info -> ?exclude_def:bool -> use -> uses
 
   val def_is_unused : info -> Def.t -> bool
@@ -89,4 +91,6 @@ module type S = sig
   val build_scope_tree : info -> Scope.t Tree.t
 
   val compute_free_and_bound_variables : Scope.t Tree.t -> (Def.t SMap.t * SSet.t * SSet.t) Tree.t
+
+  val compute_all_in_scope_bindings_per_scope : info -> Def.t SMap.t IMap.t
 end

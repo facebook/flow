@@ -121,6 +121,22 @@ module Make (L : Loc_sig.S) = struct
       scopes
       L.LSet.empty
 
+  let scopes_of_uses_of_def { scopes; _ } def =
+    IMap.fold
+      (fun scope_id scope acc ->
+        L.LMap.fold
+          (fun use def' scopes ->
+            if Def.is use def' then
+              scopes
+            else if Def.compare def def' = 0 then
+              ISet.add scope_id scopes
+            else
+              scopes)
+          scope.Scope.locals
+          acc)
+      scopes
+      ISet.empty
+
   let uses_of_use info ?exclude_def use =
     try
       let def = def_of_use info use in
@@ -209,6 +225,25 @@ module Make (L : Loc_sig.S) = struct
       Tree.Node (IMap.find scope_id scopes, children)
     in
     build_scope_tree 0
+
+  let compute_all_in_scope_bindings_per_scope info =
+    let scopes = info.scopes in
+    let children_map = rev_scope_pointers scopes in
+    let rec build_bindings_per_scope scope_id parent_in_scope_bindings acc =
+      let scope = IMap.find scope_id scopes in
+      let all_in_scope_bindings =
+        SMap.union ~combine:(fun _ l _ -> Some l) scope.Scope.defs parent_in_scope_bindings
+      in
+      let acc = IMap.add scope_id all_in_scope_bindings acc in
+      match IMap.find_opt scope_id children_map with
+      | None -> acc
+      | Some children_scope_ids ->
+        Base.List.fold_left
+          ~init:acc
+          ~f:(fun acc id -> build_bindings_per_scope id all_in_scope_bindings acc)
+          children_scope_ids
+    in
+    build_bindings_per_scope 0 SMap.empty IMap.empty
 
   (* Let D be the declared names of some scope.
 
