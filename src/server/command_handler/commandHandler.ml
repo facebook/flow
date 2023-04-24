@@ -1962,6 +1962,19 @@ let handle_persistent_autocomplete_lsp
       | None -> None
       | Some token_char -> Some (char - token_char)
     in
+    let metadata =
+      with_data
+        ~extra_data:
+          (Some
+             (Hh_json_helpers.Jprint.object_opt
+                [
+                  ("session_requests", Base.Option.map ~f:Hh_json.int_ autocomplete_session_length);
+                  ("typed_length", Base.Option.map ~f:Hh_json.int_ typed_len);
+                ]
+             )
+          )
+        metadata
+    in
     let result =
       Flow_lsp_conversions.flow_completions_to_lsp
         ?token
