@@ -29,9 +29,9 @@ References:
    <BUILTINS>/react.js:405:56
                                                                v-
    405|   declare export var Profiler: React$AbstractComponent<{|
-   406|     children?: React$Node,
-   407|     id: string,
-   408|     onRender: ProfilerOnRenderFnType,
+   406|     +children?: React$Node,
+   407|     +id: string,
+   408|     +onRender: ProfilerOnRenderFnType,
    409|   |}, void>;
           -^ [2]
 
@@ -52,9 +52,9 @@ References:
    <BUILTINS>/react.js:405:56
                                                                v-
    405|   declare export var Profiler: React$AbstractComponent<{|
-   406|     children?: React$Node,
-   407|     id: string,
-   408|     onRender: ProfilerOnRenderFnType,
+   406|     +children?: React$Node,
+   407|     +id: string,
+   408|     +onRender: ProfilerOnRenderFnType,
    409|   |}, void>;
           -^ [2]
 
