@@ -86,6 +86,7 @@ let flow_completion_item_to_lsp
     ?token
     ?autocomplete_session_length
     ?typed_len
+    ~ac_type
     ~is_snippet_supported:(_ : bool)
     ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
@@ -146,6 +147,7 @@ let flow_completion_item_to_lsp
                     | Some typed_length -> JSON_Number (string_of_int typed_length)
                   );
                   ("completion", JSON_String item.name);
+                  ("ac_type", JSON_String ac_type);
                 ];
             ];
       }
@@ -191,6 +193,7 @@ let flow_completions_to_lsp
     ?token
     ?autocomplete_session_length
     ?typed_len
+    ~ac_type
     ~(is_snippet_supported : bool)
     ~(is_tags_supported : Lsp.CompletionItemTag.t -> bool)
     ~(is_preselect_supported : bool)
@@ -206,6 +209,7 @@ let flow_completions_to_lsp
           ?token
           ?autocomplete_session_length
           ?typed_len
+          ~ac_type
           ~is_snippet_supported
           ~is_tags_supported
           ~is_preselect_supported
