@@ -832,7 +832,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:134:4
 
-Cannot cast `d1` to object type because number [1] is incompatible with string [2] in property `foo`.
+Cannot cast `d1` to object type because number [1] is incompatible with string [2] in property `foo`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 [incompatible-cast]
 
    upper_non_t.js:134:4

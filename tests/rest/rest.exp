@@ -18,7 +18,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:10:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `X` [2] in property `x`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type.js:10:2
    10| (o1: {|x?: X|}); // Error: x is not optional
@@ -71,7 +73,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:12:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `X` [2] in property `x`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type.js:12:2
    12| (o1: {|x?: X, y?: Y|}); // Error: x is not optional and y is not in O1
@@ -428,7 +432,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:40:2
 
-Cannot cast `o4` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
+Cannot cast `o4` to object type because undefined [1] is incompatible with `X` [2] in property `x`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type.js:40:2
    40| (o4: {|x?: X|}); // Error: x is not optional and missing y
@@ -445,7 +451,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:42:2
 
-Cannot cast `o4` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
+Cannot cast `o4` to object type because undefined [1] is incompatible with `X` [2] in property `x`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type.js:42:2
    42| (o4: {|x?: X, y?: Y|}); // Error: x is not optional
@@ -1304,7 +1312,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:100:2
 
-Cannot cast `o17` to object type because `Y` [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
+Cannot cast `o17` to object type because `Y` [1] is incompatible with `X` [2] in property `x`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_dict.js:100:2
    100| (o17: {|[string]: Y | void|}); // OK
@@ -1321,7 +1331,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:100:2
 
-Cannot cast `o17` to object type because undefined [1] is incompatible with `X` [2] in property `x`. [incompatible-cast]
+Cannot cast `o17` to object type because undefined [1] is incompatible with `X` [2] in property `x`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_dict.js:100:2
    100| (o17: {|[string]: Y | void|}); // OK

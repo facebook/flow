@@ -1,7 +1,8 @@
 Error ------------------------------------------------------------------------------------ required-positioning.js:18:20
 
-Cannot call `register` because boolean [1] is incompatible with number [2] in property `foo` of type argument `T`.
-[incompatible-call]
+Cannot call `register` because boolean [1] is incompatible with number [2] in property `foo` of type argument `T`. This
+property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    required-positioning.js:18:20
    18| register(() => (x: {foo: number}) => null); // ERROR!
@@ -19,7 +20,8 @@ References:
 Error ------------------------------------------------------------------------------------ required-positioning.js:18:20
 
 Cannot call `register` because object type [1] is incompatible with number [2] in property `foo` of type argument `T`.
-[incompatible-call]
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    required-positioning.js:18:20
    18| register(() => (x: {foo: number}) => null); // ERROR!
@@ -37,7 +39,8 @@ References:
 Error ------------------------------------------------------------------------------------ required-positioning.js:18:20
 
 Cannot call `register` because read-only array type [1] is incompatible with number [2] in property `foo` of type
-argument `T`. [incompatible-call]
+argument `T`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    required-positioning.js:18:20
    18| register(() => (x: {foo: number}) => null); // ERROR!

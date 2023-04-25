@@ -93,7 +93,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:12:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type.js:12:2
    12| (o1: {p?:T}); // ok
@@ -352,7 +354,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:74:2
 
-Cannot cast `o9` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o9` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type.js:74:2
    74| (o9: {p?:T,q:U});
@@ -405,7 +409,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:102:2
 
-Cannot cast `o14` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o14` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type.js:102:2
    102| (o14: {p?:T}); // ok
@@ -658,7 +664,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_instance.js:6:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with number [2] in property `p`.
+Cannot cast `o1` to object type because undefined [1] is incompatible with number [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 [incompatible-cast]
 
    type_instance.js:6:2
@@ -680,6 +687,9 @@ Cannot cast `o1` to object type because in property `p`: [incompatible-cast]
  - Either undefined [1] is incompatible with string [2].
  - Or undefined [1] is incompatible with number [3].
 
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
    type_instance.js:6:2
    6| (o1: {p?:number}); // Error
        ^^
@@ -698,7 +708,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- type_intersection.js:9:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection.js:9:2
    9| (o1: {p?:T,q?:U}); // ok
@@ -715,7 +727,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- type_intersection.js:9:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `U` [2] in property `q`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `U` [2] in property `q`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection.js:9:2
    9| (o1: {p?:T,q?:U}); // ok
@@ -732,7 +746,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------- type_intersection.js:13:2
 
-Cannot cast `o2` to object type because undefined [1] is incompatible with `A` [2] in property `p`. [incompatible-cast]
+Cannot cast `o2` to object type because undefined [1] is incompatible with `A` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection.js:13:2
    13| (o2: {p?:B}); // ok
@@ -749,7 +765,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------- type_intersection.js:13:2
 
-Cannot cast `o2` to object type because undefined [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `o2` to object type because undefined [1] is incompatible with `B` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection.js:13:2
    13| (o2: {p?:B}); // ok
@@ -780,7 +798,9 @@ References:
 
 Error -------------------------------------------------------------------------------- type_intersection_optional.js:5:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:5:2
    5| (o1: {p?:T&U}); // ok
@@ -797,7 +817,9 @@ References:
 
 Error -------------------------------------------------------------------------------- type_intersection_optional.js:5:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with `U` [2] in property `p`. [incompatible-cast]
+Cannot cast `o1` to object type because undefined [1] is incompatible with `U` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:5:2
    5| (o1: {p?:T&U}); // ok
@@ -814,7 +836,9 @@ References:
 
 Error -------------------------------------------------------------------------------- type_intersection_optional.js:8:2
 
-Cannot cast `o2` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o2` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:8:2
    8| (o2: {p?:T&U}); // ok
@@ -831,7 +855,9 @@ References:
 
 Error -------------------------------------------------------------------------------- type_intersection_optional.js:8:2
 
-Cannot cast `o2` to object type because undefined [1] is incompatible with `U` [2] in property `p`. [incompatible-cast]
+Cannot cast `o2` to object type because undefined [1] is incompatible with `U` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:8:2
    8| (o2: {p?:T&U}); // ok
@@ -848,7 +874,9 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:11:2
 
-Cannot cast `o3` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o3` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:11:2
    11| (o3: {p?:T&U}); // ok
@@ -865,7 +893,9 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:11:2
 
-Cannot cast `o3` to object type because undefined [1] is incompatible with `U` [2] in property `p`. [incompatible-cast]
+Cannot cast `o3` to object type because undefined [1] is incompatible with `U` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:11:2
    11| (o3: {p?:T&U}); // ok
@@ -882,7 +912,9 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:53:2
 
-Cannot cast `o17` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o17` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:53:2
    53| (o17: {p?:T,q?:U}); // ok
@@ -899,7 +931,9 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:53:2
 
-Cannot cast `o17` to object type because undefined [1] is incompatible with `U` [2] in property `q`. [incompatible-cast]
+Cannot cast `o17` to object type because undefined [1] is incompatible with `U` [2] in property `q`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:53:2
    53| (o17: {p?:T,q?:U}); // ok
@@ -916,7 +950,9 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:56:2
 
-Cannot cast `o18` to object type because undefined [1] is incompatible with `U` [2] in property `q`. [incompatible-cast]
+Cannot cast `o18` to object type because undefined [1] is incompatible with `U` [2] in property `q`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:56:2
    56| (o18: {p?:T,q?:U}); // ok
@@ -933,7 +969,9 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:59:2
 
-Cannot cast `o19` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o19` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:59:2
    59| (o19: {p?:T,q?:U}); // ok
@@ -950,7 +988,9 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:65:2
 
-Cannot cast `o21` to object type because undefined [1] is incompatible with `U` [2] in property `q`. [incompatible-cast]
+Cannot cast `o21` to object type because undefined [1] is incompatible with `U` [2] in property `q`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_intersection_optional.js:65:2
    65| (o21: {p:T,q?:U}); // ok
@@ -1089,7 +1129,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_statics.js:5:2
 
-Cannot cast `o1` to object type because undefined [1] is incompatible with number [2] in property `p`.
+Cannot cast `o1` to object type because undefined [1] is incompatible with number [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 [incompatible-cast]
 
    type_statics.js:5:2
@@ -1115,7 +1156,9 @@ string literal `foo` [1] is not an object. [not-an-object]
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o1` to union type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1132,7 +1175,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because undefined [1] is incompatible with `U` [2] in property `q`. [incompatible-cast]
+Cannot cast `o1` to union type because undefined [1] is incompatible with `U` [2] in property `q`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1353,7 +1398,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:41:2
 
-Cannot cast `o5` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o5` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_void.js:41:2
    41| (o5: {p?:T}); // ok
@@ -1402,7 +1449,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:50:2
 
-Cannot cast `o6` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o6` to object type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    type_void.js:50:2
    50| (o6: {p?:T}); // error, void doesn't overwrite p

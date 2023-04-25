@@ -72,7 +72,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:4
 
-Cannot cast `rwB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `rwB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. This property is invariantly
+typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    test.js:61:4
    61|   (rwB: RWA); // error
@@ -89,7 +91,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:4
 
-Cannot cast `drwB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+Cannot cast `drwB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
 
    test.js:62:4
    62|   (drwB: dRWA); // error

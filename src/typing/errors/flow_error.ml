@@ -670,6 +670,15 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
           `Frame (lower, use_op, [text "the indexer property"])
         | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op) ->
           `Frame (lower, use_op, [text "the callable signature"])
+        | Frame (UnifyFlip, Frame (PropertyCompatibility { lower; upper; prop }, use_op)) ->
+          let message =
+            [
+              text "This property is invariantly typed. See ";
+              text
+                "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
+            ]
+          in
+          `Explanation (Frame (PropertyCompatibility { lower; upper; prop }, use_op), message)
         | Frame (PropertyCompatibility { prop = Some prop; lower; _ }, use_op) ->
           let repos_small_reason loc reason = function
             (* If we are checking class extensions or implementations then the

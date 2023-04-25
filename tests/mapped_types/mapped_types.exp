@@ -366,8 +366,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
 
-Cannot cast `preserve` to object type because number [1] is incompatible with string [2] in property `bar`.
-[incompatible-cast]
+Cannot cast `preserve` to object type because number [1] is incompatible with string [2] in property `bar`. This
+property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
 
    optionality.js:9:4
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string

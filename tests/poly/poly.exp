@@ -529,7 +529,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
 
-Cannot return `f` because number [1] is incompatible with `S` [2] in property `a` of the return value.
+Cannot return `f` because number [1] is incompatible with `S` [2] in property `a` of the return value. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 [incompatible-return]
 
    subtyping.js:73:51
@@ -565,7 +566,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
 
-Cannot return `f` because string [1] is incompatible with `T` [2] in property `b` of the return value.
+Cannot return `f` because string [1] is incompatible with `T` [2] in property `b` of the return value. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 [incompatible-return]
 
    subtyping.js:73:51

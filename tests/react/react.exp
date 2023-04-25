@@ -1611,7 +1611,9 @@ References:
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:29:29
 
 Cannot call `React.useImperativeHandle` with `ref` bound to `ref` because: [incompatible-call]
- - Either property `focus` is missing in object literal [1] but exists in `Interface` [2] in property `current`.
+ - Either property `focus` is missing in object literal [1] but exists in `Interface` [2] in property `current`. This
+   property is invariantly typed. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
    function type [4].
 

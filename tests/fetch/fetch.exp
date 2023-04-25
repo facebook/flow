@@ -315,7 +315,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
-`cache`. [incompatible-call]
+`cache`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -333,7 +334,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
-`credentials`. [incompatible-call]
+`credentials`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -351,7 +353,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because array type [1] is incompatible with `Headers` [2] in property
-`headers`. [incompatible-call]
+`headers`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -369,7 +372,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because object type [1] is incompatible with `Headers` [2] in property
-`headers`. [incompatible-call]
+`headers`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -387,7 +391,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with `Headers` [2] in property
-`headers`. [incompatible-call]
+`headers`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -405,7 +410,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with string [2] in property
-`integrity`. [incompatible-call]
+`integrity`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -423,7 +429,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with string [2] in property
-`method`. [incompatible-call]
+`method`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -441,7 +448,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
-`mode`. [incompatible-call]
+`mode`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -459,7 +467,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
-`redirect`. [incompatible-call]
+`redirect`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -477,7 +486,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with string [2] in property
-`referrer`. [incompatible-call]
+`referrer`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
@@ -495,7 +505,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because undefined [1] is incompatible with literal union [2] in property
-`referrerPolicy`. [incompatible-call]
+`referrerPolicy`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
 
    request.js:6:35
       6| const e: Request = new Request(b, c); // incorrect
