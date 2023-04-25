@@ -474,6 +474,12 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), _), _) ->
       let t = make_readonly cx use_op reason t in
       elab_t cx t op
+    | (EvalT (t, TypeDestructorT (use_op, reason, PartialType), _), _) ->
+      let t = make_partial cx use_op reason t in
+      elab_t cx t op
+    | (EvalT (t, TypeDestructorT (use_op, reason, RequiredType), _), _) ->
+      let t = make_required cx use_op reason t in
+      elab_t cx t op
     | (EvalT (t, TypeDestructorT (use_op, reason, SpreadType (target, todo_rev, head_slice)), _), _)
       ->
       let state =
@@ -1321,6 +1327,14 @@ module rec ConsGen : S = struct
   and make_readonly cx use_op reason t =
     let resolve_tool = Type.Object.(Resolve Next) in
     object_kit cx use_op reason resolve_tool Type.Object.ReadOnly t
+
+  and make_partial cx use_op reason t =
+    let resolve_tool = Type.Object.(Resolve Next) in
+    object_kit cx use_op reason resolve_tool Type.Object.Partial t
+
+  and make_required cx use_op reason t =
+    let resolve_tool = Type.Object.(Resolve Next) in
+    object_kit cx use_op reason resolve_tool Type.Object.Required t
 
   and make_exact cx reason t = elab_t cx t (Annot_MakeExactT reason)
 
