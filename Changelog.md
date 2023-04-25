@@ -1,3 +1,8 @@
+### 0.204.1
+
+Notable bug fixes:
+* Fix a crash that could happen when canceling a recheck during module resolution
+
 ### 0.204.0
 
 Likely to cause new Flow errors:
