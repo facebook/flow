@@ -263,7 +263,7 @@ let autocomplete
   | Error (Failed e) -> (Error e, None)
   | Error (Skipped reason) ->
     let response =
-      (None, { ServerProt.Response.Completion.items = []; is_incomplete = false }, None)
+      (None, { ServerProt.Response.Completion.items = []; is_incomplete = false }, None, "Skipped")
     in
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
@@ -351,7 +351,7 @@ let autocomplete
                     Base.Option.is_some documentation
                 )
               in
-              ( Ok (token_opt, result, ac_loc),
+              ( Ok (token_opt, result, ac_loc, ac_type_string),
                 ("result", JSON_String result_string)
                 :: ("count", JSON_Number (items |> List.length |> string_of_int))
                 :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
@@ -362,7 +362,8 @@ let autocomplete
               ( Ok
                   ( token_opt,
                     { ServerProt.Response.Completion.items = []; is_incomplete = false },
-                    ac_loc
+                    ac_loc,
+                    ac_type_string
                   ),
                 ("result", JSON_String "SUCCESS")
                 :: ("count", JSON_Number "0")
@@ -921,7 +922,7 @@ let handle_autocomplete
   let result =
     Base.Result.map result ~f:(fun x ->
         match x with
-        | (_, b, _) -> b
+        | (_, b, _, ac_type) -> (b, ac_type)
     )
   in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
@@ -1867,7 +1868,7 @@ let handle_persistent_autocomplete_lsp
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok (token, completions, ac_loc) ->
+  | Ok (token, completions, ac_loc, ac_type) ->
     let token_loc =
       match ac_loc with
       | None -> None
@@ -1915,6 +1916,7 @@ let handle_persistent_autocomplete_lsp
         ?token
         ?autocomplete_session_length
         ?typed_len
+        ~ac_type
         ~is_snippet_supported
         ~is_tags_supported
         ~is_preselect_supported

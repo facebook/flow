@@ -235,7 +235,11 @@ module Response = struct
     }
   end
 
-  type autocomplete_response = (Completion.t, string) result
+  (** Which "type" of autocomplete this was. e.g. identifier vs type vs member.
+      See AutocompleteService_js.string_of_autocomplete_type *)
+  type ac_type = string
+
+  type autocomplete_response = (Completion.t * ac_type, string) result
 
   type autofix_exports_response = (Replacement_printer.patch * string list, string) result
 

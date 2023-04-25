@@ -496,7 +496,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"baz"
+        "completion":"baz",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -525,7 +526,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"baz_DEPRECATED"
+        "completion":"baz_DEPRECATED",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -571,7 +573,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bar"
+        "completion":"bar",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -600,7 +603,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"baz"
+        "completion":"baz",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -1086,7 +1090,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Tympanic"
+        "completion":"Tympanic",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1112,7 +1117,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Typaram"
+        "completion":"Typaram",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1138,7 +1144,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Types"
+        "completion":"Types",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1164,7 +1171,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Typesafe"
+        "completion":"Typesafe",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1190,7 +1198,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Typeset"
+        "completion":"Typeset",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1216,7 +1225,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Typewriter"
+        "completion":"Typewriter",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1242,7 +1252,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Typhoon"
+        "completion":"Typhoon",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1268,7 +1279,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Typnotism"
+        "completion":"Typnotism",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1294,7 +1306,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Typography"
+        "completion":"Typography",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1320,7 +1333,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Typologies"
+        "completion":"Typologies",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1346,7 +1360,8 @@ Flags: --lsp
         "index":10,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Tyrant"
+        "completion":"Tyrant",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1372,7 +1387,8 @@ Flags: --lsp
         "index":11,
         "session_requests":null,
         "typed_length":null,
-        "completion":"any"
+        "completion":"any",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1398,7 +1414,8 @@ Flags: --lsp
         "index":12,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bigint"
+        "completion":"bigint",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1424,7 +1441,8 @@ Flags: --lsp
         "index":13,
         "session_requests":null,
         "typed_length":null,
-        "completion":"boolean"
+        "completion":"boolean",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1450,7 +1468,8 @@ Flags: --lsp
         "index":14,
         "session_requests":null,
         "typed_length":null,
-        "completion":"empty"
+        "completion":"empty",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1476,7 +1495,8 @@ Flags: --lsp
         "index":15,
         "session_requests":null,
         "typed_length":null,
-        "completion":"false"
+        "completion":"false",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1502,7 +1522,8 @@ Flags: --lsp
         "index":16,
         "session_requests":null,
         "typed_length":null,
-        "completion":"mixed"
+        "completion":"mixed",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1528,7 +1549,8 @@ Flags: --lsp
         "index":17,
         "session_requests":null,
         "typed_length":null,
-        "completion":"null"
+        "completion":"null",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1554,7 +1576,8 @@ Flags: --lsp
         "index":18,
         "session_requests":null,
         "typed_length":null,
-        "completion":"number"
+        "completion":"number",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1580,7 +1603,8 @@ Flags: --lsp
         "index":19,
         "session_requests":null,
         "typed_length":null,
-        "completion":"string"
+        "completion":"string",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1606,7 +1630,8 @@ Flags: --lsp
         "index":20,
         "session_requests":null,
         "typed_length":null,
-        "completion":"symbol"
+        "completion":"symbol",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1632,7 +1657,8 @@ Flags: --lsp
         "index":21,
         "session_requests":null,
         "typed_length":null,
-        "completion":"true"
+        "completion":"true",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1658,7 +1684,8 @@ Flags: --lsp
         "index":22,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1684,7 +1711,8 @@ Flags: --lsp
         "index":23,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Call"
+        "completion":"$Call",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1710,7 +1738,8 @@ Flags: --lsp
         "index":24,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$CharSet"
+        "completion":"$CharSet",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1736,7 +1765,8 @@ Flags: --lsp
         "index":25,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Diff"
+        "completion":"$Diff",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1762,7 +1792,8 @@ Flags: --lsp
         "index":26,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ElementType"
+        "completion":"$ElementType",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1788,7 +1819,8 @@ Flags: --lsp
         "index":27,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Exact"
+        "completion":"$Exact",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1814,7 +1846,8 @@ Flags: --lsp
         "index":28,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Exports"
+        "completion":"$Exports",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1840,7 +1873,8 @@ Flags: --lsp
         "index":29,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$KeyMirror"
+        "completion":"$KeyMirror",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1866,7 +1900,8 @@ Flags: --lsp
         "index":30,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Keys"
+        "completion":"$Keys",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1892,7 +1927,8 @@ Flags: --lsp
         "index":31,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$NonMaybeType"
+        "completion":"$NonMaybeType",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1918,7 +1954,8 @@ Flags: --lsp
         "index":32,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ObjMap"
+        "completion":"$ObjMap",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1944,7 +1981,8 @@ Flags: --lsp
         "index":33,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ObjMapi"
+        "completion":"$ObjMapi",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1970,7 +2008,8 @@ Flags: --lsp
         "index":34,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$PropertyType"
+        "completion":"$PropertyType",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -1996,7 +2035,8 @@ Flags: --lsp
         "index":35,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ReadOnly"
+        "completion":"$ReadOnly",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -2022,7 +2062,8 @@ Flags: --lsp
         "index":36,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Rest"
+        "completion":"$Rest",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -2048,7 +2089,8 @@ Flags: --lsp
         "index":37,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Shape"
+        "completion":"$Shape",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -2074,7 +2116,8 @@ Flags: --lsp
         "index":38,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$TupleMap"
+        "completion":"$TupleMap",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -2100,7 +2143,8 @@ Flags: --lsp
         "index":39,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Values"
+        "completion":"$Values",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -2126,7 +2170,8 @@ Flags: --lsp
         "index":40,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Class"
+        "completion":"Class",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -2152,7 +2197,8 @@ Flags: --lsp
         "index":41,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Partial"
+        "completion":"Partial",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -2178,7 +2224,8 @@ Flags: --lsp
         "index":42,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Required"
+        "completion":"Required",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -2333,7 +2380,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"toString"
+        "completion":"toString",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2363,7 +2411,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"toString"
+        "completion":"toString",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2393,7 +2442,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"toString"
+        "completion":"toString",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2423,7 +2473,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.foo"
+        "completion":"?.foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2453,7 +2504,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.bar"
+        "completion":"?.bar",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2480,7 +2532,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2510,7 +2563,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.foo"
+        "completion":"?.foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2542,7 +2596,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Bar"
+        "completion":"Bar",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2569,7 +2624,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Foo"
+        "completion":"Foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2596,7 +2652,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"cast"
+        "completion":"cast",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2623,7 +2680,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"getName"
+        "completion":"getName",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2650,7 +2708,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"isValid"
+        "completion":"isValid",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2677,7 +2736,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"members"
+        "completion":"members",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -2728,7 +2788,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"async"
+        "completion":"async",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2753,7 +2814,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"await"
+        "completion":"await",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2780,7 +2842,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Bar"
+        "completion":"Bar",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2808,7 +2871,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"baz"
+        "completion":"baz",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2835,7 +2899,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"BooleanEnum"
+        "completion":"BooleanEnum",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2860,7 +2925,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"break"
+        "completion":"break",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2885,7 +2951,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"case"
+        "completion":"case",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2910,7 +2977,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"catch"
+        "completion":"catch",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2935,7 +3003,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"class"
+        "completion":"class",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2960,7 +3029,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"const"
+        "completion":"const",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -2985,7 +3055,8 @@ Flags: --lsp
         "index":10,
         "session_requests":null,
         "typed_length":null,
-        "completion":"continue"
+        "completion":"continue",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3010,7 +3081,8 @@ Flags: --lsp
         "index":11,
         "session_requests":null,
         "typed_length":null,
-        "completion":"debugger"
+        "completion":"debugger",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3035,7 +3107,8 @@ Flags: --lsp
         "index":12,
         "session_requests":null,
         "typed_length":null,
-        "completion":"declare"
+        "completion":"declare",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3060,7 +3133,8 @@ Flags: --lsp
         "index":13,
         "session_requests":null,
         "typed_length":null,
-        "completion":"default"
+        "completion":"default",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3087,7 +3161,8 @@ Flags: --lsp
         "index":14,
         "session_requests":null,
         "typed_length":null,
-        "completion":"DefaultedStringEnum"
+        "completion":"DefaultedStringEnum",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3112,7 +3187,8 @@ Flags: --lsp
         "index":15,
         "session_requests":null,
         "typed_length":null,
-        "completion":"delete"
+        "completion":"delete",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3137,7 +3213,8 @@ Flags: --lsp
         "index":16,
         "session_requests":null,
         "typed_length":null,
-        "completion":"do"
+        "completion":"do",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3162,7 +3239,8 @@ Flags: --lsp
         "index":17,
         "session_requests":null,
         "typed_length":null,
-        "completion":"else"
+        "completion":"else",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3187,7 +3265,8 @@ Flags: --lsp
         "index":18,
         "session_requests":null,
         "typed_length":null,
-        "completion":"enum"
+        "completion":"enum",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3212,7 +3291,8 @@ Flags: --lsp
         "index":19,
         "session_requests":null,
         "typed_length":null,
-        "completion":"export"
+        "completion":"export",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3237,7 +3317,8 @@ Flags: --lsp
         "index":20,
         "session_requests":null,
         "typed_length":null,
-        "completion":"extends"
+        "completion":"extends",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3262,7 +3343,8 @@ Flags: --lsp
         "index":21,
         "session_requests":null,
         "typed_length":null,
-        "completion":"finally"
+        "completion":"finally",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3290,7 +3372,8 @@ Flags: --lsp
         "index":22,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3315,7 +3398,8 @@ Flags: --lsp
         "index":23,
         "session_requests":null,
         "typed_length":null,
-        "completion":"for"
+        "completion":"for",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3340,7 +3424,8 @@ Flags: --lsp
         "index":24,
         "session_requests":null,
         "typed_length":null,
-        "completion":"function"
+        "completion":"function",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3365,7 +3450,8 @@ Flags: --lsp
         "index":25,
         "session_requests":null,
         "typed_length":null,
-        "completion":"if"
+        "completion":"if",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3390,7 +3476,8 @@ Flags: --lsp
         "index":26,
         "session_requests":null,
         "typed_length":null,
-        "completion":"implements"
+        "completion":"implements",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3415,7 +3502,8 @@ Flags: --lsp
         "index":27,
         "session_requests":null,
         "typed_length":null,
-        "completion":"import"
+        "completion":"import",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3442,7 +3530,8 @@ Flags: --lsp
         "index":28,
         "session_requests":null,
         "typed_length":null,
-        "completion":"InitializedStringEnum"
+        "completion":"InitializedStringEnum",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3467,7 +3556,8 @@ Flags: --lsp
         "index":29,
         "session_requests":null,
         "typed_length":null,
-        "completion":"interface"
+        "completion":"interface",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3492,7 +3582,8 @@ Flags: --lsp
         "index":30,
         "session_requests":null,
         "typed_length":null,
-        "completion":"let"
+        "completion":"let",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3517,7 +3608,8 @@ Flags: --lsp
         "index":31,
         "session_requests":null,
         "typed_length":null,
-        "completion":"new"
+        "completion":"new",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3544,7 +3636,8 @@ Flags: --lsp
         "index":32,
         "session_requests":null,
         "typed_length":null,
-        "completion":"NumberEnum"
+        "completion":"NumberEnum",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3569,7 +3662,8 @@ Flags: --lsp
         "index":33,
         "session_requests":null,
         "typed_length":null,
-        "completion":"opaque"
+        "completion":"opaque",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3600,7 +3694,8 @@ Flags: --lsp
         "index":34,
         "session_requests":null,
         "typed_length":null,
-        "completion":"qux"
+        "completion":"qux",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3625,7 +3720,8 @@ Flags: --lsp
         "index":35,
         "session_requests":null,
         "typed_length":null,
-        "completion":"return"
+        "completion":"return",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3650,7 +3746,8 @@ Flags: --lsp
         "index":36,
         "session_requests":null,
         "typed_length":null,
-        "completion":"static"
+        "completion":"static",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3675,7 +3772,8 @@ Flags: --lsp
         "index":37,
         "session_requests":null,
         "typed_length":null,
-        "completion":"switch"
+        "completion":"switch",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3702,7 +3800,8 @@ Flags: --lsp
         "index":38,
         "session_requests":null,
         "typed_length":null,
-        "completion":"SymbolEnum"
+        "completion":"SymbolEnum",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3727,7 +3826,8 @@ Flags: --lsp
         "index":39,
         "session_requests":null,
         "typed_length":null,
-        "completion":"throw"
+        "completion":"throw",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3752,7 +3852,8 @@ Flags: --lsp
         "index":40,
         "session_requests":null,
         "typed_length":null,
-        "completion":"try"
+        "completion":"try",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3777,7 +3878,8 @@ Flags: --lsp
         "index":41,
         "session_requests":null,
         "typed_length":null,
-        "completion":"type"
+        "completion":"type",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3802,7 +3904,8 @@ Flags: --lsp
         "index":42,
         "session_requests":null,
         "typed_length":null,
-        "completion":"typeof"
+        "completion":"typeof",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3827,7 +3930,8 @@ Flags: --lsp
         "index":43,
         "session_requests":null,
         "typed_length":null,
-        "completion":"var"
+        "completion":"var",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3852,7 +3956,8 @@ Flags: --lsp
         "index":44,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3877,7 +3982,8 @@ Flags: --lsp
         "index":45,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3902,7 +4008,8 @@ Flags: --lsp
         "index":46,
         "session_requests":null,
         "typed_length":null,
-        "completion":"while"
+        "completion":"while",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3931,7 +4038,8 @@ Flags: --lsp
         "index":47,
         "session_requests":null,
         "typed_length":null,
-        "completion":"x"
+        "completion":"x",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3956,7 +4064,8 @@ Flags: --lsp
         "index":48,
         "session_requests":null,
         "typed_length":null,
-        "completion":"yield"
+        "completion":"yield",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -3987,7 +4096,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"a"
+        "completion":"a",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4015,7 +4125,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"b"
+        "completion":"b",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4043,7 +4154,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"c"
+        "completion":"c",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4071,7 +4183,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"d"
+        "completion":"d",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4098,7 +4211,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"e"
+        "completion":"e",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4126,7 +4240,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"f"
+        "completion":"f",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4154,7 +4269,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"g"
+        "completion":"g",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4185,7 +4301,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"h"
+        "completion":"h",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4216,7 +4333,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bar"
+        "completion":"bar",
+        "ac_type":"Acjsx"
       }
     ]
   }
@@ -4244,7 +4362,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"baz"
+        "completion":"baz",
+        "ac_type":"Acjsx"
       }
     ]
   }
@@ -4272,7 +4391,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Acjsx"
       }
     ]
   }
@@ -4300,7 +4420,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"qux"
+        "completion":"qux",
+        "ac_type":"Acjsx"
       }
     ]
   }
@@ -4331,7 +4452,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bar"
+        "completion":"bar",
+        "ac_type":"Acjsx"
       }
     ]
   }
@@ -4359,7 +4481,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"baz"
+        "completion":"baz",
+        "ac_type":"Acjsx"
       }
     ]
   }
@@ -4387,7 +4510,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Acjsx"
       }
     ]
   }
@@ -4415,7 +4539,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"qux"
+        "completion":"qux",
+        "ac_type":"Acjsx"
       }
     ]
   }
@@ -4446,7 +4571,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"staticMethod"
+        "completion":"staticMethod",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4474,7 +4600,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"staticProp"
+        "completion":"staticProp",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4501,7 +4628,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"apply"
+        "completion":"apply",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4528,7 +4656,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"arguments"
+        "completion":"arguments",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4555,7 +4684,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bind"
+        "completion":"bind",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4582,7 +4712,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"call"
+        "completion":"call",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4609,7 +4740,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"caller"
+        "completion":"caller",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4636,7 +4768,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"length"
+        "completion":"length",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4664,7 +4797,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"name"
+        "completion":"name",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4692,7 +4826,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"toString"
+        "completion":"toString",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4723,7 +4858,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"instanceMethod"
+        "completion":"instanceMethod",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4751,7 +4887,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"instanceProp"
+        "completion":"instanceProp",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4779,7 +4916,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"varianceProp"
+        "completion":"varianceProp",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4810,7 +4948,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bar"
+        "completion":"bar",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4838,7 +4977,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"baz"
+        "completion":"baz",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4866,7 +5006,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4894,7 +5035,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"qux"
+        "completion":"qux",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4925,7 +5067,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.bar"
+        "completion":"?.bar",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4953,7 +5096,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.baz"
+        "completion":"?.baz",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -4981,7 +5125,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.foo"
+        "completion":"?.foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5009,7 +5154,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.qux"
+        "completion":"?.qux",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5041,7 +5187,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member1"
+        "completion":"Member1",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5070,7 +5217,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member2"
+        "completion":"Member2",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5098,7 +5246,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"cast"
+        "completion":"cast",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5126,7 +5275,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"getName"
+        "completion":"getName",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5154,7 +5304,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"isValid"
+        "completion":"isValid",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5182,7 +5333,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"members"
+        "completion":"members",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5214,7 +5366,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member1"
+        "completion":"Member1",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5243,7 +5396,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member2"
+        "completion":"Member2",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5271,7 +5425,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"cast"
+        "completion":"cast",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5299,7 +5454,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"getName"
+        "completion":"getName",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5327,7 +5483,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"isValid"
+        "completion":"isValid",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5355,7 +5512,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"members"
+        "completion":"members",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5387,7 +5545,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member1"
+        "completion":"Member1",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5416,7 +5575,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member2"
+        "completion":"Member2",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5444,7 +5604,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"cast"
+        "completion":"cast",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5472,7 +5633,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"getName"
+        "completion":"getName",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5500,7 +5662,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"isValid"
+        "completion":"isValid",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5528,7 +5691,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"members"
+        "completion":"members",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5560,7 +5724,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member1"
+        "completion":"Member1",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5589,7 +5754,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member2"
+        "completion":"Member2",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5617,7 +5783,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"cast"
+        "completion":"cast",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5645,7 +5812,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"getName"
+        "completion":"getName",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5673,7 +5841,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"isValid"
+        "completion":"isValid",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5701,7 +5870,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"members"
+        "completion":"members",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5733,7 +5903,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member1"
+        "completion":"Member1",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5762,7 +5933,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Member2"
+        "completion":"Member2",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5790,7 +5962,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"cast"
+        "completion":"cast",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5818,7 +5991,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"getName"
+        "completion":"getName",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5846,7 +6020,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"isValid"
+        "completion":"isValid",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5874,7 +6049,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"members"
+        "completion":"members",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -5904,7 +6080,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportBar"
+        "completion":"ExportBar",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -5931,7 +6108,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportClass"
+        "completion":"ExportClass",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -5958,7 +6136,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportEnum"
+        "completion":"ExportEnum",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -5989,7 +6168,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportFoo"
+        "completion":"ExportFoo",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6016,7 +6196,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportInterface"
+        "completion":"ExportInterface",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6043,7 +6224,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"exportValue"
+        "completion":"exportValue",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6070,7 +6252,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"myBar"
+        "completion":"myBar",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6097,7 +6280,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"myClass"
+        "completion":"myClass",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6124,7 +6308,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"myEnum"
+        "completion":"myEnum",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6152,7 +6337,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"myFoo"
+        "completion":"myFoo",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6179,7 +6365,8 @@ Flags: --lsp
         "index":10,
         "session_requests":null,
         "typed_length":null,
-        "completion":"myInterface"
+        "completion":"myInterface",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6205,7 +6392,8 @@ Flags: --lsp
         "index":11,
         "session_requests":null,
         "typed_length":null,
-        "completion":"any"
+        "completion":"any",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6231,7 +6419,8 @@ Flags: --lsp
         "index":12,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bigint"
+        "completion":"bigint",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6257,7 +6446,8 @@ Flags: --lsp
         "index":13,
         "session_requests":null,
         "typed_length":null,
-        "completion":"boolean"
+        "completion":"boolean",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6283,7 +6473,8 @@ Flags: --lsp
         "index":14,
         "session_requests":null,
         "typed_length":null,
-        "completion":"empty"
+        "completion":"empty",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6309,7 +6500,8 @@ Flags: --lsp
         "index":15,
         "session_requests":null,
         "typed_length":null,
-        "completion":"false"
+        "completion":"false",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6335,7 +6527,8 @@ Flags: --lsp
         "index":16,
         "session_requests":null,
         "typed_length":null,
-        "completion":"mixed"
+        "completion":"mixed",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6361,7 +6554,8 @@ Flags: --lsp
         "index":17,
         "session_requests":null,
         "typed_length":null,
-        "completion":"null"
+        "completion":"null",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6387,7 +6581,8 @@ Flags: --lsp
         "index":18,
         "session_requests":null,
         "typed_length":null,
-        "completion":"number"
+        "completion":"number",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6413,7 +6608,8 @@ Flags: --lsp
         "index":19,
         "session_requests":null,
         "typed_length":null,
-        "completion":"string"
+        "completion":"string",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6439,7 +6635,8 @@ Flags: --lsp
         "index":20,
         "session_requests":null,
         "typed_length":null,
-        "completion":"symbol"
+        "completion":"symbol",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6465,7 +6662,8 @@ Flags: --lsp
         "index":21,
         "session_requests":null,
         "typed_length":null,
-        "completion":"true"
+        "completion":"true",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6491,7 +6689,8 @@ Flags: --lsp
         "index":22,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6517,7 +6716,8 @@ Flags: --lsp
         "index":23,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Call"
+        "completion":"$Call",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6543,7 +6743,8 @@ Flags: --lsp
         "index":24,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$CharSet"
+        "completion":"$CharSet",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6569,7 +6770,8 @@ Flags: --lsp
         "index":25,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Diff"
+        "completion":"$Diff",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6595,7 +6797,8 @@ Flags: --lsp
         "index":26,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ElementType"
+        "completion":"$ElementType",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6621,7 +6824,8 @@ Flags: --lsp
         "index":27,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Exact"
+        "completion":"$Exact",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6647,7 +6851,8 @@ Flags: --lsp
         "index":28,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Exports"
+        "completion":"$Exports",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6673,7 +6878,8 @@ Flags: --lsp
         "index":29,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$KeyMirror"
+        "completion":"$KeyMirror",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6699,7 +6905,8 @@ Flags: --lsp
         "index":30,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Keys"
+        "completion":"$Keys",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6725,7 +6932,8 @@ Flags: --lsp
         "index":31,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$NonMaybeType"
+        "completion":"$NonMaybeType",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6751,7 +6959,8 @@ Flags: --lsp
         "index":32,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ObjMap"
+        "completion":"$ObjMap",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6777,7 +6986,8 @@ Flags: --lsp
         "index":33,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ObjMapi"
+        "completion":"$ObjMapi",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6803,7 +7013,8 @@ Flags: --lsp
         "index":34,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$PropertyType"
+        "completion":"$PropertyType",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6829,7 +7040,8 @@ Flags: --lsp
         "index":35,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ReadOnly"
+        "completion":"$ReadOnly",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6855,7 +7067,8 @@ Flags: --lsp
         "index":36,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Rest"
+        "completion":"$Rest",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6881,7 +7094,8 @@ Flags: --lsp
         "index":37,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Shape"
+        "completion":"$Shape",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6907,7 +7121,8 @@ Flags: --lsp
         "index":38,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$TupleMap"
+        "completion":"$TupleMap",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6933,7 +7148,8 @@ Flags: --lsp
         "index":39,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Values"
+        "completion":"$Values",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6959,7 +7175,8 @@ Flags: --lsp
         "index":40,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Class"
+        "completion":"Class",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -6985,7 +7202,8 @@ Flags: --lsp
         "index":41,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Partial"
+        "completion":"Partial",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -7011,7 +7229,8 @@ Flags: --lsp
         "index":42,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Required"
+        "completion":"Required",
+        "ac_type":"Actype"
       }
     ]
   }
@@ -7041,7 +7260,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportBar"
+        "completion":"ExportBar",
+        "ac_type":"Acqualifiedtype"
       }
     ]
   }
@@ -7068,7 +7288,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportClass"
+        "completion":"ExportClass",
+        "ac_type":"Acqualifiedtype"
       }
     ]
   }
@@ -7095,7 +7316,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportEnum"
+        "completion":"ExportEnum",
+        "ac_type":"Acqualifiedtype"
       }
     ]
   }
@@ -7126,7 +7348,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportFoo"
+        "completion":"ExportFoo",
+        "ac_type":"Acqualifiedtype"
       }
     ]
   }
@@ -7153,7 +7376,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"ExportInterface"
+        "completion":"ExportInterface",
+        "ac_type":"Acqualifiedtype"
       }
     ]
   }
@@ -7183,7 +7407,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"'bar'",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7212,7 +7437,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7239,7 +7465,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"obj"
+        "completion":"obj",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7269,7 +7496,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"bar\""
+        "completion":"\"bar\"",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7296,7 +7524,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7326,7 +7555,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"bar\""
+        "completion":"\"bar\"",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7353,7 +7583,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7383,7 +7614,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"'bar'",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7410,7 +7642,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7437,7 +7670,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"obj"
+        "completion":"obj",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7464,7 +7698,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"x"
+        "completion":"x",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7492,7 +7727,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"async"
+        "completion":"async",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7517,7 +7753,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"await"
+        "completion":"await",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7542,7 +7779,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"class"
+        "completion":"class",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7567,7 +7805,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"delete"
+        "completion":"delete",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7592,7 +7831,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"function"
+        "completion":"function",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7617,7 +7857,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"import"
+        "completion":"import",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7642,7 +7883,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"new"
+        "completion":"new",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7669,7 +7911,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"obj"
+        "completion":"obj",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7694,7 +7937,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"typeof"
+        "completion":"typeof",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7719,7 +7963,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7746,7 +7991,8 @@ Flags: --lsp
         "index":10,
         "session_requests":null,
         "typed_length":null,
-        "completion":"x"
+        "completion":"x",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7771,7 +8017,8 @@ Flags: --lsp
         "index":11,
         "session_requests":null,
         "typed_length":null,
-        "completion":"yield"
+        "completion":"yield",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -7801,7 +8048,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.['bar']"
+        "completion":"?.['bar']",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7828,7 +8076,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.['foo']"
+        "completion":"?.['foo']",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7855,7 +8104,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"obj"
+        "completion":"obj",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7882,7 +8132,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"x"
+        "completion":"x",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7912,7 +8163,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bar"
+        "completion":"bar",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7939,7 +8191,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7966,7 +8219,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Symbol.iterator"
+        "completion":"Symbol.iterator",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -7996,7 +8250,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bar"
+        "completion":"bar",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8023,7 +8278,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8050,7 +8306,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Symbol.asyncIterator"
+        "completion":"Symbol.asyncIterator",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8080,7 +8337,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"['foo.bar.baz']"
+        "completion":"['foo.bar.baz']",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8107,7 +8365,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8137,7 +8396,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.['foo.bar.baz']"
+        "completion":"?.['foo.bar.baz']",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8164,7 +8424,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"?.foo"
+        "completion":"?.foo",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8195,7 +8456,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"'bar'",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8223,7 +8485,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'baz'"
+        "completion":"'baz'",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8251,7 +8514,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8276,7 +8540,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"async"
+        "completion":"async",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8301,7 +8566,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"await"
+        "completion":"await",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8326,7 +8592,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"class"
+        "completion":"class",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8351,7 +8618,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"delete"
+        "completion":"delete",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8376,7 +8644,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"function"
+        "completion":"function",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8401,7 +8670,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"import"
+        "completion":"import",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8426,7 +8696,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"new"
+        "completion":"new",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8451,7 +8722,8 @@ Flags: --lsp
         "index":10,
         "session_requests":null,
         "typed_length":null,
-        "completion":"typeof"
+        "completion":"typeof",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8476,7 +8748,8 @@ Flags: --lsp
         "index":11,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8501,7 +8774,8 @@ Flags: --lsp
         "index":12,
         "session_requests":null,
         "typed_length":null,
-        "completion":"yield"
+        "completion":"yield",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8528,7 +8802,8 @@ Flags: --lsp
         "index":13,
         "session_requests":null,
         "typed_length":null,
-        "completion":"f"
+        "completion":"f",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -8559,7 +8834,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'baz'"
+        "completion":"'baz'",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -8587,7 +8863,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"'bar'",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -8615,7 +8892,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -8870,7 +9148,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"'bar'",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8899,7 +9178,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8927,7 +9207,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"K"
+        "completion":"K",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8953,7 +9234,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"O"
+        "completion":"O",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -8979,7 +9261,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"T"
+        "completion":"T",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9005,7 +9288,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"any"
+        "completion":"any",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9031,7 +9315,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bigint"
+        "completion":"bigint",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9057,7 +9342,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"boolean"
+        "completion":"boolean",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9083,7 +9369,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"empty"
+        "completion":"empty",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9109,7 +9396,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"false"
+        "completion":"false",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9135,7 +9423,8 @@ Flags: --lsp
         "index":10,
         "session_requests":null,
         "typed_length":null,
-        "completion":"mixed"
+        "completion":"mixed",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9161,7 +9450,8 @@ Flags: --lsp
         "index":11,
         "session_requests":null,
         "typed_length":null,
-        "completion":"null"
+        "completion":"null",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9187,7 +9477,8 @@ Flags: --lsp
         "index":12,
         "session_requests":null,
         "typed_length":null,
-        "completion":"number"
+        "completion":"number",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9213,7 +9504,8 @@ Flags: --lsp
         "index":13,
         "session_requests":null,
         "typed_length":null,
-        "completion":"string"
+        "completion":"string",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9239,7 +9531,8 @@ Flags: --lsp
         "index":14,
         "session_requests":null,
         "typed_length":null,
-        "completion":"symbol"
+        "completion":"symbol",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9265,7 +9558,8 @@ Flags: --lsp
         "index":15,
         "session_requests":null,
         "typed_length":null,
-        "completion":"true"
+        "completion":"true",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9291,7 +9585,8 @@ Flags: --lsp
         "index":16,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9317,7 +9612,8 @@ Flags: --lsp
         "index":17,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Call"
+        "completion":"$Call",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9343,7 +9639,8 @@ Flags: --lsp
         "index":18,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$CharSet"
+        "completion":"$CharSet",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9369,7 +9666,8 @@ Flags: --lsp
         "index":19,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Diff"
+        "completion":"$Diff",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9395,7 +9693,8 @@ Flags: --lsp
         "index":20,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ElementType"
+        "completion":"$ElementType",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9421,7 +9720,8 @@ Flags: --lsp
         "index":21,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Exact"
+        "completion":"$Exact",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9447,7 +9747,8 @@ Flags: --lsp
         "index":22,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Exports"
+        "completion":"$Exports",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9473,7 +9774,8 @@ Flags: --lsp
         "index":23,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$KeyMirror"
+        "completion":"$KeyMirror",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9499,7 +9801,8 @@ Flags: --lsp
         "index":24,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Keys"
+        "completion":"$Keys",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9525,7 +9828,8 @@ Flags: --lsp
         "index":25,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$NonMaybeType"
+        "completion":"$NonMaybeType",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9551,7 +9855,8 @@ Flags: --lsp
         "index":26,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ObjMap"
+        "completion":"$ObjMap",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9577,7 +9882,8 @@ Flags: --lsp
         "index":27,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ObjMapi"
+        "completion":"$ObjMapi",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9603,7 +9909,8 @@ Flags: --lsp
         "index":28,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$PropertyType"
+        "completion":"$PropertyType",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9629,7 +9936,8 @@ Flags: --lsp
         "index":29,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ReadOnly"
+        "completion":"$ReadOnly",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9655,7 +9963,8 @@ Flags: --lsp
         "index":30,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Rest"
+        "completion":"$Rest",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9681,7 +9990,8 @@ Flags: --lsp
         "index":31,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Shape"
+        "completion":"$Shape",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9707,7 +10017,8 @@ Flags: --lsp
         "index":32,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$TupleMap"
+        "completion":"$TupleMap",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9733,7 +10044,8 @@ Flags: --lsp
         "index":33,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Values"
+        "completion":"$Values",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9759,7 +10071,8 @@ Flags: --lsp
         "index":34,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Class"
+        "completion":"Class",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9785,7 +10098,8 @@ Flags: --lsp
         "index":35,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Partial"
+        "completion":"Partial",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9811,7 +10125,8 @@ Flags: --lsp
         "index":36,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Required"
+        "completion":"Required",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9841,7 +10156,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"bar\""
+        "completion":"\"bar\"",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9868,7 +10184,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9898,7 +10215,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'bar'"
+        "completion":"'bar'",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9925,7 +10243,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9951,7 +10270,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"K"
+        "completion":"K",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -9977,7 +10297,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"O"
+        "completion":"O",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10003,7 +10324,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"T"
+        "completion":"T",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10029,7 +10351,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"any"
+        "completion":"any",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10055,7 +10378,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bigint"
+        "completion":"bigint",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10081,7 +10405,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"boolean"
+        "completion":"boolean",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10107,7 +10432,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"empty"
+        "completion":"empty",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10133,7 +10459,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"false"
+        "completion":"false",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10159,7 +10486,8 @@ Flags: --lsp
         "index":10,
         "session_requests":null,
         "typed_length":null,
-        "completion":"mixed"
+        "completion":"mixed",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10185,7 +10513,8 @@ Flags: --lsp
         "index":11,
         "session_requests":null,
         "typed_length":null,
-        "completion":"null"
+        "completion":"null",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10211,7 +10540,8 @@ Flags: --lsp
         "index":12,
         "session_requests":null,
         "typed_length":null,
-        "completion":"number"
+        "completion":"number",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10237,7 +10567,8 @@ Flags: --lsp
         "index":13,
         "session_requests":null,
         "typed_length":null,
-        "completion":"string"
+        "completion":"string",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10263,7 +10594,8 @@ Flags: --lsp
         "index":14,
         "session_requests":null,
         "typed_length":null,
-        "completion":"symbol"
+        "completion":"symbol",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10289,7 +10621,8 @@ Flags: --lsp
         "index":15,
         "session_requests":null,
         "typed_length":null,
-        "completion":"true"
+        "completion":"true",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10315,7 +10648,8 @@ Flags: --lsp
         "index":16,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10341,7 +10675,8 @@ Flags: --lsp
         "index":17,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Call"
+        "completion":"$Call",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10367,7 +10702,8 @@ Flags: --lsp
         "index":18,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$CharSet"
+        "completion":"$CharSet",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10393,7 +10729,8 @@ Flags: --lsp
         "index":19,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Diff"
+        "completion":"$Diff",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10419,7 +10756,8 @@ Flags: --lsp
         "index":20,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ElementType"
+        "completion":"$ElementType",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10445,7 +10783,8 @@ Flags: --lsp
         "index":21,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Exact"
+        "completion":"$Exact",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10471,7 +10810,8 @@ Flags: --lsp
         "index":22,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Exports"
+        "completion":"$Exports",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10497,7 +10837,8 @@ Flags: --lsp
         "index":23,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$KeyMirror"
+        "completion":"$KeyMirror",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10523,7 +10864,8 @@ Flags: --lsp
         "index":24,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Keys"
+        "completion":"$Keys",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10549,7 +10891,8 @@ Flags: --lsp
         "index":25,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$NonMaybeType"
+        "completion":"$NonMaybeType",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10575,7 +10918,8 @@ Flags: --lsp
         "index":26,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ObjMap"
+        "completion":"$ObjMap",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10601,7 +10945,8 @@ Flags: --lsp
         "index":27,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ObjMapi"
+        "completion":"$ObjMapi",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10627,7 +10972,8 @@ Flags: --lsp
         "index":28,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$PropertyType"
+        "completion":"$PropertyType",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10653,7 +10999,8 @@ Flags: --lsp
         "index":29,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$ReadOnly"
+        "completion":"$ReadOnly",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10679,7 +11026,8 @@ Flags: --lsp
         "index":30,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Rest"
+        "completion":"$Rest",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10705,7 +11053,8 @@ Flags: --lsp
         "index":31,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Shape"
+        "completion":"$Shape",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10731,7 +11080,8 @@ Flags: --lsp
         "index":32,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$TupleMap"
+        "completion":"$TupleMap",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10757,7 +11107,8 @@ Flags: --lsp
         "index":33,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$Values"
+        "completion":"$Values",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10783,7 +11134,8 @@ Flags: --lsp
         "index":34,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Class"
+        "completion":"Class",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10809,7 +11161,8 @@ Flags: --lsp
         "index":35,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Partial"
+        "completion":"Partial",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10835,7 +11188,8 @@ Flags: --lsp
         "index":36,
         "session_requests":null,
         "typed_length":null,
-        "completion":"Required"
+        "completion":"Required",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10865,7 +11219,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"bar\""
+        "completion":"\"bar\"",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10892,7 +11247,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -10922,7 +11278,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"abb"
+        "completion":"abb",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -10952,7 +11309,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"b"
+        "completion":"b",
+        "ac_type":"Acmem"
       }
     ]
   }
@@ -11023,7 +11381,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"bar"
+        "completion":"bar",
+        "ac_type":"Ac_class_key"
       }
     ]
   }
@@ -11049,7 +11408,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Ac_class_key"
       }
     ]
   }
@@ -11075,7 +11435,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"i"
+        "completion":"i",
+        "ac_type":"Ac_class_key"
       }
     ]
   }
@@ -11101,7 +11462,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"qux"
+        "completion":"qux",
+        "ac_type":"Ac_class_key"
       }
     ]
   }
@@ -11131,7 +11493,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Ackey"
       }
     ]
   }
@@ -11157,7 +11520,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"foo"
+        "completion":"foo",
+        "ac_type":"Ackey"
       }
     ]
   }
@@ -11238,7 +11602,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11263,7 +11628,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"async"
+        "completion":"async",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11288,7 +11654,8 @@ Flags: --lsp
         "index":2,
         "session_requests":null,
         "typed_length":null,
-        "completion":"await"
+        "completion":"await",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11313,7 +11680,8 @@ Flags: --lsp
         "index":3,
         "session_requests":null,
         "typed_length":null,
-        "completion":"class"
+        "completion":"class",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11338,7 +11706,8 @@ Flags: --lsp
         "index":4,
         "session_requests":null,
         "typed_length":null,
-        "completion":"delete"
+        "completion":"delete",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11363,7 +11732,8 @@ Flags: --lsp
         "index":5,
         "session_requests":null,
         "typed_length":null,
-        "completion":"function"
+        "completion":"function",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11388,7 +11758,8 @@ Flags: --lsp
         "index":6,
         "session_requests":null,
         "typed_length":null,
-        "completion":"import"
+        "completion":"import",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11413,7 +11784,8 @@ Flags: --lsp
         "index":7,
         "session_requests":null,
         "typed_length":null,
-        "completion":"new"
+        "completion":"new",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11438,7 +11810,8 @@ Flags: --lsp
         "index":8,
         "session_requests":null,
         "typed_length":null,
-        "completion":"typeof"
+        "completion":"typeof",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11463,7 +11836,8 @@ Flags: --lsp
         "index":9,
         "session_requests":null,
         "typed_length":null,
-        "completion":"void"
+        "completion":"void",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11488,7 +11862,8 @@ Flags: --lsp
         "index":10,
         "session_requests":null,
         "typed_length":null,
-        "completion":"yield"
+        "completion":"yield",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11515,7 +11890,8 @@ Flags: --lsp
         "index":11,
         "session_requests":null,
         "typed_length":null,
-        "completion":"a"
+        "completion":"a",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11546,7 +11922,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11577,7 +11954,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11605,7 +11983,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"function"
+        "completion":"function",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11633,7 +12012,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acid"
       }
     ]
   }
@@ -11664,7 +12044,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11695,7 +12076,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11726,7 +12108,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11757,7 +12140,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11788,7 +12172,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11819,7 +12204,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11850,7 +12236,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"'foo'"
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11881,7 +12268,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"\"foo\""
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
       }
     ]
   }
@@ -11921,7 +12309,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-call]"
+        "completion":"$FlowFixMe[incompatible-call]",
+        "ac_type":"Ac_comment"
       }
     ]
   }
@@ -11949,7 +12338,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-call]"
+        "completion":"$FlowFixMe[incompatible-call]",
+        "ac_type":"Ac_comment"
       }
     ]
   }
@@ -11974,7 +12364,8 @@ Flags: --lsp
         "index":1,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[unsafe-addition]"
+        "completion":"$FlowFixMe[unsafe-addition]",
+        "ac_type":"Ac_comment"
       }
     ]
   }
@@ -12002,7 +12393,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[unused-promise]"
+        "completion":"$FlowFixMe[unused-promise]",
+        "ac_type":"Ac_comment"
       }
     ]
   }
@@ -12034,7 +12426,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-call]"
+        "completion":"$FlowFixMe[incompatible-call]",
+        "ac_type":"Ac_comment"
       }
     ]
   }
@@ -12063,7 +12456,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"/** */"
+        "completion":"/** */",
+        "ac_type":"Ac_comment"
       }
     ]
   }
@@ -12092,7 +12486,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"/** */"
+        "completion":"/** */",
+        "ac_type":"Ac_comment"
       }
     ]
   }
@@ -12121,7 +12516,8 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"/** */"
+        "completion":"/** */",
+        "ac_type":"Ac_comment"
       }
     ]
   }

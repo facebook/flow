@@ -98,7 +98,7 @@ let autocomplete_response_to_json ~strip_root response =
           ("result", JSON_Array []);
           (* TODO: remove this? kept for BC *)
         ]
-    | Ok { ServerProt.Response.Completion.items; is_incomplete = _ } ->
+    | Ok ({ ServerProt.Response.Completion.items; is_incomplete = _ }, _ac_type) ->
       let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) items in
       JSON_Object [("result", JSON_Array results)]
   )
@@ -160,10 +160,11 @@ let main
     if lsp then
       Base.Result.iter
         results
-        ~f:(fun { ServerProt.Response.Completion.items; is_incomplete = _ } ->
+        ~f:(fun ({ ServerProt.Response.Completion.items; is_incomplete = _ }, ac_type) ->
           List.iteri
             (fun index ->
               Flow_lsp_conversions.flow_completion_item_to_lsp
+                ~ac_type
                 ~is_snippet_supported:true
                 ~is_tags_supported:(fun _ -> true)
                 ~is_preselect_supported:true
@@ -179,7 +180,7 @@ let main
     else (
       match results with
       | Error error -> prerr_endlinef "Error: %s" error
-      | Ok { ServerProt.Response.Completion.items; is_incomplete = _ } ->
+      | Ok ({ ServerProt.Response.Completion.items; is_incomplete = _ }, _ac_type) ->
         List.iter
           (fun res ->
             let name = res.ServerProt.Response.Completion.name in
