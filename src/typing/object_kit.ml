@@ -121,19 +121,36 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (* Object Read Only *)
     (********************)
     let object_read_only cx trace _use_op reason x tout =
+      (* We always use an unknown_use intentionally when flowing to the tout. The use_op associated
+       * with the tvar is more relevant with the use of the ReadOnly type than the use_op associated
+       * with the ReadOnly instantiation *)
       rec_flow_t ~use_op:unknown_use cx trace (Slice_utils.object_read_only cx reason x, tout)
     in
     (******************)
     (* Object Partial *)
     (******************)
-    let object_partial cx trace use_op reason x tout =
-      rec_flow_t ~use_op cx trace (Slice_utils.object_update_optionality `Partial cx reason x, tout)
+    let object_partial cx trace _use_op reason x tout =
+      (* We always use an unknown_use intentionally when flowing to the tout. The use_op associated
+       * with the tvar is more relevant with the use of the Partial type than the use_op associated
+       * with the Partial instantiation *)
+      rec_flow_t
+        ~use_op:unknown_use
+        cx
+        trace
+        (Slice_utils.object_update_optionality `Partial cx reason x, tout)
     in
     (*******************)
     (* Object Required *)
     (*******************)
-    let object_required cx trace use_op reason x tout =
-      rec_flow_t ~use_op cx trace (Slice_utils.object_update_optionality `Required cx reason x, tout)
+    let object_required cx trace _use_op reason x tout =
+      (* We always use an unknown_use intentionally when flowing to the tout. The use_op associated
+       * with the tvar is more relevant with the use of the Required type than the use_op associated
+       * with the Required instantiation *)
+      rec_flow_t
+        ~use_op:unknown_use
+        cx
+        trace
+        (Slice_utils.object_update_optionality `Required cx reason x, tout)
     in
     (**************)
     (* Object Rep *)
