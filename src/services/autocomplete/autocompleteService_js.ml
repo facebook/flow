@@ -2339,10 +2339,10 @@ let autocomplete_get_results
           ~kind:`Type
           qtype
     in
-    let keywords = Keywords.keywords_at_loc ast (ALoc.to_loc_exn ac_loc) in
     let result =
       match result with
       | AcResult { result; errors_to_log } ->
+        let keywords = Keywords.keywords_at_loc ast (ALoc.to_loc_exn ac_loc) in
         AcResult
           {
             result =
@@ -2354,16 +2354,6 @@ let autocomplete_get_results
                     (keywords @ result.ServerProt.Response.Completion.items);
               };
             errors_to_log;
-          }
-      | AcEmpty _ when not (Base.List.is_empty keywords) ->
-        AcResult
-          {
-            result =
-              {
-                ServerProt.Response.Completion.items = filter_by_token_and_sort token keywords;
-                is_incomplete = false;
-              };
-            errors_to_log = [];
           }
       | x -> x
     in
