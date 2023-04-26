@@ -3,12 +3,17 @@ title: Tuple Types
 slug: /types/tuples
 ---
 
-Tuples are a fixed length list, where each element can have a different type.
-This is in contrast to [arrays](../arrays), which have an undetermined length, and all elements have the same type.
+Tuple types represent a **fixed length** list, where the elements can have **different types**.
+This is in contrast to [array types](../arrays), which have an unknown length and all elements have the same type.
 
-JavaScript array literal values can be used to create both tuple and array types.
+JavaScript array literal values can be used to create both tuple and array types:
 
-In Flow you can create tuple types using the `[type, type, type]` syntax:
+```js flow-check
+const arr: Array<number> = [1, 2, 3]; // As an array type
+const tup: [number, number, number] = [1, 2, 3]; // As a tuple type
+```
+
+In Flow you can create tuple types using the `[type1, type2, type3]` syntax:
 
 ```js flow-check
 const tuple1: [number] = [1];
