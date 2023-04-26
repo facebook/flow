@@ -45,3 +45,10 @@ function definitely_assignable_choose_true_branch<T>(x: T): Array<T> extends $Re
 
 (definitely_assignable_choose_true_branch(''): string); // ok
 (definitely_assignable_choose_true_branch(''): number); // error: string ~> number
+
+function definitely_not_assignable_choose_false_branch<T>(x: T): Set<T> extends Array<infer X> ? X : string {
+  return ''; // ok
+}
+
+(definitely_not_assignable_choose_false_branch(''): string); // ok
+(definitely_not_assignable_choose_false_branch(''): number); // error: string ~> number

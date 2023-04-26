@@ -1217,6 +1217,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   module Flow = FlowJs
   module Instantiation_helper = Instantiation_helper
   module Pierce = Pierce (Flow)
+  module SpeculationKit = Speculation_kit.Make (Flow)
   open Instantiation_helper
 
   let instantiate_poly_with_subst_map
@@ -1358,28 +1359,59 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
             (* If the subtyping can succeed even when the GenericTs are still abstract, then it must
                succeed under every possible instantiation, so we can take the true branch. *)
             | Some subst_map -> Subst.subst cx ~use_op:unknown_use subst_map true_t
-            | None
-              when Subst_name.Set.is_empty (Subst.free_var_finder cx check_t)
-                   && Subst_name.Set.is_empty
-                        (Subst.free_var_finder
-                           cx
-                           ~bound:
-                             (tparams
-                             |> Base.List.map ~f:(fun tparam -> tparam.name)
-                             |> Subst_name.Set.of_list
-                             )
-                           extends_t
-                        ) ->
-              false_t
             | None ->
-              (* A conditional type with GenericTs in check type and extends type is tricky.
-                 We often cannot decide which branch we should take. To maintain soundness
-                 in the most general case, we make the type abstract. *)
-              let name = Subst_name.Synthetic ("conditional type", []) in
-              let id = Context.make_generic_id cx name (aloc_of_reason reason) in
-              let reason = update_desc_reason invalidate_rtype_alias reason in
-              let bound = MixedT.make reason (bogus_trust ()) in
-              GenericT { reason; name; id; bound }
+              let free_vars =
+                Subst_name.Set.union
+                  (Subst.free_var_finder cx check_t)
+                  (Subst.free_var_finder
+                     cx
+                     ~bound:
+                       (tparams
+                       |> Base.List.map ~f:(fun tparam -> tparam.name)
+                       |> Subst_name.Set.of_list
+                       )
+                     extends_t
+                  )
+              in
+              if Subst_name.Set.is_empty free_vars then
+                false_t
+              else
+                let any_subst_map =
+                  Subst_name.Set.fold
+                    (fun name acc -> Subst_name.Map.add name (AnyT.placeholder reason) acc)
+                    free_vars
+                    Subst_name.Map.empty
+                in
+                let any_subst_map =
+                  Base.List.fold tparams ~init:any_subst_map ~f:(fun acc tparam ->
+                      Subst_name.Map.add tparam.name (AnyT.placeholder reason) acc
+                  )
+                in
+                let check_t = Subst.subst cx ~use_op:unknown_use any_subst_map check_t in
+                let extends_t = Subst.subst cx ~use_op:unknown_use any_subst_map extends_t in
+                (match
+                   SpeculationKit.try_singleton_throw_on_failure
+                     cx
+                     trace
+                     reason
+                     ~upper_unresolved:true
+                     check_t
+                     (UseT (use_op, extends_t))
+                 with
+                | exception Flow_js_utils.SpeculationSingletonError ->
+                  (* When all the GenericT and infer types are replaced with any, and subtyping
+                     check still cannot succeed, then we can safely conclude that, in every possible
+                     instantiation, we will always take the false branch *)
+                  false_t
+                | _ ->
+                  (* A conditional type with GenericTs in check type and extends type is tricky.
+                     We cannot conservatively decide which branch we will take. To maintain
+                     soundness in this general case, we make the type abstract. *)
+                  let name = Subst_name.Synthetic ("conditional type", []) in
+                  let id = Context.make_generic_id cx name (aloc_of_reason reason) in
+                  let reason = update_desc_reason invalidate_rtype_alias reason in
+                  let bound = MixedT.make reason (bogus_trust ()) in
+                  GenericT { reason; name; id; bound })
           in
           reposition cx ~trace (aloc_of_reason reason) t
       )
