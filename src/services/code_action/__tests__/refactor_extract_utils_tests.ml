@@ -145,8 +145,9 @@ let extract_tests =
   let assert_extracted
       ~ctxt ?expected_statements ?expected_expression ?expected_type source extract_range =
     let ast = parse source in
+    let tokens = AstExtractor.tokens ~use_strict:true None source in
     let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
-      AstExtractor.extract ast extract_range
+      AstExtractor.extract tokens ast extract_range
     in
     let extracted_statements_str =
       match extracted_statements with
@@ -381,6 +382,28 @@ foo(a + b);
     );
     ( "extract_expression_ban_multiple" >:: fun ctxt ->
       assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 9) (1, 25))
+    );
+    ( "extract_expression_allow_whitespace" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        "const a =  1   ;"
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 16);
+              };
+            ],
+            "1"
+          )
+        (mk_loc (1, 10) (1, 14))
+    );
+    ( "extract_expression_overlap_disallowed" >:: fun ctxt ->
+      (* selected `= 1` *)
+      assert_extracted ~ctxt "let a = 1;" (mk_loc (1, 6) (1, 9));
+      (* selected ` 1;` *)
+      assert_extracted ~ctxt "let a = 1;" (mk_loc (1, 7) (1, 10))
     );
     (* Selecting `1;`.
        Although expression is contained, illegal selection of statement invalidates it. *)

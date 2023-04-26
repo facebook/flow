@@ -1139,6 +1139,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
             ~cx
             ~file_sig
             ~tolerable_errors
+            ~file_contents
             ~ast
             ~typed_ast
             ~scope_info
