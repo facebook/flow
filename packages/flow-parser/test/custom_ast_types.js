@@ -45,29 +45,6 @@ function custom_ast_types(fork) {
     .field('trueType', def('FlowType'))
     .field('falseType', def('FlowType'));
 
-  var returnTypeAnnotation = or(
-    def('TypeAnnotation'),
-    def('TypePredicate'),
-    null,
-  );
-
-  def('FunctionDeclaration').field(
-    'returnType',
-    returnTypeAnnotation,
-    defaults['null'],
-  );
-
-  def('ArrowFunctionExpression').field(
-    'returnType',
-    returnTypeAnnotation,
-    defaults['null'],
-  );
-
-  def('FunctionTypeAnnotation').field(
-    'returnType',
-    or(def('FlowType'), def('TypePredicate')),
-  );
-
   def('InferTypeAnnotation')
     .bases('FlowType')
     .build('typeParameter')
@@ -99,7 +76,7 @@ function custom_ast_types(fork) {
     .field('types', undefined);
 
   def('TypePredicate')
-    .bases('TypeAnnotation')
+    .bases('TypeAnnotation', 'FlowType')
     .build('parameterName', 'typeAnnotation', 'asserts')
     .field('parameterName', def('Identifier'))
     .field('typeAnnotation', or(def('FlowType'), null), defaults['null'])

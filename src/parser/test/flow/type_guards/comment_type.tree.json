@@ -58,23 +58,28 @@
       "predicate":null,
       "expression":false,
       "returnType":{
-        "type":"TypePredicate",
+        "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":34}},
         "range":[19,34],
-        "parameterName":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":24}},
-          "range":[23,24],
-          "name":"x",
-          "typeAnnotation":null,
-          "optional":false
-        },
         "typeAnnotation":{
-          "type":"NumberTypeAnnotation",
-          "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":34}},
-          "range":[28,34]
-        },
-        "asserts":false
+          "type":"TypePredicate",
+          "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":34}},
+          "range":[23,34],
+          "parameterName":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":24}},
+            "range":[23,24],
+            "name":"x",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeAnnotation":{
+            "type":"NumberTypeAnnotation",
+            "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":34}},
+            "range":[28,34]
+          },
+          "asserts":false
+        }
       },
       "typeParameters":null
     }
