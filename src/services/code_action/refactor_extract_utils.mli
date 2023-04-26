@@ -63,7 +63,10 @@ module AstExtractor : sig
     extracted_type: type_with_statement_loc option;
   }
 
-  val extract : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> extracted
+  val tokens : use_strict:bool -> File_key.t option -> string -> Parser_env.token_sink_result list
+
+  val extract :
+    Parser_env.token_sink_result list -> (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> extracted
 end
 
 module InformationCollectors : sig

@@ -53,6 +53,7 @@ val code_actions_at_loc :
   cx:Context.t ->
   file_sig:File_sig.t ->
   tolerable_errors:File_sig.tolerable_error list ->
+  file_contents:string ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   scope_info:Scope_api.With_Loc.info ->

@@ -198,9 +198,18 @@ module AstExtractor = struct
     extracted_type: type_with_statement_loc option;
   }
 
+  let tokens ~use_strict filename file_contents =
+    let rev_tokens = ref [] in
+    let token_sink = Some (fun token_data -> rev_tokens := token_data :: !rev_tokens) in
+    let parse_options =
+      Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict }
+    in
+    ignore @@ Parser_flow.program_file ~token_sink ~fail:false ~parse_options file_contents filename;
+    !rev_tokens
+
   (* Collect all statements that are completely within the selection.
      Collect a single expression that is completely within the selection. *)
-  class collector (extract_range : Loc.t) =
+  class collector tokens (extract_range : Loc.t) =
     object (this)
       inherit
         [Loc.t, Loc.t] InsertionPointCollectors.function_and_method_insertion_point_visitor as super
@@ -304,8 +313,7 @@ module AstExtractor = struct
 
       method! expression expr =
         let (expression_loc, _) = expr in
-        if Loc.equal extract_range expression_loc then
-          (* Only collect expression when the selection is an exact match. *)
+        if this#valid_single_selection expression_loc then
           let () = collected_expression <- Some { constant_insertion_points; expression = expr } in
           expr
         else if Loc.contains expression_loc extract_range then
@@ -319,8 +327,7 @@ module AstExtractor = struct
 
       method! type_ t =
         let (type_loc, _) = t in
-        if Loc.equal extract_range type_loc then
-          (* Only collect type when the selection is an exact match. *)
+        if this#valid_single_selection type_loc then
           let ({ statement_loc; _ }, _) = constant_insertion_points in
           let () =
             collected_type <- Some { directly_containing_statement_loc = statement_loc; type_ = t }
@@ -334,10 +341,23 @@ module AstExtractor = struct
         else
           (* In all other cases, selection is illegal. *)
           t
+
+      (* Check whether the node at node_loc is a valid single selection. *)
+      method private valid_single_selection node_loc =
+        (* Fast path: exact selection is always valid *)
+        Loc.equal extract_range node_loc
+        || (* If we selected more than the current node, we need to ensure that the selection
+              doesn't touch any other token outside of node_loc *)
+        Loc.contains extract_range node_loc
+        && Base.List.for_all tokens ~f:(fun { Parser_env.token_loc; _ } ->
+               Loc.contains node_loc token_loc
+               || Loc.(pos_cmp extract_range._end token_loc.start) <= 0
+               || Loc.(pos_cmp token_loc._end extract_range.start) <= 0
+           )
     end
 
-  let extract ast extract_range =
-    let collector = new collector extract_range in
+  let extract tokens ast extract_range =
+    let collector = new collector tokens extract_range in
     let _ = collector#program ast in
     collector#extracted
 end

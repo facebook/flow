@@ -757,6 +757,7 @@ let extract_to_type_alias_refactors
   | Error _ -> []
 
 let provide_available_refactors
+    ~tokens
     ~ast
     ~cx
     ~file
@@ -766,7 +767,7 @@ let provide_available_refactors
     ~support_experimental_snippet_text_edit
     ~extract_range =
   let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
-    AstExtractor.extract ast extract_range
+    AstExtractor.extract tokens ast extract_range
   in
   let used_names = VariableAnalysis.collect_used_names ast in
   let create_unique_name = create_unique_name ~support_experimental_snippet_text_edit ~used_names in

@@ -12,6 +12,7 @@ type refactor = {
 }
 
 val provide_available_refactors :
+  tokens:Parser_env.token_sink_result list ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   cx:Context.t ->
   file:File_key.t ->

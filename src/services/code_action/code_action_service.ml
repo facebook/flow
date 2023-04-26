@@ -79,6 +79,7 @@ let autofix_missing_local_annot_code_actions
 let refactor_extract_code_actions
     ~options
     ~support_experimental_snippet_text_edit
+    ~file_contents
     ~ast
     ~cx
     ~file_sig
@@ -122,7 +123,14 @@ let refactor_extract_code_actions
                   );
             }
         in
+        let tokens =
+          Refactor_extract_utils.AstExtractor.tokens
+            ~use_strict:(Options.modules_are_use_strict options)
+            (Some file)
+            file_contents
+        in
         Refactor_extract.provide_available_refactors
+          ~tokens
           ~ast
           ~cx
           ~file
@@ -941,6 +949,7 @@ let code_actions_at_loc
     ~cx
     ~file_sig
     ~tolerable_errors
+    ~file_contents
     ~ast
     ~typed_ast
     ~scope_info
@@ -964,6 +973,7 @@ let code_actions_at_loc
         ~options
         ~support_experimental_snippet_text_edit:
           (Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
+        ~file_contents
         ~ast
         ~cx
         ~file_sig
