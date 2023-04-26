@@ -1,3 +1,28 @@
+### 0.205.0
+
+Likely to cause new Flow errors:
+* Remove the `flow get-imports` CLI command.
+* Some duplicate errors with `Arrays are invariantly typed` explanations are now correctly removed.
+
+New Features:
+* Added type-aware autocomplete in IDE for switch cases.
+* Added signature help to IDE for constructor calls.
+* Go-to-definition in the IDE can now provide multiple options if the target is defined in multiple locations (for example, in a union).
+* Add `Required` and `Partial` to list of utility types to autocomplete in the IDE.
+* Added quick fix in the IDE for missing "this." on class member access.
+* To use the extract to expression/type alias IDE refactors, you no longer need to do exact selections to trigger it. Any selections that include extra whitespaces will be OK too.
+
+Notable bug fixes:
+* Fix go-to-definition in IDE for constructors (e.g., `new Foo()`).
+* When considering a function as a callable object type, we now also check the statics of the function against the object. This may cause new errors. For example, the code in this [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdRgk8caAAIYACgCUh4GoA6sAHQwIEQwF5DARgDct2yZjJLcwCANwg4IU9jJwD6GTgoBFZDOxS1M082EGCMNCZoamCABjsAJkKAZjt3EDUgA) will now error.
+* We now error more consistently when nested union types are being spread. Before, a bug was causing legitimate errors to not be surfaced. Example with [cannot-spread-inexact] errors: [try-Flow](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdRFg6mAAQA3LGgMB5AEIApZAeBY79GXCgI1AbgA6UH7v0YxqYGAO4QaADW9ACMdsAAdIlqBgA+xhBwQt5Q-qaBJmZhkfQATHGJ8clpRhlCqemZ2bmGBQYQRGAAFuVJ9QAUNZn1g0IAlNk+fQmJVtasBhVFUdFq4wYA9OsGXAAOGHgYQnZgWFBQELgAtPQ7mFhCl65cPJPT8bPzi+FRJaseG1tdvtcIdjqdzlcbncHk9uHhXhUPgtEu0un8AQYALIASQAyrjsQA5ADiYLOF2ut2wMKgzzwBj6JDINGMBgADPESmyAKzxNmjHxsEBGDBoJjQahGDlcgAs8WiIDUQA). Example with type incompatibility: [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdVz8ADhgAEAQUNmAvIeCHcyQwHIs9w2oDcAHVL6jAIQDCFlY2dva8zmqGAD5Btg5g4R5eBib+hpbWsY7hUTEhYS45GSHxLomeImB0mIYAblhohpwAjHbG-mVQkFD0uIYQLYap6YYAdGPNpYYA9FOGGGhoEGj0rIYMc5wGeEKeu1AVVUZ1DZwATK057Z5dPX3ngwHDYyNnkzODAKoA4oZQEHMLJaGEhkGi1AAMI1O4IArCNwXtPGwQDV5kxoNQapDoQAWEZNEBqIA).
+* Some spurious underconstrained-implicit-instantiation errors might be removed. Previously, some classes that extend `any` might have caused this issue.
+* Fix over-eager IDE autocompletion of keywords after typing a space.
+
+Library Definitions:
+* Added NodeJS `process.hrtime.bigint()`.
+* Many built-in react components and intrinsics props are now readonly.
+
 ### 0.204.1
 
 Notable bug fixes:
