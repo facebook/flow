@@ -1333,17 +1333,20 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | "$Refine" ->
           check_type_arg_arity cx loc t_ast targs 3 (fun () ->
               match convert_type_params () with
-              | ([base_t; fun_pred_t; DefT (_, _, SingletonNumT (f, _))], targs) ->
+              | ([base_t; fun_pred_t; DefT (rnum, _, SingletonNumT (f, _))], targs) ->
                 let idx = Base.Int.of_float f in
-                let reason = mk_reason (RCustom "refined type") loc in
-                reconstruct_ast
-                  (EvalT
-                     ( base_t,
-                       TypeDestructorT (unknown_use, reason, LatentPred (fun_pred_t, idx)),
-                       mk_eval_id cx loc
-                     )
-                  )
-                  targs
+                if idx < 1 then
+                  error_type cx loc (Error_message.EFunPredInvalidIndex (aloc_of_reason rnum)) t_ast
+                else
+                  let reason = mk_reason (RCustom "refined type") loc in
+                  reconstruct_ast
+                    (EvalT
+                       ( base_t,
+                         TypeDestructorT (unknown_use, reason, LatentPred (fun_pred_t, idx)),
+                         mk_eval_id cx loc
+                       )
+                    )
+                    targs
               | _ -> error_type cx loc (Error_message.ERefineAnnot loc) t_ast
           )
         | "$Trusted" ->

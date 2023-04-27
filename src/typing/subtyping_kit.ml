@@ -109,19 +109,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
     fun cx trace use_op (lreason, params1, pred1) (ureason, params2, pred2) ->
       match subst_map (0, SMap.empty) (params1, params2) with
       | Error (`ArityMismatch (n1, n2)) ->
-        let mod_reason n =
-          replace_desc_reason (RCustom (spf "predicate function with %d arguments" n))
-        in
-        let error =
-          Error_message.EFunPredCustom
-            ( (mod_reason n1 lreason, mod_reason n2 ureason),
-              "Predicate function is incompatible with"
-            )
-        in
-        add_output cx ~trace error
+        add_output
+          cx
+          ~trace
+          (Error_message.EPredicateFuncArityMismatch
+             { use_op; reasons = (lreason, ureason); arities = (n1, n2) }
+          )
       | Error `NoParamNames ->
-        let error = Error_message.(EInternal (aloc_of_reason ureason, PredFunWithoutParamNames)) in
-        add_output cx ~trace error
+        (* Already an unsupported-syntax error on the definition side of the function. *)
+        ()
       | Ok map ->
         let (lreason, pmap1, _nmap1) = pred1 in
         let (ureason, pmap2, nmap2) = pred2 in
@@ -1302,7 +1298,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           add_output
             cx
             ~trace
-            (Error_message.EFunPredCustom ((lreason, ureason), "Function is incompatible with"))
+            (Error_message.EPredicateFuncIncompatibility { use_op; reasons = (lreason, ureason) })
         | (Some p1, Some p2) ->
           func_predicate_compat cx trace use_op (lreason, ft1.params, p1) (ureason, ft2.params, p2)
         | (Some _, None)

@@ -1132,7 +1132,6 @@ let dump_error_message =
     | ReadOfUnresolvedTvar _ -> "ReadOfUnresolvedTvar"
     | MethodNotAFunction -> "MethodNotAFunction"
     | OptionalMethod -> "OptionalMethod"
-    | PredFunWithoutParamNames -> "PredFunWithoutParamNames"
     | UnsupportedGuardPredicate _ -> "UnsupportedGuardPredicate"
     | PropertyDescriptorPropertyCannotBeRead -> "PropertyDescriptorPropertyCannotBeRead"
     | ForInLHS -> "ForInLHS"
@@ -1460,8 +1459,12 @@ let dump_error_message =
     | ERefineAnnot loc -> spf "ERefineAnnot (%s)" (string_of_aloc loc)
     | ETrustedAnnot loc -> spf "ETrustedAnnot (%s)" (string_of_aloc loc)
     | EPrivateAnnot loc -> spf "EPrivateAnnot (%s)" (string_of_aloc loc)
-    | EFunPredCustom ((reason1, reason2), msg) ->
-      spf "EFunPredCustom (%s, %s, %S)" (dump_reason cx reason1) (dump_reason cx reason2) msg
+    | EPredicateFuncTooShort { loc; _ } -> spf "EPredicateFuncTooShort (%s)" (string_of_aloc loc)
+    | EFunPredInvalidIndex loc -> spf "EFunPredInvalidIndex (%s)" (string_of_aloc loc)
+    | EPredicateFuncArityMismatch { use_op; _ } ->
+      spf "EPredicateFuncArityMismatch (%s)" (string_of_use_op use_op)
+    | EPredicateFuncIncompatibility { use_op; _ } ->
+      spf "EPredicateFuncIncompatibility (%s)" (string_of_use_op use_op)
     | EIncompatibleWithShape (lower, upper, use_op) ->
       spf
         "EIncompatibleWithShape (%s, %s, %s)"

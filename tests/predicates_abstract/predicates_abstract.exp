@@ -1,3 +1,11 @@
+Error -------------------------------------------------------------------------------------------------- invalid.js:1:28
+
+The index position of a `$Refine` type needs to be a positive integer. [function-predicate]
+
+   1| type T = $Refine<any, any, -1>;
+                                 ^^
+
+
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:14:2
 
 Cannot cast `my_filter(...)` to array type because property `v` is missing in `A` [1] but exists in `B` [2] in array
@@ -131,7 +139,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- sanity-filter.js:11:24
 
-function [1]. Function is incompatible with abstract predicate function [2]. [function-predicate]
+Cannot call `my_filter` because function [1], a non-predicate function, is incompatible with abstract predicate
+function [2], which is a predicate function in type argument `P`. [function-predicate]
 
    sanity-filter.js:11:24
    11| const d = my_filter(c, is_string_regular);
@@ -165,17 +174,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------- sanity-refine.js:2:55
 
-refined type that uses predicate on parameter at position 2 [1]. This is incompatible with function with 1
-parameters [2]. [function-predicate]
+Cannot pass in `2` as the index in a `$Refine` operation, because function [1] only accepts 1 parameters.
+[function-predicate]
 
    sanity-refine.js:2:55
-   2| declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
-                                                            ^^^^^^^^^^^^^^ [1]
+    2| declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
+                                                             ^^^^^^^^^^^^^^
 
 References:
-   sanity-refine.js:5:19
-   5| var b = refine(a, is_string);   // ERROR: index out of bounds
-                        ^^^^^^^^^ [2]
+   sanity-refine.js:32:1
+   32| function is_string(x: mixed): %checks {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- sanity-refine.js:6:2
@@ -197,8 +206,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- sanity-refine.js:17:27
 
-predicate function with 2 arguments [1]. Predicate function is incompatible with predicate function with 3
-arguments [2]. [function-predicate]
+Cannot call `refine3` because arity 2 of function [1] is incompatible with arity 3 of abstract predicate function [2] in
+type argument `P`. [function-predicate]
 
    sanity-refine.js:17:27
    17| var e2 = refine3(c, d, e, is_string_and_number);
@@ -215,7 +224,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- sanity-refine.js:26:20
 
-function [1]. Function is incompatible with abstract predicate function [2]. [function-predicate]
+Cannot call `refine` because function [1], a non-predicate function, is incompatible with abstract predicate
+function [2], which is a predicate function in type argument `P`. [function-predicate]
 
    sanity-refine.js:26:20
    26| var e3 = refine(a, is_string_regular);   // ERROR: is_string_regular is not a
@@ -248,4 +258,4 @@ References:
 
 
 
-Found 14 errors
+Found 15 errors

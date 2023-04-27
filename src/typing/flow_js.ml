@@ -2246,57 +2246,39 @@ struct
         *)
         | ( DefT (lreason, _, FunT (_, { params; predicate = Some (_, pmap, nmap); _ })),
             CallLatentPredT (reason, sense, index, unrefined_t, fresh_t)
-          ) ->
+          ) -> begin
           (* TODO: for the moment we only support simple keys (empty projection)
              that exactly correspond to the function's parameters *)
-          let name_or_err =
-            try
-              let (name, _) = List.nth params (index - 1) in
-              Ok name
-            with
-            | Invalid_argument _ -> Error ("Negative refinement index.", (lreason, reason))
-            | Failure msg when msg = "nth" ->
-              let r1 =
-                update_desc_new_reason
-                  (fun desc ->
-                    RCustom
-                      (spf
-                         "%s that uses predicate on parameter at position %d"
-                         (string_of_desc desc)
-                         index
-                      ))
-                  reason
-              in
-              let r2 =
-                update_desc_new_reason
-                  (fun desc ->
-                    RCustom (spf "%s with %d parameters" (string_of_desc desc) (List.length params)))
-                  lreason
-              in
-              Error ("This is incompatible with", (r1, r2))
-          in
-          begin
-            match name_or_err with
-            | Ok (Some name) ->
-              let key = (OrdinaryName name, []) in
-              let preds =
-                if sense then
-                  pmap
-                else
-                  nmap
-              in
-              begin
-                match Key_map.find_opt key preds with
-                | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
-                | None -> rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
-              end
-            | Ok None ->
-              let loc = aloc_of_reason lreason in
-              add_output cx ~trace Error_message.(EInternal (loc, PredFunWithoutParamNames))
-            | Error (msg, reasons) ->
-              add_output cx ~trace (Error_message.EFunPredCustom (reasons, msg));
-              rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
-          end
+          match Base.List.nth params (index - 1) with
+          | None ->
+            let msg =
+              Error_message.EPredicateFuncTooShort
+                {
+                  loc = aloc_of_reason reason;
+                  pred_func = lreason;
+                  pred_func_param_num = List.length params;
+                  index;
+                }
+            in
+            add_output cx ~trace msg;
+            rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+          | Some (None, _) ->
+            (* Already an unsupported-syntax error on the definition side of the function. *)
+            rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+          | Some (Some name, _) ->
+            let key = (OrdinaryName name, []) in
+            let preds =
+              if sense then
+                pmap
+              else
+                nmap
+            in
+            begin
+              match Key_map.find_opt key preds with
+              | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
+              | None -> rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+            end
+        end
         (* Fall through all the remaining cases *)
         | (_, CallLatentPredT (_, _, _, unrefined_t, fresh_t)) ->
           rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)

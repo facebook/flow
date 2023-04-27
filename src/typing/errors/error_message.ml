@@ -230,7 +230,22 @@ and 'loc t' =
   | ERefineAnnot of 'loc
   | ETrustedAnnot of 'loc
   | EPrivateAnnot of 'loc
-  | EFunPredCustom of ('loc virtual_reason * 'loc virtual_reason) * string
+  | EPredicateFuncTooShort of {
+      loc: 'loc;
+      pred_func: 'loc virtual_reason;
+      pred_func_param_num: int;
+      index: int;
+    }
+  | EPredicateFuncArityMismatch of {
+      use_op: 'loc virtual_use_op;
+      reasons: 'loc virtual_reason * 'loc virtual_reason;
+      arities: int * int;
+    }
+  | EPredicateFuncIncompatibility of {
+      use_op: 'loc virtual_use_op;
+      reasons: 'loc virtual_reason * 'loc virtual_reason;
+    }
+  | EFunPredInvalidIndex of 'loc
   | EIncompatibleWithShape of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * 'loc unsupported_syntax
@@ -562,7 +577,6 @@ and internal_error =
   | AbnormalControlFlow
   | MethodNotAFunction
   | OptionalMethod
-  | PredFunWithoutParamNames
   | UnsupportedGuardPredicate of string
   | PropertyDescriptorPropertyCannotBeRead
   | ForInLHS
@@ -943,7 +957,16 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ERefineAnnot loc -> ERefineAnnot (f loc)
   | ETrustedAnnot loc -> ETrustedAnnot (f loc)
   | EPrivateAnnot loc -> EPrivateAnnot (f loc)
-  | EFunPredCustom ((r1, r2), s) -> EFunPredCustom ((map_reason r1, map_reason r2), s)
+  | EPredicateFuncTooShort { loc; pred_func; pred_func_param_num; index } ->
+    EPredicateFuncTooShort
+      { loc = f loc; pred_func = map_reason pred_func; pred_func_param_num; index }
+  | EPredicateFuncArityMismatch { use_op; reasons = (r1, r2); arities } ->
+    EPredicateFuncArityMismatch
+      { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2); arities }
+  | EPredicateFuncIncompatibility { use_op; reasons = (r1, r2) } ->
+    EPredicateFuncIncompatibility
+      { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
+  | EFunPredInvalidIndex loc -> EFunPredInvalidIndex (f loc)
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, map_unsupported_syntax u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
@@ -1362,7 +1385,10 @@ let util_use_op_of_msg nope util = function
   | ERefineAnnot _
   | ETrustedAnnot _
   | EPrivateAnnot _
-  | EFunPredCustom (_, _)
+  | EPredicateFuncTooShort _
+  | EPredicateFuncArityMismatch _
+  | EPredicateFuncIncompatibility _
+  | EFunPredInvalidIndex _
   | EInternal (_, _)
   | EUnsupportedSyntax (_, _)
   | EUseArrayLiteral _
@@ -1468,7 +1494,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EValueUsedAsType { reason_use = primary }
   | EComparison (primary, _)
   | ENonStrictEqualityComparison (primary, _)
-  | EFunPredCustom ((primary, _), _)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
   | ETooManyTypeArgs (primary, _, _) ->
@@ -1611,6 +1636,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EAnnotationInferenceRecursive (loc, _)
   | EInvalidCatchParameterAnnotation loc
   | EInvalidMappedType { loc; _ }
+  | EFunPredInvalidIndex loc
+  | EPredicateFuncTooShort { loc; _ }
   | ETSSyntax { loc; _ } ->
     Some loc
   | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (poly_loc_of_reason reason_call)
@@ -1684,7 +1711,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMethodUnbinding _
   | EImplicitInstantiationUnderconstrainedError _
   | EClassToObject _
-  | EPrimitiveAsInterface _ ->
+  | EPrimitiveAsInterface _
+  | EPredicateFuncArityMismatch _
+  | EPredicateFuncIncompatibility _ ->
     None
 
 let kind_of_msg =
@@ -1776,7 +1805,6 @@ let string_of_internal_error = function
     spf "read of %s entry from previous component is not FullyResolved" (Env_api.show_def_loc_type k)
   | MethodNotAFunction -> "expected function type"
   | OptionalMethod -> "optional methods are not supported"
-  | PredFunWithoutParamNames -> "FunT -> FunT no params"
   | UnsupportedGuardPredicate pred -> spf "unsupported guard predicate (%s)" pred
   | PropertyDescriptorPropertyCannotBeRead -> "unexpected property in properties object"
   | ForInLHS -> "unexpected LHS in for...in"
@@ -2618,8 +2646,62 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features = [text "Not a valid type to mark as "; code "$Trusted"; text "."] }
   | EPrivateAnnot _ ->
     Normal { features = [text "Not a valid type to mark as "; code "$Private"; text "."] }
-  | EFunPredCustom ((a, b), msg) ->
-    Normal { features = [ref a; text ". "; text msg; text " "; ref b; text "."] }
+  | EPredicateFuncTooShort { loc = _; pred_func; pred_func_param_num; index } ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot pass in ";
+            code (string_of_int index);
+            text " as the index in a ";
+            code "$Refine";
+            text " operation, because ";
+            ref pred_func;
+            text " only accepts ";
+            text (string_of_int pred_func_param_num);
+            text " parameters.";
+          ];
+      }
+  | EPredicateFuncArityMismatch { use_op; reasons = (lower, upper); arities = (n1, n2) } ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features =
+          [
+            text "arity ";
+            text (string_of_int n1);
+            text " of ";
+            ref lower;
+            text " is incompatible with arity ";
+            text (string_of_int n2);
+            text " of ";
+            ref upper;
+          ];
+        use_op;
+      }
+  | EPredicateFuncIncompatibility { use_op; reasons = (lower, upper) } ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features =
+          [
+            ref lower;
+            text ", a non-predicate function, is incompatible with ";
+            ref upper;
+            text ", which is a predicate function";
+          ];
+        use_op;
+      }
+  | EFunPredInvalidIndex _ ->
+    Normal
+      {
+        features =
+          [
+            text "The index position of a ";
+            code "$Refine";
+            text " type needs to be a positive integer.";
+          ];
+      }
   | EIncompatibleWithShape (lower, upper, use_op) ->
     UseOp
       {
@@ -4829,7 +4911,11 @@ let error_code_of_message err : error_code option =
   | EForInRHS _ -> Some InvalidInRhs
   | EInstanceofRHS _ -> Some InvalidInRhs
   | EFunctionCallExtraArg _ -> Some ExtraArg
-  | EFunPredCustom (_, _) -> Some FunctionPredicate
+  | EPredicateFuncTooShort _
+  | EPredicateFuncArityMismatch _
+  | EFunPredInvalidIndex _
+  | EPredicateFuncIncompatibility _ ->
+    Some FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
   | EIdxUse _ -> Some InvalidIdx
   | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
