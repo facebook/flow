@@ -202,7 +202,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- D.js:21:10
 
-Cannot return `x` because string [1] is incompatible with number [2] in the return value. [incompatible-return]
+Cannot return `x` because: [incompatible-return]
+ - Either string [1] is incompatible with number [2] in the return value.
+ - Or function type [3] requires another argument from function type [4].
 
    D.js:21:10
    21|   return x;
@@ -215,6 +217,12 @@ References:
    D.js:20:59
    20| function e(x: { (): string; (x: number): string }): () => number {
                                                                  ^^^^^^ [2]
+   D.js:20:29
+   20| function e(x: { (): string; (x: number): string }): () => number {
+                                   ^^^^^^^^^^^^^^^^^^^ [3]
+   D.js:20:53
+   20| function e(x: { (): string; (x: number): string }): () => number {
+                                                           ^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------------- E.js:2:32

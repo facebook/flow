@@ -39,9 +39,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
 
-Cannot assign `"a"` to `w` because string [1] is incompatible with number [2]. All writes to `w` must be compatible with
-the type of one of its initial assignments [3], [4]. Add an annotation to `w` [3] if a different type is desired.
-[incompatible-type]
+Cannot assign `"a"` to `w` because: [incompatible-type]
+ - Either string [1] is incompatible with number [2].
+ - Or string [1] is incompatible with null [3].
+
+All writes to `w` must be compatible with the type of one of its initial assignments [4], [5]. Add an annotation to
+`w` [4] if a different type is desired.
 
    test.js:19:5
    19| w = "a";
@@ -51,12 +54,15 @@ References:
    test.js:18:5
    18| w = 42;
            ^^ [2]
+   test.js:17:9
+   17| var w = null;
+               ^^^^ [3]
    test.js:17:5
    17| var w = null;
-           ^ [3]
+           ^ [4]
    test.js:18:1
    18| w = 42;
-       ^ [4]
+       ^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:5

@@ -813,8 +813,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test4.js:9:9
 
-Cannot call `(new C()).bar` because string [1] is incompatible with number [2] in the first parameter.
-[incompatible-call]
+Cannot call `(new C()).bar` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in the first parameter.
+ - Or property `foo` is missing in function [3] but exists in `I` [4].
 
    test4.js:9:9
    9| new C().bar((x: string) => { }); // error, number ~/~> string
@@ -827,6 +828,12 @@ References:
    test4.js:6:14
    6|   bar(f: (x: number) => void): void;
                    ^^^^^^ [2]
+   test4.js:9:13
+   9| new C().bar((x: string) => { }); // error, number ~/~> string
+                  ^^^^^^^^^^^^^^^^^^ [3]
+   test4.js:5:10
+   5|   bar(i: I): void;
+               ^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:12:2

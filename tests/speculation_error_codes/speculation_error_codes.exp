@@ -41,7 +41,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
-Cannot call `f` because boolean [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `f` because: [incompatible-call]
+ - Either boolean [1] is incompatible with number [2].
+ - Or null [3] is not a function.
 
    test.js:10:1
    10| f(true); // incompatible-call
@@ -54,6 +56,9 @@ References:
    test.js:9:24
     9| declare var f: null & (number => void);
                               ^^^^^^ [2]
+   test.js:9:16
+    9| declare var f: null & (number => void);
+                      ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:2

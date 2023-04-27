@@ -731,7 +731,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:59:4
 
-Cannot cast `yu` to union type because null or undefined [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `yu` to union type because: [incompatible-cast]
+ - Either null or undefined [1] is incompatible with undefined [2].
+ - Or null or undefined [1] is incompatible with number [3].
 
    maybe.js:59:4
    59|   (yu: void | number); // nope
@@ -744,6 +746,9 @@ References:
    maybe.js:59:8
    59|   (yu: void | number); // nope
               ^^^^ [2]
+   maybe.js:59:15
+   59|   (yu: void | number); // nope
+                     ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:60:4
@@ -882,7 +887,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:88:4
 
-Cannot cast `b.x` to union type because number [1] is incompatible with `Y` [2]. [incompatible-cast]
+Cannot cast `b.x` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with `Y` [2].
+ - Or number [1] is incompatible with undefined [3].
 
    maybe.js:88:4
    88|   (b.x: Y | void); //nope
@@ -895,6 +902,9 @@ References:
    maybe.js:88:9
    88|   (b.x: Y | void); //nope
                ^ [2]
+   maybe.js:88:13
+   88|   (b.x: Y | void); //nope
+                   ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:94:4

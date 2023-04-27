@@ -1156,9 +1156,10 @@ string literal `foo` [1] is not an object. [not-an-object]
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because undefined [1] is incompatible with `T` [2] in property `p`. This property is
-invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-cast]
+Cannot cast `o1` to union type because: [incompatible-cast]
+ - Either undefined [1] is incompatible with `T` [2] in property `p`. This property is invariantly typed. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+ - Or property `q` is missing in object type [3] but exists in object type [4].
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1171,13 +1172,20 @@ References:
    type_union.js:7:18
    7| type O1 = {...{p:T}|{q:U}};
                        ^ [2]
+   type_union.js:8:17
+   8| declare var o1: O1;
+                      ^^ [3]
+   type_union.js:9:13
+   9| (o1: {p?:T}|{q?:U}); // ok
+                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because undefined [1] is incompatible with `U` [2] in property `q`. This property is
-invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-cast]
+Cannot cast `o1` to union type because: [incompatible-cast]
+ - Either undefined [1] is incompatible with `U` [2] in property `q`. This property is invariantly typed. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+ - Or property `p` is missing in object type [3] but exists in object type [4].
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1190,6 +1198,12 @@ References:
    type_union.js:7:24
    7| type O1 = {...{p:T}|{q:U}};
                              ^ [2]
+   type_union.js:8:17
+   8| declare var o1: O1;
+                      ^^ [3]
+   type_union.js:9:6
+   9| (o1: {p?:T}|{q?:U}); // ok
+           ^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:14:17

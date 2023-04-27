@@ -58,8 +58,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:27:64
 
-Cannot call `ClipboardEvent` with object literal bound to `eventInit` because object literal [1] is incompatible with
-`DataTransfer` [2] in property `clipboardData`. [incompatible-call]
+Cannot call `ClipboardEvent` with object literal bound to `eventInit` because in property `clipboardData`:
+[incompatible-call]
+ - Either object literal [1] is incompatible with `DataTransfer` [2].
+ - Or object literal [1] is incompatible with null [3].
 
    ClipboardEvent.js:27:64
                                                                        v
@@ -71,6 +73,9 @@ References:
    <BUILTINS>/dom.js:906:18
    906|   clipboardData: DataTransfer | null,
                          ^^^^^^^^^^^^ [2]
+   <BUILTINS>/dom.js:906:33
+   906|   clipboardData: DataTransfer | null,
+                                        ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ ClipboardEvent.js:32:23
@@ -89,12 +94,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Element.js:14:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
-union [2] in property `behavior`. [incompatible-call]
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because: [incompatible-call]
+ - Either string [1] is incompatible with literal union [2] in property `behavior`.
+ - Or object literal [3] is incompatible with boolean [4].
 
    Element.js:14:28
      14|     element.scrollIntoView({ behavior: 'invalid' });
-                                    ^^^^^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    Element.js:14:40
@@ -103,16 +109,20 @@ References:
    <BUILTINS>/dom.js:1867:22
    1867|          behavior?: ('auto' | 'instant' | 'smooth'),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/dom.js:1866:25
+   1866|   scrollIntoView(arg?: (boolean | {
+                                 ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- Element.js:15:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
-union [2] in property `block`. [incompatible-call]
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because: [incompatible-call]
+ - Either string [1] is incompatible with literal union [2] in property `block`.
+ - Or object literal [3] is incompatible with boolean [4].
 
    Element.js:15:28
      15|     element.scrollIntoView({ block: 'invalid' });
-                                    ^^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    Element.js:15:37
@@ -121,12 +131,16 @@ References:
    <BUILTINS>/dom.js:1868:19
    1868|          block?: ('start' | 'center' | 'end' | 'nearest'),
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/dom.js:1866:25
+   1866|   scrollIntoView(arg?: (boolean | {
+                                 ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- Element.js:16:28
 
-Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] is incompatible with boolean [2].
-[incompatible-call]
+Cannot call `element.scrollIntoView` with `1` bound to `arg` because: [incompatible-call]
+ - Either number [1] is incompatible with boolean [2].
+ - Or number [1] is incompatible with object type [3].
 
    Element.js:16:28
      16|     element.scrollIntoView(1);
@@ -136,6 +150,15 @@ References:
    <BUILTINS>/dom.js:1866:25
    1866|   scrollIntoView(arg?: (boolean | {
                                  ^^^^^^^ [2]
+   <BUILTINS>/dom.js:1866:35
+                                           v
+   1866|   scrollIntoView(arg?: (boolean | {
+   1867|          behavior?: ('auto' | 'instant' | 'smooth'),
+   1868|          block?: ('start' | 'center' | 'end' | 'nearest'),
+   1869|          inline?: ('start' | 'center' | 'end' | 'nearest'),
+   1870|          ...
+   1871|   })): void;
+           ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- HTMLCollection.js:10:4
@@ -182,12 +205,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:22:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
-union [2] in property `behavior`. [incompatible-call]
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because: [incompatible-call]
+ - Either string [1] is incompatible with literal union [2] in property `behavior`.
+ - Or object literal [3] is incompatible with boolean [4].
 
    HTMLElement.js:22:28
      22|     element.scrollIntoView({behavior: 'invalid'});
-                                    ^^^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    HTMLElement.js:22:39
@@ -196,16 +220,20 @@ References:
    <BUILTINS>/dom.js:1867:22
    1867|          behavior?: ('auto' | 'instant' | 'smooth'),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/dom.js:1866:25
+   1866|   scrollIntoView(arg?: (boolean | {
+                                 ^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:23:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with literal
-union [2] in property `block`. [incompatible-call]
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because: [incompatible-call]
+ - Either string [1] is incompatible with literal union [2] in property `block`.
+ - Or object literal [3] is incompatible with boolean [4].
 
    HTMLElement.js:23:28
      23|     element.scrollIntoView({block: 'invalid'});
-                                    ^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    HTMLElement.js:23:36
@@ -214,12 +242,16 @@ References:
    <BUILTINS>/dom.js:1868:19
    1868|          block?: ('start' | 'center' | 'end' | 'nearest'),
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/dom.js:1866:25
+   1866|   scrollIntoView(arg?: (boolean | {
+                                 ^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:24:28
 
-Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] is incompatible with boolean [2].
-[incompatible-call]
+Cannot call `element.scrollIntoView` with `1` bound to `arg` because: [incompatible-call]
+ - Either number [1] is incompatible with boolean [2].
+ - Or number [1] is incompatible with object type [3].
 
    HTMLElement.js:24:28
      24|     element.scrollIntoView(1);
@@ -229,6 +261,15 @@ References:
    <BUILTINS>/dom.js:1866:25
    1866|   scrollIntoView(arg?: (boolean | {
                                  ^^^^^^^ [2]
+   <BUILTINS>/dom.js:1866:35
+                                           v
+   1866|   scrollIntoView(arg?: (boolean | {
+   1867|          behavior?: ('auto' | 'instant' | 'smooth'),
+   1868|          block?: ('start' | 'center' | 'end' | 'nearest'),
+   1869|          inline?: ('start' | 'center' | 'end' | 'nearest'),
+   1870|          ...
+   1871|   })): void;
+           ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:46:6
@@ -279,8 +320,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:51:6
 
-Cannot cast `element.querySelector(...)` to union type because `HTMLElement` [1] is incompatible with
-`HTMLAnchorElement` [2]. [incompatible-cast]
+Cannot cast `element.querySelector(...)` to union type because: [incompatible-cast]
+ - Either `HTMLElement` [1] is incompatible with `HTMLAnchorElement` [2].
+ - Or `HTMLElement` [1] is incompatible with null [3].
 
    HTMLElement.js:51:6
      51|     (element.querySelector(str): HTMLAnchorElement | null);
@@ -293,6 +335,9 @@ References:
    HTMLElement.js:51:34
      51|     (element.querySelector(str): HTMLAnchorElement | null);
                                           ^^^^^^^^^^^^^^^^^ [2]
+   HTMLElement.js:51:54
+     51|     (element.querySelector(str): HTMLAnchorElement | null);
+                                                              ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:52:6
@@ -364,8 +409,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:60:6
 
-Cannot cast `element.querySelector(...)` to union type because `HTMLDivElement` [1] is incompatible with
-`HTMLAnchorElement` [2]. [incompatible-cast]
+Cannot cast `element.querySelector(...)` to union type because: [incompatible-cast]
+ - Either `HTMLDivElement` [1] is incompatible with `HTMLAnchorElement` [2].
+ - Or `HTMLDivElement` [1] is incompatible with null [3].
 
    HTMLElement.js:60:6
      60|     (element.querySelector('div'): HTMLAnchorElement | null);
@@ -378,6 +424,9 @@ References:
    HTMLElement.js:60:36
      60|     (element.querySelector('div'): HTMLAnchorElement | null);
                                             ^^^^^^^^^^^^^^^^^ [2]
+   HTMLElement.js:60:56
+     60|     (element.querySelector('div'): HTMLAnchorElement | null);
+                                                                ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- HTMLElement.js:61:6
@@ -461,7 +510,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ HTMLInputElement.js:7:8
 
-Cannot call `el.setRangeText` because number [1] is incompatible with undefined [2]. [incompatible-call]
+Cannot call `el.setRangeText` because: [incompatible-call]
+ - Either number [1] is incompatible with undefined [2].
+ - Or function type [3] requires another argument from call of method `setRangeText` [4].
 
    HTMLInputElement.js:7:8
       7|     el.setRangeText('foo', 123); // end is required
@@ -474,11 +525,19 @@ References:
    <BUILTINS>/dom.js:3728:45
    3728|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
+   <BUILTINS>/dom.js:3729:3
+   3729|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   HTMLInputElement.js:7:5
+      7|     el.setRangeText('foo', 123); // end is required
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:8
 
-Cannot call `el.setRangeText` because string [1] is incompatible with literal union [2]. [incompatible-call]
+Cannot call `el.setRangeText` because: [incompatible-call]
+ - Either string [1] is incompatible with literal union [2].
+ - Or number [3] is incompatible with undefined [4].
 
    HTMLInputElement.js:10:8
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
@@ -491,6 +550,12 @@ References:
    <BUILTINS>/dom.js:3729:78
    3729|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
+   HTMLInputElement.js:10:28
+     10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
+                                    ^^^ [3]
+   <BUILTINS>/dom.js:3728:45
+   3728|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+                                                     ^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------- HTMLSelectElement.js:11:6
@@ -664,7 +729,9 @@ Cannot use `window` as a type because it is an `any`-typed value. Type `window` 
 
 Error -------------------------------------------------------------------------------------------------- path2d.js:16:11
 
-Cannot call `path.arcTo` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `path.arcTo` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2].
+ - Or string [1] is incompatible with undefined [3].
 
    path2d.js:16:11
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
@@ -677,6 +744,9 @@ References:
    <BUILTINS>/dom.js:2283:83
    2283|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                            ^^^^^^ [2]
+   <BUILTINS>/dom.js:2282:76
+   2282|   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number, _: void, _: void): void;
+                                                                                    ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- registerElement.js:32:19
@@ -711,8 +781,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- traversal.js:29:14
 
-Cannot call `document.createNodeIterator` because object literal [1] is incompatible with `Node` [2].
-[incompatible-call]
+Cannot call `document.createNodeIterator` because: [incompatible-call]
+ - Either object literal [1] is incompatible with `Node` [2].
+ - Or function type [3] requires another argument from call of method `createNodeIterator` [4].
 
    traversal.js:29:14
      29|     document.createNodeIterator({}); // invalid
@@ -725,11 +796,19 @@ References:
    <BUILTINS>/dom.js:1601:33
    1601|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
                                          ^^^^ [2]
+   <BUILTINS>/dom.js:1590:3
+   1590|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   traversal.js:29:5
+     29|     document.createNodeIterator({}); // invalid
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- traversal.js:33:14
 
-Cannot call `document.createTreeWalker` because object literal [1] is incompatible with `Node` [2]. [incompatible-call]
+Cannot call `document.createTreeWalker` because: [incompatible-call]
+ - Either object literal [1] is incompatible with `Node` [2].
+ - Or function type [3] requires another argument from call of method `createTreeWalker` [4].
 
    traversal.js:33:14
      33|     document.createTreeWalker({}); // invalid
@@ -742,6 +821,12 @@ References:
    <BUILTINS>/dom.js:1602:31
    1602|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
                                        ^^^^ [2]
+   <BUILTINS>/dom.js:1597:3
+   1597|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   traversal.js:33:5
+     33|     document.createTreeWalker({}); // invalid
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:186:14
@@ -920,8 +1005,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:188:14
 
-Cannot call `document.createNodeIterator` because string [1] is incompatible with literal union [2] in the return value
-of property `acceptNode`. [incompatible-call]
+Cannot call `document.createNodeIterator` because: [incompatible-call]
+ - Either string [1] is incompatible with literal union [2] in the return value of property `acceptNode`.
+ - Or number [3] is incompatible with number literal `133` [4].
 
    traversal.js:188:14
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -937,6 +1023,12 @@ References:
    4279| typeof NodeFilter.FILTER_REJECT |
    4280| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
+   traversal.js:188:48
+    188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                        ^^ [3]
+   <BUILTINS>/dom.js:1590:68
+   1590|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
+                                                                            ^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:189:14
@@ -1289,8 +1381,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:195:14
 
-Cannot call `document.createTreeWalker` because string [1] is incompatible with literal union [2] in the return value of
-property `acceptNode`. [incompatible-call]
+Cannot call `document.createTreeWalker` because: [incompatible-call]
+ - Either string [1] is incompatible with literal union [2] in the return value of property `acceptNode`.
+ - Or number [3] is incompatible with number literal `133` [4].
 
    traversal.js:195:14
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -1306,6 +1399,12 @@ References:
    4279| typeof NodeFilter.FILTER_REJECT |
    4280| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
+   traversal.js:195:46
+    195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                      ^^ [3]
+   <BUILTINS>/dom.js:1597:66
+   1597|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
+                                                                          ^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:196:14

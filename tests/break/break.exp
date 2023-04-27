@@ -69,9 +69,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- break.js:17:13
 
-Cannot assign empty string to `x` because string [1] is incompatible with boolean [2]. All writes to `x` must be
-compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired.
-[incompatible-type]
+Cannot assign empty string to `x` because: [incompatible-type]
+ - Either string [1] is incompatible with boolean [2].
+ - Or string [1] is incompatible with null [3].
+
+All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
+type is desired.
 
    break.js:17:13
    17|         x = "";
@@ -81,9 +84,12 @@ References:
    break.js:12:23
    12|     var x = b ? null: false;
                              ^^^^^ [2]
+   break.js:12:17
+   12|     var x = b ? null: false;
+                       ^^^^ [3]
    break.js:12:9
    12|     var x = b ? null: false;
-               ^ [3]
+               ^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- break.js:19:24
@@ -173,9 +179,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- break.js:32:11
 
-Cannot assign empty string to `x` because string [1] is incompatible with boolean [2]. All writes to `x` must be
-compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired.
-[incompatible-type]
+Cannot assign empty string to `x` because: [incompatible-type]
+ - Either string [1] is incompatible with boolean [2].
+ - Or string [1] is incompatible with null [3].
+
+All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
+type is desired.
 
    break.js:32:11
    32|       x = "";
@@ -185,9 +194,12 @@ References:
    break.js:27:23
    27|     var x = b ? null: false;
                              ^^^^^ [2]
+   break.js:27:17
+   27|     var x = b ? null: false;
+                       ^^^^ [3]
    break.js:27:9
    27|     var x = b ? null: false;
-               ^ [3]
+               ^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- break.js:35:22

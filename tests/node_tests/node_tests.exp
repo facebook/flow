@@ -23,7 +23,9 @@ References:
 
 Error ------------------------------------------------------------------------------------ child_process/execSync.js:8:2
 
-Cannot call `execSync` because string [1] is incompatible with number [2] in property `timeout`. [incompatible-call]
+Cannot call `execSync` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `timeout`.
+ - Or property `encoding` is missing in object literal [3] but exists in object type [4].
 
    child_process/execSync.js:8:2
      8| (execSync('ls', {timeout: '250'})); // error, no signatures match
@@ -36,6 +38,12 @@ References:
    <BUILTINS>/node.js:173:13
    173|   timeout?: number,
                     ^^^^^^ [2]
+   child_process/execSync.js:8:17
+     8| (execSync('ls', {timeout: '250'})); // error, no signatures match
+                        ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/node.js:305:14
+   305|     options: { encoding: buffer$NonBufferEncoding, ... } & child_process$execSyncOpts
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:8
@@ -242,7 +250,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:27:5
 
-Cannot call `dns.lookup` because number [1] is incompatible with function type [2]. [incompatible-call]
+Cannot call `dns.lookup` because: [incompatible-call]
+ - Either number [1] is incompatible with function type [2].
+ - Or function type [3] requires another argument from call of method `lookup` [4].
 
    dns/dns.js:27:5
     27| dns.lookup("test.com", 4); // error
@@ -255,12 +265,25 @@ References:
    <BUILTINS>/node.js:799:15
    799|     callback: (err: ?Error, address: string, family: number) => void
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:792:26
+                                 v
+   792|   declare function lookup(
+   793|     domain: string,
+   794|     options: number | LookupOptions,
+   795|     callback: (err: ?Error, address: string, family: number) => void
+   796|   ): void;
+          ------^ [3]
+   dns/dns.js:27:1
+    27| dns.lookup("test.com", 4); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:29:5
 
-Cannot call `dns.lookup` because a call signature declaring the expected parameter / return type is missing in object
-literal [1] but exists in function type [2]. [incompatible-call]
+Cannot call `dns.lookup` because: [incompatible-call]
+ - Either a call signature declaring the expected parameter / return type is missing in object literal [1] but exists in
+   function type [2].
+ - Or function type [3] requires another argument from call of method `lookup` [4].
 
    dns/dns.js:29:5
     29| dns.lookup("test.com", { family: 6 }); // error
@@ -273,11 +296,24 @@ References:
    <BUILTINS>/node.js:799:15
    799|     callback: (err: ?Error, address: string, family: number) => void
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:792:26
+                                 v
+   792|   declare function lookup(
+   793|     domain: string,
+   794|     options: number | LookupOptions,
+   795|     callback: (err: ?Error, address: string, family: number) => void
+   796|   ): void;
+          ------^ [3]
+   dns/dns.js:29:1
+    29| dns.lookup("test.com", { family: 6 }); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:31:5
 
-Cannot call `dns.lookup` because no more than 2 arguments are expected by function type [1]. [incompatible-call]
+Cannot call `dns.lookup` because: [incompatible-call]
+ - Either no more than 2 arguments are expected by function type [1].
+ - Or null [2] is incompatible with `LookupOptions` [3].
 
    dns/dns.js:31:5
     31| dns.lookup("test.com", null, (err: mixed, address: mixed, family: mixed) => {}); // error
@@ -291,6 +327,12 @@ References:
    799|     callback: (err: ?Error, address: string, family: number) => void
    800|   ): void;
           ------^ [1]
+   dns/dns.js:31:24
+    31| dns.lookup("test.com", null, (err: mixed, address: mixed, family: mixed) => {}); // error
+                               ^^^^ [2]
+   <BUILTINS>/node.js:794:23
+   794|     options: number | LookupOptions,
+                              ^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:33:5
@@ -711,7 +753,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- http/get.js:11:6
 
-Cannot call `http.get` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `http.get` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `http$requestOptions` [3].
 
    http/get.js:11:6
      11| http.get(-1); // error
@@ -724,11 +768,16 @@ References:
    <BUILTINS>/node.js:1663:10
    1663|     url: string,
                   ^^^^^^ [2]
+   <BUILTINS>/node.js:1659:14
+   1659|     options: http$requestOptions,
+                      ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- http/get.js:12:6
 
-Cannot call `http.get` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
+Cannot call `http.get` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `port`.
+ - Or object literal [3] is incompatible with string [4].
 
    http/get.js:12:6
      12| http.get({port: 'expects number'}); // error
@@ -741,11 +790,19 @@ References:
    <BUILTINS>/node.js:1623:10
    1623|   port?: number,
                   ^^^^^^ [2]
+   http/get.js:12:10
+     12| http.get({port: 'expects number'}); // error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/node.js:1663:10
+   1663|     url: string,
+                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- http/get.js:13:6
 
-Cannot call `http.get` because number [1] is incompatible with function type [2]. [incompatible-call]
+Cannot call `http.get` because: [incompatible-call]
+ - Either number [1] is incompatible with function type [2].
+ - Or no more than 2 arguments are expected by function type [3].
 
    http/get.js:13:6
      13| http.get(url, {}, -1); // error
@@ -758,11 +815,20 @@ References:
    <BUILTINS>/node.js:1665:16
    1665|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:1658:23
+                               v
+   1658|   declare function get(
+   1659|     options: http$requestOptions,
+   1660|     callback?: (response: IncomingMessage) => void
+   1661|   ): ClientRequest;
+           ---------------^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- http/get.js:14:6
 
-Cannot call `http.get` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
+Cannot call `http.get` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `port`.
+ - Or no more than 2 arguments are expected by function type [3].
 
    http/get.js:14:6
      14| http.get(url, {port: 'expects number'}, () => {}); // error
@@ -775,11 +841,20 @@ References:
    <BUILTINS>/node.js:1623:10
    1623|   port?: number,
                   ^^^^^^ [2]
+   <BUILTINS>/node.js:1658:23
+                               v
+   1658|   declare function get(
+   1659|     options: http$requestOptions,
+   1660|     callback?: (response: IncomingMessage) => void
+   1661|   ): ClientRequest;
+           ---------------^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- http/request.js:11:6
 
-Cannot call `http.request` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `http.request` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `http$requestOptions` [3].
 
    http/request.js:11:6
      11| http.request(-1); // error
@@ -792,11 +867,16 @@ References:
    <BUILTINS>/node.js:1654:10
    1654|     url: string,
                   ^^^^^^ [2]
+   <BUILTINS>/node.js:1650:14
+   1650|     options: http$requestOptions,
+                      ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- http/request.js:12:6
 
-Cannot call `http.request` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
+Cannot call `http.request` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `port`.
+ - Or object literal [3] is incompatible with string [4].
 
    http/request.js:12:6
      12| http.request({port: 'expects number'}); // error
@@ -809,11 +889,19 @@ References:
    <BUILTINS>/node.js:1623:10
    1623|   port?: number,
                   ^^^^^^ [2]
+   http/request.js:12:14
+     12| http.request({port: 'expects number'}); // error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/node.js:1654:10
+   1654|     url: string,
+                  ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- http/request.js:13:6
 
-Cannot call `http.request` because number [1] is incompatible with function type [2]. [incompatible-call]
+Cannot call `http.request` because: [incompatible-call]
+ - Either number [1] is incompatible with function type [2].
+ - Or no more than 2 arguments are expected by function type [3].
 
    http/request.js:13:6
      13| http.request(url, {}, -1); // error
@@ -826,11 +914,20 @@ References:
    <BUILTINS>/node.js:1656:16
    1656|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:1649:27
+                                   v
+   1649|   declare function request(
+   1650|     options: http$requestOptions,
+   1651|     callback?: (response: IncomingMessage) => void
+   1652|   ): ClientRequest;
+           ---------------^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- http/request.js:14:6
 
-Cannot call `http.request` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
+Cannot call `http.request` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `port`.
+ - Or no more than 2 arguments are expected by function type [3].
 
    http/request.js:14:6
      14| http.request(url, {port: 'expects number'}, () => {}); // error
@@ -843,11 +940,20 @@ References:
    <BUILTINS>/node.js:1623:10
    1623|   port?: number,
                   ^^^^^^ [2]
+   <BUILTINS>/node.js:1649:27
+                                   v
+   1649|   declare function request(
+   1650|     options: http$requestOptions,
+   1651|     callback?: (response: IncomingMessage) => void
+   1652|   ): ClientRequest;
+           ---------------^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:67:8
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `server.listen` because: [incompatible-call]
+ - Either object literal [1] is incompatible with number [2].
+ - Or no more than 3 arguments are expected by function type [3].
 
    http/server.js:67:8
      67| server.listen({}, () => {}, 'localhost', 123);
@@ -860,11 +966,16 @@ References:
    <BUILTINS>/node.js:1562:17
    1562|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
+   <BUILTINS>/node.js:1564:3
+   1564|   listen(port?: number, backlog?: number, callback?: Function): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:68:8
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `server.listen` because: [incompatible-call]
+ - Either object literal [1] is incompatible with number [2].
+ - Or no more than 3 arguments are expected by function type [3].
 
    http/server.js:68:8
      68| server.listen({}, function() {}, 'localhost', 123);
@@ -877,6 +988,9 @@ References:
    <BUILTINS>/node.js:1562:17
    1562|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
+   <BUILTINS>/node.js:1564:3
+   1564|   listen(port?: number, backlog?: number, callback?: Function): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:69:8
@@ -985,7 +1099,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:77:8
 
-Cannot call `server.listen` because function [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `server.listen` because: [incompatible-call]
+ - Either function [1] is incompatible with string [2].
+ - Or no more than 3 arguments are expected by function type [3].
 
    http/server.js:77:8
      77| server.listen(8080, () => {}, 'localhost', 123);
@@ -998,11 +1114,16 @@ References:
    <BUILTINS>/node.js:1562:36
    1562|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
+   <BUILTINS>/node.js:1564:3
+   1564|   listen(port?: number, backlog?: number, callback?: Function): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:78:8
 
-Cannot call `server.listen` because function [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `server.listen` because: [incompatible-call]
+ - Either function [1] is incompatible with string [2].
+ - Or no more than 3 arguments are expected by function type [3].
 
    http/server.js:78:8
      78| server.listen(8080, function() {}, 'localhost', 123);
@@ -1015,6 +1136,9 @@ References:
    <BUILTINS>/node.js:1562:36
    1562|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
+   <BUILTINS>/node.js:1564:3
+   1564|   listen(port?: number, backlog?: number, callback?: Function): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:79:8
@@ -1123,7 +1247,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ https/get.js:11:7
 
-Cannot call `https.get` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `https.get` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `https$requestOptions` [3].
 
    https/get.js:11:7
      11| https.get(-1); // error
@@ -1136,11 +1262,16 @@ References:
    <BUILTINS>/node.js:1710:10
    1710|     url: string,
                   ^^^^^^ [2]
+   <BUILTINS>/node.js:1706:14
+   1706|     options: https$requestOptions,
+                      ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ https/get.js:12:7
 
-Cannot call `https.get` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
+Cannot call `https.get` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `port`.
+ - Or object literal [3] is incompatible with string [4].
 
    https/get.js:12:7
      12| https.get({port: 'expects number'}); // error
@@ -1153,11 +1284,19 @@ References:
    <BUILTINS>/node.js:1623:10
    1623|   port?: number,
                   ^^^^^^ [2]
+   https/get.js:12:11
+     12| https.get({port: 'expects number'}); // error
+                   ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/node.js:1710:10
+   1710|     url: string,
+                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ https/get.js:13:7
 
-Cannot call `https.get` because number [1] is incompatible with function type [2]. [incompatible-call]
+Cannot call `https.get` because: [incompatible-call]
+ - Either number [1] is incompatible with function type [2].
+ - Or no more than 2 arguments are expected by function type [3].
 
    https/get.js:13:7
      13| https.get(url, {}, -1); // error
@@ -1170,11 +1309,20 @@ References:
    <BUILTINS>/node.js:1712:16
    1712|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:1705:23
+                               v
+   1705|   declare function get(
+   1706|     options: https$requestOptions,
+   1707|     callback?: (response: IncomingMessage) => void
+   1708|   ): ClientRequest;
+           ---------------^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ https/get.js:14:7
 
-Cannot call `https.get` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
+Cannot call `https.get` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `port`.
+ - Or no more than 2 arguments are expected by function type [3].
 
    https/get.js:14:7
      14| https.get(url, {port: 'expects number'}, () => {}); // error
@@ -1187,11 +1335,20 @@ References:
    <BUILTINS>/node.js:1623:10
    1623|   port?: number,
                   ^^^^^^ [2]
+   <BUILTINS>/node.js:1705:23
+                               v
+   1705|   declare function get(
+   1706|     options: https$requestOptions,
+   1707|     callback?: (response: IncomingMessage) => void
+   1708|   ): ClientRequest;
+           ---------------^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- https/request.js:11:7
 
-Cannot call `https.request` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `https.request` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `https$requestOptions` [3].
 
    https/request.js:11:7
      11| https.request(-1); // error
@@ -1204,11 +1361,16 @@ References:
    <BUILTINS>/node.js:1701:10
    1701|     url: string,
                   ^^^^^^ [2]
+   <BUILTINS>/node.js:1697:14
+   1697|     options: https$requestOptions,
+                      ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- https/request.js:12:7
 
-Cannot call `https.request` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
+Cannot call `https.request` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `port`.
+ - Or object literal [3] is incompatible with string [4].
 
    https/request.js:12:7
      12| https.request({port: 'expects number'}); // error
@@ -1221,11 +1383,19 @@ References:
    <BUILTINS>/node.js:1623:10
    1623|   port?: number,
                   ^^^^^^ [2]
+   https/request.js:12:15
+     12| https.request({port: 'expects number'}); // error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/node.js:1701:10
+   1701|     url: string,
+                  ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- https/request.js:13:7
 
-Cannot call `https.request` because number [1] is incompatible with function type [2]. [incompatible-call]
+Cannot call `https.request` because: [incompatible-call]
+ - Either number [1] is incompatible with function type [2].
+ - Or no more than 2 arguments are expected by function type [3].
 
    https/request.js:13:7
      13| https.request(url, {}, -1); // error
@@ -1238,11 +1408,20 @@ References:
    <BUILTINS>/node.js:1703:16
    1703|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:1696:27
+                                   v
+   1696|   declare function request(
+   1697|     options: https$requestOptions,
+   1698|     callback?: (response: IncomingMessage) => void
+   1699|   ): ClientRequest;
+           ---------------^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- https/request.js:14:7
 
-Cannot call `https.request` because string [1] is incompatible with number [2] in property `port`. [incompatible-call]
+Cannot call `https.request` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `port`.
+ - Or no more than 2 arguments are expected by function type [3].
 
    https/request.js:14:7
      14| https.request(url, {port: 'expects number'}, () => {}); // error
@@ -1255,11 +1434,20 @@ References:
    <BUILTINS>/node.js:1623:10
    1623|   port?: number,
                   ^^^^^^ [2]
+   <BUILTINS>/node.js:1696:27
+                                   v
+   1696|   declare function request(
+   1697|     options: https$requestOptions,
+   1698|     callback?: (response: IncomingMessage) => void
+   1699|   ): ClientRequest;
+           ---------------^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:67:8
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `server.listen` because: [incompatible-call]
+ - Either object literal [1] is incompatible with number [2].
+ - Or no more than 3 arguments are expected by function type [3].
 
    https/server.js:67:8
      67| server.listen({}, () => {}, 'localhost', 123);
@@ -1272,11 +1460,16 @@ References:
    <BUILTINS>/node.js:1589:17
    1589|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
+   <BUILTINS>/node.js:1591:3
+   1591|   listen(port?: number, backlog?: number, callback?: Function): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:68:8
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `server.listen` because: [incompatible-call]
+ - Either object literal [1] is incompatible with number [2].
+ - Or no more than 3 arguments are expected by function type [3].
 
    https/server.js:68:8
      68| server.listen({}, function() {}, 'localhost', 123);
@@ -1289,6 +1482,9 @@ References:
    <BUILTINS>/node.js:1589:17
    1589|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                          ^^^^^^ [2]
+   <BUILTINS>/node.js:1591:3
+   1591|   listen(port?: number, backlog?: number, callback?: Function): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:69:8
@@ -1397,7 +1593,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- https/server.js:77:8
 
-Cannot call `server.listen` because function [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `server.listen` because: [incompatible-call]
+ - Either function [1] is incompatible with string [2].
+ - Or no more than 3 arguments are expected by function type [3].
 
    https/server.js:77:8
      77| server.listen(8443, () => {}, 'localhost', 123);
@@ -1410,11 +1608,16 @@ References:
    <BUILTINS>/node.js:1589:36
    1589|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
+   <BUILTINS>/node.js:1591:3
+   1591|   listen(port?: number, backlog?: number, callback?: Function): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:78:8
 
-Cannot call `server.listen` because function [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `server.listen` because: [incompatible-call]
+ - Either function [1] is incompatible with string [2].
+ - Or no more than 3 arguments are expected by function type [3].
 
    https/server.js:78:8
      78| server.listen(8443, function() {}, 'localhost', 123);
@@ -1427,6 +1630,9 @@ References:
    <BUILTINS>/node.js:1589:36
    1589|   listen(port?: number, hostname?: string, backlog?: number, callback?: Function): this;
                                             ^^^^^^ [2]
+   <BUILTINS>/node.js:1591:3
+   1591|   listen(port?: number, backlog?: number, callback?: Function): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:79:8
@@ -1911,7 +2117,9 @@ References:
 
 Error -------------------------------------------------------------------------------------- process/emitWarning.js:13:9
 
-Cannot call `process.emitWarning` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `process.emitWarning` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
 
    process/emitWarning.js:13:9
      13| process.emitWarning("blah", "blah", 42); // error
@@ -1924,6 +2132,9 @@ References:
    <BUILTINS>/node.js:3208:11
    3208|     code: string,
                    ^^^^^^ [2]
+   <BUILTINS>/node.js:3204:58
+   3204|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+                                                                  ^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------- process/emitWarning.js:14:2

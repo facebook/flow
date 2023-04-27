@@ -1350,7 +1350,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_dict.js:100:2
 
-Cannot cast `o17` to object type because `X` [1] is incompatible with `Y` [2] in property `x`. [incompatible-cast]
+Cannot cast `o17` to object type because in property `x`: [incompatible-cast]
+ - Either `X` [1] is incompatible with `Y` [2].
+ - Or `X` [1] is incompatible with undefined [3].
 
    type_dict.js:100:2
    100| (o17: {|[string]: Y | void|}); // OK
@@ -1363,6 +1365,9 @@ References:
    type_dict.js:100:19
    100| (o17: {|[string]: Y | void|}); // OK
                           ^ [2]
+   type_dict.js:100:23
+   100| (o17: {|[string]: Y | void|}); // OK
+                              ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:1:37

@@ -162,8 +162,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
-Cannot assign `<Foo />` to `foo` because number [1] is incompatible with string [2] in type argument `ElementType`.
-[incompatible-type-arg]
+Cannot assign `<Foo />` to `foo` because in type argument `ElementType`: [incompatible-type-arg]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with AbstractComponent [3].
 
    classes.js:39:25
     39| var foo: $jsx<number> = <Foo/>;
@@ -176,6 +177,9 @@ References:
    <BUILTINS>/react.js:162:5
    162|   | string
             ^^^^^^ [2]
+   <BUILTINS>/react.js:163:5
+   163|   | React$AbstractComponent<empty, mixed>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
@@ -356,15 +360,16 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- state6.js:27:19
 
-Cannot call `this.setState` with function bound to `partialState` because string [1] is incompatible with number [2] in
-property `bar` of the return value. [incompatible-call]
+Cannot call `this.setState` with function bound to `partialState` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2] in property `bar` of the return value.
+ - Or inexact function [3] is incompatible with exact `State` [4].
 
    state6.js:27:19
                          v-------------------------------------------
    27|     this.setState(() => ({ // Error: `bar` should be a number.
    28|       bar: '42',
    29|     }));
-           -^
+           -^ [3]
 
 References:
    state6.js:28:12
@@ -373,6 +378,9 @@ References:
    state6.js:5:34
     5| type State = {|foo: number, bar: number|};
                                         ^^^^^^ [2]
+   state6.js:11:59
+   11| class MyComponent extends React.Component<{prop: number}, State> {
+                                                                 ^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:31:29
@@ -405,12 +413,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- state6.js:39:25
 
-Cannot call `this.setState` with `any` bound to `partialState` because number [1] is incompatible with `State` [2] in
-the first parameter. [incompatible-call]
+Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-call]
+ - Either number [1] is incompatible with `State` [2] in the first parameter.
+ - Or inexact `StateUpdater3` [3] is incompatible with exact `$ReadOnly` [4].
 
    state6.js:39:25
    39|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                               ^^^^^^^^^^^^^
+                               ^^^^^^^^^^^^^ [3]
 
 References:
    state6.js:9:24
@@ -419,6 +428,9 @@ References:
    state6.js:11:59
    11| class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ [2]
+   <BUILTINS>/react.js:53:20
+   53|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:3

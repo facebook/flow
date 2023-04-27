@@ -18,7 +18,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- cycle_C.js:7:25
 
-Cannot call `f` with `null` bound to `x` because null [1] is incompatible with undefined [2]. [incompatible-call]
+Cannot call `f` with `null` bound to `x` because: [incompatible-call]
+ - Either null [1] is incompatible with undefined [2].
+ - Or null [1] is incompatible with number [3].
 
    cycle_C.js:7:25
    7| const resNull: void = f(null);
@@ -28,6 +30,9 @@ References:
    cycle_C.js:3:24
    3| function f(x: number | void) {
                              ^^^^ [2]
+   cycle_C.js:3:15
+   3| function f(x: number | void) {
+                    ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- new.js:7:9

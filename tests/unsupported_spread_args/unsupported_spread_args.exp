@@ -1,7 +1,8 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:4:16
 
-Cannot instantiate React ref because number [1] is incompatible with string [2] in type argument `ElementType`.
-[incompatible-type-arg]
+Cannot instantiate React ref because in type argument `ElementType`: [incompatible-type-arg]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with AbstractComponent [3].
 
    test.js:4:16
      4| const arr = [1,2,3];  // badly-positioned error
@@ -14,6 +15,9 @@ References:
    <BUILTINS>/react.js:162:5
    162|   | string
             ^^^^^^ [2]
+   <BUILTINS>/react.js:163:5
+   163|   | React$AbstractComponent<empty, mixed>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:7
@@ -88,8 +92,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
-Cannot instantiate `React.Element` because number [1] is incompatible with string [2] in type argument `ElementType`.
-[incompatible-type-arg]
+Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type-arg]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with AbstractComponent [3].
 
    test.js:10:1
     10| React.createElement(...arr, ...arr); // error
@@ -102,6 +107,9 @@ References:
    <BUILTINS>/react.js:162:5
    162|   | string
             ^^^^^^ [2]
+   <BUILTINS>/react.js:163:5
+   163|   | React$AbstractComponent<empty, mixed>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:67

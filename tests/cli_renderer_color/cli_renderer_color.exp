@@ -3440,16 +3440,17 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:36:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mproperty[0m[0m
-[0m[0m[0m[0;1mb[0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m.[0m[0m
+[0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mobject[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m.[0m[0m
 [0m[0m
-[0m[0m        [0m[0m[0m[0;2m33[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m34[0m[0;2m|[0m[0m [0m[0;2m// Error: number ~> boolean. Because of union error scoring we should only see[0m[0m
-[0m[0m        [0m[0m[0m[0;2m35[0m[0;2m|[0m[0m [0m[0;2m// one error.[0m[0m
-[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m[0m[0;2m36[0m[0;2m|[0m[0m [0m[0;2m({a: [0m[31m{b: [0m[36m42[0m[31m}[0m[0;2m}: {a: boolean | {b: [0m[36mboolean[0m[0;2m | {}}});[0m[0m
-[0m[0m        [0m[0m[0m[0;2m37[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m38[0m[0;2m|[0m[0m [0m[0;2m(42: boolean); // Error: number ~> boolean[0m[0m
-[0m[0m        [0m[0m[0m[0;2m39[0m[0;2m|[0m[0m [0m[0;2m(42: {} | {} | {} | boolean); // Error: number ~> boolean[0m[0m
+[0m[0m           [0m[0m[0m[0;2m33[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m34[0m[0;2m|[0m[0m [0m[0;2m// Error: number ~> boolean. Because of union error scoring we should only see[0m[0m
+[0m[0m           [0m[0m[0m[0;2m35[0m[0;2m|[0m[0m [0m[0;2m// one error.[0m[0m
+[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0;2m[[0m[36m3[0m[0;2m][0m[0m [0m[0m[0m[0;2m36[0m[0;2m|[0m[0m [0m[0;2m({a: [0m[31m{b: [0m[36m42[0m[31m}[0m[0;2m}: {a: boolean | {b: [0m[36mboolean[0m[0;2m | [0m[36m{}[0m[0;2m}});[0m[0m
+[0m[0m           [0m[0m[0m[0;2m37[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m38[0m[0;2m|[0m[0m [0m[0;2m(42: boolean); // Error: number ~> boolean[0m[0m
+[0m[0m           [0m[0m[0m[0;2m39[0m[0;2m|[0m[0m [0m[0;2m(42: {} | {} | {} | boolean); // Error: number ~> boolean[0m[0m
 [0m[0m
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:38:2[0m[0m
@@ -3467,28 +3468,32 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:39:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1m42[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1m42[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
+[0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mobject[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
-[0m[0m        [0m[0m[0m[0;2m36[0m[0;2m|[0m[0m [0m[0;2m({a: {b: 42}}: {a: boolean | {b: boolean | {}}});[0m[0m
-[0m[0m        [0m[0m[0m[0;2m37[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m38[0m[0;2m|[0m[0m [0m[0;2m(42: boolean); // Error: number ~> boolean[0m[0m
-[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m[0m[0;2m39[0m[0;2m|[0m[0m [0m[0;2m([0m[31m42[0m[0;2m: {} | {} | {} | [0m[36mboolean[0m[0;2m); // Error: number ~> boolean[0m[0m
-[0m[0m        [0m[0m[0m[0;2m40[0m[0;2m|[0m[0m [0m[0;2m(42: {} | ({} | ({} | boolean))); // Error: number ~> boolean[0m[0m
-[0m[0m        [0m[0m[0m[0;2m41[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m42[0m[0;2m|[0m[0m [0m[0;2m// Alias Example 1[0m[0m
+[0m[0m           [0m[0m[0m[0;2m36[0m[0;2m|[0m[0m [0m[0;2m({a: {b: 42}}: {a: boolean | {b: boolean | {}}});[0m[0m
+[0m[0m           [0m[0m[0m[0;2m37[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m38[0m[0;2m|[0m[0m [0m[0;2m(42: boolean); // Error: number ~> boolean[0m[0m
+[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m3[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m[0m[0;2m39[0m[0;2m|[0m[0m [0m[0;2m([0m[31m42[0m[0;2m: {} | {} | [0m[36m{}[0m[0;2m | [0m[36mboolean[0m[0;2m); // Error: number ~> boolean[0m[0m
+[0m[0m           [0m[0m[0m[0;2m40[0m[0;2m|[0m[0m [0m[0;2m(42: {} | ({} | ({} | boolean))); // Error: number ~> boolean[0m[0m
+[0m[0m           [0m[0m[0m[0;2m41[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m42[0m[0;2m|[0m[0m [0m[0;2m// Alias Example 1[0m[0m
 [0m[0m
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:40:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1m42[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1m42[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
+[0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mobject[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
-[0m[0m        [0m[0m[0m[0;2m37[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m38[0m[0;2m|[0m[0m [0m[0;2m(42: boolean); // Error: number ~> boolean[0m[0m
-[0m[0m        [0m[0m[0m[0;2m39[0m[0;2m|[0m[0m [0m[0;2m(42: {} | {} | {} | boolean); // Error: number ~> boolean[0m[0m
-[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m[0m[0;2m40[0m[0;2m|[0m[0m [0m[0;2m([0m[31m42[0m[0;2m: {} | ({} | ({} | [0m[36mboolean[0m[0;2m))); // Error: number ~> boolean[0m[0m
-[0m[0m        [0m[0m[0m[0;2m41[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m42[0m[0;2m|[0m[0m [0m[0;2m// Alias Example 1[0m[0m
-[0m[0m        [0m[0m[0m[0;2m43[0m[0;2m|[0m[0m [0m[0;2m({x: 123, y: 'abc'}: {x: number, y: number} | {x: string, y: string}); // Error[0m[0m
+[0m[0m           [0m[0m[0m[0;2m37[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m38[0m[0;2m|[0m[0m [0m[0;2m(42: boolean); // Error: number ~> boolean[0m[0m
+[0m[0m           [0m[0m[0m[0;2m39[0m[0;2m|[0m[0m [0m[0;2m(42: {} | {} | {} | boolean); // Error: number ~> boolean[0m[0m
+[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m3[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m[0m[0;2m40[0m[0;2m|[0m[0m [0m[0;2m([0m[31m42[0m[0;2m: {} | ({} | ([0m[36m{}[0m[0;2m | [0m[36mboolean[0m[0;2m))); // Error: number ~> boolean[0m[0m
+[0m[0m           [0m[0m[0m[0;2m41[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m42[0m[0;2m|[0m[0m [0m[0;2m// Alias Example 1[0m[0m
+[0m[0m           [0m[0m[0m[0;2m43[0m[0;2m|[0m[0m [0m[0;2m({x: 123, y: 'abc'}: {x: number, y: number} | {x: string, y: string}); // Error[0m[0m
 [0m[0m
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:43:2[0m[0m
@@ -3917,43 +3922,47 @@
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:98:2[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1mtrue[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
+[0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mobject[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
-[0m[0m        [0m[0m [0m[0;2m95[0m[0;2m|[0m[0m [0m[0;2m(true: (string | number) | number | number); // Error: should be flattened[0m[0m
-[0m[0m        [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
-[0m[0m        [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m([0m[31mtrue[0m[0;2m: [0m[36mnumber[0m[0;2m | {}); // Error[0m[0m
-[0m[0m        [0m[0m [0m[0;2m99[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | {}, b: number | {}}); // Error[0m[0m
-[0m[0m        [0m[0m[0m[0;2m100[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error[0m[0m
-[0m[0m        [0m[0m[0m[0;2m101[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m [0m[0;2m95[0m[0;2m|[0m[0m [0m[0;2m(true: (string | number) | number | number); // Error: should be flattened[0m[0m
+[0m[0m           [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
+[0m[0m           [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0;2m[[0m[36m3[0m[0;2m][0m[0m [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m([0m[31mtrue[0m[0;2m: [0m[36mnumber[0m[0;2m | [0m[36m{}[0m[0;2m); // Error[0m[0m
+[0m[0m           [0m[0m [0m[0;2m99[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | {}, b: number | {}}); // Error[0m[0m
+[0m[0m           [0m[0m[0m[0;2m100[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error[0m[0m
+[0m[0m           [0m[0m[0m[0;2m101[0m[0;2m|[0m[0;2m[0m[0m
 [0m[0m
 [0m[0m
 [0m[31mError ---------------------------------------------------------------------------------------------------- union.js:99:6[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m.[0m[0m[0m[0m
-[0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1ma[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
+[0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mobject[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
-[0m[0m        [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
-[0m[0m        [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m(true: number | {}); // Error[0m[0m
-[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m [0m[0;2m99[0m[0;2m|[0m[0m [0m[0;2m({a: [0m[31mtrue[0m[0;2m, b: true}: {a: [0m[36mnumber[0m[0;2m | {}, b: number | {}}); // Error[0m[0m
-[0m[0m        [0m[0m[0m[0;2m100[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error[0m[0m
-[0m[0m        [0m[0m[0m[0;2m101[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m102[0m[0;2m|[0m[0m [0m[0;2m// Error: union inside union fun.[0m[0m
+[0m[0m           [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
+[0m[0m           [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m(true: number | {}); // Error[0m[0m
+[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0;2m[[0m[36m3[0m[0;2m][0m[0m [0m[0m [0m[0;2m99[0m[0;2m|[0m[0m [0m[0;2m({a: [0m[31mtrue[0m[0;2m, b: true}: {a: [0m[36mnumber[0m[0;2m | [0m[36m{}[0m[0;2m, b: number | {}}); // Error[0m[0m
+[0m[0m           [0m[0m[0m[0;2m100[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error[0m[0m
+[0m[0m           [0m[0m[0m[0;2m101[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m102[0m[0;2m|[0m[0m [0m[0;2m// Error: union inside union fun.[0m[0m
 [0m[0m
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:99:15[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m.[0m[0m[0m[0m
-[0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
+[0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mobject[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
-[0m[0m        [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
-[0m[0m        [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m(true: number | {}); // Error[0m[0m
-[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m [0m[0;2m99[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: [0m[31mtrue[0m[0;2m}: {a: number | {}, b: [0m[36mnumber[0m[0;2m | {}}); // Error[0m[0m
-[0m[0m        [0m[0m[0m[0;2m100[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error[0m[0m
-[0m[0m        [0m[0m[0m[0;2m101[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m102[0m[0;2m|[0m[0m [0m[0;2m// Error: union inside union fun.[0m[0m
+[0m[0m           [0m[0m [0m[0;2m96[0m[0;2m|[0m[0m [0m[0;2m(true: ((string | number) | number) | number); // Error: should be flattened[0m[0m
+[0m[0m           [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m(true: number | {}); // Error[0m[0m
+[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0;2m[[0m[36m3[0m[0;2m][0m[0m [0m[0m [0m[0;2m99[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: [0m[31mtrue[0m[0;2m}: {a: number | {}, b: [0m[36mnumber[0m[0;2m | [0m[36m{}[0m[0;2m}); // Error[0m[0m
+[0m[0m           [0m[0m[0m[0;2m100[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error[0m[0m
+[0m[0m           [0m[0m[0m[0;2m101[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m102[0m[0;2m|[0m[0m [0m[0;2m// Error: union inside union fun.[0m[0m
 [0m[0m
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:100:6[0m[0m
@@ -3973,16 +3982,17 @@
 [0m[0m
 [0m[31mError -------------------------------------------------------------------------------------------------- union.js:100:15[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m.[0m[0m[0m[0m
-[0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
+[0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mobject[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
 [0m[0m
-[0m[0m        [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m(true: number | {}); // Error[0m[0m
-[0m[0m        [0m[0m [0m[0;2m99[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | {}, b: number | {}}); // Error[0m[0m
-[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m[0m[0;2m100[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: [0m[31mtrue[0m[0;2m}: {a: number | string | {}, b: [0m[36mnumber[0m[0;2m | {}}); // Error[0m[0m
-[0m[0m        [0m[0m[0m[0;2m101[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m102[0m[0;2m|[0m[0m [0m[0;2m// Error: union inside union fun.[0m[0m
-[0m[0m        [0m[0m[0m[0;2m103[0m[0;2m|[0m[0m [0m[0;2m((any: [[null, number]]): [[null, A] | [null, B]] | [[null, C] | [null, D]]);[0m[0m
+[0m[0m           [0m[0m [0m[0;2m97[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m [0m[0;2m98[0m[0;2m|[0m[0m [0m[0;2m(true: number | {}); // Error[0m[0m
+[0m[0m           [0m[0m [0m[0;2m99[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: true}: {a: number | {}, b: number | {}}); // Error[0m[0m
+[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0;2m[[0m[36m3[0m[0;2m][0m[0m [0m[0m[0m[0;2m100[0m[0;2m|[0m[0m [0m[0;2m({a: true, b: [0m[31mtrue[0m[0;2m}: {a: number | string | {}, b: [0m[36mnumber[0m[0;2m | [0m[36m{}[0m[0;2m}); // Error[0m[0m
+[0m[0m           [0m[0m[0m[0;2m101[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m           [0m[0m[0m[0;2m102[0m[0;2m|[0m[0m [0m[0;2m// Error: union inside union fun.[0m[0m
+[0m[0m           [0m[0m[0m[0;2m103[0m[0;2m|[0m[0m [0m[0;2m((any: [[null, number]]): [[null, A] | [null, B]] | [[null, C] | [null, D]]);[0m[0m
 [0m[0m
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:103:8[0m[0m
@@ -4035,13 +4045,15 @@
 [0m[0m
 [0m[31mError --------------------------------------------------------------------------------------------------- union.js:112:8[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mC[0m[0;4m[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0;1many[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0munion[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
+[0m[0m - [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4m[0m[0;1;4mC[0m[0;4m[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m1[0m[0m[0m[0m [0m[0mof[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
+[0m[0m - [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mtuple[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[33m3[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mobject[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m4[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mindex[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m
 [0m[0m
-[0m[0m        [0m[0m[0m[0;2m109[0m[0;2m|[0m[0m [0m[0;2m((any: [[null, number]]): [[null, A] | {}] | [[null, C] | {}]);[0m[0m
-[0m[0m        [0m[0m[0m[0;2m110[0m[0;2m|[0m[0;2m[0m[0m
-[0m[0m        [0m[0m[0m[0;2m111[0m[0;2m|[0m[0m [0m[0;2m// Error: union inside union fun, but thanks to scoring we only show one.[0m[0m
-[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m[0m[0;2m112[0m[0;2m|[0m[0m [0m[0;2m((any: [0m[31m[[null, [0m[36mnumber[0m[31m]][0m[0;2m): {} | [[null, [0m[36mC[0m[0;2m] | {}]);[0m[0m
-[0m[0m        [0m[0m[0m[0;2m113[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m              [0m[0m[0m[0;2m109[0m[0;2m|[0m[0m [0m[0;2m((any: [[null, number]]): [[null, A] | {}] | [[null, C] | {}]);[0m[0m
+[0m[0m              [0m[0m[0m[0;2m110[0m[0;2m|[0m[0;2m[0m[0m
+[0m[0m              [0m[0m[0m[0;2m111[0m[0;2m|[0m[0m [0m[0;2m// Error: union inside union fun, but thanks to scoring we only show one.[0m[0m
+[0m[0m [0m[0;2m[[0m[33m3[0m[0;2m][0m[0;2m[[0m[36m1[0m[0;2m][0m[0;2m[[0m[36m2[0m[0;2m][0m[0;2m[[0m[36m4[0m[0;2m][0m[0m [0m[0m[0m[0;2m112[0m[0;2m|[0m[0m [0m[0;2m((any: [0m[31m[[0m[33m[null, [0m[36mnumber[0m[33m][0m[31m][0m[0;2m): {} | [[null, [0m[36mC[0m[0;2m] | [0m[36m{}[0m[0;2m]);[0m[0m
+[0m[0m              [0m[0m[0m[0;2m113[0m[0;2m|[0m[0;2m[0m[0m
 [0m[0m
 [0m[0m
 [0m[33mWarning ------------------------------------------------------------------------------------------------ warning.js:11:5[0m[0m

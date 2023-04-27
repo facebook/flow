@@ -53,8 +53,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:27
 
-Cannot call `"".match` with `0` bound to `regexp` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `RegExp` [3].
 
    overload.js:7:27
       7| var x1: number = "".match(0)[0];
@@ -64,6 +65,9 @@ References:
    <BUILTINS>/core.js:1181:19
    1181|     match(regexp: string | RegExp): RegExp$matchResult | null;
                            ^^^^^^ [2]
+   <BUILTINS>/core.js:1181:28
+   1181|     match(regexp: string | RegExp): RegExp$matchResult | null;
+                                    ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- overload.js:8:18

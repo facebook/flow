@@ -15,8 +15,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- collator.js:6:15
 
-Cannot call `Intl.Collator` with `1` bound to `locales` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `Intl.Collator` with `1` bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with array type [3].
 
    collator.js:6:15
     6| Intl.Collator(1, {
@@ -26,6 +27,9 @@ References:
    <BUILTINS>/intl.js:20:21
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- collator.js:7:18
@@ -177,8 +181,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ collator.js:34:29
 
-Cannot call `Collator.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
-string [2]. [incompatible-call]
+Cannot call `Collator.supportedLocalesOf` with `1` bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with array type [3].
 
    collator.js:34:29
    34| Collator.supportedLocalesOf(1) // incorrect
@@ -188,6 +193,9 @@ References:
    <BUILTINS>/intl.js:20:21
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:5:30
@@ -207,8 +215,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:6:21
 
-Cannot call `Intl.DateTimeFormat` with `1` bound to `locales` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `Intl.DateTimeFormat` with `1` bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with array type [3].
 
    date_time_format.js:6:21
     6| Intl.DateTimeFormat(1, {
@@ -218,6 +227,9 @@ References:
    <BUILTINS>/intl.js:20:21
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- date_time_format.js:7:18
@@ -447,8 +459,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------- date_time_format.js:52:35
 
-Cannot call `DateTimeFormat.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
-string [2]. [incompatible-call]
+Cannot call `DateTimeFormat.supportedLocalesOf` with `1` bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with array type [3].
 
    date_time_format.js:52:35
    52| DateTimeFormat.supportedLocalesOf(1) // incorrect
@@ -458,6 +471,9 @@ References:
    <BUILTINS>/intl.js:20:21
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- intl.js:2:19
@@ -530,12 +546,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- intl.js:7:43
 
-Cannot call `getCanonicalLocales` with array literal bound to `locales` because number [1] is incompatible with
-string [2] in array element. [incompatible-call]
+Cannot call `getCanonicalLocales` with array literal bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2] in array element.
+ - Or array literal [3] is incompatible with string [4].
 
    intl.js:7:43
     7|   const d: string[] = getCanonicalLocales([ 1, 2 ]); // incorrect
-                                                 ^^^^^^^^
+                                                 ^^^^^^^^ [3]
 
 References:
    intl.js:7:45
@@ -544,6 +561,9 @@ References:
    <BUILTINS>/intl.js:20:35
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                                          ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                           ^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- intl.js:13:16
@@ -585,8 +605,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- number_format.js:6:19
 
-Cannot call `Intl.NumberFormat` with `1` bound to `locales` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `Intl.NumberFormat` with `1` bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with array type [3].
 
    number_format.js:6:19
     6| Intl.NumberFormat(1, {
@@ -596,6 +617,9 @@ References:
    <BUILTINS>/intl.js:20:21
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- number_format.js:7:18
@@ -794,8 +818,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- number_format.js:41:33
 
-Cannot call `NumberFormat.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
-string [2]. [incompatible-call]
+Cannot call `NumberFormat.supportedLocalesOf` with `1` bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with array type [3].
 
    number_format.js:41:33
    41| NumberFormat.supportedLocalesOf(1) // incorrect
@@ -805,6 +830,9 @@ References:
    <BUILTINS>/intl.js:20:21
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:3:16
@@ -853,8 +881,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:8:19
 
-Cannot call `PluralRules` with `1` bound to `locales` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `PluralRules` with `1` bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with array type [3].
 
    plural_rules.js:8:19
     8|   new PluralRules(1); // incorrect
@@ -864,6 +893,9 @@ References:
    <BUILTINS>/intl.js:20:21
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- plural_rules.js:12:20
@@ -989,8 +1021,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- plural_rules.js:39:34
 
-Cannot call `PluralRules.supportedLocalesOf` with `1` bound to `locales` because number [1] is incompatible with
-string [2]. [incompatible-call]
+Cannot call `PluralRules.supportedLocalesOf` with `1` bound to `locales` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with array type [3].
 
    plural_rules.js:39:34
    39|   PluralRules.supportedLocalesOf(1) // incorrect
@@ -1000,6 +1033,9 @@ References:
    <BUILTINS>/intl.js:20:21
    20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
+                                         ^^^^^^^^^^^^^ [3]
 
 
 

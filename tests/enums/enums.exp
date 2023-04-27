@@ -103,8 +103,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
 
-Cannot cast `BS.A` to union type because `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum
-value to a boolean using `(<expression>: boolean)`. [incompatible-cast]
+Cannot cast `BS.A` to union type because: [incompatible-cast]
+ - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
+   `(<expression>: boolean)`.
+ - Or `B` [1] is incompatible with string [3].
 
    cast.js:66:2
    66| (BS.A: string | boolean); // Error
@@ -117,12 +119,17 @@ References:
    cast.js:66:17
    66| (BS.A: string | boolean); // Error
                        ^^^^^^^ [2]
+   cast.js:66:8
+   66| (BS.A: string | boolean); // Error
+              ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
 
-Cannot cast `BS.A` to union type because `S` [1] is incompatible with string [2]. You can explicitly cast your enum
-value to a string using `(<expression>: string)`. [incompatible-cast]
+Cannot cast `BS.A` to union type because: [incompatible-cast]
+ - Either `S` [1] is incompatible with string [2]. You can explicitly cast your enum value to a string using
+   `(<expression>: string)`.
+ - Or `S` [1] is incompatible with boolean [3].
 
    cast.js:66:2
    66| (BS.A: string | boolean); // Error
@@ -135,12 +142,17 @@ References:
    cast.js:66:8
    66| (BS.A: string | boolean); // Error
               ^^^^^^ [2]
+   cast.js:66:17
+   66| (BS.A: string | boolean); // Error
+                       ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
 
-Cannot cast `sb` to union type because `S` [1] is incompatible with string [2]. You can explicitly cast your enum value
-to a string using `(<expression>: string)`. [incompatible-cast]
+Cannot cast `sb` to union type because: [incompatible-cast]
+ - Either `S` [1] is incompatible with string [2]. You can explicitly cast your enum value to a string using
+   `(<expression>: string)`.
+ - Or `S` [1] is incompatible with boolean [3].
 
    cast.js:69:2
    69| (sb: string | boolean); // Error
@@ -153,12 +165,17 @@ References:
    cast.js:69:6
    69| (sb: string | boolean); // Error
             ^^^^^^ [2]
+   cast.js:69:15
+   69| (sb: string | boolean); // Error
+                     ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
 
-Cannot cast `sb` to union type because `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value
-to a boolean using `(<expression>: boolean)`. [incompatible-cast]
+Cannot cast `sb` to union type because: [incompatible-cast]
+ - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
+   `(<expression>: boolean)`.
+ - Or `B` [1] is incompatible with string [3].
 
    cast.js:69:2
    69| (sb: string | boolean); // Error
@@ -171,6 +188,9 @@ References:
    cast.js:69:15
    69| (sb: string | boolean); // Error
                      ^^^^^^^ [2]
+   cast.js:69:6
+   69| (sb: string | boolean); // Error
+            ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:71:2

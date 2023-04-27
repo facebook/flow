@@ -44,8 +44,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:31:44
 
-Cannot assign `this.divRef.current` to `image` because `HTMLDivElement` [1] is incompatible with `HTMLImageElement` [2].
-[incompatible-type]
+Cannot assign `this.divRef.current` to `image` because: [incompatible-type]
+ - Either `HTMLDivElement` [1] is incompatible with `HTMLImageElement` [2].
+ - Or `HTMLDivElement` [1] is incompatible with null [3].
 
    createContext.js:31:44
    31|       var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
@@ -58,6 +59,9 @@ References:
    createContext.js:31:25
    31|       var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
                                ^^^^^^^^^^^^^^^^ [2]
+   createContext.js:31:18
+   31|       var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
+                        ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- createContext.js:53:24
@@ -1034,8 +1038,9 @@ References:
 
 Error ----------------------------------------------------------------------------- intersection_component_error.js:12:2
 
-Cannot create `MyComponent` element because property `foo` is missing in props [1] but exists in object type [2].
-[incompatible-use]
+Cannot create `MyComponent` element because: [incompatible-use]
+ - Either property `foo` is missing in props [1] but exists in object type [2].
+ - Or object type [3] is not a React component.
 
    intersection_component_error.js:12:2
    12| <MyComponent />;
@@ -1048,6 +1053,12 @@ References:
    intersection_component_error.js:8:46
     8| declare var MyComponent: React.ComponentType<{foo: number}> & {
                                                     ^^^^^^^^^^^^^ [2]
+   intersection_component_error.js:8:63
+                                                                     v
+    8| declare var MyComponent: React.ComponentType<{foo: number}> & {
+    9|   someStatic: boolean,
+   10| };
+       ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- jsx_spread.js:9:15
@@ -1115,20 +1126,24 @@ Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclos
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:10:11
 
-Cannot create `Foo` element because number [1] is incompatible with `Foo` [2] in the first parameter of property `ref`.
-[incompatible-type]
+Cannot create `Foo` element because in property `ref`: [incompatible-type]
+ - Either number [1] is incompatible with `Foo` [2] in the first parameter.
+ - Or property `current` is missing in function [3] but exists in object type [4].
 
    ref.js:10:11
-   10| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
-                 ^^^^^^^^^^^^^^^^^^^
+    10| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
+                  ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    ref.js:10:17
-   10| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
-                       ^^^^^^ [1]
+    10| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
+                        ^^^^^^ [1]
    ref.js:3:7
-    3| class Foo extends React.Component<{}, void> {}
-             ^^^ [2]
+     3| class Foo extends React.Component<{}, void> {}
+              ^^^ [2]
+   <BUILTINS>/react.js:188:5
+   188|   | { -current: React$ElementRef<ElementType> | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:11:19
@@ -1150,7 +1165,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:13:19
 
-Cannot cast `foo` to union type because `Foo` [1] is incompatible with `Bar` [2]. [incompatible-cast]
+Cannot cast `foo` to union type because: [incompatible-cast]
+ - Either `Foo` [1] is incompatible with `Bar` [2].
+ - Or `Foo` [1] is incompatible with null [3].
 
    ref.js:13:19
    13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
@@ -1163,34 +1180,42 @@ References:
    ref.js:13:24
    13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
                               ^^^ [2]
+   ref.js:13:30
+   13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                                    ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:21:16
 
-Cannot create `FooExact` element because number [1] is incompatible with `FooExact` [2] in the first parameter of
-property `ref`. [incompatible-type]
+Cannot create `FooExact` element because in property `ref`: [incompatible-type]
+ - Either number [1] is incompatible with `FooExact` [2] in the first parameter.
+ - Or property `current` is missing in function [3] but exists in object type [4].
 
    ref.js:21:16
-   21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
-                      ^^^^^^^^^^^^^^^^^^^
+    21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+                       ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    ref.js:21:22
-   21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
-                            ^^^^^^ [1]
+    21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+                             ^^^^^^ [1]
    ref.js:15:7
-   15| class FooExact extends React.Component<{||}, void> {}
-             ^^^^^^^^ [2]
+    15| class FooExact extends React.Component<{||}, void> {}
+              ^^^^^^^^ [2]
+   <BUILTINS>/react.js:188:5
+   188|   | { -current: React$ElementRef<ElementType> | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:22:16
 
-Cannot create `FooExact` element because `FooExact` [1] is incompatible with null [2] in the first parameter of property
-`ref`. [incompatible-type]
+Cannot create `FooExact` element because in property `ref`: [incompatible-type]
+ - Either `FooExact` [1] is incompatible with null [2] in the first parameter.
+ - Or property `current` is missing in function [3] but exists in object type [4].
 
    ref.js:22:16
     22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
-                       ^^^^^^^^^^^^^^^^^^^^^
+                       ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    ref.js:22:22
@@ -1199,6 +1224,9 @@ References:
    <BUILTINS>/react.js:189:39
    189|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [2]
+   <BUILTINS>/react.js:188:5
+   188|   | { -current: React$ElementRef<ElementType> | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
@@ -1557,9 +1585,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:22:30
 
-Cannot call `React.useEffect` with async function bound to `create` because a call signature declaring the expected
-parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
-[incompatible-call]
+Cannot call `React.useEffect` with async function bound to `create` because in the return value: [incompatible-call]
+ - Either a call signature declaring the expected parameter / return type is missing in `Promise` [1] but exists in
+   function type [2].
+ - Or `Promise` [1] is incompatible with undefined [3].
 
    useEffect_hook.js:22:30
     22|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type
@@ -1569,16 +1598,20 @@ References:
    <BUILTINS>/react.js:312:41
    312|   declare type MaybeCleanUpFn = void | (() => void);
                                                 ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:312:33
+   312|   declare type MaybeCleanUpFn = void | (() => void);
+                                        ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:23:25
 
-Cannot call `React.useEffect` with function bound to `create` because number [1] is incompatible with undefined [2] in
-the return value of the return value. [incompatible-call]
+Cannot call `React.useEffect` with function bound to `create` because in the return value: [incompatible-call]
+ - Either number [1] is incompatible with undefined [2] in the return value.
+ - Or function [3] is incompatible with undefined [4].
 
    useEffect_hook.js:23:25
     23|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value
-                                ^^^^^^^^^
+                                ^^^^^^^^^ [3]
 
 References:
    useEffect_hook.js:23:31
@@ -1587,6 +1620,9 @@ References:
    <BUILTINS>/react.js:312:47
    312|   declare type MaybeCleanUpFn = void | (() => void);
                                                       ^^^^ [2]
+   <BUILTINS>/react.js:312:33
+   312|   declare type MaybeCleanUpFn = void | (() => void);
+                                        ^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------- useImperativeHandle_hook.js:4:9
@@ -1711,9 +1747,11 @@ References:
 
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:22:36
 
-Cannot call `React.useLayoutEffect` with async function bound to `create` because a call signature declaring the
-expected parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
+Cannot call `React.useLayoutEffect` with async function bound to `create` because in the return value:
 [incompatible-call]
+ - Either a call signature declaring the expected parameter / return type is missing in `Promise` [1] but exists in
+   function type [2].
+ - Or `Promise` [1] is incompatible with undefined [3].
 
    useLayoutEffect_hook.js:22:36
     22|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type
@@ -1723,16 +1761,20 @@ References:
    <BUILTINS>/react.js:312:41
    312|   declare type MaybeCleanUpFn = void | (() => void);
                                                 ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:312:33
+   312|   declare type MaybeCleanUpFn = void | (() => void);
+                                        ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:23:31
 
-Cannot call `React.useLayoutEffect` with function bound to `create` because number [1] is incompatible with
-undefined [2] in the return value of the return value. [incompatible-call]
+Cannot call `React.useLayoutEffect` with function bound to `create` because in the return value: [incompatible-call]
+ - Either number [1] is incompatible with undefined [2] in the return value.
+ - Or function [3] is incompatible with undefined [4].
 
    useLayoutEffect_hook.js:23:31
     23|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value
-                                      ^^^^^^^^^
+                                      ^^^^^^^^^ [3]
 
 References:
    useLayoutEffect_hook.js:23:37
@@ -1741,6 +1783,9 @@ References:
    <BUILTINS>/react.js:312:47
    312|   declare type MaybeCleanUpFn = void | (() => void);
                                                       ^^^^ [2]
+   <BUILTINS>/react.js:312:33
+   312|   declare type MaybeCleanUpFn = void | (() => void);
+                                        ^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- useMemo_hook.js:4:9
@@ -2310,8 +2355,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:14:62
 
-Cannot call `React.useRef` with `123` bound to `initialValue` because number [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `React.useRef` with `123` bound to `initialValue` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with null [3].
 
    useRef_hook.js:14:62
    14|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
@@ -2321,12 +2367,16 @@ References:
    useRef_hook.js:14:32
    14|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
                                       ^^^^^^ [2]
+   useRef_hook.js:14:41
+   14|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
+                                               ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:15:62
 
-Cannot call `React.useRef` with `"abc"` bound to `initialValue` because string [1] is incompatible with number [2].
-[incompatible-call]
+Cannot call `React.useRef` with `"abc"` bound to `initialValue` because: [incompatible-call]
+ - Either string [1] is incompatible with number [2].
+ - Or string [1] is incompatible with null [3].
 
    useRef_hook.js:15:62
    15|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
@@ -2336,6 +2386,9 @@ References:
    useRef_hook.js:15:32
    15|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
                                       ^^^^^^ [2]
+   useRef_hook.js:15:41
+   15|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
+                                               ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:16:51
@@ -2355,7 +2408,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:22:25
 
-Cannot assign `123` to `stringValue.current` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `123` to `stringValue.current` because: [incompatible-type]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with null [3].
 
    useRef_hook.js:22:25
    22|   stringValue.current = 123; // Error: number is incompatible with string in property current
@@ -2365,12 +2420,16 @@ References:
    useRef_hook.js:20:32
    20|   const stringValue: {current: string | null} = React.useRef(null);
                                       ^^^^^^ [2]
+   useRef_hook.js:20:41
+   20|   const stringValue: {current: string | null} = React.useRef(null);
+                                               ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:30:51
 
-Cannot call `React.useRef` with `new Bar()` bound to `initialValue` because `Bar` [1] is incompatible with `Foo` [2].
-[incompatible-call]
+Cannot call `React.useRef` with `new Bar()` bound to `initialValue` because: [incompatible-call]
+ - Either `Bar` [1] is incompatible with `Foo` [2].
+ - Or `Bar` [1] is incompatible with null [3].
 
    useRef_hook.js:30:51
    30|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
@@ -2380,6 +2439,9 @@ References:
    useRef_hook.js:30:24
    30|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
                               ^^^ [2]
+   useRef_hook.js:30:30
+   30|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+                                    ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- useState_hook.js:8:2
@@ -2401,17 +2463,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------- useState_hook.js:11:10
 
-Cannot call `setCount` with `true` bound to the first parameter because boolean [1] is incompatible with number [2].
-[incompatible-call]
+Cannot call `setCount` with `true` bound to the first parameter because: [incompatible-call]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with function type [3].
 
    useState_hook.js:11:10
-   11| setCount(true); // Error: boolean is incompatible with number
-                ^^^^ [1]
+    11| setCount(true); // Error: boolean is incompatible with number
+                 ^^^^ [1]
 
 References:
    useState_hook.js:5:42
-    5| const [count, setCount] = React.useState<number>(1);
-                                                ^^^^^^ [2]
+     5| const [count, setCount] = React.useState<number>(1);
+                                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:313:52
+   313|   declare export type ReactSetStateFunction<S> = ((S => S) | S) => void;
+                                                           ^^^^^^ [3]
 
 
 

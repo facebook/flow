@@ -226,9 +226,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:24
 
-Cannot call `WeakSet` because number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap
-it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface in type argument
-`T`. [incompatible-call]
+Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
+ - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+ - Or number [1] is incompatible with read-only array type [3].
 
    weakset.js:17:24
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -238,13 +239,17 @@ References:
    <BUILTINS>/core.js:1828:26
    1828| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1828:41
+   1828| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:27
 
-Cannot call `WeakSet` because number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap
-it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface in type argument
-`T`. [incompatible-call]
+Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
+ - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+ - Or number [1] is incompatible with read-only array type [3].
 
    weakset.js:17:27
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -254,13 +259,17 @@ References:
    <BUILTINS>/core.js:1828:26
    1828| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1828:41
+   1828| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:17:30
 
-Cannot call `WeakSet` because number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap
-it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface in type argument
-`T`. [incompatible-call]
+Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
+ - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+ - Or number [1] is incompatible with read-only array type [3].
 
    weakset.js:17:30
      17| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -270,13 +279,17 @@ References:
    <BUILTINS>/core.js:1828:26
    1828| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1828:41
+   1828| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:34:15
 
-Cannot call `WeakSet` because number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap
-it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface in type argument
-`T`. [incompatible-call]
+Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
+ - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+ - Or number [1] is incompatible with read-only array type [3].
 
    weakset.js:34:15
      34| let ws5 = new WeakSet(numbers()); // error, must be objects
@@ -289,6 +302,9 @@ References:
    <BUILTINS>/core.js:1828:26
    1828| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1828:41
+   1828| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 

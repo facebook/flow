@@ -719,12 +719,13 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- fun.js:108:11
 
-Cannot create `FunArray` element because array literal [1] is incompatible with `Fn` [2] in array element of property
-`children`. [incompatible-type]
+Cannot create `FunArray` element because in property `children`: [incompatible-type]
+ - Either array literal [1] is incompatible with `Fn` [2] in array element.
+ - Or children array [3] is incompatible with `Fn` [4].
 
    fun.js:108:11
    108| <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    fun.js:108:12
@@ -733,16 +734,20 @@ References:
    fun.js:21:62
     21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                      ^^ [2]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- fun.js:111:11
 
-Cannot create `FunArray` element because array literal [1] is incompatible with `Fn` [2] in array element of property
-`children`. [incompatible-type]
+Cannot create `FunArray` element because in property `children`: [incompatible-type]
+ - Either array literal [1] is incompatible with `Fn` [2] in array element.
+ - Or children array [3] is incompatible with `Fn` [4].
 
    fun.js:111:11
    111| <FunArray>{[() => 42, () => 42]}{() => 42}</FunArray>;
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    fun.js:111:12
@@ -751,6 +756,9 @@ References:
    fun.js:21:62
     21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                      ^^ [2]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:134:2
@@ -905,8 +913,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- fun.js:142:11
 
-Cannot create `FunArray` element because a call signature declaring the expected parameter / return type is missing in
-`React.Element` [1] but exists in `Fn` [2] in property `children`. [incompatible-type]
+Cannot create `FunArray` element because in property `children`: [incompatible-type]
+ - Either a call signature declaring the expected parameter / return type is missing in `React.Element` [1] but exists
+   in `Fn` [2].
+ - Or `React.Element` [1] is incompatible with array type [3].
 
    fun.js:142:11
    142| <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.
@@ -916,6 +926,9 @@ References:
    fun.js:21:51
     21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                           ^^ [2]
+   fun.js:21:56
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:7:6
@@ -1012,12 +1025,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:67:9
 
-Cannot create `TabBar` element because `NotTab` [1] is incompatible with `Tab` [2] in property `type` of property
-`children`. [incompatible-type]
+Cannot create `TabBar` element because in property `children`: [incompatible-type]
+ - Either `NotTab` [1] is incompatible with `Tab` [2] in property `type`.
+ - Or `React.Element` [3] is incompatible with array type [4].
 
    tabs.js:67:9
    67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-               ^^^^^^^^^
+               ^^^^^^^^^ [3]
 
 References:
    tabs.js:11:7
@@ -1026,16 +1040,20 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
+   tabs.js:18:5
+   18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
+           ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:68:9
 
-Cannot create `TabBar` element because `NotTab` [1] is incompatible with `Tab` [2] in property `type` of property
-`children` of array element. [incompatible-type]
+Cannot create `TabBar` element because in property `children`: [incompatible-type]
+ - Either `NotTab` [1] is incompatible with `Tab` [2] in property `type` of array element.
+ - Or children array [3] is incompatible with `React.Element` [4].
 
    tabs.js:68:9
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-               ^^^^^^^^^^^^^^^^^^
+               ^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    tabs.js:11:7
@@ -1044,12 +1062,16 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
+   tabs.js:17:5
+   17|   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:71:9
 
-Cannot create `TabBar` element because `NotTab` [1] is incompatible with `Tab` [2] in property `type` of property
-`children` of array element. [incompatible-type]
+Cannot create `TabBar` element because in property `children`: [incompatible-type]
+ - Either `NotTab` [1] is incompatible with `Tab` [2] in property `type` of array element.
+ - Or children array [3] is incompatible with `React.Element` [4].
 
    tabs.js:71:9
                v
@@ -1059,7 +1081,7 @@ Cannot create `TabBar` element because `NotTab` [1] is incompatible with `Tab` [
    74|   <Tab/>
    75|   <Tab/>
    76| </TabBar>;
-       ^
+       ^ [3]
 
 References:
    tabs.js:11:7
@@ -1068,6 +1090,9 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
+   tabs.js:17:5
+   17|   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ text.js:9:2
@@ -1525,8 +1550,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- view.js:32:4
 
-Cannot create `View` element because property `a` is missing in `React.Element` [1] but exists in object literal [2] in
-property `children`. [incompatible-type]
+Cannot create `View` element because in property `children`: [incompatible-type]
+ - Either property `a` is missing in `React.Element` [1] but exists in object literal [2].
+ - Or object literal [2] is incompatible with array type [3].
 
    view.js:32:4
    32|   {{a: 1, b: 2, c: 3}}
@@ -1536,12 +1562,16 @@ References:
    view.js:9:5
     9|   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ [1]
+   view.js:10:5
+   10|   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:35:7
 
-Cannot create `View` element because JSX text [1] is incompatible with boolean [2] in property `children`.
-[incompatible-type]
+Cannot create `View` element because in property `children`: [incompatible-type]
+ - Either JSX text [1] is incompatible with boolean [2].
+ - Or JSX text [1] is incompatible with `React.Element` [3].
 
    view.js:35:7
    35| <View>Hello, world!</View>; // Error: Strings are not allowed as children.
@@ -1551,12 +1581,16 @@ References:
    view.js:8:5
     8|   | boolean
            ^^^^^^^ [2]
+   view.js:9:5
+    9|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:36:8
 
-Cannot create `View` element because string [1] is incompatible with boolean [2] in property `children`.
-[incompatible-type]
+Cannot create `View` element because in property `children`: [incompatible-type]
+ - Either string [1] is incompatible with boolean [2].
+ - Or string [1] is incompatible with `React.Element` [3].
 
    view.js:36:8
    36| <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
@@ -1566,12 +1600,16 @@ References:
    view.js:8:5
     8|   | boolean
            ^^^^^^^ [2]
+   view.js:9:5
+    9|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:37:8
 
-Cannot create `View` element because number [1] is incompatible with boolean [2] in property `children`.
-[incompatible-type]
+Cannot create `View` element because in property `children`: [incompatible-type]
+ - Either number [1] is incompatible with boolean [2].
+ - Or number [1] is incompatible with `React.Element` [3].
 
    view.js:37:8
    37| <View>{42}</View>; // Error: Numbers are not allowed as children.
@@ -1581,6 +1619,9 @@ References:
    view.js:8:5
     8|   | boolean
            ^^^^^^^ [2]
+   view.js:9:5
+    9|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:38:7
@@ -1607,8 +1648,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- view.js:39:8
 
-Cannot create `View` element because string [1] is incompatible with boolean [2] in property `children` of array
-element. [incompatible-type]
+Cannot create `View` element because in property `children`: [incompatible-type]
+ - Either string [1] is incompatible with boolean [2] in array element.
+ - Or string [1] is incompatible with `React.Element` [3] in array element.
 
    view.js:39:8
    39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
@@ -1621,12 +1663,16 @@ References:
    view.js:8:5
     8|   | boolean
            ^^^^^^^ [2]
+   view.js:9:5
+    9|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:40:8
 
-Cannot create `View` element because number [1] is incompatible with boolean [2] in property `children` of array
-element. [incompatible-type]
+Cannot create `View` element because in property `children`: [incompatible-type]
+ - Either number [1] is incompatible with boolean [2] in array element.
+ - Or number [1] is incompatible with `React.Element` [3] in array element.
 
    view.js:40:8
    40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
@@ -1639,6 +1685,9 @@ References:
    view.js:8:5
     8|   | boolean
            ^^^^^^^ [2]
+   view.js:9:5
+    9|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [3]
 
 
 

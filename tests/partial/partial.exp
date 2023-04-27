@@ -146,9 +146,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:17
 
-Cannot assign `a` to `p3` because undefined [1] is incompatible with string [1] in property `x`. This property is
-invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `a` to `p3` because: [incompatible-type]
+ - Either undefined [1] is incompatible with string [1] in property `x`. This property is invariantly typed. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+ - Or `Foo` [2] is incompatible with null or undefined [3].
 
    test.js:25:17
    25| let p3 : PFoo = a; // error
@@ -158,11 +159,19 @@ References:
    test.js:1:19
     1| type Foo = {| x : string, y : string |};
                          ^^^^^^ [1]
+   test.js:2:9
+    2| let a : Foo = {x : "", y : ""};
+               ^^^ [2]
+   test.js:22:21
+   22| type PFoo = Partial<?Foo>;
+                           ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:17
 
-Cannot assign `3` to `p6` because number [1] is incompatible with `PFoo` [2]. [incompatible-type]
+Cannot assign `3` to `p6` because: [incompatible-type]
+ - Either number [1] is incompatible with `PFoo` [2].
+ - Or number [1] is incompatible with null or undefined [2].
 
    test.js:28:17
    28| let p6 : PFoo = 3; // error

@@ -34,7 +34,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:32:2
 
-Cannot cast `0` to `S4` because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `0` to `S4` because: [incompatible-cast]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `R` [3].
 
    main.js:32:2
    32| (0: S4); // error number ~> string
@@ -44,6 +46,9 @@ References:
    recursive_types.js:10:17
    10| export type S = string | R; // okay
                        ^^^^^^ [2]
+   recursive_types.js:10:26
+   10| export type S = string | R; // okay
+                                ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:33:2

@@ -198,8 +198,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:31:3
 
-Cannot create `AcceptsWhatever` element because string [1] is incompatible with number [2] in the return value.
-[incompatible-use]
+Cannot create `AcceptsWhatever` element because: [incompatible-use]
+ - Either string [1] is incompatible with number [2] in the return value.
+ - Or props [3] is incompatible with null [4].
 
    jsx.js:31:3
    31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
@@ -212,12 +213,19 @@ References:
    jsx.js:31:53
    31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
                                                            ^^^^^^ [2]
+   jsx.js:31:2
+   31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   jsx.js:13:10
+   13|   props: null,
+                ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:34:3
 
-Cannot create `ExpectsProps` element because property `name` is missing in object type [1] but exists in object type [2]
-in the first parameter. [incompatible-use]
+Cannot create `ExpectsProps` element because: [incompatible-use]
+ - Either property `name` is missing in object type [1] but exists in object type [2] in the first parameter.
+ - Or null [3] is incompatible with object type [2].
 
    jsx.js:34:3
    34| (<ExpectsProps />); // Error - missing prop
@@ -230,12 +238,16 @@ References:
    jsx.js:33:38
    33| declare function ExpectsProps(props: { name: string }, children: any): string;
                                             ^^^^^^^^^^^^^^^^ [2]
+   jsx.js:34:2
+   34| (<ExpectsProps />); // Error - missing prop
+        ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:35:3
 
-Cannot create `ExpectsProps` element because string [1] is incompatible with number [2] in the return value.
-[incompatible-use]
+Cannot create `ExpectsProps` element because: [incompatible-use]
+ - Either string [1] is incompatible with number [2] in the return value.
+ - Or props [3] is incompatible with null [4].
 
    jsx.js:35:3
    35| (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
@@ -248,6 +260,12 @@ References:
    jsx.js:35:47
    35| (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
                                                      ^^^^^^ [2]
+   jsx.js:35:2
+   35| (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   jsx.js:13:10
+   13|   props: null,
+                ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:38:3

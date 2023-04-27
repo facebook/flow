@@ -1,6 +1,8 @@
 Error ------------------------------------------------------------------------------------------------ recursive.js:15:2
 
-Cannot cast function to `Value` because function [1] is incompatible with indexed `Aggregate` [2]. [incompatible-cast]
+Cannot cast function to `Value` because: [incompatible-cast]
+ - Either function [1] is incompatible with indexed `Aggregate` [2].
+ - Or function [1] is incompatible with string [3].
 
    recursive.js:15:2
    15| (() => {}: Value);
@@ -10,6 +12,9 @@ References:
    recursive.js:8:5
     8|   | Aggregate 
            ^^^^^^^^^ [2]
+   recursive.js:7:5
+    7|   | string
+           ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2

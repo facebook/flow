@@ -517,7 +517,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:44:12
 
-Cannot return `g` because undefined [1] is incompatible with boolean [2] in the first parameter. [incompatible-return]
+Cannot return `g` because: [incompatible-return]
+ - Either undefined [1] is incompatible with boolean [2] in the first parameter.
+ - Or function [3] is incompatible with `X` [4].
 
    misc.js:44:12
    44|     return g;
@@ -530,6 +532,12 @@ References:
    misc.js:40:30
    40|   function g<X>(x: X): X | ((boolean, number) => void) {
                                     ^^^^^^^ [2]
+   misc.js:40:3
+   40|   function g<X>(x: X): X | ((boolean, number) => void) {
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   misc.js:40:24
+   40|   function g<X>(x: X): X | ((boolean, number) => void) {
+                              ^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:53:5

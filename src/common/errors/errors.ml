@@ -354,7 +354,12 @@ module Friendly = struct
                * messages. We are now hiding some messages. *)
               score > high_score
             then
-              (score, hidden_branches || acc <> [], [(acc_frames, acc_explanations, error)])
+              let hidden_branches =
+                match acc with
+                | hidden_branch :: _ -> Some (high_score, hidden_branch)
+                | [] -> None
+              in
+              (score, hidden_branches, [(acc_frames, acc_explanations, error)])
             (* If this message has the same score as our high score then add
              * it to acc and keep our high score. *)
             else if score = high_score then
@@ -362,7 +367,15 @@ module Friendly = struct
             (* If this message has a lower score then our high score we skip
              * the error. We are now hiding at least one message. *)
             else
-              (high_score, true, acc)
+              let hidden_branches =
+                match hidden_branches with
+                | None -> Some (score, (acc_frames, acc_explanations, error))
+                (* Keep one hidden branch with the higher score. *)
+                | Some (hidden_branch_score, _) when score > hidden_branch_score ->
+                  Some (score, (acc_frames, acc_explanations, error))
+                | _ -> hidden_branches
+              in
+              (high_score, hidden_branches, acc)
           in
           (* Recurse... *)
           flatten_speculation_branches
@@ -467,11 +480,19 @@ module Friendly = struct
           flatten_speculation_branches
             ~show_all_branches
             ~high_score:min_int
-            ~hidden_branches:false
+            ~hidden_branches:None
             []
             []
             []
             branches
+        in
+        (* If there is only one branch in acc and we have a hidden branch,
+         * show that hidden branch as well. If we improve our scoring logic
+         * we can remove this. *)
+        let speculation_errors_rev =
+          match (hidden_branches, speculation_errors_rev) with
+          | (Some (_, hidden_branch), [acc]) -> [acc; hidden_branch]
+          | _ -> speculation_errors_rev
         in
         (match speculation_errors_rev with
         (* When there is only one branch in acc (we had one branch with a
@@ -602,7 +623,7 @@ module Friendly = struct
           ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
-    loop ~hidden_branches:false [] []
+    loop ~hidden_branches:None [] []
 
   let extract_references_message_intermediate ~next_id ~loc_to_id ~id_to_loc ~message =
     let (next_id, loc_to_id, id_to_loc, message) =
@@ -2854,7 +2875,10 @@ module Cli_output = struct
      * render a trace. *)
     Friendly.(
       let (primary_loc, { group_message; group_message_list; group_message_post }) =
-        check (message_group_of_error ~show_all_branches ~show_root:true ~show_code:true error)
+        let (hidden_branches, loc, err) =
+          message_group_of_error ~show_all_branches ~show_root:true ~show_code:true error
+        in
+        check (Option.is_some hidden_branches, loc, err)
       in
       get_pretty_printed_friendly_error_group
         ~stdin_file

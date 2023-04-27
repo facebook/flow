@@ -115,10 +115,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:21:43
 
-Cannot assign `a.getAll(...)` to `a2` because number [1] is incompatible with string [2] in array element. Arrays are
-invariantly typed. See
+Cannot assign `a.getAll(...)` to `a2` because in array element: [incompatible-type]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `File` [3].
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    FormData.js:21:43
     21| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
@@ -131,14 +133,19 @@ References:
    <BUILTINS>/bom.js:577:27
    577| type FormDataEntryValue = string | File
                                   ^^^^^^ [2]
+   <BUILTINS>/bom.js:577:36
+   577| type FormDataEntryValue = string | File
+                                           ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:22:41
 
-Cannot assign `a.getAll(...)` to `a3` because `Blob` [1] is incompatible with `File` [2] in array element. Arrays are
-invariantly typed. See
+Cannot assign `a.getAll(...)` to `a3` because in array element: [incompatible-type]
+ - Either `Blob` [1] is incompatible with `File` [2].
+ - Or `Blob` [1] is incompatible with string [3].
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    FormData.js:22:41
     22| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
@@ -151,6 +158,9 @@ References:
    <BUILTINS>/bom.js:577:36
    577| type FormDataEntryValue = string | File
                                            ^^^^ [2]
+   <BUILTINS>/bom.js:577:27
+   577| type FormDataEntryValue = string | File
+                                  ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:23:10
@@ -261,7 +271,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:35:3
 
-Cannot call `a.set` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `a.set` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or `Blob` [3] is incompatible with `File` [4].
 
    FormData.js:35:3
     35| a.set('bar', new Blob, 2) // incorrect
@@ -274,6 +286,12 @@ References:
    <BUILTINS>/bom.js:587:47
    587|     set(name: string, value: Blob, filename?: string): void;
                                                       ^^^^^^ [2]
+   FormData.js:35:14
+    35| a.set('bar', new Blob, 2) // incorrect
+                     ^^^^^^^^ [3]
+   <BUILTINS>/bom.js:588:30
+   588|     set(name: string, value: File, filename?: string): void;
+                                     ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:39:3
@@ -370,7 +388,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- FormData.js:48:3
 
-Cannot call `a.append` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `a.append` because: [incompatible-call]
+ - Either number [1] is incompatible with string [2].
+ - Or `Blob` [3] is incompatible with `File` [4].
 
    FormData.js:48:3
     48| a.append('bar', new Blob, 2) // incorrect
@@ -383,6 +403,12 @@ References:
    <BUILTINS>/bom.js:591:50
    591|     append(name: string, value: Blob, filename?: string): void;
                                                          ^^^^^^ [2]
+   FormData.js:48:17
+    48| a.append('bar', new Blob, 2) // incorrect
+                        ^^^^^^^^ [3]
+   <BUILTINS>/bom.js:592:33
+   592|     append(name: string, value: File, filename?: string): void;
+                                        ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:52:10
@@ -418,8 +444,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:64:52
 
-Cannot assign for-of element to destructuring because `Blob` [1] is incompatible with `File` [2] in index 1.
-[incompatible-type]
+Cannot assign for-of element to destructuring because in index 1: [incompatible-type]
+ - Either `Blob` [1] is incompatible with `File` [2].
+ - Or `Blob` [1] is incompatible with string [3].
 
    FormData.js:64:52
     64| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
@@ -432,6 +459,9 @@ References:
    <BUILTINS>/bom.js:577:36
    577| type FormDataEntryValue = string | File
                                            ^^^^ [2]
+   <BUILTINS>/bom.js:577:27
+   577| type FormDataEntryValue = string | File
+                                  ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:65:38
@@ -508,8 +538,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
 
-Cannot assign for-of element to destructuring because number [1] is incompatible with string [2] in index 1.
-[incompatible-type]
+Cannot assign for-of element to destructuring because in index 1: [incompatible-type]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `File` [3].
 
    FormData.js:66:38
     66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
@@ -522,6 +553,9 @@ References:
    <BUILTINS>/bom.js:577:27
    577| type FormDataEntryValue = string | File
                                   ^^^^^^ [2]
+   <BUILTINS>/bom.js:577:36
+   577| type FormDataEntryValue = string | File
+                                           ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
@@ -580,8 +614,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
 
-Cannot assign for-of element to destructuring because number [1] is incompatible with string [2] in index 1.
-[incompatible-type]
+Cannot assign for-of element to destructuring because in index 1: [incompatible-type]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with `File` [3].
 
    FormData.js:67:38
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
@@ -594,6 +629,9 @@ References:
    <BUILTINS>/bom.js:577:27
    577| type FormDataEntryValue = string | File
                                   ^^^^^^ [2]
+   <BUILTINS>/bom.js:577:36
+   577| type FormDataEntryValue = string | File
+                                           ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- Headers.js:8:19

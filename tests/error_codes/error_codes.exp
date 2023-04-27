@@ -262,8 +262,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:119:2
 
-Cannot cast `any` to object type because property `bar` is missing in object type [1] but exists in object type [2].
-[incompatible-cast]
+Cannot cast `any` to object type because: [incompatible-cast]
+ - Either property `bar` is missing in object type [1] but exists in object type [2].
+ - Or number [3] is incompatible with object type [2].
 
    test.js:119:2
    119| ((any: {} & number): {bar:string}); // error
@@ -276,12 +277,16 @@ References:
    test.js:119:22
    119| ((any: {} & number): {bar:string}); // error
                              ^^^^^^^^^^^^ [2]
+   test.js:119:13
+   119| ((any: {} & number): {bar:string}); // error
+                    ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:128:2
 
-Cannot cast `any` to object type because property `bar` is missing in object type [1] but exists in object type [2].
-[incompatible-cast]
+Cannot cast `any` to object type because: [incompatible-cast]
+ - Either property `bar` is missing in object type [1] but exists in object type [2].
+ - Or number [3] is incompatible with object type [2].
 
    test.js:128:2
    128| ((any: {} & number): {bar:string});  // error + unused suppression
@@ -294,12 +299,16 @@ References:
    test.js:128:22
    128| ((any: {} & number): {bar:string});  // error + unused suppression
                              ^^^^^^^^^^^^ [2]
+   test.js:128:13
+   128| ((any: {} & number): {bar:string});  // error + unused suppression
+                    ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:131:2
 
-Cannot cast `any` to object type because property `bar` is missing in object type [1] but exists in object type [2].
-[incompatible-cast]
+Cannot cast `any` to object type because: [incompatible-cast]
+ - Either property `bar` is missing in object type [1] but exists in object type [2].
+ - Or number [3] is incompatible with object type [2].
 
    test.js:131:2
    131| ((any: {} & number): {bar:string});  // error + unused suppression
@@ -312,6 +321,9 @@ References:
    test.js:131:22
    131| ((any: {} & number): {bar:string});  // error + unused suppression
                              ^^^^^^^^^^^^ [2]
+   test.js:131:13
+   131| ((any: {} & number): {bar:string});  // error + unused suppression
+                    ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:135:1

@@ -3630,8 +3630,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:36:26
 
-Cannot assign `a?.a` to `b` because undefined (result of null short-circuiting an optional chain) [1] is incompatible
-with null [2]. [incompatible-type]
+Cannot assign `a?.a` to `b` because: [incompatible-type]
+ - Either undefined (result of null short-circuiting an optional chain) [1] is incompatible with null [2].
+ - Or undefined (result of null short-circuiting an optional chain) [1] is incompatible with string [3].
 
    static_members.js:36:26
    36| const b: string | null = a?.a;
@@ -3644,11 +3645,16 @@ References:
    static_members.js:36:19
    36| const b: string | null = a?.a;
                          ^^^^ [2]
+   static_members.js:36:10
+   36| const b: string | null = a?.a;
+                ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ static_members.js:38:26
 
-Cannot assign `c?.c` to `d` because null or undefined [1] is incompatible with null [2]. [incompatible-type]
+Cannot assign `c?.c` to `d` because: [incompatible-type]
+ - Either null or undefined [1] is incompatible with null [2].
+ - Or null or undefined [1] is incompatible with string [3].
 
    static_members.js:38:26
    38| const d: string | null = c?.c;
@@ -3661,6 +3667,9 @@ References:
    static_members.js:38:19
    38| const d: string | null = c?.c;
                          ^^^^ [2]
+   static_members.js:38:10
+   38| const d: string | null = c?.c;
+                ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ super_call.js:4:6

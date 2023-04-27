@@ -65,12 +65,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- headers.js:4:23
 
-Cannot call `Headers` with array literal bound to `init` because string [1] is incompatible with tuple type [2] in array
-element. [incompatible-call]
+Cannot call `Headers` with array literal bound to `init` because: [incompatible-call]
+ - Either string [1] is incompatible with tuple type [2] in array element.
+ - Or array literal [3] is incompatible with object type [4].
 
    headers.js:4:23
       4| const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    headers.js:4:24
@@ -79,6 +80,9 @@ References:
    <BUILTINS>/bom.js:1510:36
    1510| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
                                             ^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/bom.js:1510:56
+   1510| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- headers.js:9:3
@@ -542,8 +546,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- request.js:24:10
 
-Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first parameter.
-[incompatible-call]
+Cannot call `h.text().then` because: [incompatible-call]
+ - Either `Buffer` [1] is incompatible with string [2] in the first parameter.
+ - Or function [3] is incompatible with literal union [4].
 
    request.js:24:10
      24| h.text().then((t: Buffer) => t); // incorrect
@@ -556,12 +561,19 @@ References:
    <BUILTINS>/bom.js:1633:21
    1633|     text(): Promise<string>;
                              ^^^^^^ [2]
+   request.js:24:15
+     24| h.text().then((t: Buffer) => t); // incorrect
+                       ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1861:18
+   1861|       onFulfill: null | void,
+                          ^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- request.js:26:17
 
-Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first parameter.
-[incompatible-call]
+Cannot call `h.arrayBuffer().then` because: [incompatible-call]
+ - Either `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first parameter.
+ - Or function [3] is incompatible with literal union [4].
 
    request.js:26:17
      26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
@@ -574,6 +586,12 @@ References:
    request.js:26:27
      26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                                    ^^^^^^ [2]
+   request.js:26:22
+     26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
+                              ^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1861:18
+   1861|       onFulfill: null | void,
+                          ^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- request.js:56:12
@@ -722,8 +740,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ response.js:42:10
 
-Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first parameter.
-[incompatible-call]
+Cannot call `h.text().then` because: [incompatible-call]
+ - Either `Buffer` [1] is incompatible with string [2] in the first parameter.
+ - Or function [3] is incompatible with literal union [4].
 
    response.js:42:10
      42| h.text().then((t: Buffer) => t); // incorrect
@@ -736,12 +755,19 @@ References:
    <BUILTINS>/bom.js:1606:21
    1606|     text(): Promise<string>;
                              ^^^^^^ [2]
+   response.js:42:15
+     42| h.text().then((t: Buffer) => t); // incorrect
+                       ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1861:18
+   1861|       onFulfill: null | void,
+                          ^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ response.js:44:17
 
-Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first parameter.
-[incompatible-call]
+Cannot call `h.arrayBuffer().then` because: [incompatible-call]
+ - Either `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first parameter.
+ - Or function [3] is incompatible with literal union [4].
 
    response.js:44:17
      44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
@@ -754,16 +780,23 @@ References:
    response.js:44:27
      44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                                    ^^^^^^ [2]
+   response.js:44:22
+     44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
+                              ^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1861:18
+   1861|       onFulfill: null | void,
+                          ^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ urlsearchparams.js:4:31
 
-Cannot call `URLSearchParams` with array literal bound to `query` because string [1] is incompatible with tuple type [2]
-in array element. [incompatible-call]
+Cannot call `URLSearchParams` with array literal bound to `query` because: [incompatible-call]
+ - Either string [1] is incompatible with tuple type [2] in array element.
+ - Or array literal [3] is incompatible with object type [4].
 
    urlsearchparams.js:4:31
       4| const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                       ^^^^^^^^^^^^^^^^^^
+                                       ^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    urlsearchparams.js:4:32
@@ -772,6 +805,9 @@ References:
    <BUILTINS>/bom.js:1531:58
    1531|     constructor(query?: string | URLSearchParams | Array<[string, string]> | { [string]: string, ... } ): void;
                                                                   ^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/bom.js:1531:78
+   1531|     constructor(query?: string | URLSearchParams | Array<[string, string]> | { [string]: string, ... } ): void;
+                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- urlsearchparams.js:9:3
