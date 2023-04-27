@@ -1141,7 +1141,6 @@ let utility_types =
     "$PropertyType";
     "$ReadOnly";
     "$Rest";
-    "$Shape";
     "$TupleMap";
     "$Values";
   ]
