@@ -95,6 +95,15 @@ function MyComponent({ children }: { children: React.Node }) {
 All `react-dom` JSX intrinsics have `React.Node` as their children type.
 `<div>`, `<span>`, and all the rest.
 
+## `React.MixedElement` {#toc-react-mixedelement}
+
+The most general type of all React elements (similar to `mixed` for all values). `React.MixedElement` is defined as
+`React.Element<React.ElementType>`.
+
+A common use case of this type is when we want to annotate an element with a type that hides the element details. For example
+```js
+const element: React.MixedElement = <div />;
+```
 
 ## `React.Element<typeof Component>` {#toc-react-element}
 
@@ -186,16 +195,6 @@ The definition for `React.ElementType` is roughly:
 type ElementType =
   | string
   | React.AbstractComponent<empty, mixed>;
-```
-
-## `React.MixedElement` {#toc-react-mixedelement}
-
-The most general type of all React elements (similar to `mixed` for all values). `React.MixedElement` is defined as
-`React.Element<React.ElementType>`.
-
-A common use case of this type is when we want to annotate an element with a type that hides the element details. For example
-```js
-const element: React.MixedElement = <div />;
 ```
 
 ## `React.Key` {#toc-react-key}
