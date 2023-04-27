@@ -1637,7 +1637,7 @@ struct
         | (UnionT _, StrictEqT { reason; cond_context; flip; arg })
           when needs_resolution arg || is_generic arg ->
           rec_flow cx trace (arg, StrictEqT { reason; cond_context; flip = not flip; arg = l })
-        | (UnionT (r, rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result)) ->
+        | (UnionT (r, rep), SentinelPropTestT (_reason, l, sense, sentinel, result)) ->
           (* we have the check l.key === sentinel where l.key is a union *)
           if sense then
             match sentinel with
@@ -4744,8 +4744,9 @@ struct
         (**************************************)
         | (_, PredicateT (p, t)) -> predicate cx trace t l p
         | (_, GuardT (pred, result, sink)) -> guard cx trace l pred result sink
-        | (_, SentinelPropTestT (reason, obj, key, sense, enum, result)) ->
-          sentinel_refinement cx trace l reason obj key sense enum result
+        | (_, SentinelPropTestT (reason, obj, sense, enum, result)) ->
+          let t = Type_filter.sentinel_refinement l reason obj sense enum in
+          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT result)
         (*********************)
         (* functions statics *)
         (*********************)
@@ -7840,7 +7841,7 @@ struct
             let desc = RMatchingProp (key, desc_of_sentinel sentinel) in
             replace_desc_reason desc (fst result)
           in
-          let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in
+          let test = SentinelPropTestT (reason, orig_obj, sense, sentinel, result) in
           rec_flow cx trace (t, test)
         | None ->
           let reason_obj = reason_of_t obj in
@@ -7902,7 +7903,7 @@ struct
           let test =
             let desc = RMatchingProp (key, desc_of_sentinel s) in
             let r = replace_desc_reason desc (fst result) in
-            SentinelPropTestT (r, orig_obj, key, sense, s, result)
+            SentinelPropTestT (r, orig_obj, sense, s, result)
           in
           rec_flow cx trace (tuple_length reason trust arity, test)
         | IntersectionT (_, rep) ->
@@ -7929,57 +7930,6 @@ struct
       | None ->
         (* not enough info to refine *)
         rec_flow_t cx trace ~use_op:unknown_use (orig_obj, OpenT result)
-
-  and sentinel_refinement =
-    let open UnionEnum in
-    let enum_match sense = function
-      | (DefT (_, _, StrT (Literal (_, value))), Str sentinel) when value = sentinel != sense ->
-        true
-      | (DefT (_, _, NumT (Literal (_, (value, _)))), Num sentinel) when value = sentinel != sense
-        ->
-        true
-      | (DefT (_, _, BoolT (Some value)), Bool sentinel) when value = sentinel != sense -> true
-      | (DefT (_, _, BigIntT (Literal (_, (value, _)))), BigInt (sentinel, _))
-        when value = sentinel != sense ->
-        true
-      | (DefT (_, _, NullT), Null)
-      | (DefT (_, _, VoidT), Void) ->
-        true
-      | _ -> false
-    in
-    fun cx trace v reason l key sense enum result ->
-      match (v, enum) with
-      | (_, One e) when enum_match sense (v, e) && not sense -> ()
-      | (DefT (_, _, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) -> ()
-      | (DefT (_, _, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) -> ()
-      | (DefT (_, _, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) -> ()
-      | (DefT (_, _, BigIntT _), One (BigInt sentinel)) when enum_match sense (v, BigInt sentinel)
-        ->
-        ()
-      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many enums)
-        when sense ->
-        UnionEnumSet.iter
-          (fun enum ->
-            if enum_match sense (v, enum) |> not then
-              sentinel_refinement cx trace v reason l key sense (One enum) result)
-          enums
-      | (DefT (_, _, StrT _), One (Str _))
-      | (DefT (_, _, NumT _), One (Num _))
-      | (DefT (_, _, BoolT _), One (Bool _))
-      | (DefT (_, _, BigIntT _), One (BigInt _))
-      | (DefT (_, _, NullT), One Null)
-      | (DefT (_, _, VoidT), One Void)
-      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many _) ->
-        rec_flow_t cx trace ~use_op:unknown_use (l, OpenT result)
-      (* types don't match (would've been matched above) *)
-      (* we don't prune other types like objects or instances, even though
-         a test like `if (ObjT === StrT)` seems obviously unreachable, but
-         we have to be wary of toString and valueOf on objects/instances. *)
-      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _) when sense -> ()
-      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _)
-      | _ ->
-        (* property exists, but is not something we can use for refinement *)
-        rec_flow_t cx trace ~use_op:unknown_use (l, OpenT result)
 
   (*******************************************************************)
   (* /predicate *)

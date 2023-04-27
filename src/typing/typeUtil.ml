@@ -128,7 +128,7 @@ and reason_of_use_t = function
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
-  | SentinelPropTestT (_, _, _, _, _, (reason, _)) -> reason
+  | SentinelPropTestT (_, _, _, _, (reason, _)) -> reason
   | SetElemT (_, reason, _, _, _, _) -> reason
   | SetPropT (_, reason, _, _, _, _, _) -> reason
   | SetPrivatePropT (_, reason, _, _, _, _, _, _, _) -> reason
@@ -326,8 +326,8 @@ and mod_reason_of_use_t f = function
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
   | SealGenericT ({ reason; _ } as generic) -> SealGenericT { generic with reason = f reason }
-  | SentinelPropTestT (reason_op, l, key, sense, sentinel, (reason, result)) ->
-    SentinelPropTestT (reason_op, l, key, sense, sentinel, (f reason, result))
+  | SentinelPropTestT (reason_op, l, sense, sentinel, (reason, result)) ->
+    SentinelPropTestT (reason_op, l, sense, sentinel, (f reason, result))
   | SetElemT (use_op, reason, it, mode, et, t) -> SetElemT (use_op, f reason, it, mode, et, t)
   | SetPropT (use_op, reason, n, mode, i, t, tp) -> SetPropT (use_op, f reason, n, mode, i, t, tp)
   | SetPrivatePropT (use_op, reason, n, mode, scopes, static, ctx, t, tp) ->
@@ -503,7 +503,7 @@ let rec util_use_op_of_use_t :
   | PreprocessKitT (_, _)
   | DebugPrintT _
   | DebugSleepT _
-  | SentinelPropTestT (_, _, _, _, _, _)
+  | SentinelPropTestT (_, _, _, _, _)
   | IdxUnwrap (_, _)
   | IdxUnMaybeifyT (_, _)
   | OptionalChainT _

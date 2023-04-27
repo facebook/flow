@@ -4762,7 +4762,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:72:21
 
-Cannot get `x.A` because property `A` is missing in `C` [1]. [prop-missing]
+Cannot get `x.A` because property `A` is missing in object type [1]. [prop-missing]
 
    tagged_union.js:72:21
    72|   default: return x.A; // error, x: C and property A not found in type C

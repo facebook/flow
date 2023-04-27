@@ -725,7 +725,7 @@ module rec TypeTerm : sig
     | PreprocessKitT of reason * intersection_preprocess_tool
     | DebugPrintT of reason
     | DebugSleepT of reason
-    | SentinelPropTestT of reason * t * string * sense * UnionEnum.star * tvar
+    | SentinelPropTestT of reason * t * sense * UnionEnum.star * tvar
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
     | OptionalChainT of {

@@ -505,3 +505,57 @@ let not_array t =
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT)
   | DefT (_, trust, ArrT _) -> DefT (reason_of_t t, trust, EmptyT)
   | _ -> t
+
+let sentinel_refinement =
+  let open UnionEnum in
+  let enum_match sense = function
+    | (DefT (_, _, StrT (Literal (_, value))), Str sentinel) when value = sentinel != sense -> true
+    | (DefT (_, _, NumT (Literal (_, (value, _)))), Num sentinel) when value = sentinel != sense ->
+      true
+    | (DefT (_, _, BoolT (Some value)), Bool sentinel) when value = sentinel != sense -> true
+    | (DefT (_, _, BigIntT (Literal (_, (value, _)))), BigInt (sentinel, _))
+      when value = sentinel != sense ->
+      true
+    | (DefT (_, _, NullT), Null)
+    | (DefT (_, _, VoidT), Void) ->
+      true
+    | _ -> false
+  in
+  fun v reason l sense enum ->
+    let rec loop enum =
+      match (v, enum) with
+      | (_, One e) when enum_match sense (v, e) && not sense -> []
+      | (DefT (_, _, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) -> []
+      | (DefT (_, _, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) -> []
+      | (DefT (_, _, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) -> []
+      | (DefT (_, _, BigIntT _), One (BigInt sentinel)) when enum_match sense (v, BigInt sentinel)
+        ->
+        []
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many enums)
+        when sense ->
+        UnionEnumSet.elements enums
+        |> Base.List.concat_map ~f:(fun enum ->
+               if enum_match sense (v, enum) |> not then
+                 loop (One enum)
+               else
+                 []
+           )
+      | (DefT (_, _, StrT _), One (Str _))
+      | (DefT (_, _, NumT _), One (Num _))
+      | (DefT (_, _, BoolT _), One (Bool _))
+      | (DefT (_, _, BigIntT _), One (BigInt _))
+      | (DefT (_, _, NullT), One Null)
+      | (DefT (_, _, VoidT), One Void)
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many _) ->
+        [l]
+      (* types don't match (would've been matched above) *)
+      (* we don't prune other types like objects or instances, even though
+         a test like `if (ObjT === StrT)` seems obviously unreachable, but
+         we have to be wary of toString and valueOf on objects/instances. *)
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _) when sense -> []
+      | (DefT (_, _, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _)
+      | _ ->
+        (* property exists, but is not something we can use for refinement *)
+        [l]
+    in
+    TypeUtil.union_of_ts reason (loop enum)

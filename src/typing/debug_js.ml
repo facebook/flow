@@ -896,7 +896,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToMultiflowSubtypeFull _
       | ResolveSpreadsToCustomFunCall _ ->
         p ~extra:(string_of_use_op use_op) t)
-    | SentinelPropTestT (_, l, _key, sense, sentinel, result) ->
+    | SentinelPropTestT (_, l, sense, sentinel, result) ->
       p
         ~reason:false
         ~extra:(spf "%s, %b, %s, %s" (kid l) sense (string_of_sentinel sentinel) (tout result))

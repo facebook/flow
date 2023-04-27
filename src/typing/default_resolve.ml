@@ -175,7 +175,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | DebugPrintT _
   | DebugSleepT _ ->
     ()
-  | SentinelPropTestT (_, _, _, _, _, tvar) -> resolve_tvar tvar
+  | SentinelPropTestT (_, _, _, _, tvar) -> resolve_tvar tvar
   | IdxUnwrap (_, t)
   | IdxUnMaybeifyT (_, t) ->
     resolve t
