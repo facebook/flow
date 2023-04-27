@@ -273,14 +273,6 @@ let substituter =
                * were substituted. *)
               let use_op = Base.Option.value use_op ~default:op in
               Flow_cache.Eval.id cx x' (TypeDestructorT (use_op, r, d'))
-          (* We only want to change the EvalT id if the rest of the EvalT actually changed *)
-          | EvalT (t', dt, _id) ->
-            let t'' = self#type_ cx map_cx t' in
-            let dt' = self#defer_use_type cx map_cx dt in
-            if t' == t'' && dt == dt' then
-              t
-            else
-              Flow_cache.Eval.id cx t'' dt'
           | ModuleT _
           | InternalT (ExtendsT _) ->
             failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)

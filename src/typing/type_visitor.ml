@@ -43,7 +43,6 @@ class ['a] t =
         let acc =
           let pole =
             match (defer_use_t, t) with
-            | (LatentPredT _, _) -> pole
             | (TypeDestructorT _, OpenT _) -> P.Neutral
             | (TypeDestructorT _, _) -> P.Positive
           in
@@ -148,7 +147,6 @@ class ['a] t =
 
     method private defer_use_type cx acc =
       function
-      | LatentPredT (_, p) -> self#predicate cx acc p
       | TypeDestructorT (_, _, d) -> self#destructor cx acc d
 
     method private selector cx acc =

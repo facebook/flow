@@ -164,7 +164,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, PolyT { t_out = t; _ }) -> collect_of_type ?log_unresolved cx acc t
   (* TODO: The following kinds of types are not walked out of laziness. It's
      not immediately clear what we'd gain (or lose) by walking them. *)
-  | EvalT _
   | InternalT (ChoiceKitT (_, _))
   | TypeDestructorTriggerT _
   | ModuleT (_, _, _)

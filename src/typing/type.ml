@@ -244,7 +244,6 @@ module rec TypeTerm : sig
   and lazy_hint_t = bool * (reason -> hint_eval_result)
 
   and defer_use_t =
-    | LatentPredT of reason * predicate
     (* destructors that extract parts of various kinds of types *)
     | TypeDestructorT of use_op * reason * destructor
 
@@ -3546,7 +3545,6 @@ end
 
 (* printing *)
 let string_of_defer_use_ctor = function
-  | LatentPredT _ -> "LatentPredT"
   | TypeDestructorT _ -> "TypeDestructorT"
 
 let string_of_def_ctor = function

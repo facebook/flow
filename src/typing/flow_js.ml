@@ -535,10 +535,6 @@ struct
             rec_flow cx trace (result, ReposUseT (reason, false, use_op, l))
           else
             rec_flow cx trace (l, UseT (use_op, result))
-        | (EvalT (t, LatentPredT (reason, p), i), _) ->
-          rec_flow cx trace (eval_latent_pred cx ~trace reason t p i, u)
-        | (_, UseT (use_op, EvalT (t, LatentPredT (reason, p), i))) ->
-          rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
         (******************)
         (* process X ~> Y *)
         (******************)
@@ -6634,19 +6630,8 @@ struct
     in
     lookup_prop cx trace options t reason_prop lreason x (SuperProp (use_op, p))
 
-  and eval_latent_pred cx ?trace reason curr_t p i =
-    let evaluated = Context.evaluated cx in
-    match Eval.Map.find_opt i evaluated with
-    | None ->
-      Tvar.mk_no_wrap_where cx reason (fun tvar ->
-          Context.set_evaluated cx (Eval.Map.add i (OpenT tvar) evaluated);
-          flow_opt cx ?trace (curr_t, RefineT (reason, p, tvar))
-      )
-    | Some it -> it
-
   and eval_evalt cx ?trace t evaluator id =
     match evaluator with
-    | LatentPredT (reason, pred) -> eval_latent_pred cx ?trace reason t pred id
     | TypeDestructorT (use_op, reason, d) ->
       let (_, result) =
         mk_type_destructor

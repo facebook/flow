@@ -330,12 +330,6 @@ class virtual ['a] t =
 
     method defer_use_type cx map_cx t =
       match t with
-      | LatentPredT (r, p) ->
-        let p' = self#predicate cx map_cx p in
-        if p' == p then
-          t
-        else
-          LatentPredT (r, p')
       | TypeDestructorT (u, r, d) ->
         let d' = self#destructor cx map_cx d in
         if d == d' then

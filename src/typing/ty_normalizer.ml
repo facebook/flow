@@ -408,15 +408,6 @@ end = struct
         | _ -> default ~env tout
       else
         non_eval ~env t d
-    | T.LatentPredT _ ->
-      let cx = Env.get_cx env in
-      let evaluated = Context.evaluated cx in
-      let t' =
-        match T.Eval.Map.find_opt id evaluated with
-        | Some evaled_t -> evaled_t
-        | None -> t
-      in
-      cont ~env t'
 
   let type_variable ~env ~(cont : fn_t) id =
     let uses_t =

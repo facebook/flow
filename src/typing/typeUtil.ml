@@ -46,9 +46,7 @@ let rec reason_of_t = function
   | OptionalT { reason; type_ = _; use_desc = _ } -> reason
 
 and reason_of_defer_use_t = function
-  | LatentPredT (reason, _)
-  | TypeDestructorT (_, reason, _) ->
-    reason
+  | TypeDestructorT (_, reason, _) -> reason
 
 and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
@@ -209,7 +207,6 @@ let rec mod_reason_of_t f = function
   | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
 
 and mod_reason_of_defer_use_t f = function
-  | LatentPredT (reason, p) -> LatentPredT (f reason, p)
   | TypeDestructorT (use_op, reason, s) -> TypeDestructorT (use_op, f reason, s)
 
 and mod_reason_of_use_t f = function

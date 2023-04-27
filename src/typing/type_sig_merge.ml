@@ -946,7 +946,7 @@ and merge_annot tps infer_tps file = function
     let base = merge tps infer_tps file base in
     let fn_pred = merge tps infer_tps file fn_pred in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
-    Type.(EvalT (base, LatentPredT (reason, Type.LatentP (fn_pred, index)), id))
+    Type.(EvalT (base, TypeDestructorT (unknown_use, reason, LatentPred (fn_pred, index)), id))
   | Trusted (loc, t) -> begin
     match merge tps infer_tps file t with
     | Type.DefT (r, trust, def_t) ->

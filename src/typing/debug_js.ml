@@ -111,7 +111,6 @@ let rec dump_t_ (depth, tvars) cx t =
   let tvar id = dump_tvar_ (depth - 1, tvars) cx id in
   let defer_use expr t =
     match expr with
-    | LatentPredT (_, p) -> spf "LatentPred %s on %s" (string_of_predicate p) t
     | TypeDestructorT (use_op, _, destructor) ->
       spf "%s, TypeDestruct %s on %s" (string_of_use_op use_op) (string_of_destructor destructor) t
   in
