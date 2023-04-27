@@ -756,11 +756,11 @@ module rec TypeTerm : sig
      *)
     | CallLatentPredT of reason * sense * index * t * tvar
     (*
-     * `RefineT (reason, pred, tvar)` is an instruction to refine an incoming
-     * flow using the predicate `pred`. The result will be stored in `tvar`,
-     * which is expected to be a type variable.
+     * `RefineT (reason, fun_t, i, tvar)` is an instruction to refine an incoming
+     * flow using the predicate of function `fun_t` on the i-th position. The result
+     * will be stored in `tvar`, which is expected to be a type variable.
      *)
-    | RefineT of reason * predicate * tvar
+    | RefineT of reason * t * index * tvar
     (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
      * arguments, etc. Often we have logic that depends on what the spread

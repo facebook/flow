@@ -876,7 +876,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t
     | ReactKitT (use_op, _, tool) ->
       p t ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
-    | RefineT (_, _, (_, tout)) -> p t ~extra:(spf "tout=%s" (tvar tout))
+    | RefineT (_, _, _, (_, tout)) -> p t ~extra:(spf "tout=%s" (tvar tout))
     | ReactPropsToOut (_, props)
     | ReactInToProps (_, props) ->
       p ~extra:(kid props |> spf "%s") t

@@ -701,7 +701,7 @@ struct
         (*****************************)
         (* Refinement type subtyping *)
         (*****************************)
-        | (_, RefineT (reason, LatentP (fun_t, idx), tvar)) ->
+        | (_, RefineT (reason, fun_t, idx, tvar)) ->
           rec_flow cx trace (fun_t, CallLatentPredT (reason, true, idx, l, tvar))
         (*************)
         (* Debugging *)
@@ -6982,7 +6982,7 @@ struct
                   OpenT tout
                 )
             )
-          | LatentPred (fun_t, idx) -> RefineT (reason, LatentP (fun_t, idx), tout)
+          | LatentPred (fun_t, idx) -> RefineT (reason, fun_t, idx, tout)
         )
 
   and eval_keys cx ~trace reason t =
