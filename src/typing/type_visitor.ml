@@ -220,6 +220,7 @@ class ['a] t =
       | TypeMap map -> self#type_map cx acc map
       | MappedType { property_type; mapped_type_flags = _ } ->
         self#type_ cx pole_TODO acc property_type
+      | LatentPred (t, _) -> self#type_ cx pole_TODO acc t
 
     method private custom_fun_kind cx acc =
       function

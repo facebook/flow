@@ -1336,9 +1336,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | ([base_t; fun_pred_t; DefT (_, _, SingletonNumT (f, _))], targs) ->
                 let idx = Base.Int.of_float f in
                 let reason = mk_reason (RCustom "refined type") loc in
-                let pred = LatentP (fun_pred_t, idx) in
                 reconstruct_ast
-                  (EvalT (base_t, LatentPredT (reason, pred), mk_eval_id cx loc))
+                  (EvalT
+                     ( base_t,
+                       TypeDestructorT (unknown_use, reason, LatentPred (fun_pred_t, idx)),
+                       mk_eval_id cx loc
+                     )
+                  )
                   targs
               | _ -> error_type cx loc (Error_message.ERefineAnnot loc) t_ast
           )

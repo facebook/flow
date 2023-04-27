@@ -548,6 +548,12 @@ class virtual ['a] t =
       | ReactElementRefType
       | IdxUnwrapType ->
         t
+      | LatentPred (t_in, i) ->
+        let t_in' = self#type_ cx map_cx t_in in
+        if t_in' == t_in then
+          t
+        else
+          LatentPred (t_in', i)
 
     method object_kit_spread_operand_slice
         cx map_cx ({ Object.Spread.reason; prop_map; dict; generics } as slice) =

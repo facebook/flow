@@ -18,6 +18,26 @@ References:
 
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:14:2
 
+Cannot cast `my_filter(...)` to array type because property `u` is missing in `B` [1] but exists in `A` [2] in array
+element. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[prop-missing]
+
+   sanity-filter-union.js:14:2
+   14| (my_filter(ab, (x: A|B|C|D|E): %checks => x.kind === 'A'): Array<B>);    // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   sanity-filter-union.js:14:66
+   14| (my_filter(ab, (x: A|B|C|D|E): %checks => x.kind === 'A'): Array<B>);    // ERROR
+                                                                        ^ [1]
+   sanity-filter-union.js:12:23
+   12| declare var ab: Array<A|B|C>;
+                             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------- sanity-filter-union.js:14:2
+
 Cannot cast `my_filter(...)` to array type because string literal `A` [1] is incompatible with string literal `B` [2] in
 property `kind` of array element. [incompatible-cast]
 
@@ -36,7 +56,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:15:2
 
-Cannot cast `my_filter(...)` to array type because `B` [1] is incompatible with union type [2] in array element.
+Cannot cast `my_filter(...)` to array type because object type [1] is incompatible with union type [2] in array element.
 [incompatible-cast]
 
    sanity-filter-union.js:15:2
@@ -50,6 +70,26 @@ References:
    sanity-filter-union.js:15:66
    15| (my_filter(ab, (x: A|B|C|D|E): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
                                                                         ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- sanity-filter-union.js:15:2
+
+Cannot cast `my_filter(...)` to array type because `A` [1] is incompatible with union type [2] in array element. Arrays
+are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-cast]
+
+   sanity-filter-union.js:15:2
+   15| (my_filter(ab, (x: A|B|C|D|E): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   sanity-filter-union.js:15:66
+   15| (my_filter(ab, (x: A|B|C|D|E): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                                        ^ [1]
+   sanity-filter-union.js:12:23
+   12| declare var ab: Array<A|B|C>;
+                             ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- sanity-filter.js:6:2
@@ -67,6 +107,26 @@ References:
    sanity-filter.js:6:11
     6| (b: Array<number>);
                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- sanity-filter.js:6:2
+
+Cannot cast `b` to array type because number [1] is incompatible with string [2] in array element. Arrays are
+invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-cast]
+
+   sanity-filter.js:6:2
+    6| (b: Array<number>);
+        ^
+
+References:
+   sanity-filter.js:6:11
+    6| (b: Array<number>);
+                 ^^^^^^ [1]
+   sanity-filter.js:15:10
+   15|   return typeof x === "string";
+                ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- sanity-filter.js:11:24
@@ -188,4 +248,4 @@ References:
 
 
 
-Found 11 errors
+Found 14 errors

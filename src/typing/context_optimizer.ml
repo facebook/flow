@@ -264,6 +264,12 @@ class context_optimizer ~no_lowers =
       | ReactElementRefType
       | IdxUnwrapType ->
         t
+      | LatentPred (t_in, i) ->
+        let t_in' = self#type_ cx map_cx t_in in
+        if t_in' == t_in then
+          t
+        else
+          LatentPred (t_in', i)
 
     method! type_ cx pole t =
       begin

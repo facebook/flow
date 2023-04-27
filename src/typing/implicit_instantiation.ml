@@ -190,7 +190,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | CallType _
       | ConditionalType _
       | TypeMap _
-      | ReactElementRefType ->
+      | ReactElementRefType
+      | LatentPred _ ->
         UpperEmpty
       | ReactElementPropsType
       | ReactElementConfigType ->

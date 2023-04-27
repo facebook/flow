@@ -385,7 +385,8 @@ end = struct
         | ReactElementConfigType
         | ReactElementRefType
         | ReactConfigType _
-        | IdxUnwrapType ->
+        | IdxUnwrapType
+        | LatentPred _ ->
           false)
       )
     | Env.EvaluateAll -> true
@@ -1702,6 +1703,10 @@ end = struct
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
       | T.MappedType { property_type; mapped_type_flags } ->
         mapped_type ~env ty property_type mapped_type_flags
+      | T.LatentPred (p, i) ->
+        let%bind t' = type__ ~env t in
+        let%map p' = type__ ~env p in
+        generic_builtin_t (Reason.OrdinaryName "$Refined") [t'; p'; Ty.NumLit (string_of_int i)]
 
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 

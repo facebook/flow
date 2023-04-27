@@ -706,7 +706,7 @@ struct
         (* Refinement type subtyping *)
         (*****************************)
         | (_, RefineT (reason, LatentP (fun_t, idx), tvar)) ->
-          flow cx (fun_t, CallLatentPredT (reason, true, idx, l, tvar))
+          rec_flow cx trace (fun_t, CallLatentPredT (reason, true, idx, l, tvar))
         (*************)
         (* Debugging *)
         (*************)
@@ -5671,7 +5671,8 @@ struct
     | SealGenericT _
     | ResolveUnionT _
     | EnumCastT _
-    | ArithT _ ->
+    | ArithT _
+    | RefineT _ ->
       false
     | BecomeT { empty_success; _ } -> empty_success
     | _ -> true
@@ -6996,6 +6997,7 @@ struct
                   OpenT tout
                 )
             )
+          | LatentPred (fun_t, idx) -> RefineT (reason, LatentP (fun_t, idx), tout)
         )
 
   and eval_keys cx ~trace reason t =

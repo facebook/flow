@@ -1402,6 +1402,7 @@ module rec TypeTerm : sig
         property_type: t;
         mapped_type_flags: mapped_type_flags;
       }
+    | LatentPred of t * index
 
   and mapped_type_optionality =
     | MakeOptional
