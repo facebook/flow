@@ -375,20 +375,6 @@ end = struct
           sym_def_loc;
         }
       | s -> s
-
-    (* debug *)
-    let dump x =
-      let { index; use_mode; remote; _ } = x in
-      let use_mode_str =
-        match use_mode with
-        | ValueUseMode -> "value"
-        | TypeUseMode -> "type"
-      in
-      Utils_js.spf
-        "(symbol: '%s', use_mode: %s, index: %d)"
-        (Ty_debug.dump_symbol remote)
-        use_mode_str
-        index
   end
 
   (* Mapping from imported names to lists of imports (ImportInfo). Here we hold
@@ -439,17 +425,6 @@ end = struct
 
     let fold f x acc =
       NameUtils.Map.fold (fun _ lst a -> Nel.fold_left (fun b y -> f y b) a lst) x acc
-
-    (* debug *)
-    let _dump m =
-      NameUtils.Map.bindings m
-      |> List.map (fun (k, v) ->
-             Utils_js.spf
-               "'%s' ->\n%s\n"
-               (Reason.display_string_of_name k)
-               (Nel.map ImportInfo.dump v |> Nel.to_list |> String.concat "\n")
-         )
-      |> String.concat "\n"
   end
 
   module SymbolWithUseModeMap = WrappedMap.Make (struct

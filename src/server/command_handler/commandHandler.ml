@@ -441,14 +441,39 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
         )
   )
 
-type infer_type_input = {
-  file_input: File_input.t;
-  query_position: Loc.position;
-  verbose: Verbose.t option;
-  omit_targ_defaults: bool;
-  verbose_normalizer: bool;
-  max_depth: int;
-}
+let infer_type_to_response
+    ~reader ~json ~expanded ~exact_by_default ~strip_root loc documentation tys =
+  let module Ty_debug = Ty_debug.Make (struct
+    let aloc_to_loc = Some (Parsing_heaps.Reader.loc_of_aloc ~reader)
+  end) in
+  let tys =
+    if json then
+      let open Hh_json in
+      let type_json t =
+        let json_obj =
+          [("type", JSON_String (Ty_printer.string_of_elt_single_line ~exact_by_default t))]
+        in
+        let json_obj =
+          if expanded then
+            ("expanded", Ty_debug.json_of_elt ~strip_root t) :: json_obj
+          else
+            json_obj
+        in
+        JSON_Object json_obj
+      in
+      let json =
+        match tys with
+        | Some { Ty.unevaluated; evaluated } ->
+          let evaluated = Base.Option.value_map evaluated ~default:JSON_Null ~f:type_json in
+          JSON_Object [("unevaluated", type_json unevaluated); ("evaluated", evaluated)]
+        | None -> JSON_Null
+      in
+      ServerProt.Response.Infer_type_JSON json
+    else
+      ServerProt.Response.Infer_type_string
+        (Base.Option.map tys ~f:(Ty_printer.string_of_type_at_pos_result ~exact_by_default))
+  in
+  ServerProt.Response.Infer_type_response { loc; tys; documentation }
 
 let infer_type
     ~(options : Options.t)
@@ -458,22 +483,32 @@ let infer_type
     ~type_parse_artifacts_cache
     input : ServerProt.Response.infer_type_response * Hh_json.json option =
   let {
-    file_input;
-    query_position = { Loc.line; column };
+    ServerProt.Infer_type_options.input = file_input;
+    line;
+    char = column;
     verbose;
     omit_targ_defaults;
-    max_depth;
+    wait_for_recheck = _;
     verbose_normalizer;
+    max_depth;
+    json;
+    strip_root;
+    expanded;
   } =
     input
   in
   match of_file_input ~options ~env file_input with
   | Error (Failed e) -> (Error e, None)
   | Error (Skipped reason) ->
+    (* TODO: wow, this is a shady way to return no result! *)
+    let tys =
+      if json then
+        ServerProt.Response.Infer_type_JSON Hh_json.JSON_Null
+      else
+        ServerProt.Response.Infer_type_string None
+    in
     let response =
-      (* TODO: wow, this is a shady way to return no result! *)
-      ServerProt.Response.Infer_type_response
-        { loc = Loc.none; tys = None; exact_by_default = true; documentation = None }
+      ServerProt.Response.Infer_type_response { loc = Loc.none; tys; documentation = None }
     in
     let extra_data = json_of_skipped reason in
     (Ok response, extra_data)
@@ -532,7 +567,15 @@ let infer_type
       in
       let exact_by_default = Options.exact_by_default options in
       let response =
-        ServerProt.Response.Infer_type_response { loc; tys; exact_by_default; documentation }
+        infer_type_to_response
+          ~reader
+          ~json
+          ~expanded
+          ~exact_by_default
+          ~strip_root
+          loc
+          documentation
+          tys
       in
       (Ok response, Some (Hh_json.JSON_Object json_props)))
 
@@ -1002,28 +1045,7 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~types_only ~profiling:_ ~
   let%lwt response = output_dependencies ~env root strip_root types_only outfile in
   Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
-let handle_infer_type
-    ~options
-    ~reader
-    ~file_input
-    ~line
-    ~char
-    ~verbose
-    ~omit_targ_defaults
-    ~max_depth
-    ~verbose_normalizer
-    ~profiling
-    ~env =
-  let input =
-    {
-      file_input;
-      query_position = { Loc.line; column = char };
-      verbose;
-      omit_targ_defaults;
-      verbose_normalizer;
-      max_depth;
-    }
-  in
+let handle_infer_type ~options ~reader ~profiling ~env input =
   let (result, json_data) =
     try_with_json (fun () ->
         infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input
@@ -1311,31 +1333,11 @@ let get_ephemeral_handler genv command =
   | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; types_only } ->
     (* The user preference is to make this wait for up-to-date data *)
     Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~types_only ~outfile)
-  | ServerProt.Request.INFER_TYPE
-      {
-        input = file_input;
-        line;
-        char;
-        verbose;
-        omit_targ_defaults;
-        wait_for_recheck;
-        verbose_normalizer;
-        max_depth;
-      } ->
+  | ServerProt.Request.INFER_TYPE input ->
     mk_parallelizable
-      ~wait_for_recheck
+      ~wait_for_recheck:input.ServerProt.Infer_type_options.wait_for_recheck
       ~options
-      (handle_infer_type
-         ~options
-         ~reader
-         ~file_input
-         ~line
-         ~char
-         ~verbose
-         ~omit_targ_defaults
-         ~max_depth
-         ~verbose_normalizer
-      )
+      (handle_infer_type ~options ~reader input)
   | ServerProt.Request.RAGE { files } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.INSERT_TYPE
@@ -1755,12 +1757,17 @@ let handle_persistent_infer_type
   let type_parse_artifacts_cache = Some (Persistent_connection.type_parse_artifacts_cache client) in
   let input =
     {
-      file_input;
-      query_position = { Loc.line; column };
+      ServerProt.Infer_type_options.input = file_input;
+      line;
+      char = column;
       verbose = None;
       omit_targ_defaults = false;
+      wait_for_recheck = None;
       verbose_normalizer = false;
       max_depth = 50;
+      json = false;
+      strip_root = None;
+      expanded = false;
     }
   in
   let (result, extra_data) =
@@ -1768,7 +1775,7 @@ let handle_persistent_infer_type
   in
   let metadata = with_data ~extra_data metadata in
   match result with
-  | Ok (ServerProt.Response.Infer_type_response { loc; tys; exact_by_default; documentation }) ->
+  | Ok (ServerProt.Response.Infer_type_response { loc; tys; documentation }) ->
     (* loc may be the 'none' location; content may be None. *)
     (* If both are none then we'll return null; otherwise we'll return a hover *)
     let default_uri = params.textDocument.TextDocumentIdentifier.uri in
@@ -1782,8 +1789,7 @@ let handle_persistent_infer_type
     let contents =
       let types =
         match tys with
-        | Some result ->
-          [MarkedCode ("flow", Ty_printer.string_of_type_at_pos_result ~exact_by_default result)]
+        | ServerProt.Response.Infer_type_string (Some result) -> [MarkedCode ("flow", result)]
         | _ -> []
       in
       let docs = Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc) in
@@ -1793,7 +1799,7 @@ let handle_persistent_infer_type
     in
     let r =
       match (range, tys) with
-      | (None, None) -> None
+      | (None, ServerProt.Response.Infer_type_string None) -> None
       | (_, _) -> Some { Lsp.Hover.contents; range }
     in
     let response = ResponseMessage (id, HoverResult r) in

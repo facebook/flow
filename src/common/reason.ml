@@ -1504,3 +1504,15 @@ let is_array_reason r = classification_of_reason r = `Array
 let invalidate_rtype_alias = function
   | RTypeAlias (name, Some _, desc) -> RTypeAlias (name, None, desc)
   | desc -> desc
+
+let range_string_of_loc ~strip_root loc =
+  Loc.(
+    let file =
+      match loc.source with
+      | Some file -> string_of_source ~strip_root file
+      | None -> ""
+    in
+    let (l0, c0) = (loc.start.line, loc.start.column + 1) in
+    let (l1, c1) = (loc._end.line, loc._end.column) in
+    spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
+  )

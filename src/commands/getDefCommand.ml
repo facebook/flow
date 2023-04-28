@@ -102,7 +102,9 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
             print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
         )
       else
-        Base.List.iter locs ~f:(fun loc -> print_endline (range_string_of_loc ~strip_root loc))
+        Base.List.iter locs ~f:(fun loc ->
+            print_endline (Reason.range_string_of_loc ~strip_root loc)
+        )
   | ServerProt.Response.GET_DEF (Error exn_msg) ->
     if json || pretty then
       let open Hh_json in

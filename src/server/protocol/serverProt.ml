@@ -5,6 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Infer_type_options = struct
+  type t = {
+    input: File_input.t;
+    line: int;
+    char: int;
+    verbose: Verbose.t option;
+    omit_targ_defaults: bool;
+    wait_for_recheck: bool option;
+    verbose_normalizer: bool;
+    max_depth: int;
+    json: bool;
+    strip_root: Path.t option;
+    expanded: bool;
+  }
+end
+
 module Request = struct
   type command =
     | AUTOCOMPLETE of {
@@ -76,16 +92,7 @@ module Request = struct
         outfile: string;
         types_only: bool;
       }
-    | INFER_TYPE of {
-        input: File_input.t;
-        line: int;
-        char: int;
-        verbose: Verbose.t option;
-        omit_targ_defaults: bool;
-        wait_for_recheck: bool option;
-        verbose_normalizer: bool;
-        max_depth: int;
-      }
+    | INFER_TYPE of Infer_type_options.t
     | INSERT_TYPE of {
         input: File_input.t;
         target: Loc.t;
@@ -146,17 +153,7 @@ module Request = struct
       Printf.sprintf "force-recheck %s (%s)" (String.concat " " files) parts
     | GET_DEF { input; line; char; wait_for_recheck = _ } ->
       Printf.sprintf "get-def %s:%d:%d" (File_input.filename_of_file_input input) line char
-    | INFER_TYPE
-        {
-          input;
-          line;
-          char;
-          verbose = _;
-          omit_targ_defaults = _;
-          wait_for_recheck = _;
-          verbose_normalizer = _;
-          max_depth = _;
-        } ->
+    | INFER_TYPE { Infer_type_options.input; line; char; _ } ->
       Printf.sprintf "type-at-pos %s:%d:%d" (File_input.filename_of_file_input input) line char
     | INSERT_TYPE { input; target; _ } ->
       Loc.(
@@ -254,11 +251,14 @@ module Response = struct
 
   type get_def_response = (Loc.t list, string) result
 
+  type infer_type_response_payload =
+    | Infer_type_string of string option
+    | Infer_type_JSON of Hh_json.json
+
   type infer_type_response_ok =
     | Infer_type_response of {
         loc: Loc.t;
-        tys: Ty.type_at_pos_result option;
-        exact_by_default: bool;
+        tys: infer_type_response_payload;
         documentation: string option;
       }
 

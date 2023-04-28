@@ -47,37 +47,17 @@ let spec =
       );
   }
 
-let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response =
-  let (ServerProt.Response.Infer_type_response { loc; tys; exact_by_default; documentation }) =
-    response
-  in
-  if json then
+let handle_response ~file_contents ~pretty ~strip_root response =
+  let (ServerProt.Response.Infer_type_response { loc; tys; documentation }) = response in
+  match tys with
+  | ServerProt.Response.Infer_type_JSON json ->
     let open Hh_json in
     let open Reason in
     let offset_table =
       Base.Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
     in
-    let type_json t =
-      let json =
-        [("type", JSON_String (Ty_printer.string_of_elt_single_line ~exact_by_default t))]
-      in
-      let json =
-        if expanded then
-          ("expanded", Ty_debug.json_of_elt ~strip_root t) :: json
-        else
-          json
-      in
-      JSON_Object json
-    in
-    let types_json =
-      match tys with
-      | Some { Ty.unevaluated; evaluated } ->
-        let evaluated = Base.Option.value_map evaluated ~default:JSON_Null ~f:type_json in
-        JSON_Object [("unevaluated", type_json unevaluated); ("evaluated", evaluated)]
-      | _ -> JSON_Null
-    in
     let json_assoc =
-      ("types", types_json)
+      ("types", json)
       :: ("reasons", JSON_Array [])
       :: ("loc", json_of_loc ~strip_root ~offset_table loc)
       :: Errors.deprecated_json_props_of_loc ~strip_root loc
@@ -89,10 +69,10 @@ let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response 
     in
     let json = JSON_Object json_assoc in
     print_json_endline ~pretty json
-  else
+  | ServerProt.Response.Infer_type_string tys ->
     let ty =
       match tys with
-      | Some result -> Ty_printer.string_of_type_at_pos_result ~exact_by_default result
+      | Some result -> result
       | _ -> "(unknown)"
     in
     let doc =
@@ -104,7 +84,7 @@ let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response 
       if loc = Loc.none then
         ""
       else
-        spf "\n%s" (range_string_of_loc ~strip_root loc)
+        spf "\n%s" (Reason.range_string_of_loc ~strip_root loc)
     in
     print_endline (doc ^ ty ^ range)
 
@@ -145,25 +125,27 @@ let main
   in
   if (not json) && verbose <> None then
     prerr_endline "NOTE: --verbose writes to the server log file";
-
-  let request =
-    ServerProt.Request.INFER_TYPE
-      {
-        input = file;
-        line;
-        char = column;
-        verbose;
-        omit_targ_defaults;
-        wait_for_recheck;
-        verbose_normalizer;
-        max_depth;
-      }
+  let options =
+    {
+      ServerProt.Infer_type_options.input = file;
+      line;
+      char = column;
+      verbose;
+      omit_targ_defaults;
+      wait_for_recheck;
+      verbose_normalizer;
+      max_depth;
+      json;
+      strip_root;
+      expanded;
+    }
   in
-  let file_contents = File_input.content_of_file_input file |> Base.Result.ok in
+  let request = ServerProt.Request.INFER_TYPE options in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
   | ServerProt.Response.INFER_TYPE (Ok resp) ->
-    handle_response resp ~file_contents ~json ~pretty ~strip_root ~expanded
+    let file_contents = File_input.content_of_file_input file |> Base.Result.ok in
+    handle_response resp ~file_contents ~pretty ~strip_root
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

@@ -378,3 +378,5 @@ val show_virtual_reason_desc :
   (Format.formatter -> 'loc -> Ppx_deriving_runtime.unit) -> 'loc virtual_reason_desc -> string
 
 val show_reason_desc_function : reason_desc_function -> string
+
+val range_string_of_loc : strip_root:Path.t option -> Loc.t -> string

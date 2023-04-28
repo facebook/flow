@@ -271,7 +271,11 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   | ( Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | BigInt _ | NumLit _ | StrLit _
     | BoolLit _ | BigIntLit _ | Arr _ | Tup _ ) as t ->
     ( NameUtils.Map.empty,
-      [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)]
+      [
+        Printf.sprintf
+          "members_of_ty unexpectedly applied to (%s)"
+          (Ty_debug.dump_t_EXPOSES_ABSTRACT_LOCS t);
+      ]
     )
   | Any _
   | Top

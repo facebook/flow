@@ -1638,18 +1638,6 @@ let parse_location_with_optional_filename spec path args =
   let (line, column) = convert_input_pos (line, column) in
   (file, line, column)
 
-let range_string_of_loc ~strip_root loc =
-  Loc.(
-    let file =
-      match loc.source with
-      | Some file -> Reason.string_of_source ~strip_root file
-      | None -> ""
-    in
-    let (l0, c0) = (loc.start.line, loc.start.column + 1) in
-    let (l1, c1) = (loc._end.line, loc._end.column) in
-    spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
-  )
-
 let exe_name = Utils_js.exe_name
 
 (* What should we do when we connect to the flow server monitor, but it dies before responding to

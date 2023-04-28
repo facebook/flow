@@ -16,26 +16,6 @@ let return = Base.Result.return
 
 let mapM f xs = Base.Result.all (Base.List.map ~f xs)
 
-let show m =
-  List.fold_left
-    (fun acc (loc, syms) ->
-      List.fold_left
-        (fun a { Ty.sym_provenance; sym_name; _ } ->
-          let x =
-            spf
-              "%s\n%s - %s\n"
-              (Reason.string_of_loc loc)
-              (Reason.display_string_of_name sym_name)
-              (Ty_debug.ctor_of_provenance sym_provenance)
-          in
-          x :: a)
-        acc
-        syms)
-    []
-    m
-  |> List.rev
-  |> String.concat "\n"
-
 let combine = List.rev_append
 
 module SymbolMap = struct

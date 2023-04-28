@@ -9,6 +9,5 @@ lib.js
 
 [options]
 all=true
-experimental.abstract_locations=false
 
 [strict]

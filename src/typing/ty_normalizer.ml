@@ -624,7 +624,7 @@ end = struct
       let result = type_with_alias_reason ~env ?id t state in
       let result_str =
         match result with
-        | (Ok ty, _) -> "[Ok] " ^ Ty_debug.dump_t ty
+        | (Ok ty, _) -> "[Ok] " ^ Ty_debug.dump_t_EXPOSES_ABSTRACT_LOCS ty
         | (Error e, _) -> "[Error] " ^ error_to_string e
       in
       prerr_endlinef "%s Output: %s\n" prefix result_str;
