@@ -246,7 +246,6 @@ and 'loc t' =
       reasons: 'loc virtual_reason * 'loc virtual_reason;
     }
   | EFunPredInvalidIndex of 'loc
-  | EIncompatibleWithShape of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * 'loc unsupported_syntax
   | EUseArrayLiteral of 'loc
@@ -868,8 +867,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EInvalidCharSet
       { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
   | EInvalidConstructor r -> EInvalidConstructor (map_reason r)
-  | EIncompatibleWithShape (l, u, use_op) ->
-    EIncompatibleWithShape (map_reason l, map_reason u, map_use_op use_op)
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     EInvalidObjectKit
       { reason = map_reason reason; reason_op = map_reason reason_op; use_op = map_use_op use_op }
@@ -1300,8 +1297,6 @@ let util_use_op_of_msg nope util = function
     util op (fun op -> EFunctionIncompatibleWithIndexer (rs, op))
   | EInvalidCharSet { invalid; valid; use_op } ->
     util use_op (fun use_op -> EInvalidCharSet { invalid; valid; use_op })
-  | EIncompatibleWithShape (l, u, use_op) ->
-    util use_op (fun use_op -> EIncompatibleWithShape (l, u, use_op))
   | EInvalidObjectKit { reason; reason_op; use_op } ->
     util use_op (fun use_op -> EInvalidObjectKit { reason; reason_op; use_op })
   | EIncompatibleWithUseOp ({ use_op; _ } as contents) ->
@@ -1680,7 +1675,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumIncompatible _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
-  | EIncompatibleWithShape _
   | EInvalidCharSet _
   | EIncompatibleWithExact _
   | EFunctionIncompatibleWithIndexer _
@@ -2701,13 +2695,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             code "$Refine";
             text " type needs to be a positive integer.";
           ];
-      }
-  | EIncompatibleWithShape (lower, upper, use_op) ->
-    UseOp
-      {
-        loc = loc_of_reason lower;
-        features = [ref lower; text " is incompatible with "; code "$Shape"; text " of "; ref upper];
-        use_op;
       }
   | EInternal (_, internal_error) ->
     let msg = string_of_internal_error internal_error in
@@ -4933,7 +4920,6 @@ let error_code_of_message err : error_code option =
   | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
   | EFunctionIncompatibleWithIndexer _ -> Some IncompatibleFunctionIndexer
-  | EIncompatibleWithShape _ -> Some IncompatibleShape
   | EEnumIncompatible { use_op; _ }
   | EIncompatibleWithUseOp { use_op; _ } ->
     error_code_of_use_op use_op ~default:IncompatibleType

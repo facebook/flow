@@ -174,7 +174,6 @@ class visitor =
       | DefT (_, _, PolyT { t_out = t; _ })
       | TypeAppT (_, _, t, _)
       | DefT (_, _, TypeT (_, t))
-      | ShapeT (_, t)
       | GenericT { bound = t; _ }
       | ThisClassT (_, t, _, _)
       | ThisTypeAppT (_, t, _, _) ->

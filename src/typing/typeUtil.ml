@@ -35,7 +35,6 @@ let rec reason_of_t = function
   | ObjProtoT reason -> reason
   | MatchingPropT (reason, _, _) -> reason
   | OpaqueT (reason, _) -> reason
-  | ShapeT (reason, _) -> reason
   | ThisClassT (reason, _, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
   | TypeAppT (reason, _, _, _) -> reason
@@ -201,7 +200,6 @@ let rec mod_reason_of_t f = function
   | ObjProtoT reason -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
-  | ShapeT (reason, t) -> ShapeT (f reason, t)
   | ThisClassT (reason, t, is_this, this_name) -> ThisClassT (f reason, t, is_this, this_name)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
   | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)

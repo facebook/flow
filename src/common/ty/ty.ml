@@ -250,7 +250,6 @@ and utility =
   | TupleMap of t * t
   | Call of t * t list
   | Class of t
-  | Shape of t
   (* React utils *)
   | ReactElementPropsType of t
   | ReactElementConfigType of t
@@ -617,7 +616,6 @@ class ['A] comparator_ty =
       | TupleMap _ -> 11
       | Call _ -> 12
       | Class _ -> 13
-      | Shape _ -> 14
       | ReactElementPropsType _ -> 18
       | ReactElementConfigType _ -> 19
       | ReactElementRefType _ -> 20
@@ -768,7 +766,6 @@ let string_of_utility_ctor = function
   | TupleMap _ -> "$TupleMap"
   | Call _ -> "$Call"
   | Class _ -> "Class"
-  | Shape _ -> "$Shape"
   | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
   | ReactElementRefType _ -> "React$ElementRef"
@@ -793,7 +790,6 @@ let types_of_utility = function
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]
-  | Shape t -> Some [t]
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]
   | ReactElementRefType t -> Some [t]

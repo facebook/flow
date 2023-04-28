@@ -770,9 +770,6 @@ end = struct
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t
       | OpaqueT (r, o) -> opaque_t ~env r o
-      | ShapeT (_, t) ->
-        let%map t = type__ ~env t in
-        Ty.Utility (Ty.Shape t)
       | TypeDestructorTriggerT (_, r, _, _, _) ->
         let loc = Reason.def_aloc_of_reason r in
         return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))

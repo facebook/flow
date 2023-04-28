@@ -97,8 +97,6 @@ module rec TypeTerm : sig
     | FunProtoApplyT of reason (* Function.prototype.apply *)
     | FunProtoBindT of reason (* Function.prototype.bind *)
     | FunProtoCallT of reason (* Function.prototype.call *)
-    (* constrains some properties of an object *)
-    | ShapeT of reason * t
     | MatchingPropT of reason * string * t
     (* & types *)
     | IntersectionT of reason * InterRep.t
@@ -3607,7 +3605,6 @@ let string_of_ctor = function
   | ObjProtoT _ -> "ObjProtoT"
   | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
-  | ShapeT _ -> "ShapeT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
   | TypeAppT _ -> "TypeAppT"

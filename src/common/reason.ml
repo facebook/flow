@@ -214,7 +214,6 @@ type 'loc virtual_reason_desc =
   | RRefinedElement of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of 'loc virtual_reason_desc
-  | RShapeOf of 'loc virtual_reason_desc
   | RPartialOf of 'loc virtual_reason_desc
   | RRequiredOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
@@ -316,7 +315,6 @@ let rec map_desc_locs f = function
   | RRefined desc -> RRefined (map_desc_locs f desc)
   | RRefinedElement desc -> RRefinedElement (map_desc_locs f desc)
   | RSpreadOf desc -> RSpreadOf (map_desc_locs f desc)
-  | RShapeOf desc -> RShapeOf (map_desc_locs f desc)
   | RPartialOf desc -> RPartialOf (map_desc_locs f desc)
   | RRequiredOf desc -> RRequiredOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
@@ -708,7 +706,6 @@ let rec string_of_desc = function
   | RRefinedElement d -> spf "array element of refined %s" (string_of_desc d)
   | RIncompatibleInstantiation x -> spf "`%s`" x
   | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
-  | RShapeOf d -> spf "%s" (string_of_desc d)
   | RPartialOf d -> spf "partial %s" (string_of_desc d)
   | RRequiredOf d -> spf "required of %s" (string_of_desc d)
   | RObjectPatternRestProp -> "rest of object pattern"
@@ -1463,7 +1460,6 @@ let classification_of_reason r =
   | RRefinedElement _
   | RIncompatibleInstantiation _
   | RSpreadOf _
-  | RShapeOf _
   | RPartialOf _
   | RRequiredOf _
   | RObjectPatternRestProp

@@ -2204,10 +2204,6 @@ struct
         | (ExactT (r, t), _) ->
           let t = push_type_alias_reason r t in
           rec_flow cx trace (t, MakeExactT (r, Upper u))
-        (* Shapes need to be trapped here to avoid error-ing when used as exact types.
-           Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
-           to be used just as o is allowed to be used. *)
-        | (ShapeT (_, o), MakeExactT _) -> rec_flow cx trace (o, u)
         (* Classes/Functions are "inexact" *)
         (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
         (* exactify incoming LB object type, flow to UB *)
@@ -3126,31 +3122,6 @@ struct
               AnyT.error reason_op
           in
           rec_flow cx trace (reposition cx ~trace (aloc_of_reason reason) fun_t, u)
-        (******************************)
-        (* matching shapes of objects *)
-        (******************************)
-
-        (* When something of type ShapeT(o) is used, it behaves like it had type o.
-
-           On the other hand, things that can be passed to something of type
-           ShapeT(o) must be "subobjects" of o: they may have fewer properties, but
-           those properties should be transferable to o.
-
-           Because a property x with a type OptionalT(t) could be considered
-           missing or having type t, we consider such a property to be transferable
-           if t is a subtype of x's type in o. Otherwise, the property should be
-           assignable to o.
-
-           TODO: The type constructors ShapeT, ObjAssignToT/ObjAssignFromT,
-           ObjRestT express related meta-operations on objects. Consolidate these
-           meta-operations and ensure consistency of their semantics. **)
-        | (ShapeT (r, o), _) -> rec_flow cx trace (reposition cx ~trace (aloc_of_reason r) o, u)
-        (* Function definitions are incompatible with ShapeT. ShapeT is meant to
-         * match an object type with a subset of the props in the type being
-         * destructured. It would be complicated and confusing to use a function for
-         * this.
-         *
-         * This invariant is important for the React setState() type definition. *)
         | (AnyT (_, src), ObjTestT (reason_op, _, u)) ->
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason_op, u)
         | (_, ObjTestT (reason_op, default, u)) ->
@@ -5755,7 +5726,6 @@ struct
       | OptionalIndexedAccessT _
       | MapTypeT _
       (* the above case is not needed for correctness, but rather avoids a slow path in TupleMap *)
-      | UseT (_, ShapeT _)
       | UseT (Op (Coercion _), DefT (_, _, StrT _)) ->
         rec_flow cx trace (reposition_reason cx reason bound, u);
         true
@@ -6065,8 +6035,7 @@ struct
       true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
-    | UseT (use_op, ExactT (_, t))
-    | UseT (use_op, ShapeT (_, t)) ->
+    | UseT (use_op, ExactT (_, t)) ->
       covariant_flow ~use_op t;
       true
     | UseT (use_op, DefT (_, _, ReactAbstractComponentT { config; instance })) ->
@@ -6315,7 +6284,6 @@ struct
     | ThisClassT _
     | EvalT _
     | MatchingPropT _
-    | ShapeT _
     | OptionalT _
     | MaybeT _
     | DefT (_, _, PolyT _)

@@ -748,7 +748,6 @@ module rec ConsGen : S = struct
       let t = push_type_alias_reason r t in
       let t = make_exact cx r t in
       elab_t cx t op
-    | (ShapeT (_, o), Annot_MakeExactT _) -> elab_t cx o op
     | (DefT (reason_obj, trust, ObjT obj), Annot_MakeExactT reason_op) ->
       TypeUtil.make_exact_object ~reason_obj trust obj ~reason_op
     | (AnyT (_, src), Annot_MakeExactT reason_op) -> AnyT.why src reason_op
@@ -852,10 +851,6 @@ module rec ConsGen : S = struct
       let l = get_builtin_prop_type cx reason kind in
       elab_t cx l op
     | (CustomFunT (r, _), _) when function_like_op op -> elab_t cx (FunProtoT r) op
-    (**************)
-    (* Shape type *)
-    (**************)
-    | (ShapeT (r, o), _) -> elab_t cx ~seen (reposition cx (aloc_of_reason r) o) op
     (*****************)
     (* ObjTestProtoT *)
     (*****************)

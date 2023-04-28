@@ -347,7 +347,6 @@ let rec dump_t_ (depth, tvars) cx t =
         t
     | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
     | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
-    | ShapeT (_, arg) -> p ~extra:(kid arg) t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
     | DefT (_, trust, SingletonStrT s) ->
@@ -1465,12 +1464,6 @@ let dump_error_message =
       spf "EPredicateFuncArityMismatch (%s)" (string_of_use_op use_op)
     | EPredicateFuncIncompatibility { use_op; _ } ->
       spf "EPredicateFuncIncompatibility (%s)" (string_of_use_op use_op)
-    | EIncompatibleWithShape (lower, upper, use_op) ->
-      spf
-        "EIncompatibleWithShape (%s, %s, %s)"
-        (dump_reason cx lower)
-        (dump_reason cx upper)
-        (string_of_use_op use_op)
     | EInternal (loc, err) -> spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) -> spf "EUnsupportedSyntax (%s, _)" (string_of_aloc loc)
     | EUseArrayLiteral loc -> spf "EUseArrayLiteral (%s)" (string_of_aloc loc)

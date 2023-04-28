@@ -111,12 +111,6 @@ class virtual ['a] t =
           t
         else
           GenericT { generic with bound = bound' }
-      | ShapeT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          ShapeT (r, t'')
       | MatchingPropT (r, x, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

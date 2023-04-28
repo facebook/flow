@@ -428,27 +428,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       trace
       (uproto, ReposUseT (ureason, false, use_op, DefT (lreason, bogus_trust (), ObjT l_obj)))
 
-  let match_shape cx trace ~use_op proto reason props =
-    let reason_op = reason_of_t proto in
-    NameUtils.Map.iter
-      (fun x p ->
-        let reason_prop = update_desc_reason (fun desc -> RPropertyOf (x, desc)) reason in
-        match Property.read_t p with
-        | Some t ->
-          let use_op =
-            Frame
-              (PropertyCompatibility { prop = Some x; upper = reason; lower = reason_op }, use_op)
-          in
-          let propref = Named (reason_prop, x) in
-          let t = filter_optional cx ~trace reason_prop t in
-          rec_flow cx trace (proto, MatchPropT (use_op, reason_op, propref, (reason_prop, t)))
-        | None ->
-          add_output
-            cx
-            ~trace
-            (Error_message.EPropNotReadable { reason_prop; prop_name = Some x; use_op }))
-      props
-
   (* mutable sites on parent values (i.e. object properties,
      array elements) must be typed invariantly when a value
      flows to the parent, unless the incoming value is fresh,
@@ -982,12 +961,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
     (* any ~> $Exact<UB>. unwrap exact *)
     | ((DefT (_, _, EmptyT) | AnyT _), ExactT (_, t)) -> rec_flow_t cx trace ~use_op (l, t)
-    (*
-     * Shapes need to be trapped here to avoid error-ing when used as exact types.
-     * Below (see "matching shapes of objects"), we have a rule that allows ShapeT(o)
-     * to be used just as o is allowed to be used.
-     *)
-    | (ShapeT (_, o), ExactT _) -> rec_flow_t cx trace ~use_op (o, u)
     (* anything else ~> $Exact<UB>. error *)
     | (_, ExactT (r, t)) -> rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
     (*
@@ -1482,48 +1455,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           AnyT.error reason_op
       in
       rec_flow_t cx trace ~use_op (fun_t, u)
-    (* When something of type ShapeT(o) is used, it behaves like it had type o.
-     *
-     * On the other hand, things that can be passed to something of type
-     * ShapeT(o) must be "subobjects" of o: they may have fewer properties, but
-     * those properties should be transferable to o.
-     *
-     * Because a property x with a type OptionalT(t) could be considered
-     * missing or having type t, we consider such a property to be transferable
-     * if t is a subtype of x's type in o. Otherwise, the property should be
-     * assignable to o.
-     *
-     * TODO: The type constructors ShapeT, ObjAssignToT/ObjAssignFromT,
-     * ObjRestT express related meta-operations on objects. Consolidate these
-     * meta-operations and ensure consistency of their semantics.
-     *)
-    | (ShapeT (r, o), _) ->
-      rec_flow_t cx trace ~use_op (reposition cx ~trace (aloc_of_reason r) o, u)
-    | (DefT (reason, _, ObjT ({ call_t = None; _ } as o)), ShapeT (_, proto)) ->
-      let props = Context.find_real_props cx o.props_tmap in
-      match_shape cx trace ~use_op proto reason props
-    | (DefT (reason, _, InstanceT (_, _, _, ({ inst_call_t = None; _ } as i))), ShapeT (_, proto))
-      ->
-      let own_props = Context.find_props cx i.own_props in
-      let proto_props = Context.find_props cx i.proto_props in
-      let proto_props =
-        match i.inst_kind with
-        | InterfaceKind _ -> proto_props
-        | ClassKind -> NameUtils.Map.remove (OrdinaryName "constructor") proto_props
-      in
-      let props = NameUtils.Map.union own_props proto_props in
-      match_shape cx trace ~use_op proto reason props
-    (* Function definitions are incompatible with ShapeT. ShapeT is meant to
-     * match an object type with a subset of the props in the type being
-     * destructured. It would be complicated and confusing to use a function for
-     * this.
-     *
-     * This invariant is important for the React setState() type definition. *)
-    | (_, ShapeT (_, o)) ->
-      add_output
-        cx
-        ~trace
-        (Error_message.EIncompatibleWithShape (reason_of_t l, reason_of_t o, use_op))
     (********************************************)
     (* array types deconstruct into their parts *)
     (********************************************)
