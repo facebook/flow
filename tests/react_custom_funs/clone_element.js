@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import type {Element} from 'react';
 
 declare var any: any;
@@ -75,3 +75,34 @@ React.cloneElement(e, {foo: 1, bar: undefined}); // OK: `bar` has a default.
 
 function SFC(props: { p: number }) { return null };
 React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
+
+// Exact
+declare function Exact({|foo: number|}): void;
+declare const exact: Element<typeof Exact>;
+React.cloneElement(exact, {foo: 1}); // OK
+React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
+
+// Clone typeof element
+type CompProps = $ReadOnly<{|
+  foo: string,
+  bar: string,
+|}>;
+{
+  declare function Comp(CompProps): React.Element<'div'>;
+  declare const el: React.Element<typeof Comp>;
+  React.cloneElement(el, {foo: 'hi'}); // OK
+}
+
+// MixedElement
+{
+  declare const el: React.MixedElement;
+  React.cloneElement(el); // OK - no props supplied
+  React.cloneElement(el, {}); // ERROR
+}
+
+// Node
+{
+  declare const el: React.Node;
+  React.cloneElement(el); // ERROR
+  React.cloneElement(el, {}); // ERROR
+}

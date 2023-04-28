@@ -440,6 +440,19 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let config_check clone config children_args =
       (* Create the optional children input type from the children arguments. *)
       let children = coerce_children_args children_args in
+
+      let make_readonly_partial t =
+        let reason = reason_of_t t in
+        let loc = loc_of_t t in
+        let readonly_reason = mk_reason RReadOnlyType loc in
+        let t =
+          EvalT
+            (t, TypeDestructorT (unknown_use, readonly_reason, ReadOnlyType), Eval.generate_id ())
+        in
+        let partial_reason = mk_reason (RPartialOf (desc_of_reason reason)) loc in
+        EvalT (t, TypeDestructorT (unknown_use, partial_reason, PartialType), Eval.generate_id ())
+      in
+
       (* Create a type variable for our props. *)
       (* If we are cloning an existing element, the config does not need to
        * provide the entire props type. *)
@@ -461,7 +474,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
            * Additionally, this hack enables us to not have to explicitly handle
            * AbstractComponent past this point. *)
           ( ( if clone then
-              ShapeT (reason_of_t config, config)
+              make_readonly_partial config
             else
               config
             ),
@@ -469,7 +482,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           )
         | _ ->
           ( ( if clone then
-              ShapeT (reason_of_t config, Tvar.mk_where cx reason_op props_to_tout)
+              make_readonly_partial (Tvar.mk_where cx (reason_of_t config) props_to_tout)
             else
               Tvar.mk_where cx reason_op tin_to_props
             ),

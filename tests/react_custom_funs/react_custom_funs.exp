@@ -160,24 +160,6 @@ References:
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- clone_element.js:38:7
-
-Cannot call `React.cloneElement` because property `bar` is missing in call of method `cloneElement` [1] but exists in
-props [2]. [prop-missing]
-
-   clone_element.js:38:7
-   38| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-             ^^^^^^^^^^^^
-
-References:
-   clone_element.js:38:1
-   38| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   clone_element.js:38:23
-   38| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-                             ^^^^^^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- clone_element.js:39:29
 
 Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `foo`.
@@ -223,14 +205,14 @@ References:
                                                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- clone_element.js:55:7
+Error ------------------------------------------------------------------------------------------- clone_element.js:55:23
 
 Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:55:7
+   clone_element.js:55:23
    55| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
-             ^^^^^^^^^^^^
+                             ^^
 
 References:
    clone_element.js:55:1
@@ -241,14 +223,14 @@ References:
                                                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- clone_element.js:56:7
+Error ------------------------------------------------------------------------------------------- clone_element.js:56:23
 
 Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:56:7
+   clone_element.js:56:23
    56| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
-             ^^^^^^^^^^^^
+                             ^^^^^^^^^
 
 References:
    clone_element.js:56:1
@@ -259,14 +241,14 @@ References:
                                                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- clone_element.js:57:7
+Error ------------------------------------------------------------------------------------------- clone_element.js:57:23
 
 Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:57:7
+   clone_element.js:57:23
    57| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
-             ^^^^^^^^^^^^
+                             ^^^^
 
 References:
    clone_element.js:57:1
@@ -292,46 +274,55 @@ References:
                                                   ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:63:27
+Error ------------------------------------------------------------------------------------------- clone_element.js:63:23
 
 Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
+   clone_element.js:63:23
+   63| React.cloneElement(d, {}, 42); // Error: `children` is an array.
+                             ^^
+
+References:
    clone_element.js:63:27
    63| React.cloneElement(d, {}, 42); // Error: `children` is an array.
                                  ^^ [1]
-
-References:
    clone_element.js:9:44
     9| class D extends React.Component<{children: Array<number>}, void> {}
                                                   ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:64:34
+Error ------------------------------------------------------------------------------------------- clone_element.js:64:23
 
 Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
+   clone_element.js:64:23
+   64| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+                             ^^^^^^^^^
+
+References:
    clone_element.js:64:34
    64| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
                                         ^^ [1]
-
-References:
    clone_element.js:9:44
     9| class D extends React.Component<{children: Array<number>}, void> {}
                                                   ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:65:29
+Error ------------------------------------------------------------------------------------------- clone_element.js:65:23
 
 Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
+   clone_element.js:65:23
+   65| React.cloneElement(d, null, 42); // Error: `children` is an array.
+                             ^^^^
+
+References:
    clone_element.js:65:29
    65| React.cloneElement(d, null, 42); // Error: `children` is an array.
                                    ^^ [1]
-
-References:
    clone_element.js:9:44
     9| class D extends React.Component<{children: Array<number>}, void> {}
                                                   ^^^^^^^^^^^^^ [2]
@@ -349,6 +340,357 @@ References:
    clone_element.js:76:26
    76| function SFC(props: { p: number }) { return null };
                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- clone_element.js:83:27
+
+Cannot call `React.cloneElement` because property `bar` is missing in object type [1] but exists in props [2].
+[prop-missing]
+
+   clone_element.js:83:27
+   83| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
+                                 ^^^^^^^^^^^^^^^^ [2]
+
+References:
+   clone_element.js:80:24
+   80| declare function Exact({|foo: number|}): void;
+                              ^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:100:26
+
+Cannot call `React.cloneElement` because props [1] is incompatible with empty [2]. [incompatible-call]
+
+   clone_element.js:100:26
+   100|   React.cloneElement(el, {}); // ERROR
+                                 ^^ [1]
+
+References:
+   <BUILTINS>/react.js:163:29
+   163|   | React$AbstractComponent<empty, mixed>;
+                                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+
+`React.Portal` [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:106:22
+   106|   React.cloneElement(el); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+
+boolean [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:106:22
+   106|   React.cloneElement(el); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+
+null [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:106:22
+   106|   React.cloneElement(el); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+
+number [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:106:22
+   106|   React.cloneElement(el); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+
+string [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:106:22
+   106|   React.cloneElement(el); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+
+undefined [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:106:22
+   106|   React.cloneElement(el); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+
+Inexact `$Iterable` [1] is incompatible with exact `React.Element` [2]. [incompatible-exact]
+
+   clone_element.js:106:22
+   106|   React.cloneElement(el); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+
+`React.Portal` [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:107:22
+   107|   React.cloneElement(el, {}); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+
+boolean [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:107:22
+   107|   React.cloneElement(el, {}); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+
+null [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:107:22
+   107|   React.cloneElement(el, {}); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+
+number [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:107:22
+   107|   React.cloneElement(el, {}); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+
+string [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:107:22
+   107|   React.cloneElement(el, {}); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+
+undefined [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:107:22
+   107|   React.cloneElement(el, {}); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+
+Inexact `$Iterable` [1] is incompatible with exact `React.Element` [2]. [incompatible-exact]
+
+   clone_element.js:107:22
+   107|   React.cloneElement(el, {}); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:169:63
+                                                                      v-
+   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   170|   +type: ElementType,
+   171|   +props: React$ElementProps<ElementType>,
+   172|   +key: React$Key | null,
+   173|   +ref: any,
+   174| |};
+        -^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- create_element.js:5:1
@@ -3375,7 +3717,7 @@ References:
 
 
 
-Found 204 errors
+Found 219 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -17,7 +17,7 @@ type State = {};
 
 class MyComponent extends React.Component<Props, State> {
   static _cloneElement(
-    element: React$Element<React$ElementType>,
+    element: React$Element<typeof MyComponent>,
   ): React$Element<React$ElementType> {
     const someProp = 'some value';
     return React.cloneElement(element, {someProp});
