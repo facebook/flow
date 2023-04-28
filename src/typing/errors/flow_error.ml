@@ -449,8 +449,8 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
     let open Friendly in
     let rec loop (loc : Loc.t) frames (use_op : Loc.t virtual_use_op) =
       match use_op with
-      | Op UnknownUse -> unknown_root loc frames false
-      | Op (Type.Speculation _) when speculation -> unknown_root loc frames true
+      | Op UnknownUse -> unknown_root loc frames
+      | Op (Type.Speculation _) when speculation -> unknown_root loc frames
       | Op (Type.Speculation use) -> loop loc frames use
       | Op (ObjectSpread { op }) -> root loc frames op [text "Cannot spread "; desc op]
       | Op (ObjectRest { op }) -> root loc frames op [text "Cannot get rest of "; desc op]
@@ -478,7 +478,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
         root loc frames def [text "Cannot implement "; ref implements; text " with "; desc def]
       | Op (ClassOwnProtoCheck { prop; own_loc; proto_loc }) ->
         (match (own_loc, proto_loc) with
-        | (None, None) -> unknown_root loc frames true
+        | (None, None) -> unknown_root loc frames
         | (Some loc, None) ->
           let def = mk_reason (RProperty (Some prop)) loc in
           root loc frames def [text "Cannot shadow proto property"]
@@ -777,39 +777,22 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
           frame_loc
       in
       (* Add our frame and recurse with the next use_op. *)
-      let (all_frames, local_frames, explanations) = frames in
-      let frames =
-        ( frame :: all_frames,
-          ( if frame_contains_loc then
-            local_frames
-          else
-            frame :: local_frames
-          ),
-          explanations
-        )
-      in
+      let (all_frames, explanations) = frames in
+      let frames = (frame :: all_frames, explanations) in
       loop loc frames use_op
     and unwrap_frame_without_loc loc frames use_op frame =
       (* Same logic as `unwrap_frame` except we don't have a frame location. *)
-      let (all_frames, local_frames, explanations) = frames in
-      let frames = (frame :: all_frames, frame :: local_frames, explanations) in
+      let (all_frames, explanations) = frames in
+      let frames = (frame :: all_frames, explanations) in
       loop loc frames use_op
     and explanation loc frames use_op frame =
-      let (all_frames, local_frames, explanations) = frames in
-      let frames = (all_frames, local_frames, frame :: explanations) in
+      let (all_frames, explanations) = frames in
+      let frames = (all_frames, frame :: explanations) in
       loop loc frames use_op
-    and unknown_root loc frames show_all_frames =
+    and unknown_root loc frames =
       (* We don't know what our root is! Return what we do know. *)
-      let (all_frames, local_frames, explanations) = frames in
-      ( None,
-        loc,
-        ( if show_all_frames then
-          all_frames
-        else
-          local_frames
-        ),
-        explanations
-      )
+      let (all_frames, explanations) = frames in
+      (None, loc, all_frames, explanations)
     and root_with_loc_and_specific_loc loc frames root_loc specific_loc root_message =
       (* Finish up be returning our root location, root message, primary loc,
        * and frames.
@@ -824,7 +807,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
       in
       (* Return our root loc and message in addition to the true primary loc
        * and frames. *)
-      let (all_frames, _, explanations) = frames in
+      let (all_frames, explanations) = frames in
       (Some (root_loc, root_message), loc, all_frames, explanations)
     and root_with_specific_reason loc frames root_reason specific_reason root_message =
       let root_loc = loc_of_reason root_reason in
@@ -835,7 +818,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
       root_with_loc_and_specific_loc loc frames root_loc root_loc root_message
     in
     fun (loc : Loc.t) (use_op : Loc.t virtual_use_op) ->
-      let (root, loc, frames, explanations) = loop loc ([], [], []) use_op in
+      let (root, loc, frames, explanations) = loop loc ([], []) use_op in
       let root =
         Base.Option.map root ~f:(fun (root_loc, root_message) ->
             (root_loc, root_message @ [text " because"])
