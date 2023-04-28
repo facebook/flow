@@ -448,383 +448,407 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
   let unwrap_use_ops =
     let open Friendly in
     let rec loop (loc : Loc.t) frames (use_op : Loc.t virtual_use_op) =
-      let action =
-        match use_op with
-        | Op UnknownUse -> `UnknownRoot false
-        | Op (Type.Speculation _) when speculation -> `UnknownRoot true
-        | Op (Type.Speculation use) -> `Next use
-        | Op (ObjectSpread { op }) -> `Root (op, None, [text "Cannot spread "; desc op])
-        | Op (ObjectRest { op }) -> `Root (op, None, [text "Cannot get rest of "; desc op])
-        | Op (ObjectChain { op }) ->
-          `Root (op, None, [text "Incorrect arguments passed to "; desc op])
-        | Op (Arith { op; left; right }) ->
-          `Root (op, None, [text "Cannot add "; desc left; text " and "; desc right])
-        | Op (AssignVar { var; init }) ->
-          `Root
-            ( init,
-              None,
-              match var with
-              | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
-              | None -> [text "Cannot assign "; desc init; text " to variable"]
-            )
-        | Op (DeleteVar { var }) -> `Root (var, None, [text "Cannot delete "; desc var])
-        | Op (InitField { op; body }) ->
-          `Root (op, None, [text "Cannot initialize "; desc op; text " with "; desc body])
-        | Op (Cast { lower; upper }) ->
-          `Root (lower, None, [text "Cannot cast "; desc lower; text " to "; desc upper])
-        | Op (ClassExtendsCheck { extends; def }) ->
-          `Root (def, None, [text "Cannot extend "; ref extends; text " with "; desc def])
-        | Op (ClassMethodDefinition { name; def }) ->
-          `Root (def, None, [text "Cannot define "; ref def; text " on "; desc name])
-        | Op (ClassImplementsCheck { implements; def; _ }) ->
-          `Root (def, None, [text "Cannot implement "; ref implements; text " with "; desc def])
-        | Op (ClassOwnProtoCheck { prop; own_loc; proto_loc }) ->
-          (match (own_loc, proto_loc) with
-          | (None, None) -> `UnknownRoot true
-          | (Some loc, None) ->
-            let def = mk_reason (RProperty (Some prop)) loc in
-            `Root (def, None, [text "Cannot shadow proto property"])
-          | (None, Some loc) ->
-            let def = mk_reason (RProperty (Some prop)) loc in
-            `Root (def, None, [text "Cannot define shadowed proto property"])
-          | (Some own_loc, Some proto_loc) ->
-            let def = mk_reason (RProperty (Some prop)) own_loc in
-            let proto = mk_reason (RProperty (Some prop)) proto_loc in
-            `Root (def, None, [text "Cannot shadow proto "; ref proto]))
-        | Op (Coercion { from; target }) ->
-          `Root (from, None, [text "Cannot coerce "; desc from; text " to "; desc target])
-        | Op (FunCall { op; fn; _ }) -> `Root (op, Some fn, [text "Cannot call "; desc fn])
-        | Op (FunCallMethod { op; fn; prop; _ }) ->
-          `Root (op, Some prop, [text "Cannot call "; desc fn])
-        | Frame
-            ( FunParam _,
-              ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as
-              use_op
-              )
-            ) ->
-          `Next use_op
-        | Frame
-            ( FunParam { n; name; lower = lower'; _ },
-              Op (FunCall { args; fn; _ } | FunCallMethod { args; fn; _ })
-            ) ->
-          let lower =
-            if List.length args > n - 1 then
-              List.nth args (n - 1)
-            else
-              lower'
-          in
-          let param =
-            match name with
-            | Some name -> code name
-            | None -> text (spf "the %s parameter" (Utils_js.ordinal n))
-          in
-          `Root
-            ( lower,
-              None,
-              [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]
-            )
-        | Op (FunReturnStatement { value }) ->
-          `Root (value, None, [text "Cannot return "; desc value])
-        | Op (FunImplicitReturn { upper; fn }) ->
-          `Root
-            ( upper,
-              None,
-              [text "Cannot expect "; desc upper; text " as the return type of "; desc fn]
-            )
-        | Op (GeneratorYield { value }) -> `Root (value, None, [text "Cannot yield "; desc value])
-        | Op (GetProperty prop) -> `Root (prop, None, [text "Cannot get "; desc prop])
-        | Op (IndexedTypeAccess { _object; index }) ->
-          `Root (index, None, [text "Cannot access "; desc index; text " on "; desc _object])
-        | Op (InferBoundCompatibilityCheck { bound; infer }) ->
-          `Root
-            ( bound,
-              None,
-              [text "Cannot use "; desc bound; text " as the bound of infer type "; desc infer]
-            )
-        | Op (ConditionalTypeEval { check_type_reason; extends_type_reason }) ->
-          `Root
-            ( check_type_reason,
-              None,
-              [
-                text "Cannot check ";
-                desc check_type_reason;
-                text " against ";
-                desc extends_type_reason;
-              ]
-            )
-        | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
-        | Op (JSXCreateElement { op; component; _ }) ->
-          `Root (op, Some component, [text "Cannot create "; desc component; text " element"])
-        | Op (ReactCreateElementCall { op; component; _ }) ->
-          `Root (op, Some component, [text "Cannot create "; desc component; text " element"])
-        | Op (ReactGetIntrinsic { literal }) ->
-          `Root (literal, None, [text "Cannot create "; desc literal; text " element"])
-        | Op (TypeApplication { type' }) ->
-          `Root (type', None, [text "Cannot instantiate "; desc type'])
-        | Op (SetProperty { prop; value; lhs; _ }) ->
-          let loc_reason =
-            if Loc.contains (loc_of_reason lhs) loc then
-              lhs
-            else
-              value
-          in
-          `Root (loc_reason, None, [text "Cannot assign "; desc value; text " to "; desc prop])
-        | Op (UpdateProperty { prop; lhs }) -> `Root (lhs, None, [text "Cannot update "; desc prop])
-        | Op (DeleteProperty { prop; lhs }) -> `Root (lhs, None, [text "Cannot delete "; desc prop])
-        | Op (SwitchCheck { case_test; switch_discriminant }) ->
-          `Root
-            ( case_test,
-              None,
-              [text "Invalid check of "; desc case_test; text " against "; ref switch_discriminant]
-            )
-        | Op (MatchingProp { op; obj; key; sentinel_reason }) ->
-          let message =
-            [
-              text "Cannot compare ";
-              ref sentinel_reason;
-              text " with property ";
-              code key;
-              text " of ";
-              ref obj;
-            ]
-          in
-          `Root (op, None, message)
-        | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
-          let noun =
-            if array then
-              "element"
-            else
-              "assignment"
-          in
-          let assignments =
-            match providers with
-            | [] -> (* should not happen *) [text (spf "one of its initial %ss" noun)]
-            | [r] when Loc.equal r declaration ->
-              [
-                text "its ";
-                ref
-                  (mk_reason
-                     (RCustom
-                        ( if array then
-                          "initial element"
-                        else
-                          "initializer"
-                        )
-                     )
-                     declaration
-                  );
-              ]
-            | [r] -> [text "its "; ref (mk_reason (RCustom ("initial " ^ noun)) r)]
-            | providers ->
-              text (spf "one of its initial %ss" noun)
-              :: (Base.List.map ~f:(fun r -> ref (mk_reason (RCustom "") r)) providers
-                 |> Base.List.intersperse ~sep:(text ",")
-                 )
-          in
-          let message =
-            [text "All writes to "; code name; text " must be compatible with the type of "]
-            @ assignments
-            @ [
-                text ". Add an annotation to ";
-                ref (mk_reason (RIdentifier (OrdinaryName name)) declaration);
-                text " if a different type is desired";
-              ]
-          in
-          `Explanation (use_op, message)
-        | Frame (UnifyFlip, Frame (ArrayElementCompatibility { lower; upper }, use_op)) ->
-          let message =
-            [
-              text "Arrays are invariantly typed. See ";
-              text
-                "https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number";
-            ]
-          in
-          `Explanation (Frame (ArrayElementCompatibility { lower; upper }, use_op), message)
-        | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
-          `Frame (lower, use_op, [text "array element"])
-        | Frame (FunParam { n; lower; name; _ }, (Frame (FunCompatibility _, _) as use_op)) ->
-          let arg =
-            match name with
-            | Some "this" -> [text "the "; code "this"; text " parameter"]
-            | _ -> [text "the "; text (Utils_js.ordinal n); text " parameter"]
-          in
-          `Frame (lower, use_op, arg)
-        | Frame (FunParam { n; lower; name; _ }, use_op) ->
-          let arg =
-            match name with
-            | Some "this" -> [text "the "; code "this"; text " argument"]
-            | _ -> [text "the "; text (Utils_js.ordinal n); text " argument"]
-          in
-          `Frame (lower, use_op, arg)
-        | Frame (FunRestParam _, use_op) -> `Next use_op
-        | Frame (FunReturn { lower; _ }, use_op) ->
-          `Frame (repos_reason loc lower, use_op, [text "the return value"])
-        | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
-          `Frame (lower, use_op, [text "the indexer property's key"])
-        | Frame
-            ( PropertyCompatibility
-                (* TODO the $-prefixed names should be internal *)
-                { prop = None | Some (OrdinaryName ("$key" | "$value")); lower; _ },
-              use_op
-            ) ->
-          `Frame (lower, use_op, [text "the indexer property"])
-        | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op) ->
-          `Frame (lower, use_op, [text "the callable signature"])
-        | Frame (UnifyFlip, Frame (PropertyCompatibility { lower; upper; prop }, use_op)) ->
-          let message =
-            [
-              text "This property is invariantly typed. See ";
-              text
-                "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
-            ]
-          in
-          `Explanation (Frame (PropertyCompatibility { lower; upper; prop }, use_op), message)
-        | Frame (PropertyCompatibility { prop = Some prop; lower; _ }, use_op) ->
-          let repos_small_reason loc reason = function
-            (* If we are checking class extensions or implementations then the
-             * object reason will point to the class name. So don't reposition with
-             * this reason. *)
-            | Op (ClassExtendsCheck _) -> repos_reason loc reason
-            | Op (ClassImplementsCheck _) -> repos_reason loc reason
-            | _ -> reason
-          in
-          let lower = repos_small_reason loc lower use_op in
-          let rec loop lower = function
-            (* Don't match $key/$value/$call properties since they have special
-             * meaning. As defined above. *)
-            | Frame (PropertyCompatibility { prop = Some prop; lower = lower'; _ }, use_op)
-            (* TODO the $-prefixed names should be internal *)
-              when prop <> OrdinaryName "$key"
-                   && prop <> OrdinaryName "$value"
-                   && prop <> OrdinaryName "$call" ->
-              let lower' = repos_small_reason (loc_of_reason lower) lower' use_op in
-              (* Perform the same frame location unwrapping as we do in our
-               * general code. *)
-              let lower =
-                if Loc.contains (loc_of_reason lower') (loc_of_reason lower) then
-                  lower
-                else
-                  lower'
-              in
-              let (lower, props, use_op) = loop lower use_op in
-              (lower, prop :: props, use_op)
-            (* Perform standard iteration through these use_ops. *)
-            | use_op -> (lower, [], use_op)
-          in
-          (* Loop through our parent use_op to get our property path. *)
-          let (lower, props, use_op) = loop lower use_op in
-          (* Create our final action. *)
-          `Frame
-            ( lower,
-              use_op,
-              [
-                text "property ";
-                code
-                  (List.fold_left
-                     (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
-                     (display_string_of_name prop)
-                     props
-                  );
-              ]
-            )
-        | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
-          `Frame (lower, use_op, [text "index "; text (string_of_int n)])
-        | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
-          `Frame (lower, use_op, [text "type argument "; ref targ])
-        | Frame (TypeParamBound { name }, use_op) ->
-          `FrameWithoutLoc
-            (use_op, [text "type argument "; code (Subst_name.string_of_subst_name name)])
-        | Frame (FunCompatibility { lower; _ }, use_op) -> `NextWithLoc (lower, use_op)
-        | Frame (FunMissingArg _, use_op)
-        | Frame (ImplicitTypeParam, use_op)
-        | Frame (ReactConfigCheck, use_op)
-        | Frame (ReactGetConfig _, use_op)
-        | Frame (UnifyFlip, use_op)
-        | Frame (CallFunCompatibility _, use_op)
-        | Frame (TupleMapFunCompatibility _, use_op)
-        | Frame (ObjMapFunCompatibility _, use_op)
-        | Frame (ObjMapiFunCompatibility _, use_op) ->
-          `Next use_op
-      in
-      match action with
-      (* Skip this use_op and go to the next one. *)
-      | `Next use_op -> loop loc frames use_op
-      (* Skip this use_op, don't add a frame, but do use the loc to reposition
-       * our primary location. *)
-      | `NextWithLoc (frame_reason, use_op) ->
-        (* If our current loc is inside our frame_loc then use our current loc
-         * since it is the smallest possible loc in our frame_loc. *)
-        let frame_loc = loc_of_reason frame_reason in
-        let loc =
-          if Loc.contains frame_loc loc then
-            loc
-          else
-            frame_loc
-        in
-        loop loc frames use_op
-      (* Add our frame message and reposition the location if appropriate. *)
-      | `Frame (frame_reason, use_op, frame) ->
-        (* If our current loc is inside our frame_loc then use our current loc
-         * since it is the smallest possible loc in our frame_loc. *)
-        let frame_loc = loc_of_reason frame_reason in
-        let frame_contains_loc = Loc.contains frame_loc loc in
-        let loc =
-          if frame_contains_loc then
-            loc
-          else
-            frame_loc
-        in
-        (* Add our frame and recurse with the next use_op. *)
-        let (all_frames, local_frames, explanations) = frames in
-        let frames =
-          ( frame :: all_frames,
-            ( if frame_contains_loc then
-              local_frames
-            else
-              frame :: local_frames
-            ),
-            explanations
+      match use_op with
+      | Op UnknownUse -> unknown_root loc frames false
+      | Op (Type.Speculation _) when speculation -> unknown_root loc frames true
+      | Op (Type.Speculation use) -> loop loc frames use
+      | Op (ObjectSpread { op }) -> root loc frames (op, None, [text "Cannot spread "; desc op])
+      | Op (ObjectRest { op }) -> root loc frames (op, None, [text "Cannot get rest of "; desc op])
+      | Op (ObjectChain { op }) ->
+        root loc frames (op, None, [text "Incorrect arguments passed to "; desc op])
+      | Op (Arith { op; left; right }) ->
+        root loc frames (op, None, [text "Cannot add "; desc left; text " and "; desc right])
+      | Op (AssignVar { var; init }) ->
+        root
+          loc
+          frames
+          ( init,
+            None,
+            match var with
+            | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
+            | None -> [text "Cannot assign "; desc init; text " to variable"]
           )
-        in
+      | Op (DeleteVar { var }) -> root loc frames (var, None, [text "Cannot delete "; desc var])
+      | Op (InitField { op; body }) ->
+        root loc frames (op, None, [text "Cannot initialize "; desc op; text " with "; desc body])
+      | Op (Cast { lower; upper }) ->
+        root loc frames (lower, None, [text "Cannot cast "; desc lower; text " to "; desc upper])
+      | Op (ClassExtendsCheck { extends; def }) ->
+        root loc frames (def, None, [text "Cannot extend "; ref extends; text " with "; desc def])
+      | Op (ClassMethodDefinition { name; def }) ->
+        root loc frames (def, None, [text "Cannot define "; ref def; text " on "; desc name])
+      | Op (ClassImplementsCheck { implements; def; _ }) ->
+        root
+          loc
+          frames
+          (def, None, [text "Cannot implement "; ref implements; text " with "; desc def])
+      | Op (ClassOwnProtoCheck { prop; own_loc; proto_loc }) ->
+        (match (own_loc, proto_loc) with
+        | (None, None) -> unknown_root loc frames true
+        | (Some loc, None) ->
+          let def = mk_reason (RProperty (Some prop)) loc in
+          root loc frames (def, None, [text "Cannot shadow proto property"])
+        | (None, Some loc) ->
+          let def = mk_reason (RProperty (Some prop)) loc in
+          root loc frames (def, None, [text "Cannot define shadowed proto property"])
+        | (Some own_loc, Some proto_loc) ->
+          let def = mk_reason (RProperty (Some prop)) own_loc in
+          let proto = mk_reason (RProperty (Some prop)) proto_loc in
+          root loc frames (def, None, [text "Cannot shadow proto "; ref proto]))
+      | Op (Coercion { from; target }) ->
+        root loc frames (from, None, [text "Cannot coerce "; desc from; text " to "; desc target])
+      | Op (FunCall { op; fn; _ }) -> root loc frames (op, Some fn, [text "Cannot call "; desc fn])
+      | Op (FunCallMethod { op; fn; prop; _ }) ->
+        root loc frames (op, Some prop, [text "Cannot call "; desc fn])
+      | Frame
+          ( FunParam _,
+            (Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as use_op)
+          ) ->
         loop loc frames use_op
-      (* Same logic as `Frame except we don't have a frame location. *)
-      | `FrameWithoutLoc (use_op, frame) ->
-        let (all_frames, local_frames, explanations) = frames in
-        let frames = (frame :: all_frames, frame :: local_frames, explanations) in
-        loop loc frames use_op
-      | `Explanation (use_op, frame) ->
-        let (all_frames, local_frames, explanations) = frames in
-        let frames = (all_frames, local_frames, frame :: explanations) in
-        loop loc frames use_op
-      (* We don't know what our root is! Return what we do know. *)
-      | `UnknownRoot show_all_frames ->
-        let (all_frames, local_frames, explanations) = frames in
-        ( None,
-          loc,
-          ( if show_all_frames then
-            all_frames
+      | Frame
+          ( FunParam { n; name; lower = lower'; _ },
+            Op (FunCall { args; fn; _ } | FunCallMethod { args; fn; _ })
+          ) ->
+        let lower =
+          if List.length args > n - 1 then
+            List.nth args (n - 1)
           else
+            lower'
+        in
+        let param =
+          match name with
+          | Some name -> code name
+          | None -> text (spf "the %s parameter" (Utils_js.ordinal n))
+        in
+        root
+          loc
+          frames
+          ( lower,
+            None,
+            [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]
+          )
+      | Op (FunReturnStatement { value }) ->
+        root loc frames (value, None, [text "Cannot return "; desc value])
+      | Op (FunImplicitReturn { upper; fn }) ->
+        root
+          loc
+          frames
+          (upper, None, [text "Cannot expect "; desc upper; text " as the return type of "; desc fn])
+      | Op (GeneratorYield { value }) ->
+        root loc frames (value, None, [text "Cannot yield "; desc value])
+      | Op (GetProperty prop) -> root loc frames (prop, None, [text "Cannot get "; desc prop])
+      | Op (IndexedTypeAccess { _object; index }) ->
+        root loc frames (index, None, [text "Cannot access "; desc index; text " on "; desc _object])
+      | Op (InferBoundCompatibilityCheck { bound; infer }) ->
+        root
+          loc
+          frames
+          ( bound,
+            None,
+            [text "Cannot use "; desc bound; text " as the bound of infer type "; desc infer]
+          )
+      | Op (ConditionalTypeEval { check_type_reason; extends_type_reason }) ->
+        root
+          loc
+          frames
+          ( check_type_reason,
+            None,
+            [
+              text "Cannot check ";
+              desc check_type_reason;
+              text " against ";
+              desc extends_type_reason;
+            ]
+          )
+      | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
+      | Op (JSXCreateElement { op; component; _ }) ->
+        root
+          loc
+          frames
+          (op, Some component, [text "Cannot create "; desc component; text " element"])
+      | Op (ReactCreateElementCall { op; component; _ }) ->
+        root
+          loc
+          frames
+          (op, Some component, [text "Cannot create "; desc component; text " element"])
+      | Op (ReactGetIntrinsic { literal }) ->
+        root loc frames (literal, None, [text "Cannot create "; desc literal; text " element"])
+      | Op (TypeApplication { type' }) ->
+        root loc frames (type', None, [text "Cannot instantiate "; desc type'])
+      | Op (SetProperty { prop; value; lhs; _ }) ->
+        let loc_reason =
+          if Loc.contains (loc_of_reason lhs) loc then
+            lhs
+          else
+            value
+        in
+        root
+          loc
+          frames
+          (loc_reason, None, [text "Cannot assign "; desc value; text " to "; desc prop])
+      | Op (UpdateProperty { prop; lhs }) ->
+        root loc frames (lhs, None, [text "Cannot update "; desc prop])
+      | Op (DeleteProperty { prop; lhs }) ->
+        root loc frames (lhs, None, [text "Cannot delete "; desc prop])
+      | Op (SwitchCheck { case_test; switch_discriminant }) ->
+        root
+          loc
+          frames
+          ( case_test,
+            None,
+            [text "Invalid check of "; desc case_test; text " against "; ref switch_discriminant]
+          )
+      | Op (MatchingProp { op; obj; key; sentinel_reason }) ->
+        let message =
+          [
+            text "Cannot compare ";
+            ref sentinel_reason;
+            text " with property ";
+            code key;
+            text " of ";
+            ref obj;
+          ]
+        in
+        root loc frames (op, None, message)
+      | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
+        let noun =
+          if array then
+            "element"
+          else
+            "assignment"
+        in
+        let assignments =
+          match providers with
+          | [] -> (* should not happen *) [text (spf "one of its initial %ss" noun)]
+          | [r] when Loc.equal r declaration ->
+            [
+              text "its ";
+              ref
+                (mk_reason
+                   (RCustom
+                      ( if array then
+                        "initial element"
+                      else
+                        "initializer"
+                      )
+                   )
+                   declaration
+                );
+            ]
+          | [r] -> [text "its "; ref (mk_reason (RCustom ("initial " ^ noun)) r)]
+          | providers ->
+            text (spf "one of its initial %ss" noun)
+            :: (Base.List.map ~f:(fun r -> ref (mk_reason (RCustom "") r)) providers
+               |> Base.List.intersperse ~sep:(text ",")
+               )
+        in
+        let message =
+          [text "All writes to "; code name; text " must be compatible with the type of "]
+          @ assignments
+          @ [
+              text ". Add an annotation to ";
+              ref (mk_reason (RIdentifier (OrdinaryName name)) declaration);
+              text " if a different type is desired";
+            ]
+        in
+        explanation loc frames (use_op, message)
+      | Frame (UnifyFlip, (Frame (ArrayElementCompatibility _, _) as use_op)) ->
+        let message =
+          [
+            text "Arrays are invariantly typed. See ";
+            text
+              "https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number";
+          ]
+        in
+        explanation loc frames (use_op, message)
+      | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
+        unwrap_frame loc frames (lower, use_op, [text "array element"])
+      | Frame (FunParam { n; lower; name; _ }, (Frame (FunCompatibility _, _) as use_op)) ->
+        let arg =
+          match name with
+          | Some "this" -> [text "the "; code "this"; text " parameter"]
+          | _ -> [text "the "; text (Utils_js.ordinal n); text " parameter"]
+        in
+        unwrap_frame loc frames (lower, use_op, arg)
+      | Frame (FunParam { n; lower; name; _ }, use_op) ->
+        let arg =
+          match name with
+          | Some "this" -> [text "the "; code "this"; text " argument"]
+          | _ -> [text "the "; text (Utils_js.ordinal n); text " argument"]
+        in
+        unwrap_frame loc frames (lower, use_op, arg)
+      | Frame (FunRestParam _, use_op) -> loop loc frames use_op
+      | Frame (FunReturn { lower; _ }, use_op) ->
+        unwrap_frame loc frames (repos_reason loc lower, use_op, [text "the return value"])
+      | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
+        unwrap_frame loc frames (lower, use_op, [text "the indexer property's key"])
+      | Frame
+          ( PropertyCompatibility
+              (* TODO the $-prefixed names should be internal *)
+              { prop = None | Some (OrdinaryName ("$key" | "$value")); lower; _ },
+            use_op
+          ) ->
+        unwrap_frame loc frames (lower, use_op, [text "the indexer property"])
+      | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op) ->
+        unwrap_frame loc frames (lower, use_op, [text "the callable signature"])
+      | Frame (UnifyFlip, (Frame (PropertyCompatibility _, _) as use_op)) ->
+        let message =
+          [
+            text "This property is invariantly typed. See ";
+            text
+              "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
+          ]
+        in
+        explanation loc frames (use_op, message)
+      | Frame (PropertyCompatibility { prop = Some prop; lower; _ }, use_op) ->
+        let repos_small_reason loc reason = function
+          (* If we are checking class extensions or implementations then the
+           * object reason will point to the class name. So don't reposition with
+           * this reason. *)
+          | Op (ClassExtendsCheck _) -> repos_reason loc reason
+          | Op (ClassImplementsCheck _) -> repos_reason loc reason
+          | _ -> reason
+        in
+        let lower = repos_small_reason loc lower use_op in
+        let rec loop lower = function
+          (* Don't match $key/$value/$call properties since they have special
+           * meaning. As defined above. *)
+          | Frame (PropertyCompatibility { prop = Some prop; lower = lower'; _ }, use_op)
+          (* TODO the $-prefixed names should be internal *)
+            when prop <> OrdinaryName "$key"
+                 && prop <> OrdinaryName "$value"
+                 && prop <> OrdinaryName "$call" ->
+            let lower' = repos_small_reason (loc_of_reason lower) lower' use_op in
+            (* Perform the same frame location unwrapping as we do in our
+             * general code. *)
+            let lower =
+              if Loc.contains (loc_of_reason lower') (loc_of_reason lower) then
+                lower
+              else
+                lower'
+            in
+            let (lower, props, use_op) = loop lower use_op in
+            (lower, prop :: props, use_op)
+          (* Perform standard iteration through these use_ops. *)
+          | use_op -> (lower, [], use_op)
+        in
+        (* Loop through our parent use_op to get our property path. *)
+        let (lower, props, use_op) = loop lower use_op in
+        (* Create our final action. *)
+        unwrap_frame
+          loc
+          frames
+          ( lower,
+            use_op,
+            [
+              text "property ";
+              code
+                (List.fold_left
+                   (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
+                   (display_string_of_name prop)
+                   props
+                );
+            ]
+          )
+      | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
+        unwrap_frame loc frames (lower, use_op, [text "index "; text (string_of_int n)])
+      | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
+        unwrap_frame loc frames (lower, use_op, [text "type argument "; ref targ])
+      | Frame (TypeParamBound { name }, use_op) ->
+        unwrap_frame_without_loc
+          loc
+          frames
+          (use_op, [text "type argument "; code (Subst_name.string_of_subst_name name)])
+      | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames (lower, use_op)
+      | Frame (FunMissingArg _, use_op)
+      | Frame (ImplicitTypeParam, use_op)
+      | Frame (ReactConfigCheck, use_op)
+      | Frame (ReactGetConfig _, use_op)
+      | Frame (UnifyFlip, use_op)
+      | Frame (CallFunCompatibility _, use_op)
+      | Frame (TupleMapFunCompatibility _, use_op)
+      | Frame (ObjMapFunCompatibility _, use_op)
+      | Frame (ObjMapiFunCompatibility _, use_op) ->
+        loop loc frames use_op
+    and next_with_loc loc frames (frame_reason, use_op) =
+      (* Skip this use_op, don't add a frame, but do use the loc to reposition
+       * our primary location.
+       *
+       * If our current loc is inside our frame_loc then use our current loc
+       * since it is the smallest possible loc in our frame_loc. *)
+      let frame_loc = loc_of_reason frame_reason in
+      let loc =
+        if Loc.contains frame_loc loc then
+          loc
+        else
+          frame_loc
+      in
+      loop loc frames use_op
+    and unwrap_frame loc frames (frame_reason, use_op, frame) =
+      (* Add our frame message and reposition the location if appropriate.
+       *
+       * If our current loc is inside our frame_loc then use our current loc
+       * since it is the smallest possible loc in our frame_loc. *)
+      let frame_loc = loc_of_reason frame_reason in
+      let frame_contains_loc = Loc.contains frame_loc loc in
+      let loc =
+        if frame_contains_loc then
+          loc
+        else
+          frame_loc
+      in
+      (* Add our frame and recurse with the next use_op. *)
+      let (all_frames, local_frames, explanations) = frames in
+      let frames =
+        ( frame :: all_frames,
+          ( if frame_contains_loc then
             local_frames
+          else
+            frame :: local_frames
           ),
           explanations
         )
+      in
+      loop loc frames use_op
+    and unwrap_frame_without_loc loc frames (use_op, frame) =
+      (* Same logic as `unwrap_frame` except we don't have a frame location. *)
+      let (all_frames, local_frames, explanations) = frames in
+      let frames = (frame :: all_frames, frame :: local_frames, explanations) in
+      loop loc frames use_op
+    and explanation loc frames (use_op, frame) =
+      let (all_frames, local_frames, explanations) = frames in
+      let frames = (all_frames, local_frames, frame :: explanations) in
+      loop loc frames use_op
+    and unknown_root loc frames show_all_frames =
+      (* We don't know what our root is! Return what we do know. *)
+      let (all_frames, local_frames, explanations) = frames in
+      ( None,
+        loc,
+        ( if show_all_frames then
+          all_frames
+        else
+          local_frames
+        ),
+        explanations
+      )
+    and root loc frames (root_reason, root_specific_reason, root_message) =
       (* Finish up be returning our root location, root message, primary loc,
+       * and frames.
+
+       * If our current loc is inside our root_loc then use our current loc
+       * since it is the smallest possible loc in our root_loc. *)
+      let root_loc = loc_of_reason root_reason in
+      let root_specific_loc = Base.Option.map root_specific_reason ~f:loc_of_reason in
+      let loc =
+        if Loc.contains root_loc loc && Loc.compare root_loc loc <> 0 then
+          loc
+        else
+          Base.Option.value root_specific_loc ~default:root_loc
+      in
+      (* Return our root loc and message in addition to the true primary loc
        * and frames. *)
-      | `Root (root_reason, root_specific_reason, root_message) ->
-        (* If our current loc is inside our root_loc then use our current loc
-         * since it is the smallest possible loc in our root_loc. *)
-        let root_loc = loc_of_reason root_reason in
-        let root_specific_loc = Base.Option.map root_specific_reason ~f:loc_of_reason in
-        let loc =
-          if Loc.contains root_loc loc && Loc.compare root_loc loc <> 0 then
-            loc
-          else
-            Base.Option.value root_specific_loc ~default:root_loc
-        in
-        (* Return our root loc and message in addition to the true primary loc
-         * and frames. *)
-        let (all_frames, _, explanations) = frames in
-        (Some (root_loc, root_message), loc, all_frames, explanations)
+      let (all_frames, _, explanations) = frames in
+      (Some (root_loc, root_message), loc, all_frames, explanations)
     in
     fun (loc : Loc.t) (use_op : Loc.t virtual_use_op) ->
       let (root, loc, frames, explanations) = loop loc ([], [], []) use_op in
