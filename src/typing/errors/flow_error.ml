@@ -452,54 +452,49 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
       | Op UnknownUse -> unknown_root loc frames false
       | Op (Type.Speculation _) when speculation -> unknown_root loc frames true
       | Op (Type.Speculation use) -> loop loc frames use
-      | Op (ObjectSpread { op }) -> root loc frames (op, None, [text "Cannot spread "; desc op])
-      | Op (ObjectRest { op }) -> root loc frames (op, None, [text "Cannot get rest of "; desc op])
+      | Op (ObjectSpread { op }) -> root loc frames op [text "Cannot spread "; desc op]
+      | Op (ObjectRest { op }) -> root loc frames op [text "Cannot get rest of "; desc op]
       | Op (ObjectChain { op }) ->
-        root loc frames (op, None, [text "Incorrect arguments passed to "; desc op])
+        root loc frames op [text "Incorrect arguments passed to "; desc op]
       | Op (Arith { op; left; right }) ->
-        root loc frames (op, None, [text "Cannot add "; desc left; text " and "; desc right])
+        root loc frames op [text "Cannot add "; desc left; text " and "; desc right]
       | Op (AssignVar { var; init }) ->
-        root
-          loc
-          frames
-          ( init,
-            None,
-            match var with
-            | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
-            | None -> [text "Cannot assign "; desc init; text " to variable"]
-          )
-      | Op (DeleteVar { var }) -> root loc frames (var, None, [text "Cannot delete "; desc var])
+        let message =
+          match var with
+          | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
+          | None -> [text "Cannot assign "; desc init; text " to variable"]
+        in
+        root loc frames init message
+      | Op (DeleteVar { var }) -> root loc frames var [text "Cannot delete "; desc var]
       | Op (InitField { op; body }) ->
-        root loc frames (op, None, [text "Cannot initialize "; desc op; text " with "; desc body])
+        root loc frames op [text "Cannot initialize "; desc op; text " with "; desc body]
       | Op (Cast { lower; upper }) ->
-        root loc frames (lower, None, [text "Cannot cast "; desc lower; text " to "; desc upper])
+        root loc frames lower [text "Cannot cast "; desc lower; text " to "; desc upper]
       | Op (ClassExtendsCheck { extends; def }) ->
-        root loc frames (def, None, [text "Cannot extend "; ref extends; text " with "; desc def])
+        root loc frames def [text "Cannot extend "; ref extends; text " with "; desc def]
       | Op (ClassMethodDefinition { name; def }) ->
-        root loc frames (def, None, [text "Cannot define "; ref def; text " on "; desc name])
+        root loc frames def [text "Cannot define "; ref def; text " on "; desc name]
       | Op (ClassImplementsCheck { implements; def; _ }) ->
-        root
-          loc
-          frames
-          (def, None, [text "Cannot implement "; ref implements; text " with "; desc def])
+        root loc frames def [text "Cannot implement "; ref implements; text " with "; desc def]
       | Op (ClassOwnProtoCheck { prop; own_loc; proto_loc }) ->
         (match (own_loc, proto_loc) with
         | (None, None) -> unknown_root loc frames true
         | (Some loc, None) ->
           let def = mk_reason (RProperty (Some prop)) loc in
-          root loc frames (def, None, [text "Cannot shadow proto property"])
+          root loc frames def [text "Cannot shadow proto property"]
         | (None, Some loc) ->
           let def = mk_reason (RProperty (Some prop)) loc in
-          root loc frames (def, None, [text "Cannot define shadowed proto property"])
+          root loc frames def [text "Cannot define shadowed proto property"]
         | (Some own_loc, Some proto_loc) ->
           let def = mk_reason (RProperty (Some prop)) own_loc in
           let proto = mk_reason (RProperty (Some prop)) proto_loc in
-          root loc frames (def, None, [text "Cannot shadow proto "; ref proto]))
+          root loc frames def [text "Cannot shadow proto "; ref proto])
       | Op (Coercion { from; target }) ->
-        root loc frames (from, None, [text "Cannot coerce "; desc from; text " to "; desc target])
-      | Op (FunCall { op; fn; _ }) -> root loc frames (op, Some fn, [text "Cannot call "; desc fn])
+        root loc frames from [text "Cannot coerce "; desc from; text " to "; desc target]
+      | Op (FunCall { op; fn; _ }) ->
+        root_with_specific_reason loc frames op fn [text "Cannot call "; desc fn]
       | Op (FunCallMethod { op; fn; prop; _ }) ->
-        root loc frames (op, Some prop, [text "Cannot call "; desc fn])
+        root_with_specific_reason loc frames op prop [text "Cannot call "; desc fn]
       | Frame
           ( FunParam _,
             (Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as use_op)
@@ -523,58 +518,51 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
         root
           loc
           frames
-          ( lower,
-            None,
-            [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]
-          )
+          lower
+          [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]
       | Op (FunReturnStatement { value }) ->
-        root loc frames (value, None, [text "Cannot return "; desc value])
+        root loc frames value [text "Cannot return "; desc value]
       | Op (FunImplicitReturn { upper; fn }) ->
         root
           loc
           frames
-          (upper, None, [text "Cannot expect "; desc upper; text " as the return type of "; desc fn])
-      | Op (GeneratorYield { value }) ->
-        root loc frames (value, None, [text "Cannot yield "; desc value])
-      | Op (GetProperty prop) -> root loc frames (prop, None, [text "Cannot get "; desc prop])
+          upper
+          [text "Cannot expect "; desc upper; text " as the return type of "; desc fn]
+      | Op (GeneratorYield { value }) -> root loc frames value [text "Cannot yield "; desc value]
+      | Op (GetProperty prop) -> root loc frames prop [text "Cannot get "; desc prop]
       | Op (IndexedTypeAccess { _object; index }) ->
-        root loc frames (index, None, [text "Cannot access "; desc index; text " on "; desc _object])
+        root loc frames index [text "Cannot access "; desc index; text " on "; desc _object]
       | Op (InferBoundCompatibilityCheck { bound; infer }) ->
         root
           loc
           frames
-          ( bound,
-            None,
-            [text "Cannot use "; desc bound; text " as the bound of infer type "; desc infer]
-          )
+          bound
+          [text "Cannot use "; desc bound; text " as the bound of infer type "; desc infer]
       | Op (ConditionalTypeEval { check_type_reason; extends_type_reason }) ->
         root
           loc
           frames
-          ( check_type_reason,
-            None,
-            [
-              text "Cannot check ";
-              desc check_type_reason;
-              text " against ";
-              desc extends_type_reason;
-            ]
-          )
+          check_type_reason
+          [text "Cannot check "; desc check_type_reason; text " against "; desc extends_type_reason]
       | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
       | Op (JSXCreateElement { op; component; _ }) ->
-        root
+        root_with_specific_reason
           loc
           frames
-          (op, Some component, [text "Cannot create "; desc component; text " element"])
+          op
+          component
+          [text "Cannot create "; desc component; text " element"]
       | Op (ReactCreateElementCall { op; component; _ }) ->
-        root
+        root_with_specific_reason
           loc
           frames
-          (op, Some component, [text "Cannot create "; desc component; text " element"])
+          op
+          component
+          [text "Cannot create "; desc component; text " element"]
       | Op (ReactGetIntrinsic { literal }) ->
-        root loc frames (literal, None, [text "Cannot create "; desc literal; text " element"])
+        root loc frames literal [text "Cannot create "; desc literal; text " element"]
       | Op (TypeApplication { type' }) ->
-        root loc frames (type', None, [text "Cannot instantiate "; desc type'])
+        root loc frames type' [text "Cannot instantiate "; desc type']
       | Op (SetProperty { prop; value; lhs; _ }) ->
         let loc_reason =
           if Loc.contains (loc_of_reason lhs) loc then
@@ -582,22 +570,15 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
           else
             value
         in
-        root
-          loc
-          frames
-          (loc_reason, None, [text "Cannot assign "; desc value; text " to "; desc prop])
-      | Op (UpdateProperty { prop; lhs }) ->
-        root loc frames (lhs, None, [text "Cannot update "; desc prop])
-      | Op (DeleteProperty { prop; lhs }) ->
-        root loc frames (lhs, None, [text "Cannot delete "; desc prop])
+        root loc frames loc_reason [text "Cannot assign "; desc value; text " to "; desc prop]
+      | Op (UpdateProperty { prop; lhs }) -> root loc frames lhs [text "Cannot update "; desc prop]
+      | Op (DeleteProperty { prop; lhs }) -> root loc frames lhs [text "Cannot delete "; desc prop]
       | Op (SwitchCheck { case_test; switch_discriminant }) ->
         root
           loc
           frames
-          ( case_test,
-            None,
-            [text "Invalid check of "; desc case_test; text " against "; ref switch_discriminant]
-          )
+          case_test
+          [text "Invalid check of "; desc case_test; text " against "; ref switch_discriminant]
       | Op (MatchingProp { op; obj; key; sentinel_reason }) ->
         let message =
           [
@@ -609,7 +590,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
             ref obj;
           ]
         in
-        root loc frames (op, None, message)
+        root loc frames op message
       | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
         let noun =
           if array then
@@ -831,24 +812,29 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
         ),
         explanations
       )
-    and root loc frames (root_reason, root_specific_reason, root_message) =
+    and root_with_loc_and_specific_loc loc frames root_loc specific_loc root_message =
       (* Finish up be returning our root location, root message, primary loc,
        * and frames.
 
        * If our current loc is inside our root_loc then use our current loc
        * since it is the smallest possible loc in our root_loc. *)
-      let root_loc = loc_of_reason root_reason in
-      let root_specific_loc = Base.Option.map root_specific_reason ~f:loc_of_reason in
       let loc =
         if Loc.contains root_loc loc && Loc.compare root_loc loc <> 0 then
           loc
         else
-          Base.Option.value root_specific_loc ~default:root_loc
+          specific_loc
       in
       (* Return our root loc and message in addition to the true primary loc
        * and frames. *)
       let (all_frames, _, explanations) = frames in
       (Some (root_loc, root_message), loc, all_frames, explanations)
+    and root_with_specific_reason loc frames root_reason specific_reason root_message =
+      let root_loc = loc_of_reason root_reason in
+      let specific_loc = loc_of_reason specific_reason in
+      root_with_loc_and_specific_loc loc frames root_loc specific_loc root_message
+    and root loc frames root_reason root_message =
+      let root_loc = loc_of_reason root_reason in
+      root_with_loc_and_specific_loc loc frames root_loc root_loc root_message
     in
     fun (loc : Loc.t) (use_op : Loc.t virtual_use_op) ->
       let (root, loc, frames, explanations) = loop loc ([], [], []) use_op in
