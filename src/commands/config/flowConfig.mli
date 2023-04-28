@@ -126,6 +126,10 @@ val gc_worker_space_overhead : config -> int option
 
 val gc_worker_window_size : config -> int option
 
+val global_find_ref_identifiers : config -> bool option
+
+val global_find_ref_props : config -> bool option
+
 val haste_module_ref_prefix : config -> string option
 
 val haste_module_ref_prefix_LEGACY_INTEROP : config -> string option
