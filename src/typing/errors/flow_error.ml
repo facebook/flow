@@ -632,7 +632,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
               text " if a different type is desired";
             ]
         in
-        explanation loc frames (use_op, message)
+        explanation loc frames use_op message
       | Frame (UnifyFlip, (Frame (ArrayElementCompatibility _, _) as use_op)) ->
         let message =
           [
@@ -641,37 +641,37 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
               "https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number";
           ]
         in
-        explanation loc frames (use_op, message)
+        explanation loc frames use_op message
       | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
-        unwrap_frame loc frames (lower, use_op, [text "array element"])
+        unwrap_frame loc frames lower use_op [text "array element"]
       | Frame (FunParam { n; lower; name; _ }, (Frame (FunCompatibility _, _) as use_op)) ->
         let arg =
           match name with
           | Some "this" -> [text "the "; code "this"; text " parameter"]
           | _ -> [text "the "; text (Utils_js.ordinal n); text " parameter"]
         in
-        unwrap_frame loc frames (lower, use_op, arg)
+        unwrap_frame loc frames lower use_op arg
       | Frame (FunParam { n; lower; name; _ }, use_op) ->
         let arg =
           match name with
           | Some "this" -> [text "the "; code "this"; text " argument"]
           | _ -> [text "the "; text (Utils_js.ordinal n); text " argument"]
         in
-        unwrap_frame loc frames (lower, use_op, arg)
+        unwrap_frame loc frames lower use_op arg
       | Frame (FunRestParam _, use_op) -> loop loc frames use_op
       | Frame (FunReturn { lower; _ }, use_op) ->
-        unwrap_frame loc frames (repos_reason loc lower, use_op, [text "the return value"])
+        unwrap_frame loc frames (repos_reason loc lower) use_op [text "the return value"]
       | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
-        unwrap_frame loc frames (lower, use_op, [text "the indexer property's key"])
+        unwrap_frame loc frames lower use_op [text "the indexer property's key"]
       | Frame
           ( PropertyCompatibility
               (* TODO the $-prefixed names should be internal *)
               { prop = None | Some (OrdinaryName ("$key" | "$value")); lower; _ },
             use_op
           ) ->
-        unwrap_frame loc frames (lower, use_op, [text "the indexer property"])
+        unwrap_frame loc frames lower use_op [text "the indexer property"]
       | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op) ->
-        unwrap_frame loc frames (lower, use_op, [text "the callable signature"])
+        unwrap_frame loc frames lower use_op [text "the callable signature"]
       | Frame (UnifyFlip, (Frame (PropertyCompatibility _, _) as use_op)) ->
         let message =
           [
@@ -680,7 +680,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
               "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
           ]
         in
-        explanation loc frames (use_op, message)
+        explanation loc frames use_op message
       | Frame (PropertyCompatibility { prop = Some prop; lower; _ }, use_op) ->
         let repos_small_reason loc reason = function
           (* If we are checking class extensions or implementations then the
@@ -716,31 +716,29 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
         (* Loop through our parent use_op to get our property path. *)
         let (lower, props, use_op) = loop lower use_op in
         (* Create our final action. *)
-        unwrap_frame
-          loc
-          frames
-          ( lower,
-            use_op,
-            [
-              text "property ";
-              code
-                (List.fold_left
-                   (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
-                   (display_string_of_name prop)
-                   props
-                );
-            ]
-          )
+        let message =
+          [
+            text "property ";
+            code
+              (List.fold_left
+                 (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
+                 (display_string_of_name prop)
+                 props
+              );
+          ]
+        in
+        unwrap_frame loc frames lower use_op message
       | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
-        unwrap_frame loc frames (lower, use_op, [text "index "; text (string_of_int n)])
+        unwrap_frame loc frames lower use_op [text "index "; text (string_of_int n)]
       | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
-        unwrap_frame loc frames (lower, use_op, [text "type argument "; ref targ])
+        unwrap_frame loc frames lower use_op [text "type argument "; ref targ]
       | Frame (TypeParamBound { name }, use_op) ->
         unwrap_frame_without_loc
           loc
           frames
-          (use_op, [text "type argument "; code (Subst_name.string_of_subst_name name)])
-      | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames (lower, use_op)
+          use_op
+          [text "type argument "; code (Subst_name.string_of_subst_name name)]
+      | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam, use_op)
       | Frame (ReactConfigCheck, use_op)
@@ -751,7 +749,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
       | Frame (ObjMapFunCompatibility _, use_op)
       | Frame (ObjMapiFunCompatibility _, use_op) ->
         loop loc frames use_op
-    and next_with_loc loc frames (frame_reason, use_op) =
+    and next_with_loc loc frames frame_reason use_op =
       (* Skip this use_op, don't add a frame, but do use the loc to reposition
        * our primary location.
        *
@@ -765,7 +763,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
           frame_loc
       in
       loop loc frames use_op
-    and unwrap_frame loc frames (frame_reason, use_op, frame) =
+    and unwrap_frame loc frames frame_reason use_op frame =
       (* Add our frame message and reposition the location if appropriate.
        *
        * If our current loc is inside our frame_loc then use our current loc
@@ -791,12 +789,12 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
         )
       in
       loop loc frames use_op
-    and unwrap_frame_without_loc loc frames (use_op, frame) =
+    and unwrap_frame_without_loc loc frames use_op frame =
       (* Same logic as `unwrap_frame` except we don't have a frame location. *)
       let (all_frames, local_frames, explanations) = frames in
       let frames = (frame :: all_frames, frame :: local_frames, explanations) in
       loop loc frames use_op
-    and explanation loc frames (use_op, frame) =
+    and explanation loc frames use_op frame =
       let (all_frames, local_frames, explanations) = frames in
       let frames = (all_frames, local_frames, frame :: explanations) in
       loop loc frames use_op
