@@ -56,7 +56,6 @@ type log_saving = {
 }
 
 type t = {
-  opt_abstract_locations: bool;
   opt_all: bool;
   opt_any_propagation: bool;
   opt_autoimports: bool;
@@ -140,8 +139,6 @@ type t = {
   opt_wait_for_recheck: bool;
   opt_distributed: bool;
 }
-
-let abstract_locations opts = opts.opt_abstract_locations
 
 let all opts = opts.opt_all
 

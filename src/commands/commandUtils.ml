@@ -838,7 +838,6 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    abstract_locations: bool option;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     include_suppressions: bool;
@@ -906,7 +905,6 @@ let options_flags =
       temp_dir
       quiet
       merge_timeout
-      abstract_locations
       include_suppressions
       trust_mode
       estimate_recheck_time
@@ -936,7 +934,6 @@ let options_flags =
         quiet;
         merge_timeout;
         trust_mode;
-        abstract_locations;
         include_suppressions;
         estimate_recheck_time;
         long_lived_workers;
@@ -980,11 +977,6 @@ let options_flags =
              ^ "0 means no timeout (default: 100)"
              )
            ~env:"FLOW_MERGE_TIMEOUT"
-      |> flag
-           "--abstract-locations"
-           no_arg
-           ~doc:
-             "[EXPERIMENTAL] Use abstract locations to improve recheck times. Has no effect unless types-first is also enabled"
       |> flag
            "--include-suppressed"
            truthy
@@ -1285,12 +1277,6 @@ let make_options
     | Some FlowConfig.Non_lazy -> false
     | None -> false
   in
-  let opt_abstract_locations =
-    Base.Option.first_some
-      options_flags.abstract_locations
-      (FlowConfig.abstract_locations flowconfig)
-    |> Base.Option.value ~default:true
-  in
   let opt_wait_for_recheck =
     Base.Option.value
       options_flags.wait_for_recheck
@@ -1390,7 +1376,6 @@ let make_options
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
-    opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_distributed = options_flags.distributed;
     opt_trust_mode =

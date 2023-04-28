@@ -287,14 +287,6 @@ let mk_check_file
 
     let aloc (loc : Locs.index) = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
 
-    let aloc =
-      if Options.abstract_locations options then
-        aloc
-      else
-        fun loc ->
-      aloc loc |> ALoc.to_loc aloc_table |> ALoc.of_loc
-    in
-
     let buf = Reader.get_type_sig_buf parse in
 
     let cx =

@@ -43,7 +43,6 @@ module Opts = struct
   type opt_error = int * error_kind
 
   type t = {
-    abstract_locations: bool option;
     all: bool option;
     autoimports: bool option;
     autoimports_ranked_by_usage: bool option;
@@ -164,7 +163,6 @@ module Opts = struct
 
   let default_options =
     {
-      abstract_locations = None;
       all = None;
       autoimports = None;
       autoimports_ranked_by_usage = None;
@@ -462,9 +460,6 @@ module Opts = struct
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
 
-  let abstract_locations_parser =
-    boolean (fun opts v -> Ok { opts with abstract_locations = Some v })
-
   let automatic_require_default_parser =
     boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
 
@@ -732,7 +727,6 @@ module Opts = struct
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
-      ("experimental.abstract_locations", abstract_locations_parser);
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
@@ -1352,7 +1346,6 @@ let includes config = config.includes
 let libs config = config.libs
 
 (* options *)
-let abstract_locations c = c.options.Opts.abstract_locations
 
 let all c = c.options.Opts.all
 
