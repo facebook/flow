@@ -4001,10 +4001,10 @@ struct
           ->
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem (annot, tout)))
         | ( (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
-            CallElemT (reason_call, reason_lookup, key, action)
+            CallElemT (use_op, reason_call, reason_lookup, key, action)
           ) ->
           let action = CallElem (reason_call, action) in
-          rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
+          rec_flow cx trace (key, ElemT (use_op, reason_lookup, l, action))
         | (_, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action)) ->
           elem_action_on_obj cx trace ~use_op l obj reason_op action
         | (_, ElemT (use_op, reason_op, (AnyT (_, src) as obj), action)) ->

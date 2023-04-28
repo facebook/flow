@@ -95,7 +95,7 @@ let rec default_resolve_touts ~flow cx loc u =
     resolve_tvar tvar
   | SetElemT (_, _, _, _, _, topt) -> map_opt resolve topt
   | GetElemT (_, _, _, _, t) -> resolve_tvar t
-  | CallElemT (_, _, _, action) -> resolve_method_action action
+  | CallElemT (_, _, _, _, action) -> resolve_method_action action
   | GetStaticsT tvar
   | GetProtoT (_, tvar) ->
     resolve_tvar tvar

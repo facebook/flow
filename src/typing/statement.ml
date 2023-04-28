@@ -4115,6 +4115,18 @@ module Make
           | Member.PropertyExpression expr ->
             let reason_call = mk_reason (RMethodCall None) loc in
             let reason_lookup = mk_reason (RProperty None) lookup_loc in
+            let use_op =
+              Op
+                (FunCallMethod
+                   {
+                     op = expr_reason;
+                     fn = mk_expression_reason orig_receiver;
+                     prop = mk_expression_reason expr;
+                     args = mk_initial_arguments_reason arguments;
+                     local = true;
+                   }
+                )
+            in
             let call_voided_out = Tvar.mk cx expr_reason in
             let prop_t = Tvar.mk cx reason_lookup in
             let get_opt_use (argts, elem_t) _ _ =
@@ -4122,6 +4134,7 @@ module Make
                 opt_state
                 ~prop_t
                 ~voided_out:call_voided_out
+                ~use_op
                 ~reason_call
                 ~reason_lookup
                 ~reason_expr:expr_reason
@@ -4385,6 +4398,7 @@ module Make
       opt_state
       ~voided_out
       ~prop_t
+      ~use_op
       ~reason_call
       ~reason_lookup
       ~reason_expr
@@ -4407,7 +4421,7 @@ module Make
           }
       | _ -> OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable }
     in
-    OptCallElemT (reason_call, reason_lookup, elem_t, action)
+    OptCallElemT (use_op, reason_call, reason_lookup, elem_t, action)
 
   and identifier_ cx name loc =
     let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in

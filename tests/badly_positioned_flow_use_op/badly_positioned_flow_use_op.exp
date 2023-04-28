@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------- b.js:19:12
 
-Property `x` is missing in object literal [1] but exists in `Data` [2]. [prop-missing]
+Cannot call `o['fun']` with `data` bound to `data` because property `x` is missing in object literal [1] but exists in
+`Data` [2]. [prop-missing]
 
    b.js:19:12
    19|   o['fun'](data); // Error: { z: 0 } ~> Data
@@ -17,7 +18,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:19:12
 
-Property `z` is missing in `Data` [1] but exists in object literal [2] in the first argument. [prop-missing]
+Cannot call `o['fun']` with `data` bound to `data` because property `z` is missing in `Data` [1] but exists in object
+literal [2]. [prop-missing]
 
    b.js:19:12
    19|   o['fun'](data); // Error: { z: 0 } ~> Data

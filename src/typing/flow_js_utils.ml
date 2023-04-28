@@ -378,7 +378,7 @@ let error_message_kind_of_upper = function
   | CallT _ -> Error_message.IncompatibleCallT
   | GetElemT (_, _, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
   | SetElemT (_, _, t, _, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
-  | CallElemT (_, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
+  | CallElemT (_, _, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
   | ElemT (_, _, DefT (_, _, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT
   | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
   | ObjAssignFromT _ -> Error_message.IncompatibleObjAssignFromT

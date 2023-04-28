@@ -20,7 +20,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-Property `e` is missing in `B` [1] but exists in `A` [2]. [prop-missing]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `e` is missing in `B` [1] but
+exists in `A` [2]. [prop-missing]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -37,7 +38,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-Property `e` is missing in `C` [1] but exists in `A` [2]. [prop-missing]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `e` is missing in `C` [1] but
+exists in `A` [2]. [prop-missing]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -54,7 +56,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-Property `k` is missing in `A` [1] but exists in `B` [2]. [prop-missing]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `k` is missing in `A` [1] but
+exists in `B` [2]. [prop-missing]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -71,7 +74,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-Property `k` is missing in `C` [1] but exists in `B` [2]. [prop-missing]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `k` is missing in `C` [1] but
+exists in `B` [2]. [prop-missing]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -88,7 +92,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-Property `v` is missing in `A` [1] but exists in `B` [2]. [prop-missing]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `v` is missing in `A` [1] but
+exists in `B` [2]. [prop-missing]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -105,7 +110,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-Property `v` is missing in `C` [1] but exists in `B` [2]. [prop-missing]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `v` is missing in `C` [1] but
+exists in `B` [2]. [prop-missing]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -122,7 +128,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-string literal `b` [1] is incompatible with string literal `a` [2] in property `kind`. [incompatible-type]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because string literal `b` [1] is incompatible
+with string literal `a` [2] in property `kind`. [incompatible-call]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -139,7 +146,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-string literal `c` [1] is incompatible with string literal `a` [2] in property `kind`. [incompatible-type]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because string literal `c` [1] is incompatible
+with string literal `a` [2] in property `kind`. [incompatible-call]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -156,7 +164,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
-string literal `c` [1] is incompatible with string literal `b` [2] in property `kind`. [incompatible-type]
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because string literal `c` [1] is incompatible
+with string literal `b` [2] in property `kind`. [incompatible-call]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);

@@ -60,7 +60,7 @@ and reason_of_use_t = function
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT { reason; _ } -> reason
   | BindT (_, reason, _) -> reason
-  | CallElemT (reason, _, _, _) -> reason
+  | CallElemT (_, reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallT { reason; _ } -> reason
   | ChoiceKitUseT (reason, _) -> reason
@@ -223,7 +223,8 @@ and mod_reason_of_use_t f = function
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT { reason; t; empty_success } -> BecomeT { reason = f reason; t; empty_success }
   | BindT (use_op, reason, ft) -> BindT (use_op, f reason, ft)
-  | CallElemT (reason_call, reason_lookup, t, ft) -> CallElemT (f reason_call, reason_lookup, t, ft)
+  | CallElemT (use_op, reason_call, reason_lookup, t, ft) ->
+    CallElemT (use_op, f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
   | CallT { use_op; reason; call_action; return_hint } ->
     CallT { use_op; reason = f reason; call_action; return_hint }
@@ -370,7 +371,7 @@ and mod_reason_of_opt_use_t f = function
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
   | OptTestPropT (use_op, reason, id, n) -> OptTestPropT (use_op, f reason, id, n)
   | OptGetElemT (use_op, reason, annot, it) -> OptGetElemT (use_op, f reason, annot, it)
-  | OptCallElemT (r1, r2, elt, call) -> OptCallElemT (f r1, r2, elt, call)
+  | OptCallElemT (use_op, r1, r2, elt, call) -> OptCallElemT (use_op, f r1, r2, elt, call)
 
 let rec util_use_op_of_use_t :
           'a. (use_t -> 'a) -> (use_t -> use_op -> (use_op -> use_t) -> 'a) -> use_t -> 'a =
@@ -453,7 +454,7 @@ let rec util_use_op_of_use_t :
   | AssertIterableT ({ use_op; _ } as contents) ->
     util use_op (fun use_op -> AssertIterableT { contents with use_op })
   | MakeExactT (_, _)
-  | CallElemT (_, _, _, _)
+  | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)
   | GetProtoT (_, _)
   | SetProtoT (_, _)

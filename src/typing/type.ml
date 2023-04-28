@@ -508,7 +508,7 @@ module rec TypeTerm : sig
        need to ensure that reads happen after writes. *)
     | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
     | GetElemT of use_op * reason * bool (* from annot *) * t * tvar
-    | CallElemT of (* call *) reason * (* lookup *) reason * t * method_action
+    | CallElemT of use_op * (* call *) reason * (* lookup *) reason * t * method_action
     | GetStaticsT of tvar
     | GetProtoT of reason * tvar
     | SetProtoT of reason * t
@@ -907,7 +907,7 @@ module rec TypeTerm : sig
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of use_op * reason * ident * propref
     | OptGetElemT of use_op * reason * bool (* from annot *) * t
-    | OptCallElemT of (* call *) reason * (* lookup *) reason * t * opt_method_action
+    | OptCallElemT of use_op * (* call *) reason * (* lookup *) reason * t * opt_method_action
 
   and opt_state =
     | NonOptional
@@ -4035,7 +4035,7 @@ let apply_opt_use opt_use t_out =
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
   | OptGetElemT (u, r, a, t) -> GetElemT (u, r, a, t, t_out)
-  | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call t_out)
+  | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type ~trust reason enum =
   let reason =
