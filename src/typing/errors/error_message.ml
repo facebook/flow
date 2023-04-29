@@ -29,6 +29,8 @@ module IncorrectType = struct
     | Shape
     | TSReadonly
     | TSReadonlyArray
+    | TSReadonlyMap
+    | TSReadonlySet
     | TSNonNullable
 
   let incorrect_of_kind = function
@@ -36,6 +38,8 @@ module IncorrectType = struct
     | Shape -> "$Shape"
     | TSReadonly -> "Readonly"
     | TSReadonlyArray -> "ReadonlyArray"
+    | TSReadonlyMap -> "ReadonlyMap"
+    | TSReadonlySet -> "ReadonlySet"
     | TSNonNullable -> "NonNullable"
 
   let replacement_of_kind = function
@@ -43,6 +47,8 @@ module IncorrectType = struct
     | Shape -> "Partial"
     | TSReadonly -> "$ReadOnly"
     | TSReadonlyArray -> "$ReadOnlyArray"
+    | TSReadonlyMap -> "$ReadOnlyMap"
+    | TSReadonlySet -> "$ReadOnlySet"
     | TSNonNullable -> "$NonMaybeType"
 
   type error_type =
@@ -55,6 +61,8 @@ module IncorrectType = struct
       DeprecatedUtility
     | TSReadonly
     | TSReadonlyArray
+    | TSReadonlyMap
+    | TSReadonlySet
     | TSNonNullable ->
       TSType
 end

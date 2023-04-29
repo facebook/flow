@@ -721,7 +721,7 @@ let ast_transforms_of_error ?loc = function
   | Error_message.EIncorrectTypeWithReplacement { kind; loc = error_loc } ->
     let incorrect_name = Error_message.IncorrectType.incorrect_of_kind kind in
     let replacement_name = Error_message.IncorrectType.replacement_of_kind kind in
-    let title = Printf.sprintf "Convert to `%s<T>`" replacement_name in
+    let title = Printf.sprintf "Convert to `%s`" replacement_name in
     let diagnostic_title = Printf.sprintf "convert_%s_type" incorrect_name in
     if loc_opt_intersects ~error_loc ~loc then
       [

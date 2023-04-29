@@ -1384,6 +1384,18 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlyArray }
             )
             t_ast
+        | "ReadonlyMap" ->
+          error_type
+            cx
+            loc
+            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlyMap })
+            t_ast
+        | "ReadonlySet" ->
+          error_type
+            cx
+            loc
+            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlySet })
+            t_ast
         | "NonNullable" ->
           error_type
             cx

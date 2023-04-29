@@ -3253,7 +3253,7 @@ module.exports = (suite(
             method: 'textDocument/codeAction',
             result: [
               {
-                title: 'Convert to `$ReadOnly<T>`',
+                title: 'Convert to `$ReadOnly`',
                 kind: 'quickfix',
                 diagnostics: [],
                 edit: {
@@ -3281,7 +3281,7 @@ module.exports = (suite(
                   arguments: [
                     'textDocument/codeAction',
                     'convert_Readonly_type',
-                    'Convert to `$ReadOnly<T>`',
+                    'Convert to `$ReadOnly`',
                   ],
                 },
               },
@@ -3318,7 +3318,7 @@ module.exports = (suite(
             method: 'textDocument/codeAction',
             result: [
               {
-                title: 'Convert to `$ReadOnlyArray<T>`',
+                title: 'Convert to `$ReadOnlyArray`',
                 kind: 'quickfix',
                 diagnostics: [],
                 edit: {
@@ -3346,7 +3346,137 @@ module.exports = (suite(
                   arguments: [
                     'textDocument/codeAction',
                     'convert_ReadonlyArray_type',
-                    'Convert to `$ReadOnlyArray<T>`',
+                    'Convert to `$ReadOnlyArray`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
+    test('provide quickfix for `ReadonlyMap` type', [
+      addFile('fix-readonlymap-type.js.ignored', 'fix-readonlymap-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-readonlymap-type.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 9,
+          },
+          end: {
+            line: 1,
+            character: 20,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `$ReadOnlyMap`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-readonlymap-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 1,
+                            character: 9,
+                          },
+                          end: {
+                            line: 1,
+                            character: 20,
+                          },
+                        },
+                        newText: '$ReadOnlyMap',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_ReadonlyMap_type',
+                    'Convert to `$ReadOnlyMap`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
+    test('provide quickfix for `ReadonlySet` type', [
+      addFile('fix-readonlyset-type.js.ignored', 'fix-readonlyset-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-readonlyset-type.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 9,
+          },
+          end: {
+            line: 1,
+            character: 20,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `$ReadOnlySet`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-readonlyset-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 1,
+                            character: 9,
+                          },
+                          end: {
+                            line: 1,
+                            character: 20,
+                          },
+                        },
+                        newText: '$ReadOnlySet',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_ReadonlySet_type',
+                    'Convert to `$ReadOnlySet`',
                   ],
                 },
               },
@@ -3383,7 +3513,7 @@ module.exports = (suite(
             method: 'textDocument/codeAction',
             result: [
               {
-                title: 'Convert to `$NonMaybeType<T>`',
+                title: 'Convert to `$NonMaybeType`',
                 kind: 'quickfix',
                 diagnostics: [],
                 edit: {
@@ -3411,7 +3541,7 @@ module.exports = (suite(
                   arguments: [
                     'textDocument/codeAction',
                     'convert_NonNullable_type',
-                    'Convert to `$NonMaybeType<T>`',
+                    'Convert to `$NonMaybeType`',
                   ],
                 },
               },
@@ -3721,7 +3851,7 @@ module.exports = (suite(
             method: 'textDocument/codeAction',
             result: [
               {
-                title: 'Convert to `Partial<T>`',
+                title: 'Convert to `Partial`',
                 kind: 'quickfix',
                 diagnostics: [],
                 edit: {
@@ -3749,7 +3879,7 @@ module.exports = (suite(
                   arguments: [
                     'textDocument/codeAction',
                     'convert_$Partial_type',
-                    'Convert to `Partial<T>`',
+                    'Convert to `Partial`',
                   ],
                 },
               },
@@ -3786,7 +3916,7 @@ module.exports = (suite(
             method: 'textDocument/codeAction',
             result: [
               {
-                title: 'Convert to `Partial<T>`',
+                title: 'Convert to `Partial`',
                 kind: 'quickfix',
                 diagnostics: [],
                 edit: {
@@ -3814,7 +3944,7 @@ module.exports = (suite(
                   arguments: [
                     'textDocument/codeAction',
                     'convert_$Shape_type',
-                    'Convert to `Partial<T>`',
+                    'Convert to `Partial`',
                   ],
                 },
               },
