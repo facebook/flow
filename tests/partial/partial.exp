@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ deprecated-alias.js:1:6
 
-Use `Partial` instead of `$Partial` - the latter is deprecated. [deprecated-utility]
+The utility type `$Partial` is deprecated, use `Partial` instead. [deprecated-utility]
 
    1| ({}: $Partial<{x: string, y: string}>); // ERROR: deprecated utility - use `Partial` instead
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Use `Partial` instead of `$Partial` - the latter is deprecated. [deprecated-util
 
 Error ----------------------------------------------------------------------------------------- deprecated-alias.js:8:17
 
-Use `Partial` instead of `$Partial` - the latter is deprecated. [deprecated-utility]
+The utility type `$Partial` is deprecated, use `Partial` instead. [deprecated-utility]
 
    8| export type T = $Partial<{x: string}>; // ERROR
                       ^^^^^^^^^^^^^^^^^^^^^

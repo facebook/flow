@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-class mapper target_loc ~deprecated_name ~replacement_name =
+class mapper target_loc ~incorrect_name ~replacement_name =
   object (this)
     inherit Flow_ast_contains_mapper.mapper target_loc as super
 
@@ -18,7 +18,7 @@ class mapper target_loc ~deprecated_name ~replacement_name =
         match id with
         | Generic.Identifier.Unqualified
             (id_loc, { Flow_ast.Identifier.name; comments = id_comments })
-          when name = deprecated_name ->
+          when name = incorrect_name ->
           let id =
             Generic.Identifier.Unqualified
               (id_loc, { Flow_ast.Identifier.name = replacement_name; comments = id_comments })
@@ -27,8 +27,8 @@ class mapper target_loc ~deprecated_name ~replacement_name =
         | _ -> super#generic_type loc t
   end
 
-let convert_utility_type kind ast loc =
-  let deprecated_name = Error_message.DeprecatedUtility.deprecated_of_kind kind in
-  let replacement_name = Error_message.DeprecatedUtility.replacement_of_kind kind in
-  let mapper = new mapper loc ~deprecated_name ~replacement_name in
+let convert_type kind ast loc =
+  let incorrect_name = Error_message.IncorrectType.incorrect_of_kind kind in
+  let replacement_name = Error_message.IncorrectType.replacement_of_kind kind in
+  let mapper = new mapper loc ~incorrect_name ~replacement_name in
   mapper#program ast

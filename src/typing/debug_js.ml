@@ -1608,9 +1608,9 @@ let dump_error_message =
     | ENonstrictImport loc -> spf "ENonstrictImport (%s)" (string_of_aloc loc)
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedBool loc -> spf "EDeprecatedBool (%s)" (string_of_aloc loc)
-    | EDeprecatedUtilityWithReplacement { loc; kind } ->
-      let deprecated_name = Error_message.DeprecatedUtility.deprecated_of_kind kind in
-      spf "EDeprecatedUtilityWithReplacement (%s) (%s)" (string_of_aloc loc) deprecated_name
+    | EIncorrectTypeWithReplacement { loc; kind } ->
+      let deprecated_name = Error_message.IncorrectType.incorrect_of_kind kind in
+      spf "EIncorrectTypeWithReplacement (%s) (%s)" (string_of_aloc loc) deprecated_name
     | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)
     | ECodelessSuppression (loc, c) -> spf "ECodelessSuppression (%s, %s)" (string_of_aloc loc) c

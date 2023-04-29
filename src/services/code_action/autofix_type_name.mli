@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val convert_utility_type :
-  Error_message.DeprecatedUtility.t ->
+val convert_type :
+  Error_message.IncorrectType.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t

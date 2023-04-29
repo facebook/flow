@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:1:10
 
-Use `Partial` instead of `$Shape` - the latter is deprecated. [deprecated-utility]
+The utility type `$Shape` is deprecated, use `Partial` instead. [deprecated-utility]
 
    1| type T = $Shape<{a: foo}>; // ERROR
                ^^^^^^^^^^^^^^^^

@@ -821,9 +821,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           error_type
             cx
             loc
-            Error_message.(
-              EDeprecatedUtilityWithReplacement { loc; kind = DeprecatedUtility.Partial }
-            )
+            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.Partial })
             t_ast
         (* Partial<T> makes all of `T`'s properties optional *)
         | "Partial" ->
@@ -850,7 +848,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           error_type
             cx
             loc
-            Error_message.(EDeprecatedUtilityWithReplacement { loc; kind = DeprecatedUtility.Shape })
+            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.Shape })
             t_ast
         (* $Diff<T, S> *)
         | "$Diff" ->
