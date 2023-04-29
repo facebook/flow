@@ -1002,51 +1002,6 @@ let patch_misplaced_error
   in
   (error_kind, message_list, { friendly with message })
 
-let locs_of_printable_error =
-  let locs_of_message locs message =
-    Friendly.(
-      List.fold_left
-        (fun locs feature ->
-          match feature with
-          | Inline _ -> locs
-          | Reference (_, loc) -> loc :: locs)
-        locs
-        message
-    )
-  in
-  let rec locs_of_friendly_error locs error =
-    Friendly.(
-      let { loc; root; message } = error in
-      let locs =
-        Base.Option.value_map root ~default:locs ~f:(fun { root_message; root_loc } ->
-            root_loc :: locs_of_message locs root_message
-        )
-      in
-      let locs =
-        match message with
-        | Normal { frames; explanations; message; code = _ } ->
-          let locs =
-            Base.Option.value_map frames ~default:locs ~f:(List.fold_left locs_of_message locs)
-          in
-          let locs =
-            Base.Option.value_map explanations ~default:locs ~f:(List.fold_left locs_of_message locs)
-          in
-          let locs = locs_of_message locs message in
-          locs
-        | Speculation { frames; explanations; branches; code = _ } ->
-          let locs = List.fold_left locs_of_message locs frames in
-          let locs = List.fold_left locs_of_message locs explanations in
-          let locs =
-            List.fold_left (fun locs (_, error) -> locs_of_friendly_error locs error) locs branches
-          in
-          locs
-      in
-      let locs = loc :: locs in
-      locs
-    )
-  in
-  (fun ((_, _, error) : 'loc printable_error) -> locs_of_friendly_error [] error)
-
 let kind_of_printable_error (kind, _, _) = kind
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)

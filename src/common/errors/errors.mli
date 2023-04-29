@@ -96,8 +96,6 @@ val mk_speculation_error :
 
 val loc_of_printable_error : 'loc printable_error -> 'loc
 
-val locs_of_printable_error : 'loc printable_error -> 'loc list
-
 val patch_misplaced_error :
   strip_root:Path.t option -> File_key.t -> 'loc printable_error -> 'loc printable_error
 
