@@ -40,14 +40,6 @@ val filter_suppressed_errors :
   * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
   * t
 
-val filter_suppressed_error_set :
-  root:Path.t ->
-  file_options:Files.options Base.Option.t ->
-  loc_of_aloc:(ALoc.t -> Loc.t) ->
-  t ->
-  Flow_error.ErrorSet.t ->
-  Flow_error.ErrorSet.t
-
 (* We use an PrintableErrorSet here (as opposed to a ConcretePrintableErrorSet) because this operation happens
    during merge rather than during collation as filter_suppressed_errors does *)
 val filter_lints :
