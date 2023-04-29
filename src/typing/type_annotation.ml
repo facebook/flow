@@ -1369,6 +1369,27 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   targs
               | _ -> error_type cx loc (Error_message.EPrivateAnnot loc) t_ast
           )
+        (* TS Types *)
+        | "Readonly" ->
+          error_type
+            cx
+            loc
+            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonly })
+            t_ast
+        | "ReadonlyArray" ->
+          error_type
+            cx
+            loc
+            Error_message.(
+              EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSReadonlyArray }
+            )
+            t_ast
+        | "NonNullable" ->
+          error_type
+            cx
+            loc
+            Error_message.(EIncorrectTypeWithReplacement { loc; kind = IncorrectType.TSNonNullable })
+            t_ast
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()
       end

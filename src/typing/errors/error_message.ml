@@ -27,21 +27,36 @@ module IncorrectType = struct
   type t =
     | Partial
     | Shape
+    | TSReadonly
+    | TSReadonlyArray
+    | TSNonNullable
 
   let incorrect_of_kind = function
     | Partial -> "$Partial"
     | Shape -> "$Shape"
+    | TSReadonly -> "Readonly"
+    | TSReadonlyArray -> "ReadonlyArray"
+    | TSNonNullable -> "NonNullable"
 
   let replacement_of_kind = function
     | Partial -> "Partial"
     | Shape -> "Partial"
+    | TSReadonly -> "$ReadOnly"
+    | TSReadonlyArray -> "$ReadOnlyArray"
+    | TSNonNullable -> "$NonMaybeType"
 
-  type error_type = DeprecatedUtility
+  type error_type =
+    | DeprecatedUtility
+    | TSType
 
   let error_type_of_kind = function
     | Partial
     | Shape ->
       DeprecatedUtility
+    | TSReadonly
+    | TSReadonlyArray
+    | TSNonNullable ->
+      TSType
 end
 
 type t = ALoc.t t'
@@ -3559,7 +3574,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let open IncorrectType in
     let incorrect_name = incorrect_of_kind kind in
     let replacement_name = replacement_of_kind kind in
-
     let features =
       match error_type_of_kind kind with
       | DeprecatedUtility ->
@@ -3569,6 +3583,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text " is deprecated, use ";
           code replacement_name;
           text " instead.";
+        ]
+      | TSType ->
+        [
+          text "The equivalent of TypeScript's ";
+          code incorrect_name;
+          text " type in Flow is ";
+          code replacement_name;
+          text ".";
         ]
     in
     Normal { features }
@@ -4874,7 +4896,8 @@ let error_code_of_message err : error_code option =
   | EDebugPrint (_, _) -> None
   | EIncorrectTypeWithReplacement { kind; _ } ->
     (match IncorrectType.error_type_of_kind kind with
-    | IncorrectType.DeprecatedUtility -> Some DeprecatedUtility)
+    | IncorrectType.DeprecatedUtility -> Some DeprecatedUtility
+    | IncorrectType.TSType -> Some TSSyntax)
   | EDocblockError (_, err) -> begin
     match err with
     | MultipleFlowAttributes -> Some DuplicateFlowDecl

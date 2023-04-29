@@ -3226,6 +3226,201 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics'],
       ),
     ]),
+    test('provide quickfix for `Readonly` type', [
+      addFile('fix-readonly-type.js.ignored', 'fix-readonly-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-readonly-type.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 9,
+          },
+          end: {
+            line: 1,
+            character: 17,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `$ReadOnly<T>`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-readonly-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 1,
+                            character: 9,
+                          },
+                          end: {
+                            line: 1,
+                            character: 17,
+                          },
+                        },
+                        newText: '$ReadOnly',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_Readonly_type',
+                    'Convert to `$ReadOnly<T>`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
+    test('provide quickfix for `ReadonlyArray` type', [
+      addFile('fix-readonlyarray-type.js.ignored', 'fix-readonlyarray-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-readonlyarray-type.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 9,
+          },
+          end: {
+            line: 1,
+            character: 22,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `$ReadOnlyArray<T>`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-readonlyarray-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 1,
+                            character: 9,
+                          },
+                          end: {
+                            line: 1,
+                            character: 22,
+                          },
+                        },
+                        newText: '$ReadOnlyArray',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_ReadonlyArray_type',
+                    'Convert to `$ReadOnlyArray<T>`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
+    test('provide quickfix for `NonNullable` type', [
+      addFile('fix-nonnullable-type.js.ignored', 'fix-nonnullable-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-nonnullable-type.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 9,
+          },
+          end: {
+            line: 1,
+            character: 20,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `$NonMaybeType<T>`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-nonnullable-type.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 1,
+                            character: 9,
+                          },
+                          end: {
+                            line: 1,
+                            character: 20,
+                          },
+                        },
+                        newText: '$NonMaybeType',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_NonNullable_type',
+                    'Convert to `$NonMaybeType<T>`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics'],
+      ),
+    ]),
     test('provide codeAction for inserting jsdocs', [
       addFile('insert-jsdoc.js.ignored', 'insert-jsdoc.js'),
       lspStartAndConnect(),
