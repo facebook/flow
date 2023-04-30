@@ -37,7 +37,7 @@ let prop_accesses =
         | _ -> acc)
   )
 
-let data_of_prop_missing_error error =
+let data_of_prop_missing_error loc_of_aloc error =
   let open Type in
   let open Error_message in
   let msg = Flow_error.msg_of_error error in
@@ -47,8 +47,8 @@ let data_of_prop_missing_error error =
   | (SetProperty { value; _ }, EPropNotFound { reason_obj; prop_name = Some name; _ })
   | (GetProperty value, EIncompatibleProp { reason_obj; prop = Some name; _ })
   | (GetProperty value, EPropNotFound { reason_obj; prop_name = Some name; _ }) ->
-    let obj_loc = def_loc_of_reason reason_obj in
-    let init_locs = [def_loc_of_reason value] in
+    let obj_loc = loc_of_aloc (def_aloc_of_reason reason_obj) in
+    let init_locs = [loc_of_aloc (def_aloc_of_reason value)] in
     let prop_accesses = prop_accesses op in
     Some { obj_loc; name; init_locs; prop_accesses }
   | _ -> None
@@ -222,44 +222,35 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
 
     method! program prog =
       let cx = Codemod_context.Typed.context cctx in
-      let errors =
+      let reader = cctx.Codemod_context.Typed.reader in
+      let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+      let suppressions = Context.error_suppressions cx in
+      let error_is_suppressed error =
+        let errors =
+          Flow_error.ErrorSet.singleton error
+          |> Flow_error.concretize_errors loc_of_aloc
+          |> Flow_error.make_errors_printable ~strip_root:(Some (Context.root cx))
+        in
+        let (errors, _, _) =
+          Error_suppressions.filter_suppressed_errors
+            ~root:Path.dummy_path
+            ~file_options:None
+            suppressions
+            errors
+            ~unused:suppressions
+        in
+        Errors.ConcreteLocPrintableErrorSet.is_empty errors
+      in
+      prop_data <-
         Flow_error.ErrorSet.fold
           (fun error acc ->
-            try
-              Flow_error.ConcreteErrorSet.add
-                (Flow_error.concretize_error
-                   (ALoc.to_loc_with_tables (Context.aloc_tables cx))
-                   error
-                )
-                acc
-            with
-            | Not_found -> acc)
-          (Context.errors cx)
-          Flow_error.ConcreteErrorSet.empty
-      in
-      let suppressions = Context.error_suppressions cx in
-      prop_data <-
-        Flow_error.ConcreteErrorSet.fold
-          (fun error acc ->
-            let errors =
-              Flow_error.ConcreteErrorSet.singleton error
-              |> Flow_error.make_errors_printable ~strip_root:(Some (Context.root cx))
-            in
-            let (errors, _, _) =
-              Error_suppressions.filter_suppressed_errors
-                ~root:Path.dummy_path
-                ~file_options:None
-                suppressions
-                errors
-                ~unused:suppressions
-            in
-            if Errors.ConcreteLocPrintableErrorSet.is_empty errors then
+            if error_is_suppressed error then
               acc
             else
-              match data_of_prop_missing_error error with
+              match data_of_prop_missing_error loc_of_aloc error with
               | Some data -> PropDataSet.add data acc
               | None -> acc)
-          errors
+          (Context.errors cx)
           PropDataSet.empty;
       if PropDataSet.is_empty prop_data then
         prog
