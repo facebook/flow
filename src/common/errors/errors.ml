@@ -199,25 +199,28 @@ module Friendly = struct
 
   let code s = Inline [Code s]
 
-  let ref ?(loc = true) r =
+  let desc_helper r =
     let desc = desc_of_reason ~unwrap:(is_scalar_reason r) r in
-    let desc =
-      match desc with
-      | RCode code -> [Code code]
-      | _ -> message_inlines_of_string (string_of_desc desc)
+    match desc with
+    | RCode code -> [Code code]
+    | _ -> message_inlines_of_string (string_of_desc desc)
+
+  let desc r = Inline (desc_helper r)
+
+  let ref_map map_loc r =
+    let desc = desc_helper r in
+    let loc =
+      match annot_poly_loc_of_reason r with
+      | Some loc -> loc
+      | None -> def_poly_loc_of_reason r
     in
-    if loc then
-      let loc =
-        match annot_loc_of_reason r with
-        | Some loc -> loc
-        | None -> def_loc_of_reason r
-      in
-      if loc = Loc.none then
-        Inline desc
-      else
-        Reference (desc, loc)
-    else
+    let loc = map_loc loc in
+    if loc = Loc.none then
       Inline desc
+    else
+      Reference (desc, loc)
+
+  let ref r = ref_map Fun.id r
 
   (* Concatenates a list of messages with a conjunction according to the "rules"
    * of the English language. *)

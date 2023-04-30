@@ -442,7 +442,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
   let text = Friendly.text in
   let code = Friendly.code in
   let ref = Friendly.ref in
-  let desc = Friendly.ref ~loc:false in
+  let desc = Friendly.desc in
   (* Unwrap a use_op for the friendly error format. Takes the smallest location
    * where we found the error and a use_op which we will unwrap. *)
   let unwrap_use_ops =

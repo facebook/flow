@@ -310,6 +310,10 @@ val desc_of_reason : ?unwrap:bool -> 'loc virtual_reason -> 'loc virtual_reason_
 
 val annot_loc_of_reason : concrete_reason -> Loc.t option
 
+val annot_poly_loc_of_reason : 'loc virtual_reason -> 'loc option
+
+val def_poly_loc_of_reason : 'loc virtual_reason -> 'loc
+
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
 (* replace desc, but keep loc, def_loc, annot_loc *)

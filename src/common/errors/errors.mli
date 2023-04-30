@@ -61,7 +61,11 @@ module Friendly : sig
 
   val code : string -> 'a message_feature
 
-  val ref : ?loc:bool -> Reason.concrete_reason -> Loc.t message_feature
+  val ref : Reason.concrete_reason -> Loc.t message_feature
+
+  val ref_map : ('a -> Loc.t) -> 'a Reason.virtual_reason -> Loc.t message_feature
+
+  val desc : 'a Reason.virtual_reason -> 'b message_feature
 
   val conjunction_concat : ?conjunction:string -> 'a message list -> 'a message
 

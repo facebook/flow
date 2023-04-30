@@ -1923,7 +1923,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   let text = Errors.Friendly.text in
   let code = Errors.Friendly.code in
   let ref = Errors.Friendly.ref in
-  let desc = Errors.Friendly.ref ~loc:false in
+  let desc = Errors.Friendly.desc in
   let msg_export prefix export_name =
     if export_name = "default" then
       (text "", text "the default export")
