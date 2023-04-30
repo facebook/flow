@@ -1949,8 +1949,7 @@ let applicable_error_codes ~reader ~cx comment_loc =
   let applies error_loc = Loc.lines_intersect next_line error_loc in
   cx
   |> Context.errors
-  |> Flow_error.concretize_errors (loc_of_aloc ~reader)
-  |> Flow_error.make_errors_printable ~strip_root:(Some (Context.root cx))
+  |> Flow_error.make_errors_printable (loc_of_aloc ~reader) ~strip_root:(Some (Context.root cx))
   |> Errors.ConcreteLocPrintableErrorSet.elements
   |> Base.List.rev_filter_map ~f:(fun err ->
          if applies (Errors.loc_of_printable_error err) then

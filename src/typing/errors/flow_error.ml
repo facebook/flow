@@ -1247,11 +1247,10 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
   in
   patched_printable_error
 
-let concretize_errors loc_of_aloc set =
-  ErrorSet.fold (concretize_error loc_of_aloc %> ConcreteErrorSet.add) set ConcreteErrorSet.empty
-
-let make_errors_printable ~strip_root set =
-  ConcreteErrorSet.fold
-    (make_error_printable ~strip_root ~speculation:false %> Errors.ConcreteLocPrintableErrorSet.add)
-    set
-    Errors.ConcreteLocPrintableErrorSet.empty
+let make_errors_printable loc_of_aloc ~strip_root errors =
+  let f err acc =
+    let err = concretize_error loc_of_aloc err in
+    let err = make_error_printable ~strip_root ~speculation:false err in
+    Errors.ConcreteLocPrintableErrorSet.add err acc
+  in
+  ErrorSet.fold f errors Errors.ConcreteLocPrintableErrorSet.empty

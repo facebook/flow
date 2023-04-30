@@ -390,22 +390,16 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
              | Ok None -> acc
              | Ok (Some (errors, warnings, _, _, _)) ->
                let errors =
-                 errors
-                 |> Flow_error.concretize_errors loc_of_aloc
-                 |> Flow_error.make_errors_printable ~strip_root:(Some root)
+                 Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) errors
                in
                let warnings =
-                 warnings
-                 |> Flow_error.concretize_errors loc_of_aloc
-                 |> Flow_error.make_errors_printable ~strip_root:(Some root)
+                 Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) warnings
                in
                (file, errors, warnings) :: acc
              | Error msg ->
                let errors = error_set_of_internal_error file msg in
                let errors =
-                 errors
-                 |> Flow_error.concretize_errors loc_of_aloc
-                 |> Flow_error.make_errors_printable ~strip_root:(Some root)
+                 Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) errors
                in
                let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
                (file, errors, warnings) :: acc)
@@ -959,22 +953,23 @@ end = struct
     (* record reparse errors *)
     let local_errors =
       let () =
-        let error_set : Flow_error.ErrorSet.t =
+        let errors : Flow_error.ErrorSet.t =
           FilenameMap.fold
             (fun _ -> Flow_error.ErrorSet.union)
             new_local_errors
             Flow_error.ErrorSet.empty
         in
-        let error_set =
-          error_set
-          |> Flow_error.concretize_errors loc_of_aloc
-          |> Flow_error.make_errors_printable ~strip_root:(Some (Options.root options))
+        let errors =
+          Flow_error.make_errors_printable
+            loc_of_aloc
+            ~strip_root:(Some (Options.root options))
+            errors
         in
-        if not (Errors.ConcreteLocPrintableErrorSet.is_empty error_set) then
+        if not (Errors.ConcreteLocPrintableErrorSet.is_empty errors) then
           Persistent_connection.update_clients
             ~clients:env.ServerEnv.connections
             ~errors_reason:LspProt.Recheck_streaming
-            ~calc_errors_and_warnings:(fun () -> (error_set, FilenameMap.empty)
+            ~calc_errors_and_warnings:(fun () -> (errors, FilenameMap.empty)
           )
       in
       merge_error_maps new_local_errors local_errors

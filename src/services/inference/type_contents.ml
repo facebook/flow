@@ -122,16 +122,8 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
       severity_cover
   in
   let root = Options.root options in
-  let errors =
-    errors
-    |> Flow_error.concretize_errors loc_of_aloc
-    |> Flow_error.make_errors_printable ~strip_root:(Some root)
-  in
-  let warnings =
-    warnings
-    |> Flow_error.concretize_errors loc_of_aloc
-    |> Flow_error.make_errors_printable ~strip_root:(Some root)
-  in
+  let errors = Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) errors in
+  let warnings = Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) warnings in
   let file_options = Some (Options.file_options options) in
   (* Filter out suppressed errors *)
   let (errors, _, _) =
@@ -172,11 +164,7 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
     in
     (errors, warnings)
   | Error errors ->
-    let errors =
-      errors
-      |> Flow_error.concretize_errors loc_of_aloc
-      |> Flow_error.make_errors_printable ~strip_root:(Some root)
-    in
+    let errors = Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) errors in
     (errors, Errors.ConcreteLocPrintableErrorSet.empty)
 
 (** Resolves dependencies specifically for checking contents, rather than for

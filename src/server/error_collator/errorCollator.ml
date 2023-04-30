@@ -93,8 +93,7 @@ let regenerate ~reader ~options =
     let file_options = Some (Options.file_options options) in
     let (file_errs, file_suppressed, unused) =
       file_errs
-      |> Flow_error.concretize_errors loc_of_aloc
-      |> Flow_error.make_errors_printable ~strip_root:(Some root)
+      |> Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root)
       |> Error_suppressions.filter_suppressed_errors ~root ~file_options suppressions ~unused
     in
     let errors = f filename file_errs errors in

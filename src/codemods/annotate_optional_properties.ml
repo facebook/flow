@@ -228,8 +228,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let error_is_suppressed error =
         let errors =
           Flow_error.ErrorSet.singleton error
-          |> Flow_error.concretize_errors loc_of_aloc
-          |> Flow_error.make_errors_printable ~strip_root:(Some (Context.root cx))
+          |> Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some (Context.root cx))
         in
         let (errors, _, _) =
           Error_suppressions.filter_suppressed_errors
