@@ -26,6 +26,7 @@ open TypeUtil
 open Constraint
 open Debug_js.Verbose
 module FlowError = Flow_error
+module IICheck = Implicit_instantiation_check
 
 (* type exemplar set - reasons are not considered in compare *)
 module TypeExSet = Flow_set.Make (struct
@@ -2497,7 +2498,7 @@ struct
           ) ->
           let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
           let t_ =
-            instantiate_poly_call_or_new
+            instantiate_with_targs
               cx
               trace
               (tparams_loc, ids, t)
@@ -2541,172 +2542,57 @@ struct
            without fearing regressions in termination guarantees.
         *)
         | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
+            CallT { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint }
+          )
+          when calltype.call_kind <> MapTypeKind ->
+          let check = lazy (IICheck.of_call l (tparams_loc, ids, t) use_op reason_op calltype) in
+          let lparts = (reason_tapp, tparams_loc, ids, t) in
+          let uparts = (use_op, reason_op, calltype.call_targs, return_hint) in
+          let t_ = instantiate_poly_call_or_new cx trace ~cache:true lparts uparts check in
+          let u =
             CallT
               {
                 use_op;
                 reason = reason_op;
-                call_action = Funcalltype ({ call_kind; _ } as calltype);
+                call_action = Funcalltype { calltype with call_targs = None };
                 return_hint;
               }
-          )
-          when call_kind <> MapTypeKind -> begin
-          match all_explicit_targs calltype.call_targs with
-          | Some targs ->
-            let t_ =
-              instantiate_poly_call_or_new
-                cx
-                trace
-                (tparams_loc, ids, t)
-                targs
-                ~use_op
-                ~reason_op
-                ~reason_tapp
-            in
-            rec_flow
-              cx
-              trace
-              ( t_,
-                CallT
-                  {
-                    use_op;
-                    reason = reason_op;
-                    call_action = Funcalltype { calltype with call_targs = None };
-                    return_hint;
-                  }
-              )
-          | _ ->
-            let poly_t = (tparams_loc, ids, t) in
-            let check = Implicit_instantiation_check.of_call l poly_t use_op reason_op calltype in
-            let t_ =
-              ImplicitInstantiationKit.run_call
-                cx
-                check
-                ~cache:true
-                trace
-                ~use_op
-                ~reason_op
-                ~reason_tapp
-                ~return_hint
-            in
-            rec_flow
-              cx
-              trace
-              ( t_,
-                CallT
-                  {
-                    use_op;
-                    reason = reason_op;
-                    call_action = Funcalltype { calltype with call_targs = None };
-                    return_hint;
-                  }
-              )
-        end
+          in
+          rec_flow cx trace (t_, u)
         | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
             ConstructorT { use_op; reason = reason_op; targs; args; tout; return_hint }
           ) ->
-          (match all_explicit_targs targs with
-          | Some targs ->
-            let t_ =
-              instantiate_poly_call_or_new
-                cx
-                trace
-                (tparams_loc, ids, t)
-                targs
-                ~use_op
-                ~reason_op
-                ~reason_tapp
-            in
-            rec_flow
-              cx
-              trace
-              ( t_,
-                ConstructorT { use_op; reason = reason_op; targs = None; args; tout; return_hint }
-              )
-          | None ->
-            let poly_t = (tparams_loc, ids, t) in
-            let check = Implicit_instantiation_check.of_ctor l poly_t use_op reason_op targs args in
-            let t_ =
-              ImplicitInstantiationKit.run_call
-                cx
-                check
-                trace
-                ~use_op
-                ~reason_op
-                ~reason_tapp
-                ~return_hint
-            in
-            rec_flow
-              cx
-              trace
-              ( t_,
-                ConstructorT { use_op; reason = reason_op; targs = None; args; tout; return_hint }
-              ))
+          let check = lazy (IICheck.of_ctor l (tparams_loc, ids, t) use_op reason_op targs args) in
+          let lparts = (reason_tapp, tparams_loc, ids, t) in
+          let uparts = (use_op, reason_op, targs, return_hint) in
+          let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
+          let u =
+            ConstructorT { use_op; reason = reason_op; targs = None; args; tout; return_hint }
+          in
+          rec_flow cx trace (t_, u)
         | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
             ReactKitT
               ( use_op,
                 reason_op,
                 React.CreateElement { clone; component; config; children; return_hint; targs; tout }
               )
-          ) -> begin
-          match all_explicit_targs targs with
-          | Some targs ->
-            let t_ =
-              instantiate_poly_call_or_new
-                cx
-                trace
-                (tparams_loc, ids, t)
-                targs
-                ~use_op
-                ~reason_op
-                ~reason_tapp
-            in
-            rec_flow
-              cx
-              trace
-              ( t_,
-                ReactKitT
-                  ( use_op,
-                    reason_op,
-                    React.CreateElement
-                      { clone; component; config; children; return_hint; targs = None; tout }
-                  )
-              )
-          | None ->
+          ) ->
+          let lparts = (reason_tapp, tparams_loc, ids, t) in
+          let uparts = (use_op, reason_op, targs, return_hint) in
+          let check =
             let poly_t = (tparams_loc, ids, t) in
-            let check =
-              Implicit_instantiation_check.of_jsx
-                l
-                poly_t
-                use_op
-                reason_op
-                clone
-                ~component
-                ~config
-                ~targs
-                children
-            in
-            let t_ =
-              ImplicitInstantiationKit.run_call
-                cx
-                check
-                trace
-                ~use_op
-                ~reason_op
-                ~reason_tapp
-                ~return_hint
-            in
-            rec_flow
-              cx
-              trace
-              ( t_,
-                ReactKitT
-                  ( use_op,
-                    reason_op,
-                    React.CreateElement
-                      { clone; component; config; children; return_hint; targs = None; tout }
-                  )
+            lazy (IICheck.of_jsx l poly_t use_op reason_op clone ~component ~config ~targs children)
+          in
+          let t_ = instantiate_poly_call_or_new cx trace lparts uparts check in
+          let u =
+            ReactKitT
+              ( use_op,
+                reason_op,
+                React.CreateElement
+                  { clone; component; config; children; return_hint; targs = None; tout }
               )
-        end
+          in
+          rec_flow cx trace (t_, u)
         | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
           let reason_op = reason_of_use_t u in
           let use_op =
@@ -6951,8 +6837,7 @@ struct
 
   (* Instantiate a polymorphic definition given tparam instantiations in a Call or
    * New expression. *)
-  and instantiate_poly_call_or_new
-      cx trace ~use_op ~reason_op ~reason_tapp ?errs_ref (tparams_loc, xs, t) targs =
+  and instantiate_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) targs =
     let (_, ts) =
       Nel.fold_left
         (fun (targs, ts) _ ->
@@ -6973,11 +6858,28 @@ struct
         ~reason_op
         ~reason_tapp
         ~cache:false
-        ?errs_ref
         (tparams_loc, xs, t)
         (List.rev ts)
     in
     t
+
+  and instantiate_poly_call_or_new cx trace ?cache lparts uparts check =
+    let (reason_tapp, tparams_loc, ids, t) = lparts in
+    let (use_op, reason_op, targs, return_hint) = uparts in
+    match all_explicit_targs targs with
+    | Some targs ->
+      instantiate_with_targs cx trace (tparams_loc, ids, t) targs ~use_op ~reason_op ~reason_tapp
+    | None ->
+      let check = Lazy.force check in
+      ImplicitInstantiationKit.run_call
+        cx
+        check
+        ?cache
+        trace
+        ~use_op
+        ~reason_op
+        ~reason_tapp
+        ~return_hint
 
   (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
   (* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)
