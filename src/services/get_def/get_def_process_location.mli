@@ -8,6 +8,7 @@
 type ('M, 'T) result =
   | OwnDef of 'M
   | Request of ('M, 'T) Get_def_request.t
+  | Empty of string
   | LocNotFound
 
 val process_location :
