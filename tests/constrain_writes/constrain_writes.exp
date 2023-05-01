@@ -244,6 +244,56 @@ References:
              ^^^^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:13
+
+Cannot assign `<OtherComponent />` to `element` because property `other_prop` is missing in `Props` [1] but exists in
+`OtherProps` [2] in type argument `P` [3]. All writes to `element` must be compatible with the type of its
+initializer [4]. Add an annotation to `element` [4] if a different type is desired. [prop-missing]
+
+   wiki_examples.js:23:13
+    23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:12:28
+    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                   ^^^^^ [1]
+   wiki_examples.js:18:32
+    18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                       ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:169:62
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+                                                                     ^ [3]
+   wiki_examples.js:14:7
+    14|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:13
+
+Cannot assign `<OtherComponent />` to `element` because property `prop` is missing in `OtherProps` [1] but exists in
+`Props` [2] in type argument `P` [3]. All writes to `element` must be compatible with the type of its initializer [4].
+Add an annotation to `element` [4] if a different type is desired. [prop-missing]
+
+   wiki_examples.js:23:13
+    23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:18:32
+    18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                       ^^^^^^^^^^ [1]
+   wiki_examples.js:12:28
+    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                   ^^^^^ [2]
+   <BUILTINS>/react.js:169:62
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+                                                                     ^ [3]
+   wiki_examples.js:14:7
+    14|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
 
 Cannot assign `<OtherComponent />` to `element` because property `other_prop` is missing in `Props` [1] but exists in
@@ -262,7 +312,7 @@ References:
     18|   declare var OtherComponent: (OtherProps) => React.Node;
                                        ^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -287,7 +337,7 @@ References:
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                    ^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -312,7 +362,7 @@ References:
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -337,7 +387,7 @@ References:
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -362,7 +412,7 @@ References:
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -387,7 +437,7 @@ References:
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -412,7 +462,7 @@ References:
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -437,7 +487,7 @@ References:
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -463,7 +513,7 @@ References:
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType> = {|
+   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -583,7 +633,7 @@ References:
 
 
 
-Found 28 errors
+Found 30 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

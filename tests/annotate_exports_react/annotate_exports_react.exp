@@ -87,7 +87,7 @@ module.exports = (): {|
 Stats:
   Files changed:                            6
   Number of annotations added:              8
-  Total size of annotations:               26
+  Total size of annotations:               27
   Number of sig. ver. errors:               8
   Number of annotations required:           8
   Number of annotations skipped:            0
@@ -119,7 +119,7 @@ const React = require('react');
 
 type Props = {}
 
-module.exports = (): React$Element<typeof Abc> => {
+module.exports = (): React$Element<typeof Abc, Props> => {
   class Abc extends React.Component<Props> { }
   return <Abc/>;
 }
@@ -199,7 +199,7 @@ module.exports = (): {
 7c7
 < module.exports = (): React.Node => {
 ---
-> module.exports = (): React$Element<typeof Abc> => {
+> module.exports = (): React$Element<typeof Abc, Props> => {
 
 >>> ./element-div.js
 6c6

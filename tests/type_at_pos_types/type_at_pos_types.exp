@@ -1189,9 +1189,7 @@ subst.js:18:7 = {
 }
 subst.js:21:7 = {
   "types":{
-    "unevaluated":{
-      "type":"{|+key: (React$Key | null), +props: React$ElementProps<any>, +ref: any, +type: any|}"
-    },
+    "unevaluated":{"type":"{|+key: (React$Key | null), +props: any, +ref: any, +type: any|}"},
     "evaluated":null
   },
   "reasons":[],
@@ -1208,7 +1206,7 @@ subst.js:21:7 = {
   "end":8
 }
 subst.js:22:7 = {
-  "types":{"unevaluated":{"type":"React$Element<any>"},"evaluated":null},
+  "types":{"unevaluated":{"type":"React$Element<any, any>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",

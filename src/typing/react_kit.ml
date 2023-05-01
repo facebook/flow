@@ -641,7 +641,14 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         ~use_op:unknown_use
         cx
         trace
-        (get_builtin_typeapp cx ~trace elem_reason (OrdinaryName "React$Element") [component], tout)
+        ( get_builtin_typeapp
+            cx
+            ~trace
+            elem_reason
+            (OrdinaryName "React$Element")
+            [component; Tvar.mk_where cx reason_op props_to_tout],
+          tout
+        )
     in
     let get_config = get_config cx trace l ~use_op ~reason_op u Polarity.Positive in
     let get_config_with_props_and_defaults default_props tout =
