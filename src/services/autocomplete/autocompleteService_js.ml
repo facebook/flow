@@ -1947,16 +1947,20 @@ let applicable_error_codes ~reader ~cx comment_loc =
       }
   in
   let applies error_loc = Loc.lines_intersect next_line error_loc in
-  cx
-  |> Context.errors
-  |> Flow_error.make_errors_printable (loc_of_aloc ~reader) ~strip_root:(Some (Context.root cx))
-  |> Errors.ConcreteLocPrintableErrorSet.elements
-  |> Base.List.rev_filter_map ~f:(fun err ->
-         if applies (Errors.loc_of_printable_error err) then
-           Option.map Error_codes.string_of_code (Errors.code_of_printable_error err)
-         else
-           None
-     )
+  let error_codes =
+    let loc_of_aloc = loc_of_aloc ~reader in
+    let strip_root = Some (Context.root cx) in
+    Flow_error.ErrorSet.fold
+      (fun err acc ->
+        let err = Flow_error.make_error_printable loc_of_aloc ~strip_root err in
+        let loc = Errors.loc_of_printable_error err in
+        match Errors.code_of_printable_error err with
+        | Some code when applies loc -> code :: acc
+        | _ -> acc)
+      (Context.errors cx)
+      []
+  in
+  List.sort_uniq Stdlib.compare error_codes
 
 let has_leading text =
   (* There is leading text if there are non-whitespace characters before the word we're autocompleting in. *)
@@ -1972,10 +1976,9 @@ let autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc =
     let edit_locs = (word_loc, word_loc) in
     let error_codes = applicable_error_codes ~reader ~cx ac_loc in
     Base.List.map error_codes ~f:(fun error_code ->
-        let name = Printf.sprintf "$FlowFixMe[%s]" error_code in
-        let insert_text =
-          Printf.sprintf "\\$FlowFixMe[%s] ${1:reason for suppression}" error_code
-        in
+        let code_str = Error_codes.string_of_code error_code in
+        let name = Printf.sprintf "$FlowFixMe[%s]" code_str in
+        let insert_text = Printf.sprintf "\\$FlowFixMe[%s] ${1:reason for suppression}" code_str in
         {
           ServerProt.Response.Completion.kind = Some Lsp.Completion.Text;
           name;
