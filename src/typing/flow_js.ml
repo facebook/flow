@@ -2166,6 +2166,93 @@ struct
                 (rrt_resolved, rrt_unresolved)
                 rrt_resolve_to
           end
+        (**************)
+        (* conditional type *)
+        (**************)
+        | (DefT (_, _, EmptyT), ConditionalT { use_op; tout; _ }) ->
+          rec_flow_t cx trace ~use_op (l, OpenT tout)
+        | ( check_t,
+            ConditionalT
+              {
+                use_op;
+                reason;
+                distributive_tparam_name = Some name;
+                infer_tparams;
+                extends_t;
+                true_t;
+                false_t;
+                tout;
+              }
+          ) ->
+          let reason_tparam = reason_of_t check_t in
+          let reason_tapp = update_desc_new_reason (fun desc -> RPolyType desc) reason in
+          let subst t =
+            mk_typeapp_of_poly
+              cx
+              trace
+              ~use_op
+              ~reason_op:reason
+              ~reason_tapp
+              (Poly.generate_id ())
+              (aloc_of_reason reason_tparam)
+              (Nel.one
+                 {
+                   reason = reason_tparam;
+                   name;
+                   bound = MixedT.make reason_tparam (bogus_trust ());
+                   polarity = Polarity.Neutral;
+                   default = None;
+                   is_this = false;
+                 }
+              )
+              t
+              [check_t]
+          in
+          rec_flow
+            cx
+            trace
+            ( check_t,
+              ConditionalT
+                {
+                  use_op;
+                  reason;
+                  distributive_tparam_name = None;
+                  infer_tparams =
+                    Base.List.map infer_tparams ~f:(fun tparam ->
+                        { tparam with bound = subst tparam.bound }
+                    );
+                  extends_t = subst extends_t;
+                  true_t = subst true_t;
+                  false_t = subst false_t;
+                  tout;
+                }
+            )
+        | ( check_t,
+            ConditionalT
+              {
+                use_op;
+                reason;
+                distributive_tparam_name = None;
+                infer_tparams;
+                extends_t;
+                true_t;
+                false_t;
+                tout;
+              }
+          ) ->
+          let result =
+            ImplicitInstantiationKit.run_conditional
+              cx
+              trace
+              ~use_op
+              ~reason
+              ~tparams:infer_tparams
+              ~check_t
+              ~extends_t
+              ~true_t
+              ~false_t
+          in
+          rec_flow_t cx trace ~use_op (result, OpenT tout)
         (* singleton lower bounds are equivalent to the corresponding
            primitive with a literal constraint. These conversions are
            low precedence to allow equality exploits above, such as
@@ -4004,93 +4091,6 @@ struct
         (*****************)
         | (_, DestructuringT (reason, kind, selector, tout, id)) ->
           destruct cx ~trace reason kind l selector tout id
-        (**************)
-        (* conditional type *)
-        (**************)
-        | (DefT (_, _, EmptyT), ConditionalT { use_op; tout; _ }) ->
-          rec_flow_t cx trace ~use_op (l, OpenT tout)
-        | ( check_t,
-            ConditionalT
-              {
-                use_op;
-                reason;
-                distributive_tparam_name = Some name;
-                infer_tparams;
-                extends_t;
-                true_t;
-                false_t;
-                tout;
-              }
-          ) ->
-          let reason_tparam = reason_of_t check_t in
-          let reason_tapp = update_desc_new_reason (fun desc -> RPolyType desc) reason in
-          let subst t =
-            mk_typeapp_of_poly
-              cx
-              trace
-              ~use_op
-              ~reason_op:reason
-              ~reason_tapp
-              (Poly.generate_id ())
-              (aloc_of_reason reason_tparam)
-              (Nel.one
-                 {
-                   reason = reason_tparam;
-                   name;
-                   bound = MixedT.make reason_tparam (bogus_trust ());
-                   polarity = Polarity.Neutral;
-                   default = None;
-                   is_this = false;
-                 }
-              )
-              t
-              [check_t]
-          in
-          rec_flow
-            cx
-            trace
-            ( check_t,
-              ConditionalT
-                {
-                  use_op;
-                  reason;
-                  distributive_tparam_name = None;
-                  infer_tparams =
-                    Base.List.map infer_tparams ~f:(fun tparam ->
-                        { tparam with bound = subst tparam.bound }
-                    );
-                  extends_t = subst extends_t;
-                  true_t = subst true_t;
-                  false_t = subst false_t;
-                  tout;
-                }
-            )
-        | ( check_t,
-            ConditionalT
-              {
-                use_op;
-                reason;
-                distributive_tparam_name = None;
-                infer_tparams;
-                extends_t;
-                true_t;
-                false_t;
-                tout;
-              }
-          ) ->
-          let result =
-            ImplicitInstantiationKit.run_conditional
-              cx
-              trace
-              ~use_op
-              ~reason
-              ~tparams:infer_tparams
-              ~check_t
-              ~extends_t
-              ~true_t
-              ~false_t
-          in
-          rec_flow_t cx trace ~use_op (result, OpenT tout)
         (**************)
         (* object kit *)
         (**************)
