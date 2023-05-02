@@ -47,7 +47,7 @@ let regenerate ~reader ~options =
             let err =
               let msg = Error_message.EUnusedSuppression loc in
               Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
-              |> Flow_error.make_error_printable ~strip_root:(Some root)
+              |> Flow_error.make_error_printable Fun.id ~strip_root:(Some root)
             in
             let file_warnings =
               FilenameMap.find_opt source_file warnings
@@ -70,7 +70,7 @@ let regenerate ~reader ~options =
         let err =
           Error_message.ECodelessSuppression (loc, code)
           |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
-          |> Flow_error.make_error_printable ~strip_root:(Some root)
+          |> Flow_error.make_error_printable Fun.id ~strip_root:(Some root)
         in
         let file_warnings =
           FilenameMap.find_opt source_file warnings
@@ -107,7 +107,7 @@ let regenerate ~reader ~options =
       let err =
         Error_message.EDuplicateModuleProvider { module_name; provider; conflict }
         |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:duplicate
-        |> Flow_error.make_error_printable ~strip_root:(Some root)
+        |> Flow_error.make_error_printable Fun.id ~strip_root:(Some root)
       in
       Errors.ConcreteLocPrintableErrorSet.add err acc
     in

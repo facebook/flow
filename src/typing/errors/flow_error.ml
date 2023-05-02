@@ -37,8 +37,6 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } =
     trace_reasons = Base.List.map ~f:(Reason.map_reason_locs f) trace_reasons;
   }
 
-let concretize_error = map_loc_of_error
-
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
 module Error (M : Set.OrderedType) : Set.OrderedType with type t = M.t t = struct
@@ -353,8 +351,14 @@ let post_process_errors original_errors =
   in
   ErrorSet.filter retain_error original_errors
 
-let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t) :
-    Loc.t Errors.printable_error =
+let rec make_error_printable :
+          'loc.
+          ('loc -> Loc.t) ->
+          strip_root:Path.t option ->
+          ?speculation:bool ->
+          'loc t ->
+          Loc.t Errors.printable_error =
+ fun loc_of_aloc ~strip_root ?(speculation = false) error ->
   let open Errors in
   let {
     loc : Loc.t option;
@@ -362,7 +366,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
     source_file;
     trace_reasons : Loc.t virtual_reason list;
   } =
-    error
+    map_loc_of_error loc_of_aloc error
   in
   let kind = kind_of_msg msg in
   let mk_info (reason : concrete_reason) extras =
@@ -844,7 +848,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
           let score = score_of_msg msg in
           let error =
             error_of_msg ~trace_reasons:[] ~source_file msg
-            |> make_error_printable ~strip_root ~speculation:true
+            |> make_error_printable Fun.id ~strip_root ~speculation:true
           in
           (score, error))
         branches
@@ -1249,8 +1253,7 @@ let rec make_error_printable ~strip_root ?(speculation = false) (error : Loc.t t
 
 let make_errors_printable loc_of_aloc ~strip_root errors =
   let f err acc =
-    let err = concretize_error loc_of_aloc err in
-    let err = make_error_printable ~strip_root ~speculation:false err in
+    let err = make_error_printable loc_of_aloc ~strip_root ~speculation:false err in
     Errors.ConcreteLocPrintableErrorSet.add err acc
   in
   ErrorSet.fold f errors Errors.ConcreteLocPrintableErrorSet.empty

@@ -33,12 +33,14 @@ module ConcreteErrorSet : Flow_set.S with type elt = Loc.t t
 
 val map_loc_of_error : ('a -> 'b) -> 'a t -> 'b t
 
-val concretize_error : (ALoc.t -> Loc.t) -> ALoc.t t -> Loc.t t
-
 val post_process_errors : ErrorSet.t -> ErrorSet.t
 
 val make_error_printable :
-  strip_root:Path.t option -> ?speculation:bool -> Loc.t t -> Loc.t Errors.printable_error
+  ('loc -> Loc.t) ->
+  strip_root:Path.t option ->
+  ?speculation:bool ->
+  'loc t ->
+  Loc.t Errors.printable_error
 
 val make_errors_printable :
   (ALoc.t -> Loc.t) ->
