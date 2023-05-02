@@ -663,8 +663,8 @@ let rec make_error_printable :
         in
         unwrap_frame loc frames lower use_op arg
       | Frame (FunRestParam _, use_op) -> loop loc frames use_op
-      | Frame (FunReturn { lower; _ }, use_op) ->
-        unwrap_frame loc frames (repos_reason loc lower) use_op [text "the return value"]
+      | Frame (FunReturn _, use_op) ->
+        unwrap_frame_without_loc loc frames use_op [text "the return value"]
       | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op [text "the indexer property's key"]
       | Frame
