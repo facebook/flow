@@ -686,16 +686,15 @@ let rec make_error_printable :
         in
         explanation loc frames use_op message
       | Frame (PropertyCompatibility { prop = Some prop; lower; _ }, use_op) ->
-        let repos_small_reason loc reason = function
+        let loc_of_prop_compatibility_reason loc reason = function
           (* If we are checking class extensions or implementations then the
            * object reason will point to the class name. So don't reposition with
            * this reason. *)
-          | Op (ClassExtendsCheck _) -> repos_reason loc reason
-          | Op (ClassImplementsCheck _) -> repos_reason loc reason
-          | _ -> reason
+          | Op (ClassExtendsCheck _) -> loc
+          | Op (ClassImplementsCheck _) -> loc
+          | _ -> loc_of_reason reason
         in
-        let lower = repos_small_reason loc lower use_op in
-        let rec loop lower = function
+        let rec loop lower_loc = function
           (* Don't match $key/$value/$call properties since they have special
            * meaning. As defined above. *)
           | Frame (PropertyCompatibility { prop = Some prop; lower = lower'; _ }, use_op)
@@ -703,22 +702,23 @@ let rec make_error_printable :
             when prop <> OrdinaryName "$key"
                  && prop <> OrdinaryName "$value"
                  && prop <> OrdinaryName "$call" ->
-            let lower' = repos_small_reason (loc_of_reason lower) lower' use_op in
+            let lower_loc' = loc_of_prop_compatibility_reason lower_loc lower' use_op in
             (* Perform the same frame location unwrapping as we do in our
              * general code. *)
-            let lower =
-              if Loc.contains (loc_of_reason lower') (loc_of_reason lower) then
-                lower
+            let lower_loc =
+              if Loc.contains lower_loc' lower_loc then
+                lower_loc
               else
-                lower'
+                lower_loc'
             in
-            let (lower, props, use_op) = loop lower use_op in
-            (lower, prop :: props, use_op)
+            let (lower_loc, props, use_op) = loop lower_loc use_op in
+            (lower_loc, prop :: props, use_op)
           (* Perform standard iteration through these use_ops. *)
-          | use_op -> (lower, [], use_op)
+          | use_op -> (lower_loc, [], use_op)
         in
         (* Loop through our parent use_op to get our property path. *)
-        let (lower, props, use_op) = loop lower use_op in
+        let lower_loc = loc_of_prop_compatibility_reason loc lower use_op in
+        let (lower_loc, props, use_op) = loop lower_loc use_op in
         (* Create our final action. *)
         let message =
           [
@@ -731,7 +731,7 @@ let rec make_error_printable :
               );
           ]
         in
-        unwrap_frame loc frames lower use_op message
+        unwrap_frame_with_loc loc frames lower_loc use_op message
       | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op [text "index "; text (string_of_int n)]
       | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
@@ -767,12 +767,11 @@ let rec make_error_printable :
           frame_loc
       in
       loop loc frames use_op
-    and unwrap_frame loc frames frame_reason use_op frame =
+    and unwrap_frame_with_loc loc frames frame_loc use_op frame =
       (* Add our frame message and reposition the location if appropriate.
        *
        * If our current loc is inside our frame_loc then use our current loc
        * since it is the smallest possible loc in our frame_loc. *)
-      let frame_loc = loc_of_reason frame_reason in
       let frame_contains_loc = Loc.contains frame_loc loc in
       let loc =
         if frame_contains_loc then
@@ -784,6 +783,9 @@ let rec make_error_printable :
       let (all_frames, explanations) = frames in
       let frames = (frame :: all_frames, explanations) in
       loop loc frames use_op
+    and unwrap_frame loc frames frame_reason use_op frame =
+      let frame_loc = loc_of_reason frame_reason in
+      unwrap_frame_with_loc loc frames frame_loc use_op frame
     and unwrap_frame_without_loc loc frames use_op frame =
       (* Same logic as `unwrap_frame` except we don't have a frame location. *)
       let (all_frames, explanations) = frames in
