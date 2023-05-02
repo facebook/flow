@@ -588,7 +588,7 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode ~use_strict options
   in
-  let parsing_options = make_parsing_options ~use_strict ~types_mode ~docblock:None options in
+  let parsing_options = make_parsing_options ~use_strict ~types_mode options in
   let exported_module = Module_js.exported_module ~options in
   (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
@@ -610,7 +610,7 @@ let reparse_with_defaults
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode ~use_strict options
   in
-  let parsing_options = make_parsing_options ~types_mode ~use_strict ~docblock:None options in
+  let parsing_options = make_parsing_options ~types_mode ~use_strict options in
   let exported_module = Module_js.exported_module ~options in
   reparse
     ~transaction
@@ -653,7 +653,7 @@ let ensure_parsed ~reader options workers files =
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
   in
   let next = MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts) in
-  let parsing_options = make_parsing_options ~types_mode ~use_strict ~docblock:None options in
+  let parsing_options = make_parsing_options ~types_mode ~use_strict options in
   let exported_module = Module_js.exported_module ~options in
   let%lwt {
         parsed = _;

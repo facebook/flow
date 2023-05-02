@@ -33,7 +33,7 @@ type t = {
   parse_enable_mapped_types: bool;
 }
 
-let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict ~docblock options =
+let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict options =
   let use_strict =
     match use_strict with
     | Some use_strict -> use_strict
@@ -42,12 +42,7 @@ let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict ~docblock opti
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options in
   let facebook_fbt = Options.facebook_fbt options in
-  let prevent_munge =
-    let default = not (Options.should_munge_underscores options) in
-    match docblock with
-    | Some docblock -> Docblock.preventMunge docblock || default
-    | None -> default
-  in
+  let prevent_munge = not (Options.should_munge_underscores options) in
   {
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
