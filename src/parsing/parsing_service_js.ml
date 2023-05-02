@@ -220,7 +220,7 @@ let do_parse ~parsing_options ~docblock content file =
           let imports = Imports.add_globals globals imports in
           let tolerable_errors =
             List.fold_left
-              (fun acc (_, err) ->
+              (fun acc err ->
                 match err with
                 | Type_sig.SigError err ->
                   let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in

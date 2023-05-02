@@ -85,7 +85,7 @@ module SignatureVerification = struct
       Type_sig_utils.parse_and_pack_module ~strict sig_opts None ast
     in
     List.fold_left
-      (fun acc (_, err) ->
+      (fun acc err ->
         match err with
         | Type_sig.CheckError -> acc
         | Type_sig.SigError err ->

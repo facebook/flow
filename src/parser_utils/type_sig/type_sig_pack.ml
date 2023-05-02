@@ -221,7 +221,7 @@ type 'loc pattern =
     }
 [@@deriving map, show { with_path = false }]
 
-type 'loc cx = { mutable errs: (Locs.index * 'loc errno) list }
+type 'loc cx = { mutable errs: 'loc errno list }
 
 let create_cx () = { errs = [] }
 
@@ -246,7 +246,7 @@ let rec pack_parsed cx = function
   | P.Err (loc, err) ->
     let loc = pack_loc loc in
     let err = map_errno pack_loc err in
-    cx.errs <- (loc, err) :: cx.errs;
+    cx.errs <- err :: cx.errs;
     Err loc
   | P.ValRef ref -> Ref (pack_ref ref)
   | P.Pattern p -> Pattern (Patterns.index_exn p)

@@ -609,4 +609,4 @@ type 'loc errno =
   | SigError of 'loc Signature_error.t
 [@@deriving show { with_path = false }, map]
 
-type 'loc error = 'loc * 'loc errno [@@deriving show { with_path = false }]
+type 'loc error = 'loc errno [@@deriving show { with_path = false }]
