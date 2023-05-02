@@ -28,9 +28,7 @@ let do_parse_wrapper ~options filename contents =
   let parsing_options =
     Parsing_options.make_parsing_options ~types_mode ~docblock:(Some docblock) options
   in
-  let parse_result =
-    Parsing_service_js.do_parse ~parsing_options ~info:docblock contents filename
-  in
+  let parse_result = Parsing_service_js.do_parse ~parsing_options ~docblock contents filename in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; requires; file_sig; tolerable_errors; _ } ->
     Parsed
@@ -224,10 +222,10 @@ let ensure_checked_dependencies ~options ~reader file requires =
     raise Lwt.Canceled
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~profiling ~reader master_cx filename info ast requires file_sig =
+let merge_contents ~options ~profiling ~reader master_cx filename docblock ast requires file_sig =
   with_timer ~options "MergeContents" profiling (fun () ->
       let () = ensure_checked_dependencies ~options ~reader filename requires in
-      Merge_service.check_contents_context ~reader options master_cx filename ast info file_sig
+      Merge_service.check_contents_context ~reader options master_cx filename ast docblock file_sig
   )
 
 (* If the given type refers to an object literal, return the location of the object literal.

@@ -98,7 +98,7 @@ val parse_package_json_file :
 (* parse contents of a file *)
 val do_parse :
   parsing_options:Parsing_options.t ->
-  info:Docblock.t ->
+  docblock:Docblock.t ->
   string ->
   (* contents of the file *)
   File_key.t ->

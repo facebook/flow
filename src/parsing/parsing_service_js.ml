@@ -108,11 +108,11 @@ let parse_package_json_file ~node_main_fields content file =
 (* Allow types based on `types_mode`, using the @flow annotation in the
    file header if possible. Note, this should be consistent with
    Infer_service.apply_docblock_overrides w.r.t. the metadata.checked flag. *)
-let types_checked types_mode info =
+let types_checked types_mode docblock =
   match types_mode with
   | TypesAllowed -> true
   | TypesForbiddenByDefault ->
-    (match Docblock.flow info with
+    (match Docblock.flow docblock with
     | None
     | Some Docblock.OptOut ->
       false
@@ -121,7 +121,7 @@ let types_checked types_mode info =
     | Some Docblock.OptInStrictLocal ->
       true)
 
-let do_parse ~parsing_options ~info content file =
+let do_parse ~parsing_options ~docblock content file =
   let {
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
@@ -155,12 +155,12 @@ let do_parse ~parsing_options ~info content file =
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
     | _ ->
       (* either all=true or @flow pragma exists *)
-      let types_checked = types_checked types_mode info in
+      let types_checked = types_checked types_mode docblock in
       if not types_checked then
         Parse_skip Skip_non_flow_file
       else
         let (ast, parse_errors) = parse_source_file ~types:true ~use_strict content file in
-        let prevent_munge = Docblock.preventMunge info || prevent_munge in
+        let prevent_munge = Docblock.preventMunge docblock || prevent_munge in
         (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
            property named `propTypes` in any class. It should be killed with fire or replaced with
            something that only works for React classes, in which case we must make a corresponding
@@ -212,7 +212,7 @@ let do_parse ~parsing_options ~info content file =
               ~facebook_keyMirror
           in
           let (sig_errors, locs, type_sig) =
-            let strict = Docblock.is_strict info in
+            let strict = Docblock.is_strict docblock in
             Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
           in
           let exports = Exports.of_module type_sig in
@@ -351,15 +351,15 @@ let reducer
         { acc with unchanged = FilenameSet.add file_key acc.unchanged }
       else (
         match parse_docblock ~max_tokens:max_header_tokens file_key content with
-        | ([], info) ->
-          let info =
+        | ([], docblock) ->
+          let docblock =
             if noflow file_key then
-              { info with Docblock.flow = Some Docblock.OptOut }
+              { docblock with Docblock.flow = Some Docblock.OptOut }
             else
-              info
+              docblock
           in
           begin
-            match do_parse ~parsing_options ~info content file_key with
+            match do_parse ~parsing_options ~docblock content file_key with
             | Parse_ok
                 {
                   ast;
@@ -375,7 +375,7 @@ let reducer
               (* if parsing_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
               let file_sig = (file_sig, tolerable_errors) in
-              let module_name = exported_module file_key (`Module info) in
+              let module_name = exported_module file_key (`Module docblock) in
               let dirty_modules =
                 worker_mutator.Parsing_heaps.add_parsed
                   file_key
@@ -384,7 +384,7 @@ let reducer
                   ~imports
                   hash
                   module_name
-                  info
+                  docblock
                   ast
                   requires
                   file_sig
@@ -396,11 +396,11 @@ let reducer
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with parsed; dirty_modules }
             | Parse_recovered { parse_errors = (error, _); _ } ->
-              let module_name = exported_module file_key (`Module info) in
+              let module_name = exported_module file_key (`Module docblock) in
               let failure = Parse_error error in
               fold_failed acc worker_mutator file_key file_opt hash module_name failure
             | Parse_exn exn ->
-              let module_name = exported_module file_key (`Module info) in
+              let module_name = exported_module file_key (`Module docblock) in
               let failure = Uncaught_exception exn in
               fold_failed acc worker_mutator file_key file_opt hash module_name failure
             | Parse_skip (Skip_package_json result) ->
@@ -426,7 +426,7 @@ let reducer
               { acc with package_json; dirty_modules }
             | Parse_skip Skip_non_flow_file
             | Parse_skip Skip_resource_file ->
-              let module_name = exported_module file_key (`Module info) in
+              let module_name = exported_module file_key (`Module docblock) in
               let dirty_modules =
                 worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
               in
@@ -434,8 +434,8 @@ let reducer
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with unparsed; dirty_modules }
           end
-        | (docblock_errors, info) ->
-          let module_name = exported_module file_key (`Module info) in
+        | (docblock_errors, docblock) ->
+          let module_name = exported_module file_key (`Module docblock) in
           let dirty_modules =
             worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
           in
