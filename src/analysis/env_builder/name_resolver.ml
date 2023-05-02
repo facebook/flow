@@ -4981,7 +4981,8 @@ module Make
           ignore @@ this#optional_chain arg;
           this#commit_refinement refi
         (* Latent refinements are only applied on function calls where the function call is an identifier *)
-        | { Call.callee; arguments; _ } when not (Flow_ast_utils.is_call_to_invariant callee) ->
+        | { Call.callee; arguments; targs; _ } when not (Flow_ast_utils.is_call_to_invariant callee)
+          ->
           (* This case handles predicate functions. We ensure that this
            * is not a call to invariant.
            * The only other criterion that must be met for this call to produce
@@ -5008,6 +5009,7 @@ module Make
               List.map (fun arg -> RefinementKey.of_argument arg) arglist
           in
           ignore @@ this#expression callee;
+          ignore @@ Base.Option.map ~f:this#call_type_args targs;
           ignore @@ this#arg_list arguments;
           this#havoc_current_env ~all:false;
           let latent_callee =
