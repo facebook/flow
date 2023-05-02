@@ -125,7 +125,7 @@ let do_parse ~parsing_options ~docblock content file =
   let {
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
-    parse_prevent_munge = prevent_munge;
+    parse_munge_underscores = munge_underscores;
     parse_module_ref_prefix = module_ref_prefix;
     parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
     parse_facebook_fbt = _;
@@ -160,7 +160,7 @@ let do_parse ~parsing_options ~docblock content file =
         Parse_skip Skip_non_flow_file
       else
         let (ast, parse_errors) = parse_source_file ~types:true ~use_strict content file in
-        let prevent_munge = Docblock.preventMunge docblock || prevent_munge in
+        let munge_underscores = munge_underscores && not (Docblock.preventMunge docblock) in
         (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
            property named `propTypes` in any class. It should be killed with fire or replaced with
            something that only works for React classes, in which case we must make a corresponding
@@ -207,7 +207,7 @@ let do_parse ~parsing_options ~docblock content file =
               parsing_options
               ~enable_relay_integration
               ~relay_integration_module_prefix
-              ~munge:(not prevent_munge)
+              ~munge:munge_underscores
               ~ignore_static_propTypes
               ~facebook_keyMirror
           in

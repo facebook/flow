@@ -18,7 +18,7 @@ let run ctxt expected name content =
       {
         parse_types_mode = TypesAllowed;
         parse_use_strict = true;
-        parse_prevent_munge = false;
+        parse_munge_underscores = true;
         parse_module_ref_prefix = None;
         parse_module_ref_prefix_LEGACY_INTEROP = None;
         parse_facebook_fbt = None;

@@ -15,7 +15,7 @@ type types_mode =
 type t = {
   parse_types_mode: types_mode;
   parse_use_strict: bool;
-  parse_prevent_munge: bool;
+  parse_munge_underscores: bool;
   parse_module_ref_prefix: string option;
   parse_module_ref_prefix_LEGACY_INTEROP: string option;
   parse_facebook_fbt: string option;
@@ -42,11 +42,10 @@ let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict options =
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options in
   let facebook_fbt = Options.facebook_fbt options in
-  let prevent_munge = not (Options.should_munge_underscores options) in
   {
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
-    parse_prevent_munge = prevent_munge;
+    parse_munge_underscores = Options.should_munge_underscores options;
     parse_module_ref_prefix = module_ref_prefix;
     parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
     parse_facebook_fbt = facebook_fbt;
