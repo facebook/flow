@@ -121,22 +121,60 @@ let types_checked types_mode docblock =
     | Some Docblock.OptInStrictLocal ->
       true)
 
-let do_parse ~parsing_options ~docblock content file =
+let parse_file_sig parsing_options file ast =
   let {
-    parse_types_mode = types_mode;
-    parse_use_strict = use_strict;
-    parse_munge_underscores = munge_underscores;
     parse_module_ref_prefix = module_ref_prefix;
     parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
-    parse_facebook_fbt = _;
-    parse_suppress_types = _;
-    parse_max_literal_len = _;
-    parse_exact_by_default = _;
     parse_enable_enums = enable_enums;
     parse_enable_relay_integration = enable_relay_integration;
     parse_relay_integration_excludes = relay_integration_excludes;
     parse_relay_integration_module_prefix = relay_integration_module_prefix;
     parse_relay_integration_module_prefix_includes = relay_integration_module_prefix_includes;
+    _;
+  } =
+    parsing_options
+  in
+  let enable_relay_integration =
+    enable_relay_integration && Relay_options.enabled_for_file relay_integration_excludes file
+  in
+  let relay_integration_module_prefix =
+    Relay_options.module_prefix_for_file
+      relay_integration_module_prefix_includes
+      file
+      relay_integration_module_prefix
+  in
+  let file_sig_opts =
+    {
+      File_sig.module_ref_prefix;
+      module_ref_prefix_LEGACY_INTEROP;
+      enable_enums;
+      enable_relay_integration;
+      relay_integration_module_prefix;
+    }
+  in
+  File_sig.program ~ast ~opts:file_sig_opts
+
+let parse_type_sig parsing_options docblock file ast =
+  let sig_opts = Type_sig_options.of_parsing_options parsing_options docblock file in
+  let strict = Docblock.is_strict docblock in
+  Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+
+let do_parse ~parsing_options ~docblock content file =
+  let {
+    parse_types_mode = types_mode;
+    parse_use_strict = use_strict;
+    parse_munge_underscores = _;
+    parse_module_ref_prefix = _;
+    parse_module_ref_prefix_LEGACY_INTEROP = _;
+    parse_facebook_fbt = _;
+    parse_suppress_types = _;
+    parse_max_literal_len = _;
+    parse_exact_by_default = _;
+    parse_enable_enums = enable_enums;
+    parse_enable_relay_integration = _;
+    parse_relay_integration_excludes = _;
+    parse_relay_integration_module_prefix = _;
+    parse_relay_integration_module_prefix_includes = _;
     parse_node_main_fields = node_main_fields;
     parse_distributed = distributed;
     parse_enable_conditional_types = _;
@@ -160,35 +198,7 @@ let do_parse ~parsing_options ~docblock content file =
         Parse_skip Skip_non_flow_file
       else
         let (ast, parse_errors) = parse_source_file ~types:true ~use_strict content file in
-        let munge_underscores = munge_underscores && not (Docblock.preventMunge docblock) in
-        (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
-           property named `propTypes` in any class. It should be killed with fire or replaced with
-           something that only works for React classes, in which case we must make a corresponding
-           change in the type system that enforces that any such property is private. *)
-        let ignore_static_propTypes = true in
-        (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
-           recognize and process a custom `keyMirror` function that makes an enum out of the keys
-           of an object. *)
-        let facebook_keyMirror = true in
-        let enable_relay_integration =
-          enable_relay_integration && Relay_options.enabled_for_file relay_integration_excludes file
-        in
-        let relay_integration_module_prefix =
-          Relay_options.module_prefix_for_file
-            relay_integration_module_prefix_includes
-            file
-            relay_integration_module_prefix
-        in
-        let file_sig_opts =
-          {
-            File_sig.module_ref_prefix;
-            module_ref_prefix_LEGACY_INTEROP;
-            enable_enums;
-            enable_relay_integration;
-            relay_integration_module_prefix;
-          }
-        in
-        let (file_sig, tolerable_errors) = File_sig.program ~ast ~opts:file_sig_opts in
+        let (file_sig, tolerable_errors) = parse_file_sig parsing_options file ast in
         let requires = File_sig.require_set file_sig |> SSet.elements |> Array.of_list in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
         let (_, (_, _, globals)) = Ssa_builder.program_with_scope ~enable_enums ast in
@@ -202,19 +212,7 @@ let do_parse ~parsing_options ~docblock content file =
               parse_errors = Nel.of_list_exn parse_errors;
             }
         else
-          let sig_opts =
-            Type_sig_options.of_parsing_options
-              parsing_options
-              ~enable_relay_integration
-              ~relay_integration_module_prefix
-              ~munge:munge_underscores
-              ~ignore_static_propTypes
-              ~facebook_keyMirror
-          in
-          let (sig_errors, locs, type_sig) =
-            let strict = Docblock.is_strict docblock in
-            Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
-          in
+          let (sig_errors, locs, type_sig) = parse_type_sig parsing_options docblock file ast in
           let exports = Exports.of_module type_sig in
           let imports = Imports.of_file_sig file_sig in
           let imports = Imports.add_globals globals imports in

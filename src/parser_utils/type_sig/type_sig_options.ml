@@ -22,22 +22,43 @@ type t = {
   mapped_type: bool;
 }
 
-let of_parsing_options
-    ?enable_relay_integration
-    ?relay_integration_module_prefix
-    ~munge
-    ~ignore_static_propTypes
-    ~facebook_keyMirror
-    parsing_options =
-  let open Parsing_options in
+let of_parsing_options parsing_options docblock file =
+  let {
+    Parsing_options.parse_munge_underscores = munge_underscores;
+    parse_module_ref_prefix = module_ref_prefix;
+    parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
+    parse_facebook_fbt = facebook_fbt;
+    parse_suppress_types = suppress_types;
+    parse_max_literal_len = max_literal_len;
+    parse_exact_by_default = exact_by_default;
+    parse_enable_enums = enable_enums;
+    parse_enable_relay_integration = enable_relay_integration;
+    parse_relay_integration_excludes = relay_integration_excludes;
+    parse_relay_integration_module_prefix = relay_integration_module_prefix;
+    parse_relay_integration_module_prefix_includes = relay_integration_module_prefix_includes;
+    parse_enable_conditional_types = conditional_type;
+    parse_enable_mapped_types = mapped_type;
+    _;
+  } =
+    parsing_options
+  in
+  let munge = munge_underscores && not (Docblock.preventMunge docblock) in
+  (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
+     property named `propTypes` in any class. It should be killed with fire or replaced with
+     something that only works for React classes, in which case we must make a corresponding
+     change in the type system that enforces that any such property is private. *)
+  let ignore_static_propTypes = true in
+  (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
+     recognize and process a custom `keyMirror` function that makes an enum out of the keys
+     of an object. *)
+  let facebook_keyMirror = true in
   let enable_relay_integration =
-    Base.Option.value
-      ~default:parsing_options.parse_enable_relay_integration
-      enable_relay_integration
+    enable_relay_integration && Relay_options.enabled_for_file relay_integration_excludes file
   in
   let relay_integration_module_prefix =
-    Base.Option.value
-      ~default:parsing_options.parse_relay_integration_module_prefix
+    Relay_options.module_prefix_for_file
+      relay_integration_module_prefix_includes
+      file
       relay_integration_module_prefix
   in
   {
@@ -46,15 +67,15 @@ let of_parsing_options
     facebook_keyMirror;
     enable_relay_integration;
     relay_integration_module_prefix;
-    suppress_types = parsing_options.parse_suppress_types;
-    facebook_fbt = parsing_options.parse_facebook_fbt;
-    max_literal_len = parsing_options.parse_max_literal_len;
-    exact_by_default = parsing_options.parse_exact_by_default;
-    module_ref_prefix = parsing_options.parse_module_ref_prefix;
-    module_ref_prefix_LEGACY_INTEROP = parsing_options.parse_module_ref_prefix_LEGACY_INTEROP;
-    enable_enums = parsing_options.parse_enable_enums;
-    conditional_type = parsing_options.parse_enable_conditional_types;
-    mapped_type = parsing_options.parse_enable_mapped_types;
+    suppress_types;
+    facebook_fbt;
+    max_literal_len;
+    exact_by_default;
+    module_ref_prefix;
+    module_ref_prefix_LEGACY_INTEROP;
+    enable_enums;
+    conditional_type;
+    mapped_type;
   }
 
 let of_options options ~munge ~ignore_static_propTypes ~facebook_keyMirror =

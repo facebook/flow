@@ -95,6 +95,18 @@ val ensure_parsed :
 val parse_package_json_file :
   node_main_fields:string list -> string -> File_key.t -> (Package_json.t, parse_error) Result.t
 
+val parse_file_sig :
+  Parsing_options.t -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> File_sig.tolerable_t
+
+val parse_type_sig :
+  Parsing_options.t ->
+  Docblock.t ->
+  File_key.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  Type_sig_collections.Locs.index Type_sig.error list
+  * Parsing_heaps.locs_tbl
+  * Parsing_heaps.type_sig
+
 (* parse contents of a file *)
 val do_parse :
   parsing_options:Parsing_options.t ->
