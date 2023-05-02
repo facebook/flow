@@ -1803,9 +1803,11 @@ let mk_prop_message =
     | Some prop -> [text "property "; code prop]
   )
 
-let mk_tuple_element_error_message ~reason ~index ~name kind =
+let mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name kind =
   let open Errors.Friendly in
-  let index_ref = Reference ([Code (string_of_int index)], def_loc_of_reason reason) in
+  let index_ref =
+    Reference ([Code (string_of_int index)], loc_of_aloc (def_loc_of_reason reason))
+  in
   let label =
     Base.Option.value_map name ~default:[] ~f:(fun name -> [text " labeled "; code name])
   in
@@ -1895,7 +1897,7 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
-      suggestion: 'loc Errors.Friendly.message_feature list;
+      suggestion: Loc.t Errors.Friendly.message_feature list;
     }
   | PropMissing of {
       loc: 'loc;
@@ -1904,10 +1906,10 @@ type 'loc friendly_message_recipe =
       reason_obj: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
     }
-  | Normal of { features: 'loc Errors.Friendly.message_feature list }
+  | Normal of { features: Loc.t Errors.Friendly.message_feature list }
   | UseOp of {
       loc: 'loc;
-      features: 'loc Errors.Friendly.message_feature list;
+      features: Loc.t Errors.Friendly.message_feature list;
       use_op: 'loc Type.virtual_use_op;
     }
   | PropPolarityMismatch of {
@@ -1919,10 +1921,10 @@ type 'loc friendly_message_recipe =
       use_op: 'loc Type.virtual_use_op;
     }
 
-let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
+let friendly_message_of_msg loc_of_aloc msg =
   let text = Errors.Friendly.text in
   let code = Errors.Friendly.code in
-  let ref = Errors.Friendly.ref in
+  let ref = Errors.Friendly.ref_map loc_of_aloc in
   let desc = Errors.Friendly.desc in
   let msg_export prefix export_name =
     if export_name = "default" then
@@ -1930,8 +1932,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     else
       (text prefix, code export_name)
   in
-  let open Errors in
-  function
+  match msg with
   | EIncompatible
       { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op; branches } ->
     if branches = [] then
@@ -2457,7 +2458,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         use_op;
       }
   | ETupleNonIntegerIndex { reason; index; use_op } ->
-    let index_ref = Errors.Friendly.(Reference ([Code index], def_loc_of_reason reason)) in
+    let index_ref =
+      Errors.Friendly.(Reference ([Code index], loc_of_aloc (def_loc_of_reason reason)))
+    in
     UseOp
       {
         loc = loc_of_reason reason;
@@ -2480,14 +2483,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     UseOp
       {
         loc = loc_of_reason reason;
-        features = mk_tuple_element_error_message ~reason ~index ~name "readable";
+        features = mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "readable";
         use_op;
       }
   | ETupleElementNotWritable { reason; index; name; use_op } ->
     UseOp
       {
         loc = loc_of_reason reason;
-        features = mk_tuple_element_error_message ~reason ~index ~name "writable";
+        features = mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "writable";
         use_op;
       }
   | ETupleElementPolarityMismatch
@@ -2524,33 +2527,31 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Speculation { loc = loc_of_reason reason; use_op; branches }
   | ESpeculationAmbiguous
       { reason = _; prev_case = (prev_i, prev_case); case = (i, case); cases = case_rs } ->
-    Friendly.(
-      let prev_case_r =
-        mk_reason (RCustom ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
-      in
-      let case_r = mk_reason (RCustom ("case " ^ string_of_int (i + 1))) (loc_of_reason case) in
-      let features =
-        [
-          text "Could not decide which case to select, since ";
-          ref prev_case_r;
-          text " ";
-          text "may work but if it doesn't ";
-          ref case_r;
-          text " looks promising ";
-          text "too. To fix add a type annotation ";
-        ]
-        @ conjunction_concat
-            ~conjunction:"or"
-            (Base.List.map
-               ~f:(fun case_r ->
-                 let text = "to " ^ string_of_desc (desc_of_reason case_r) in
-                 [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
-               case_rs
-            )
-        @ [text "."]
-      in
-      Normal { features }
-    )
+    let prev_case_r =
+      mk_reason (RCustom ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
+    in
+    let case_r = mk_reason (RCustom ("case " ^ string_of_int (i + 1))) (loc_of_reason case) in
+    let features =
+      [
+        text "Could not decide which case to select, since ";
+        ref prev_case_r;
+        text " ";
+        text "may work but if it doesn't ";
+        ref case_r;
+        text " looks promising ";
+        text "too. To fix add a type annotation ";
+      ]
+      @ Errors.Friendly.conjunction_concat
+          ~conjunction:"or"
+          (Base.List.map
+             ~f:(fun case_r ->
+               let text = "to " ^ string_of_desc (desc_of_reason case_r) in
+               [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
+             case_rs
+          )
+      @ [text "."]
+    in
+    Normal { features }
   | EIncompatibleWithExact (reasons, use_op, kind) ->
     let (lower, upper) = reasons in
     let object_kind =
@@ -2642,7 +2643,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         loc = loc_of_reason invalid_reason;
         features =
           [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
-          @ Friendly.conjunction_concat ~conjunction:"and" invalids;
+          @ Errors.Friendly.conjunction_concat ~conjunction:"and" invalids;
         use_op;
       }
   | EUnsupportedKeyInObjectType _ -> Normal { features = [text "Unsupported key in object type."] }
@@ -2867,11 +2868,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
-    let x = mk_reason desc (entry_loc |> ALoc.to_loc_exn) in
-    let type_as_value_msg x =
+    let x = mk_reason desc (ALoc.to_loc_exn entry_loc) in
+    let ref_x = Errors.Friendly.ref x in
+    let type_as_value_msg () =
       [
         text "Cannot use type ";
-        ref x;
+        ref_x;
         text " as a value. ";
         text "Types are erased and don't exist at runtime.";
       ]
@@ -2879,27 +2881,27 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let features =
       match binding_error with
       | ENameAlreadyBound ->
-        [text "Cannot declare "; ref x; text " because the name is already bound."]
+        [text "Cannot declare "; ref_x; text " because the name is already bound."]
       | EVarRedeclaration ->
-        [text "Cannot declare "; ref x; text " because var redeclaration is not supported."]
+        [text "Cannot declare "; ref_x; text " because var redeclaration is not supported."]
       | EReferencedBeforeDeclaration ->
         if desc = RThis || desc = RSuper then
           [
             text "Must call ";
             code "super";
             text " before accessing ";
-            ref x;
+            ref_x;
             text " in a derived constructor.";
           ]
         else
           [
             text "Cannot use variable ";
-            ref x;
+            ref_x;
             text " because the declaration ";
             text "either comes later or was skipped.";
           ]
       | ETypeInValuePosition { imported = true; name } ->
-        type_as_value_msg x
+        type_as_value_msg ()
         @ [
             text " If the exported binding can also be used as a value, try importing it using ";
             code (spf "import %s" name);
@@ -2913,12 +2915,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ]
       | ETypeInValuePosition { imported = false; name = _ }
       | ETypeAliasInValuePosition ->
-        type_as_value_msg x
+        type_as_value_msg ()
       | EConstReassigned
       | EConstParamReassigned ->
-        [text "Cannot reassign constant "; ref x; text "."]
-      | EImportReassigned -> [text "Cannot reassign import "; ref x; text "."]
-      | EEnumReassigned -> [text "Cannot reassign enum "; ref x; text "."]
+        [text "Cannot reassign constant "; ref_x; text "."]
+      | EImportReassigned -> [text "Cannot reassign import "; ref_x; text "."]
+      | EEnumReassigned -> [text "Cannot reassign enum "; ref_x; text "."]
     in
     Normal { features }
   | ERecursionLimit _ -> Normal { features = [text "*** Recursion limit exceeded ***"] }
@@ -3425,7 +3427,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | EParseError (_, parse_error) ->
-    Normal { features = Friendly.message_of_string (Parse_error.PP.error parse_error) }
+    Normal { features = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) }
   | EDocblockError (_, err) ->
     let features =
       match err with
@@ -4047,7 +4049,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             )
             @ [text (spf "and %d others" (number_to_check - max_display_amount))]
           else
-            Friendly.conjunction_concat
+            Errors.Friendly.conjunction_concat
               (Base.List.map ~f:(fun member -> [code member]) left_to_check)
         in
         (text "the members " :: members_features)
@@ -4321,7 +4323,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     UseOp { loc = loc_of_reason reason_class; features; use_op }
   | EMethodUnbinding { use_op; reason_op; reason_prop } ->
-    let context = Errors.Friendly.(Reference ([Text "context"], def_loc_of_reason reason_prop)) in
+    let context =
+      Errors.Friendly.(Reference ([Text "context"], loc_of_aloc (def_loc_of_reason reason_prop)))
+    in
     UseOp
       {
         loc = loc_of_reason reason_op;
@@ -4414,11 +4418,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               | Env_api.Object { loc; props } -> (loc :: locs, props @ properties))
             ls
         in
-        let (locs, properties) =
-          ( Base.List.take (Base.List.dedup_and_sort ~compare:Loc.compare locs) 10,
-            Base.List.dedup_and_sort ~compare:Loc.compare properties
-          )
-        in
+        let compare a b = Loc.compare (loc_of_aloc a) (loc_of_aloc b) in
+        let locs = Base.List.take (Base.List.dedup_and_sort ~compare locs) 10 in
+        let properties = Base.List.dedup_and_sort ~compare properties in
         let props =
           if List.length properties <= 5 && List.length properties > 0 then
             let these =
@@ -4448,6 +4450,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | EDefinitionCycle dependencies ->
+    let compare a b = Loc.compare (loc_of_aloc a) (loc_of_aloc b) in
     let deps =
       Base.List.filter_mapi
         ~f:
@@ -4456,7 +4459,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             | _ when i = 10 -> Some [text " - ...\n"]
             | _ when i > 10 -> None
             | (reason, (_ :: _ as dep), _) ->
-              let (hd, tl) = Base.List.dedup_and_sort ~compare:Loc.compare dep |> Nel.of_list_exn in
+              let (hd, tl) = Base.List.dedup_and_sort ~compare dep |> Nel.of_list_exn in
               let (suffix, tl) =
                 if List.length tl > 4 then
                   ([text ", [...]"], Base.List.take tl 4)
@@ -4492,11 +4495,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ))
         (Nel.to_list dependencies)
     in
-    let (locs, properties) =
-      ( Base.List.take (Base.List.dedup_and_sort ~compare:Loc.compare locs) 10,
-        Base.List.dedup_and_sort ~compare:Loc.compare properties
-      )
-    in
+    let locs = Base.List.take (Base.List.dedup_and_sort ~compare locs) 10 in
+    let properties = Base.List.dedup_and_sort ~compare properties in
     let annot_message ls =
       Base.List.map ~f:(fun annot_loc -> ref (mk_reason (RCustom "") annot_loc)) ls
     in

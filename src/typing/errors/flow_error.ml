@@ -360,16 +360,9 @@ let rec make_error_printable :
           Loc.t Errors.printable_error =
  fun loc_of_aloc ~strip_root ?(speculation = false) error ->
   let open Errors in
-  let {
-    loc : Loc.t option;
-    msg : Loc.t Error_message.t';
-    source_file;
-    trace_reasons : Loc.t virtual_reason list;
-  } =
-    map_loc_of_error loc_of_aloc error
-  in
+  let { loc; msg; source_file; trace_reasons } = error in
   let kind = kind_of_msg msg in
-  let mk_info (reason : concrete_reason) extras =
+  let mk_info reason extras =
     let desc = string_of_desc (desc_of_reason reason) in
     (* For descriptions that are an identifier wrapped in primes, e.g. `A`, then
      * we want to unwrap the primes and just show A. This looks better in infos.
@@ -386,9 +379,9 @@ let rec make_error_printable :
       else
         desc
     in
-    (loc_of_reason reason, desc :: extras)
+    (loc_of_aloc (loc_of_reason reason), desc :: extras)
   in
-  let info_of_reason (r : concrete_reason) = mk_info r [] in
+  let info_of_reason r = mk_info r [] in
   let trace_infos = Base.List.map ~f:info_of_reason trace_reasons in
   (* In friendly error messages, we always want to point to a value as the
    * primary location. Or an annotation on a value. Normally, values are found
@@ -445,13 +438,12 @@ let rec make_error_printable :
   in
   let text = Friendly.text in
   let code = Friendly.code in
-  let ref = Friendly.ref in
+  let ref = Friendly.ref_map loc_of_aloc in
   let desc = Friendly.desc in
   (* Unwrap a use_op for the friendly error format. Takes the smallest location
    * where we found the error and a use_op which we will unwrap. *)
   let unwrap_use_ops =
-    let open Friendly in
-    let rec loop (loc : Loc.t) frames (use_op : Loc.t virtual_use_op) =
+    let rec loop loc frames use_op =
       match use_op with
       | Op UnknownUse -> unknown_root loc frames
       | Op (Type.Speculation _) when speculation -> unknown_root loc frames
@@ -485,10 +477,10 @@ let rec make_error_printable :
         | (None, None) -> unknown_root loc frames
         | (Some loc, None) ->
           let def = mk_reason (RProperty (Some prop)) loc in
-          root loc frames def [text "Cannot shadow proto property"]
+          root (loc_of_aloc loc) frames def [text "Cannot shadow proto property"]
         | (None, Some loc) ->
           let def = mk_reason (RProperty (Some prop)) loc in
-          root loc frames def [text "Cannot define shadowed proto property"]
+          root (loc_of_aloc loc) frames def [text "Cannot define shadowed proto property"]
         | (Some own_loc, Some proto_loc) ->
           let def = mk_reason (RProperty (Some prop)) own_loc in
           let proto = mk_reason (RProperty (Some prop)) proto_loc in
@@ -569,7 +561,7 @@ let rec make_error_printable :
         root loc frames type' [text "Cannot instantiate "; desc type']
       | Op (SetProperty { prop; value; lhs; _ }) ->
         let loc_reason =
-          if Loc.contains (loc_of_reason lhs) loc then
+          if Loc.contains (loc_of_aloc (loc_of_reason lhs)) loc then
             lhs
           else
             value
@@ -605,7 +597,7 @@ let rec make_error_printable :
         let assignments =
           match providers with
           | [] -> (* should not happen *) [text (spf "one of its initial %ss" noun)]
-          | [r] when Loc.equal r declaration ->
+          | [r] when Loc.equal (loc_of_aloc r) (loc_of_aloc declaration) ->
             [
               text "its ";
               ref
@@ -692,7 +684,7 @@ let rec make_error_printable :
            * this reason. *)
           | Op (ClassExtendsCheck _) -> loc
           | Op (ClassImplementsCheck _) -> loc
-          | _ -> loc_of_reason reason
+          | _ -> loc_of_aloc (loc_of_reason reason)
         in
         let rec loop lower_loc = function
           (* Don't match $key/$value/$call properties since they have special
@@ -759,7 +751,7 @@ let rec make_error_printable :
        *
        * If our current loc is inside our frame_loc then use our current loc
        * since it is the smallest possible loc in our frame_loc. *)
-      let frame_loc = loc_of_reason frame_reason in
+      let frame_loc = loc_of_aloc (loc_of_reason frame_reason) in
       let loc =
         if Loc.contains frame_loc loc then
           loc
@@ -784,7 +776,7 @@ let rec make_error_printable :
       let frames = (frame :: all_frames, explanations) in
       loop loc frames use_op
     and unwrap_frame loc frames frame_reason use_op frame =
-      let frame_loc = loc_of_reason frame_reason in
+      let frame_loc = loc_of_aloc (loc_of_reason frame_reason) in
       unwrap_frame_with_loc loc frames frame_loc use_op frame
     and unwrap_frame_without_loc loc frames use_op frame =
       (* Same logic as `unwrap_frame` except we don't have a frame location. *)
@@ -816,14 +808,14 @@ let rec make_error_printable :
       let (all_frames, explanations) = frames in
       (Some (root_loc, root_message), loc, all_frames, explanations)
     and root_with_specific_reason loc frames root_reason specific_reason root_message =
-      let root_loc = loc_of_reason root_reason in
-      let specific_loc = loc_of_reason specific_reason in
+      let root_loc = loc_of_aloc (loc_of_reason root_reason) in
+      let specific_loc = loc_of_aloc (loc_of_reason specific_reason) in
       root_with_loc_and_specific_loc loc frames root_loc specific_loc root_message
     and root loc frames root_reason root_message =
-      let root_loc = loc_of_reason root_reason in
+      let root_loc = loc_of_aloc (loc_of_reason root_reason) in
       root_with_loc_and_specific_loc loc frames root_loc root_loc root_message
     in
-    fun (loc : Loc.t) (use_op : Loc.t virtual_use_op) ->
+    fun loc use_op ->
       let (root, loc, frames, explanations) = loop loc ([], []) use_op in
       let root =
         Base.Option.map root ~f:(fun (root_loc, root_message) ->
@@ -835,22 +827,26 @@ let rec make_error_printable :
   (* Make a friendly error based on a use_op. The message we are provided should
    * not have any punctuation. Punctuation will be provided after the frames of
    * an error message. *)
-  let mk_use_op_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) message =
-    let (root, loc, frames, explanations) = unwrap_use_ops loc use_op in
+  let mk_use_op_error loc use_op message =
+    let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
     let code = code_of_error error in
     mk_error ~trace_infos ?root ~frames ~explanations loc code message
   in
+  let mk_use_op_error_reason reason use_op message =
+    mk_use_op_error (loc_of_reason reason) use_op message
+  in
+
   (* Make a friendly error based on failed speculation. *)
-  let mk_use_op_speculation_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) branches =
-    let (root, loc, frames, explanations) = unwrap_use_ops loc use_op in
+  let mk_use_op_speculation_error loc use_op branches =
+    let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
     let error_code = code_of_error error in
     let speculation_errors =
       Base.List.map
-        ~f:(fun (_, (msg : Loc.t Error_message.t')) ->
+        ~f:(fun (_, msg) ->
           let score = score_of_msg msg in
           let error =
             error_of_msg ~trace_reasons:[] ~source_file msg
-            |> make_error_printable Fun.id ~strip_root ~speculation:true
+            |> make_error_printable loc_of_aloc ~strip_root ~speculation:true
           in
           (score, error))
         branches
@@ -872,19 +868,18 @@ let rec make_error_printable :
    * This is a specialization of mk_incompatible_use_error. *)
   let mk_incompatible_error ?additional_message lower upper use_op =
     let ((lower, upper), use_op) = flip_contravariant (lower, upper) use_op in
-    let make_error loc message =
+    let make_error reason message =
       let message =
         match additional_message with
         | Some additional_message -> message @ (text ". " :: additional_message)
         | None -> message
       in
-      mk_use_op_error loc use_op message
+      mk_use_op_error_reason reason use_op message
     in
     match use_op with
     (* Add a custom message for Coercion root_use_ops that does not include the
      * upper bound. *)
-    | Op (Coercion { from; _ }) ->
-      make_error (loc_of_reason from) [ref lower; text " should not be coerced"]
+    | Op (Coercion { from; _ }) -> make_error from [ref lower; text " should not be coerced"]
     (* Ending with FunMissingArg gives us a different error message. Even though
      * this error was generated by an incompatibility, we want to show a more
      * descriptive error message. *)
@@ -952,7 +947,7 @@ let rec make_error_printable :
           ]
         | _ -> [ref def; text " requires another argument from "; ref op]
       in
-      make_error (loc_of_reason op) message
+      make_error op message
     | _ ->
       let root_use_op = root_of_use_op use_op in
       (match root_use_op with
@@ -963,11 +958,13 @@ let rec make_error_printable :
        * In flip_contravariant we flip upper/lower for all FunImplicitReturn. So
        * reverse those back as well. *)
       | FunImplicitReturn { upper = return; _ } ->
+        let upper_loc = loc_of_aloc (loc_of_reason upper) in
+        let return_loc = loc_of_aloc (loc_of_reason return) in
         make_error
-          (loc_of_reason lower)
+          lower
           ([ref lower; text " is incompatible with "]
           @
-          if Loc.compare (loc_of_reason return) (loc_of_reason upper) = 0 then
+          if Loc.compare return_loc upper_loc = 0 then
             [text "implicitly-returned "; desc upper]
           else
             [ref upper]
@@ -977,7 +974,7 @@ let rec make_error_printable :
         match (desc_of_reason lower, desc_of_reason upper) with
         | (RLongStringLit n, RStringLit _) ->
           make_error
-            (loc_of_reason lower)
+            lower
             [
               ref lower;
               text " is incompatible with ";
@@ -997,7 +994,7 @@ let rec make_error_printable :
               text ")";
             ]
           in
-          make_error (loc_of_reason lower) message
+          make_error lower message
         | (_, RUnknownParameter n) ->
           let message =
             [
@@ -1009,32 +1006,28 @@ let rec make_error_printable :
               text ")";
             ]
           in
-          make_error (loc_of_reason lower) message
-        | _ ->
-          make_error (loc_of_reason lower) [ref lower; text " is incompatible with "; ref upper]
+          make_error lower message
+        | _ -> make_error lower [ref lower; text " is incompatible with "; ref upper]
       end)
   in
   let mk_trust_incompatible_error lower upper use_op =
     match (desc_of_reason lower, desc_of_reason upper) with
     | ((RAnyExplicit | RAnyImplicit), (RTrusted _ | RPrivate (RTrusted _)))
     | ((RPrivate _ | RTrusted (RPrivate _)), (RAnyExplicit | RAnyImplicit)) ->
-      mk_use_op_error
-        (loc_of_reason lower)
-        use_op
-        [ref lower; text " is incompatible with "; ref upper]
+      mk_use_op_error_reason lower use_op [ref lower; text " is incompatible with "; ref upper]
     | ((RAnyExplicit | RAnyImplicit), _) ->
-      mk_use_op_error
-        (loc_of_reason lower)
+      mk_use_op_error_reason
+        lower
         use_op
         [ref lower; text " is incompatible with trusted "; ref upper]
     | (_, (RAnyExplicit | RAnyImplicit)) ->
-      mk_use_op_error
-        (loc_of_reason lower)
+      mk_use_op_error_reason
+        lower
         use_op
         [text "private "; ref lower; text " is incompatible with "; ref upper]
     | (RPrivate _, RTrusted _) ->
-      mk_use_op_error
-        (loc_of_reason lower)
+      mk_use_op_error_reason
+        lower
         use_op
         ([
            text "`any` may have been passed into ";
@@ -1051,8 +1044,8 @@ let rec make_error_printable :
           ]
         )
     | (_, (RTrusted _ | RPrivate (RTrusted _))) ->
-      mk_use_op_error
-        (loc_of_reason lower)
+      mk_use_op_error_reason
+        lower
         use_op
         [
           text "`any` may have been passed into ";
@@ -1061,8 +1054,8 @@ let rec make_error_printable :
           ref upper;
         ]
     | ((RPrivate _ | RTrusted (RPrivate _)), _) ->
-      mk_use_op_error
-        (loc_of_reason lower)
+      mk_use_op_error_reason
+        lower
         use_op
         [
           ref upper;
@@ -1070,11 +1063,7 @@ let rec make_error_printable :
           ref lower;
           text " is incompatible with `any`";
         ]
-    | _ ->
-      mk_use_op_error
-        (loc_of_reason lower)
-        use_op
-        [ref lower; text " is incompatible with "; ref upper]
+    | _ -> mk_use_op_error_reason lower use_op [ref lower; text " is incompatible with "; ref upper]
   in
   (* When we fail to find a property on an object we use this function to create
    * an error. prop_loc should be the position of the use which caused this
@@ -1209,13 +1198,13 @@ let rec make_error_printable :
           ref upper;
         ]
     in
-    mk_use_op_error (loc_of_reason lower) use_op message
+    mk_use_op_error_reason lower use_op message
   in
 
   let printable_error =
-    match (loc, friendly_message_of_msg msg) with
+    match (loc, friendly_message_of_msg loc_of_aloc msg) with
     | (Some loc, Error_message.Normal { features }) ->
-      mk_error ~trace_infos ~kind loc (code_of_error error) features
+      mk_error ~trace_infos ~kind (loc_of_aloc loc) (code_of_error error) features
     | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
       mk_prop_missing_error loc prop reason_obj use_op suggestion
@@ -1240,7 +1229,7 @@ let rec make_error_printable :
       mk_use_op_speculation_error loc use_op branches
     | (None, Error_message.Normal _)
     | (Some _, _) ->
-      raise (ImproperlyFormattedError msg)
+      raise (ImproperlyFormattedError (map_loc_of_error_message loc_of_aloc msg))
   in
   (* Patch errors that will be located in files other than source_file. *)
   let loc = Errors.loc_of_printable_error printable_error in
