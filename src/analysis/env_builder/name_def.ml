@@ -1590,9 +1590,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           when not @@ Env_api.Provider_api.is_provider providers id_loc ->
           Env_api.Provider_api.providers_of_def providers id_loc
           |> Base.Option.value_map ~f:(fun x -> x.Env_api.Provider_api.providers) ~default:[]
-          |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } ->
-                 Reason.aloc_of_reason reason
-             )
+          |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } -> Reason.loc_of_reason reason)
           |> Nel.of_list
           |> Base.Option.map ~f:(fun providers -> ProvidersHint providers)
         | (_, Ast.Pattern.Identifier _) -> None

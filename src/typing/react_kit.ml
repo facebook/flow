@@ -278,7 +278,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let coerce_prop_type t =
       match drop_generic t with
       | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
-        let loc = aloc_of_reason reason in
+        let loc = loc_of_reason reason in
         Ok (required, reposition cx ~trace ~annot_loc:loc loc t)
       | DefT (reason, _, FunT _) as t ->
         rec_flow_t
@@ -384,7 +384,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             RReactChildren
             (match use_op with
             | Op (ReactCreateElementCall { children; _ }) -> children
-            | _ -> aloc_of_reason reason_op)
+            | _ -> loc_of_reason reason_op)
         in
         Some (DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (t :: ts), Some (t :: ts)))))
       (* If we only have a spread of unknown length then React may not pass in
@@ -413,7 +413,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             (RReactChildrenOrType (t |> reason_of_t |> desc_of_reason))
             (match use_op with
             | Op (ReactCreateElementCall { children; _ }) -> children
-            | _ -> aloc_of_reason reason_op)
+            | _ -> loc_of_reason reason_op)
         in
         Some
           (union_of_ts
@@ -430,7 +430,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             RReactChildren
             (match use_op with
             | Op (ReactCreateElementCall { children; _ }) -> children
-            | _ -> aloc_of_reason reason_op)
+            | _ -> loc_of_reason reason_op)
         in
         Some
           (DefT
@@ -631,7 +631,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               }
           )
       in
-      let annot_loc = aloc_of_reason reason_op in
+      let annot_loc = loc_of_reason reason_op in
       let elem_reason =
         annot_reason
           ~annot_loc
@@ -736,7 +736,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, None))) in
           resolve t
         | InstanceOf ->
-          let annot_loc = aloc_of_reason reason_op in
+          let annot_loc = loc_of_reason reason_op in
           let t = mk_instance cx (annot_reason ~annot_loc reason_op) l in
           resolve t
         | ObjectOf ->
@@ -898,7 +898,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 if required then
                   t
                 else
-                  optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
+                  optional ?annot_loc:(annot_loc_of_reason @@ reason_of_t t) t
               | Error _ -> AnyT.make (AnyError None) reason_op |> optional
             in
             next todo (add_prop k t shape))

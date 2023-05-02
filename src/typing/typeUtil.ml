@@ -168,9 +168,9 @@ let reason_of_use_t_add_id = reason_of_use_t
 
 let desc_of_t = reason_of_t %> desc_of_reason
 
-let loc_of_t = reason_of_t %> aloc_of_reason
+let loc_of_t = reason_of_t %> loc_of_reason
 
-let def_loc_of_t = reason_of_t %> def_aloc_of_reason
+let def_loc_of_t = reason_of_t %> def_loc_of_reason
 
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
@@ -803,7 +803,7 @@ let extends_use_type use_op l u =
 
 let poly_type id tparams_loc tparams t =
   let reason = update_desc_new_reason (fun desc -> RPolyType desc) (reason_of_t t) in
-  let reason = annot_reason ~annot_loc:(aloc_of_reason reason) reason in
+  let reason = annot_reason ~annot_loc:(loc_of_reason reason) reason in
   DefT (reason, bogus_trust (), PolyT { tparams_loc; tparams; t_out = t; id })
 
 let poly_type_of_tparam_list id tparams_loc tparams t =

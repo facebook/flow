@@ -1522,7 +1522,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs (primary, _, _)
   | ETooManyTypeArgs (primary, _, _) ->
-    Some (poly_loc_of_reason primary)
+    Some (loc_of_reason primary)
   | ESketchyNumberLint (_, reason)
   | EInvalidExtends reason
   | EUnsupportedSetProto reason
@@ -1557,7 +1557,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
         existing_lower_bound_reason = _;
       }
   | EComputedPropertyWithUnion { computed_property_reason = reason; union_reason = _ } ->
-    Some (poly_loc_of_reason reason)
+    Some (loc_of_reason reason)
   | EEnumMemberAlreadyChecked { reason; _ }
   | EEnumAllMembersAlreadyChecked { reason; _ }
   | EEnumNotAllChecked { reason; _ }
@@ -1576,7 +1576,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBigIntNumCoerce reason
   | EInvalidBinaryArith { reason_out = reason; _ }
   | ETupleRequiredAfterOptional reason ->
-    Some (poly_loc_of_reason reason)
+    Some (loc_of_reason reason)
   | EExponentialSpread
       {
         reason = _;
@@ -1602,7 +1602,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
       | (_, None) -> first_reason_group2
       | (Some r, _) -> r
     in
-    Some (poly_loc_of_reason union_reason)
+    Some (loc_of_reason union_reason)
   | EInvalidPrototype (loc, _)
   | EUntypedTypeImport (loc, _)
   | EUntypedImport (loc, _)
@@ -1665,12 +1665,12 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPredicateFuncTooShort { loc; _ }
   | ETSSyntax { loc; _ } ->
     Some loc
-  | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (poly_loc_of_reason reason_call)
+  | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
   | ESketchyNullLint { loc; _ } -> Some loc
   | ECallTypeArity { call_loc; _ } -> Some call_loc
-  | EMissingTypeArgs { reason_op; _ } -> Some (poly_loc_of_reason reason_op)
+  | EMissingTypeArgs { reason_op; _ } -> Some (loc_of_reason reason_op)
   | ESignatureVerification sve ->
     Signature_error.(
       (match sve with
@@ -1687,8 +1687,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBindingError (_, loc, _, _) -> Some loc
   | EEnumModification { loc; _ } -> Some loc
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
-  | ESpeculationAmbiguous { reason; _ } -> Some (poly_loc_of_reason reason)
-  | EBuiltinLookupFailed { reason; _ } -> Some (poly_loc_of_reason reason)
+  | ESpeculationAmbiguous { reason; _ } -> Some (loc_of_reason reason)
+  | EBuiltinLookupFailed { reason; _ } -> Some (loc_of_reason reason)
   | EDuplicateClassMember { loc; _ } -> Some loc
   | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnusedPromise { loc; _ } -> Some loc

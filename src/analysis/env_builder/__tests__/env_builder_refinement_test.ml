@@ -45,19 +45,19 @@ let print_values refinement_of_id =
     | Undeclared _ -> "(undeclared)"
     | Projection l -> Utils_js.spf "projection at %s" (L.debug_to_string l)
     | Write reason ->
-      let loc = Reason.poly_loc_of_reason reason in
+      let loc = Reason.loc_of_reason reason in
       Utils_js.spf
         "%s: (%s)"
         (L.debug_to_string loc)
         Reason.(desc_of_reason reason |> string_of_desc)
     | EmptyArray { reason; _ } ->
-      let loc = Reason.poly_loc_of_reason reason in
+      let loc = Reason.loc_of_reason reason in
       Utils_js.spf
         "(empty array) %s: (%s)"
         (L.debug_to_string loc)
         Reason.(desc_of_reason reason |> string_of_desc)
     | IllegalWrite reason ->
-      let loc = Reason.poly_loc_of_reason reason in
+      let loc = Reason.loc_of_reason reason in
       Utils_js.spf "illegal write at %s" (L.debug_to_string loc)
     | Refinement { refinement_id; writes; write_id = _ } ->
       let refinement = refinement_of_id refinement_id in

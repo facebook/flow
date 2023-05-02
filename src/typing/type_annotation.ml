@@ -1334,7 +1334,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | ([base_t; fun_pred_t; DefT (rnum, _, SingletonNumT (f, _))], targs) ->
                 let idx = Base.Int.of_float f in
                 if idx < 1 then
-                  error_type cx loc (Error_message.EFunPredInvalidIndex (aloc_of_reason rnum)) t_ast
+                  error_type cx loc (Error_message.EFunPredInvalidIndex (loc_of_reason rnum)) t_ast
                 else
                   let reason = mk_reason (RCustom "refined type") loc in
                   reconstruct_ast
@@ -2360,7 +2360,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let void_t = VoidT.why reason |> with_trust literal_trust in
       let t =
         if async then
-          let reason = mk_annot_reason (RType (OrdinaryName "Promise")) (aloc_of_reason reason) in
+          let reason = mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason reason) in
           Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
         else
           void_t
@@ -2422,7 +2422,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   (* Given the type of expression C and type arguments T1...Tn, return the type of
      values described by C<T1,...,Tn>, or C when there are no type arguments. *)
   and mk_nominal_type cx reason tparams_map infer_tparams_map (c, targs) =
-    let annot_loc = aloc_of_reason reason in
+    let annot_loc = loc_of_reason reason in
     match targs with
     | None ->
       let reason = annot_reason ~annot_loc reason in

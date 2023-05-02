@@ -268,7 +268,7 @@ struct
             in
             Base.List.iter
               ~f:(fun { Provider_api.reason = r; _ } ->
-                let key = (Env_api.OrdinaryNameLoc, Reason.poly_loc_of_reason r) in
+                let key = (Env_api.OrdinaryNameLoc, Reason.loc_of_reason r) in
                 this#add ~why:loc key)
               provider_entries
           );
@@ -677,7 +677,7 @@ struct
             (fun acc (_id, op) ->
               match op with
               | Hint.Decomp_ObjComputed r ->
-                let loc = aloc_of_reason r in
+                let loc = loc_of_reason r in
                 depends_of_node
                   (fun visitor -> visitor#add ~why:loc (Env_api.ExpressionLoc, loc))
                   acc
@@ -686,7 +686,7 @@ struct
                   (fun _ check acc ->
                     match check with
                     | Hint.Member r ->
-                      let loc = aloc_of_reason r in
+                      let loc = loc_of_reason r in
                       depends_of_node
                         (fun visitor -> visitor#add ~why:loc (Env_api.ExpressionLoc, loc))
                         acc
@@ -981,7 +981,7 @@ struct
             Base.List.fold
               ~init:EnvMap.empty
               ~f:(fun acc { Provider_api.reason = r; _ } ->
-                let key = (Env_api.OrdinaryNameLoc, Reason.poly_loc_of_reason r) in
+                let key = (Env_api.OrdinaryNameLoc, Reason.loc_of_reason r) in
                 if Env_api.has_assigning_write key env_entries then
                   EnvMap.update
                     key

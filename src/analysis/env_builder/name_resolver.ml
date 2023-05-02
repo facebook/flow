@@ -237,19 +237,19 @@ module Make
       | DeclaredButSkipped _ -> "(declared but skipped)"
       | Projection l -> Utils_js.spf "projection at %s" (L.debug_to_string l)
       | Loc reason ->
-        let loc = Reason.poly_loc_of_reason reason in
+        let loc = Reason.loc_of_reason reason in
         Utils_js.spf
           "%s: (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
       | EmptyArray { reason; _ } ->
-        let loc = Reason.poly_loc_of_reason reason in
+        let loc = Reason.loc_of_reason reason in
         Utils_js.spf
           "(empty array) %s: (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason reason |> string_of_desc)
       | IllegalWrite reason ->
-        let loc = Reason.poly_loc_of_reason reason in
+        let loc = Reason.loc_of_reason reason in
         Utils_js.spf "illegal write at %s" (L.debug_to_string loc)
       | Refinement { refinement_id; val_t } ->
         let refinement_kind =
@@ -1237,7 +1237,7 @@ module Make
             Env_api.Provider_api.providers = { Env_api.Provider_api.reason = def_reason; _ } :: _;
             _;
           } ->
-        let def_loc = Reason.aloc_of_reason def_reason in
+        let def_loc = Reason.loc_of_reason def_reason in
         let def_loc_is_pred = is_def_loc_predicate_function def_loc in
         (* Raise an error for an overload (other than the first one) if:
          * - The first overload is a predicate function (`def_loc_is_pred`), or
@@ -1774,7 +1774,7 @@ module Make
               let write_entries =
                 Base.List.fold
                   ~f:(fun acc { Provider_api.reason = r; _ } ->
-                    EnvMap.add_ordinary (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                    EnvMap.add_ordinary (loc_of_reason r) (Env_api.AssigningWrite r) acc)
                   ~init:env_state.write_entries
                   providers
               in
@@ -1792,7 +1792,7 @@ module Make
               let write_entries =
                 Base.List.fold
                   ~f:(fun acc { Provider_api.reason = r; _ } ->
-                    EnvMap.add_ordinary (poly_loc_of_reason r) (Env_api.AssigningWrite r) acc)
+                    EnvMap.add_ordinary (loc_of_reason r) (Env_api.AssigningWrite r) acc)
                   ~init:env_state.write_entries
                   providers
               in
@@ -1896,7 +1896,7 @@ module Make
                       (Base.List.mem
                          ~equal:ALoc.equal
                          (Base.List.map
-                            ~f:(fun { Provider_api.reason; _ } -> poly_loc_of_reason reason)
+                            ~f:(fun { Provider_api.reason; _ } -> loc_of_reason reason)
                             providers
                          )
                       )
@@ -1907,7 +1907,7 @@ module Make
                     if all_writes_by_closure_are_providers then
                       let writes_by_closure_providers =
                         Base.List.filter providers ~f:(fun { Provider_api.reason; _ } ->
-                            L.LSet.mem (poly_loc_of_reason reason) writes_by_closure
+                            L.LSet.mem (loc_of_reason reason) writes_by_closure
                         )
                       in
                       if not @@ Base.List.is_empty writes_by_closure_providers then
@@ -3855,8 +3855,7 @@ module Make
                               ~f:
                                 (fun (locs, undeclared) -> function
                                   | Env_api.Undeclared _ -> (locs, true)
-                                  | Env_api.Write r ->
-                                    (Reason.poly_loc_of_reason r :: locs, undeclared)
+                                  | Env_api.Write r -> (Reason.loc_of_reason r :: locs, undeclared)
                                   | _ ->
                                     raise
                                       Env_api.(
@@ -4021,7 +4020,7 @@ module Make
           | Hint.Member reason ->
             let write_entries =
               EnvMap.add
-                (Env_api.ExpressionLoc, aloc_of_reason reason)
+                (Env_api.ExpressionLoc, loc_of_reason reason)
                 (Env_api.AssigningWrite reason)
                 env_state.write_entries
             in

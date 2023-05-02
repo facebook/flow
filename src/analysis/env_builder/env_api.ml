@@ -522,21 +522,21 @@ module Make
     match write_loc with
     | Refinement { refinement_id = _; write_id = _; writes } ->
       writes |> List.map (writes_of_write_loc ~for_type providers) |> List.flatten
-    | Write r -> [(OrdinaryNameLoc, Reason.poly_loc_of_reason r)]
+    | Write r -> [(OrdinaryNameLoc, Reason.loc_of_reason r)]
     | EmptyArray { reason; arr_providers } ->
-      (OrdinaryNameLoc, Reason.poly_loc_of_reason reason)
+      (OrdinaryNameLoc, Reason.loc_of_reason reason)
       :: Base.List.map ~f:(fun l -> (ArrayProviderLoc, l)) (L.LSet.elements arr_providers)
     | IllegalWrite _ -> []
     | Uninitialized _ -> []
     | Undeclared (_, loc) when for_type -> [(OrdinaryNameLoc, loc)]
     | Undeclared _ -> []
-    | FunctionThis r -> [(FunctionThisLoc, Reason.poly_loc_of_reason r)]
+    | FunctionThis r -> [(FunctionThisLoc, Reason.loc_of_reason r)]
     | GlobalThis _ -> []
     | IllegalThis _ -> []
-    | ClassInstanceThis r -> [(ClassInstanceThisLoc, Reason.poly_loc_of_reason r)]
-    | ClassStaticThis r -> [(ClassStaticThisLoc, Reason.poly_loc_of_reason r)]
-    | ClassInstanceSuper r -> [(ClassInstanceSuperLoc, Reason.poly_loc_of_reason r)]
-    | ClassStaticSuper r -> [(ClassStaticSuperLoc, Reason.poly_loc_of_reason r)]
+    | ClassInstanceThis r -> [(ClassInstanceThisLoc, Reason.loc_of_reason r)]
+    | ClassStaticThis r -> [(ClassStaticThisLoc, Reason.loc_of_reason r)]
+    | ClassInstanceSuper r -> [(ClassInstanceSuperLoc, Reason.loc_of_reason r)]
+    | ClassStaticSuper r -> [(ClassStaticSuperLoc, Reason.loc_of_reason r)]
     | Exports -> []
     | ModuleScoped _ -> []
     | Global _ -> []
@@ -548,7 +548,7 @@ module Make
       Provider_api.providers_of_def providers l
       |> Base.Option.value_map ~f:(fun { Provider_api.providers; _ } -> providers) ~default:[]
       |> Base.List.map ~f:(fun { Provider_api.reason; _ } ->
-             (OrdinaryNameLoc, Reason.poly_loc_of_reason reason)
+             (OrdinaryNameLoc, Reason.loc_of_reason reason)
          )
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =

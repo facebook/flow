@@ -88,7 +88,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       Flow_js_utils.add_output
         cx
         Error_message.(
-          EUnsupportedSyntax (spread_fn |> TypeUtil.reason_of_t |> aloc_of_reason, SpreadArgument)
+          EUnsupportedSyntax (spread_fn |> TypeUtil.reason_of_t |> loc_of_reason, SpreadArgument)
         );
       rec_flow_t cx ~use_op:unknown_use trace (AnyT.error reason_op, OpenT tin);
       rec_flow_t cx ~use_op:unknown_use trace (AnyT.error reason_op, OpenT tout)

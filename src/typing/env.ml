@@ -155,7 +155,7 @@ let find_refi { Env_api.refinement_of_id; _ } = refinement_of_id
 let find_providers { Env_api.providers; _ } loc =
   Env_api.Provider_api.providers_of_def providers loc
   |> Base.Option.value_map ~f:(fun { Env_api.Provider_api.providers; _ } -> providers) ~default:[]
-  |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } -> Reason.aloc_of_reason reason)
+  |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } -> Reason.loc_of_reason reason)
 
 let is_def_loc_annotated { Env_api.providers; _ } loc =
   let providers = Env_api.Provider_api.providers_of_def providers loc in
@@ -307,7 +307,7 @@ and refine cx reason loc refi res =
 and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
   let { Loc_env.var_info; _ } = env in
   let find_write_exn kind reason =
-    let loc = Reason.aloc_of_reason reason in
+    let loc = Reason.loc_of_reason reason in
     checked_find_loc_env_write cx kind loc
   in
   let rec res_of_state states val_id refi =
@@ -339,7 +339,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      spf
                        "reading %s from location %s"
                        (Reason.string_of_aloc loc)
-                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                       (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                    ]
                    );
                Ok (find_write_exn Env_api.OrdinaryNameLoc reason)
@@ -351,7 +351,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      spf
                        "reading %s from illegal write location %s"
                        (Reason.string_of_aloc loc)
-                       (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                       (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                    ]
                    );
                Ok Type.(AnyT.make (AnyError None) reason)
@@ -367,7 +367,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                    spf
                      "reading illegal this(%s) from location %s"
                      (Reason.string_of_aloc loc)
-                     (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                     (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
                Ok Type.(AnyT.make (AnyError None) reason)
              | (Env_api.With_ALoc.FunctionThis reason, _) ->
@@ -377,7 +377,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                    spf
                      "reading function this(%s) from location %s"
                      (Reason.string_of_aloc loc)
-                     (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                     (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
                Ok (find_write_exn Env_api.FunctionThisLoc reason)
              | (Env_api.With_ALoc.ClassInstanceThis reason, _) ->
@@ -387,7 +387,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                    spf
                      "reading instance this(%s) from location %s"
                      (Reason.string_of_aloc loc)
-                     (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                     (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
                Ok (find_write_exn Env_api.ClassInstanceThisLoc reason)
              | (Env_api.With_ALoc.ClassStaticThis reason, _) ->
@@ -397,7 +397,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                    spf
                      "reading static this(%s) from location %s"
                      (Reason.string_of_aloc loc)
-                     (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                     (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
                Ok (find_write_exn Env_api.ClassStaticThisLoc reason)
              | (Env_api.With_ALoc.ClassInstanceSuper reason, _) ->
@@ -407,7 +407,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                    spf
                      "reading instance super(%s) from location %s"
                      (Reason.string_of_aloc loc)
-                     (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                     (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
                Ok (find_write_exn Env_api.ClassInstanceSuperLoc reason)
              | (Env_api.With_ALoc.ClassStaticSuper reason, _) ->
@@ -417,7 +417,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                    spf
                      "reading %s from illegal write location %s"
                      (Reason.string_of_aloc loc)
-                     (Reason.aloc_of_reason reason |> Reason.string_of_aloc);
+                     (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
                Ok (find_write_exn Env_api.ClassStaticSuperLoc reason)
              | (Env_api.With_ALoc.Exports, _) ->
@@ -520,7 +520,7 @@ let ref_entry_exn ~lookup_mode cx loc reason =
   Flow_js.reposition cx loc t
 
 let find_write cx kind reason =
-  let loc = Reason.aloc_of_reason reason in
+  let loc = Reason.loc_of_reason reason in
   match checked_find_loc_env_write_opt cx kind loc with
   | Some t -> t
   | None -> Tvar.mk cx reason
@@ -688,7 +688,7 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
                     declaration;
                     providers =
                       Base.List.map
-                        ~f:(fun { Env_api.Provider_api.reason; _ } -> poly_loc_of_reason reason)
+                        ~f:(fun { Env_api.Provider_api.reason; _ } -> loc_of_reason reason)
                         provider_locs;
                     array = false;
                   },

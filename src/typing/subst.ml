@@ -182,7 +182,7 @@ let substituter =
             else
               super#type_ cx map_cx t
           | GenericT ({ reason = tp_reason; name; _ } as gen) ->
-            let annot_loc = aloc_of_reason tp_reason in
+            let annot_loc = loc_of_reason tp_reason in
             begin
               match Subst_name.Map.find_opt name map with
               | None -> super#type_ cx map_cx t

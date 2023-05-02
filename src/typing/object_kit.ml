@@ -639,7 +639,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               let r =
                 mk_reason
                   (RUnknownUnspecifiedProperty (desc_of_reason reason))
-                  (aloc_of_reason reason)
+                  (loc_of_reason reason)
               in
               let mixed = DefT (r, bogus_trust (), MixedT Mixed_everything) in
               rec_flow_t cx trace ~use_op (mixed, react_transport_value)

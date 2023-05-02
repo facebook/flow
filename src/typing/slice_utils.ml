@@ -156,7 +156,7 @@ let get_prop r p dict =
         is_own = true;
         is_method = false;
         polarity = Polarity.Neutral;
-        key_loc = Some (aloc_of_reason (reason_of_t d.key));
+        key_loc = Some (loc_of_reason (reason_of_t d.key));
       }
   | (None, None) -> None
 
@@ -1080,7 +1080,7 @@ let intersect2
             is_own = true;
             is_method = false;
             polarity = Polarity.Neutral;
-            key_loc = Some (aloc_of_reason (reason_of_t d.key));
+            key_loc = Some (loc_of_reason (reason_of_t d.key));
           }
         in
         match (p1, p2) with
@@ -1231,7 +1231,7 @@ let resolve
   | DefT (r, _, ClassT i) -> recurse cx use_op reason (Resolve resolve_tool) tool (statics cx r i)
   (* Resolve each member of a union. *)
   | UnionT (union_reason, rep) ->
-    let union_loc = aloc_of_reason union_reason in
+    let union_loc = loc_of_reason union_reason in
     let members_filtered = Type_mapper.union_flatten cx (UnionRep.members rep) in
     let tool =
       match tool with
@@ -1249,7 +1249,7 @@ let resolve
     end
   (* Resolve each member of an intersection. *)
   | IntersectionT (intersection_reason, rep) ->
-    let intersection_loc = aloc_of_reason intersection_reason in
+    let intersection_loc = loc_of_reason intersection_reason in
     let (t, todo) = InterRep.members_nel rep in
     let resolve_tool = Resolve (List0 (todo, (intersection_loc, And))) in
     recurse cx use_op reason resolve_tool tool t
@@ -1430,7 +1430,7 @@ let map_object
         (fun key { Object.prop_t; is_own = _; is_method = _; polarity = prop_polarity; key_loc } ->
         let key_loc =
           match key_loc with
-          | None -> aloc_of_reason (reason_of_t prop_t)
+          | None -> loc_of_reason (reason_of_t prop_t)
           | Some loc -> loc
         in
         let key_t = DefT (mk_reason (RStringLit key) key_loc, bogus_trust (), SingletonStrT key) in

@@ -306,9 +306,9 @@ module Make
   let this_or_mixed_of_t ~static x =
     let loc =
       if static then
-        aloc_of_reason x.static.reason
+        loc_of_reason x.static.reason
       else
-        aloc_of_reason x.instance.reason
+        loc_of_reason x.instance.reason
     in
     let this_t = this_or_mixed loc x in
     if static then
@@ -319,7 +319,7 @@ module Make
   let tparams_with_this tparams this_tp =
     (* Use the loc for the original tparams, or just the loc for the this type if there are no
        * tparams *)
-    let loc = Base.Option.value_map ~default:(aloc_of_reason this_tp.Type.reason) ~f:fst tparams in
+    let loc = Base.Option.value_map ~default:(loc_of_reason this_tp.Type.reason) ~f:fst tparams in
     (* Add the type of `this` to the end of the list of type
        parameters. Remember, order is important, since we don't have recursive
        bounds (aka F-bounds): the bound of This refers to all the other type
@@ -474,7 +474,7 @@ module Make
   let statictype cx static_proto x =
     let s = x.static in
     let (inited_fields, fields, methods, call) =
-      let loc = aloc_of_reason x.static.reason in
+      let loc = loc_of_reason x.static.reason in
       elements cx ~this:(this_or_mixed loc x |> TypeUtil.class_type) s x.super
     in
     let props =
@@ -504,7 +504,7 @@ module Make
       let ts =
         List.rev_map
           (fun { id_loc; this_write_loc = _; func_sig = t; set_asts = _; set_type } ->
-            let t = F.methodtype cx None (Type.dummy_this (aloc_of_reason s.instance.reason)) t in
+            let t = F.methodtype cx None (Type.dummy_this (loc_of_reason s.instance.reason)) t in
             let () = Base.Option.iter id_loc ~f:(fun _loc -> set_type t) in
             (id_loc, t))
           s.constructor
@@ -527,7 +527,7 @@ module Make
         (Type.TypeParams.to_list s.tparams)
     in
     let (initialized_fields, fields, methods, call) =
-      let loc = aloc_of_reason s.instance.reason in
+      let loc = loc_of_reason s.instance.reason in
       elements cx ~this:(this_or_mixed loc s) ?constructor s.instance s.super
     in
     {
@@ -753,7 +753,7 @@ module Make
     (* The this parameter of a class method is irrelvant for class subtyping, since
        dynamic dispatch enforces that the method is called on the right subclass
        at runtime even if the static type is a supertype. *)
-    let inst_loc = aloc_of_reason reason in
+    let inst_loc = loc_of_reason reason in
     let (_, own, proto, _call) =
       elements cx ~this:(this_or_mixed inst_loc x) ?constructor:None x.instance x.super
     in

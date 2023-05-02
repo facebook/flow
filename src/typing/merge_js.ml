@@ -75,9 +75,9 @@ let detect_sketchy_null_checks cx =
         | _ ->
           let t_loc =
             let reason = reason_of_t t in
-            match annot_aloc_of_reason reason with
+            match annot_loc_of_reason reason with
             | Some loc -> Some loc
-            | None -> Some (def_aloc_of_reason reason)
+            | None -> Some (def_loc_of_reason reason)
           in
           let exists_check =
             ALocMap.find_opt loc cur_checks |> Base.Option.value ~default:ExistsCheck.empty

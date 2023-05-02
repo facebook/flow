@@ -225,14 +225,14 @@ end = struct
      3. The type parameter is not in env. Do the default action.
   *)
   let lookup_tparam ~default env t tp_name tp_loc =
-    let pred { T.name; reason; _ } = name = tp_name && tp_loc = Reason.def_aloc_of_reason reason in
+    let pred { T.name; reason; _ } = name = tp_name && tp_loc = Reason.def_loc_of_reason reason in
     match List.find_opt pred env.Env.tparams_rev with
     | Some _ ->
       (* If we care about shadowing of type params, then flag an error *)
       if Env.flag_shadowed_type_params env then
         let shadow_pred { T.name; _ } = name = tp_name in
         match List.find_opt shadow_pred env.Env.tparams_rev with
-        | Some { T.reason; _ } when Reason.def_aloc_of_reason reason <> tp_loc ->
+        | Some { T.reason; _ } when Reason.def_loc_of_reason reason <> tp_loc ->
           terr ~kind:ShadowTypeParam (Some t)
         | Some _ -> return (Ty.Bound (tp_loc, Subst_name.string_of_subst_name tp_name))
         | None -> assert false
@@ -313,7 +313,7 @@ end = struct
   (* NOTE Due to repositioning, `reason_loc` may not point to the actual location
      where `name` was defined. *)
   let symbol_from_reason env reason name =
-    let def_loc = Reason.def_aloc_of_reason reason in
+    let def_loc = Reason.def_loc_of_reason reason in
     symbol_from_loc env def_loc name
 
   let remove_targs_matching_defaults targs tparams =
@@ -688,7 +688,7 @@ end = struct
             let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
             type_variable ~env ~cont:type__ root_id
       | GenericT { bound; reason; name; _ } ->
-        let loc = Reason.def_aloc_of_reason reason in
+        let loc = Reason.def_loc_of_reason reason in
         let default _ =
           let pred { T.name = tp_name; _ } = name = tp_name in
           match List.find_opt pred env.Env.infer_tparams with
@@ -771,7 +771,7 @@ end = struct
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t
       | OpaqueT (r, o) -> opaque_t ~env r o
       | TypeDestructorTriggerT (_, r, _, _, _) ->
-        let loc = Reason.def_aloc_of_reason r in
+        let loc = Reason.def_loc_of_reason r in
         return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
       | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
       | FunProtoT _ -> return Ty.(TypeOf FunProto)
@@ -839,7 +839,7 @@ end = struct
     and any_t reason kind =
       match kind with
       | T.(AnnotatedAny | CatchAny) ->
-        let aloc = Reason.aloc_of_reason reason in
+        let aloc = Reason.loc_of_reason reason in
         Ty.Annotated aloc
       | T.AnyError kind -> Ty.AnyError (any_error_kind kind)
       | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
@@ -895,7 +895,7 @@ end = struct
       | _ -> return None
 
     and obj_ty ~env ?(inherited = false) ?(source = Ty.Other) reason o =
-      let obj_def_loc = Some (Reason.def_aloc_of_reason reason) in
+      let obj_def_loc = Some (Reason.def_loc_of_reason reason) in
       let { T.flags; props_tmap; call_t; _ } = o in
       let { T.obj_kind; T.frozen = obj_frozen; _ } = flags in
       let obj_literal =
@@ -1740,7 +1740,7 @@ end = struct
       let open Type in
       let name = opaque_type.opaque_name in
       let current_source = Env.current_file env in
-      let opaque_source = ALoc.source (def_aloc_of_reason reason) in
+      let opaque_source = ALoc.source (def_loc_of_reason reason) in
       let name = symbol_from_reason env reason (Reason.OrdinaryName name) in
       (* Compare the current file (of the query) and the file that the opaque
          type is defined. If they differ, then hide the underlying/super type.
@@ -1785,7 +1785,7 @@ end = struct
       let type_param env r t =
         match desc_of_reason r with
         | RType name ->
-          let loc = Reason.def_aloc_of_reason r in
+          let loc = Reason.def_loc_of_reason r in
           let default t = TypeConverter.convert_t ~env t in
           let%map p =
             lookup_tparam ~default env t (Subst_name.Name (display_string_of_name name)) loc
@@ -2182,7 +2182,7 @@ end = struct
       in
       Ty.Obj
         {
-          Ty.obj_def_loc = Some (Reason.def_aloc_of_reason reason);
+          Ty.obj_def_loc = Some (Reason.def_loc_of_reason reason);
           obj_kind = Ty.InexactObj;
           obj_frozen = false;
           obj_literal = None;
@@ -2213,7 +2213,7 @@ end = struct
 
     and opaque_t ~env ~inherited ~source ~imode r opaquetype =
       let current_source = Env.current_file env in
-      let opaque_source = ALoc.source (def_aloc_of_reason r) in
+      let opaque_source = ALoc.source (def_loc_of_reason r) in
       (* Compare the current file (of the query) and the file that the opaque
          type is defined. If they differ, then hide the underlying type. *)
       let same_file = Some current_source = opaque_source in

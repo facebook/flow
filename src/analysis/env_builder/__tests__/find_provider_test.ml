@@ -54,7 +54,7 @@ let print_providers_of_def prov =
     Utils_js.spf
       "[%s]%s"
       (Base.List.map
-         ~f:(fun { Provider_api.LocProviders.reason = r; _ } -> Reason.poly_loc_of_reason r)
+         ~f:(fun { Provider_api.LocProviders.reason = r; _ } -> Reason.loc_of_reason r)
          provider_locs
       |> Base.List.map ~f:(Loc.debug_to_string ~include_source:false)
       |> String.concat "], ["

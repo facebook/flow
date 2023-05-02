@@ -123,7 +123,7 @@ class func_scope_visitor
                         [Arg t]
                         (open_tvar tvar)
                     in
-                    let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
+                    let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
                     Flow.flow
                       cx
                       ( funt,
@@ -200,7 +200,7 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
-      ret_annot_loc = Reason.aloc_of_reason reason;
+      ret_annot_loc = Reason.loc_of_reason reason;
       statics = None;
     }
 
@@ -349,7 +349,7 @@ struct
             Flow.reposition
               cx
               ~desc:(desc_of_t t)
-              (type_t_of_annotated_or_inferred return_t |> reason_of_t |> aloc_of_reason)
+              (type_t_of_annotated_or_inferred return_t |> reason_of_t |> loc_of_reason)
               t
           in
           Flow.flow_t cx (type_t_of_annotated_or_inferred return_t, t)
@@ -366,7 +366,7 @@ struct
             Flow.reposition
               cx
               ~desc:(desc_of_t t)
-              (type_t_of_annotated_or_inferred return_t |> reason_of_t |> aloc_of_reason)
+              (type_t_of_annotated_or_inferred return_t |> reason_of_t |> loc_of_reason)
               t
           in
           Flow.flow_t cx (t, type_t_of_annotated_or_inferred return_t)
@@ -478,7 +478,7 @@ struct
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)
           | Predicate _ ->
-            let loc = aloc_of_reason reason in
+            let loc = loc_of_reason reason in
             Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, PredicateVoidReturn));
             let t = VoidT.at loc |> with_trust bogus_trust in
             let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in

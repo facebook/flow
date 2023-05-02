@@ -751,7 +751,7 @@ module VariableAnalysis = struct
                         (function
                           | Ssa_api.Uninitialized -> false
                           | Ssa_api.Write reason ->
-                            let write_loc = Reason.poly_loc_of_reason reason in
+                            let write_loc = Reason.loc_of_reason reason in
                             Loc.contains extracted_loc write_loc)
                         writes
                   in
@@ -852,7 +852,7 @@ module VariableAnalysis = struct
                       (function
                         | Ssa_api.Uninitialized -> false
                         | Ssa_api.Write reason ->
-                          let write_loc = Reason.poly_loc_of_reason reason in
+                          let write_loc = Reason.loc_of_reason reason in
                           not (Loc.contains extracted_statements_loc write_loc))
                       write_locs
                 )

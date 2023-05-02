@@ -100,16 +100,16 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
         | Get_def_request.Typeof _ -> loop t
         | _ ->
           (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
-          (match Reason.annot_aloc_of_reason r with
+          (match Reason.annot_loc_of_reason r with
           | Some aloc -> Ok (Nel.one (loc_of_aloc ~reader aloc))
           | None -> loop t))
       | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) -> loop t
       | t ->
         let r = TypeUtil.reason_of_t t in
         let aloc =
-          match Reason.annot_aloc_of_reason r with
+          match Reason.annot_loc_of_reason r with
           | Some aloc -> aloc
-          | None -> Reason.def_aloc_of_reason r
+          | None -> Reason.def_loc_of_reason r
         in
         Ok (Nel.one (loc_of_aloc ~reader aloc))
     in

@@ -1620,7 +1620,7 @@ and merge_fun
         if is_method then
           Type.implicit_mixed_this reason
         else
-          Type.bound_function_dummy_this (Reason.aloc_of_reason reason)
+          Type.bound_function_dummy_this (Reason.loc_of_reason reason)
       | Some t -> merge tps infer_tps file t
     in
     let return_t = merge tps infer_tps file return in
@@ -1651,7 +1651,7 @@ let merge_type_alias file reason name tparams body =
     let t =
       let open Reason in
       let open TypeUtil in
-      let id_loc = aloc_of_reason reason in
+      let id_loc = loc_of_reason reason in
       mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some id_loc, desc))) t
     in
     Type.(DefT (reason, trust, TypeT (TypeAliasKind, t)))

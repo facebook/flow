@@ -136,7 +136,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
             provider_locs.writes
             []
           |> Base.List.sort ~compare:(fun { reason = r1; _ } { reason = r2; _ } ->
-                 Reason.(L.compare (poly_loc_of_reason r1) (poly_loc_of_reason r2))
+                 Reason.(L.compare (loc_of_reason r1) (loc_of_reason r2))
              )
         in
         L.LSet.fold

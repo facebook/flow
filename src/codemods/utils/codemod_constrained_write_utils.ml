@@ -52,7 +52,7 @@ let is_extractable_assignment cx relevant_declarations =
                 Base.List.filter_map
                   ~f:(function
                     | Ssa_api.Uninitialized -> None
-                    | Ssa_api.Write reason -> Some (Reason.aloc_of_reason reason))
+                    | Ssa_api.Write reason -> Some (Reason.loc_of_reason reason))
                   writes
               in
               begin
@@ -66,7 +66,7 @@ let is_extractable_assignment cx relevant_declarations =
         Provider_api.providers_of_def providers loc
         |> Base.Option.value_map ~default:false ~f:(fun { Provider_api.providers; _ } ->
                Base.List.exists providers ~f:(fun { Provider_api.reason = r; _ } ->
-                   Reason.poly_loc_of_reason r |> ALoc.concretize_equal tables loc
+                   Reason.loc_of_reason r |> ALoc.concretize_equal tables loc
                )
            )
       in

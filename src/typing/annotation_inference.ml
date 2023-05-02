@@ -181,7 +181,7 @@ module rec ConsGen : S = struct
    * are mostly cases that rely on subtyping, which is not implemented here; most
    * commonly evaluating call-like EvalTs and speculation. *)
   let error_unsupported_reason ?suggestion cx t reason_op =
-    let loc = Reason.aloc_of_reason reason_op in
+    let loc = Reason.loc_of_reason reason_op in
     let msg =
       Error_message.EAnnotationInference (loc, reason_op, TypeUtil.reason_of_t t, suggestion)
     in
@@ -195,7 +195,7 @@ module rec ConsGen : S = struct
     error_unsupported_reason ?suggestion cx t reason_op
 
   let error_recursive cx reason =
-    let loc = Reason.aloc_of_reason reason in
+    let loc = Reason.loc_of_reason reason in
     let msg = Error_message.EAnnotationInferenceRecursive (loc, reason) in
     (match !dst_cx_ref with
     | None -> assert false
@@ -203,7 +203,7 @@ module rec ConsGen : S = struct
     AnyT.error reason
 
   let error_internal_reason cx msg reason_op =
-    let loc = Reason.aloc_of_reason reason_op in
+    let loc = Reason.loc_of_reason reason_op in
     let msg = Error_message.(EInternal (loc, UnexpectedAnnotationInference msg)) in
     (match !dst_cx_ref with
     | None -> assert false
@@ -302,7 +302,7 @@ module rec ConsGen : S = struct
 
     let perform_read_prop_action cx use_op propref p ureason =
       match Property.read_t p with
-      | Some t -> reposition cx (aloc_of_reason ureason) t
+      | Some t -> reposition cx (loc_of_reason ureason) t
       | None ->
         let (reason_prop, prop_name) =
           match propref with
@@ -518,7 +518,7 @@ module rec ConsGen : S = struct
     | (InternalT _, _) ->
       error_unsupported cx t op
     | (AnnotT (r, t, _), _) ->
-      let t = reposition cx (aloc_of_reason r) t in
+      let t = reposition cx (loc_of_reason r) t in
       elab_t cx ~seen t op
     (*********************************************************************)
     (* UseT TypeT (runtime types derive static types through annotation) *)
@@ -553,7 +553,7 @@ module rec ConsGen : S = struct
       elab_t cx c op
     | (DefT (_, _, ClassT it), Annot_UseT_TypeT reason) ->
       (* a class value annotation becomes the instance type *)
-      reposition cx (aloc_of_reason reason) it
+      reposition cx (loc_of_reason reason) it
     | (DefT (_, _, TypeT (_, l)), Annot_UseT_TypeT _) -> l
     | (DefT (lreason, trust, EnumObjectT enum), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum type *)
@@ -648,7 +648,7 @@ module rec ConsGen : S = struct
     (* Opaque types *)
     (****************)
     | (OpaqueT (r, { underlying_t = Some t; _ }), _)
-      when ALoc.source (aloc_of_reason r) = ALoc.source (def_aloc_of_reason r) ->
+      when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
       elab_t cx ~seen t op
     (********)
     (* Keys *)
@@ -691,7 +691,7 @@ module rec ConsGen : S = struct
       let ts = UnionRep.members rep in
       let f t = ExactT (reason_op, t) in
       let ts' = Base.List.map ts ~f in
-      let reason' = repos_reason (aloc_of_reason reason_op) reason in
+      let reason' = repos_reason (loc_of_reason reason_op) reason in
       union_of_ts reason' ts'
     | (UnionT _, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
       object_kit_concrete cx use_op op reason resolve_tool tool t
@@ -715,7 +715,7 @@ module rec ConsGen : S = struct
     | (DefT (_, trust, BoolT None), Annot_NotT reason)
     | (DefT (_, trust, StrT AnyLiteral), Annot_NotT reason)
     | (DefT (_, trust, NumT AnyLiteral), Annot_NotT reason) ->
-      BoolT.at (aloc_of_reason reason) trust
+      BoolT.at (loc_of_reason reason) trust
     (* !x when x is falsy *)
     | (DefT (_, trust, BoolT (Some false)), Annot_NotT reason)
     | (DefT (_, trust, SingletonBoolT false), Annot_NotT reason)
@@ -802,11 +802,11 @@ module rec ConsGen : S = struct
     | (AnyT _, Annot_SpecializeT _) -> t
     | (ThisClassT (_, i, _, this_name), Annot_ThisSpecializeT (reason, this)) ->
       let i = subst cx (Subst_name.Map.singleton this_name this) i in
-      reposition cx (aloc_of_reason reason) i
+      reposition cx (loc_of_reason reason) i
     (* this-specialization of non-this-abstracted classes is a no-op *)
     | (DefT (_, _, ClassT i), Annot_ThisSpecializeT (reason, _this)) ->
-      reposition cx (aloc_of_reason reason) i
-    | (AnyT _, Annot_ThisSpecializeT (reason, _)) -> reposition cx (aloc_of_reason reason) t
+      reposition cx (loc_of_reason reason) i
+    | (AnyT _, Annot_ThisSpecializeT (reason, _)) -> reposition cx (loc_of_reason reason) t
     (**********************)
     (* Type instantiation *)
     (**********************)
@@ -858,24 +858,24 @@ module rec ConsGen : S = struct
     | (DefT (_, trust, NullT), Annot_ObjTestProtoT reason_op) -> NullProtoT.why reason_op trust
     | (_, Annot_ObjTestProtoT reason_op) ->
       if Flow_js_utils.object_like t then
-        reposition cx (aloc_of_reason reason_op) t
+        reposition cx (loc_of_reason reason_op) t
       else
         let () =
           Flow_js_utils.add_output
             cx
-            (Error_message.EInvalidPrototype (aloc_of_reason reason_op, reason_of_t t))
+            (Error_message.EInvalidPrototype (loc_of_reason reason_op, reason_of_t t))
         in
         ObjProtoT.why reason_op |> with_trust bogus_trust
     (***************)
     (* Get statics *)
     (***************)
     | (DefT (_, _, InstanceT (static, _, _, _)), Annot_GetStaticsT reason_op) ->
-      reposition cx (aloc_of_reason reason_op) static
+      reposition cx (loc_of_reason reason_op) static
     | (AnyT (_, src), Annot_GetStaticsT reason_op) -> AnyT.why src reason_op
     | (ObjProtoT _, Annot_GetStaticsT reason_op) ->
       (* ObjProtoT not only serves as the instance type of the root class, but
        * also as the statics of the root class. *)
-      reposition cx (aloc_of_reason reason_op) t
+      reposition cx (loc_of_reason reason_op) t
     (***************)
     (* LookupT pt1 *)
     (***************)
@@ -889,7 +889,7 @@ module rec ConsGen : S = struct
       | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref
       | Some p -> GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op)
     | (DefT (_, _, InstanceT _), Annot_LookupT (reason_op, _, Computed _)) ->
-      let loc = aloc_of_reason reason_op in
+      let loc = loc_of_reason reason_op in
       Flow_js_utils.add_output cx Error_message.(EInternal (loc, InstanceLookupComputed));
       AnyT.error reason_op
     | (DefT (_, _, ObjT o), Annot_LookupT (reason_op, use_op, propref)) ->
@@ -939,7 +939,7 @@ module rec ConsGen : S = struct
     | (AnyT _, Annot_GetPropT (reason_op, _, _)) -> AnyT (reason_op, Untyped)
     | (DefT (reason, _, ClassT instance), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype")))
       ->
-      reposition cx (aloc_of_reason reason) instance
+      reposition cx (loc_of_reason reason) instance
     (**************)
     (* Object Kit *)
     (**************)
@@ -961,10 +961,10 @@ module rec ConsGen : S = struct
       elab_t cx obj (Annot_GetPropT (reason_op, use_op, propref))
     | (_, Annot_ElemT (reason_op, _use_op, (AnyT _ as _obj))) ->
       let value = AnyT.untyped reason_op in
-      reposition cx (aloc_of_reason reason_op) value
+      reposition cx (loc_of_reason reason_op) value
     | (AnyT _, Annot_ElemT (reason_op, _, DefT (_, _, ArrT arrtype))) ->
       let value = elemt_of_arrtype arrtype in
-      reposition cx (aloc_of_reason reason_op) value
+      reposition cx (loc_of_reason reason_op) value
     | (DefT (_, _, NumT _), Annot_ElemT (reason_op, use_op, DefT (reason_tup, _, ArrT arrtype))) ->
       let (value, _) =
         Flow_js_utils.array_elem_check
@@ -977,7 +977,7 @@ module rec ConsGen : S = struct
           reason_tup
           arrtype
       in
-      reposition cx (aloc_of_reason reason_op) value
+      reposition cx (loc_of_reason reason_op) value
     | (DefT (_, trust, ObjT o), Annot_ObjKeyMirror reason_op) ->
       Flow_js_utils.obj_key_mirror cx trust o reason_op
     | (DefT (_, trust, ObjT o), Annot_ObjMapConst (reason_op, target)) ->
@@ -1008,7 +1008,7 @@ module rec ConsGen : S = struct
     (* Function Statics *)
     (********************)
     | (DefT (reason, _, FunT (static, _)), _) when object_like_op op ->
-      let static = reposition cx (aloc_of_reason reason) static in
+      let static = reposition cx (loc_of_reason reason) static in
       elab_t cx static op
     (*****************)
     (* Class statics *)
@@ -1175,8 +1175,8 @@ module rec ConsGen : S = struct
   (* Unlike Flow_js, types in this module are 0->1, so there is no need for a
    * mechanism similar to BecomeT of Flow_js. *)
   and mk_typeof_annotation cx ?trace:_ reason t =
-    let annot_loc = aloc_of_reason reason in
-    let t = reposition cx (aloc_of_reason reason) t in
+    let annot_loc = loc_of_reason reason in
+    let t = reposition cx (loc_of_reason reason) t in
     AnnotT (opt_annot_reason ~annot_loc reason, t, false)
 
   and assert_export_is_type cx reason name t =

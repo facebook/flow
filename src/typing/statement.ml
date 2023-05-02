@@ -124,7 +124,7 @@ module Make
                 Flow_js.flow_t cx (obj_t, tvar)
             )
           in
-          let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
+          let (_, lazy_hint) = Env.get_hint cx (Reason.loc_of_reason reason) in
           lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:get_autocomplete_t
         else
           obj_t
@@ -192,7 +192,7 @@ module Make
         let l = Flow.widen_obj_type cx ~use_op reason t in
         Flow.flow cx (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
         if obj_key_autocomplete acc then
-          let (_, lazy_hint) = Env.get_hint cx (Reason.aloc_of_reason reason) in
+          let (_, lazy_hint) = Env.get_hint cx (Reason.loc_of_reason reason) in
           lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> tout)
         else
           tout
@@ -1572,7 +1572,7 @@ module Make
 
   and for_of_elemt cx right_t reason await =
     let elem_t = Tvar.mk cx reason in
-    let loc = aloc_of_reason reason in
+    let loc = loc_of_reason reason in
     (* Second and third args here are never relevant to the loop, but they should be as
        general as possible to allow iterating over arbitrary generators *)
     let targs =
@@ -4337,7 +4337,7 @@ module Make
   and method_call
       cx reason ~use_op ?(call_strict_arity = true) prop_loc (expr, obj_t, name) targts argts =
     let (expr_loc, _) = expr in
-    match Refinement.get ~allow_optional:true cx expr (aloc_of_reason reason) with
+    match Refinement.get ~allow_optional:true cx expr (loc_of_reason reason) with
     | Some f ->
       (* note: the current state of affairs is that we understand
          member expressions as having refined types, rather than
@@ -6055,7 +6055,7 @@ module Make
               in
               let t =
                 Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tvar ->
-                    let loc = aloc_of_reason reason in
+                    let loc = loc_of_reason reason in
                     let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [tvar] in
                     Flow.flow cx (spec, UseT (use_op, propdesc))
                 )
@@ -6165,7 +6165,7 @@ module Make
           )
         | _ -> assert_false "unexpected type argument to Object.defineProperty, match guard failed"
       in
-      let loc = aloc_of_reason reason in
+      let loc = loc_of_reason reason in
       let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
       let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [ty] in
       let (((_, o), _) as e_ast) = expression cx e in
@@ -6223,7 +6223,7 @@ module Make
                    reason
                in
                let tvar = Tvar.mk cx reason in
-               let loc = aloc_of_reason reason in
+               let loc = loc_of_reason reason in
                let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [tvar] in
                Flow.flow cx (spec, UseT (use_op, propdesc));
                Flow.flow
@@ -6332,7 +6332,7 @@ module Make
     | Some x ->
       Debug_js.Verbose.print_if_verbose_lazy
         cx
-        (lazy [spf "Class cache hit at %s" (ALoc.debug_to_string (aloc_of_reason reason))]);
+        (lazy [spf "Class cache hit at %s" (ALoc.debug_to_string (loc_of_reason reason))]);
       x
     | None ->
       let def_reason = repos_reason class_loc reason in
@@ -6418,7 +6418,7 @@ module Make
               let (this_t, arrow, function_loc_opt) =
                 match expr with
                 | (_, Ast.Expression.ArrowFunction _) ->
-                  (dummy_this (aloc_of_reason reason), true, None)
+                  (dummy_this (loc_of_reason reason), true, None)
                 | (loc, _) ->
                   let this_t =
                     if
@@ -6550,7 +6550,7 @@ module Make
       | Some x ->
         Debug_js.Verbose.print_if_verbose_lazy
           cx
-          (lazy [spf "Class sig cache hit at %s" (ALoc.debug_to_string (aloc_of_reason reason))]);
+          (lazy [spf "Class sig cache hit at %s" (ALoc.debug_to_string (loc_of_reason reason))]);
         x
       | None ->
         let {
@@ -7237,7 +7237,7 @@ module Make
       match Node_cache.get_function_sig cache sig_loc with
       | Some x -> x
       | None ->
-        let loc = aloc_of_reason reason in
+        let loc = loc_of_reason reason in
         let ret_loc =
           match return with
           | Ast.Function.ReturnAnnot.Available (loc, _)
@@ -7393,7 +7393,7 @@ module Make
     let default_this =
       match default_this with
       | Some t -> t
-      | None -> dummy_this (aloc_of_reason reason)
+      | None -> dummy_this (loc_of_reason reason)
     in
     let fun_type = Func_stmt_sig.functiontype cx ~arrow fun_loc default_this func_sig in
     if Context.typing_mode cx <> Context.CheckingMode then
@@ -7433,10 +7433,10 @@ module Make
     | Some cached ->
       Debug_js.Verbose.print_if_verbose_lazy
         cx
-        (lazy [spf "Function cache hit at %s" (ALoc.debug_to_string (aloc_of_reason reason))]);
+        (lazy [spf "Function cache hit at %s" (ALoc.debug_to_string (loc_of_reason reason))]);
       cached
     | None ->
-      let loc = aloc_of_reason reason in
+      let loc = loc_of_reason reason in
 
       (* The default behavior of `this` still depends on how it
          was created, so we must provide the recipe based on where `function_decl`
@@ -7646,7 +7646,7 @@ module Make
     let (representation_t, members, has_unknown_members) =
       match body with
       | (_, BooleanBody { BooleanBody.members; has_unknown_members; _ }) ->
-        let reason = mk_reason (REnumRepresentation RBoolean) (aloc_of_reason enum_reason) in
+        let reason = mk_reason (REnumRepresentation RBoolean) (loc_of_reason enum_reason) in
         let (members, bool_type, _) =
           Base.List.fold_left
             ~f:
@@ -7677,7 +7677,7 @@ module Make
         in
         (DefT (reason, literal_trust (), BoolT bool_type), members, has_unknown_members)
       | (_, NumberBody { NumberBody.members; has_unknown_members; _ }) ->
-        let reason = mk_reason (REnumRepresentation RNumber) (aloc_of_reason enum_reason) in
+        let reason = mk_reason (REnumRepresentation RNumber) (loc_of_reason enum_reason) in
         let (members, num_type, _) =
           Base.List.fold_left
             ~f:
@@ -7707,7 +7707,7 @@ module Make
         in
         (DefT (reason, literal_trust (), NumT num_type), members, has_unknown_members)
       | (_, BigIntBody { BigIntBody.members; has_unknown_members; _ }) ->
-        let reason = mk_reason (REnumRepresentation RBigInt) (aloc_of_reason enum_reason) in
+        let reason = mk_reason (REnumRepresentation RBigInt) (loc_of_reason enum_reason) in
         let (members, num_type, _) =
           Base.List.fold_left
             ~f:
@@ -7739,7 +7739,7 @@ module Make
       | ( _,
           StringBody { StringBody.members = StringBody.Initialized members; has_unknown_members; _ }
         ) ->
-        let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
+        let reason = mk_reason (REnumRepresentation RString) (loc_of_reason enum_reason) in
         let (members, str_type, _) =
           Base.List.fold_left
             ~f:
@@ -7770,13 +7770,13 @@ module Make
         (DefT (reason, literal_trust (), StrT str_type), members, has_unknown_members)
       | (_, StringBody { StringBody.members = StringBody.Defaulted members; has_unknown_members; _ })
         ->
-        let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
+        let reason = mk_reason (REnumRepresentation RString) (loc_of_reason enum_reason) in
         ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
           defaulted_members members,
           has_unknown_members
         )
       | (_, SymbolBody { SymbolBody.members; has_unknown_members; comments = _ }) ->
-        let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
+        let reason = mk_reason (REnumRepresentation RSymbol) (loc_of_reason enum_reason) in
         (DefT (reason, literal_trust (), SymbolT), defaulted_members members, has_unknown_members)
     in
     { enum_id; members; representation_t; has_unknown_members }

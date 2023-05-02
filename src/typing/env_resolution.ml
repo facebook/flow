@@ -283,7 +283,7 @@ let resolve_annotated_function
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this =
     if bind_this && Signature_utils.This_finder.found_this_in_body_or_params body params then
-      let loc = aloc_of_reason reason in
+      let loc = loc_of_reason reason in
       Tvar.mk cx (mk_reason RThis loc)
     else
       Type.implicit_mixed_this reason
@@ -507,7 +507,7 @@ let resolve_binding_partial cx reason loc b =
     in
     let default_this =
       if (not arrow) && Signature_utils.This_finder.found_this_in_body_or_params body params then
-        let loc = aloc_of_reason reason_fun in
+        let loc = loc_of_reason reason_fun in
         Tvar.mk cx (mk_reason RThis loc)
       else
         Type.implicit_mixed_this reason_fun
@@ -625,7 +625,7 @@ let resolve_binding_partial cx reason loc b =
             ( ConstrainedAssignment
                 {
                   name;
-                  declaration = poly_loc_of_reason reason;
+                  declaration = loc_of_reason reason;
                   providers = ALocSet.elements array_providers;
                   array = true;
                 },
@@ -649,7 +649,7 @@ let resolve_binding_partial cx reason loc b =
     let use_op = Op (AssignVar { var = Some reason; init = mk_reason (RCode "[]") arr_loc }) in
     (t, use_op)
   | Root (Contextual { reason; hints; optional; default_expression }) ->
-    let param_loc = Reason.poly_loc_of_reason reason in
+    let param_loc = Reason.loc_of_reason reason in
     let t =
       let (has_hint, lazy_hint) = lazily_resolve_hints cx loc hints in
       match lazy_hint reason with
@@ -1022,7 +1022,7 @@ let resolve_generator_next cx reason gen =
               ]
           in
           let t =
-            Flow_js.reposition cx ~desc:(desc_of_t t) (reason_of_t return_t |> aloc_of_reason) t
+            Flow_js.reposition cx ~desc:(desc_of_t t) (reason_of_t return_t |> loc_of_reason) t
           in
           Flow_js.flow_t cx (t, return_t)
       )
@@ -1123,7 +1123,7 @@ let entries_of_def graph (kind, loc) =
   let add_from_bindings acc = function
     | Root (Annotation { param_loc = Some l; _ }) -> EnvSet.add (Env_api.FunctionParamLoc, l) acc
     | Root (Contextual { reason; _ }) ->
-      let l = Reason.poly_loc_of_reason reason in
+      let l = Reason.loc_of_reason reason in
       EnvSet.add (Env_api.FunctionParamLoc, l) acc
     | Root
         (FunctionValue

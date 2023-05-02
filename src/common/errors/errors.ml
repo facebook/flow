@@ -210,9 +210,9 @@ module Friendly = struct
   let ref_map map_loc r =
     let desc = desc_helper r in
     let loc =
-      match annot_poly_loc_of_reason r with
+      match annot_loc_of_reason r with
       | Some loc -> loc
-      | None -> def_poly_loc_of_reason r
+      | None -> def_loc_of_reason r
     in
     let loc = map_loc loc in
     if loc = Loc.none then

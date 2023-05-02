@@ -294,25 +294,13 @@ val string_of_reason : ?strip_root:Path.t option -> reason -> string
 val dump_reason : ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
-val poly_loc_of_reason : 'loc virtual_reason -> 'loc
+val loc_of_reason : 'loc virtual_reason -> 'loc
 
-val loc_of_reason : concrete_reason -> Loc.t
+val def_loc_of_reason : 'loc virtual_reason -> 'loc
 
-val aloc_of_reason : reason -> ALoc.t
-
-val def_aloc_of_reason : reason -> ALoc.t
-
-val def_loc_of_reason : concrete_reason -> Loc.t
-
-val annot_aloc_of_reason : reason -> ALoc.t option
+val annot_loc_of_reason : 'loc virtual_reason -> 'loc option
 
 val desc_of_reason : ?unwrap:bool -> 'loc virtual_reason -> 'loc virtual_reason_desc
-
-val annot_loc_of_reason : concrete_reason -> Loc.t option
-
-val annot_poly_loc_of_reason : 'loc virtual_reason -> 'loc option
-
-val def_poly_loc_of_reason : 'loc virtual_reason -> 'loc
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)

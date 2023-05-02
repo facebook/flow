@@ -47,8 +47,8 @@ let data_of_prop_missing_error loc_of_aloc error =
   | (SetProperty { value; _ }, EPropNotFound { reason_obj; prop_name = Some name; _ })
   | (GetProperty value, EIncompatibleProp { reason_obj; prop = Some name; _ })
   | (GetProperty value, EPropNotFound { reason_obj; prop_name = Some name; _ }) ->
-    let obj_loc = loc_of_aloc (def_aloc_of_reason reason_obj) in
-    let init_locs = [loc_of_aloc (def_aloc_of_reason value)] in
+    let obj_loc = loc_of_aloc (def_loc_of_reason reason_obj) in
+    let init_locs = [loc_of_aloc (def_loc_of_reason value)] in
     let prop_accesses = prop_accesses op in
     Some { obj_loc; name; init_locs; prop_accesses }
   | _ -> None

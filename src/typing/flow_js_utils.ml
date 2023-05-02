@@ -362,18 +362,18 @@ let error_message_kind_of_lower = function
 
 let error_message_kind_of_upper = function
   | GetPropT (_, _, _, Named (r, name), _) ->
-    Error_message.IncompatibleGetPropT (aloc_of_reason r, Some name)
+    Error_message.IncompatibleGetPropT (loc_of_reason r, Some name)
   | GetPropT (_, _, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
   | GetPrivatePropT (_, _, _, _, _, _) -> Error_message.IncompatibleGetPrivatePropT
   | SetPropT (_, _, Named (r, name), _, _, _, _) ->
-    Error_message.IncompatibleSetPropT (aloc_of_reason r, Some name)
+    Error_message.IncompatibleSetPropT (loc_of_reason r, Some name)
   | SetPropT (_, _, Computed t, _, _, _, _) -> Error_message.IncompatibleSetPropT (loc_of_t t, None)
   | MatchPropT (_, _, Named (r, name), _) ->
-    Error_message.IncompatibleMatchPropT (aloc_of_reason r, Some name)
+    Error_message.IncompatibleMatchPropT (loc_of_reason r, Some name)
   | MatchPropT (_, _, Computed t, _) -> Error_message.IncompatibleMatchPropT (loc_of_t t, None)
   | SetPrivatePropT (_, _, _, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
   | MethodT (_, _, _, Named (r, name), _, _) ->
-    Error_message.IncompatibleMethodT (aloc_of_reason r, Some name)
+    Error_message.IncompatibleMethodT (loc_of_reason r, Some name)
   | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> Error_message.IncompatibleCallT
   | GetElemT (_, _, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
@@ -398,8 +398,8 @@ let error_message_kind_of_upper = function
         ( DefT (_, _, StrT (Literal (_, name)))
         | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); _ } )
       ) ->
-    Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
-  | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
+    Error_message.IncompatibleHasOwnPropT (loc_of_reason r, Some name)
+  | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (loc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
   | GetDictValuesT _ -> Error_message.IncompatibleGetValuesT
   | UnaryArithT _ -> Error_message.IncompatibleUnaryArithT
@@ -596,13 +596,13 @@ let iter_resolve_union ~f cx trace reason rep upper =
 (* New generics mode: generate a GenericT from a generic *)
 
 let generic_of_tparam cx ~f { bound; name; reason = param_reason; is_this = _; _ } =
-  let param_loc = aloc_of_reason param_reason in
+  let param_loc = loc_of_reason param_reason in
   let bound = f bound in
   let id = Context.make_generic_id cx name param_loc in
   let bound =
     mod_reason_of_t
       (fun bound_reason ->
-        let annot_loc = annot_aloc_of_reason bound_reason in
+        let annot_loc = annot_loc_of_reason bound_reason in
         let desc = desc_of_reason ~unwrap:false bound_reason in
         opt_annot_reason ?annot_loc @@ mk_reason desc param_loc)
       bound
@@ -731,7 +731,7 @@ let apply_env_errors cx loc = function
     t
 
 let lookup_builtin_strict cx x reason =
-  lookup_builtin_strict_result cx x reason |> apply_env_errors cx (aloc_of_reason reason)
+  lookup_builtin_strict_result cx x reason |> apply_env_errors cx (loc_of_reason reason)
 
 let lookup_builtin_with_default cx x default =
   let builtins = Context.builtins cx in
@@ -833,11 +833,11 @@ let check_untyped_import cx import_kind lreason ureason =
   (* Use a special reason so we can tell the difference between an any-typed type import
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   | ((ImportType | ImportTypeof), RUntypedModule module_name) ->
-    let loc = Reason.aloc_of_reason ureason in
+    let loc = Reason.loc_of_reason ureason in
     let message = Error_message.EUntypedTypeImport (loc, module_name) in
     add_output cx message
   | (ImportValue, RUntypedModule module_name) ->
-    let loc = Reason.aloc_of_reason ureason in
+    let loc = Reason.loc_of_reason ureason in
     let message = Error_message.EUntypedImport (loc, module_name) in
     add_output cx message
   | _ -> ()
@@ -859,7 +859,7 @@ let fix_this_class cx reason (r, i, is_this, this_name) =
              if is_this then
                GenericT
                  {
-                   id = Context.make_generic_id cx this_name (def_aloc_of_reason r);
+                   id = Context.make_generic_id cx this_name (def_loc_of_reason r);
                    reason;
                    name = this_name;
                    bound = this;
@@ -964,7 +964,7 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
         (Subst_name.Map.empty, ts, [])
         xs
     in
-    (reposition cx ~trace (aloc_of_reason reason_tapp) (subst cx ~use_op map t), all_ts_rev)
+    (reposition cx ~trace (loc_of_reason reason_tapp) (subst cx ~use_op map t), all_ts_rev)
 
   let mk_typeapp_of_poly
       cx trace ~use_op ~reason_op ~reason_tapp ?(cache = false) id tparams_loc xs t ts =
@@ -1044,7 +1044,7 @@ end
 
 let check_nonstrict_import cx trace is_strict imported_is_strict reason =
   if is_strict && not imported_is_strict then
-    let loc = Reason.aloc_of_reason reason in
+    let loc = Reason.loc_of_reason reason in
     let message = Error_message.ENonstrictImport loc in
     add_output cx ~trace message
 
@@ -1246,7 +1246,7 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
       | Some t ->
         (* reposition the export to point at the require(), like the object
            we create below for non-CommonJS exports *)
-        F.reposition ~trace cx (aloc_of_reason reason) t
+        F.reposition ~trace cx (loc_of_reason reason) t
       | None ->
         (* Use default export if option is enabled and module is not lib *)
         let automatic_require_default =
@@ -1278,7 +1278,7 @@ module ImportModuleNsT_kit (F : Import_export_helper_sig) = struct
     check_nonstrict_import cx trace is_strict imported_is_strict reason_op;
     let reason =
       module_reason
-      |> Reason.repos_reason (aloc_of_reason reason_op)
+      |> Reason.repos_reason (loc_of_reason reason_op)
       |> Reason.replace_desc_reason (desc_of_reason reason_op)
     in
     let exports_tmap = Context.find_exports cx exports.exports_tmap in
@@ -1700,7 +1700,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         cx
         trace
         ~use_op:unknown_use
-        (TypeUtil.class_type ?annot_loc:(annot_aloc_of_reason r) l)
+        (TypeUtil.class_type ?annot_loc:(annot_loc_of_reason r) l)
     | Named (reason_prop, x) ->
       let own_props = Context.find_props cx insttype.own_props in
       let proto_props = Context.find_props cx insttype.proto_props in
@@ -1726,7 +1726,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
-      let loc = aloc_of_reason reason_op in
+      let loc = loc_of_reason reason_op in
       add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed));
       F.error_type cx trace reason_op
 
@@ -1752,11 +1752,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | OrdinaryName name when is_valid_member_name name ->
       if SMap.mem name members then
         let enum_type =
-          F.reposition
-            cx
-            ~trace
-            (aloc_of_reason access_reason)
-            (mk_enum_type ~trust enum_reason enum)
+          F.reposition cx ~trace (loc_of_reason access_reason) (mk_enum_type ~trust enum_reason enum)
         in
         F.return cx trace ~use_op:unknown_use enum_type
       else
@@ -1772,7 +1768,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
   let on_array_length cx trace reason trust arity reason_op =
     (* Use definition as the reason for the length, as this is
      * the actual location where the length is in fact set. *)
-    let loc = Reason.aloc_of_reason reason_op in
+    let loc = Reason.loc_of_reason reason_op in
     let t = tuple_length reason trust arity in
     F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
 
@@ -1800,7 +1796,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
   let perform_read_prop_action cx trace use_op propref p ureason =
     match Property.read_t p with
     | Some t ->
-      let loc = aloc_of_reason ureason in
+      let loc = loc_of_reason ureason in
       F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
     | None ->
       let (reason_prop, prop_name) =
@@ -1920,7 +1916,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                        }
                     );
                   ( true,
-                    AnyT.error (mk_reason (RTupleOutOfBoundsAccess index) (aloc_of_reason reason))
+                    AnyT.error (mk_reason (RTupleOutOfBoundsAccess index) (loc_of_reason reason))
                   )
                 ) else
                   (true, value)

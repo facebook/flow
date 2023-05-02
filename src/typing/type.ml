@@ -3510,7 +3510,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | UpdateProperty { lhs = op; _ }
   | SwitchCheck { case_test = op; _ }
   | MatchingProp { op; _ } ->
-    aloc_of_reason op
+    loc_of_reason op
   | ReactGetIntrinsic _
   | Speculation _
   | UnknownUse

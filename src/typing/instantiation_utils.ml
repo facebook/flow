@@ -23,15 +23,15 @@ module ImplicitTypeArgument = struct
   let mk_targ cx typeparam reason_op reason_tapp =
     (* Create a reason that is positioned at reason_op, but has a def_loc at
      * typeparam.reason. *)
-    let loc_op = aloc_of_reason reason_op in
+    let loc_op = loc_of_reason reason_op in
     let desc =
       RTypeParam
         ( typeparam.name,
           (desc_of_reason reason_op, loc_op),
-          (desc_of_reason reason_tapp, def_aloc_of_reason reason_tapp)
+          (desc_of_reason reason_tapp, def_loc_of_reason reason_tapp)
         )
     in
-    let reason = mk_reason desc (def_aloc_of_reason typeparam.reason) in
+    let reason = mk_reason desc (def_loc_of_reason typeparam.reason) in
     let reason = repos_reason loc_op reason in
     Tvar.mk cx reason
 

@@ -637,7 +637,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               Default_resolve.default_resolve_touts
                 ~flow:(flow_t cx)
                 cx
-                (aloc_of_reason reason_lower)
+                (loc_of_reason reason_lower)
                 upper;
               match upper with
               | UseT (use_op, t) ->

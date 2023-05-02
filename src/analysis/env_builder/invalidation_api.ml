@@ -28,7 +28,7 @@ struct
               List.fold_left
                 (fun acc -> function
                   | Ssa_api.Uninitialized -> acc
-                  | Ssa_api.Write reason -> L.LSet.add (Reason.poly_loc_of_reason reason) acc)
+                  | Ssa_api.Write reason -> L.LSet.add (Reason.loc_of_reason reason) acc)
                 acc
                 write_locs)
           uses
@@ -63,7 +63,7 @@ struct
            (* Since this variable is not fully initialized, if there are any providers then
               they must be null providers *)
            Base.List.map
-             ~f:(fun { Provider_api.reason; _ } -> Reason.poly_loc_of_reason reason)
+             ~f:(fun { Provider_api.reason; _ } -> Reason.loc_of_reason reason)
              providers
            |> L.LSet.of_list
          in

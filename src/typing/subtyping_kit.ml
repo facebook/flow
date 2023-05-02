@@ -389,7 +389,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (match lflags.obj_kind with
       | Inexact ->
         let r =
-          mk_reason (RUnknownUnspecifiedProperty (desc_of_reason lreason)) (aloc_of_reason lreason)
+          mk_reason (RUnknownUnspecifiedProperty (desc_of_reason lreason)) (loc_of_reason lreason)
         in
         let mixed = DefT (r, bogus_trust (), MixedT Mixed_everything) in
         rec_flow_t cx trace ~use_op (mixed, value)
@@ -652,12 +652,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
     | (OpaqueT (r, { underlying_t = Some t; _ }), _)
-      when ALoc.source (aloc_of_reason r) = ALoc.source (def_aloc_of_reason r) ->
+      when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
       rec_flow_t cx trace ~use_op (t, u)
     (* If the lower bound is in the same file as where the opaque type was defined,
      * we expose the underlying type information *)
     | (_, OpaqueT (r, { underlying_t = Some t; _ }))
-      when ALoc.source (aloc_of_reason (reason_of_t l)) = ALoc.source (def_aloc_of_reason r) ->
+      when ALoc.source (loc_of_reason (reason_of_t l)) = ALoc.source (def_loc_of_reason r) ->
       rec_flow_t cx trace ~use_op (l, t)
     (***********************)
     (* Singletons and keys *)
@@ -1173,7 +1173,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ~rest_param:
             (Some
                ( None,
-                 aloc_of_reason reasonu,
+                 loc_of_reason reasonu,
                  EmptyT.why (replace_desc_new_reason REmpty reasonu) (bogus_trust ())
                )
             )
@@ -1600,7 +1600,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);
         add_output cx ~trace Error_message.(EValueUsedAsType { reason_use }))
     | (DefT (rl, _, ClassT l), DefT (_, _, ClassT u)) ->
-      rec_flow cx trace (reposition cx ~trace (aloc_of_reason rl) l, UseT (use_op, u))
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason rl) l, UseT (use_op, u))
     | ( DefT (_, _, FunT (static1, _)),
         DefT (_, _, ClassT (DefT (_, _, InstanceT (static2, _, _, _))))
       ) ->

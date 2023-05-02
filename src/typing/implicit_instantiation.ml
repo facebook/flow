@@ -653,7 +653,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                 tparams_rest
                 explicit_targs_rest
             | ImplicitArg (r, id) ->
-              let reason = mk_reason RImplicitInstantiation (aloc_of_reason r) in
+              let reason = mk_reason RImplicitInstantiation (loc_of_reason r) in
               let targ =
                 Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason reason_tapp
               in
@@ -1069,7 +1069,7 @@ module PinTypes (Flow : Flow_common.S) = struct
         cx
         Error_message.(
           EInternal
-            ( aloc_of_reason tparam.Type.reason,
+            ( loc_of_reason tparam.Type.reason,
               ImplicitInstantiationInvariant "Constant tparam is unsupported."
             )
         );
@@ -1255,7 +1255,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
              ~use_op:frame
              (inferred, Subst.subst cx ~use_op subst_map tparam.bound)
        );
-    reposition cx ~trace (aloc_of_reason reason_tapp) (Subst.subst cx ~use_op subst_map poly_t)
+    reposition cx ~trace (loc_of_reason reason_tapp) (Subst.subst cx ~use_op subst_map poly_t)
 
   let run_call
       cx check ~return_hint:(_, lazy_hint) ?(cache = false) trace ~use_op ~reason_op ~reason_tapp =
@@ -1409,11 +1409,11 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                      We cannot conservatively decide which branch we will take. To maintain
                      soundness in this general case, we make the type abstract. *)
                   let name = Subst_name.Synthetic ("conditional type", []) in
-                  let id = Context.make_generic_id cx name (aloc_of_reason reason) in
+                  let id = Context.make_generic_id cx name (loc_of_reason reason) in
                   let reason = update_desc_reason invalidate_rtype_alias reason in
                   let bound = MixedT.make reason (bogus_trust ()) in
                   GenericT { reason; name; id; bound })
           in
-          reposition cx ~trace (aloc_of_reason reason) t
+          reposition cx ~trace (loc_of_reason reason) t
       )
 end

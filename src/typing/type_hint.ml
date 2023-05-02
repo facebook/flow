@@ -258,7 +258,7 @@ and instantiate_component cx component instantiation_hint =
 and type_of_hint_decomposition cx op reason t =
   let fun_t ~params ~rest_param ~return_t =
     let statics_reason =
-      Reason.func_reason ~async:false ~generator:false (Reason.aloc_of_reason reason)
+      Reason.func_reason ~async:false ~generator:false (Reason.loc_of_reason reason)
     in
     let statics =
       Obj_type.mk_with_proto cx statics_reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact

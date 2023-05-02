@@ -482,27 +482,14 @@ let func_reason ~async ~generator =
   in
   mk_reason (RFunction func_desc)
 
-let poly_loc_of_reason r = r.loc
+let loc_of_reason r = r.loc
 
-let aloc_of_reason = poly_loc_of_reason
-
-let loc_of_reason = poly_loc_of_reason
-
-(* TODO return ALoc *)
-let def_poly_loc_of_reason r =
+let def_loc_of_reason r =
   match r.def_loc_opt with
   | Some loc -> loc
-  | None -> aloc_of_reason r
+  | None -> loc_of_reason r
 
-let def_aloc_of_reason = def_poly_loc_of_reason
-
-let def_loc_of_reason = def_poly_loc_of_reason
-
-let annot_poly_loc_of_reason r = r.annot_loc_opt
-
-let annot_aloc_of_reason = annot_poly_loc_of_reason
-
-let annot_loc_of_reason = annot_poly_loc_of_reason
+let annot_loc_of_reason r = r.annot_loc_opt
 
 let function_desc_prefix = function
   | RAsync -> "async "
@@ -741,7 +728,7 @@ let rec string_of_desc = function
   | RUnannotatedNext -> "undefined (default `next` of unannotated generator function)"
 
 let string_of_reason ?(strip_root = None) r =
-  let spos = string_of_aloc ~strip_root (aloc_of_reason r) in
+  let spos = string_of_aloc ~strip_root (loc_of_reason r) in
   let desc = string_of_desc r.desc in
   if spos = "" then
     desc
@@ -751,7 +738,7 @@ let string_of_reason ?(strip_root = None) r =
     spf "%s: %s" spos desc
 
 let dump_reason ?(strip_root = None) r =
-  spf "%s: %S" (string_of_aloc ~strip_root (aloc_of_reason r)) (string_of_desc r.desc)
+  spf "%s: %S" (string_of_aloc ~strip_root (loc_of_reason r)) (string_of_desc r.desc)
 
 let desc_of_reason =
   let rec loop = function
@@ -872,9 +859,7 @@ let is_lib_reason r =
   r.loc |> ALoc.source |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
 
 let is_lib_reason_def r =
-  def_aloc_of_reason r
-  |> ALoc.source
-  |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
+  def_loc_of_reason r |> ALoc.source |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
 
 let is_blamable_reason r = not (r.loc = ALoc.none || is_lib_reason r)
 
@@ -884,12 +869,12 @@ let is_blamable_reason r = not (r.loc = ALoc.none || is_lib_reason r)
 let update_desc_reason f r =
   mk_reason_internal
     (f (desc_of_reason ~unwrap:false r))
-    (poly_loc_of_reason r)
+    (loc_of_reason r)
     r.def_loc_opt
-    (annot_poly_loc_of_reason r)
+    (annot_loc_of_reason r)
 
 let update_desc_new_reason f r =
-  mk_reason_internal (f (desc_of_reason ~unwrap:false r)) (poly_loc_of_reason r) None None
+  mk_reason_internal (f (desc_of_reason ~unwrap:false r)) (loc_of_reason r) None None
 
 let replace_desc_reason desc r = mk_reason_internal desc r.loc r.def_loc_opt r.annot_loc_opt
 
@@ -898,7 +883,7 @@ let replace_desc_new_reason desc r = mk_reason_internal desc r.loc None None
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =
   let def_aloc_opt =
-    let def_loc = def_poly_loc_of_reason reason in
+    let def_loc = def_loc_of_reason reason in
     if loc = def_loc then
       None
     else

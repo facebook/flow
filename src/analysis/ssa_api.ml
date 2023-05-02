@@ -48,7 +48,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
          (fun _ write_locs ->
            Base.List.exists
              ~f:(function
-               | Write r -> Reason.poly_loc_of_reason r = loc
+               | Write r -> Reason.loc_of_reason r = loc
                | Uninitialized -> false)
              write_locs)
          values
