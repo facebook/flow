@@ -329,7 +329,7 @@ module Friendly = struct
               (frames :: acc_frames)
               (explanations :: acc_explanations)
               acc
-              nested_branches
+              (ListUtils.dedup nested_branches)
           in
           (* Resume recursion in our branches list. *)
           flatten_speculation_branches
@@ -488,7 +488,7 @@ module Friendly = struct
             []
             []
             []
-            branches
+            (ListUtils.dedup branches)
         in
         (* If there is only one branch in acc and we have a hidden branch,
          * show that hidden branch as well. If we improve our scoring logic
@@ -794,7 +794,6 @@ let mk_speculation_error
     let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
     let branches =
       Base.List.map ~f:(fun (score, (_, _, error)) -> (score, error)) speculation_errors
-      |> ListUtils.dedup
     in
     ( kind,
       trace,
