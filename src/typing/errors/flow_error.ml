@@ -1029,20 +1029,17 @@ let rec make_error_printable :
       mk_use_op_error_reason
         lower
         use_op
-        ([
-           text "`any` may have been passed into ";
-           ref lower;
-           text " and `any` is incompatible with ";
-           ref upper;
-           text ", and ";
-         ]
-        @ [
-            ref upper;
-            text " may be passed into `any` and ";
-            ref lower;
-            text " is incompatible with `any`";
-          ]
-        )
+        [
+          text "`any` may have been passed into ";
+          ref lower;
+          text " and `any` is incompatible with ";
+          ref upper;
+          text ", and ";
+          ref upper;
+          text " may be passed into `any` and ";
+          ref lower;
+          text " is incompatible with `any`";
+        ]
     | (_, (RTrusted _ | RPrivate (RTrusted _))) ->
       mk_use_op_error_reason
         lower
