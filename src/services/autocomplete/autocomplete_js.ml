@@ -35,6 +35,7 @@ type autocomplete_type =
   | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
   | Ac_type  (** type identifiers *)
+  | Ac_type_binding  (** introduces a new type name. like Ac_binding, but for types *)
   | Ac_qualified_type of Type.t  (** qualified type identifiers *)
   | Ac_member of {
       obj_type: Type.t;
@@ -742,7 +743,24 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | _ -> super#type_ t
 
     (* Don't autocomplete type identifier bindings *)
-    method! binding_type_identifier id = id
+    method! binding_type_identifier id =
+      let ((loc, _), Flow_ast.Identifier.{ name; _ }) = id in
+      if this#covers_target loc then
+        (* don't offer suggestions for bindings, because this is where names are created,
+           so existing names aren't useful. *)
+        this#find loc name Ac_type_binding
+      else
+        id
+
+    (* Do't autocomplete type param bindings *)
+    method! type_param_identifier id =
+      let (loc, Flow_ast.Identifier.{ name; _ }) = id in
+      if this#covers_target loc then
+        (* don't offer suggestions for bindings, because this is where names are created,
+           so existing names aren't useful. *)
+        this#find loc name Ac_type_binding
+      else
+        id
   end
 
 let autocomplete_id ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc

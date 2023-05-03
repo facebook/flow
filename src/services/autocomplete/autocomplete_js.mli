@@ -35,6 +35,7 @@ type autocomplete_type =
   | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
   | Ac_type  (** type identifiers *)
+  | Ac_type_binding
   | Ac_qualified_type of Type.t  (** qualified type identifiers *)
   | Ac_member of {
       obj_type: Type.t;
