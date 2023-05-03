@@ -181,7 +181,7 @@ class ['a] t =
       | ArrP -> acc
       | PropExistsP _ -> acc
       | PropNonMaybeP _ -> acc
-      | LatentP (t, _) -> self#type_ cx P.Positive acc t
+      | LatentP ((lazy t), _) -> self#type_ cx P.Positive acc t
 
     method destructor cx acc =
       function

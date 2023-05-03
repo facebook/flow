@@ -1,1 +1,36 @@
-Found 0 errors
+Error -------------------------------------------------------------------------------------------- complex_callee.js:7:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   complex_callee.js:7:6
+   7|     (x: string); // error
+           ^
+
+References:
+   complex_callee.js:2:47
+   2| declare function f(x: mixed): boolean %checks(typeof x === "number");
+                                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
+   complex_callee.js:7:9
+   7|     (x: string); // error
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- complex_callee.js:15:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   complex_callee.js:15:6
+   15|     (x: string); // error
+            ^
+
+References:
+   complex_callee.js:2:47
+    2| declare function f(x: mixed): boolean %checks(typeof x === "number");
+                                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
+   complex_callee.js:15:9
+   15|     (x: string); // error
+               ^^^^^^ [2]
+
+
+
+Found 2 errors

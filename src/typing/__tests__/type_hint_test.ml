@@ -8,6 +8,7 @@
 open OUnit2
 open Reason
 open Hint
+open Loc_collections
 
 let metadata =
   {
@@ -114,7 +115,7 @@ end = struct
           }
         )
     in
-    let env = Loc_env.with_info Name_def.Global Loc_collections.ALocMap.empty info in
+    let env = Loc_env.with_info Name_def.Global Loc_collections.ALocMap.empty info ALocMap.empty in
     Context.set_environment cx env;
     Env.init_env cx Name_def.Global;
     let ((_, t), _) = Annot.convert cx Subst_name.Map.empty t_ast in

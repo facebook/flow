@@ -752,12 +752,12 @@ class virtual ['a] t =
       | PropNonMaybeP _
       | PropExistsP _ ->
         p
-      | LatentP (t, i) ->
+      | LatentP ((lazy t), i) ->
         let t' = self#type_ cx map_cx t in
         if t' == t then
           p
         else
-          LatentP (t', i)
+          LatentP (lazy t', i)
 
     method type_map cx map_cx t =
       match t with

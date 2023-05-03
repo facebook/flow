@@ -193,10 +193,8 @@ struct
           let rec writes_of_refinement refi =
             let open Env_api.Refi in
             match refi with
-            | InstanceOfR exp
-            | LatentR { func = LatentSimple exp; _ }
-            | LatentR { func = LatentMember (exp, _); _ } ->
-              ignore (this#expression exp)
+            | InstanceOfR exp -> ignore (this#expression exp)
+            | LatentR { func; _ } -> ignore (this#expression func)
             | SentinelR (_prop, loc) -> this#add ~why:loc (Env_api.ExpressionLoc, loc)
             | AndR (l, r)
             | OrR (l, r) ->

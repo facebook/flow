@@ -7453,10 +7453,10 @@ struct
     (********************)
     (* Latent predicate *)
     (********************)
-    | LatentP (fun_t, idx) ->
+    | LatentP ((lazy fun_t), idx) ->
       let reason = update_desc_reason (fun desc -> RPredicateCall desc) (reason_of_t fun_t) in
       rec_flow cx trace (fun_t, CallLatentPredT (reason, true, idx, l, t))
-    | NotP (LatentP (fun_t, idx)) ->
+    | NotP (LatentP ((lazy fun_t), idx)) ->
       let neg_reason =
         update_desc_reason (fun desc -> RPredicateCallNeg desc) (reason_of_t fun_t)
       in

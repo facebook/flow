@@ -974,7 +974,7 @@ module rec TypeTerm : sig
     | PropNonMaybeP of string * reason
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
-    | LatentP of t * index
+    | LatentP of t Lazy.t * index
 
   and substitution = Key.t SMap.t
 
@@ -3850,8 +3850,8 @@ let rec string_of_predicate = function
   | ArrP -> "array"
   | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
-  | LatentP (OpenT (_, id), i) -> spf "LatentPred(TYPE_%d, %d)" id i
-  | LatentP (t, i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
+  | LatentP ((lazy (OpenT (_, id))), i) -> spf "LatentPred(TYPE_%d, %d)" id i
+  | LatentP ((lazy t), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 
 let string_of_type_t_kind = function
   | TypeAliasKind -> "TypeAliasKind"

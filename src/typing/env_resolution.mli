@@ -12,3 +12,6 @@ val resolve_component :
   (Name_def.def * Name_def.scope_kind * Name_def.class_stack * Reason.t) Env_api.EnvMap.t ->
   Name_def_ordering.result ->
   unit
+
+val resolve_pred_func :
+  Context.t -> ALoc.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> Type.t Lazy.t

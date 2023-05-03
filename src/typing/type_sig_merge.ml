@@ -1573,7 +1573,7 @@ and merge_predicate tps infer_tps file (loc, p) =
       let t = merge tps infer_tps file t in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | LatentP (t, keys) ->
-      let t = merge tps infer_tps file t in
+      let t = lazy (merge tps infer_tps file t) in
       Nel.fold_left
         (fun (pos1, neg1) (key, i) ->
           let (pos2, neg2) = singleton key (Type.LatentP (t, i + 1)) in

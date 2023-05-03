@@ -886,6 +886,7 @@ module Make
     visiting_hoisted_type: bool;
     in_conditional_type_extends: bool;
     jsx_base_name: string option;
+    pred_func_map: (L.t, L.t) Ast.Expression.t L.LMap.t;
   }
 
   type pattern_write_kind =
@@ -1291,6 +1292,7 @@ module Make
           visiting_hoisted_type = false;
           in_conditional_type_extends = false;
           jsx_base_name;
+          pred_func_map = L.LMap.empty;
         }
 
       method jsx_base_name = env_state.jsx_base_name
@@ -1308,6 +1310,8 @@ module Make
       method module_toplevel_members = env_state.module_toplevel_members
 
       method predicate_refinement_maps = env_state.predicate_refinement_maps
+
+      method pred_func_map = env_state.pred_func_map
 
       method private is_assigning_write key =
         match EnvMap.find_opt key env_state.write_entries with
@@ -1578,20 +1582,15 @@ module Make
        * as an argument. Variables not passed into the function are havoced if
        * the invalidation api says they can be invalidated.
        *)
-      method apply_latent_refinements refinement_keys_by_arg latent_callee =
-        let callee_loc =
-          match latent_callee with
-          | LatentSimple (callee_loc, _)
-          | LatentMember ((callee_loc, _), _) ->
-            callee_loc
-        in
+      method apply_latent_refinements refinement_keys_by_arg func =
+        let (callee_loc, _) = func in
         List.iteri
           (fun index -> function
             | None -> ()
             | Some key ->
-              this#add_single_refinement
-                key
-                (L.LSet.singleton callee_loc, LatentR { func = latent_callee; index = index + 1 }))
+              let pred = LatentR { func; index = index + 1 } in
+              this#add_single_refinement key (L.LSet.singleton callee_loc, pred);
+              this#add_pred_func_info (fst func) func)
           refinement_keys_by_arg
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
@@ -4555,6 +4554,9 @@ module Make
 
       method add_single_refinement key refi = this#commit_refinement (this#start_refinement key refi)
 
+      method add_pred_func_info key loc =
+        env_state <- { env_state with pred_func_map = L.LMap.add key loc env_state.pred_func_map }
+
       method start_refinement { RefinementKey.loc; lookup } refi =
         LookupMap.singleton lookup (loc, refi)
 
@@ -5011,21 +5013,7 @@ module Make
           ignore @@ Base.Option.map ~f:this#call_type_args targs;
           ignore @@ this#arg_list arguments;
           this#havoc_current_env ~all:false;
-          let latent_callee =
-            match callee with
-            | (_, Identifier _) -> Some (LatentSimple callee)
-            | ( _,
-                Member
-                  {
-                    Member._object = (_, Identifier _) as obj;
-                    property = Member.PropertyIdentifier (_, { Ast.Identifier.name; _ });
-                    _;
-                  }
-              ) ->
-              Some (LatentMember (obj, name))
-            | _ -> None
-          in
-          Base.Option.iter latent_callee ~f:(this#apply_latent_refinements refinement_keys)
+          this#apply_latent_refinements refinement_keys callee
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement
@@ -5678,6 +5666,7 @@ module Make
         module_toplevel_members = env_walk#module_toplevel_members;
         predicate_refinement_maps = env_walk#predicate_refinement_maps;
         refinement_of_id = env_walk#refinement_of_id;
+        pred_func_map = env_walk#pred_func_map;
       }
     )
 

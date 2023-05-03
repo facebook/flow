@@ -269,21 +269,8 @@ let rec predicate_of_refinement cx =
         (lazy [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]);
       let other_t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
       LeftP (SentinelProp prop, other_t)
-    | LatentR { func = LatentSimple (func_loc, _); index } ->
-      (* Latent refinements store the loc of the callee, which is a read in the env *)
-      let reason = mk_reason (RCustom "Function call") func_loc in
-      let t = read_entry_exn ~lookup_mode:ForValue cx func_loc reason in
-      LatentP (t, index)
-    | LatentR { func = LatentMember ((obj_loc, _), proj); index } ->
-      (* Latent refinements store the loc of the callee, which is a read in the env *)
-      let reason = mk_reason (RCustom "Function call") obj_loc in
-      let obj_t = read_entry_exn ~lookup_mode:ForValue cx obj_loc reason in
-      let propref = Named (reason, OrdinaryName proj) in
-      let t =
-        Speculation_flow.get_method_type_opt cx obj_t reason propref
-        |> Option.value ~default:(AnyT.untyped reason)
-      in
-      LatentP (t, index)
+    | LatentR { func = (func_loc, _); index } ->
+      LatentP (lazy (read_pred_func_info_exn cx func_loc), index)
     | PropExistsR { propname; loc } ->
       PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)
   )
@@ -482,6 +469,14 @@ and read_entry_exn ~lookup_mode cx loc reason =
       match read_entry ~lookup_mode cx loc reason with
       | Error loc -> failwith (Utils_js.spf "LocEnvEntryNotFound %s" (Reason.string_of_aloc loc))
       | Ok x -> x
+  )
+
+and read_pred_func_info_exn cx loc =
+  with_debug_exn cx loc (fun () ->
+      let { Loc_env.pred_func_map; _ } = Context.environment cx in
+      match ALocMap.find_opt loc pred_func_map with
+      | None -> failwith (Utils_js.spf "PredFuncInfoNotFound %s" (Reason.string_of_aloc loc))
+      | Some (lazy t) -> t
   )
 
 and predicate_refinement_maps cx loc =

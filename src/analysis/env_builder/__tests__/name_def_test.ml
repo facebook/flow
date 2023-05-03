@@ -652,6 +652,22 @@ if (f(x)) {
     illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) =>
     (6, 6) to (6, 7) |}]
 
+let%expect_test "refi_latent_complex" =
+  print_order_test {|
+function f() { return (x: any) => y; }
+declare var x: mixed;
+var y;
+
+if (f()(x)) {
+  y = x;
+}
+  |};
+  [%expect {|
+    (2, 23) to (2, 24) =>
+    (3, 12) to (3, 13) =>
+    illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) =>
+    (6, 8) to (6, 9) |}]
+
 let%expect_test "refi_sentinel" =
   print_order_test {|
 declare var x: mixed;

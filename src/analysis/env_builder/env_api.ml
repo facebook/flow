@@ -113,10 +113,6 @@ module type S = sig
   type values = read L.LMap.t
 
   module Refi : sig
-    type latent_callee =
-      | LatentSimple of (L.t, L.t) Ast.Expression.t
-      | LatentMember of (L.t, L.t) Ast.Expression.t * string
-
     type refinement_kind =
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
@@ -157,7 +153,7 @@ module type S = sig
       (* The location here is the location of expr in x.foo === expr *)
       | SentinelR of string * L.t
       | LatentR of {
-          func: latent_callee;
+          func: (L.t, L.t) Ast.Expression.t;
           index: int;
         }
       | PropExistsR of {
@@ -198,6 +194,7 @@ module type S = sig
     predicate_refinement_maps: predicate_refinement_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
+    pred_func_map: (L.t, L.t) Ast.Expression.t (* Callee *) L.LMap.t;
   }
 
   type 'l annot_loc =
@@ -381,11 +378,6 @@ module Make
   and write_locs = write_loc list
 
   module Refi = struct
-    type latent_callee =
-      | LatentSimple of (L.t, L.t) Ast.Expression.t
-      | LatentMember of (L.t, L.t) Ast.Expression.t * string
-    [@@deriving show { with_path = false }]
-
     type refinement_kind =
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
@@ -425,7 +417,7 @@ module Make
         }
       | SentinelR of string * L.t
       | LatentR of {
-          func: latent_callee;
+          func: (L.t, L.t) Ast.Expression.t;
           index: int;
         }
       | PropExistsR of {
@@ -478,6 +470,7 @@ module Make
     predicate_refinement_maps: predicate_refinement_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
+    pred_func_map: (L.t, L.t) Ast.Expression.t (* Callee *) L.LMap.t;
   }
 
   type 'l annot_loc =
@@ -498,6 +491,7 @@ module Make
       predicate_refinement_maps = L.LMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> raise (Env_invariant (None, Impossible "Empty env info")));
+      pred_func_map = L.LMap.empty;
     }
 
   let map_result ~f res =

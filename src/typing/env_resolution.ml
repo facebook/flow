@@ -276,6 +276,14 @@ let lazily_resolve_hints cx loc hints =
   let lazy_hint reason = resolve_hints cx loc hints |> Type_hint.evaluate_hints cx reason in
   (has_hint, lazy_hint)
 
+let resolve_pred_func cx _loc callee =
+  lazy
+    (let (callee_loc, _) = callee in
+     (* [callee] might be a member access expression. Since we are explicitly unbinding it from
+      * the call, make sure we don't raise a method-unbinding error. *)
+     Context.with_allowed_method_unbinding cx callee_loc (fun () -> expression cx callee)
+    )
+
 let resolve_annotated_function
     cx synthesizable ~bind_this ~statics reason tparams_map function_loc function_ =
   let { Ast.Function.body; params; sig_loc; return; _ } = function_ in

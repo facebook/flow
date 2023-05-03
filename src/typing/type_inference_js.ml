@@ -370,9 +370,8 @@ let infer_core cx statements =
 
 let initialize_env
     ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast toplevel_scope_kind =
-  let (_abrupt_completion, ({ Env_api.env_entries; env_values; providers; _ } as info)) =
-    NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
-  in
+  let (_abrupt_completion, info) = NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast in
+  let { Env_api.env_entries; env_values; providers; pred_func_map; _ } = info in
   let autocomplete_hooks =
     {
       Env_api.id_hook = Type_inference_hooks_js.dispatch_id_hook cx;
@@ -384,7 +383,8 @@ let initialize_env
     Name_def.find_defs ~autocomplete_hooks env_entries env_values providers aloc_ast
   in
   let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hints cx) hint_map in
-  let env = Loc_env.with_info Name_def.Global hint_map info in
+  let pred_func_map = ALocMap.mapi (Env_resolution.resolve_pred_func cx) pred_func_map in
+  let env = Loc_env.with_info Name_def.Global hint_map info pred_func_map in
   Context.set_environment cx env;
   let components = NameDefOrdering.build_ordering cx ~autocomplete_hooks info name_def_graph in
   Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;

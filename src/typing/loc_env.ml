@@ -15,6 +15,8 @@ open Loc_collections
 module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
 
+type pred_func_info = Type.t (* callee type *) Lazy.t
+
 type t = {
   types: Type.t EnvMap.t;
   tparams: (Subst_name.t * Type.typeparam * Type.t) ALocMap.t;
@@ -26,6 +28,7 @@ type t = {
   under_resolution: EnvSet.t;
   hint_map: Type.lazy_hint_t ALocMap.t;
   var_info: Env_api.env_info;
+  pred_func_map: pred_func_info ALocMap.t;
 }
 
 let initialize info def_loc_kind loc t =
@@ -69,8 +72,9 @@ let empty scope_kind =
     readable = EnvSet.empty;
     hint_map = ALocMap.empty;
     under_resolution = EnvSet.empty;
+    pred_func_map = ALocMap.empty;
   }
 
-let with_info scope_kind hint_map var_info =
+let with_info scope_kind hint_map var_info pred_func_map =
   let env = empty scope_kind in
-  { env with hint_map; var_info }
+  { env with hint_map; var_info; pred_func_map }
