@@ -81,6 +81,12 @@ let remove str =
   | None -> (str, "")
   | Some split -> split
 
+(** [split_opt str] splits [str] at the autocomplete sigil.
+
+    Returns [Some (before_sigil, sigil_and_after)]. Like [remove_opt], but includes the sigil *)
+let split_opt str =
+  remove_opt str |> Base.Option.map ~f:(fun (before, after) -> (before, sigil ^ after))
+
 (** Finds the first occurrence of the sigil and returns the contents with the
     sigil removed, along with the (line, column) cursor position. *)
 let extract_cursor contents =
