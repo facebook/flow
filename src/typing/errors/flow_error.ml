@@ -815,14 +815,7 @@ let rec make_error_printable :
       let root_loc = loc_of_aloc (loc_of_reason root_reason) in
       root_with_loc_and_specific_loc loc frames root_loc root_loc root_message
     in
-    fun loc use_op ->
-      let (root, loc, frames, explanations) = loop loc ([], []) use_op in
-      let root =
-        Base.Option.map root ~f:(fun (root_loc, root_message) ->
-            (root_loc, root_message @ [text " because"])
-        )
-      in
-      (root, loc, frames, explanations)
+    (fun loc use_op -> loop loc ([], []) use_op)
   in
   (* Make a friendly error based on a use_op. The message we are provided should
    * not have any punctuation. Punctuation will be provided after the frames of

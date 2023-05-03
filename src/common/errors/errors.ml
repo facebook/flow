@@ -404,7 +404,7 @@ module Friendly = struct
          * the root. *)
         let message =
           match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ (text " " :: message)
+          | Some { root_message; _ } when show_root -> root_message @ (text " because " :: message)
           | _ -> message
         in
         let message =
@@ -452,7 +452,7 @@ module Friendly = struct
          * the root. *)
         let message =
           match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ (text " " :: message)
+          | Some { root_message; _ } when show_root -> root_message @ (text " because " :: message)
           | _ -> message
         in
         (* Finish our error message with a period. But only if frames
@@ -549,9 +549,9 @@ module Friendly = struct
                 match error.root with
                 | Some { root_message; _ } when show_root ->
                   if message = [] then
-                    root_message
+                    root_message @ [text " because"]
                   else
-                    root_message @ (text " " :: message)
+                    root_message @ (text " because " :: message)
                 | _ -> message
               in
               (* Finish our error message with a colon. *)
