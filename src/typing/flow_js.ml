@@ -394,7 +394,9 @@ struct
     | Some p ->
       let p =
         match p with
-        | Method (r, t) when not allow_method_access ->
+        | Method (r, t)
+          when (not allow_method_access)
+               && not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
           add_output
             cx
             ~trace
@@ -3334,7 +3336,10 @@ struct
           | Some p ->
             let p =
               match p with
-              | Method (r, t) when not method_accessible ->
+              | Method (r, t)
+                when (not method_accessible)
+                     && not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op))
+                ->
                 add_output
                   cx
                   ~trace
@@ -7120,7 +7125,8 @@ struct
           | Some p ->
             ( if not allow_method_access then
               match p with
-              | Method (_, t) ->
+              | Method (_, t)
+                when not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
                 add_output
                   cx
                   ~trace

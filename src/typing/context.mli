@@ -396,6 +396,10 @@ val test_prop_miss :
 val test_prop_get_never_hit :
   t -> (Reason.name option * (Reason.t * Reason.t) * Type.use_op * string option) list
 
+val with_allowed_method_unbinding : t -> ALoc.t -> (unit -> 'a) -> 'a
+
+val allowed_method_unbinding : t -> ALoc.t -> bool
+
 val computed_property_state_for_id : t -> Type.ident -> computed_property_state option
 
 val computed_property_add_lower_bound : t -> Type.ident -> Reason.t -> unit
