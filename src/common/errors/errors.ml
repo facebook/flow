@@ -83,6 +83,7 @@ module Friendly = struct
   type 'a t' = {
     loc: 'a;
     root: 'a error_root option;
+    code: Error_codes.error_code option;
     message: 'a error_message;
   }
 
@@ -96,13 +97,11 @@ module Friendly = struct
         message: 'a message;
         frames: 'a message list option;
         explanations: 'a message list option;
-        code: Error_codes.error_code option;
       }
     | Speculation of {
         frames: 'a message list;
         explanations: 'a message list;
         branches: (int * 'a t') list;
-        code: Error_codes.error_code option;
       }
 
   and 'a message = 'a message_feature list
@@ -114,10 +113,6 @@ module Friendly = struct
   and message_inline =
     | Text of string
     | Code of string
-
-  let code_of_message = function
-    | Normal { code; _ } -> code
-    | Speculation { code; _ } -> code
 
   (* The composition of some root error message and a list of associated
    * error messages. This structure is used in two contexts:
@@ -398,7 +393,7 @@ module Friendly = struct
        * have one) and return. We can safely ignore acc_frames. If a message has
        * frames set to None then the message is not equipped to handle
        * extra frames. *)
-      | Normal { message; frames = None; explanations = None; code = error_code } ->
+      | Normal { message; frames = None; explanations = None } ->
         (* Add the root to our error message when we are configured to show
          * the root. *)
         let message =
@@ -412,7 +407,7 @@ module Friendly = struct
               ~f:(fun error_code ->
                 message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
               ~default:message
-              error_code
+              error.code
           else
             message
         in
@@ -421,7 +416,7 @@ module Friendly = struct
           { group_message = message; group_message_list = []; group_message_post = None }
         )
       (* Create normal error messages. *)
-      | Normal { message; frames; explanations; code = error_code } ->
+      | Normal { message; frames; explanations } ->
         (* Add the frames to our error message. *)
         let frames =
           Base.Option.value_map
@@ -464,7 +459,7 @@ module Friendly = struct
               ~f:(fun error_code ->
                 message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
               ~default:message
-              error_code
+              error.code
           else
             message
         in
@@ -476,7 +471,7 @@ module Friendly = struct
        * group. Flatten out nested speculation errors with no frames. Hide
        * frames with low scores. Use a single message_group if we hide all but
        * one branches. *)
-      | Speculation { frames; explanations; branches; code = error_code } ->
+      | Speculation { frames; explanations; branches } ->
         (* Loop through our speculation branches. We will flatten out relevant
          * union branches and hide branches with a low score in this loop. *)
         let (hidden_branches, _, speculation_errors_rev) =
@@ -529,7 +524,7 @@ module Friendly = struct
                   ~f:(fun error_code ->
                     message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
                   ~default:message
-                  error_code
+                  error.code
               else
                 message
             else
@@ -560,7 +555,7 @@ module Friendly = struct
                     ~f:(fun error_code ->
                       message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
                     ~default:message
-                    error_code
+                    error.code
                 else
                   message
               in
@@ -731,20 +726,20 @@ module Friendly = struct
         ""
         message
     in
+    let extra =
+      if not (IMap.is_empty references) then
+        InfoLeaf [(Loc.none, ["References:"])]
+        :: (references
+           |> IMap.bindings
+           |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])])
+           )
+      else
+        []
+    in
     {
       messages = [BlameM (loc, message)];
-      extra =
-        ( if not (IMap.is_empty references) then
-          InfoLeaf [(Loc.none, ["References:"])]
-          :: (references
-             |> IMap.bindings
-             |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])])
-             )
-        else
-          []
-        );
-      error_codes =
-        code_of_message error.message |> Base.Option.value_map ~f:(fun code -> [code]) ~default:[];
+      extra;
+      error_codes = Base.Option.value_map error.code ~f:(fun code -> [code]) ~default:[];
     }
 end
 
@@ -772,7 +767,8 @@ let mk_error
       {
         loc;
         root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
-        message = Normal { message; frames; explanations; code = error_code };
+        code = error_code;
+        message = Normal { message; frames; explanations };
       }
     )
   )
@@ -789,16 +785,14 @@ let mk_speculation_error
   Friendly.(
     let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
     let rec erase_branch_codes =
-      Base.List.map ~f:(fun (score, { loc; root; message }) ->
+      Base.List.map ~f:(fun (score, { loc; root; code = _; message }) ->
           let message =
             match message with
-            | Normal { message; frames; explanations; _ } ->
-              Normal { message; frames; explanations; code = error_code }
-            | Speculation { frames; explanations; branches; _ } ->
-              Speculation
-                { frames; explanations; branches = erase_branch_codes branches; code = error_code }
+            | Normal _ -> message
+            | Speculation { frames; explanations; branches } ->
+              Speculation { frames; explanations; branches = erase_branch_codes branches }
           in
-          (score, { loc; root; message })
+          (score, { loc; root; code = error_code; message })
       )
     in
     let branches =
@@ -811,14 +805,15 @@ let mk_speculation_error
       {
         loc;
         root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
-        message = Speculation { frames; explanations; branches; code = error_code };
+        code = error_code;
+        message = Speculation { frames; explanations; branches };
       }
     )
   )
 
 (*******************************)
 
-let code_of_printable_error (_, _, f) = Friendly.code_of_message f.Friendly.message
+let code_of_printable_error (_, _, f) = f.Friendly.code
 
 let to_pp = function
   | BlameM (loc, s) -> (loc, s)
@@ -1091,26 +1086,22 @@ let rec compare compare_loc =
   let compare_friendly_message m1 m2 =
     Friendly.(
       match (m1, m2) with
-      | ( Normal { frames = fs1; explanations = ex1; message = m1; code = c1 },
-          Normal { frames = fs2; explanations = ex2; message = m2; code = c2 }
+      | ( Normal { frames = fs1; explanations = ex1; message = m1 },
+          Normal { frames = fs2; explanations = ex2; message = m2 }
         ) ->
         let k = compare_option (compare_lists (compare_lists compare_message_feature)) fs1 fs2 in
         if k = 0 then
           let k = compare_option (compare_lists (compare_lists compare_message_feature)) ex1 ex2 in
           if k = 0 then
-            let k = compare_lists compare_message_feature m1 m2 in
-            if k = 0 then
-              Stdlib.compare c1 c2
-            else
-              k
+            compare_lists compare_message_feature m1 m2
           else
             k
         else
           k
       | (Normal _, Speculation _) -> -1
       | (Speculation _, Normal _) -> 1
-      | ( Speculation { frames = fs1; explanations = ex1; branches = b1; code = c1 },
-          Speculation { frames = fs2; explanations = ex2; branches = b2; code = c2 }
+      | ( Speculation { frames = fs1; explanations = ex1; branches = b1 },
+          Speculation { frames = fs2; explanations = ex2; branches = b2 }
         ) ->
         let k = compare_lists (compare_lists compare_message_feature) fs1 fs2 in
         if k = 0 then
@@ -1118,17 +1109,11 @@ let rec compare compare_loc =
           if k = 0 then
             let k = List.length b1 - List.length b2 in
             if k = 0 then
-              let k =
-                compare_lists
-                  (fun (_, err1) (_, err2) ->
-                    compare compare_loc (InferError, [], err1) (InferError, [], err2))
-                  b1
-                  b2
-              in
-              if k = 0 then
-                Stdlib.compare c1 c2
-              else
-                k
+              compare_lists
+                (fun (_, err1) (_, err2) ->
+                  compare compare_loc (InferError, [], err1) (InferError, [], err2))
+                b1
+                b2
             else
               k
           else
@@ -1150,20 +1135,30 @@ let rec compare compare_loc =
           match (err1, err2) with
           | ({ root = Some _; _ }, { root = None; _ }) -> -1
           | ({ root = None; _ }, { root = Some _; _ }) -> 1
-          | ( { root = Some { root_message = rm1; _ }; loc = loc1; message = m1 },
-              { root = Some { root_message = rm2; _ }; loc = loc2; message = m2 }
+          | ( { root = Some { root_message = rm1; _ }; loc = loc1; code = c1; message = m1 },
+              { root = Some { root_message = rm2; _ }; loc = loc2; code = c2; message = m2 }
             ) ->
             let k = compare_lists compare_message_feature rm1 rm2 in
             if k = 0 then
               let k = compare_loc loc1 loc2 in
               if k = 0 then
-                compare_friendly_message m1 m2
+                let k = compare_friendly_message m1 m2 in
+                if k = 0 then
+                  Stdlib.compare c1 c2
+                else
+                  k
               else
                 k
             else
               k
-          | ({ root = None; message = m1; _ }, { root = None; message = m2; _ }) ->
-            compare_friendly_message m1 m2
+          | ( { root = None; code = c1; message = m1; _ },
+              { root = None; code = c2; message = m2; _ }
+            ) ->
+            let k = compare_friendly_message m1 m2 in
+            if k = 0 then
+              Stdlib.compare c1 c2
+            else
+              k
         else
           k
       else
