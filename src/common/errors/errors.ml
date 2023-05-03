@@ -386,8 +386,14 @@ module Friendly = struct
             branches)
     in
     let rec loop
-        ~show_root ~show_code ~show_all_branches ~hidden_branches acc_frames acc_explanations error
-        =
+        ~show_root
+        ~show_code
+        ~show_all_branches
+        ~hidden_branches
+        ~error_code
+        acc_frames
+        acc_explanations
+        error =
       match error.message with
       (* If there are no frames then we only want to add the root message (if we
        * have one) and return. We can safely ignore acc_frames. If a message has
@@ -407,7 +413,7 @@ module Friendly = struct
               ~f:(fun error_code ->
                 message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
               ~default:message
-              error.code
+              error_code
           else
             message
         in
@@ -459,7 +465,7 @@ module Friendly = struct
               ~f:(fun error_code ->
                 message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
               ~default:message
-              error.code
+              error_code
           else
             message
         in
@@ -502,6 +508,7 @@ module Friendly = struct
             ~show_root
             ~show_all_branches
             ~hidden_branches
+            ~error_code
             ~show_code
             (frames :: (acc_frames' @ acc_frames))
             (explanations :: (acc_explanations' @ acc_explanations))
@@ -524,7 +531,7 @@ module Friendly = struct
                   ~f:(fun error_code ->
                     message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
                   ~default:message
-                  error.code
+                  error_code
               else
                 message
             else
@@ -555,7 +562,7 @@ module Friendly = struct
                     ~f:(fun error_code ->
                       message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
                     ~default:message
-                    error.code
+                    error_code
                 else
                   message
               in
@@ -571,6 +578,7 @@ module Friendly = struct
                     ~show_code:false
                     ~show_all_branches
                     ~hidden_branches
+                    ~error_code
                     acc_frames'
                     acc_explanations'
                     error
@@ -621,7 +629,7 @@ module Friendly = struct
           ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
-    loop ~hidden_branches:None [] []
+    (fun error -> loop ~hidden_branches:None ~error_code:error.code [] [] error)
 
   let extract_references_message_intermediate ~next_id ~loc_to_id ~id_to_loc ~message =
     let (next_id, loc_to_id, id_to_loc, message) =
@@ -784,21 +792,9 @@ let mk_speculation_error
     speculation_errors =
   Friendly.(
     let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
-    let rec erase_branch_codes =
-      Base.List.map ~f:(fun (score, { loc; root; code = _; message }) ->
-          let message =
-            match message with
-            | Normal _ -> message
-            | Speculation { frames; explanations; branches } ->
-              Speculation { frames; explanations; branches = erase_branch_codes branches }
-          in
-          (score, { loc; root; code = error_code; message })
-      )
-    in
     let branches =
       Base.List.map ~f:(fun (score, (_, _, error)) -> (score, error)) speculation_errors
       |> ListUtils.dedup
-      |> erase_branch_codes
     in
     ( kind,
       trace,
