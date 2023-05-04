@@ -17,7 +17,7 @@ type autocomplete_type =
   | Ac_binding  (** binding identifiers introduce new names *)
   | Ac_comment of {
       text: string;
-      word_loc: Loc.t;
+      loc: ALoc.t;  (** Loc of the whole comment *)
     }  (** inside a comment *)
   | Ac_id of ac_id  (** identifier references *)
   | Ac_class_key of { enclosing_class_t: Type.t option }  (** class method name or property name *)
@@ -91,7 +91,7 @@ let compute_member_loc ~expr_loc ~obj_loc =
 let covers_target cursor loc = Reason.in_range cursor (ALoc.to_loc_exn loc)
 
 let extract_word cursor_loc text =
-  match Autocomplete_sigil.remove_opt text with
+  match Autocomplete_sigil.split_opt text with
   | None -> ("", Loc.none)
   | Some (before, after) ->
     let before =
@@ -171,7 +171,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! comment ((loc, Flow_ast.Comment.{ text; _ }) as c) =
       if this#covers_target loc then
         let (token, word_loc) = extract_word cursor text in
-        this#find loc token (Ac_comment { text; word_loc })
+        this#find (ALoc.of_loc word_loc) token (Ac_comment { text; loc })
       else
         super#comment c
 

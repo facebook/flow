@@ -1966,13 +1966,12 @@ let has_leading text =
   let before = Base.String.rstrip before ~drop:(fun c -> not (Base.Char.is_whitespace c)) in
   Base.String.exists before ~f:(fun c -> not (Base.Char.is_whitespace c))
 
-let autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc =
+let autocomplete_fixme ~reader ~cx ~edit_locs ~token ~text ~loc =
   if has_leading text then
     (* Don't suggest if there's leading text (the fixme would be invalid) *)
     []
   else
-    let edit_locs = (word_loc, word_loc) in
-    let error_codes = applicable_error_codes ~reader ~cx ac_loc in
+    let error_codes = applicable_error_codes ~reader ~cx loc in
     Base.List.map error_codes ~f:(fun error_code ->
         let name = Printf.sprintf "$FlowFixMe[%s]" error_code in
         let insert_text =
@@ -1996,16 +1995,21 @@ let autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc =
     )
     |> filter_by_token_and_sort token
 
-let autocomplete_jsdoc ~edit_locs ~token ~ast ~ac_loc =
+let autocomplete_jsdoc ~token ~ast ~loc =
+  let loc = ALoc.to_loc_exn loc in
   let (before, _after) = Autocomplete_sigil.remove token in
   if before <> "*" then
     []
   else
     ast
-    |> Insert_jsdoc.insert_stub_in_comment ~use_snippets:true (ALoc.to_loc_exn ac_loc)
+    |> Insert_jsdoc.insert_stub_in_comment ~use_snippets:true loc
     |> Base.Option.value_map ~default:[] ~f:(fun (_, stub) ->
            let name = "/** */" in
-           let edit_locs = (snd edit_locs, snd edit_locs) in
+           let edit_locs =
+             (* replace the whole comment *)
+             let loc = Autocomplete_sigil.remove_from_loc loc in
+             (loc, loc)
+           in
            let insert_text = Printf.sprintf "/*%s */" stub in
            [
              {
@@ -2027,14 +2031,13 @@ let autocomplete_jsdoc ~edit_locs ~token ~ast ~ac_loc =
        )
     |> filter_by_token_and_sort token
 
-let autocomplete_comment
-    ~reader ~cx ~edit_locs ~trigger_character ~ac_loc ~token ~ast ~text ~word_loc =
+let autocomplete_comment ~reader ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc =
   let items =
     match trigger_character with
     | Some "*"
     | None ->
-      let items_fixme = autocomplete_fixme ~reader ~cx ~ac_loc ~token ~text ~word_loc in
-      let items_jsdoc = autocomplete_jsdoc ~edit_locs ~token ~ast ~ac_loc in
+      let items_fixme = autocomplete_fixme ~reader ~cx ~edit_locs ~token ~text ~loc in
+      let items_jsdoc = autocomplete_jsdoc ~token ~ast ~loc in
       items_fixme @ items_jsdoc
     | _ -> []
   in
@@ -2099,17 +2102,8 @@ let autocomplete_get_results
       match autocomplete_type with
       | Ac_binding -> AcEmpty "Binding"
       | Ac_ignored -> AcEmpty "Ignored"
-      | Ac_comment { text; word_loc } ->
-        autocomplete_comment
-          ~reader
-          ~cx
-          ~edit_locs
-          ~trigger_character
-          ~ac_loc
-          ~token
-          ~ast
-          ~text
-          ~word_loc
+      | Ac_comment { text; loc } ->
+        autocomplete_comment ~reader ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc
       | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
         autocomplete_class_key

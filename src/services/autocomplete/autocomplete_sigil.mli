@@ -13,4 +13,6 @@ val remove_opt : string -> (string * string) option
 
 val remove : string -> string * string
 
+val split_opt : string -> (string * string) option
+
 val extract_cursor : string -> (string * (int * int)) option
