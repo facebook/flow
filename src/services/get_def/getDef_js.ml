@@ -12,7 +12,7 @@ module Get_def_result = struct
     | Def of Loc.t list  (** the final location of the definition *)
     | Partial of Loc.t list * string
         (** if an intermediate get-def failed, return partial progress and the error message *)
-    | Bad_loc  (** the input loc didn't point at anything you can call get-def on *)
+    | Bad_loc of string  (** the input loc didn't point at anything you can call get-def on *)
     | Def_error of string  (** an unexpected, internal error *)
 end
 
@@ -247,7 +247,7 @@ let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
                    Def [res_loc]
                  else
                    match loop ~depth:(Depth.add req_loc depth) res_loc with
-                   | Bad_loc -> Def [res_loc]
+                   | Bad_loc _ -> Def [res_loc]
                    | Def_error msg -> Partial ([res_loc], msg)
                    | (Def _ | Partial _) as res -> res
              )
@@ -259,12 +259,13 @@ let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
                  | (Def locs1, Partial (locs2, msg))
                  | (Partial (locs1, msg), Def locs2) ->
                    Partial (Base.List.unordered_append locs1 locs2, msg)
-                 | ((Bad_loc | Def_error _), other)
-                 | (other, (Bad_loc | Def_error _)) ->
+                 | ((Bad_loc _ | Def_error _), other)
+                 | (other, (Bad_loc _ | Def_error _)) ->
                    other
              )
         | Error msg -> Def_error msg
       end
-      | LocNotFound -> Bad_loc
+      | Empty msg -> Bad_loc msg
+      | LocNotFound -> Bad_loc "not found"
   in
   loop ~depth:Depth.empty requested_loc

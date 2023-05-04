@@ -430,7 +430,14 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
             :: json_props
             )
         )
-      | Bad_loc -> (Ok [], Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
+      | Bad_loc msg ->
+        ( Ok [],
+          Some
+            (("result", Hh_json.JSON_String "BAD_LOC")
+            :: ("error", Hh_json.JSON_String msg)
+            :: json_props
+            )
+        )
       | Def_error msg ->
         ( Error msg,
           Some

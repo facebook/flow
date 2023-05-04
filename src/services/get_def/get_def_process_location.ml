@@ -13,6 +13,7 @@ exception Found
 type ('M, 'T) result =
   | OwnDef of 'M
   | Request of ('M, 'T) Get_def_request.t
+  | Empty of string
   | LocNotFound
 
 (** Determines if the given expression is a [require()] call, or a member expression
@@ -71,6 +72,11 @@ class ['M, 'T] searcher
     method own_def : 'a. 'M -> 'a =
       fun x ->
         found_loc_ <- OwnDef x;
+        raise Found
+
+    method found_empty : 'a. string -> 'a =
+      fun x ->
+        found_loc_ <- Empty x;
         raise Found
 
     method request : 'a. ('M, 'T) Get_def_request.t -> 'a =
@@ -347,6 +353,16 @@ class ['M, 'T] searcher
         | _ -> ()
       end;
       super#new_ expr
+
+    method! comment c =
+      let (loc, _) = c in
+      if covers_target loc then this#found_empty "comment";
+      c
+
+    method! t_comment c =
+      let (annot, _) = c in
+      if annot_covers_target annot then this#found_empty "comment";
+      c
   end
 
 let process_location
