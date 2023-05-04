@@ -2050,6 +2050,7 @@ let string_of_autocomplete_type ac_type =
   match ac_type with
   | Ac_ignored -> "Empty"
   | Ac_binding -> "Empty"
+  | Ac_type_binding -> "Empty"
   | Ac_comment _ -> "Ac_comment"
   | Ac_enum -> "Acenum"
   | Ac_module -> "Acmodule"
@@ -2101,6 +2102,7 @@ let autocomplete_get_results
     let result =
       match autocomplete_type with
       | Ac_binding -> AcEmpty "Binding"
+      | Ac_type_binding -> AcEmpty "TypeBinding"
       | Ac_ignored -> AcEmpty "Ignored"
       | Ac_comment { text; loc } ->
         autocomplete_comment ~reader ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc
